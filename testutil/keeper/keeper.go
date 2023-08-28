@@ -1,6 +1,11 @@
 package keeper
 
 import (
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"math/rand"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,6 +23,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	evmmodule "github.com/evmos/ethermint/x/evm"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
@@ -273,4 +279,28 @@ func NewSDKKeepers(
 		FeeMarketKeeper: feeMarketKeeper,
 		EvmKeeper:       evmKeeper,
 	}
+}
+
+// InitGenesis initializes the test modules genesis state
+func (sdkm SDKModules) InitGenesis(ctx sdk.Context) {
+	sdkm.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
+	sdkm.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
+	sdkm.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
+	evmmodule.InitGenesis(ctx, sdkm.EvmKeeper, sdkm.AuthKeeper, *evmtypes.DefaultGenesisState())
+}
+
+// InitBlockProposer initialize the block proposer for test purposes with an associated validator
+func (sdkm SDKModules) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+	r := rand.New(rand.NewSource(42))
+
+	// Set validator in the store
+	validator := sample.Validator(t, r)
+	sdkm.StakingKeeper.SetValidator(ctx, validator)
+	err := sdkm.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(t, err)
+
+	// Validator is proposer
+	consAddr, err := validator.GetConsAddr()
+	require.NoError(t, err)
+	return ctx.WithProposer(consAddr)
 }

@@ -140,7 +140,6 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContract")
 	}
 
-	//system := types.SystemContract{}
 	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
 

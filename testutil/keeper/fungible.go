@@ -1,13 +1,11 @@
 package keeper
 
 import (
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmmodule "github.com/evmos/ethermint/x/evm"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -15,8 +13,10 @@ import (
 	tmdb "github.com/tendermint/tm-db"
 
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
+	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 type FungibleMockOptions struct {
@@ -67,8 +67,11 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	ctx = ctx.WithChainID("test_1-1")
 
-	defaultGenesis := evmtypes.DefaultGenesisState()
-	evmmodule.InitGenesis(ctx, sdkKeepers.EvmKeeper, sdkKeepers.AuthKeeper, *defaultGenesis)
+	// Initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+
+	// Add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -97,6 +100,8 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		bankKeeper,
 		observerKeeper,
 	)
+
+	fungiblemodule.InitGenesis(ctx, *k, *fungibletypes.DefaultGenesis())
 
 	return k, ctx
 }

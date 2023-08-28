@@ -47,7 +47,7 @@ func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, e
 	// set the system contract
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	return systemAddress, nil
@@ -56,7 +56,7 @@ func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, e
 func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
@@ -78,7 +78,7 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 func (k *Keeper) GetUniswapv2FacotryAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
@@ -100,7 +100,7 @@ func (k *Keeper) GetUniswapv2FacotryAddress(ctx sdk.Context) (ethcommon.Address,
 func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
@@ -156,7 +156,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.Int) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVaraibleNotFound, "failed to get system contract variable")
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
 	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()

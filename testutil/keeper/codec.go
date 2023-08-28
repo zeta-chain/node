@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -21,6 +22,7 @@ import (
 func NewCodec() *codec.ProtoCodec {
 	registry := codectypes.NewInterfaceRegistry()
 
+	cryptocodec.RegisterInterfaces(registry)
 	authtypes.RegisterInterfaces(registry)
 	authz.RegisterInterfaces(registry)
 	banktypes.RegisterInterfaces(registry)
