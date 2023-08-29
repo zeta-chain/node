@@ -65,7 +65,6 @@ fi
 # Start of genesis creation . This is done only on zetacore_node-1
 if [ "$DISCOVERED_HOSTNAME" == "$DISCOVERED_NETWORK-zetacore_node-1" ]
 then
-  echo "DEBUG: Entering the core1 path"
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh $DISCOVERED_NETWORK-zetaclient-1 mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* $DISCOVERED_NETWORK-zetaclient-1:~/.zetacored/keyring-test/
@@ -97,74 +96,54 @@ then
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
   # Copy host gentx to other nodes
   for NODE in "${NODELIST[@]}"; do
-    echo "DEBUG: Working on $DISCOVERED_NETWORK-$NODE now." 
-    echo "DEBUG: NSLOOKUP output for it: $(nslookup $DISCOVERED_NETWORK-$NODE)" 
     ssh $DISCOVERED_NETWORK-$NODE mkdir -p ~/.zetacored/config/gentx/peer/
-    echo "DEBUG $(date): made ~/.zetacored/config/gentx/peer/ on $DISCOVERED_NETWORK-$NODE" 
     scp ~/.zetacored/config/gentx/* $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/gentx/peer/
-    echo "DEBUG $(date): copied ~/.zetacored/config/gentx/* to the peer/ on $DISCOVERED_NETWORK-$NODE" 
   done
   # Create gentx files on other nodes and copy them to host node
   mkdir ~/.zetacored/config/gentx/z2gentx
   for NODE in "${NODELIST[@]}"; do
-      echo "DEBUG $(date): working on z2gentx for $DISCOVERED_NETWORK-$NODE" 
       ssh $DISCOVERED_NETWORK-$NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/genesis.json
       ssh $DISCOVERED_NETWORK-$NODE zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
       scp $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/
       scp $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
-      echo "DEBUG $(date): done on z2gentx for $DISCOVERED_NETWORK-$NODE" 
   done
 
 # 4. Collect all the gentx files in zetacore_node-1 and create the final genesis.json
   zetacored collect-gentxs
-  echo "DEBUG $(date): ran collect-gentxs" 
   zetacored validate-genesis
-  echo "DEBUG $(date): ran validate-gentxs" 
 # 5. Copy the final genesis.json to all the nodes
   for NODE in "${NODELIST[@]}"; do
-      echo "DEBUG $(date): working on genesis.json copy for $DISCOVERED_NETWORK-$NODE" 
       ssh $DISCOVERED_NETWORK-$NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/genesis.json
-      echo "DEBUG $(date): done on genesis.json copy for $DISCOVERED_NETWORK-$NODE" 
   done
 # 6. Update Config in zetacore_node-1 so that it has the correct persistent peer list
   sleep 2
-  echo "DEBUG $(date): updating config to have persistent peer list" 
   pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
   pps=${pp:1:58}
-  echo "DEBUG $(date): running sed on persistent peer list" 
-  echo "DEBUG pps: $pps"
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps/" "$HOME"/.zetacored/config/config.toml
-  echo "DEBUG $(date): updating config to have persistent peer list" 
 fi
 # End of genesis creation steps . The steps below are common to all the nodes
 
 # Update persistent peers
 if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore_node-1" ]
 then
-  echo "DEBUG: Entering the non-core1 path"
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh $DISCOVERED_NETWORK-zetaclient-"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "$DISCOVERED_NETWORK-zetaclient-$INDEX":~/.zetacored/keyring-test/
-  echo "DEBUG $(date): Copying to $DISCOVERED_NETWORK-zetaclient-$INDEX" #DEBUG
   echo "Sleeping until /root/.zetacored/config/gentx/peer/*.json"
   counter=0
   while [[ $counter -lt 60 ]]; do
     # Check for existance of file
     if ls /root/.zetacored/config/gentx/peer/*.json 1> /dev/null 2>&1; then
-      echo "DEBUG: Found a match. Continuing on."
       break
     fi
     ((counter+=5))
-    echo "DEBUG: $(ls /root/.zetacored/config/gentx/peer/)"
     sleep 5
   done
 
   pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
   pps=${pp:1:58}
-  echo "DEBUG: pp=$pp"
-  echo "DEBUG: pps=$pps"
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps/" "$HOME"/.zetacored/config/config.toml
 fi
 
