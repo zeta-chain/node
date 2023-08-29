@@ -27,7 +27,8 @@ for tag in git_tags:
         if "-rc" in str(tag):
             continue
         else:
-            tag_list.append(tag)
+            if int(tag.replace("v", "")) > int(os.environ["STARTING_VERSION"].replace("v", "")):
+                tag_list.append(tag)
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
