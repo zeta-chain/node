@@ -50227,6 +50227,8 @@ definitions:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
+  crosschainMsgUpdateTssAddressResponse:
+    type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
   crosschainMsgVoteOnObservedOutboundTxResponse:

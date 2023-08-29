@@ -56,6 +56,7 @@ type Config struct {
 	TestTssKeysign      bool          `json:"TestTssKeysign"`
 	CurrentTssPubkey    string        `json:"CurrentTssPubkey"`
 	SignerPass          string        `json:"SignerPass"`
+	ZetaCoreHome        string        `json:"ZetaCoreHome"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`

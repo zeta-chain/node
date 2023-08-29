@@ -144,6 +144,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		keygenLogger.Error().Msgf("keygen fail: reason %s ", err.Error())
 		return err
 	}
+	// Keeping this line here for now, but this is redundant as CurrentPubkey is updated from zeta-core
 	tss.CurrentPubkey = res.PubKey
 	tss.Signers = keyGen.GranteePubkeys
 
