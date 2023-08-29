@@ -288,7 +288,9 @@ func (sdkm SDKKeepers) InitGenesis(ctx sdk.Context) {
 	sdkm.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
 	sdkm.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
 	sdkm.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
-	evmmodule.InitGenesis(ctx, sdkm.EvmKeeper, sdkm.AuthKeeper, *evmtypes.DefaultGenesisState())
+	evmGenesis := *evmtypes.DefaultGenesisState()
+	evmGenesis.Params.EvmDenom = "azeta"
+	evmmodule.InitGenesis(ctx, sdkm.EvmKeeper, sdkm.AuthKeeper, evmGenesis)
 }
 
 // InitBlockProposer initialize the block proposer for test purposes with an associated validator

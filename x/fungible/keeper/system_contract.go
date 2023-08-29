@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -41,6 +42,7 @@ func (k Keeper) RemoveSystemContract(ctx sdk.Context) {
 	store.Delete([]byte{0})
 }
 
+// GetSystemContractAddress returns the system contract address
 // TODO : wzetaContractAddress and other constant strings , can be declared as a constant string in types
 // TODO Remove repetitive code
 func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, error) {
@@ -124,9 +126,12 @@ func (k *Keeper) CallWZetaDeposit(ctx sdk.Context, sender ethcommon.Address, amo
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to get wzeta contract address")
 	}
-	wzetaABI, _ := connectorzevm.WZETAMetaData.GetAbi()
+	abi, err := wzeta.WETH9MetaData.GetAbi()
+	if err != nil {
+		return err
+	}
 	gasLimit := big.NewInt(70_000) // for some reason, GasEstimate for this contract call is always insufficient
-	_, err = k.CallEVM(ctx, *wzetaABI, sender, wzetaAddress, amount, gasLimit, true, "deposit")
+	_, err = k.CallEVM(ctx, *abi, sender, wzetaAddress, amount, gasLimit, true, "deposit")
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to call wzeta deposit")
 	}

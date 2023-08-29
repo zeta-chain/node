@@ -98,6 +98,29 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, "bar", foreignCoins.Symbol)
 		require.Equal(t, zetacommon.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+
+		// can get the zrc20 data
+		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
+		require.NoError(t, err)
+		require.Equal(t, "foo", zrc20Data.Name)
+		require.Equal(t, "bar", zrc20Data.Symbol)
+		require.Equal(t, uint8(8), zrc20Data.Decimals)
+
+		// can deposit tokens
+		to := sample.EthAddress()
+		oldBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, oldBalance)
+		require.Equal(t, int64(0), oldBalance.Int64())
+
+		amount := big.NewInt(100)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
+		require.NoError(t, err)
+
+		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, newBalance)
+		require.Equal(t, amount.Int64(), newBalance.Int64())
 	})
 }
 
@@ -128,7 +151,30 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 		found, err = k.GetWZetaContractAddress(ctx)
 		require.NoError(t, err)
 		require.Equal(t, wzeta, found)
+	})
 
+	t.Run("can deposit into wzeta", func(t *testing.T) {
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		balance, err := k.BalanceOfZRC4(ctx, wzeta, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotNil(t, balance)
+		require.Equal(t, int64(0), balance.Int64())
+
+		amount := big.NewInt(100)
+		err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+		require.NoError(t, err)
+
+		err = k.CallWZetaDeposit(ctx, types.ModuleAddressEVM, amount)
+		require.NoError(t, err)
+
+		balance, err = k.BalanceOfZRC4(ctx, wzeta, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotNil(t, balance)
+		require.Equal(t, amount.Int64(), balance.Int64())
 	})
 }
 

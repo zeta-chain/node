@@ -81,12 +81,12 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
