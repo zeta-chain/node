@@ -13,6 +13,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 var ErrSample = errors.New("sample error")
@@ -56,6 +58,20 @@ func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 		stakingtypes.Description{})
 	require.NoError(t, err)
 	return val
+}
+
+// PubKeyString returns a sample public key string
+func PubKeyString() string {
+	priKey := ed25519.GenPrivKey()
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
+	if err != nil {
+		panic(err)
+	}
+	pubkey, err := common.NewPubKey(s)
+	if err != nil {
+		panic(err)
+	}
+	return pubkey.String()
 }
 
 // PrivKeyAddressPair returns a private key, address pair

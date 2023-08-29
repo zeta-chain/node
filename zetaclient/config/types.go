@@ -39,21 +39,21 @@ type BTCConfig struct {
 
 // TODO: use snake case for json fields
 type Config struct {
-	Peer                string        `json:"Peer"`
-	PublicIP            string        `json:"PublicIP"`
-	LogFormat           string        `json:"LogFormat"`
-	LogLevel            zerolog.Level `json:"LogLevel"`
-	LogSampler          bool          `json:"LogSampler"`
-	PreParamsPath       string        `json:"PreParamsPath"`
-	ChainID             string        `json:"ChainID"`
-	ZetaCoreURL         string        `json:"ZetaCoreURL"`
-	AuthzGranter        string        `json:"AuthzGranter"`
-	AuthzHotkey         string        `json:"AuthzHotkey"`
-	P2PDiagnostic       bool          `json:"P2PDiagnostic"`
-	ConfigUpdateTicker  uint64        `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker uint64        `json:"P2PDiagnosticTicker"`
-	TssPath             string        `json:"TssPath"`
-	TestTssKeysign      bool          `json:"TestTssKeysign"`
+	Peer                string `json:"Peer"`
+	PublicIP            string `json:"PublicIP"`
+	LogFormat           string `json:"LogFormat"`
+	LogLevel            int8   `json:"LogLevel"`
+	LogSampler          bool   `json:"LogSampler"`
+	PreParamsPath       string `json:"PreParamsPath"`
+	ChainID             string `json:"ChainID"`
+	ZetaCoreURL         string `json:"ZetaCoreURL"`
+	AuthzGranter        string `json:"AuthzGranter"`
+	AuthzHotkey         string `json:"AuthzHotkey"`
+	P2PDiagnostic       bool   `json:"P2PDiagnostic"`
+	ConfigUpdateTicker  uint64 `json:"ConfigUpdateTicker"`
+	P2PDiagnosticTicker uint64 `json:"P2PDiagnosticTicker"`
+	TssPath             string `json:"TssPath"`
+	TestTssKeysign      bool   `json:"TestTssKeysign"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`

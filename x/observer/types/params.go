@@ -31,30 +31,36 @@ func DefaultParams() Params {
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 	}
-	adminPolicy := []*Admin_Policy{
+	return NewParams(observerParams, DefaultAdminPolicy(), 100)
+}
+
+func DefaultAdminPolicy() []*Admin_Policy {
+	return []*Admin_Policy{
 		{
 			PolicyType: Policy_Type_out_tx_tracker,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_stop_inbound_cctx,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_deploy_fungible_coin,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_client_params,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_keygen_block,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
+		},
+		{
+			PolicyType: Policy_Type_add_observer,
+			Address:    GroupID1Address,
 		},
 	}
-
-	return NewParams(observerParams, adminPolicy, 100)
 }
 
 // ParamSetPairs get the params.ParamSet
