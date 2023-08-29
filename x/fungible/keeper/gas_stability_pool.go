@@ -7,6 +7,17 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+// EnsureGasStabilityPoolAccountCreated ensures the gas stability pool account exists
+func (k Keeper) EnsureGasStabilityPoolAccountCreated(ctx sdk.Context, chainID int64) {
+	address := types.GasStabilityPoolAddress(chainID)
+
+	ak := k.GetAuthKeeper()
+	accExists := ak.HasAccount(ctx, address)
+	if !accExists {
+		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, address))
+	}
+}
+
 // GetGasStabilityPoolBalance returns the balance of the gas stability pool
 func (k Keeper) GetGasStabilityPoolBalance(
 	ctx sdk.Context,
@@ -28,6 +39,8 @@ func (k Keeper) FundGasStabilityPool(
 	chainID int64,
 	amount *big.Int,
 ) error {
+	k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
+
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
@@ -57,11 +70,16 @@ func (k Keeper) WithdrawFromGasStabilityPool(
 	chainID int64,
 	amount *big.Int,
 ) error {
+	k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
+
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
 		return err
 	}
+
+	// Ensure the account exists SDK level
+	_ = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress(chainID))
 
 	// Send from the gas stability pool address
 	from := types.GasStabilityPoolAddressEVM(chainID)
