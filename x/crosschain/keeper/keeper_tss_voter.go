@@ -96,7 +96,14 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
 		}
 		// Set TSS history only, current TSS is updated via admin transaction
-		k.SetTSSHistory(ctx, tss)
+		// In Case this is the first TSS address update both current and history
+
+		tssList := k.GetAllTSS(ctx)
+		if len(tssList) <= 1 {
+			k.AppendTss(ctx, tss)
+		} else {
+			k.SetTSSHistory(ctx, tss)
+		}
 		keygen.Status = observerTypes.KeygenStatus_KeyGenSuccess
 		keygen.BlockNumber = ctx.BlockHeight()
 
