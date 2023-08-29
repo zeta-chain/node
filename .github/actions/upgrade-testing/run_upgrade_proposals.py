@@ -19,13 +19,12 @@ command_runner.MONIKER = os.environ["MONIKER"]
 command_runner.CHAIN_ID = os.environ["CHAIN_ID"]
 
 git_tags = command_runner.run_command("git tag --list > git_tags && cat git_tags && rm -rf git_tags").split("\n")
-p = re.compile(r'[a-z][0-9].[0-9].[0-9]*')
+p = re.compile(r'[a-z][0-9]{1,2}.[0-9]{1,2}.[0-9]*')
 tag_list = []
 met_starting_point = False
 for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
-        
         if "-rc" in str(tag):
             continue
         else:
