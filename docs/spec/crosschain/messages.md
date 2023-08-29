@@ -216,3 +216,12 @@ message MsgWhitelistERC20 {
 }
 ```
 
+## MsgUpdateTssAddress
+
+```proto
+message MsgUpdateTssAddress {
+	string creator = 1;
+	string tss_pubkey = 2;
+}
+```
+

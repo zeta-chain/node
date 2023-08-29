@@ -109,3 +109,31 @@ func CmdCreateTSSVoter() *cobra.Command {
 
 	return cmd
 }
+
+func CmdUpdateTss() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-tss-address [pubkey]",
+		Short: "Create a new TSSVoter",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+
+			argsPubkey, err := cast.ToStringE(args[0])
+			if err != nil {
+				return err
+			}
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUpdateTssAddress(clientCtx.GetFromAddress().String(), argsPubkey)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}

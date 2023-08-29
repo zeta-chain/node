@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// AppendTss appends a tss to the TSSHistoryKey store and update the current TSS to the latest one
 func (k Keeper) AppendTss(ctx sdk.Context, tss types.TSS) {
 	k.SetTSS(ctx, tss)
 	k.SetTSSHistory(ctx, tss)
@@ -76,6 +77,16 @@ func (k Keeper) GetPreviousTSS(ctx sdk.Context) (val types.TSS, found bool) {
 	return tssList[len(tssList)-2], true
 }
 
+func (k Keeper) CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (types.TSS, bool) {
+	tssList := k.GetAllTSS(ctx)
+	for _, tss := range tssList {
+		if tss.TssPubkey == tssPubkey {
+			return tss, true
+		}
+	}
+	return types.TSS{}, false
+}
+
 // Queries
 
 func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.QueryGetTSSResponse, error) {
@@ -93,7 +104,7 @@ func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.Qu
 }
 
 // TssHistory Query historical list of TSS information
-func (k Keeper) TssHistory(c context.Context, request *types.QueryTssHistoryRequest) (*types.QueryTssHistoryResponse, error) {
+func (k Keeper) TssHistory(c context.Context, _ *types.QueryTssHistoryRequest) (*types.QueryTssHistoryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	tssList := k.GetAllTSS(ctx)
 	sort.SliceStable(tssList, func(i, j int) bool {

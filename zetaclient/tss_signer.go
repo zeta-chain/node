@@ -369,7 +369,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
-	tss := TSS{
+	newTss := TSS{
 		Server:        server,
 		Keys:          make(map[string]*TSSKey),
 		CurrentPubkey: cfg.CurrentTssPubkey,
@@ -377,7 +377,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 		CoreBridge:    bridge,
 	}
 
-	err = tss.LoadTssFilesFromDirectory(cfg.TssPath)
+	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
 	if err != nil {
 		return nil, err
 	}
@@ -385,15 +385,12 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("-------------------")
-	fmt.Println(tssHistoricalList)
-	fmt.Println(pubkeyInBech32)
-	err = tss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
+	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
 		fmt.Println("ReadDir error", err)
 		return nil, err
 	}
-	return &tss, nil
+	return &newTss, nil
 }
 
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
