@@ -9,15 +9,10 @@ networks:
 services:
   rosetta:
     image: zetanode:latest
-    #container_name: rosetta
-    #hostname: rosetta
-    environment:
-      - SERVICE="rosetta"
     ports:
       - "8080:8080"
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.200
     depends_on:
       - zetacore_node
     entrypoint: ["zetacored", "rosetta", "--tendermint", "localnet-zetacore_node-1:26657", "--grpc", "localnet-zetacore_node-1:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
@@ -38,7 +33,6 @@ services:
 
   zetacore_node:
     image: zetanode:latest
-    #container_name: zetacore0
     build:
       context: ../../.
       dockerfile: Dockerfile
@@ -46,81 +40,38 @@ services:
       mode: replicated
       #scale up immediately via script if desired replicas is >2
       replicas: 2
-    environment:
-      - ZETACORE_SCALE={$ZETACORE_SCALE}
-    #hostname: zetacore0
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis.sh", "$ZETACORE_SCALE"]
-
-#  zetacore1:
-#    image: zetanode:latest
-#    container_name: zetacore1
-#    build:
-#      context: ../../.
-#      dockerfile: Dockerfile
-#    hostname: zetacore1
-#    networks:
-#      - mynetwork
-#        #ipv4_address: 172.20.0.12
-#    entrypoint: ["/root/genesis.sh", "2"]
+    entrypoint: ["/root/genesis.sh", "2"] #set the argument for geneis.sh to replcas
 
   zetaclient:
     image: zetanode:latest
-    #container_name: zetaclient0
     build:
       context: ../../.
       dockerfile: Dockerfile
-    #hostname: zetaclient0
     deploy:
       mode: replicated
       #scale up immediately via script if desired replicas is >2
       replicas: 2
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.21
     entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
-#  zetaclient1:
-#    image: zetanode:latest
-#    container_name: zetaclient1
-#    build:
-#      context: ../../.
-#      dockerfile: Dockerfile
-#    hostname: zetaclient1
-#    networks:
-#      - mynetwork
-#        #ipv4_address: 172.20.0.22
-#    entrypoint: /root/start-zetaclientd-genesis.sh
-#    environment:
-#      - ETHDEV_ENDPOINT=http://eth:8545
-
   eth:
     image: ethereum/client-go:v1.10.26
-    #container_name: eth
-    #hostname: eth
-#    ports:
-#      - "8545:8545"
     expose:
       - 8545
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.100
-    # TODO: Fix runing GETH open to the world on 8545 with nginx.
+    # TODO: Fix runing GETH open to the world on 8545 with nginx by discovering own IP and setting it for http.addr
     entrypoint: ["geth", "--dev", "--http", "--http.addr", "0.0.0.0", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
   bitcoin:
     image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
-    #container_name: bitcoin
-    #hostname: bitcoin
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.101
-#    ports:
-#      - "18443:18443"
     expose:
       - 18443
     command:
@@ -144,6 +95,5 @@ services:
     hostname: orchestrator
     networks:
       - mynetwork
-        #ipv4_address: 172.20.0.2
     entrypoint: ["/work/start.sh", "local"]
 
