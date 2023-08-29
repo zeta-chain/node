@@ -37,7 +37,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.PermissionFlags != nil {
 		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
 	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
+		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true, IsOutboundEnabled: true})
 	}
 
 	// Set if defined
