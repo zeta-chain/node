@@ -90,6 +90,7 @@ func (k Keeper) WithdrawFromGasStabilityPool(
 		from,
 		gasZRC20,
 		amount,
+		false,
 	); err != nil {
 		return err
 	}

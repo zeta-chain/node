@@ -96,8 +96,9 @@ type FungibleKeeper interface {
 		to eth.Address,
 		amountIn *big.Int,
 		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
-	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int, noEthereumTxEvent bool) error
 	DeployZRC20Contract(
 		ctx sdk.Context,
 		name, symbol string,

@@ -71,7 +71,7 @@ func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, false, BigIntZero, nil)
 	if err != nil {
 		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract")
 	}
@@ -201,7 +201,7 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
-	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
+	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, false, "deposit", to, amount)
 }
 
 // DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
@@ -224,7 +224,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
+	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
 		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
@@ -242,7 +242,7 @@ func (k Keeper) QueryZRC20Data(
 	zrc4, _ := zrc20.ZRC20MetaData.GetAbi()
 
 	// Name
-	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
+	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "name")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -254,7 +254,7 @@ func (k Keeper) QueryZRC20Data(
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "symbol")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "symbol")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -266,7 +266,7 @@ func (k Keeper) QueryZRC20Data(
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "decimals")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "decimals")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
@@ -289,7 +289,8 @@ func (k Keeper) BalanceOfZRC4(
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "balanceOf", account)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "balanceOf",
+		account)
 	if err != nil {
 		return nil, err
 	}
@@ -314,9 +315,9 @@ func (k Keeper) CallEVM(
 	ctx sdk.Context,
 	abi abi.ABI,
 	from, contract common.Address,
-	value *big.Int,
-	gasLimit *big.Int,
+	value, gasLimit *big.Int,
 	commit bool,
+	noEthereumTxEvent bool,
 	method string,
 	args ...interface{},
 ) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -329,7 +330,7 @@ func (k Keeper) CallEVM(
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
-	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, value, gasLimit)
+	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
 		return resp, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
 	}
@@ -349,6 +350,7 @@ func (k Keeper) CallEVMWithData(
 	contract *common.Address,
 	data []byte,
 	commit bool,
+	noEthereumTxEvent bool,
 	value *big.Int,
 	gasLimit *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -405,69 +407,73 @@ func (k Keeper) CallEVMWithData(
 		return res, sdkerrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
 	}
 
-	msgBytes, _ := json.Marshal(msg)
-	ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
-	attrs := []sdk.Attribute{}
-	if len(ctx.TxBytes()) > 0 {
-		// add event for tendermint transaction hash format
-		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
-		ethTxHash = common.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
-	}
-	attrs = append(attrs, []sdk.Attribute{
-		sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
-		// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
-		sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, ethTxHash.String()),
-		// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
-		sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
-		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
-		sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
-	}...)
-
-	// recipient: contract address
-	if contract != nil {
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
-	}
-	if res.Failed() {
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
-	}
-
-	txLogAttrs := make([]sdk.Attribute, len(res.Logs))
-	for i, log := range res.Logs {
-		log.TxHash = ethTxHash.String()
-		value, err := json.Marshal(log)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to encode log")
+	// Emit events and log for the transaction if it is committed
+	if commit {
+		msgBytes, _ := json.Marshal(msg)
+		ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
+		attrs := []sdk.Attribute{}
+		if len(ctx.TxBytes()) > 0 {
+			// add event for tendermint transaction hash format
+			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+			ethTxHash = common.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
 		}
-		txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
-	}
+		attrs = append(attrs, []sdk.Attribute{
+			sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
+			// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
+			sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, ethTxHash.String()),
+			// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
+			sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
+			// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
+			sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
+		}...)
 
-	// emit events
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			evmtypes.EventTypeEthereumTx,
-			attrs...,
-		),
-		sdk.NewEvent(
-			evmtypes.EventTypeTxLog,
-			txLogAttrs...,
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
-			sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
-		),
-	})
+		// recipient: contract address
+		if contract != nil {
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
+		}
+		if res.Failed() {
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
+		}
 
-	logs := evmtypes.LogsToEthereum(res.Logs)
-	var bloomReceipt ethtypes.Bloom
-	if len(logs) > 0 {
-		bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
-		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
-		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
-		k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
-		k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
+		txLogAttrs := make([]sdk.Attribute, len(res.Logs))
+		for i, log := range res.Logs {
+			log.TxHash = ethTxHash.String()
+			value, err := json.Marshal(log)
+			if err != nil {
+				return nil, sdkerrors.Wrap(err, "failed to encode log")
+			}
+			txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
+		}
+
+		if !noEthereumTxEvent {
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					evmtypes.EventTypeEthereumTx,
+					attrs...,
+				),
+				sdk.NewEvent(
+					evmtypes.EventTypeTxLog,
+					txLogAttrs...,
+				),
+				sdk.NewEvent(
+					sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
+					sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
+				),
+			})
+		}
+
+		logs := evmtypes.LogsToEthereum(res.Logs)
+		var bloomReceipt ethtypes.Bloom
+		if len(logs) > 0 {
+			bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
+			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+			bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
+			k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
+			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
+		}
 	}
 
 	return res, nil

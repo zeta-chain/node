@@ -19,7 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 
-	zetacoretypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -79,7 +79,7 @@ func (k Keeper) PostTxProcessing(
 // transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return zetacoretypes.ErrNotEnoughPermissions
+		return types.ErrNotEnoughPermissions
 	}
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
@@ -107,7 +107,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	return nil
 }
 
-// create a new CCTX to process the withdrawal event
+// ProcessZRC20WithdrawalEvent creates a new CCTX to process the withdrawal event
 // error indicates system error and non-recoverable; should abort
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
@@ -117,31 +117,62 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	recvChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
+	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
 	senderChain := common.ZetaChain()
-	toAddr, err := recvChain.EncodeAddress(event.To)
+	toAddr, err := receiverChain.EncodeAddress(event.To)
 	if err != nil {
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
 	gasLimit := foreignCoin.GasLimit
-	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, foreignCoin.ForeignChainId, math.NewUintFromBigInt(event.Value),
-		"", event.Raw.TxHash.String(), event.Raw.BlockNumber, gasLimit, foreignCoin.CoinType, foreignCoin.Asset)
+	msg := types.NewMsgSendVoter(
+		"",
+		emittingContract.Hex(),
+		senderChain.ChainId,
+		txOrigin,
+		toAddr,
+		foreignCoin.ForeignChainId,
+		math.NewUintFromBigInt(event.Value),
+		"",
+		event.Raw.TxHash.String(),
+		event.Raw.BlockNumber,
+		gasLimit,
+		foreignCoin.CoinType,
+		foreignCoin.Asset,
+	)
 	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, recvChain)
+
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+
+	// Get gas price and amount
+	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
+	if !found {
+		fmt.Printf("gasprice not found for %s\n", receiverChain)
+		return fmt.Errorf("gasprice not found for %s", receiverChain)
+	}
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
+	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
+
 	EmitZRCWithdrawCreated(ctx, cctx)
-	return k.ProcessCCTX(ctx, cctx, recvChain)
+	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
-	ctx.Logger().Info("Zeta withdrawal to %s amount %d to chain with chainId %d\n", hex.EncodeToString(event.DestinationAddress), event.ZetaValueAndGas, event.DestinationChainId)
+	ctx.Logger().Info(fmt.Sprintf(
+		"Zeta withdrawal to %s amount %d to chain with chainId %d",
+		hex.EncodeToString(event.DestinationAddress),
+		event.ZetaValueAndGas,
+		event.DestinationChainId,
+	))
+
 	if err := k.bankKeeper.BurnCoins(
 		ctx,
 		fungibletypes.ModuleName,
 		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas))),
 	); err != nil {
 		fmt.Printf("burn coins failed: %s\n", err.Error())
-		return fmt.Errorf("ProcessWithdrawalEvent: failed to burn coins from fungible: %s", err.Error())
+		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())
 	}
+
 	receiverChainID := event.DestinationChainId
 	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
 	if receiverChain == nil {
@@ -150,37 +181,51 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
 	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
-		return zetacoretypes.ErrNotFoundCoreParams
+		return types.ErrNotFoundCoreParams
 	}
 	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" {
-		return zetacoretypes.ErrUnableToSendCoinType
+		return types.ErrUnableToSendCoinType
 	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
 	senderChain := common.ZetaChain()
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
+
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := zetacoretypes.NewMsgSendVoter("", emittingContract.Hex(), senderChain.ChainId, txOrigin, toAddr, receiverChain.ChainId, amount, "", event.Raw.TxHash.String(), event.Raw.BlockNumber, 90000+uint64(event.Raw.Index), common.CoinType_Zeta, "")
+	msg := types.NewMsgSendVoter(
+		"",
+		emittingContract.Hex(),
+		senderChain.ChainId,
+		txOrigin, toAddr,
+		receiverChain.ChainId,
+		amount,
+		"",
+		event.Raw.TxHash.String(),
+		event.Raw.BlockNumber,
+		90000+uint64(event.Raw.Index),
+		common.CoinType_Zeta,
+		"",
+	)
 	sendHash := msg.Digest()
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, zetacoretypes.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+
+	// Create the CCTX
+	cctx := k.CreateNewCCTX(ctx, msg, sendHash, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+
+	// Pay gas in Zeta and update the amount for the cctx
+	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx, true); err != nil {
+		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
+	}
+
 	EmitZetaWithdrawCreated(ctx, cctx)
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, receiverChain *common.Chain) error {
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount
-	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
-	if !found {
-		fmt.Printf("gasprice not found for %s\n", receiverChain)
-		return fmt.Errorf("gasprice not found for %s", receiverChain)
-	}
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
-	cctx.CctxStatus.Status = zetacoretypes.CctxStatus_PendingOutbound
+func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *common.Chain) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
 		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
 	}
-	err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx)
-	if err != nil {
+
+	if err := k.UpdateNonce(ctx, receiverChain.ChainId, &cctx); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: update nonce failed: %s", err.Error())
 	}
 
@@ -189,7 +234,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx zetacoretypes.CrossChainTx, re
 	return nil
 }
 
-// given a log entry, try extracting Withdrawal event from registered ZRC20 contract;
+// ParseZRC20WithdrawalEvent tries extracting Withdrawal event from registered ZRC20 contract;
 // returns error if the log entry is not a Withdrawal event, or is not emitted from a
 // registered ZRC20 contract
 func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
