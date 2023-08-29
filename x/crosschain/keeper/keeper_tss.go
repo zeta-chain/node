@@ -18,6 +18,24 @@ func (k Keeper) AppendTss(ctx sdk.Context, tss types.TSS) {
 	k.SetTSSHistory(ctx, tss)
 }
 
+func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
+	k.SetTSS(ctx, tss)
+	// initialize the nonces and pending nonces of all enabled chains
+	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+	for _, chain := range supportedChains {
+		chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}
+		k.SetChainNonces(ctx, chainNonce)
+
+		p := types.PendingNonces{
+			NonceLow:  0,
+			NonceHigh: 0,
+			ChainId:   chain.ChainId,
+			Tss:       tss.TssPubkey,
+		}
+		k.SetPendingNonces(ctx, p)
+	}
+}
+
 // SetTSS sets tss information to the store
 func (k Keeper) SetTSS(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSKey))
