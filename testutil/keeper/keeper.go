@@ -284,24 +284,24 @@ func NewSDKKeepers(
 }
 
 // InitGenesis initializes the test modules genesis state
-func (sdkm SDKKeepers) InitGenesis(ctx sdk.Context) {
-	sdkm.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
-	sdkm.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
-	sdkm.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
+func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
+	sdkk.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
+	sdkk.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
+	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
 	evmGenesis := *evmtypes.DefaultGenesisState()
 	evmGenesis.Params.EvmDenom = "azeta"
-	evmmodule.InitGenesis(ctx, sdkm.EvmKeeper, sdkm.AuthKeeper, evmGenesis)
+	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)
 }
 
 // InitBlockProposer initialize the block proposer for test purposes with an associated validator
-func (sdkm SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
 	// #nosec G404 test purpose - weak randomness is not an issue here
 	r := rand.New(rand.NewSource(42))
 
 	// Set validator in the store
 	validator := sample.Validator(t, r)
-	sdkm.StakingKeeper.SetValidator(ctx, validator)
-	err := sdkm.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	sdkk.StakingKeeper.SetValidator(ctx, validator)
+	err := sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	require.NoError(t, err)
 
 	// Validator is proposer
