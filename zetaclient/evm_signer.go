@@ -332,6 +332,11 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 		gasprice = specified
 	}
+	flags, err := zetaBridge.GetPermissionFlags()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get permission flags")
+		return
+	}
 
 	var tx *ethtypes.Transaction
 
@@ -348,36 +353,98 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			return
 		}
 		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasLimit, gasprice, height)
-	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignWithdrawTx(to, send.InboundTxParams.Amount.BigInt(), send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			tx, err = signer.SignWithdrawTx(
+				to,
+				send.GetCurrentOutTxParam().Amount.BigInt(),
+				send.GetCurrentOutTxParam().OutboundTxTssNonce,
+				gasprice,
+				height,
+			)
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			tx, err = signer.SignERC20WithdrawTx(
+				to,
+				asset,
+				send.GetCurrentOutTxParam().Amount.BigInt(),
+				gasLimit,
+				send.GetCurrentOutTxParam().OutboundTxTssNonce,
+				gasprice,
+				height,
+			)
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.InboundTxParams.Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			tx, err = signer.SignOutboundTx(
+				ethcommon.HexToAddress(send.InboundTxParams.Sender),
+				big.NewInt(send.InboundTxParams.SenderChainId),
+				to,
+				send.GetCurrentOutTxParam().Amount.BigInt(),
+				gasLimit,
+				message,
+				sendhash,
+				send.GetCurrentOutTxParam().OutboundTxTssNonce,
+				gasprice,
+				height,
+			)
 		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert && send.OutboundTxParams[0].ReceiverChainId == common.ZetaChain().ChainId {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignWithdrawTx(to, send.InboundTxParams.Amount.BigInt(), send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			tx, err = signer.SignWithdrawTx(
+				to,
+				send.GetCurrentOutTxParam().Amount.BigInt(),
+				send.GetCurrentOutTxParam().OutboundTxTssNonce,
+				gasprice,
+				height,
+			)
 		}
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(send.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-			tx, err = signer.SignERC20WithdrawTx(to, asset, send.InboundTxParams.Amount.BigInt(), gasLimit, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+			tx, err = signer.SignERC20WithdrawTx(
+				to,
+				asset,
+				send.GetCurrentOutTxParam().Amount.BigInt(),
+				gasLimit,
+				send.GetCurrentOutTxParam().OutboundTxTssNonce,
+				gasprice,
+				height,
+			)
 		}
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		logger.Info().Msgf("SignRevertTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-		tx, err = signer.SignRevertTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.OutboundTxParams[0].ReceiverChainId), to.Bytes(), big.NewInt(send.GetCurrentOutTxParam().ReceiverChainId), send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+		tx, err = signer.SignRevertTx(
+			ethcommon.HexToAddress(send.InboundTxParams.Sender),
+			big.NewInt(send.OutboundTxParams[0].ReceiverChainId),
+			to.Bytes(),
+			big.NewInt(send.GetCurrentOutTxParam().ReceiverChainId),
+			send.GetCurrentOutTxParam().Amount.BigInt(),
+			gasLimit,
+			message,
+			sendhash,
+			send.GetCurrentOutTxParam().OutboundTxTssNonce,
+			gasprice,
+			height,
+		)
 	} else if send.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
-		tx, err = signer.SignOutboundTx(ethcommon.HexToAddress(send.InboundTxParams.Sender), big.NewInt(send.InboundTxParams.SenderChainId), to, send.GetCurrentOutTxParam().Amount.BigInt(), gasLimit, message, sendhash, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice, height)
+		tx, err = signer.SignOutboundTx(
+			ethcommon.HexToAddress(send.InboundTxParams.Sender),
+			big.NewInt(send.InboundTxParams.SenderChainId),
+			to,
+			send.GetCurrentOutTxParam().Amount.BigInt(),
+			gasLimit,
+			message,
+			sendhash,
+			send.GetCurrentOutTxParam().OutboundTxTssNonce,
+			gasprice,
+			height,
+		)
 	}
 
 	if err != nil {

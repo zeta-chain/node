@@ -26,7 +26,7 @@ func (k Keeper) GetPermissionFlags(ctx sdk.Context) (val types.PermissionFlags, 
 	return val, true
 }
 
-func (k Keeper) IsInboundAllowed(ctx sdk.Context) (found bool) {
+func (k Keeper) IsInboundEnabled(ctx sdk.Context) (found bool) {
 	flags, found := k.GetPermissionFlags(ctx)
 	if !found {
 		return false
@@ -34,8 +34,25 @@ func (k Keeper) IsInboundAllowed(ctx sdk.Context) (found bool) {
 	return flags.IsInboundEnabled
 }
 
+func (k Keeper) IsOutboundAllowed(ctx sdk.Context) (found bool) {
+	flags, found := k.GetPermissionFlags(ctx)
+	if !found {
+		return false
+	}
+	return flags.IsOutboundEnabled
+}
+
 // RemovePermissionFlags removes permissionFlags from the store
 func (k Keeper) RemovePermissionFlags(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
 	store.Delete([]byte{0})
+}
+
+func (k Keeper) DisableInboundOnly(ctx sdk.Context) {
+	flags, found := k.GetPermissionFlags(ctx)
+	if !found {
+		flags.IsOutboundEnabled = true
+	}
+	flags.IsInboundEnabled = false
+	k.SetPermissionFlags(ctx, flags)
 }

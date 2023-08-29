@@ -25,7 +25,7 @@ const (
 	Descending Order = "DESC"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (observertypes.PermissionFlags, error) {
+func (b *ZetaCoreBridge) GetPermissionFlags() (observertypes.PermissionFlags, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.PermissionFlags(context.Background(), &observertypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {

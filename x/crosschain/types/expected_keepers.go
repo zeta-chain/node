@@ -55,7 +55,8 @@ type ZetaObserverKeeper interface {
 	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount observertypes.NodeAccount, found bool)
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []observertypes.NodeAccount)
 	SetNodeAccount(ctx sdk.Context, nodeAccount observertypes.NodeAccount)
-	IsInboundAllowed(ctx sdk.Context) (found bool)
+	IsInboundEnabled(ctx sdk.Context) (found bool)
+	IsOutboundAllowed(ctx sdk.Context) (found bool)
 	GetKeygen(ctx sdk.Context) (val observertypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen observertypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags observertypes.PermissionFlags)
@@ -95,8 +96,9 @@ type FungibleKeeper interface {
 		to eth.Address,
 		amountIn *big.Int,
 		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
-	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int, noEthereumTxEvent bool) error
 	DeployZRC20Contract(
 		ctx sdk.Context,
 		name, symbol string,
