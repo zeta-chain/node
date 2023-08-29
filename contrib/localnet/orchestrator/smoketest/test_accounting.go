@@ -71,7 +71,7 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		if err != nil {
 			panic(err)
 		}
-		resp, err := http.Get("http://zetacore0:1317/cosmos/bank/v1beta1/supply/by_denom?denom=azeta")
+		resp, err := http.Get(fmt.Sprintf("http://%s:1317/cosmos/bank/v1beta1/supply/by_denom?denom=azeta", ZetaCoreHostname))
 		if err != nil {
 			panic(err)
 		}

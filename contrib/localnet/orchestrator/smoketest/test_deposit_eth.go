@@ -176,7 +176,7 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 			// debug info when test fails
 			fmt.Printf("  tx: %+v\n", tx)
 			fmt.Printf("  receipt: %+v\n", receipt)
-			fmt.Printf("cctx http://localhost:1317/zeta-chain/crosschain/cctx/%s\n", cctx.Index)
+			fmt.Printf("cctx http://localhost:1317/zeta-chain/crosschain/cctx/%s\n", cctx.Index) //Note: This goes to exposed zetacore node rather than service
 			panic(fmt.Sprintf("expected cctx status PendingRevert; got %s", cctx.CctxStatus.Status))
 		}
 	}()

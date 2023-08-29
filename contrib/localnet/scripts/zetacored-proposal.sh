@@ -2,8 +2,10 @@
 echo "proposal script running..."
 sleep 100
 
-HOSTNAME=$(hostname)
-num=$(echo $HOSTNAME | tr -dc '0-9')
+#DISCOVERED_HOSTNAME=$(hostname)
+DISCOVERED_HOSTNAME=$(nslookup $(hostname -i) | grep '=' | awk -F'= ' '{split($2, a, "."); print a[1]}')
+DISCOVERED_NETWORK=$(echo $DISCOVERED_HOSTNAME |  awk -F'-' '{split($1, a, "-"); print a[1]}')
+num=$(echo $DISCOVERED_HOSTNAME | tr -dc '0-9')
 
 cd /root
 

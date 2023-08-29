@@ -1,7 +1,9 @@
 #!/bin/bash
 
 KEYRING="test"
-HOSTNAME=$(hostname)
+#DISCOVERED_HOSTNAME=$(hostname)
+DISCOVERED_HOSTNAME=$(nslookup $(hostname -i) | grep '=' | awk -F'= ' '{split($2, a, "."); print a[1]}')
+DISCOVERED_NETWORK=$(echo $DISCOVERED_HOSTNAME |  awk -F'-' '{split($1, a, "-"); print a[1]}')
 
 zetacored keys add operator --algo=secp256k1 --keyring-backend=$KEYRING
 zetacored keys add hotkey --algo=secp256k1 --keyring-backend=$KEYRING
