@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"github.com/ethereum/go-ethereum/common"
+	zetacommon "github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
@@ -15,64 +16,95 @@ import (
 	"github.com/zeta-chain/zetacore/server/config"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func TestKeeper_DeploySystemContract(t *testing.T) {
-	t.Run("deploy the system contract at the given address", func(t *testing.T) {
-		// k, ctx := testkeeper.FungibleNoMocks(t)
+// deploySystemContracts deploys the system contracts and returns their addresses.
+func deploySystemContracts(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
+	var err error
+
+	wzeta, err = k.DeployWZETA(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, wzeta)
+
+	uniswapV2Factory, err = k.DeployUniswapV2Factory(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, uniswapV2Factory)
+
+	uniswapV2Router, err = k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+	require.NoError(t, err)
+	require.NotEmpty(t, uniswapV2Router)
+
+	connector, err = k.DeployConnectorZEVM(ctx, wzeta)
+	require.NoError(t, err)
+	require.NotEmpty(t, connector)
+
+	systemContract, err = k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
+	require.NoError(t, err)
+	require.NotEmpty(t, systemContract)
+
+	return
+}
+
+func TestKeeper_DeployZRC20Contract(t *testing.T) {
+	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
+		k, ctx, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			1,
+			zetacommon.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.NoError(t, err)
+
+		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(1))
+		require.NoError(t, err)
+		require.Equal(t, addr, found)
 	})
 }
 
-func TestKeeper_Deploy(t *testing.T) {
-	t.Run("deploy the contracts", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+func TestKeeper_DeploySystemContract(t *testing.T) {
+	t.Run("can deploy the system contracts", func(t *testing.T) {
+		k, ctx, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		// can deploy wzeta
-		wzeta, err := k.DeployWZETA(ctx)
-		require.NoError(t, err)
-		require.NotEmpty(t, wzeta)
-
-		// can deploy uniswap v2 factory
-		uniswapV2Factory, err := k.DeployUniswapV2Factory(ctx)
-		require.NoError(t, err)
-		require.NotEmpty(t, uniswapV2Factory)
-
-		// can deploy uniswap v2 router
-		uniswapV2Router, err := k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
-		require.NoError(t, err)
-		require.NotEmpty(t, uniswapV2Router)
-
-		// can deploy connector zevm
-		connector, err := k.DeployConnectorZEVM(ctx, wzeta)
-		require.NoError(t, err)
-		require.NotEmpty(t, connector)
-
-		// can deploy system contract
-		systemContract, err := k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
-		require.NoError(t, err)
-		require.NotEmpty(t, systemContract)
+		// deploy the system contracts
+		wzeta, uniswapV2Factory, uniswapV2Router, _, systemContract := deploySystemContracts(t, ctx, k)
 
 		// can find system contract address
 		found, err := k.GetSystemContractAddress(ctx)
 		require.NoError(t, err)
 		require.Equal(t, systemContract, found)
 
-		acc := sdkk.EvmKeeper.GetAccount(ctx, systemContract)
-		require.NotNil(t, acc)
-		code := sdkk.EvmKeeper.GetCode(ctx, common.BytesToHash(acc.CodeHash))
-		_ = code
-
 		// can find factory address
+		found, err = k.GetUniswapV2FactoryAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, uniswapV2Factory, found)
+
+		// can find router address
 		found, err = k.GetUniswapV2Router02Address(ctx)
 		require.NoError(t, err)
 		require.Equal(t, uniswapV2Router, found)
 
-		// can find the contract addresses
+		// can find the wzeta contract address
 		found, err = k.GetWZetaContractAddress(ctx)
 		require.NoError(t, err)
 		require.Equal(t, wzeta, found)
+
 	})
 }
 

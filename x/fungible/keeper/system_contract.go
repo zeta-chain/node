@@ -75,7 +75,7 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 	return wzetaResponse.Value, nil
 }
 
-func (k *Keeper) GetUniswapv2FacotryAddress(ctx sdk.Context) (ethcommon.Address, error) {
+func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")

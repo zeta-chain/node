@@ -117,7 +117,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetWZetaContractAddress")
 	}
-	uniswapV2Factory, err := k.GetUniswapv2FacotryAddress(ctx)
+	uniswapV2Factory, err := k.GetUniswapV2FactoryAddress(ctx)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetUniswapv2FacotryAddress")
 	}
