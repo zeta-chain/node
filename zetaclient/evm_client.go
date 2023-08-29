@@ -580,11 +580,11 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
-	permssions, err := ob.zetaClient.GetInboundPermissions()
+	permissions, err := ob.zetaClient.GetPermissionFlags()
 	if err != nil {
 		return err
 	}
-	if !permssions.IsInboundEnabled {
+	if !permissions.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
