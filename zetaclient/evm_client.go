@@ -498,7 +498,12 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	if confHeight < 0 || confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
-	if int64(confHeight) > ob.GetLastBlockHeight() {
+	bn, err := ob.EvmClient.BlockNumber(ctxt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if confHeight > bn {
 		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
 	}

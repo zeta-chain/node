@@ -45,6 +45,7 @@ type Config struct {
 	LogLevel            zerolog.Level `json:"LogLevel"`
 	LogSampler          bool          `json:"LogSampler"`
 	PreParamsPath       string        `json:"PreParamsPath"`
+	ZetaCoreHome        string        `json:"ZetaCoreHome"`
 	ChainID             string        `json:"ChainID"`
 	ZetaCoreURL         string        `json:"ZetaCoreURL"`
 	AuthzGranter        string        `json:"AuthzGranter"`
