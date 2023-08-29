@@ -79,7 +79,7 @@ func (k Keeper) PostTxProcessing(
 // transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return zetacoretypes.ErrNotEnoughPermissions
+		return types.ErrNotEnoughPermissions
 	}
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
