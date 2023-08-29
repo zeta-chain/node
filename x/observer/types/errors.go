@@ -25,4 +25,6 @@ var (
 	ErrKeygenCompleted         = errorsmod.Register(ModuleName, 1115, "Keygen already completed")
 	ErrNotAuthorized           = errorsmod.Register(ModuleName, 1116, "Err not authorized")
 	ErrInvalidCoinType         = errorsmod.Register(ModuleName, 1117, "Invalid coin type")
+	ErrObserverCountNegative   = errorsmod.Register(ModuleName, 1118, "Observer count cannot be negative")
+	ErrInvalidPubKey           = errorsmod.Register(ModuleName, 1119, "Invalid PubKey")
 )
