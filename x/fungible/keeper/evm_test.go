@@ -21,6 +21,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+// get a valid chain id independently of the build flag
+func getValidChainID(t *testing.T) int64 {
+	list := zetacommon.DefaultChainsList()
+	require.NotEmpty(t, list)
+	require.NotNil(t, list[0])
+
+	return list[0].ChainId
+}
+
 // assert that a contract has been deployed by checking stored code is non-empty.
 func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
@@ -72,6 +81,8 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
+		chainID := getValidChainID(t)
+
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -80,7 +91,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			"foo",
 			"bar",
 			8,
-			1,
+			chainID,
 			zetacommon.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
@@ -92,7 +103,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
 		require.True(t, found)
 		require.Equal(t, "foobar", foreignCoins.Asset)
-		require.Equal(t, int64(1), foreignCoins.ForeignChainId)
+		require.Equal(t, chainID, foreignCoins.ForeignChainId)
 		require.Equal(t, uint32(8), foreignCoins.Decimals)
 		require.Equal(t, "foo", foreignCoins.Name)
 		require.Equal(t, "bar", foreignCoins.Symbol)

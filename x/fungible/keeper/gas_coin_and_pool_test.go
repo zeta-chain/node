@@ -41,13 +41,15 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
+		chainID := getValidChainID(t)
+
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, 1, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 
 		// can retrieve the gas coin
-		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(1))
+		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 		require.NoError(t, err)
 		require.Equal(t, zrc20, found)
 	})
