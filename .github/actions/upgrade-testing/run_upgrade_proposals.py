@@ -45,7 +45,8 @@ logger.log.info("-------------------")
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
-tag_list.sort()
+tag_list.sort(key=lambda x: [int(num) for num in x[1:].split('.')])
+
 upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
