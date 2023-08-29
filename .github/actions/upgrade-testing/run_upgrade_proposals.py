@@ -47,8 +47,6 @@ non_consensus_upgrades = []
 
 for tag in tag_list:
     if first:
-        if tag != os.environ["STARTING_VERSION"]:
-            continue
         first_major_version = tag.split(".")[0]
         first_minor_version = tag.split(".")[1]
         first_sub_version = tag.split(".")[2]
@@ -57,7 +55,6 @@ for tag in tag_list:
         major_version = tag.split(".")[0]
         minor_version = tag.split(".")[1]
         sub_version = tag.split(".")[2]
-        #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
         if major_version == first_major_version and minor_version != first_minor_version:
             logger.log.info("NON-CONCENSUS: Major Version Matches, Minor Version Don't Match.")
             non_consensus_upgrades.append(tag)
@@ -76,9 +73,9 @@ for tag in tag_list:
 #os.environ["END_VERSION"] = "v1.2.7"
 #tag_list = json.loads(os.environ["TAG_LIST"])["tag_list"]
 #binary_download_list = json.loads(os.environ["BINARY_DOWNLOAD_LIST"])["binary_download_list"]
+#os.environ["STARTING_VERSION"] = tag_list[0]
 
 logger.log.info("***************************")
-#os.environ["STARTING_VERSION"] = tag_list[0]
 os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
