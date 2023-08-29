@@ -100,10 +100,9 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 
 		tssList := k.GetAllTSS(ctx)
 		if len(tssList) == 0 {
-			k.AppendTss(ctx, tss)
-		} else {
-			k.SetTSSHistory(ctx, tss)
+			k.SetTssAndUpdateNonce(ctx, tss)
 		}
+		k.SetTSSHistory(ctx, tss)
 		keygen.Status = observerTypes.KeygenStatus_KeyGenSuccess
 		keygen.BlockNumber = ctx.BlockHeight()
 
@@ -125,20 +124,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 	if !ok {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "tss pubkey has not been generated")
 	}
-	k.SetTSS(ctx, tss)
-	// initialize the nonces and pending nonces of all enabled chains
-	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
-	for _, chain := range supportedChains {
-		chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}
-		k.SetChainNonces(ctx, chainNonce)
+	k.SetTssAndUpdateNonce(ctx, tss)
 
-		p := types.PendingNonces{
-			NonceLow:  0,
-			NonceHigh: 0,
-			ChainId:   chain.ChainId,
-			Tss:       msg.TssPubkey,
-		}
-		k.SetPendingNonces(ctx, p)
-	}
 	return &types.MsgUpdateTssAddressResponse{}, nil
 }
