@@ -266,7 +266,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	//startTime := time.Now()
 	//smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
-	//smokeTest.TestDepositEtherIntoZRC20()
+	smokeTest.TestDepositEtherIntoZRC20()
 	//smokeTest.TestSendZetaIn()
 	//
 	//zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
