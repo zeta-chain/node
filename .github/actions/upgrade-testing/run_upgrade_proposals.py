@@ -32,6 +32,8 @@ for tag in git_tags:
                 met_starting_point = True
                 tag_list.append(tag)
                 continue
+            elif int(tag.split(".")[0].replace("v", "")) > int(os.environ["STARTING_VERSION"].split(".")[0].replace("v", "")):
+                tag_list.append(tag)
             elif met_starting_point:
                 tag_list.append(tag)
             else:
