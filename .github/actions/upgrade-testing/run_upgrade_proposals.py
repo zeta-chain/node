@@ -30,6 +30,7 @@ for tag in git_tags:
             if int(tag.replace("v", "").replace(".", "")) > int(os.environ["STARTING_VERSION"].replace("v", "").replace(".", "")):
                 tag_list.append(tag)
 
+
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
 tag_list.sort()
