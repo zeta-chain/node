@@ -395,7 +395,7 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
-		if NodeWasPartOfTss(granteePubKey32, t.TssParticipantList) {
+		if WasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
 			if _, ok := tss.Keys[t.TssPubkey]; !ok {
 				return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
 			}
@@ -404,7 +404,7 @@ func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 s
 	return nil
 }
 
-func NodeWasPartOfTss(granteePubKey32 string, granteeList []string) bool {
+func WasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	for _, grantee := range granteeList {
 		if granteePubKey32 == grantee {
 			return true

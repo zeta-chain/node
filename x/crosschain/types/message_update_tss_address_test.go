@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	types2 "github.com/zeta-chain/zetacore/x/observer/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
@@ -42,7 +42,7 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			types2.SetConfig(false)
+			observerTypes.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

@@ -99,7 +99,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		// In Case this is the first TSS address update both current and history
 
 		tssList := k.GetAllTSS(ctx)
-		if len(tssList) <= 1 {
+		if len(tssList) == 0 {
 			k.AppendTss(ctx, tss)
 		} else {
 			k.SetTSSHistory(ctx, tss)

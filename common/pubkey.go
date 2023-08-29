@@ -219,7 +219,7 @@ func GetPubkeyBech32FromRecord(record *keyring.Record) (string, error) {
 
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pk)
 	if err != nil {
-		fmt.Println("fail to get address from pubkey,err:%w", err)
+		return "", errors.New(fmt.Sprintf("fail to get address from pubkey,err:%w", err))
 	}
 	return s, nil
 }
