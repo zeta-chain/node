@@ -95,18 +95,20 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	}
 	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
 	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
-	pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
-	k.SetNodeAccount(ctx, types.NodeAccount{
-		Operator:       msg.ObserverAddress,
-		GranteeAddress: granteeAddress.String(),
-		GranteePubkey:  &pubkeySet,
-		NodeStatus:     types.NodeStatus_Active,
-	})
-
 	k.DisableInboundOnly(ctx)
-	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
-
+	// AddNodeAccountOnly flag usage
+	// True: adds observer into the Node Account list but returns without adding to the observer list
+	// False: adds observer to the observer list, and not the node account list
+	// Inbound is disabled in both cases and needs to be enabled manually using an admin TX
 	if msg.AddNodeAccountOnly {
+		pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator:       msg.ObserverAddress,
+			GranteeAddress: granteeAddress.String(),
+			GranteePubkey:  &pubkeySet,
+			NodeStatus:     types.NodeStatus_Active,
+		})
+		k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 		return &types.MsgAddObserverResponse{}, nil
 	}
 
