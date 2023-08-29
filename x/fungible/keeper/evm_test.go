@@ -67,6 +67,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			&contractAddress,
 			data,
 			true,
+			false,
 			big.NewInt(100),
 			nil,
 		)
@@ -116,6 +117,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			&contractAddress,
 			sample.Bytes(),
 			true,
+			false,
 			big.NewInt(100),
 			big.NewInt(1000),
 		)
@@ -141,6 +143,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			&contractAddress,
 			sample.Bytes(),
 			true,
+			false,
 			big.NewInt(100),
 			nil,
 		)
@@ -176,6 +179,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			&contractAddress,
 			sample.Bytes(),
 			true,
+			false,
 			big.NewInt(100),
 			nil,
 		)
@@ -229,6 +233,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			&contractAddress,
 			data,
 			true,
+			false,
 			big.NewInt(100),
 			nil,
 		)
