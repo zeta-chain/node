@@ -12,9 +12,9 @@ import (
 
 func CmdUpdatePermissionFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-permission-flags [is-inbound-enabled]",
+		Use:   "update-permission-flags [is-inbound-enabled] [is-outbound-enabled]",
 		Short: "Update PermissionFlags",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -25,7 +25,11 @@ func CmdUpdatePermissionFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgUpdatePermissionFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled)
+			arsIsOutboundEnabled, err := strconv.ParseBool(args[1])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgUpdatePermissionFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled, arsIsOutboundEnabled)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

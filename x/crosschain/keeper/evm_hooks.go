@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -79,6 +78,9 @@ func (k Keeper) PostTxProcessing(
 // from registered ZRC20 contract, new CCTX will be created to trigger and track outbound
 // transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return zetacoretypes.ErrNotEnoughPermissions
+	}
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
 		return fmt.Errorf("cannot find system contract")

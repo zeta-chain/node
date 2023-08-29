@@ -50736,6 +50736,8 @@ definitions:
     properties:
       isInboundEnabled:
         type: boolean
+      isOutboundEnabled:
+        type: boolean
   observerPolicy_Type:
     type: string
     enum:
@@ -50744,6 +50746,7 @@ definitions:
       - update_client_params
       - update_keygen_block
       - out_tx_tracker
+      - add_observer
     default: stop_inbound_cctx
     title: '- stop_inbound_cctx: some observer sees inbound tx'
   observerQueryAllBlameRecordsResponse:
