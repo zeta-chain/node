@@ -27,7 +27,7 @@ for tag in git_tags:
         if "-rc" in str(tag):
             continue
         else:
-            if int(tag.replace("v", "")) > int(os.environ["STARTING_VERSION"].replace("v", "")):
+            if int(tag.replace("v", "").replace(".", "")) > int(os.environ["STARTING_VERSION"].replace("v", "").replace(".", "")):
                 tag_list.append(tag)
 
 if len(tag_list) == 0 or len(tag_list) == 1:
