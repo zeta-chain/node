@@ -2,17 +2,18 @@ package keeper_test
 
 import (
 	"encoding/json"
-	zetacommon "github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	zetacommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/server/config"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -20,44 +21,59 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+// assert that a contract has been deployed by checking stored code is non-empty.
+func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
+	acc := k.GetAccount(ctx, contractAddress)
+	require.NotNil(t, acc)
+
+	code := k.GetCode(ctx, common.BytesToHash(acc.CodeHash))
+	require.NotEmpty(t, code)
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,
 	ctx sdk.Context,
 	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
 ) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
 	var err error
 
 	wzeta, err = k.DeployWZETA(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, wzeta)
+	assertContractDeployment(t, evmk, ctx, wzeta)
 
 	uniswapV2Factory, err = k.DeployUniswapV2Factory(ctx)
 	require.NoError(t, err)
 	require.NotEmpty(t, uniswapV2Factory)
+	assertContractDeployment(t, evmk, ctx, uniswapV2Factory)
 
 	uniswapV2Router, err = k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
 	require.NoError(t, err)
 	require.NotEmpty(t, uniswapV2Router)
+	assertContractDeployment(t, evmk, ctx, uniswapV2Router)
 
 	connector, err = k.DeployConnectorZEVM(ctx, wzeta)
 	require.NoError(t, err)
 	require.NotEmpty(t, connector)
+	assertContractDeployment(t, evmk, ctx, connector)
 
 	systemContract, err = k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
 	require.NoError(t, err)
 	require.NotEmpty(t, systemContract)
+	assertContractDeployment(t, evmk, ctx, systemContract)
 
 	return
 }
 
 func TestKeeper_DeployZRC20Contract(t *testing.T) {
 	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
-		k, ctx, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// deploy the system contracts
-		deploySystemContracts(t, ctx, k)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		addr, err := k.DeployZRC20Contract(
 			ctx,
@@ -70,20 +86,28 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			big.NewInt(1000),
 		)
 		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
 
-		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(1))
-		require.NoError(t, err)
-		require.Equal(t, addr, found)
+		// check foreign coin
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Equal(t, "foobar", foreignCoins.Asset)
+		require.Equal(t, int64(1), foreignCoins.ForeignChainId)
+		require.Equal(t, uint32(8), foreignCoins.Decimals)
+		require.Equal(t, "foo", foreignCoins.Name)
+		require.Equal(t, "bar", foreignCoins.Symbol)
+		require.Equal(t, zetacommon.CoinType_Gas, foreignCoins.CoinType)
+		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
 	})
 }
 
 func TestKeeper_DeploySystemContract(t *testing.T) {
 	t.Run("can deploy the system contracts", func(t *testing.T) {
-		k, ctx, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// deploy the system contracts
-		wzeta, uniswapV2Factory, uniswapV2Router, _, systemContract := deploySystemContracts(t, ctx, k)
+		wzeta, uniswapV2Factory, uniswapV2Router, _, systemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// can find system contract address
 		found, err := k.GetSystemContractAddress(ctx)
