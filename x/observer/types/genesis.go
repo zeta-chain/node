@@ -15,7 +15,7 @@ func DefaultGenesis() *GenesisState {
 		Ballots:           nil,
 		Observers:         nil,
 		NodeAccountList:   []*NodeAccount{},
-		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true},
+		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
 		Keygen:            nil,
 		LastObserverCount: nil,
 	}
@@ -39,6 +39,11 @@ func (gs GenesisState) Validate() error {
 		}
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
+
+	if err := VerifyObserverMapper(gs.Observers); err != nil {
+		return err
+	}
+
 	return nil
 }
 

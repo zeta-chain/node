@@ -26922,6 +26922,26 @@ paths:
               type: string
         tags:
             - Query
+  /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}: |
+    get:
+        summary: Queries a InTxHashToCctx data by index.
+        operationId: Query_InTxHashToCctxData
+        responses:
+            "200":
+                description: A successful response.
+                schema:
+                    $ref: '#/definitions/crosschainQueryInTxHashToCctxDataResponse'
+            default:
+                description: An unexpected error response.
+                schema:
+                    $ref: '#/definitions/googlerpcStatus'
+        parameters:
+            - name: inTxHash
+              in: path
+              required: true
+              type: string
+        tags:
+            - Query
   /zeta-chain/crosschain/lastBlockHeight: |
     get:
         summary: Queries a list of lastBlockHeight items.
@@ -50401,6 +50421,14 @@ definitions:
         type: string
       btc:
         type: string
+  crosschainQueryInTxHashToCctxDataResponse:
+    type: object
+    properties:
+      CrossChainTxs:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
   crosschainQueryLastZetaHeightResponse:
     type: object
     properties:
@@ -50708,6 +50736,8 @@ definitions:
     properties:
       isInboundEnabled:
         type: boolean
+      isOutboundEnabled:
+        type: boolean
   observerPolicy_Type:
     type: string
     enum:
@@ -50716,6 +50746,7 @@ definitions:
       - update_client_params
       - update_keygen_block
       - out_tx_tracker
+      - add_observer
     default: stop_inbound_cctx
     title: '- stop_inbound_cctx: some observer sees inbound tx'
   observerQueryAllBlameRecordsResponse:

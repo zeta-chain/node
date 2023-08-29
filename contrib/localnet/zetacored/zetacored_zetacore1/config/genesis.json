@@ -213,7 +213,8 @@
         "observer_emission_percentage": "00.25",
         "tss_signer_emission_percentage": "00.25",
         "duration_factor_constant": "0.001877876953694702"
-      }
+      },
+      "withdrawableEmissions": []
     },
     "evidence": {
       "evidence": []

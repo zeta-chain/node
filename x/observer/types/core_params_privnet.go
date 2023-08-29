@@ -29,7 +29,7 @@ func GetCoreParams() CoreParamsList {
 			{
 
 				ChainId:                     common.ZetaChain().ChainId,
-				ConfirmationCount:           0,
+				ConfirmationCount:           1,
 				GasPriceTicker:              5,
 				ZetaTokenContractAddress:    "0x2DD9830f8Ac0E421aFF9B7c8f7E9DF6F65DBF6Ea",
 				ConnectorContractAddress:    "",
