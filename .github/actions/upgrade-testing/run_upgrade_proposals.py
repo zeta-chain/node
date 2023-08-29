@@ -25,6 +25,7 @@ met_starting_point = False
 for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
+        
         if "-rc" in str(tag):
             continue
         else:
