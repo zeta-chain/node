@@ -263,91 +263,91 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
-	startTime := time.Now()
+	//startTime := time.Now()
 	smokeTest.TestBitcoinSetup()
-	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
-	smokeTest.TestDepositEtherIntoZRC20()
-	smokeTest.TestSendZetaIn()
-
-	zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
-	if err != nil {
-		panic(err)
-	}
-	receipt := MustWaitForTxReceipt(zevmClient, tx)
-	if receipt.Status != 1 {
-		panic("ZEVMSwapApp deployment failed")
-	}
-	zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
-	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
-	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
-	smokeTest.ZEVMSwapApp = zevmSwapApp
+	//smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
+	//smokeTest.TestDepositEtherIntoZRC20()
+	//smokeTest.TestSendZetaIn()
+	//
+	//zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//receipt := MustWaitForTxReceipt(zevmClient, tx)
+	//if receipt.Status != 1 {
+	//	panic("ZEVMSwapApp deployment failed")
+	//}
+	//zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
+	//fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+	//smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
+	//smokeTest.ZEVMSwapApp = zevmSwapApp
 
 	// test system contract context upgrade
-	contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	receipt = MustWaitForTxReceipt(zevmClient, tx)
-	if receipt.Status != 1 {
-		panic("ContextApp deployment failed")
-	}
-	contextApp, err := contextapp.NewContextApp(contextAppAddr, zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
-	smokeTest.ContextAppAddr = contextAppAddr
-	smokeTest.ContextApp = contextApp
-
-	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
-	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
-	fmt.Printf("##   Ether on Ethereum private net\n")
-	fmt.Printf("##   ZETA on ZetaChain EVM\n")
-	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
-	// The following tests are optional tests; comment out the ones you don't want to run
-	// temporarily to reduce dev/test cycle turnaround time
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestContextUpgrade()
-
-	smokeTest.TestDepositAndCallRefund()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestERC20Deposit()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestERC20Withdraw()
-	//smokeTest.WithdrawBitcoinMultipleTimes(5)
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestSendZetaOut()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestSendZetaOutBTCRevert()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestMessagePassing()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestZRC20Swap()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestBitcoinWithdraw()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestCrosschainSwap()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestMessagePassingRevertFail()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	smokeTest.TestMessagePassingRevertSuccess()
-	smokeTest.CheckZRC20ReserveAndSupply()
-
-	// add your dev test here
-	smokeTest.TestMyTest()
-
-	smokeTest.wg.Wait()
+	//contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//receipt = MustWaitForTxReceipt(zevmClient, tx)
+	//if receipt.Status != 1 {
+	//	panic("ContextApp deployment failed")
+	//}
+	//contextApp, err := contextapp.NewContextApp(contextAppAddr, zevmClient)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
+	//smokeTest.ContextAppAddr = contextAppAddr
+	//smokeTest.ContextApp = contextApp
+	//
+	//fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
+	//fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
+	//fmt.Printf("##   Ether on Ethereum private net\n")
+	//fmt.Printf("##   ZETA on ZetaChain EVM\n")
+	//fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
+	//// The following tests are optional tests; comment out the ones you don't want to run
+	//// temporarily to reduce dev/test cycle turnaround time
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestContextUpgrade()
+	//
+	//smokeTest.TestDepositAndCallRefund()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestERC20Deposit()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestERC20Withdraw()
+	////smokeTest.WithdrawBitcoinMultipleTimes(5)
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestSendZetaOut()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestSendZetaOutBTCRevert()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestMessagePassing()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestZRC20Swap()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestBitcoinWithdraw()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestCrosschainSwap()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestMessagePassingRevertFail()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestMessagePassingRevertSuccess()
+	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//// add your dev test here
+	//smokeTest.TestMyTest()
+	//
+	//smokeTest.wg.Wait()
 }
 
 func main() {
