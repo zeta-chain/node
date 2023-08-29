@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
+
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
