@@ -10,6 +10,7 @@ message MsgAddObserver {
 	string creator = 1;
 	string observer_address = 2;
 	string zetaclient_grantee_pubkey = 3;
+	bool add_node_account_only = 4;
 }
 ```
 

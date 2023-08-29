@@ -93,13 +93,6 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
-	observerMappers := k.GetAllObserverMappers(ctx)
-	totalObserverCountCurrentBlock := uint64(0)
-	for _, mapper := range observerMappers {
-		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
-		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
-		k.SetObserverMapper(ctx, mapper)
-	}
 	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
 	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
 	pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
@@ -109,8 +102,21 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		GranteePubkey:  &pubkeySet,
 		NodeStatus:     types.NodeStatus_Active,
 	})
+
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+
+	if msg.AddNodeAccountOnly {
+		return &types.MsgAddObserverResponse{}, nil
+	}
+
+	observerMappers := k.GetAllObserverMappers(ctx)
+	totalObserverCountCurrentBlock := uint64(0)
+	for _, mapper := range observerMappers {
+		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
+		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
+		k.SetObserverMapper(ctx, mapper)
+	}
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
 	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
