@@ -13,7 +13,19 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+// IncreaseCctxGasPrice increases the gas price associated with a CCTX and updates the it in the store
+func (k Keeper) IncreaseCctxGasPrice(ctx sdk.Context, cctx types.CrossChainTx, gasPriceIncrease math.Int) error {
+	currentGasPrice, ok := math.NewIntFromString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+	if !ok {
+		return fmt.Errorf("unable to parse cctx gas price %s", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+	}
+
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = currentGasPrice.Add(gasPriceIncrease).String()
+	k.SetCrossChainTx(ctx, cctx)
+	return nil
+}
+
+// IsAuthorizedNodeAccount checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
