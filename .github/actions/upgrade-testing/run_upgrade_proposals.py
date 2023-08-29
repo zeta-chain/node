@@ -32,9 +32,14 @@ for tag in git_tags:
                 met_starting_point = True
                 tag_list.append(tag)
                 continue
-            if met_starting_point:
+            elif met_starting_point:
                 tag_list.append(tag)
+            else:
+                logger.log.info(f"TAG NOT ADDED {tag}")
 
+logger.log.info("-------------------")
+logger.log.info(tag_list)
+logger.log.info("-------------------")
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
