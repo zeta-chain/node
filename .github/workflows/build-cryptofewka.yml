@@ -1,8 +1,8 @@
 name: 'Build and Push to GHCR'
-on:
-  push:
-    branches:
-      - CryptoFewka-patch-1
+#on:
+#  push:
+#    branches:
+#      - CryptoFewka-patch-1
 
 jobs:
   buildv2:
