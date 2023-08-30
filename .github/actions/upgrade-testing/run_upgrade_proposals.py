@@ -19,24 +19,40 @@ command_runner.MONIKER = os.environ["MONIKER"]
 command_runner.CHAIN_ID = os.environ["CHAIN_ID"]
 
 git_tags = command_runner.run_command("git tag --list > git_tags && cat git_tags && rm -rf git_tags").split("\n")
-p = re.compile(r'[a-z][0-9].[0-9].[0-9]*')
+p = re.compile(r'[a-z][0-9]{1,2}.[0-9]{1,2}.[0-9]*')
 tag_list = []
+met_starting_point = False
 for tag in git_tags:
     if p.match(tag):
         logger.log.info(tag)
         if "-rc" in str(tag):
             continue
         else:
-            tag_list.append(tag)
+            if tag == os.environ["STARTING_VERSION"]:
+                met_starting_point = True
+                tag_list.append(tag)
+                continue
+            elif int(tag.split(".")[0].replace("v", "")) > int(os.environ["STARTING_VERSION"].split(".")[0].replace("v", "")):
+                tag_list.append(tag)
+            elif met_starting_point:
+                tag_list.append(tag)
+            else:
+                logger.log.info(f"TAG NOT ADDED {tag}")
+
+logger.log.info("-------------------")
+logger.log.info(tag_list)
+logger.log.info("-------------------")
 
 if len(tag_list) == 0 or len(tag_list) == 1:
     sys.exit(0)
-tag_list.sort()
+tag_list.sort(key=lambda x: [int(num) for num in x[1:].split('.')])
+
 upgrades_json = open("upgrades.json", "r").read()
 upgrades_json = json.loads(upgrades_json)
 binary_download_list = []
 first = True
 non_consensus_upgrades = []
+
 for tag in tag_list:
     if first:
         first_major_version = tag.split(".")[0]
@@ -47,7 +63,6 @@ for tag in tag_list:
         major_version = tag.split(".")[0]
         minor_version = tag.split(".")[1]
         sub_version = tag.split(".")[2]
-        #Essentially check the last known major and minor version to determine if it was a concensus breaking version change.
         if major_version == first_major_version and minor_version != first_minor_version:
             logger.log.info("NON-CONCENSUS: Major Version Matches, Minor Version Don't Match.")
             non_consensus_upgrades.append(tag)
@@ -64,9 +79,11 @@ for tag in tag_list:
 #non_consensus_upgrades = ["v1.2.5","v1.2.7"]
 #os.environ["STARTING_VERSION"] = "v1.2.0"
 #os.environ["END_VERSION"] = "v1.2.7"
+#tag_list = json.loads(os.environ["TAG_LIST"])["tag_list"]
+#binary_download_list = json.loads(os.environ["BINARY_DOWNLOAD_LIST"])["binary_download_list"]
+#os.environ["STARTING_VERSION"] = tag_list[0]
 
 logger.log.info("***************************")
-os.environ["STARTING_VERSION"] = tag_list[0]
 os.environ["END_VERSION"] = tag_list[len(tag_list)-1]
 logger.log.info("BINARY_UPGRADE_DOWNLOAD_LIST")
 logger.log.info(binary_download_list)
