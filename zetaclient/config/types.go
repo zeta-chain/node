@@ -249,17 +249,17 @@ func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
 	if common.IsBitcoinChain(coreParams.ChainId) && coreParams.WatchUtxoTicker < 1 {
 		return fmt.Errorf("invalid core params: watchUtxo ticker %d", coreParams.WatchUtxoTicker)
 	}
-	//if common.IsEVMChain(coreParams.ChainId) {
-	//	if !validCoreContractAddress(coreParams.ZetaTokenContractAddress) {
-	//		return fmt.Errorf("invalid core params: zeta token contract address %s", coreParams.ZetaTokenContractAddress)
-	//	}
-	//	if !validCoreContractAddress(coreParams.ConnectorContractAddress) {
-	//		return fmt.Errorf("invalid core params: connector contract address %s", coreParams.ConnectorContractAddress)
-	//	}
-	//	if !validCoreContractAddress(coreParams.Erc20CustodyContractAddress) {
-	//		return fmt.Errorf("invalid core params: erc20 custody contract address %s", coreParams.Erc20CustodyContractAddress)
-	//	}
-	//}
+	if common.IsEVMChain(coreParams.ChainId) {
+		if !validCoreContractAddress(coreParams.ZetaTokenContractAddress) {
+			return fmt.Errorf("invalid core params: zeta token contract address %s", coreParams.ZetaTokenContractAddress)
+		}
+		if !validCoreContractAddress(coreParams.ConnectorContractAddress) {
+			return fmt.Errorf("invalid core params: connector contract address %s", coreParams.ConnectorContractAddress)
+		}
+		if !validCoreContractAddress(coreParams.Erc20CustodyContractAddress) {
+			return fmt.Errorf("invalid core params: erc20 custody contract address %s", coreParams.Erc20CustodyContractAddress)
+		}
+	}
 	return nil
 }
 
