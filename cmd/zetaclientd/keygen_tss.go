@@ -34,18 +34,20 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 	// Set TSS block to 0 using genesis file to disable this feature
 	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
+	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	triedKeygenAtBlock := false
 	lastBlock := int64(0)
 	for range ticker.C {
-		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
+		// Break out of loop only when TSS is generated successfully, either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
-		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
+		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
 		keyGen := cfg.GetKeygen()
 		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
-			cfg.TestTssKeysign = true
+			if triedKeygenAtBlock {
+				cfg.TestTssKeysign = true
+			}
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
