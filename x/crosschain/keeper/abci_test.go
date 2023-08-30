@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"testing"
 )
 
 func TestKeeper_IncreaseCctxGasPrice(t *testing.T) {
