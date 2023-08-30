@@ -45,9 +45,6 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 
 		keyGen := cfg.GetKeygen()
 		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
-			if triedKeygenAtBlock {
-				cfg.TestTssKeysign = true
-			}
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
@@ -100,6 +97,10 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				err = SetTSSPubKey(tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("SetTSSPubKey error")
+				}
+				err = TestTSS(tss, keygenLogger)
+				if err != nil {
+					keygenLogger.Error().Err(err).Msg("TestTSS error")
 				}
 				continue
 			}
