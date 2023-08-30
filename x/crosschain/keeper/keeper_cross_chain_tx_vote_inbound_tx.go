@@ -153,7 +153,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			// we create a new cached context, and we don't commit the previous one with EVM deposit
 			tmpCtx, commit := ctx.CacheContext()
 			err = func() error {
-				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, chain.ChainId, &cctx, false)
+				err := k.PayGasInZetaAndUpdateCctx(
+					tmpCtx,
+					chain.ChainId,
+					&cctx,
+					cctx.InboundTxParams.Amount,
+					false,
+				)
 				if err != nil {
 					return err
 				}
@@ -180,7 +186,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	} else { // Cross Chain SWAP
 		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
-			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx, false)
+			err := k.PayGasInZetaAndUpdateCctx(
+				tmpCtx,
+				receiverChain.ChainId,
+				&cctx,
+				cctx.InboundTxParams.Amount,
+				false,
+			)
 			if err != nil {
 				return err
 			}

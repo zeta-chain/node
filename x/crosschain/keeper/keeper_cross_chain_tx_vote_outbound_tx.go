@@ -151,7 +151,13 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 						//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
 						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit,
 					})
-					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx, false)
+					err := k.PayGasInZetaAndUpdateCctx(
+						tmpCtx,
+						cctx.InboundTxParams.SenderChainId,
+						&cctx,
+						cctx.OutboundTxParams[0].Amount,
+						false,
+					)
 					if err != nil {
 						return err
 					}

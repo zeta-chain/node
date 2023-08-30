@@ -25,8 +25,15 @@ func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 // PayGasInZetaAndUpdateCctx updates parameter cctx with the gas price and gas fee for the outbound tx;
 // it also makes a trade to fulfill the outbound tx gas fee in ZETA by swapping ZETA for some gas ZRC20 balances
 // The gas ZRC20 balance is subsequently burned to account for the expense of TSS address gas fee payment in the outbound tx.
+// zetaBurnt represents the amount of Zeta that has been burnt for the tx, the final amount for the tx is zetaBurnt - gasFee
 // **Caller should feed temporary ctx into this function**
-func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx, noEthereumTxEvent bool) error {
+func (k Keeper) PayGasInZetaAndUpdateCctx(
+	ctx sdk.Context,
+	chainID int64,
+	cctx *types.CrossChainTx,
+	zetaBurnt math.Uint,
+	noEthereumTxEvent bool,
+) error {
 	// TODO: this check currently break the integration tests, enable it when integration tests are fixed
 	// https://github.com/zeta-chain/node/issues/1022
 	//if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
@@ -63,17 +70,17 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
-	if cctx.ZetaFees.GT(cctx.InboundTxParams.Amount) {
+	if cctx.ZetaFees.GT(zetaBurnt) {
 		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
 			cctx.ZetaFees,
-			cctx.InboundTxParams.Amount,
+			zetaBurnt,
 			cctx.LogIdentifierForCCTX()),
 		)
 	}
 
-	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", cctx.InboundTxParams.Amount.String(), "feeInZeta",
+	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", zetaBurnt.String(), "feeInZeta",
 		cctx.ZetaFees.String())
-	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
+	cctx.GetCurrentOutTxParam().Amount = zetaBurnt.Sub(cctx.ZetaFees)
 
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
