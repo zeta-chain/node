@@ -1,6 +1,4 @@
 name: 'Build and Push to GHCR'
-description: 'Builds Docker images and pushes them to GHCR'
-
 on:
   push:
     branches:
