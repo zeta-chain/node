@@ -47,12 +47,13 @@ type BTCLog struct {
 type BitcoinChainClient struct {
 	*ChainMetrics
 
-	chain      common.Chain
-	rpcClient  *rpcclient.Client
-	zetaClient *ZetaCoreBridge
-	Tss        TSSSigner
-	lastBlock  int64
-	BlockTime  uint64 // block time in seconds
+	chain            common.Chain
+	rpcClient        *rpcclient.Client
+	zetaClient       *ZetaCoreBridge
+	Tss              TSSSigner
+	lastBlock        int64
+	lastBlockScanned int64
+	BlockTime        uint64 // block time in seconds
 
 	mu                *sync.Mutex // lock for all the maps, utxos and core params
 	pendingCctx       map[string]*types.CrossChainTx
@@ -169,7 +170,6 @@ func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), (block))
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
@@ -179,6 +179,28 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	}
 	if height >= math2.MaxInt64 {
 		panic("lastBlock is too large")
+	}
+	return height
+}
+
+func (ob *BitcoinChainClient) SetLastBlockHeightScanned(block int64) {
+	if block < 0 {
+		panic("lastBlockScanned is negative")
+	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlockScanned is too large")
+	}
+	atomic.StoreInt64(&ob.lastBlockScanned, block)
+	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), (block))
+}
+
+func (ob *BitcoinChainClient) GetLastBlockHeightScanned() int64 {
+	height := atomic.LoadInt64(&ob.lastBlockScanned)
+	if height < 0 {
+		panic("lastBlockScanned is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlockScanned is too large")
 	}
 	return height
 }
@@ -210,15 +232,6 @@ func (ob *BitcoinChainClient) WatchInTx() {
 
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
-	permissions, err := ob.zetaClient.GetPermissionFlags()
-	if err != nil {
-		return err
-	}
-	if !permissions.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
-
-	lastBN := ob.GetLastBlockHeight()
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
@@ -232,6 +245,17 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
 		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
 	}
+	ob.SetLastBlockHeight(confirmedBlockNum)
+
+	permissions, err := ob.zetaClient.GetPermissionFlags()
+	if err != nil {
+		return err
+	}
+	if !permissions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
+	}
+
+	lastBN := ob.GetLastBlockHeightScanned()
 
 	// query incoming gas asset
 	if confirmedBlockNum > lastBN {
@@ -289,8 +313,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// Save LastBlockHeight
-		ob.SetLastBlockHeight(bn)
-		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
+		ob.SetLastBlockHeightScanned(bn)
+		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())).Error; err != nil {
 			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
 		}
 	}
@@ -991,19 +1015,19 @@ func (ob *BitcoinChainClient) LoadLastBlock() error {
 	var lastBlockNum clienttypes.LastBlockSQLType
 	if err := ob.db.First(&lastBlockNum, clienttypes.LastBlockNumID).Error; err != nil {
 		ob.logger.ChainLogger.Info().Msg("LastBlockNum not found in DB, scan from latest")
-		ob.SetLastBlockHeight(bn)
+		ob.SetLastBlockHeightScanned(bn)
 	} else {
-		ob.SetLastBlockHeight(lastBlockNum.Num)
+		ob.SetLastBlockHeightScanned(lastBlockNum.Num)
 
 		//If persisted block number is too low, use the latest height
 		if (bn - lastBlockNum.Num) > maxHeightDiff {
 			ob.logger.ChainLogger.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
-			ob.SetLastBlockHeight(bn)
+			ob.SetLastBlockHeightScanned(bn)
 		}
 	}
 
 	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
-		ob.SetLastBlockHeight(100)
+		ob.SetLastBlockHeightScanned(100)
 	}
 	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.lastBlock)
 

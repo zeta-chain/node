@@ -117,7 +117,7 @@ func (b *ZetaCoreBridge) Stop() {
 }
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
-func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(keyType common.KeyType) (uint64, uint64, error) {
+func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (uint64, uint64, error) {
 	ctx := b.GetContext()
 	address := b.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
@@ -190,9 +190,16 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	}
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
-		return err
+		b.logger.Info().Msg("Unable to fetch keygen from zetacore")
 	}
 	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
+	cfg.Keygen = *keyGen
+	tss, err := b.GetCurrentTss()
+	if err != nil {
+		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")
+	} else {
+		cfg.CurrentTssPubkey = tss.GetTssPubkey()
+	}
 	return nil
 }

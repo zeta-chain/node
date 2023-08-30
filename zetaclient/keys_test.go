@@ -16,6 +16,7 @@ import (
 	cryptokeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/zetacore/cmd"
@@ -75,7 +76,12 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	_, err := GetKeyringKeybase("bob", "/Users/test/.zetacored/", "")
+	cfg := &config.Config{
+		AuthzHotkey:  "bob",
+		ZetaCoreHome: "/Users/test/.zetacored/",
+		SignerPass:   "",
+	}
+	_, _, err := GetKeyringKeybase(cfg)
 	c.Assert(err, NotNil)
 }
 
@@ -91,7 +97,13 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 		c.Assert(err, IsNil)
 	}()
 
-	k, err := GetKeyringKeybase(signerNameForTest, folder, signerPasswordForTest)
+	cfg := &config.Config{
+		AuthzHotkey:  signerNameForTest,
+		ZetaCoreHome: folder,
+		SignerPass:   signerPasswordForTest,
+	}
+
+	k, _, err := GetKeyringKeybase(cfg)
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
 	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
