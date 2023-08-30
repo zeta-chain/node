@@ -10,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 var ErrSample = errors.New("sample error")
@@ -31,6 +33,20 @@ func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
+}
+
+// PubKey returns a sample public key and address
+func PubKey() string {
+	priKey := ed25519.GenPrivKey()
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
+	if err != nil {
+		panic(err)
+	}
+	pubkey, err := common.NewPubKey(s)
+	if err != nil {
+		panic(err)
+	}
+	return pubkey.String()
 }
 
 // PrivKeyAddressPair returns a private key, address pair

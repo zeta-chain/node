@@ -11,6 +11,7 @@ import (
 	"github.com/tendermint/crypto/sha3"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -19,9 +20,9 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer, tssHistoricalList []types.TSS) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge)
+	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge, tssHistoricalList)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")
 		return nil, err
@@ -143,6 +144,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		keygenLogger.Error().Msgf("keygen fail: reason %s ", err.Error())
 		return err
 	}
+	// Keeping this line here for now, but this is redundant as CurrentPubkey is updated from zeta-core
 	tss.CurrentPubkey = res.PubKey
 	tss.Signers = keyGen.GranteePubkeys
 
