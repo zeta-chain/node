@@ -14,7 +14,7 @@ import (
 
 // FIXME: use more specific error types & codes
 
-// Casts a vote on an inbound transaction observed on a connected chain. If this
+// VoteOnObservedInboundTx casts a vote on an inbound transaction observed on a connected chain. If this
 // is the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 // created.
@@ -128,6 +128,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain.IsZetaChain() {
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
+
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -152,13 +153,29 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				OutboundTxGasLimit: 0, // for fungible refund, use default gasLimit
 				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
 			})
-			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
+
+			// we create a new cached context, and we don't commit the previous one with EVM deposit
+			tmpCtx, commit := ctx.CacheContext()
+			err = func() error {
+				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, chain.ChainId, &cctx, false)
+				if err != nil {
+					return err
+				}
+				err = k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
+				if err != nil {
+					return err
+				}
+				return nil
+			}()
+			if err != nil {
+				// do not commit anything here as the CCTX should be aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-			// do not commit() here;
+			commit()
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+
 		} else { // successful HandleEVMDeposit;
 			commit()
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")

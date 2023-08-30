@@ -13,7 +13,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Casts a vote on an outbound transaction observed on a connected chain (after
+// VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, the outbound
