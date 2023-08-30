@@ -28,7 +28,6 @@ import (
 	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaconnector "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	metricspkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
