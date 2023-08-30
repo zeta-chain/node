@@ -53,6 +53,7 @@ message OutboundTxParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  string tss_pubkey = 11;
 }
 
 message Status {

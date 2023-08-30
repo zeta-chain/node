@@ -42,7 +42,7 @@ func (s *CliTestSuite) SetupSuite() {
 	observerList := []string{"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
 		"zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
 	}
-	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
+	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList, false)
 	s.crosschainState = network.AddCrosschainData(s.T(), 2, s.cfg.GenesisState, s.cfg.Codec)
 	s.observerState = network.AddObserverData(s.T(), s.cfg.GenesisState, s.cfg.Codec, nil)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
