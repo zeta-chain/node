@@ -8,7 +8,7 @@ jobs:
   buildv2:
     runs-on: ubuntu-latest
     env:
-      GHCR_REGISTRY: CryptoFewka
+      GHCR_REGISTRY: cryptofewka
       IMAGE_TAG: latest
     steps:
       - name: Set Environment Variables"
@@ -32,7 +32,7 @@ jobs:
       #  id: login-ecr
       #  uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and push Dockekr image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
