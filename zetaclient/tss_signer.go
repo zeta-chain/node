@@ -387,8 +387,8 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	}
 	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
-		fmt.Println("ReadDir error", err)
-		return nil, err
+		//return nil, err
+		fmt.Println("VerifyKeysharesForPubkeys error :", err.Error())
 	}
 	return &newTss, nil
 }
