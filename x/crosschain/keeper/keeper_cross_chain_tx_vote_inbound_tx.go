@@ -139,19 +139,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
-			if !isFound {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "cannot find gas price")
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-			}
 			// create new OutboundTxParams for the revert
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
 				Receiver:           cctx.InboundTxParams.Sender,
 				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
 				Amount:             cctx.InboundTxParams.Amount,
 				CoinType:           cctx.InboundTxParams.CoinType,
-				OutboundTxGasLimit: 0, // for fungible refund, use default gasLimit
-				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
+				OutboundTxGasLimit: msg.GasLimit, // use same gas limit as outbound, TODO: determine a specific revert gas limit
 			})
 
 			// we create a new cached context, and we don't commit the previous one with EVM deposit

@@ -40,7 +40,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
 		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ",
-			cctx.GetCurrentOutTxParam().ReceiverChainId,
+			chain.ChainId,
 			cctx.LogIdentifierForCCTX()),
 		)
 	}
