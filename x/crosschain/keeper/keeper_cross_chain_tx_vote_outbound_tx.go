@@ -143,11 +143,13 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 				case types.CctxStatus_PendingOutbound:
 					// create new OutboundTxParams for the revert
 					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-						Receiver:           cctx.InboundTxParams.Sender,
-						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-						Amount:             cctx.InboundTxParams.Amount,
-						CoinType:           cctx.InboundTxParams.CoinType,
-						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+						Receiver:        cctx.InboundTxParams.Sender,
+						ReceiverChainId: cctx.InboundTxParams.SenderChainId,
+						Amount:          cctx.InboundTxParams.Amount,
+						CoinType:        cctx.InboundTxParams.CoinType,
+						// NOTE(pwu): revert gas limit = initial outbound gas limit set by user
+						//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
+						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit,
 					})
 					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx, false)
 					if err != nil {

@@ -141,11 +141,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			}
 			// create new OutboundTxParams for the revert
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-				Receiver:           cctx.InboundTxParams.Sender,
-				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-				Amount:             cctx.InboundTxParams.Amount,
-				CoinType:           cctx.InboundTxParams.CoinType,
-				OutboundTxGasLimit: msg.GasLimit, // use same gas limit as outbound, TODO: determine a specific revert gas limit
+				Receiver:        cctx.InboundTxParams.Sender,
+				ReceiverChainId: cctx.InboundTxParams.SenderChainId,
+				Amount:          cctx.InboundTxParams.Amount,
+				CoinType:        cctx.InboundTxParams.CoinType,
+				// use same gas limit as outbound
+				//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
+				OutboundTxGasLimit: msg.GasLimit,
 			})
 
 			// we create a new cached context, and we don't commit the previous one with EVM deposit
