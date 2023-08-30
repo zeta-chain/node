@@ -84,7 +84,7 @@ func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
-	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain)
+	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain, "")
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -178,7 +178,7 @@ func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.
 func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain)
+	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain, "")
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height ui
 func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, to, amount, 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
-	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain)
+	sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain, "")
 	if err != nil {
 		return nil, err
 	}
