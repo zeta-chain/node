@@ -56,8 +56,8 @@ var stressTestArgs = stressArguments{}
 func init() {
 	RootCmd.AddCommand(StressCmd)
 	StressCmd.Flags().StringVar(&stressTestArgs.ethURL, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
-	StressCmd.Flags().StringVar(&stressTestArgs.grpcURL, "grpcURL", "zetacore0:9090", "--grpcURL zetacore0:9090")
-	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", "http://zetacore0:8545", "--zevmURL http://zetacore0:8545")
+	StressCmd.Flags().StringVar(&stressTestArgs.grpcURL, "grpcURL", "zetacore:9090", "--grpcURL zetacore:9090")
+	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", "http://zetacore:8545", "--zevmURL http://zetacore:8545")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().BoolVar(&stressTestArgs.local, "local", true, "--local")

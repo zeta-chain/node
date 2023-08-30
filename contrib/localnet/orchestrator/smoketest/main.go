@@ -53,7 +53,8 @@ var (
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
 	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
-	HexToAddress = ethcommon.HexToAddress
+	HexToAddress     = ethcommon.HexToAddress
+	ZetaCoreHostname = "zetacore"
 )
 
 type SmokeTest struct {
@@ -137,7 +138,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 		response, err = cctxClient.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
-			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
+			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore network...\n")
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -213,7 +214,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	grpcConn, err := grpc.Dial("zetacore0:9090", grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(fmt.Sprintf("%s:9090", ZetaCoreHostname), grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
@@ -243,8 +244,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	var zevmClient *ethclient.Client
 	for {
 		time.Sleep(5 * time.Second)
-		fmt.Printf("dialing zevm client: http://zetacore0:8545\n")
-		zevmClient, err = ethclient.Dial("http://zetacore0:8545")
+		fmt.Sprintf("dialing zevm client: http://%s:8545\n", ZetaCoreHostname)
+		zevmClient, err = ethclient.Dial(fmt.Sprintf("http://%s:8545", ZetaCoreHostname))
 		if err != nil {
 			continue
 		}

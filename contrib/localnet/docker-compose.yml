@@ -6,97 +6,74 @@ networks:
       config:
         - subnet: 172.20.0.0/24
 
-
 services:
   rosetta:
     image: zetanode:latest
-    container_name: rosetta
-    hostname: rosetta
     ports:
       - "8080:8080"
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+      - mynetwork
+    depends_on:
+      - zetacore
+    entrypoint: ["zetacored", "rosetta", "--tendermint", "localnet-zetacore-1:26657", "--grpc", "localnet-zetacore-1:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
 
-  zetacore0:
-    image: zetanode:latest
-    container_name: zetacore0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetacore0
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - zetacore
+      - zetaclient
+      - eth
+      - bitcoin
     ports:
       - "1317:1317"
-      - "9545:8545"
-      - "9546:8546"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis.sh", "2"]
+      - "9545:9545"
+      - "9546:9546"
 
-
-  zetacore1:
+  zetacore:
     image: zetanode:latest
-    container_name: zetacore1
     build:
       context: ../../.
       dockerfile: Dockerfile
-    hostname: zetacore1
+    deploy:
+      mode: replicated
+      #scale up immediately via script if desired replicas is >2
+      replicas: 2
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.12
-    entrypoint: ["/root/genesis.sh", "2"]
+      - mynetwork
+    entrypoint: ["/root/genesis.sh", "2"] #set the argument for geneis.sh to replcas
 
-
-  zetaclient0:
+  zetaclient:
     image: zetanode:latest
-    container_name: zetaclient0
     build:
       context: ../../.
       dockerfile: Dockerfile
-    hostname: zetaclient0
+    deploy:
+      mode: replicated
+      #scale up immediately via script if desired replicas is >2
+      replicas: 2
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd-genesis.sh
-    environment:
-      - ETHDEV_ENDPOINT=http://eth:8545
-
-  zetaclient1:
-    image: zetanode:latest
-    container_name: zetaclient1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetaclient1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.22
+      - mynetwork
     entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
   eth:
     image: ethereum/client-go:v1.10.26
-    container_name: eth
-    hostname: eth
-    ports:
-      - "8545:8545"
+    expose:
+      - 8545
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+      - mynetwork
+    # TODO: Fix runing GETH open to the world on 8545 with nginx by discovering own IP and setting it for http.addr
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "0.0.0.0", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
   bitcoin:
     image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
-    container_name: bitcoin
-    hostname: bitcoin
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.101
-    ports:
-      - "18443:18443"
+      - mynetwork
+    expose:
+      - 18443
     command:
       -printtoconsole
       -regtest=1
@@ -112,11 +89,11 @@ services:
       context: ../../.
       dockerfile: contrib/localnet/orchestrator/Dockerfile
     depends_on:
-      - zetacore0
+      - zetacore
       - eth
+      - bitcoin
     hostname: orchestrator
     networks:
-      mynetwork:
-        ipv4_address: 172.20.0.2
+      - mynetwork
     entrypoint: ["/work/start.sh", "local"]
 
