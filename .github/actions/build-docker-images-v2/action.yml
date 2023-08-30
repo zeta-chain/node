@@ -1,8 +1,13 @@
 name: 'Build and Push to GHCR'
 description: 'Builds Docker images and pushes them to GHCR'
 
+on:
+  push:
+    branches:
+      - CryptoFewka-patch-1
+
 jobs:
-  build:
+  buildv2:
     runs-on: ubuntu-latest
     env:
       GHCR_REGISTRY: CryptoFewka
