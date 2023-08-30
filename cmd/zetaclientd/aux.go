@@ -1,7 +1,6 @@
 package main
 
 import (
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -73,7 +72,8 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 		}
 		co, err := zetaclient.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, *evmConfig, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewEVMChainClient error for chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
+			continue
 		}
 		clientMap[evmConfig.Chain] = co
 	}
@@ -82,9 +82,11 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 	if enabled {
 		co, err := zetaclient.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewBitcoinClient error for chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
+
+		} else {
+			clientMap[btcChain] = co
 		}
-		clientMap[btcChain] = co
 	}
 
 	return clientMap, nil
