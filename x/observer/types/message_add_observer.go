@@ -11,11 +11,12 @@ const TypeMsgAddObserver = "add_observer"
 
 var _ sdk.Msg = &MsgAddObserver{}
 
-func NewMsgAddObserver(creator string, observerAdresss, zetaclientGranteePubKey string) *MsgAddObserver {
+func NewMsgAddObserver(creator string, observerAdresss string, zetaclientGranteePubKey string, addNodeAccountOnly bool) *MsgAddObserver {
 	return &MsgAddObserver{
 		Creator:                 creator,
 		ObserverAddress:         observerAdresss,
 		ZetaclientGranteePubkey: zetaclientGranteePubKey,
+		AddNodeAccountOnly:      addNodeAccountOnly,
 	}
 }
 
