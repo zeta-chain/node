@@ -18,7 +18,7 @@ func TestKeeper_IncreaseCctxGasPrice(t *testing.T) {
 		require.True(t, ok)
 
 		// increase gas price
-		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewInt(42))
+		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewUint(42))
 		require.NoError(t, err)
 
 		// can retrieve cctx
@@ -34,7 +34,7 @@ func TestKeeper_IncreaseCctxGasPrice(t *testing.T) {
 	t.Run("fail if invalid cctx", func(t *testing.T) {
 		cctx := *sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalid"
-		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewInt(42))
+		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewUint(42))
 		require.Error(t, err)
 	})
 
