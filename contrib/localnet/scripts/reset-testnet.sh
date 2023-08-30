@@ -21,12 +21,12 @@ END=$((NUMOFNODES))
 NODELIST=()
 for i in $(eval echo "{$START..$END}")
 do
-  NODELIST+=("zetacore_node-$i")
+  NODELIST+=("zetacore-$i")
 done
 
-if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore_node-1" ]
+if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore-1" ]
 then
-  echo "You should run this only on $DISCOVERED_NETWORK-zetacore_node-1."
+  echo "You should run this only on $DISCOVERED_NETWORK-zetacore-1."
   exit 1
 fi
 
@@ -82,7 +82,7 @@ for NODE in "${NODELIST[@]}"; do
     scp $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
 done
 
-# 4. Collect all the gentx files in zetacore_node-1 and create the final genesis.json
+# 4. Collect all the gentx files in zetacore-1 and create the final genesis.json
 zetacored collect-gentxs
 zetacored validate-genesis
 
@@ -92,7 +92,7 @@ for NODE in "${NODELIST[@]}"; do
     scp ~/.zetacored/config/genesis.json $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/genesis.json
 done
 
-# 6. Update Config in zetacore_node-1 so that it has the correct persistent peer list
+# 6. Update Config in zetacore-1 so that it has the correct persistent peer list
 sleep 2
 pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
 pps=${pp:1:58}

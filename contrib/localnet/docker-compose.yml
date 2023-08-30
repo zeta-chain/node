@@ -14,15 +14,15 @@ services:
     networks:
       - mynetwork
     depends_on:
-      - zetacore_node
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "localnet-zetacore_node-1:26657", "--grpc", "localnet-zetacore_node-1:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
+      - zetacore
+    entrypoint: ["zetacored", "rosetta", "--tendermint", "localnet-zetacore-1:26657", "--grpc", "localnet-zetacore-1:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
 
   nginx:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - zetacore_node
+      - zetacore
       - zetaclient
       - eth
       - bitcoin
@@ -31,7 +31,7 @@ services:
       - "9545:9545"
       - "9546:9546"
 
-  zetacore_node:
+  zetacore:
     image: zetanode:latest
     build:
       context: ../../.
@@ -89,7 +89,7 @@ services:
       context: ../../.
       dockerfile: contrib/localnet/orchestrator/Dockerfile
     depends_on:
-      - zetacore_node
+      - zetacore
       - eth
       - bitcoin
     hostname: orchestrator

@@ -54,7 +54,7 @@ var (
 	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress     = ethcommon.HexToAddress
-	ZetaCoreHostname = "zetacore_node"
+	ZetaCoreHostname = "zetacore"
 )
 
 type SmokeTest struct {

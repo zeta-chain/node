@@ -15,12 +15,12 @@ if [ $DISCOVERED_HOSTNAME == "$DISCOVERED_NETWORK-zetaclient-1" ]
 then
     rm ~/.tss/address_book.seed
     zetaclientd init \
-      --pre-params ~/preParams.json  --zetacore-url $DISCOVERED_NETWORK-zetacore_node-1 \
+      --pre-params ~/preParams.json  --zetacore-url $DISCOVERED_NETWORK-zetacore-1 \
       --chain-id athens_101-1 --operator zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz --log-level 1 --hotkey=val_grantee_observer
     zetaclientd start
 else
   num=$(echo $DISCOVERED_HOSTNAME | tr -dc '0-9')
-  node="zetacore_node-$num"
+  node="zetacore-$num"
   SEED=$(curl --retry 10 --retry-delay 5 --retry-connrefused  -s $DISCOVERED_NETWORK-zetaclient-1:8123/p2p)
   ZETACLIENT_IP=$(dig +short $DISCOVERED_NETWORK-zetaclient-1 | awk '{ print; exit }')
   zetaclientd init \

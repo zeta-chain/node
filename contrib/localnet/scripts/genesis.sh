@@ -25,7 +25,7 @@ END=$((NUMOFNODES))
 NODELIST=()
 for i in $(eval echo "{$START..$END}")
 do
-  NODELIST+=("zetacore_node-$i")
+  NODELIST+=("zetacore-$i")
 done
 
 echo "DISCOVERED_HOSTNAME: $DISCOVERED_HOSTNAME"
@@ -46,9 +46,9 @@ sed -i -e "/moniker =/s/=.*/= \"$DISCOVERED_HOSTNAME\"/" "$HOME"/.zetacored/conf
 source ~/os-info.sh
 
 # Pause other nodes so that the primary can node can do the genesis creation
-if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore_node-1" ]
+if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore-1" ]
 then
-  echo "Waiting for $DISCOVERED_NETWORK-zetacore_node-1 to create genesis.json"
+  echo "Waiting for $DISCOVERED_NETWORK-zetacore-1 to create genesis.json"
   sleep $((7*NUMOFNODES))
   echo "genesis.json created" #Is it? Should check for safety.
 fi
@@ -57,13 +57,13 @@ fi
 # 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
 # 2. Add the observers , authorizations and required params to the genesis.json
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
-# 4. Collect all the gentx files in zetacore_node-1 and create the final genesis.json
+# 4. Collect all the gentx files in zetacore-1 and create the final genesis.json
 # 5. Copy the final genesis.json to all the nodes and start the nodes
-# 6. Update Config in zetacore_node-1 so that it has the correct persistent peer list
+# 6. Update Config in zetacore-1 so that it has the correct persistent peer list
 # 7. Start the nodes
 
-# Start of genesis creation . This is done only on zetacore_node-1
-if [ "$DISCOVERED_HOSTNAME" == "$DISCOVERED_NETWORK-zetacore_node-1" ]
+# Start of genesis creation . This is done only on zetacore-1
+if [ "$DISCOVERED_HOSTNAME" == "$DISCOVERED_NETWORK-zetacore-1" ]
 then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh $DISCOVERED_NETWORK-zetaclient-1 mkdir -p ~/.zetacored/keyring-test/
@@ -109,7 +109,7 @@ then
       scp $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/gentx/* ~/.zetacored/config/gentx/z2gentx/
   done
 
-# 4. Collect all the gentx files in zetacore_node-1 and create the final genesis.json
+# 4. Collect all the gentx files in zetacore-1 and create the final genesis.json
   zetacored collect-gentxs
   zetacored validate-genesis
 # 5. Copy the final genesis.json to all the nodes
@@ -117,7 +117,7 @@ then
       ssh $DISCOVERED_NETWORK-$NODE rm -rf ~/.zetacored/genesis.json
       scp ~/.zetacored/config/genesis.json $DISCOVERED_NETWORK-$NODE:~/.zetacored/config/genesis.json
   done
-# 6. Update Config in zetacore_node-1 so that it has the correct persistent peer list
+# 6. Update Config in zetacore-1 so that it has the correct persistent peer list
   sleep 2
   pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
   pps=${pp:1:58}
@@ -126,7 +126,7 @@ fi
 # End of genesis creation steps . The steps below are common to all the nodes
 
 # Update persistent peers
-if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore_node-1" ]
+if [ $DISCOVERED_HOSTNAME != "$DISCOVERED_NETWORK-zetacore-1" ]
 then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh $DISCOVERED_NETWORK-zetaclient-"$INDEX" mkdir -p ~/.zetacored/keyring-test/
