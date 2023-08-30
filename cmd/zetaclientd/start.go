@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -70,6 +71,17 @@ func start(_ *cobra.Command, _ []string) error {
 	zetaBridge.WaitForCoreToCreateBlocks()
 	startLogger.Info().Msgf("ZetaBridge is ready")
 	zetaBridge.SetAccountNumber(common.ZetaClientGranteeKey)
+
+	// cross check chainid
+	res, err := zetaBridge.GetNodeInfo()
+	if err != nil {
+		panic(err)
+	}
+	//if res.Network != cfg.ChainID {
+	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
+		startLogger.Warn().Msgf("chain id mismatch, zetacore chain id %s, zetaclient chain id %s; reset zetaclient chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
+		cfg.ChainID = res.GetDefaultNodeInfo().Network
+	}
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
 	// This is to ensure that the user does not need to keep their operator key online , and can use a cold key to sign votes

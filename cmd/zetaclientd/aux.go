@@ -45,7 +45,8 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.CoreParams.Erc20CustodyContractAddress)
 		signer, err := zetaclient.NewEVMSigner(evmConfig.Chain, evmConfig.Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			continue
 		}
 		signerMap[evmConfig.Chain] = signer
 	}
@@ -54,9 +55,10 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 	if enabled {
 		signer, err := zetaclient.NewBTCSigner(btcConfig, tss, logger, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewBTCSigner error for chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+		} else {
+			signerMap[btcChain] = signer
 		}
-		signerMap[btcChain] = signer
 	}
 
 	return signerMap, nil

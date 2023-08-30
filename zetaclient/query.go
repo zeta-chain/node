@@ -161,6 +161,16 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 	return res.Block, nil
 }
 
+func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
+	if err != nil {
+		b.logger.Error().Err(err).Msg("query GetNodeInfo error")
+		return nil, err
+	}
+	return res, nil
+}
+
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
