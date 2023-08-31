@@ -139,7 +139,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 
 						// Scan missed pending cctx in history
-						missedList := co.scanner.ScanMissedPendingCctx(c.ChainId, pendingNonces)
+						missedList := co.scanner.ScanMissedPendingCctx(bn, c.ChainId, pendingNonces)
 						if missedList != nil {
 							sendList = append(missedList, sendList...)
 						}

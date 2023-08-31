@@ -47,17 +47,22 @@ func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, logger *z
 }
 
 // Scan a new batch of missed pending cctx
-func (sc *CctxScanner) ScanMissedPendingCctx(chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
+func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
+	// tss migration detection
+	if pendingNonces.NonceLow == 0 {
+		sc.Reset()
+		sc.logger.Info().Msgf("scanner: tss migration is detected at zetachain height %d", bn)
+	}
 	// initialize missed cctx map
 	if _, found := sc.missedPendingCctx[chainID]; !found {
 		sc.missedPendingCctx[chainID] = make(map[uint64]*crosschaintypes.CrossChainTx)
 	}
 
-	// starts at 'NextNonceToScan' and ends at 'NonceLow'
+	// calculate nonce range to scan
 	nonceFrom, found := sc.nextNonceToScan[chainID]
-	if !found { // uses db nonce to start scanning
+	if !found { // uses db nonce on restart
 		nonceFrom = sc.firstNonceToScan[chainID]
-		sc.logger.Info().Msgf("scanner for chain %d starts from nonce %d", chainID, nonceFrom)
+		sc.logger.Info().Msgf("scanner: chain %d starts from nonce %d", chainID, nonceFrom)
 	}
 	nonceTo := nonceFrom + RescanBatchSize
 	if nonceTo > uint64(pendingNonces.NonceLow) {
@@ -68,7 +73,7 @@ func (sc *CctxScanner) ScanMissedPendingCctx(chainID int64, pendingNonces *cross
 	if nonceFrom < nonceTo {
 		missedList, err := sc.bridge.GetAllPendingCctxInNonceRange(chainID, nonceFrom, nonceTo)
 		if err != nil {
-			sc.logger.Error().Err(err).Msgf("failed to get pending cctx for chain %d from nonce %d to %d", chainID, nonceFrom, nonceTo)
+			sc.logger.Error().Err(err).Msgf("scanner: failed to get pending cctx for chain %d from nonce %d to %d", chainID, nonceFrom, nonceTo)
 			return sc.AllMissedPendingCctxByChain(chainID)
 		}
 		sc.addMissedPendingCctx(chainID, nonceFrom, nonceTo, missedList)
@@ -76,6 +81,7 @@ func (sc *CctxScanner) ScanMissedPendingCctx(chainID int64, pendingNonces *cross
 	return sc.AllMissedPendingCctxByChain(chainID)
 }
 
+// Note: deep clone is unnecessary as the cctx list is used in a single thread
 func (sc *CctxScanner) AllMissedPendingCctxByChain(chainID int64) []*crosschaintypes.CrossChainTx {
 	missed := make([]*crosschaintypes.CrossChainTx, 0)
 	for _, send := range sc.missedPendingCctx[chainID] {
@@ -96,7 +102,7 @@ func (sc *CctxScanner) IsMissedPendingCctx(chainID int64, nonce uint64) bool {
 func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64, nonceLow uint64) {
 	send, err := sc.bridge.GetCctxByNonce(chainID, nonce)
 	if err != nil {
-		sc.logger.Error().Err(err).Msgf("error GetCctxByNonce for chain %d nonce %d", chainID, nonce)
+		sc.logger.Error().Err(err).Msgf("scanner: error GetCctxByNonce for chain %d nonce %d", chainID, nonce)
 		return
 	}
 	if crosschaintypes.IsCctxStatusPending(send.CctxStatus.Status) {
@@ -109,11 +115,11 @@ func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64, nonc
 		// forget about this missed cctx as max retry (as its tracker might not exist in zetacore)
 		if sc.missedPendingCctxRetry[chainID][nonce] == MaxRetryOnMissedCctx {
 			sc.removeMissedPendingCctx(chainID, nonce, nonceLow)
-			sc.logger.Warn().Msgf("forget about missed pending cctx for chain %d nonce %d", chainID, nonce)
+			sc.logger.Warn().Msgf("scanner: forget about missed pending cctx for chain %d nonce %d", chainID, nonce)
 		}
 	} else { // no longer pending
 		sc.removeMissedPendingCctx(chainID, nonce, nonceLow)
-		sc.logger.Info().Msgf("removed missed pending cctx for chain %d nonce %d", chainID, nonce)
+		sc.logger.Info().Msgf("scanner: removed missed pending cctx for chain %d nonce %d", chainID, nonce)
 	}
 }
 
@@ -126,8 +132,9 @@ func (sc *CctxScanner) addMissedPendingCctx(chainID int64, nonceFrom uint64, non
 	}
 	sc.nextNonceToScan[chainID] = nonceTo
 	if len(nonces) > 0 {
-		sc.logger.Info().Msgf("found missed pending cctx for chain %d with nonces %v", chainID, nonces)
+		sc.logger.Info().Msgf("scanner: found missed pending cctx for chain %d with nonces %v", chainID, nonces)
 	}
+	sc.saveFirstNonceToScan(chainID)
 }
 
 func (sc *CctxScanner) removeMissedPendingCctx(chainID int64, nonce uint64, nonceLow uint64) {
@@ -135,17 +142,20 @@ func (sc *CctxScanner) removeMissedPendingCctx(chainID int64, nonce uint64, nonc
 	sc.saveFirstNonceToScan(chainID)
 }
 
-// Save the lowest missed nonce as the 'NextNonceToScan' for catching up
 func (sc *CctxScanner) saveFirstNonceToScan(chainID int64) {
-	lowestMissed := uint64(math.MaxUint64)
-	for nonceMissed := range sc.missedPendingCctx[chainID] {
-		if nonceMissed < lowestMissed {
-			lowestMissed = nonceMissed
+	firstNonceToScan := uint64(math.MaxUint64)
+	if len(sc.missedPendingCctx[chainID]) > 0 { // save the lowest nonce for future restart if there ARE missed pending cctx
+		for nonceMissed := range sc.missedPendingCctx[chainID] {
+			if nonceMissed < firstNonceToScan {
+				firstNonceToScan = nonceMissed
+			}
 		}
+	} else { // save the 'NextNonceToScan' for future restart if no missed pending cctx found so far
+		firstNonceToScan = sc.nextNonceToScan[chainID]
 	}
-	if lowestMissed < uint64(math.MaxUint64) {
-		if err := sc.db.Save(clienttypes.ToFirstNonceToScanSQLType(chainID, lowestMissed)).Error; err != nil {
-			sc.logger.Error().Err(err).Msgf("error writing lowest missed nonce for chain %d nonce %d", chainID, lowestMissed)
+	if firstNonceToScan < uint64(math.MaxUint64) {
+		if err := sc.db.Save(clienttypes.ToFirstNonceToScanSQLType(chainID, firstNonceToScan)).Error; err != nil {
+			sc.logger.Error().Err(err).Msgf("scanner: error writing firstNonceToScan for chain %d nonce %d", chainID, firstNonceToScan)
 		}
 	}
 }
@@ -164,7 +174,7 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	}
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database for scanner")
+		return err
 	}
 	sc.db = db
 
@@ -179,16 +189,30 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	return err
 }
 
+// reset scanner on tss migration
+func (sc *CctxScanner) Reset() {
+	sc.firstNonceToScan = make(map[int64]uint64)
+	sc.nextNonceToScan = make(map[int64]uint64)
+	sc.missedPendingCctx = make(map[int64]map[uint64]*crosschaintypes.CrossChainTx)
+	sc.missedPendingCctxRetry = make(map[int64]map[uint64]uint64)
+
+	// clean db
+	result := sc.db.Delete(&clienttypes.FirstNonceToScanSQLType{})
+	if result.Error != nil {
+		sc.logger.Error().Err(result.Error).Msg("scanner: error deleting scanner database")
+	}
+}
+
 func (sc *CctxScanner) buildFirstNonceToScanMap() error {
 	var firstNonces []clienttypes.FirstNonceToScanSQLType
 	if err := sc.db.Find(&firstNonces).Error; err != nil {
-		sc.logger.Error().Err(err).Msg("error iterating over FirstNonceToScan db")
+		sc.logger.Error().Err(err).Msg("scanner: error iterating over FirstNonceToScan db")
 		return err
 	}
 	for _, nonce := range firstNonces {
 		sc.firstNonceToScan[nonce.ID] = nonce.FirstNonce
 		sc.nextNonceToScan[nonce.ID] = nonce.FirstNonce
-		sc.logger.Info().Msgf("first nonce to scan for chain %d is %d", nonce.ID, nonce.FirstNonce)
+		sc.logger.Info().Msgf("scanner: first nonce to scan for chain %d is %d", nonce.ID, nonce.FirstNonce)
 	}
 	return nil
 }
