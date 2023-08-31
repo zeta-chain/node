@@ -230,10 +230,10 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 }
 
 // QueryWithdrawGasFee returns the gas fee for a withdrawal transaction associated with a given zrc20
-func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) *big.Int {
+func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) (*big.Int, error) {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	res, err := k.CallEVM(
 		ctx,
@@ -247,20 +247,23 @@ func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) *b
 		"withdrawGasFee",
 	)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	unpacked, err := zrc20ABI.Unpack("withdrawGasFee", res.Ret)
-	if err != nil || len(unpacked) < 2 {
-		return nil
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) < 2 {
+		return nil, fmt.Errorf("withdrawGasFee: expect 2 returned values, got %d", len(unpacked))
 	}
 
 	fees, ok := unpacked[1].(*big.Int)
 	if !ok {
-		return nil
+		return nil, err
 	}
 
-	return fees
+	return fees, nil
 }
 
 // QueryZRC20Data returns the data of a deployed ZRC20 contract

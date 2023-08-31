@@ -4,22 +4,100 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+// IsAuthorizedNodeAccount checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
 		return true
 	}
 	return false
+}
+
+// PayGasAndUpdateCctx burns the amount for the gas fees and updates the outbound tx with the new amount
+// **Caller should feed temporary ctx into this function**
+func (k Keeper) PayGasAndUpdateCctx(
+	ctx sdk.Context,
+	chainID int64,
+	cctx *types.CrossChainTx,
+	inputAmount math.Uint,
+	noEthereumTxEvent bool,
+) error {
+	// Dispatch to the correct function based on the coin type
+	switch cctx.InboundTxParams.CoinType {
+	case common.CoinType_Zeta:
+		return k.PayGasInZetaAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
+	case common.CoinType_Gas:
+		return k.PayGasNativeAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
+	default:
+		// We should return an error here since we can't pay gas with other coin types
+		// TODO: this currently break the integration tests because it calls it with coin type cmd, returns error once integration tests are fixed
+		// https://github.com/zeta-chain/node/issues/1022
+	}
+
+	return nil
+}
+
+// PayGasNativeAndUpdateCctx burns the amount for the gas fees with native gas and updates the outbound tx with the new amount
+// **Caller should feed temporary ctx into this function**
+func (k Keeper) PayGasNativeAndUpdateCctx(
+	ctx sdk.Context,
+	chainID int64,
+	cctx *types.CrossChainTx,
+	inputAmount math.Uint,
+	noEthereumTxEvent bool,
+) error {
+	// preliminary checks
+	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
+		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
+	}
+	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
+	if chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
+
+	// get the withdrawal fees
+	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
+	if err != nil {
+		return sdkerrors.Wrap(err, "PayGasNativeAndUpdateCctx: unable to get system contract gas coin")
+	}
+	withdrawFee, err := k.fungibleKeeper.QueryWithdrawGasFee(ctx, gasZRC20)
+	if err != nil {
+		return sdkerrors.Wrap(err, "PayGasNativeAndUpdateCctx: unable to query the withdraw gas fee")
+	}
+	if withdrawFee == nil {
+		return sdkerrors.Wrap(err, "PayGasNativeAndUpdateCctx: withdraw gas fee is nil")
+	}
+
+	// subtract the withdraw fee from the input amount
+	outTxGasFee := math.NewUintFromBigInt(withdrawFee)
+	if outTxGasFee.GT(inputAmount) {
+		return sdkerrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
+			cctx.ZetaFees,
+			inputAmount,
+			cctx.LogIdentifierForCCTX()),
+		)
+	}
+
+	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", inputAmount.String(), "fee",
+		outTxGasFee.String())
+	cctx.GetCurrentOutTxParam().Amount = inputAmount.Sub(outTxGasFee)
+
+	// burn the gas fee
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
+	if err != nil {
+		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
+	}
+
+	return nil
 }
 
 // PayGasInZetaAndUpdateCctx updates parameter cctx with the gas price and gas fee for the outbound tx;
@@ -34,12 +112,11 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	zetaBurnt math.Uint,
 	noEthereumTxEvent bool,
 ) error {
-	// TODO: this check currently break the integration tests, enable it when integration tests are fixed
-	// https://github.com/zeta-chain/node/issues/1022
-	//if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
-	//	return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
-	//}
+	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
+		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
+	}
 
+	// get the gas fee
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
