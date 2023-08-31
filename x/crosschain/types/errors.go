@@ -26,6 +26,7 @@ var (
 	ErrNotFoundCoreParams      = errorsmod.Register(ModuleName, 1126, "Not found chain core params")
 	ErrUnableToSendCoinType    = errorsmod.Register(ModuleName, 1127, "Unable to send this coin type to a receiver chain")
 
-	ErrInvalidAddress = errorsmod.Register(ModuleName, 1128, "Invalid address")
-	ErrDeployContract = errorsmod.Register(ModuleName, 1129, "Unable to deploy contract")
+	ErrInvalidAddress    = errorsmod.Register(ModuleName, 1128, "Invalid address")
+	ErrDeployContract    = errorsmod.Register(ModuleName, 1129, "Unable to deploy contract")
+	ErrUnableToUpdateTss = errorsmod.Register(ModuleName, 1130, "Unable to update TSS address")
 )

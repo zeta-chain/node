@@ -27258,6 +27258,20 @@ paths:
                     $ref: '#/definitions/googlerpcStatus'
         tags:
             - Query
+  /zeta-chain/crosschain/tssHistory: |
+    get:
+        operationId: Query_TssHistory
+        responses:
+            "200":
+                description: A successful response.
+                schema:
+                    $ref: '#/definitions/crosschainQueryTssHistoryResponse'
+            default:
+                description: An unexpected error response.
+                schema:
+                    $ref: '#/definitions/googlerpcStatus'
+        tags:
+            - Query
   /zeta-chain/observer/all_observer_mappers: |
     get:
         operationId: Query_AllObserverMappers
@@ -50244,6 +50258,8 @@ definitions:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
+  crosschainMsgUpdateTssAddressResponse:
+    type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
   crosschainMsgVoteOnObservedOutboundTxResponse:
@@ -50297,6 +50313,8 @@ definitions:
       outbound_tx_observed_external_height:
         type: string
         format: uint64
+      tss_pubkey:
+        type: string
   crosschainPendingNonces:
     type: object
     properties:
@@ -50323,11 +50341,13 @@ definitions:
   crosschainQueryAllCctxPendingResponse:
     type: object
     properties:
-      cross_chain_tx:
+      CrossChainTx:
         type: array
         items:
           type: object
           $ref: '#/definitions/crosschainCrossChainTx'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
       pending_nonces:
         $ref: '#/definitions/crosschainPendingNonces'
   crosschainQueryAllCctxResponse:
@@ -50479,6 +50499,14 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryTssHistoryResponse:
+    type: object
+    properties:
+      tss_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainTSS'
   crosschainTSS:
     type: object
     properties:

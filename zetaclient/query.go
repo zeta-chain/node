@@ -217,10 +217,27 @@ func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 	if err != nil {
-		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err
 	}
 	return resp.Keygen, nil
+}
+
+func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TSS, nil
+}
+
+func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TssList, nil
 }
 
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {

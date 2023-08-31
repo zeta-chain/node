@@ -132,6 +132,16 @@ service Query {
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
+
+  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+  }
+}
+
+message QueryTssHistoryRequest {}
+
+message QueryTssHistoryResponse {
+  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -293,8 +303,9 @@ message QueryAllCctxPendingRequest {
 }
 
 message QueryAllCctxPendingResponse {
-  repeated CrossChainTx cross_chain_tx = 1;
-  PendingNonces pending_nonces = 2;
+  repeated CrossChainTx CrossChainTx = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  PendingNonces pending_nonces = 3;
 }
 
 message QueryAllCctxPendingInNonceRangeRequest {

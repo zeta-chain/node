@@ -236,7 +236,7 @@ func (k Keeper) CctxAllPendingInNonceRange(c context.Context, req *types.QueryAl
 	return &types.QueryAllCctxPendingInNonceRangeResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
@@ -264,6 +264,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutboundTxObservedExternalHeight: 0,
 		CoinType:                         msg.CoinType, // FIXME: is this correct?
 		Amount:                           sdk.NewUint(0),
+		TssPubkey:                        tssPubkey,
 	}
 	status := &types.Status{
 		Status:              s,
