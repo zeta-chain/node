@@ -126,10 +126,13 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{
 		ObservationChain: chain.ChainName.String(),
 	})
-	if err != nil {
-		return nil, err
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return resp.Observers, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return resp.Observers, nil
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
@@ -164,11 +167,13 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	client := tmservice.NewServiceClient(b.grpcConn)
 	res, err := client.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
-	if err != nil {
-		b.logger.Error().Err(err).Msg("query GetNodeInfo error")
-		return nil, err
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return res, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return res, nil
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {

@@ -77,9 +77,9 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		panic(err)
 	}
-	//if res.Network != cfg.ChainID {
+
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
-		startLogger.Warn().Msgf("chain id mismatch, zetacore chain id %s, zetaclient chain id %s; reset zetaclient chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
+		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
 	}
 
@@ -173,7 +173,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	tss.CurrentPubkey = currentTss.TssPubkey
-	startLogger.Info().Msgf("TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
+	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 	if len(cfg.ChainsEnabled) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}

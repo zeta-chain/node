@@ -11,7 +11,7 @@ func CmdGetTssAddress() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-tss-address",
 		Short: "Query getTssAddress",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)

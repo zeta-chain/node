@@ -87,8 +87,17 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 					continue
 				}
 
+				newTss := mc.TSS{
+					Server:        tss.Server,
+					Keys:          tss.Keys,
+					CurrentPubkey: tss.CurrentPubkey,
+					Signers:       tss.Signers,
+					CoreBridge:    nil,
+					Metrics:       nil,
+				}
+
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, keyGen.BlockNumber, common.ReceiveStatus_Success)
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, common.ReceiveStatus_Success)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -98,7 +107,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("SetTSSPubKey error")
 				}
-				err = TestTSS(tss, keygenLogger)
+				err = TestTSS(&newTss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TestTSS error")
 				}
