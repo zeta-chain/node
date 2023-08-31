@@ -183,7 +183,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
 		}
-		if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		if types.IsCctxStatusPending(send.CctxStatus.Status) {
 			sends = append(sends, &send)
 		}
 	}
@@ -201,7 +201,39 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		sends = append(sends, &cctx)
 	}
 
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
+	// return scanned nonce range
+	scannedNonces := &types.PendingNonces{}
+	*scannedNonces = p
+	scannedNonces.NonceLow = startNonce
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends, PendingNonces: scannedNonces}, nil
+}
+
+func (k Keeper) CctxAllPendingInNonceRange(c context.Context, req *types.QueryAllCctxPendingInNonceRangeRequest) (*types.QueryAllCctxPendingInNonceRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	sends := make([]*types.CrossChainTx, 0)
+
+	for i := req.NonceLow; i < req.NonceHigh; i++ {
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, int64(i))
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+		}
+		send, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+		}
+		if types.IsCctxStatusPending(send.CctxStatus.Status) {
+			sends = append(sends, &send)
+		}
+	}
+
+	return &types.QueryAllCctxPendingInNonceRangeResponse{CrossChainTx: sends}, nil
 }
 
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {

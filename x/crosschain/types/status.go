@@ -56,3 +56,7 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	return stateTransitionMap
 
 }
+
+func IsCctxStatusPending(status CctxStatus) bool {
+	return status == CctxStatus_PendingOutbound || status == CctxStatus_PendingRevert
+}

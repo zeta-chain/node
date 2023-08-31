@@ -132,10 +132,25 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return resp.Observers, nil
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, *types.PendingNonces, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	if err != nil {
+		return nil, nil, err
+	}
+	return resp.CrossChainTx, resp.PendingNonces, nil
+}
+
+// Returns all pending cctx in the range of [nonceLow, nonceHigh)
+func (b *ZetaCoreBridge) GetAllPendingCctxInNonceRange(chainID int64, nonceLow uint64, nonceHigh uint64) ([]*types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.CctxAllPendingInNonceRange(context.Background(), &types.QueryAllCctxPendingInNonceRangeRequest{
+		ChainId:   chainID,
+		NonceLow:  nonceLow,
+		NonceHigh: nonceHigh,
+	}, maxSizeOption)
 	if err != nil {
 		return nil, err
 	}

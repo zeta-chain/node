@@ -29,6 +29,7 @@ type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
+	scanner   *CctxScanner
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    ZetaCoreLog
@@ -37,7 +38,7 @@ type CoreObserver struct {
 	stop      chan struct{}
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, dbpath string, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) (*CoreObserver, error) {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
@@ -63,7 +64,13 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
 	}
 
-	return &co
+	scanner, err := NewCctxScanner(bridge, dbpath, false, &co.logger.ZetaChainWatcher)
+	if err != nil {
+		return nil, err
+	}
+	co.scanner = scanner
+
+	return &co, nil
 }
 
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
@@ -125,11 +132,18 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						signer := co.signerMap[*c]
 						chainClient := co.clientMap[*c]
-						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
+						sendList, pendingNonces, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
+
+						// Scan missed pending cctx in history
+						missedList := co.scanner.ScanMissedPendingCctx(c.ChainId, pendingNonces)
+						if missedList != nil {
+							sendList = append(missedList, sendList...)
+						}
+
 						ob, err := co.getUpdatedChainOb(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
@@ -168,6 +182,11 @@ func (co *CoreObserver) startSendScheduler() {
 							included, _, err := ob.IsSendOutTxProcessed(send.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
 							if err != nil {
 								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail, Chain ID: %s", c.ChainName)
+								continue
+							}
+							// skip keysign for missed pending cctx as outTx was already finalized
+							if co.scanner.IsMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce) {
+								co.scanner.UpdateMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce, uint64(pendingNonces.NonceLow))
 								continue
 							}
 							if included {
