@@ -149,11 +149,12 @@ func start(_ *cobra.Command, _ []string) error {
 	if cfg.TestTssKeysign {
 		err = TestTSS(tss, masterLogger)
 		if err != nil {
-			startLogger.Error().Err(err).Msg("TestTSS error")
+			startLogger.Error().Err(err).Msgf("TestTSS error : %s", tss.CurrentPubkey)
 		}
 	}
 
-	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread
+	// Wait for TSS keygen to be successful before proceeding, This is a blocking thread only for a new keygen.
+	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
 		if cfg.Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
@@ -172,6 +173,7 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 	if len(cfg.ChainsEnabled) == 0 {
@@ -195,7 +197,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("Node %s is not an active observer", zetaBridge.GetKeys().GetOperatorAddress().String())
 		return errors.New("Node is not an active observer")
 	}
-	// CreateSignerMap : This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
+	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")

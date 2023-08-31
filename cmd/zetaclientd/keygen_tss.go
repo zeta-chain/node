@@ -109,7 +109,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				}
 				err = TestTSS(&newTss, keygenLogger)
 				if err != nil {
-					keygenLogger.Error().Err(err).Msg("TestTSS error")
+					keygenLogger.Error().Err(err).Msgf("TestTSS error: %s", newTss.CurrentPubkey)
 				}
 				continue
 			}
@@ -178,7 +178,7 @@ func SetTSSPubKey(tss *mc.TSS, logger zerolog.Logger) error {
 func TestTSS(tss *mc.TSS, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")
-	// KeySign can fail even if TSS keygen is successful , just logging the error here to break out of outer loop and report TSS
+	// KeySign can fail even if TSS keygen is successful, just logging the error here to break out of outer loop and report TSS
 	err := mc.TestKeysign(tss.CurrentPubkey, tss.Server)
 	if err != nil {
 		return err
