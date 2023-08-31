@@ -81,7 +81,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	outTxGasFee := math.NewUintFromBigInt(withdrawFee)
 	if outTxGasFee.GT(inputAmount) {
 		return sdkerrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
-			cctx.ZetaFees,
+			outTxGasFee,
 			inputAmount,
 			cctx.LogIdentifierForCCTX()),
 		)
@@ -91,10 +91,20 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 		outTxGasFee.String())
 	cctx.GetCurrentOutTxParam().Amount = inputAmount.Sub(outTxGasFee)
 
-	// burn the gas fee
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
-	if err != nil {
-		return sdkerrors.Wrapf(err, "PayGasNativeAndUpdateCctx: unable to CallZRC20Burn for gas fee %s, chain ID %d, from %s", outTxGasFee.String(), chain.ChainId, types.ModuleAddress.String())
+	// if the current outbound tx sent back after a revert on ZetaChain, it means that the ZRC20 have never been minted on ZetaChain
+	// we therefore skip the burn of the gas fee
+	revertFromZetaChain := cctx.OriginalDestinationChainID() == common.ZetaChain().ChainId && cctx.IsCurrentOutTxRevert()
+	if !revertFromZetaChain {
+		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
+		if err != nil {
+			return sdkerrors.Wrapf(
+				err,
+				"PayGasNativeAndUpdateCctx: unable to CallZRC20Burn for gas fee %s, chain ID %d, from %s",
+				outTxGasFee.String(),
+				chain.ChainId,
+				types.ModuleAddressEVM.String(),
+			)
+		}
 	}
 
 	return nil
