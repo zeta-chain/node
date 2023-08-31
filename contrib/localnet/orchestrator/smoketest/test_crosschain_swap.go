@@ -166,7 +166,8 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 		fmt.Printf("memo length %d\n", len(memo))
 
-		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+		amount := 0.1
+		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, amount, utxos[0:2], sm.btcRPCClient, memo)
 		fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 		if err != nil {
@@ -178,6 +179,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		fmt.Printf("  inboudn tx hash %s\n", cctx.InboundTxParams.InboundTxObservedHash)
 		fmt.Printf("  status %s\n", cctx.CctxStatus.Status.String())
 		fmt.Printf("  status msg: %s\n", cctx.CctxStatus.StatusMessage)
+
 		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 			panic(fmt.Sprintf("expected reverted status; got %s", cctx.CctxStatus.Status.String()))
 		}
