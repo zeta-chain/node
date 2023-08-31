@@ -94,7 +94,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	// burn the gas fee
 	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
 	if err != nil {
-		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
+		return sdkerrors.Wrapf(err, "PayGasNativeAndUpdateCctx: unable to CallZRC20Burn for gas fee %s, chain ID %d, from %s", outTxGasFee.String(), chain.ChainId, types.ModuleAddress.String())
 	}
 
 	return nil
