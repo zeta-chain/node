@@ -40,8 +40,8 @@ require (
 	github.com/evmos/ethermint v0.22.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
-	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
+	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	gopkg.in/yaml.v2 v2.4.0
@@ -250,7 +250,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/otiai10/primes v0.0.0-20180210170552-f6d2a1ba97c4 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
-	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.7
 	github.com/petermattis/goid v0.0.0-20230317030725-371a4b8eda08 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polydawn/refmt v0.0.0-20201211092308-30ac6d18308e // indirect

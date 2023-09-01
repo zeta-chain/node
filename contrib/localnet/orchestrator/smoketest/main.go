@@ -38,6 +38,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	ContractsDeployed   = "CONTRACTS_DEPLOYED"
+	ZetaEthAddrEnv      = "ZETA_ETH_ADDR"
+	ConnectorEthAddrEnv = "CONN_ETH_ADDR"
+)
+
 var (
 	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
@@ -110,8 +116,15 @@ var LocalCmd = &cobra.Command{
 	Run:   LocalSmokeTest,
 }
 
+type localArgs struct {
+	contractsDeployed bool
+}
+
+var localTestArgs = localArgs{}
+
 func init() {
 	RootCmd.AddCommand(LocalCmd)
+	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
 }
 
 func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
@@ -263,51 +276,51 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
-	//startTime := time.Now()
+	startTime := time.Now()
 	//smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
-	//smokeTest.TestSendZetaIn()
-	//
-	//zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt := MustWaitForTxReceipt(zevmClient, tx)
-	//if receipt.Status != 1 {
-	//	panic("ZEVMSwapApp deployment failed")
-	//}
-	//zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
-	//fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
-	//smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
-	//smokeTest.ZEVMSwapApp = zevmSwapApp
+	smokeTest.TestSendZetaIn()
 
-	// test system contract context upgrade
-	//contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//receipt = MustWaitForTxReceipt(zevmClient, tx)
-	//if receipt.Status != 1 {
-	//	panic("ContextApp deployment failed")
-	//}
-	//contextApp, err := contextapp.NewContextApp(contextAppAddr, zevmClient)
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
-	//smokeTest.ContextAppAddr = contextAppAddr
-	//smokeTest.ContextApp = contextApp
-	//
-	//fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
-	//fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
-	//fmt.Printf("##   Ether on Ethereum private net\n")
-	//fmt.Printf("##   ZETA on ZetaChain EVM\n")
-	//fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
+	zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	if receipt.Status != 1 {
+		panic("ZEVMSwapApp deployment failed")
+	}
+	zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
+	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
+	smokeTest.ZEVMSwapApp = zevmSwapApp
+
+	//test system contract context upgrade
+	contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	if receipt.Status != 1 {
+		panic("ContextApp deployment failed")
+	}
+	contextApp, err := contextapp.NewContextApp(contextAppAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
+	smokeTest.ContextAppAddr = contextAppAddr
+	smokeTest.ContextApp = contextApp
+
+	fmt.Printf("## Essential tests takes %s\n", time.Since(startTime))
+	fmt.Printf("## The DeployerAddress %s is funded on the following networks:\n", DeployerAddress.Hex())
+	fmt.Printf("##   Ether on Ethereum private net\n")
+	fmt.Printf("##   ZETA on ZetaChain EVM\n")
+	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
 	//// The following tests are optional tests; comment out the ones you don't want to run
 	//// temporarily to reduce dev/test cycle turnaround time
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	//smokeTest.TestContextUpgrade()
 	//
 	//smokeTest.TestDepositAndCallRefund()
