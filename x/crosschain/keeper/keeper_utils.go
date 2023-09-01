@@ -41,9 +41,8 @@ func (k Keeper) PayGasAndUpdateCctx(
 		// We should return an error here since we can't pay gas with other coin types
 		// TODO: this currently break the integration tests because it calls it with coin type cmd, returns error once integration tests are fixed
 		// https://github.com/zeta-chain/node/issues/1022
+		return fmt.Errorf("can't pay gas with coin type %s", cctx.InboundTxParams.CoinType.String())
 	}
-
-	return nil
 }
 
 // PayGasNativeAndUpdateCctx burns the amount for the gas fees with native gas and updates the outbound tx with the new amount

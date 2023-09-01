@@ -100,12 +100,20 @@ func CmdCCTXInboundVoter() *cobra.Command {
 			amount := math.NewUintFromString(args[5])
 			argsMessage := (args[6])
 			argsInTxHash := (args[7])
+
 			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
-			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
-			argsAsset := args[10]
 			if err != nil {
 				return err
 			}
+
+			coinType, ok := common.CoinType_value[args[9]]
+			if !ok {
+				return fmt.Errorf("wrong coin type %s", args[9])
+			}
+			argsCoinType := common.CoinType(coinType)
+
+			argsAsset := args[10]
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -145,15 +153,23 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 			} else {
 				return fmt.Errorf("wrong status")
 			}
+
 			chain, err := strconv.Atoi(args[5])
 			if err != nil {
 				return err
 			}
+
 			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
 			if err != nil {
 				return err
 			}
-			argsCoinType := common.CoinType(common.CoinType_value[args[7]])
+
+			coinType, ok := common.CoinType_value[args[7]]
+			if !ok {
+				return fmt.Errorf("wrong coin type %s", args[7])
+			}
+			argsCoinType := common.CoinType(coinType)
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

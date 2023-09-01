@@ -138,7 +138,7 @@ func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string,
 		status,
 		strconv.FormatInt(common.GoerliChain().ChainId, 10),
 		"1",
-		"Gas",
+		"Zeta",
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -169,7 +169,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		"100",
-		"Gas",
+		"Zeta",
 		"",
 	}
 	txArgs := []string{
@@ -201,7 +201,7 @@ func GetBallotIdentifier(message string) string {
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		100,
 		250_000,
-		common.CoinType_Gas,
+		common.CoinType_Zeta,
 		"",
 	)
 	return msg.Digest()
@@ -219,7 +219,7 @@ func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string
 		0,
 		common.GoerliChain().ChainId,
 		1,
-		common.CoinType_Gas,
+		common.CoinType_Zeta,
 	)
 	return msg.Digest()
 }
