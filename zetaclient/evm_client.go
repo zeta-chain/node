@@ -416,7 +416,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	}
 	rpcRestTime, err := strconv.Atoi(os.Getenv("OS_RPC_REST_TIME"))
 	if err != nil || rpcRestTime <= 0 {
-		rpcRestTime = 500 // 500ms
+		rpcRestTime = 20 // 20ms
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
 
@@ -441,9 +441,17 @@ func (ob *EVMChainClient) observeOutTx() {
 					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
-						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
+						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
+						ob.mu.Lock()
+						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+						if found {
+							ob.mu.Unlock()
+							continue
+						}
+						ob.mu.Unlock()
+
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
