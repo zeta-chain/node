@@ -200,7 +200,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				cctxIdentifier = test.falseBallotIdentifier
 			}
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
-			s.Require().Error(err)
+			s.Require().NoError(err)
 			cctx := crosschaintypes.QueryGetCctxResponse{}
 			if test.cctxStatus == crosschaintypes.CctxStatus_PendingRevert {
 				s.Require().Contains(out.String(), "not found")
