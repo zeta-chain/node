@@ -5,6 +5,7 @@ import (
 	"cosmossdk.io/math"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"strconv"
 	"time"
@@ -22,31 +23,32 @@ const (
 	GasPriceIncreasePercent = 100
 )
 
-// IterateAndUpdateOutboundTxGasPrice iterates through all cctx and updates the gas price if pending for too long
-func (k Keeper) IterateAndUpdateOutboundTxGasPrice(ctx sdk.Context, chainID int64) error {
-	if chainID < 0 {
-		return cosmoserrors.Wrap(types.ErrInvalidChainID, "chain id cannot be negative")
-	}
-
+// IterateAndUpdateCctxGasPrice iterates through all cctx and updates the gas price if pending for too long
+func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 	// skip if haven't reached epoch end
 	if ctx.BlockHeight()%EpochLength != 0 {
 		return nil
 	}
 
-	// get all pending cctx
-	res, err := k.CctxAllPending(sdk.UnwrapSDKContext(ctx), &types.QueryAllCctxPendingRequest{
-		ChainId: uint64(chainID),
-	})
-	if err != nil {
-		return err
-	}
+	// get all chains
+	chains := common.DefaultChainsList()
 
-	// iterate through all pending cctx
-	for _, pendingCctx := range res.CrossChainTx {
-		if pendingCctx != nil {
-			_, _, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx)
-			if err != nil {
-				return err
+	for _, chain := range chains {
+		// get all pending cctx
+		res, err := k.CctxAllPending(sdk.UnwrapSDKContext(ctx), &types.QueryAllCctxPendingRequest{
+			ChainId: uint64(chain.ChainId),
+		})
+		if err != nil {
+			return err
+		}
+
+		// iterate through all pending cctx
+		for _, pendingCctx := range res.CrossChainTx {
+			if pendingCctx != nil {
+				_, _, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
