@@ -76,7 +76,8 @@ type FungibleKeeper interface {
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
 	QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
-	QueryWithdrawGasFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
+	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
+	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
 	DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error
 	ZRC20DepositAndCallContract(
