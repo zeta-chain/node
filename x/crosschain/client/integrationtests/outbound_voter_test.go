@@ -234,9 +234,9 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &fakeBallot))
 				for _, vote := range test.votes {
 					if vote.isFakeVote {
-						for _, ballotvote := range fakeBallot.Voters {
-							if vote.voterAddress == ballotvote.VoterAddress {
-								s.Assert().Equal(vote.voteType, ballotvote.VoteType)
+						for _, ballotVote := range fakeBallot.Voters {
+							if vote.voterAddress == ballotVote.VoterAddress {
+								s.Assert().Equal(vote.voteType, ballotVote.VoteType)
 								break
 							}
 						}

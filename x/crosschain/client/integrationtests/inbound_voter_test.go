@@ -194,9 +194,6 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			}
 			s.Assert().Equal(test.ballotResult, ballot.BallotStatus)
 
-			// Get cctx list
-			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdListSend(), []string{"--output", "json"})
-
 			// Get the cctx and check its status
 			cctxIdentifier := ballotIdentifier
 			if test.falseBallotIdentifier != "" {
