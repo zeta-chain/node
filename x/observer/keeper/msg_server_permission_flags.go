@@ -23,6 +23,7 @@ func (k msgServer) UpdatePermissionFlags(goCtx context.Context, msg *types.MsgUp
 		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "not set")
 	}
 	flags.IsInboundEnabled = msg.IsInboundEnabled
+	flags.IsOutboundEnabled = msg.IsOutboundEnabled
 	k.SetPermissionFlags(ctx, flags)
 
 	return &types.MsgUpdatePermissionFlagsResponse{}, nil

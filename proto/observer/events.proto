@@ -19,3 +19,11 @@ message EventKeygenBlockUpdated {
   string keygen_block = 2;
   string keygen_pubkeys = 3;
 }
+
+message EventNewObserverAdded {
+  string msg_type_url = 1;
+  string observer_address = 2;
+  string zetaclient_grantee_address = 3;
+  string zetaclient_grantee_pubkey = 4;
+  uint64 observer_last_block_count = 5;
+}
