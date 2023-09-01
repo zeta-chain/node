@@ -64,7 +64,7 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
 	}
 
-	scanner, err := NewCctxScanner(bridge, dbpath, false, &co.logger.ZetaChainWatcher)
+	scanner, err := NewCctxScanner(bridge, dbpath, false, tss.CurrentPubkey, &co.logger.ZetaChainWatcher)
 	if err != nil {
 		return nil, err
 	}

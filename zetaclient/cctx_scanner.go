@@ -21,6 +21,7 @@ const (
 
 // CctxScanner scans missed pending cctx and updates their status
 type CctxScanner struct {
+	tssPubkey              string
 	db                     *gorm.DB
 	logger                 *zerolog.Logger
 	bridge                 *ZetaCoreBridge
@@ -30,7 +31,7 @@ type CctxScanner struct {
 	missedPendingCctxRetry map[int64]map[uint64]uint64                        // chainID -> nonce -> retry count
 }
 
-func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, logger *zerolog.Logger) (*CctxScanner, error) {
+func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, tssPubkey string, logger *zerolog.Logger) (*CctxScanner, error) {
 	sc := &CctxScanner{
 		logger:                 logger,
 		bridge:                 bridge,
@@ -43,16 +44,19 @@ func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, logger *z
 	if err != nil {
 		return nil, err
 	}
+
+	// on bootstrap or tss migration
+	if tssPubkey != sc.tssPubkey {
+		err = sc.Reset(tssPubkey)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return sc, nil
 }
 
 // Scan a new batch of missed pending cctx
 func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
-	// tss migration detection
-	if pendingNonces.NonceLow == 0 {
-		sc.Reset()
-		sc.logger.Info().Msgf("scanner: tss migration is detected at zetachain height %d", bn)
-	}
 	// initialize missed cctx map
 	if _, found := sc.missedPendingCctx[chainID]; !found {
 		sc.missedPendingCctx[chainID] = make(map[uint64]*crosschaintypes.CrossChainTx)
@@ -106,13 +110,15 @@ func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64, nonc
 		return
 	}
 	if crosschaintypes.IsCctxStatusPending(send.CctxStatus.Status) {
-		// update retry count
+		// increase retry count
 		if _, found := sc.missedPendingCctxRetry[chainID]; !found {
 			sc.missedPendingCctxRetry[chainID] = make(map[uint64]uint64)
 		}
 		sc.missedPendingCctxRetry[chainID][nonce]++
 
-		// forget about this missed cctx as max retry (as its tracker might not exist in zetacore)
+		// forget about this missed cctx as max retry reached, there could be 2 cases:
+		//    1. No tracker.   For some reason, no observer had reported outtx hash.
+		//    2. No true hash. Track exists but none of the hashes is true (can't be verified)
 		if sc.missedPendingCctxRetry[chainID][nonce] == MaxRetryOnMissedCctx {
 			sc.removeMissedPendingCctx(chainID, nonce, nonceLow)
 			sc.logger.Warn().Msgf("scanner: forget about missed pending cctx for chain %d nonce %d", chainID, nonce)
@@ -178,10 +184,14 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	}
 	sc.db = db
 
-	err = db.AutoMigrate(&clienttypes.FirstNonceToScanSQLType{})
+	err = db.AutoMigrate(&clienttypes.CurrentTssSQLType{},
+		&clienttypes.FirstNonceToScanSQLType{})
 	if err != nil {
 		return err
 	}
+
+	// Load current tss pubkey
+	sc.loadCurrentTssPubkey()
 
 	// Load first nonce for each chain to start scanning from
 	err = sc.buildFirstNonceToScanMap()
@@ -189,18 +199,35 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	return err
 }
 
-// reset scanner on tss migration
-func (sc *CctxScanner) Reset() {
+func (sc *CctxScanner) Reset(tssPubkey string) error {
+	sc.tssPubkey = tssPubkey
 	sc.firstNonceToScan = make(map[int64]uint64)
 	sc.nextNonceToScan = make(map[int64]uint64)
 	sc.missedPendingCctx = make(map[int64]map[uint64]*crosschaintypes.CrossChainTx)
 	sc.missedPendingCctxRetry = make(map[int64]map[uint64]uint64)
 
-	// clean db
-	result := sc.db.Delete(&clienttypes.FirstNonceToScanSQLType{})
-	if result.Error != nil {
-		sc.logger.Error().Err(result.Error).Msg("scanner: error deleting scanner database")
+	// save current tss pubkey
+	if err := sc.db.Save(clienttypes.ToCurrentTssSQLType(tssPubkey)).Error; err != nil {
+		sc.logger.Error().Err(err).Msgf("scanner: error writing current tss pubkey %s", tssPubkey)
+		return err
 	}
+
+	// clean db, GORM uses pluralizes struct name to snake_cases as table name
+	if err := sc.db.Exec("DELETE FROM first_nonce_to_scan_sql_types").Error; err != nil {
+		sc.logger.Error().Err(err).Msg("scanner: error cleaning FirstNonceToScan db")
+		return err
+	}
+	sc.logger.Info().Msgf("scanner: reset db successfully for tss pubkey %s", tssPubkey)
+
+	return nil
+}
+
+func (sc *CctxScanner) loadCurrentTssPubkey() {
+	var tss clienttypes.CurrentTssSQLType
+	if err := sc.db.First(&tss, clienttypes.CurrentTssID).Error; err != nil {
+		sc.tssPubkey = "" // record not found
+	}
+	sc.tssPubkey = tss.TssPubkey
 }
 
 func (sc *CctxScanner) buildFirstNonceToScanMap() error {
