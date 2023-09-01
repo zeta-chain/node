@@ -71,6 +71,41 @@ func (_m *FungibleAccountKeeper) GetSequence(ctx types.Context, addr types.AccAd
 	return r0, r1
 }
 
+// HasAccount provides a mock function with given fields: ctx, addr
+func (_m *FungibleAccountKeeper) HasAccount(ctx types.Context, addr types.AccAddress) bool {
+	ret := _m.Called(ctx, addr)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) bool); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// NewAccountWithAddress provides a mock function with given fields: ctx, addr
+func (_m *FungibleAccountKeeper) NewAccountWithAddress(ctx types.Context, addr types.AccAddress) authtypes.AccountI {
+	ret := _m.Called(ctx, addr)
+
+	var r0 authtypes.AccountI
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) authtypes.AccountI); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(authtypes.AccountI)
+		}
+	}
+
+	return r0
+}
+
+// SetAccount provides a mock function with given fields: ctx, acc
+func (_m *FungibleAccountKeeper) SetAccount(ctx types.Context, acc authtypes.AccountI) {
+	_m.Called(ctx, acc)
+}
+
 // NewFungibleAccountKeeper creates a new instance of FungibleAccountKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewFungibleAccountKeeper(t interface {

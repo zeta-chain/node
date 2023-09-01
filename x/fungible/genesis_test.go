@@ -23,7 +23,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	// Init and export
-	k, ctx := keepertest.FungibleKeeper(t)
+	k, ctx, _ := keepertest.FungibleKeeper(t)
 	fungible.InitGenesis(ctx, *k, genesisState)
 	got := fungible.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
