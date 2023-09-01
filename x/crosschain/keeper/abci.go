@@ -14,13 +14,16 @@ import (
 
 const (
 	// EpochLength is the number of blocks in an epoch before triggering a gas price increase
+	// TODO: determine value
 	EpochLength = 100
 
 	// RetryInterval is the number of blocks to wait before incrementing the gas price again
+	// TODO: determine value
 	RetryInterval = time.Minute * 10
 
 	// GasPriceIncreasePercent is the percentage of median gas price by which to increase the gas price during an increment
 	// 100 means the gas price is increased by the median gas price
+	// TODO: determine value
 	GasPriceIncreasePercent = 100
 )
 
@@ -70,19 +73,25 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(ctx sdk.Context, cctx types.CrossChai
 	}
 
 	// compute gas price increase
-	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
+	chainID := cctx.GetCurrentOutTxParam().ReceiverChainId
+	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrUnableToGetGasPrice,
-			fmt.Sprintf("cannot get gas price for chain %d", cctx.GetCurrentOutTxParam().ReceiverChainId),
+			fmt.Sprintf("cannot get gas price for chain %d", chainID),
 		)
 	}
 	gasPriceIncrease := medianGasPrice.MulUint64(GasPriceIncreasePercent).QuoUint64(100)
 
-	// TODO: pay gas from gas stability pool
+	// withdraw additional fees from the gas stability pool
 	gasLimit := math.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 	additionalFees := gasLimit.Mul(gasPriceIncrease)
-	_ = additionalFees
+	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
+		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
+			types.ErrNotEnoughFunds,
+			fmt.Sprintf("cannot withdraw %s from gas stability pool", additionalFees.String()),
+		)
+	}
 
 	// Increase the cctx value
 	err := k.IncreaseCctxGasPrice(ctx, cctx, gasPriceIncrease)
