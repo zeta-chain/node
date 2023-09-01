@@ -179,7 +179,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	for i, params := range coreParams {
 		err := config.ValidateCoreParams(params)
 		if err != nil {
-			return err
+			b.logger.Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
 		}
 		newChains[i] = *common.GetChainFromChainID(params.ChainId)
 		if common.IsBitcoinChain(params.ChainId) {

@@ -128,7 +128,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
 	gasLimit := foreignCoin.GasLimit
-	msg := types.NewMsgSendVoter(
+	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,
@@ -199,7 +199,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.
-	msg := types.NewMsgSendVoter(
+	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		emittingContract.Hex(),
 		senderChain.ChainId,

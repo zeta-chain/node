@@ -236,6 +236,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			sendHash,
 			receipt.TxHash.Hex(),
 			receipt.BlockNumber.Uint64(),
+			receipt.GasUsed,
+			transaction.GasPrice(),
 			transaction.Value(),
 			recvStatus,
 			ob.chain,
@@ -254,6 +256,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
 				transaction.Value(),
 				common.ReceiveStatus_Success,
 				ob.chain,
@@ -267,7 +271,18 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Gas)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_Gas,
+			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
@@ -303,6 +318,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -334,6 +351,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -354,7 +373,18 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Zeta)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_Zeta,
+			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
@@ -383,6 +413,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							event.Amount,
 							common.ReceiveStatus_Success,
 							ob.chain,

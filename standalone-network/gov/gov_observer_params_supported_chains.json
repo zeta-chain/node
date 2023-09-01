@@ -1,0 +1,58 @@
+{
+  "title": "Observer Param Change",
+  "description": "Update observer params",
+  "changes": [
+    {
+      "subspace": "observer",
+      "key": "ObserverParams",
+      "value": [
+        {
+          "chain": {
+            "chain_name": 6,
+            "chain_id": 5
+          },
+          "ballot_threshold": "0.660000000000000000",
+          "min_observer_delegation": "10000000000.000000000000000000",
+          "is_supported": "true"
+        },
+        {
+          "chain": {
+            "chain_name": 11,
+            "chain_id": 7001
+          },
+          "ballot_threshold": "0.660000000000000000",
+          "min_observer_delegation": "10000000000.000000000000000000",
+          "is_supported": "true"
+        },
+        {
+          "chain": {
+            "chain_name": 10,
+            "chain_id": 97
+          },
+          "ballot_threshold": "0.660000000000000000",
+          "min_observer_delegation": "10000000000.000000000000000000",
+          "is_supported": "true"
+        },
+        {
+          "chain": {
+            "chain_name": 12,
+            "chain_id": 18332
+          },
+          "ballot_threshold": "0.660000000000000000",
+          "min_observer_delegation": "10000000000.000000000000000000",
+          "is_supported": "true"
+        },
+        {
+          "chain": {
+            "chain_name": 7,
+            "chain_id": 80001
+          },
+          "ballot_threshold": "0.660000000000000000",
+          "min_observer_delegation": "10000000000.000000000000000000",
+          "is_supported": "true"
+        }
+      ]
+    }
+  ],
+  "deposit": "10000000azeta"
+}
