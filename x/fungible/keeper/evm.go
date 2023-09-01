@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -255,15 +256,89 @@ func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) (*
 		return nil, err
 	}
 	if len(unpacked) < 2 {
-		return nil, fmt.Errorf("withdrawGasFee: expect 2 returned values, got %d", len(unpacked))
+		return nil, fmt.Errorf("expect 2 returned values, got %d", len(unpacked))
 	}
 
-	fees, ok := unpacked[1].(*big.Int)
+	GasFee, ok := unpacked[1].(*big.Int)
 	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return GasFee, nil
+}
+
+// QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20
+func (k Keeper) QueryProtocolFlatFee(ctx sdk.Context, contract common.Address) (*big.Int, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"PROTOCOL_FLAT_FEE",
+	)
+	if err != nil {
 		return nil, err
 	}
 
-	return fees, nil
+	unpacked, err := zrc20ABI.Unpack("PROTOCOL_FLAT_FEE", res.Ret)
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) == 1 {
+		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
+	}
+
+	protocolGasFee, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return protocolGasFee, nil
+}
+
+// QueryGasLimit returns the gas limit for a withdrawal transaction associated with a given zrc20
+func (k Keeper) QueryGasLimit(ctx sdk.Context, contract common.Address) (*big.Int, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"GAS_LIMIT",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	unpacked, err := zrc20ABI.Unpack("GAS_LIMIT", res.Ret)
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) == 1 {
+		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
+	}
+
+	gasLimit, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return gasLimit, nil
 }
 
 // QueryZRC20Data returns the data of a deployed ZRC20 contract

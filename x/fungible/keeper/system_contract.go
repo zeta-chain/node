@@ -53,10 +53,6 @@ func (k *Keeper) GetSystemContractAddress(ctx sdk.Context) (ethcommon.Address, e
 	return systemAddress, nil
 }
 
-func (k *Keeper) QuerySystemContract(ctx sdk.Context, method string, args ...interface{}) {
-
-}
-
 func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
