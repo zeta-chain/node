@@ -2,19 +2,20 @@ package keeper
 
 import (
 	"testing"
+	"time"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
+	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -37,15 +38,14 @@ var (
 )
 
 // FungibleKeeperWithMocks initializes a fungible keeper for testing purposes with option to mock specific keepers
-func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context) {
+func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	// Initialize local store
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := NewCodec()
 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
@@ -58,6 +58,40 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.ParamsKeeper,
 	)
+
+	// Create the fungible keeper
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+	require.NoError(t, stateStore.LoadLatestVersion())
+
+	// Initialize the context
+	header := tmproto.Header{
+		Height:  1,
+		ChainID: "test_1-1",
+		Time:    time.Now().UTC(),
+		LastBlockId: tmproto.BlockID{
+			Hash: tmhash.Sum([]byte("block_id")),
+			PartSetHeader: tmproto.PartSetHeader{
+				Total: 11,
+				Hash:  tmhash.Sum([]byte("partset_header")),
+			},
+		},
+		AppHash:            tmhash.Sum([]byte("app")),
+		DataHash:           tmhash.Sum([]byte("data")),
+		EvidenceHash:       tmhash.Sum([]byte("evidence")),
+		ValidatorsHash:     tmhash.Sum([]byte("validators")),
+		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
+		ConsensusHash:      tmhash.Sum([]byte("consensus")),
+		LastResultsHash:    tmhash.Sum([]byte("last_result")),
+	}
+	ctx := sdk.NewContext(stateStore, header, false, log.NewNopLogger())
+	ctx = ctx.WithHeaderHash(tmhash.Sum([]byte("header")))
+
+	// Initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+
+	// Add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
 
 	// Initialize mocks for mocked keepers
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
@@ -76,13 +110,8 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		evmKeeper = fungiblemocks.NewFungibleEVMKeeper(t)
 	}
 
-	// Create the fungible keeper
-	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
-
 	k := keeper.NewKeeper(
-		codec.NewProtoCodec(registry),
+		cdc,
 		storeKey,
 		memStoreKey,
 		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
@@ -92,18 +121,21 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		observerKeeper,
 	)
 
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
-	return k, ctx
+	fungiblemodule.InitGenesis(ctx, *k, *types.DefaultGenesis())
+
+	return k, ctx, sdkKeepers
 }
 
 // FungibleKeeperAllMocks initializes a fungible keeper for testing purposes with all keeper mocked
 func FungibleKeeperAllMocks(t testing.TB) (*keeper.Keeper, sdk.Context) {
-	return FungibleKeeperWithMocks(t, FungibleMocksAll)
+	k, ctx, _ := FungibleKeeperWithMocks(t, FungibleMocksAll)
+	return k, ctx
 }
 
 // FungibleKeeper initializes a fungible keeper for testing purposes
-func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
-	return FungibleKeeperWithMocks(t, FungibleNoMocks)
+func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers) {
+	k, ctx, sdkk := FungibleKeeperWithMocks(t, FungibleNoMocks)
+	return k, ctx, sdkk
 }
 
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {

@@ -27647,6 +27647,42 @@ paths:
               type: string
         tags:
             - Query
+  /zeta-chain/zetacore/fungible/gas_stability_pool_address: |
+    get:
+        summary: Queries the address of a gas stability pool on a given chain.
+        operationId: Query_GasStabilityPoolAddress
+        responses:
+            "200":
+                description: A successful response.
+                schema:
+                    $ref: '#/definitions/fungibleQueryGetGasStabilityPoolAddressResponse'
+            default:
+                description: An unexpected error response.
+                schema:
+                    $ref: '#/definitions/googlerpcStatus'
+        tags:
+            - Query
+  /zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}: |
+    get:
+        summary: Queries the balance of a gas stability pool on a given chain.
+        operationId: Query_GasStabilityPoolBalance
+        responses:
+            "200":
+                description: A successful response.
+                schema:
+                    $ref: '#/definitions/fungibleQueryGetGasStabilityPoolBalanceResponse'
+            default:
+                description: An unexpected error response.
+                schema:
+                    $ref: '#/definitions/googlerpcStatus'
+        parameters:
+            - name: chain_id
+              in: path
+              required: true
+              type: string
+              format: int64
+        tags:
+            - Query
   /zeta-chain/zetacore/fungible/params: |
     get:
         summary: Parameters queries the parameters of the module.
@@ -50567,6 +50603,20 @@ definitions:
     properties:
       foreignCoins:
         $ref: '#/definitions/fungibleForeignCoins'
+  fungibleQueryGetGasStabilityPoolAddressResponse:
+    type: object
+    properties:
+      cosmos_address:
+        type: string
+      evm_address:
+        type: string
+  fungibleQueryGetGasStabilityPoolBalanceResponse:
+    type: object
+    properties:
+      contract_address:
+        type: string
+      balance:
+        type: string
   fungibleQueryGetSystemContractResponse:
     type: object
     properties:
