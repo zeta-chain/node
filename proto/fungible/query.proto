@@ -33,7 +33,7 @@ service Query {
 
   // Queries the address of a gas stability pool on a given chain.
   rpc GasStabilityPoolAddress(QueryGetGasStabilityPoolAddress) returns (QueryGetGasStabilityPoolAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_address/{chain_id}";
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_address";
   }
 
   // Queries the balance of a gas stability pool on a given chain.
@@ -74,9 +74,7 @@ message QueryGetSystemContractResponse {
   SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
 }
 
-message QueryGetGasStabilityPoolAddress {
-  int64 chain_id = 1;
-}
+message QueryGetGasStabilityPoolAddress {}
 
 message QueryGetGasStabilityPoolAddressResponse {
   string cosmos_address = 1;

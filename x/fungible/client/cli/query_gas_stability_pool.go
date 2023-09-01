@@ -12,24 +12,15 @@ import (
 
 func CmdGasStabilityPoolAddress() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gas-stability-pool-address [chain-id]",
-		Short: "query the address of a gas stability pool for a chain",
-		Args:  cobra.ExactArgs(1),
+		Use:   "gas-stability-pool-address",
+		Short: "query the address of a gas stability pool",
+		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
-			chainID, err := strconv.ParseInt(args[0], 10, 64)
-			if err != nil {
-				return err
-			}
-
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetGasStabilityPoolAddress{
-				ChainId: chainID,
-			}
-
-			res, err := queryClient.GasStabilityPoolAddress(context.Background(), params)
+			res, err := queryClient.GasStabilityPoolAddress(context.Background(), &types.QueryGetGasStabilityPoolAddress{})
 			if err != nil {
 				return err
 			}

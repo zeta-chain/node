@@ -8,8 +8,8 @@ import (
 )
 
 // EnsureGasStabilityPoolAccountCreated ensures the gas stability pool account exists
-func (k Keeper) EnsureGasStabilityPoolAccountCreated(ctx sdk.Context, chainID int64) {
-	address := types.GasStabilityPoolAddress(chainID)
+func (k Keeper) EnsureGasStabilityPoolAccountCreated(ctx sdk.Context) {
+	address := types.GasStabilityPoolAddress()
 
 	ak := k.GetAuthKeeper()
 	accExists := ak.HasAccount(ctx, address)
@@ -29,8 +29,7 @@ func (k Keeper) GetGasStabilityPoolBalance(
 		return nil, err
 	}
 
-	address := types.GasStabilityPoolAddressEVM(chainID)
-	return k.BalanceOfZRC4(ctx, gasZRC20, address)
+	return k.BalanceOfZRC4(ctx, gasZRC20, types.GasStabilityPoolAddressEVM())
 }
 
 // FundGasStabilityPool mints the ZRC20 into a special address called gas stability pool for the chain
@@ -39,7 +38,7 @@ func (k Keeper) FundGasStabilityPool(
 	chainID int64,
 	amount *big.Int,
 ) error {
-	k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
+	k.EnsureGasStabilityPoolAccountCreated(ctx)
 
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -47,15 +46,12 @@ func (k Keeper) FundGasStabilityPool(
 		return err
 	}
 
-	// send to the gas stability pool address
-	to := types.GasStabilityPoolAddressEVM(chainID)
-
 	// call deposit ZRC20 method
 	if err := k.CallZRC20Deposit(
 		ctx,
 		types.ModuleAddressEVM,
 		gasZRC20,
-		to,
+		types.GasStabilityPoolAddressEVM(),
 		amount,
 	); err != nil {
 		return err
@@ -70,7 +66,7 @@ func (k Keeper) WithdrawFromGasStabilityPool(
 	chainID int64,
 	amount *big.Int,
 ) error {
-	k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
+	k.EnsureGasStabilityPoolAccountCreated(ctx)
 
 	// get the gas zrc20 contract from the chain
 	gasZRC20, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -78,16 +74,10 @@ func (k Keeper) WithdrawFromGasStabilityPool(
 		return err
 	}
 
-	// Ensure the account exists SDK level
-	_ = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress(chainID))
-
-	// Send from the gas stability pool address
-	from := types.GasStabilityPoolAddressEVM(chainID)
-
 	// call withdraw ZRC20 method
 	if err := k.CallZRC20Burn(
 		ctx,
-		from,
+		types.GasStabilityPoolAddressEVM(),
 		gasZRC20,
 		amount,
 		false,

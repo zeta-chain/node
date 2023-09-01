@@ -18,8 +18,8 @@ func (k Keeper) GasStabilityPoolAddress(
 	}
 
 	return &types.QueryGetGasStabilityPoolAddressResponse{
-		CosmosAddress: types.GasStabilityPoolAddress(req.ChainId).String(),
-		EvmAddress:    types.GasStabilityPoolAddressEVM(req.ChainId).String(),
+		CosmosAddress: types.GasStabilityPoolAddress().String(),
+		EvmAddress:    types.GasStabilityPoolAddressEVM().String(),
 	}, nil
 }
 

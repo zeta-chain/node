@@ -13,21 +13,19 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 	t.Run("can create the gas stability pool account if doesn't exist", func(t *testing.T) {
 		k, ctx, _ := testkeeper.FungibleKeeper(t)
 
-		chainID := getValidChainID(t)
-
 		// account doesn't exist
-		acc := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress(chainID))
+		acc := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.Nil(t, acc)
 
 		// create the account
-		k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
-		acc = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress(chainID))
+		k.EnsureGasStabilityPoolAccountCreated(ctx)
+		acc = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.NotNil(t, acc)
-		require.Equal(t, types.GasStabilityPoolAddress(chainID), acc.GetAddress())
+		require.Equal(t, types.GasStabilityPoolAddress(), acc.GetAddress())
 
 		// can call the method again without side effects
-		k.EnsureGasStabilityPoolAccountCreated(ctx, chainID)
-		acc2 := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress(chainID))
+		k.EnsureGasStabilityPoolAccountCreated(ctx)
+		acc2 := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
 		require.NotNil(t, acc2)
 		require.True(t, acc.GetAddress().Equals(acc2.GetAddress()))
 		require.Equal(t, acc.GetAccountNumber(), acc2.GetAccountNumber())

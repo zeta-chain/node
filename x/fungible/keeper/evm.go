@@ -56,7 +56,7 @@ func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 
 	bin, err := hex.DecodeString(metadata.Bin[2:])
 	if err != nil {
-		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", metadata.Bin[2:], err.Error())
 	}
 
 	data := make([]byte, len(bin)+len(ctorArgs))

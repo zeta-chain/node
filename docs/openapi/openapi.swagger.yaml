@@ -27647,7 +27647,7 @@ paths:
               type: string
         tags:
             - Query
-  /zeta-chain/zetacore/fungible/gas_stability_pool_address/{chain_id}: |
+  /zeta-chain/zetacore/fungible/gas_stability_pool_address: |
     get:
         summary: Queries the address of a gas stability pool on a given chain.
         operationId: Query_GasStabilityPoolAddress
@@ -27660,12 +27660,6 @@ paths:
                 description: An unexpected error response.
                 schema:
                     $ref: '#/definitions/googlerpcStatus'
-        parameters:
-            - name: chain_id
-              in: path
-              required: true
-              type: string
-              format: int64
         tags:
             - Query
   /zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}: |

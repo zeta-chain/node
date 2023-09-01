@@ -163,24 +163,6 @@ func request_Query_GasStabilityPoolAddress_0(ctx context.Context, marshaler runt
 	var protoReq QueryGetGasStabilityPoolAddress
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["chain_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
-	}
-
-	protoReq.ChainId, err = runtime.Int64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
-	}
-
 	msg, err := client.GasStabilityPoolAddress(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -189,24 +171,6 @@ func request_Query_GasStabilityPoolAddress_0(ctx context.Context, marshaler runt
 func local_request_Query_GasStabilityPoolAddress_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetGasStabilityPoolAddress
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["chain_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
-	}
-
-	protoReq.ChainId, err = runtime.Int64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
-	}
 
 	msg, err := server.GasStabilityPoolAddress(ctx, &protoReq)
 	return msg, metadata, err
@@ -584,7 +548,7 @@ var (
 
 	pattern_Query_SystemContract_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "system_contract"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GasStabilityPoolAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "fungible", "gas_stability_pool_address", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GasStabilityPoolAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "gas_stability_pool_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GasStabilityPoolBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "fungible", "gas_stability_pool_balance", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
