@@ -277,7 +277,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
-	//smokeTest.TestBitcoinSetup()
+	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
 	smokeTest.TestSendZetaIn()
@@ -321,24 +321,24 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	//// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestContextUpgrade()
-	//
-	//smokeTest.TestDepositAndCallRefund()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestERC20Deposit()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestERC20Withdraw()
-	////smokeTest.WithdrawBitcoinMultipleTimes(5)
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestSendZetaOut()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestSendZetaOutBTCRevert()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
+	smokeTest.TestContextUpgrade()
+
+	smokeTest.TestDepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20Deposit()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20Withdraw()
+	//smokeTest.WithdrawBitcoinMultipleTimes(5)
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestSendZetaOut()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestSendZetaOutBTCRevert()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	//smokeTest.TestMessagePassing()
 	//smokeTest.CheckZRC20ReserveAndSupply()
 	//
