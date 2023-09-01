@@ -31,7 +31,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	for _, observer := range allObservers {
 		ctx.Logger().Error("Observes for | ", observer.ObserverChain.ChainName, ":", observer.ObserverList)
 	}
-	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
+	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
 }

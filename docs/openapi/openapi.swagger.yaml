@@ -27227,6 +27227,20 @@ paths:
                     $ref: '#/definitions/googlerpcStatus'
         tags:
             - Query
+  /zeta-chain/crosschain/tssHistory: |
+    get:
+        operationId: Query_TssHistory
+        responses:
+            "200":
+                description: A successful response.
+                schema:
+                    $ref: '#/definitions/crosschainQueryTssHistoryResponse'
+            default:
+                description: An unexpected error response.
+                schema:
+                    $ref: '#/definitions/googlerpcStatus'
+        tags:
+            - Query
   /zeta-chain/observer/all_observer_mappers: |
     get:
         operationId: Query_AllObserverMappers
@@ -50213,6 +50227,8 @@ definitions:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
+  crosschainMsgUpdateTssAddressResponse:
+    type: object
   crosschainMsgVoteOnObservedInboundTxResponse:
     type: object
   crosschainMsgVoteOnObservedOutboundTxResponse:
@@ -50260,12 +50276,19 @@ definitions:
         type: string
         title: |-
           the above are commands for zetaclients
-          the following fields are used for the outbound tx are mined
+          the following fields are used when the outbound tx is mined
       outbound_tx_ballot_index:
         type: string
       outbound_tx_observed_external_height:
         type: string
         format: uint64
+      outbound_tx_gas_used:
+        type: string
+        format: uint64
+      outbound_tx_effective_gas_price:
+        type: string
+      tss_pubkey:
+        type: string
   crosschainPendingNonces:
     type: object
     properties:
@@ -50440,6 +50463,14 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryTssHistoryResponse:
+    type: object
+    properties:
+      tss_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainTSS'
   crosschainTSS:
     type: object
     properties:
@@ -50736,6 +50767,8 @@ definitions:
     properties:
       isInboundEnabled:
         type: boolean
+      isOutboundEnabled:
+        type: boolean
   observerPolicy_Type:
     type: string
     enum:
@@ -50744,6 +50777,7 @@ definitions:
       - update_client_params
       - update_keygen_block
       - out_tx_tracker
+      - add_observer
     default: stop_inbound_cctx
     title: '- stop_inbound_cctx: some observer sees inbound tx'
   observerQueryAllBlameRecordsResponse:

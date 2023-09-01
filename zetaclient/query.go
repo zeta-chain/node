@@ -25,7 +25,7 @@ const (
 	Descending Order = "DESC"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
+func (b *ZetaCoreBridge) GetPermissionFlags() (zetaObserverTypes.PermissionFlags, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {
@@ -126,10 +126,13 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{
 		ObservationChain: chain.ChainName.String(),
 	})
-	if err != nil {
-		return nil, err
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return resp.Observers, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return resp.Observers, nil
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
@@ -159,6 +162,18 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 		return nil, err
 	}
 	return res.Block, nil
+}
+
+func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return res, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
+	}
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
@@ -202,10 +217,27 @@ func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 	if err != nil {
-		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err
 	}
 	return resp.Keygen, nil
+}
+
+func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TSS, nil
+}
+
+func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TssList, nil
 }
 
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
