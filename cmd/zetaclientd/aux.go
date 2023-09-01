@@ -1,7 +1,6 @@
 package main
 
 import (
-	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
@@ -45,7 +44,8 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.CoreParams.Erc20CustodyContractAddress)
 		signer, err := zetaclient.NewEVMSigner(evmConfig.Chain, evmConfig.Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
+			continue
 		}
 		signerMap[evmConfig.Chain] = signer
 	}
@@ -54,9 +54,10 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 	if enabled {
 		signer, err := zetaclient.NewBTCSigner(btcConfig, tss, logger, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewBTCSigner error for chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
+		} else {
+			signerMap[btcChain] = signer
 		}
-		signerMap[btcChain] = signer
 	}
 
 	return signerMap, nil
@@ -71,7 +72,8 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 		}
 		co, err := zetaclient.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, *evmConfig, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewEVMChainClient error for chain %s", evmConfig.Chain.String())
+			logger.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
+			continue
 		}
 		clientMap[evmConfig.Chain] = co
 	}
@@ -80,9 +82,11 @@ func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSS
 	if enabled {
 		co, err := zetaclient.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, ts)
 		if err != nil {
-			return nil, errors.Wrapf(err, "NewBitcoinClient error for chain %s", btcChain.String())
+			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
+
+		} else {
+			clientMap[btcChain] = co
 		}
-		clientMap[btcChain] = co
 	}
 
 	return clientMap, nil
