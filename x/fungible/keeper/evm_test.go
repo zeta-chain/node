@@ -6,15 +6,188 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	zetacommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/server/config"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
+
+// get a valid chain id independently of the build flag
+func getValidChainID(t *testing.T) int64 {
+	list := zetacommon.DefaultChainsList()
+	require.NotEmpty(t, list)
+	require.NotNil(t, list[0])
+
+	return list[0].ChainId
+}
+
+// assert that a contract has been deployed by checking stored code is non-empty.
+func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
+	acc := k.GetAccount(ctx, contractAddress)
+	require.NotNil(t, acc)
+
+	code := k.GetCode(ctx, common.BytesToHash(acc.CodeHash))
+	require.NotEmpty(t, code)
+}
+
+// deploySystemContracts deploys the system contracts and returns their addresses.
+func deploySystemContracts(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
+	var err error
+
+	wzeta, err = k.DeployWZETA(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, wzeta)
+	assertContractDeployment(t, evmk, ctx, wzeta)
+
+	uniswapV2Factory, err = k.DeployUniswapV2Factory(ctx)
+	require.NoError(t, err)
+	require.NotEmpty(t, uniswapV2Factory)
+	assertContractDeployment(t, evmk, ctx, uniswapV2Factory)
+
+	uniswapV2Router, err = k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+	require.NoError(t, err)
+	require.NotEmpty(t, uniswapV2Router)
+	assertContractDeployment(t, evmk, ctx, uniswapV2Router)
+
+	connector, err = k.DeployConnectorZEVM(ctx, wzeta)
+	require.NoError(t, err)
+	require.NotEmpty(t, connector)
+	assertContractDeployment(t, evmk, ctx, connector)
+
+	systemContract, err = k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
+	require.NoError(t, err)
+	require.NotEmpty(t, systemContract)
+	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	return
+}
+
+func TestKeeper_DeployZRC20Contract(t *testing.T) {
+	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.DeployZRC20Contract(
+			ctx,
+			"foo",
+			"bar",
+			8,
+			chainID,
+			zetacommon.CoinType_Gas,
+			"foobar",
+			big.NewInt(1000),
+		)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, addr)
+
+		// check foreign coin
+		foreignCoins, found := k.GetForeignCoins(ctx, addr.Hex())
+		require.True(t, found)
+		require.Equal(t, "foobar", foreignCoins.Asset)
+		require.Equal(t, chainID, foreignCoins.ForeignChainId)
+		require.Equal(t, uint32(8), foreignCoins.Decimals)
+		require.Equal(t, "foo", foreignCoins.Name)
+		require.Equal(t, "bar", foreignCoins.Symbol)
+		require.Equal(t, zetacommon.CoinType_Gas, foreignCoins.CoinType)
+		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
+
+		// can get the zrc20 data
+		zrc20Data, err := k.QueryZRC20Data(ctx, addr)
+		require.NoError(t, err)
+		require.Equal(t, "foo", zrc20Data.Name)
+		require.Equal(t, "bar", zrc20Data.Symbol)
+		require.Equal(t, uint8(8), zrc20Data.Decimals)
+
+		// can deposit tokens
+		to := sample.EthAddress()
+		oldBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, oldBalance)
+		require.Equal(t, int64(0), oldBalance.Int64())
+
+		amount := big.NewInt(100)
+		_, err = k.DepositZRC20(ctx, addr, to, amount)
+		require.NoError(t, err)
+
+		newBalance, err := k.BalanceOfZRC4(ctx, addr, to)
+		require.NoError(t, err)
+		require.NotNil(t, newBalance)
+		require.Equal(t, amount.Int64(), newBalance.Int64())
+	})
+}
+
+func TestKeeper_DeploySystemContract(t *testing.T) {
+	t.Run("can deploy the system contracts", func(t *testing.T) {
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		// deploy the system contracts
+		wzeta, uniswapV2Factory, uniswapV2Router, _, systemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// can find system contract address
+		found, err := k.GetSystemContractAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, systemContract, found)
+
+		// can find factory address
+		found, err = k.GetUniswapV2FactoryAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, uniswapV2Factory, found)
+
+		// can find router address
+		found, err = k.GetUniswapV2Router02Address(ctx)
+		require.NoError(t, err)
+		require.Equal(t, uniswapV2Router, found)
+
+		// can find the wzeta contract address
+		found, err = k.GetWZetaContractAddress(ctx)
+		require.NoError(t, err)
+		require.Equal(t, wzeta, found)
+	})
+
+	t.Run("can deposit into wzeta", func(t *testing.T) {
+		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		balance, err := k.BalanceOfZRC4(ctx, wzeta, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotNil(t, balance)
+		require.Equal(t, int64(0), balance.Int64())
+
+		amount := big.NewInt(100)
+		err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amount))))
+		require.NoError(t, err)
+
+		err = k.CallWZetaDeposit(ctx, types.ModuleAddressEVM, amount)
+		require.NoError(t, err)
+
+		balance, err = k.BalanceOfZRC4(ctx, wzeta, types.ModuleAddressEVM)
+		require.NoError(t, err)
+		require.NotNil(t, balance)
+		require.Equal(t, amount.Int64(), balance.Int64())
+	})
+}
 
 func TestKeeper_CallEVMWithData(t *testing.T) {
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {
