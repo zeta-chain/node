@@ -45,6 +45,7 @@ type Config struct {
 	LogLevel            int8   `json:"LogLevel"`
 	LogSampler          bool   `json:"LogSampler"`
 	PreParamsPath       string `json:"PreParamsPath"`
+	ZetaCoreHome        string `json:"ZetaCoreHome"`
 	ChainID             string `json:"ChainID"`
 	ZetaCoreURL         string `json:"ZetaCoreURL"`
 	AuthzGranter        string `json:"AuthzGranter"`
@@ -54,6 +55,8 @@ type Config struct {
 	P2PDiagnosticTicker uint64 `json:"P2PDiagnosticTicker"`
 	TssPath             string `json:"TssPath"`
 	TestTssKeysign      bool   `json:"TestTssKeysign"`
+	CurrentTssPubkey    string `json:"CurrentTssPubkey"`
+	SignerPass          string `json:"SignerPass"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
