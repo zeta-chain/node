@@ -81,13 +81,13 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	ETHZRC20Addr, err := k.setupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
+	ETHZRC20Addr, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 	ctx.Logger().Info("Deployed ETH ZRC20 at " + ETHZRC20Addr.String())
 
-	BTCZRC20Addr, err := k.setupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
+	BTCZRC20Addr, err = k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
@@ -119,7 +119,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetWZetaContractAddress")
 	}
-	uniswapV2Factory, err := k.GetUniswapv2FacotryAddress(ctx)
+	uniswapV2Factory, err := k.GetUniswapV2FactoryAddress(ctx)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetUniswapv2FacotryAddress")
 	}

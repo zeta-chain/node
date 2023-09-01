@@ -20,6 +20,9 @@ type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
 	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
+	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	SetAccount(ctx sdk.Context, acc types.AccountI)
 }
 
 type BankKeeper interface {
