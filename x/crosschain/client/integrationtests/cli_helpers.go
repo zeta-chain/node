@@ -27,12 +27,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 )
 
-func MsgVoteOnObservedInboundTxExec(clientCtx client.Context, chain, obsType fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{chain.String(), obsType.String()}
-	args = append(args, extraArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.CmdCCTXInboundVoter(), args)
-}
-
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
