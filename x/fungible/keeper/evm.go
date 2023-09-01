@@ -292,7 +292,7 @@ func (k Keeper) QueryProtocolFlatFee(ctx sdk.Context, contract common.Address) (
 	if err != nil {
 		return nil, err
 	}
-	if len(unpacked) == 1 {
+	if len(unpacked) == 0 {
 		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
 	}
 
@@ -329,7 +329,7 @@ func (k Keeper) QueryGasLimit(ctx sdk.Context, contract common.Address) (*big.In
 	if err != nil {
 		return nil, err
 	}
-	if len(unpacked) == 1 {
+	if len(unpacked) == 0 {
 		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
 	}
 
