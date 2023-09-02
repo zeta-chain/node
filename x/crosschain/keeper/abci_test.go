@@ -128,6 +128,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			chainID := tc.cctx.GetCurrentOutTxParam().ReceiverChainId
 
