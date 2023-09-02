@@ -195,7 +195,7 @@ try:
         else:
             logger.log.info(f"{VERSION}: this version will be done as non-consensus breaking upgrade")
             command_runner.non_governance_upgrade(VERSION)
-            time.sleep(30)
+            time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
 
 except Exception as e:
     logger.log.error(str(e))
