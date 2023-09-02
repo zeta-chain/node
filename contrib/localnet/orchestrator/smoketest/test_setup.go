@@ -48,18 +48,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	}()
 
 	goerliClient := sm.goerliClient
-	chainid, err := goerliClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	auth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
-	if err != nil {
-		panic(err)
-	}
+	auth := sm.getDeployerAuth()
 
 	LoudPrintf("Deploy ZetaETH ConnectorETH ERC20Custody USDT\n")
 
@@ -210,35 +199,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 
 	// deploy TestDApp contract
 	//auth.GasLimit = 1_000_000
-	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, goerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
-	receipt = MustWaitForTxReceipt(goerliClient, tx)
-	fmt.Printf("TestDApp contract receipt: contract address %s, status %d; used gas %d\n", receipt.ContractAddress, receipt.Status, receipt.GasUsed)
-	dapp, err := testdapp.NewTestDApp(receipt.ContractAddress, goerliClient)
-	if err != nil {
-		panic(err)
-	}
-	{
-		code, err := sm.goerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("TestDApp contract code: len %d\n", len(code))
-		if len(code) == 0 {
-			panic("TestDApp contract code is empty")
-		}
-		res, err := dapp.Connector(&bind.CallOpts{})
-		if err != nil {
-			panic(err)
-		}
-		if res != sm.ConnectorEthAddr {
-			panic("mismatch of TestDApp connector address")
-		}
-	}
-	sm.TestDAppAddr = receipt.ContractAddress
+	sm.setupTestDapp(auth)
 
 	// Save contract addresses to toml file
 	b, err := toml.Marshal(contracts)
@@ -315,4 +276,56 @@ func (sm *SmokeTest) setContracts() {
 	if err != nil {
 		panic(err)
 	}
+
+	sm.setupTestDapp(sm.getDeployerAuth())
+}
+
+func (sm *SmokeTest) setupTestDapp(auth *bind.TransactOpts) {
+	// deploy TestDApp contract
+	//auth.GasLimit = 1_000_000
+	appAddr, tx, _, err := testdapp.DeployTestDApp(auth, sm.goerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
+	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
+	fmt.Printf("TestDApp contract receipt: contract address %s, status %d; used gas %d\n", receipt.ContractAddress, receipt.Status, receipt.GasUsed)
+	dapp, err := testdapp.NewTestDApp(receipt.ContractAddress, sm.goerliClient)
+	if err != nil {
+		panic(err)
+	}
+	{
+		code, err := sm.goerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("TestDApp contract code: len %d\n", len(code))
+		if len(code) == 0 {
+			panic("TestDApp contract code is empty")
+		}
+		res, err := dapp.Connector(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
+		if res != sm.ConnectorEthAddr {
+			panic("mismatch of TestDApp connector address")
+		}
+	}
+	sm.TestDAppAddr = receipt.ContractAddress
+}
+
+func (sm *SmokeTest) getDeployerAuth() *bind.TransactOpts {
+	chainid, err := sm.goerliClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	auth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
+	if err != nil {
+		panic(err)
+	}
+	return auth
 }

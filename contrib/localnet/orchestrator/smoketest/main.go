@@ -339,28 +339,28 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestSendZetaOutBTCRevert()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestMessagePassing()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
+	smokeTest.TestMessagePassing()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	//smokeTest.TestZRC20Swap()
 	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestBitcoinWithdraw()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
+
+	smokeTest.TestBitcoinWithdraw()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	//smokeTest.TestCrosschainSwap()
 	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestMessagePassingRevertFail()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestMessagePassingRevertSuccess()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//// add your dev test here
-	//smokeTest.TestMyTest()
-	//
-	//smokeTest.wg.Wait()
+
+	smokeTest.TestMessagePassingRevertFail()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestMessagePassingRevertSuccess()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	// add your dev test here
+	smokeTest.TestMyTest()
+
+	smokeTest.wg.Wait()
 }
 
 func main() {
