@@ -57,11 +57,6 @@ func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, tssPubkey
 
 // Scan a new batch of missed pending cctx
 func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
-	// initialize missed cctx map
-	if _, found := sc.missedPendingCctx[chainID]; !found {
-		sc.missedPendingCctx[chainID] = make(map[uint64]*crosschaintypes.CrossChainTx)
-	}
-
 	// calculate nonce range to scan
 	nonceFrom, found := sc.nextNonceToScan[chainID]
 	if !found { // uses db nonce on restart
@@ -103,7 +98,7 @@ func (sc *CctxScanner) IsMissedPendingCctx(chainID int64, nonce uint64) bool {
 }
 
 // Re-check and update missed cctx's status
-func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64, nonceLow uint64) {
+func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64) {
 	send, err := sc.bridge.GetCctxByNonce(chainID, nonce)
 	if err != nil {
 		sc.logger.Error().Err(err).Msgf("scanner: error GetCctxByNonce for chain %d nonce %d", chainID, nonce)
@@ -120,44 +115,50 @@ func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64, nonc
 		//    1. No tracker.   For some reason, no observer had reported outtx hash.
 		//    2. No true hash. Track exists but none of the hashes is true (can't be verified)
 		if sc.missedPendingCctxRetry[chainID][nonce] == MaxRetryOnMissedCctx {
-			sc.removeMissedPendingCctx(chainID, nonce, nonceLow)
+			sc.removeMissedPendingCctx(chainID, nonce)
 			sc.logger.Warn().Msgf("scanner: forget about missed pending cctx for chain %d nonce %d", chainID, nonce)
 		}
 	} else { // no longer pending
-		sc.removeMissedPendingCctx(chainID, nonce, nonceLow)
+		sc.removeMissedPendingCctx(chainID, nonce)
 		sc.logger.Info().Msgf("scanner: removed missed pending cctx for chain %d nonce %d", chainID, nonce)
 	}
 }
 
 func (sc *CctxScanner) addMissedPendingCctx(chainID int64, nonceFrom uint64, nonceTo uint64, missedList []*crosschaintypes.CrossChainTx) {
-	nonces := make([]uint64, 0)
+	// initialize missed cctx map if not done yet
+	if _, found := sc.missedPendingCctx[chainID]; !found {
+		sc.missedPendingCctx[chainID] = make(map[uint64]*crosschaintypes.CrossChainTx)
+	}
+
+	nonces := make([]uint64, 0) // for logging only
 	for _, send := range missedList {
 		nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
 		nonces = append(nonces, nonce)
 		sc.missedPendingCctx[chainID][nonce] = send
 	}
 	sc.nextNonceToScan[chainID] = nonceTo
-	if len(nonces) > 0 {
+	if len(missedList) > 0 {
+		sc.saveFirstNonceToScan(chainID)
 		sc.logger.Info().Msgf("scanner: found missed pending cctx for chain %d with nonces %v", chainID, nonces)
 	}
-	sc.saveFirstNonceToScan(chainID)
 }
 
-func (sc *CctxScanner) removeMissedPendingCctx(chainID int64, nonce uint64, nonceLow uint64) {
+func (sc *CctxScanner) removeMissedPendingCctx(chainID int64, nonce uint64) {
 	delete(sc.missedPendingCctx[chainID], nonce)
 	sc.saveFirstNonceToScan(chainID)
 }
 
 func (sc *CctxScanner) saveFirstNonceToScan(chainID int64) {
 	firstNonceToScan := uint64(math.MaxUint64)
-	if len(sc.missedPendingCctx[chainID]) > 0 { // save the lowest nonce for future restart if there ARE missed pending cctx
+	if len(sc.missedPendingCctx[chainID]) == 0 {
+		// either no missed pending cctx found so far OR last missed pending cctx removed
+		firstNonceToScan = sc.nextNonceToScan[chainID]
+	} else { // save the lowest nonce for future restart if there ARE missed pending cctx
 		for nonceMissed := range sc.missedPendingCctx[chainID] {
 			if nonceMissed < firstNonceToScan {
 				firstNonceToScan = nonceMissed
 			}
 		}
-	} else { // save the 'NextNonceToScan' for future restart if no missed pending cctx found so far
-		firstNonceToScan = sc.nextNonceToScan[chainID]
 	}
 	if firstNonceToScan < uint64(math.MaxUint64) {
 		if err := sc.db.Save(clienttypes.ToFirstNonceToScanSQLType(chainID, firstNonceToScan)).Error; err != nil {
@@ -225,7 +226,7 @@ func (sc *CctxScanner) Reset(tssPubkey string) error {
 func (sc *CctxScanner) loadCurrentTssPubkey() {
 	var tss clienttypes.CurrentTssSQLType
 	if err := sc.db.First(&tss, clienttypes.CurrentTssID).Error; err != nil {
-		sc.tssPubkey = "" // record not found
+		sc.logger.Info().Msg("scanner: use empty tss pubkey as db is empty")
 	}
 	sc.tssPubkey = tss.TssPubkey
 }

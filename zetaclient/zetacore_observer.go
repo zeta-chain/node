@@ -186,7 +186,7 @@ func (co *CoreObserver) startSendScheduler() {
 							}
 							// skip keysign for missed pending cctx as outTx was already finalized
 							if co.scanner.IsMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce) {
-								co.scanner.UpdateMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce, uint64(pendingNonces.NonceLow))
+								co.scanner.UpdateMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce)
 								continue
 							}
 							if included {
