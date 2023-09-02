@@ -446,11 +446,10 @@ func (ob *EVMChainClient) observeOutTx() {
 					default:
 						ob.mu.Lock()
 						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+						ob.mu.Unlock()
 						if found {
-							ob.mu.Unlock()
 							continue
 						}
-						ob.mu.Unlock()
 
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)

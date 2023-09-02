@@ -195,11 +195,13 @@ try:
         else:
             logger.log.info(f"{VERSION}: this version will be done as non-consensus breaking upgrade")
             command_runner.non_governance_upgrade(VERSION)
-            time.sleep(30)
+            time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
+            command_runner.docker_ps()
+            command_runner.get_docker_container_logs()
 
 except Exception as e:
     logger.log.error(str(e))
-    #command_runner.get_docker_container_logs()
+    command_runner.get_docker_container_logs()
 
 logger.log.info("Check docker process is still running for debug purposes.")
 time.sleep(30)
