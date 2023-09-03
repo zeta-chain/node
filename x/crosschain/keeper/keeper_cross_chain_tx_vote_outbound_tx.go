@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"cosmossdk.io/math"
 
@@ -198,6 +199,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
+func percentOf(n *big.Int, percent int64) *big.Int {
+	n = n.Mul(n, big.NewInt(percent))
+	n = n.Div(n, big.NewInt(100))
+	return n
+}
+
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
 func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundTxParams types.OutboundTxParams, chainID int64) error {
 	gasLimit := outboundTxParams.OutboundTxGasLimit
@@ -209,6 +216,11 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 		if gasLimit >= gasUsed {
 			remainingGas := gasLimit - gasUsed
 			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
+
+			// Funding the gas stability pool with 100% of the remaining fees ((gasLimit - gasUsed) * gasPrice)
+			// create an accountability issue because more funds are burned on the TSS address to pay the fees
+			// to avoid this issue we only fund the gas stability pool with a portion of the remaining fees
+			remainingFees = percentOf(remainingFees, 50)
 
 			// Fund the gas stability pool
 			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {

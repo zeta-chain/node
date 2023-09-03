@@ -57,19 +57,19 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			name:                                  "should call fund stability pool with correct remaining fees",
 			gasLimit:                              100,
 			gasUsed:                               90,
-			effectiveGasPrice:                     math.NewInt(20),
+			effectiveGasPrice:                     math.NewInt(100),
 			fundStabilityPoolReturn:               nil,
 			expectFundStabilityPoolCall:           true,
-			fundStabilityPoolExpectedRemainingFee: big.NewInt(200), // (100-90)*20 = 200
+			fundStabilityPoolExpectedRemainingFee: big.NewInt(500), // (100-90)*100 = 1000 * 50% = 500
 		},
 		{
 			name:                                  "should return error if fund stability pool returns error",
 			gasLimit:                              100,
 			gasUsed:                               90,
-			effectiveGasPrice:                     math.NewInt(20),
+			effectiveGasPrice:                     math.NewInt(100),
 			fundStabilityPoolReturn:               errors.New("fund stability pool error"),
 			expectFundStabilityPoolCall:           true,
-			fundStabilityPoolExpectedRemainingFee: big.NewInt(200),
+			fundStabilityPoolExpectedRemainingFee: big.NewInt(500),
 			isError:                               true,
 		},
 	}
