@@ -6,12 +6,11 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
-
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 )
 
 func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
