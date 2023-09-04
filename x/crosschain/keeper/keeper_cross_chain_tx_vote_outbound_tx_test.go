@@ -19,9 +19,9 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 
 	tt := []struct {
 		name                                  string
-		gasLimit                              uint64
 		gasUsed                               uint64
 		effectiveGasPrice                     math.Int
+		effectiveGasLimit                     uint64
 		fundStabilityPoolReturn               error
 		expectFundStabilityPoolCall           bool
 		fundStabilityPoolExpectedRemainingFee *big.Int
@@ -29,35 +29,35 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 	}{
 		{
 			name:                        "no call if gasLimit is 0",
-			gasLimit:                    0,
+			effectiveGasLimit:           0,
 			gasUsed:                     42,
 			effectiveGasPrice:           math.NewInt(42),
 			expectFundStabilityPoolCall: false,
 		},
 		{
 			name:                        "no call if gasUsed is 0",
-			gasLimit:                    42,
+			effectiveGasLimit:           42,
 			gasUsed:                     0,
 			effectiveGasPrice:           math.NewInt(42),
 			expectFundStabilityPoolCall: false,
 		},
 		{
 			name:                        "no call if effectiveGasPrice is 0",
-			gasLimit:                    42,
+			effectiveGasLimit:           42,
 			gasUsed:                     42,
 			effectiveGasPrice:           math.NewInt(0),
 			expectFundStabilityPoolCall: false,
 		},
 		{
 			name:              "should return error if gas limit is less than gas used",
-			gasLimit:          41,
+			effectiveGasLimit: 41,
 			gasUsed:           42,
 			effectiveGasPrice: math.NewInt(42),
 			isError:           true,
 		},
 		{
 			name:                                  "should call fund stability pool with correct remaining fees",
-			gasLimit:                              100,
+			effectiveGasLimit:                     100,
 			gasUsed:                               90,
 			effectiveGasPrice:                     math.NewInt(100),
 			fundStabilityPoolReturn:               nil,
@@ -66,7 +66,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 		},
 		{
 			name:                                  "should return error if fund stability pool returns error",
-			gasLimit:                              100,
+			effectiveGasLimit:                     100,
 			gasUsed:                               90,
 			effectiveGasPrice:                     math.NewInt(100),
 			fundStabilityPoolReturn:               errors.New("fund stability pool error"),
@@ -84,7 +84,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 
 			// OutboundTxParams
 			outbound := sample.OutboundTxParams(r)
-			outbound.OutboundTxGasLimit = tc.gasLimit
+			outbound.OutboundTxEffectiveGasLimit = tc.effectiveGasLimit
 			outbound.OutboundTxGasUsed = tc.gasUsed
 			outbound.OutboundTxEffectiveGasPrice = tc.effectiveGasPrice
 
