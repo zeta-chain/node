@@ -27,10 +27,8 @@ const (
 	GasPriceIncreasePercent = 100
 
 	// RemainingFeesToStabilityPoolPercent is the percentage of remaining fees used to fund the gas stability pool
-	// Funding the gas stability pool with 100% of the remaining fees ((gasLimit - gasUsed) * gasPrice)
-	// create an accountability issue because more funds are burned on the TSS address to pay the fees
-	// to avoid this issue we only fund the gas stability pool with a portion of the remaining fees
-	RemainingFeesToStabilityPoolPercent = 90
+	// TODO: determine value
+	RemainingFeesToStabilityPoolPercent = 95
 )
 
 // IterateAndUpdateCctxGasPrice iterates through all cctx and updates the gas price if pending for too long

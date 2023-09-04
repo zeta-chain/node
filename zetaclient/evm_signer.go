@@ -317,21 +317,39 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	// use dynamic gas price for ethereum chains
 	var gasprice *big.Int
-	if common.IsEthereumChain(toChain.ChainId) {
-		suggested, err := signer.client.SuggestGasPrice(context.Background())
-		if err != nil {
-			logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
-			return
-		}
-		gasprice = roundUpToNearestGwei(suggested)
-	} else {
-		specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-		if !ok {
+	//if common.IsEthereumChain(toChain.ChainId) {
+	//	suggested, err := signer.client.SuggestGasPrice(context.Background())
+	//	if err != nil {
+	//		logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
+	//		return
+	//	}
+	//	gasprice = roundUpToNearestGwei(suggested)
+	//} else {
+	//	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	//	if !ok {
+	//		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+	//		return
+	//	}
+	//	gasprice = specified
+	//}
+
+	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	if !ok {
+		if common.IsEthereumChain(toChain.ChainId) {
+			suggested, err := signer.client.SuggestGasPrice(context.Background())
+			if err != nil {
+				logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
+				return
+			}
+			gasprice = roundUpToNearestGwei(suggested)
+		} else {
 			logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
 			return
 		}
+	} else {
 		gasprice = specified
 	}
+
 	flags, err := zetaBridge.GetPermissionFlags()
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get permission flags")
