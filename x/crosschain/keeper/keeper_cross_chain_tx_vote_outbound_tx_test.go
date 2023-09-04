@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	"errors"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"math/big"
 	"math/rand"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"

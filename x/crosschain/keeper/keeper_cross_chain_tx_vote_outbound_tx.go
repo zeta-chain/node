@@ -121,6 +121,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
 	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = msg.ObservedOutTxGasUsed
 	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice = msg.ObservedOutTxEffectiveGasPrice
+	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = msg.ObservedOutTxEffectiveGasLimit
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
 	// Fund the gas stability pool with the remaining funds
@@ -207,8 +208,8 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 
 // FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
 func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundTxParams types.OutboundTxParams, chainID int64) error {
-	gasLimit := outboundTxParams.OutboundTxGasLimit
 	gasUsed := outboundTxParams.OutboundTxGasUsed
+	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
 
 	// We skip gas stability pool funding if one of the params is zero
