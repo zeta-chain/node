@@ -4,10 +4,13 @@ import (
 	"errors"
 	"hash/fnv"
 	"math/rand"
+	"strconv"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
@@ -28,6 +31,12 @@ func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
 	return newRandFromSeed(int64(h.Sum64()))
 }
 
+// PubKey returns a sample account PubKey
+func PubKey(r *rand.Rand) cryptotypes.PubKey {
+	seed := []byte(strconv.Itoa(r.Int()))
+	return ed25519.GenPrivKeyFromSecret(seed).PubKey()
+}
+
 // AccAddress returns a sample account address
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
@@ -35,8 +44,24 @@ func AccAddress() string {
 	return sdk.AccAddress(addr).String()
 }
 
-// PubKey returns a sample public key and address
-func PubKey() string {
+// ValAddress returns a sample validator operator address
+func ValAddress(r *rand.Rand) sdk.ValAddress {
+	return sdk.ValAddress(PubKey(r).Address())
+}
+
+// Validator returns a sample staking validator
+func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
+	seed := []byte(strconv.Itoa(r.Int()))
+	val, err := stakingtypes.NewValidator(
+		ValAddress(r),
+		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
+		stakingtypes.Description{})
+	require.NoError(t, err)
+	return val
+}
+
+// PubKeyString returns a sample public key string
+func PubKeyString() string {
 	priKey := ed25519.GenPrivKey()
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
