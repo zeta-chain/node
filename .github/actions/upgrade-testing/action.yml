@@ -46,7 +46,7 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
         BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
-        UPGRADES_SLEEP_TIME: 220
+        UPGRADES_SLEEP_TIME: 300
         DEBUG_UPGRADES: "false"
         #BINARY_DOWNLOAD_LIST: '{"binary_download_list":[["v8.3.3", "zetacored-ubuntu-22-amd64"],["v9.0.0", "zetacored-ubuntu-22-amd64"]]}'
         #TAG_LIST: '{"tag_list":["v8.3.3","v9.0.0"]}'

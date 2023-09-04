@@ -27,7 +27,7 @@ func TestMsgAddObserver_ValidateBasic(t *testing.T) {
 			msg: types.MsgAddObserver{
 				Creator:                 "invalid_address",
 				ObserverAddress:         sample.AccAddress(),
-				ZetaclientGranteePubkey: sample.PubKey(),
+				ZetaclientGranteePubkey: sample.PubKeyString(),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -45,7 +45,7 @@ func TestMsgAddObserver_ValidateBasic(t *testing.T) {
 			msg: types.MsgAddObserver{
 				Creator:                 sample.AccAddress(),
 				ObserverAddress:         "invalid_address",
-				ZetaclientGranteePubkey: sample.PubKey(),
+				ZetaclientGranteePubkey: sample.PubKeyString(),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -54,7 +54,7 @@ func TestMsgAddObserver_ValidateBasic(t *testing.T) {
 			msg: types.MsgAddObserver{
 				Creator:                 sample.AccAddress(),
 				ObserverAddress:         sample.AccAddress(),
-				ZetaclientGranteePubkey: sample.PubKey(),
+				ZetaclientGranteePubkey: sample.PubKeyString(),
 			},
 		},
 	}
