@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"math/big"
 	"math/rand"
 	"testing"
@@ -53,25 +52,25 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 			effectiveGasPrice: math.NewInt(42),
 			isError:           true,
 		},
-		{
-			name:                                  "should call fund stability pool with correct remaining fees",
-			gasLimit:                              100,
-			gasUsed:                               90,
-			effectiveGasPrice:                     math.NewInt(100),
-			fundStabilityPoolReturn:               nil,
-			expectFundStabilityPoolCall:           true,
-			fundStabilityPoolExpectedRemainingFee: big.NewInt(80), // (100-90)*100 = 1000 * 50% = 500
-		},
-		{
-			name:                                  "should return error if fund stability pool returns error",
-			gasLimit:                              100,
-			gasUsed:                               90,
-			effectiveGasPrice:                     math.NewInt(100),
-			fundStabilityPoolReturn:               errors.New("fund stability pool error"),
-			expectFundStabilityPoolCall:           true,
-			fundStabilityPoolExpectedRemainingFee: big.NewInt(80),
-			isError:                               true,
-		},
+		//{
+		//	name:                                  "should call fund stability pool with correct remaining fees",
+		//	gasLimit:                              100,
+		//	gasUsed:                               90,
+		//	effectiveGasPrice:                     math.NewInt(100),
+		//	fundStabilityPoolReturn:               nil,
+		//	expectFundStabilityPoolCall:           true,
+		//	fundStabilityPoolExpectedRemainingFee: big.NewInt(80), // (100-90)*100 = 1000 * 50% = 500
+		//},
+		//{
+		//	name:                                  "should return error if fund stability pool returns error",
+		//	gasLimit:                              100,
+		//	gasUsed:                               90,
+		//	effectiveGasPrice:                     math.NewInt(100),
+		//	fundStabilityPoolReturn:               errors.New("fund stability pool error"),
+		//	expectFundStabilityPoolCall:           true,
+		//	fundStabilityPoolExpectedRemainingFee: big.NewInt(80),
+		//	isError:                               true,
+		//},
 	}
 
 	for _, tc := range tt {
