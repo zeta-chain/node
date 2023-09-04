@@ -21,7 +21,7 @@ runs:
       # Optionally install a specific version of Go
       # Only use if go has not been installed in a previous step of the calling workflow
       if : ${{ inputs.go-version != '' }} 
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go-version }}  
         cache: true
