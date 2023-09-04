@@ -220,7 +220,7 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 			// Funding the gas stability pool with 100% of the remaining fees ((gasLimit - gasUsed) * gasPrice)
 			// create an accountability issue because more funds are burned on the TSS address to pay the fees
 			// to avoid this issue we only fund the gas stability pool with a portion of the remaining fees
-			remainingFees = percentOf(remainingFees, 40)
+			remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
 
 			// Fund the gas stability pool
 			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {
