@@ -317,22 +317,10 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	// use dynamic gas price for ethereum chains
 	var gasprice *big.Int
-	//if common.IsEthereumChain(toChain.ChainId) {
-	//	suggested, err := signer.client.SuggestGasPrice(context.Background())
-	//	if err != nil {
-	//		logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
-	//		return
-	//	}
-	//	gasprice = roundUpToNearestGwei(suggested)
-	//} else {
-	//	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-	//	if !ok {
-	//		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
-	//		return
-	//	}
-	//	gasprice = specified
-	//}
 
+	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
+	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no OutboundTxGasPrice
+	// we should possibly remove it completely and return an error if no OutboundTxGasPrice is provided because it means no fee is processed on ZetaChain
 	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
 	if !ok {
 		if common.IsEthereumChain(toChain.ChainId) {
@@ -349,6 +337,21 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	} else {
 		gasprice = specified
 	}
+	//if common.IsEthereumChain(toChain.ChainId) {
+	//	suggested, err := signer.client.SuggestGasPrice(context.Background())
+	//	if err != nil {
+	//		logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
+	//		return
+	//	}
+	//	gasprice = roundUpToNearestGwei(suggested)
+	//} else {
+	//	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
+	//	if !ok {
+	//		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
+	//		return
+	//	}
+	//	gasprice = specified
+	//}
 
 	flags, err := zetaBridge.GetPermissionFlags()
 	if err != nil {
