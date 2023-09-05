@@ -48,7 +48,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 		return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
 	}
 
-	res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, false, "PROTOCOL_FLAT_FEE")
+	res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, false, false, "PROTOCOL_FLAT_FEE")
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract PROTOCOL_FLAT_FEE method (%s)", err.Error())
 	}
@@ -62,7 +62,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	tmpCtx, commit := ctx.CacheContext()
-	_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, "updateProtocolFlatFee", msg.NewWithdrawFee.BigInt())
+	_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, false, "updateProtocolFlatFee", msg.NewWithdrawFee.BigInt())
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventZRC20WithdrawFeeUpdated{

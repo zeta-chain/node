@@ -6,9 +6,12 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/ethereum/go-ethereum"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
@@ -28,6 +31,7 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 		fmt.Printf("Waiting for cctx to be mined by inTxHash: %s\n", inTxHash)
 		res, err := cctxClient.InTxHashToCctx(context.Background(), &types.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
 		if err != nil {
+			fmt.Println("Error getting cctx by inTxHash: ", err.Error())
 			continue
 		}
 		cctxIndexes = res.InTxHashToCctx.CctxIndex
@@ -47,6 +51,8 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 					fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
 					cctxs = append(cctxs, res.CrossChainTx)
 					break
+				} else if err != nil {
+					fmt.Println("Error getting cctx by index: ", err.Error())
 				}
 			}
 		}()
@@ -84,14 +90,17 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 		if time.Since(start) > 30*time.Second {
 			panic("waiting tx receipt timeout")
 		}
+		time.Sleep(1 * time.Second)
 		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
 		if err != nil {
+			if !errors.Is(err, ethereum.NotFound) {
+				fmt.Println("fetching tx receipt error: ", err.Error())
+			}
 			continue
 		}
 		if receipt != nil {
 			return receipt
 		}
-		time.Sleep(1 * time.Second)
 	}
 }
 

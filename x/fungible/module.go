@@ -155,7 +155,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
-	InitGenesis(ctx, am.keeper, genState, am.accountKeeper)
+	InitGenesis(ctx, am.keeper, genState)
+
+	// ensure fungible module account is set on genesis
+	if acc := am.accountKeeper.GetModuleAccount(ctx, types.ModuleName); acc == nil {
+		// NOTE: shouldn't occur
+		panic("the fungible module account has not been set")
+	}
 
 	return []abci.ValidatorUpdate{}
 }

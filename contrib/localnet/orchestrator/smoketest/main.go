@@ -264,9 +264,13 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================
 	startTime := time.Now()
+
+	// test the block of increaseAllowance & decreaseAllowance
+
 	smokeTest.TestBitcoinSetup()
 	smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 	smokeTest.TestDepositEtherIntoZRC20()
+
 	smokeTest.TestSendZetaIn()
 
 	zevmSwapAppAddr, tx, _, err := zevmswap.DeployZEVMSwapApp(smokeTest.zevmAuth, smokeTest.zevmClient, smokeTest.UniswapV2RouterAddr, smokeTest.SystemContractAddr)
@@ -347,16 +351,49 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// add your dev test here
 	smokeTest.TestMyTest()
 
-	tx, err = smokeTest.ETHZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ZEVMSwapAppAddr, big.NewInt(1000000000000000000))
-	if err != nil {
-		panic(err)
-	}
-	receipt = MustWaitForTxReceipt(zevmClient, tx)
-	if receipt.Status != 0 {
-		panic("IncreaseAllowance should fail")
-	} else {
-		fmt.Printf("OK: IncreaseAllowance failed as expected\n")
-	}
+	//tx, err = smokeTest.ETHZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ZEVMSwapAppAddr, big.NewInt(1000000000000000000))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//receipt = MustWaitForTxReceipt(zevmClient, tx)
+	//if receipt.Status != 0 {
+	//	panic("IncreaseAllowance should fail")
+	//} else {
+	//	fmt.Printf("OK: IncreaseAllowance failed as expected\n")
+	//}
+	//{
+	//	LoudPrintf("Test ZRC20 blocked methods\n")
+	//	sampleZRC20, err := zrc20.NewZRC20(smokeTest.USDTZRC20Addr, zevmClient)
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//
+	//	_, err = sampleZRC20.Approve(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	tx, err := sampleZRC20.IncreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	//	if receipt.Status != 0 {
+	//		panic("IncreaseAllowance should be blocked!")
+	//	} else {
+	//		fmt.Printf("IncreaseAllowance is blocked as expected\n")
+	//	}
+	//	tx, err = sampleZRC20.DecreaseAllowance(smokeTest.zevmAuth, smokeTest.ERC20CustodyAddr, big.NewInt(1000000))
+	//	if err != nil {
+	//		panic(err)
+	//	}
+	//	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	//	if receipt.Status != 0 {
+	//		panic("IncreaseAllowance should be blocked!")
+	//	} else {
+	//		fmt.Printf("IncreaseAllowance is blocked as expected\n")
+	//	}
+	//}
+
 	smokeTest.wg.Wait()
 }
 

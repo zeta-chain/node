@@ -3,8 +3,10 @@ package zetaclient
 import (
 	"errors"
 	"math"
+	"time"
 
 	"github.com/btcsuite/btcd/txscript"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -39,4 +41,35 @@ func round(f float64) int64 {
 
 func payToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
+}
+
+type DynamicTicker struct {
+	name     string
+	interval uint64
+	impl     *time.Ticker
+}
+
+func NewDynamicTicker(name string, interval uint64) *DynamicTicker {
+	return &DynamicTicker{
+		name:     name,
+		interval: interval,
+		impl:     time.NewTicker(time.Duration(interval) * time.Second),
+	}
+}
+
+func (t *DynamicTicker) C() <-chan time.Time {
+	return t.impl.C
+}
+
+func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
+	if newInterval > 0 && t.interval != newInterval {
+		t.impl.Stop()
+		t.interval = newInterval
+		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
+		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, t.interval, newInterval)
+	}
+}
+
+func (t *DynamicTicker) Stop() {
+	t.impl.Stop()
 }
