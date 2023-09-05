@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"math/rand"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,18 +21,23 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ethermint "github.com/evmos/ethermint/types"
+	evmmodule "github.com/evmos/ethermint/x/evm"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-type SDKModules struct {
+// SDKKeepers is a struct containing regular SDK module keepers for test purposes
+type SDKKeepers struct {
 	ParamsKeeper    paramskeeper.Keeper
 	AuthKeeper      authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
@@ -96,7 +104,7 @@ func AccountKeeper(
 		cdc,
 		storeKey,
 		paramKeeper.Subspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount,
+		ethermint.ProtoAccount,
 		moduleAccountPerms,
 		"zeta",
 	)
@@ -234,7 +242,7 @@ func EVMKeeper(
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
-	return evmkeeper.NewKeeper(
+	k := evmkeeper.NewKeeper(
 		cdc,
 		storeKey,
 		transientKey,
@@ -248,6 +256,8 @@ func EVMKeeper(
 		"",
 		paramKeeper.Subspace(evmtypes.ModuleName),
 	)
+
+	return k
 }
 
 // NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
@@ -255,7 +265,7 @@ func NewSDKKeepers(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-) SDKModules {
+) SDKKeepers {
 	paramsKeeper := ParamsKeeper(cdc, db, ss)
 	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
 	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
@@ -263,7 +273,7 @@ func NewSDKKeepers(
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
 
-	return SDKModules{
+	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,
 		AuthKeeper:      authKeeper,
 		BankKeeper:      bankKeeper,
@@ -271,4 +281,31 @@ func NewSDKKeepers(
 		FeeMarketKeeper: feeMarketKeeper,
 		EvmKeeper:       evmKeeper,
 	}
+}
+
+// InitGenesis initializes the test modules genesis state
+func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
+	sdkk.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
+	sdkk.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
+	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
+	evmGenesis := *evmtypes.DefaultGenesisState()
+	evmGenesis.Params.EvmDenom = "azeta"
+	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)
+}
+
+// InitBlockProposer initialize the block proposer for test purposes with an associated validator
+func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+	// #nosec G404 test purpose - weak randomness is not an issue here
+	r := rand.New(rand.NewSource(42))
+
+	// Set validator in the store
+	validator := sample.Validator(t, r)
+	sdkk.StakingKeeper.SetValidator(ctx, validator)
+	err := sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(t, err)
+
+	// Validator is proposer
+	consAddr, err := validator.GetConsAddr()
+	require.NoError(t, err)
+	return ctx.WithProposer(consAddr)
 }
