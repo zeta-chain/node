@@ -38,10 +38,6 @@ func (suite *CctxScannerTestSuite) SetupTest() {
 	suite.sc = sc
 }
 
-func (suite *CctxScannerTestSuite) TearDownTest() {
-	suite.sc.Reset("") // clean db after each test
-}
-
 func (suite *CctxScannerTestSuite) SaveNLoadNonces(goerliNonce uint64, bsctestNonce uint64, mumbaiNonce uint64, btctestNonce uint64) {
 	goerli := clienttypes.ToFirstNonceToScanSQLType(5, goerliNonce)
 	bsctest := clienttypes.ToFirstNonceToScanSQLType(97, bsctestNonce)
@@ -186,6 +182,9 @@ func (suite *CctxScannerTestSuite) TestScannerDB() {
 		have := firstNonce.FirstNonce
 		suite.Equal(want, have)
 	}
+
+	// Tear down
+	suite.sc.Reset("") // clean db after each test
 }
 
 func (suite *CctxScannerTestSuite) TestScannerDBReset() {
@@ -197,6 +196,9 @@ func (suite *CctxScannerTestSuite) TestScannerDBReset() {
 
 	// Make sure all maps are empty again
 	suite.CheckEmptyNonces()
+
+	// Tear down
+	suite.sc.Reset("") // clean db after each test
 }
 
 func (suite *CctxScannerTestSuite) TestCctxNonces() {
@@ -226,6 +228,9 @@ func (suite *CctxScannerTestSuite) TestCctxNonces() {
 		have := suite.sc.nextNonceToScan[chainID]
 		suite.Equal(want, have) // next nonce should fall back to first nonce after restart
 	}
+
+	// Tear down
+	suite.sc.Reset("") // clean db after each test
 }
 
 func (suite *CctxScannerTestSuite) CheckMissedCctxByChain(allMissedMap map[int64]map[uint64]*crosschaintypes.CrossChainTx, chainID int64) {
@@ -253,6 +258,9 @@ func (suite *CctxScannerTestSuite) TestGetMissedPendingCctxByChain() {
 	suite.CheckMissedCctxByChain(allMissedMap, 5)
 	suite.CheckMissedCctxByChain(allMissedMap, 97)
 	suite.CheckMissedCctxByChain(allMissedMap, 80001)
+
+	// Tear down
+	suite.sc.Reset("") // clean db after each test
 }
 
 func (suite *CctxScannerTestSuite) TestRemoveMissedPendingCctx() {
@@ -281,4 +289,7 @@ func (suite *CctxScannerTestSuite) TestRemoveMissedPendingCctx() {
 	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5])                // next nonce fall back to first nonce for goerli, , EDGE CASE: next nonce should be 1000
 	suite.Equal(expNextNonceMapRestart[97], suite.sc.nextNonceToScan[97])       // next nonce fall back to first nonce for bsc
 	suite.Equal(expNextNonceMapRestart[80001], suite.sc.nextNonceToScan[80001]) // next nonce fall back to first nonce for mumbai
+
+	// Tear down
+	suite.sc.Reset("") // clean db after each test
 }
