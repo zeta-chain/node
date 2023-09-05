@@ -342,14 +342,14 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestMessagePassing()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestZRC20Swap()
-	//smokeTest.CheckZRC20ReserveAndSupply()
+	smokeTest.TestZRC20Swap()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestBitcoinWithdraw()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestCrosschainSwap()
-	//smokeTest.CheckZRC20ReserveAndSupply()
+	smokeTest.TestCrosschainSwap()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestMessagePassingRevertFail()
 	smokeTest.CheckZRC20ReserveAndSupply()
