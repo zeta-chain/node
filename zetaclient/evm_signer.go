@@ -526,7 +526,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 // function unwhitelist(
 // address asset,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignWhitelistTx(action string, recipient ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignWhitelistTx(action string, _ ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	var data []byte
 
 	var err error
