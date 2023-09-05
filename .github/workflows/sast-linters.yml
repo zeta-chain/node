@@ -67,6 +67,8 @@ jobs:
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }} # Check out the PR head
 
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
@@ -87,7 +89,7 @@ jobs:
         id: getfile
         run: |
           echo "Getting list of changed go files..."
-          files=$(git diff --name-only '*.go')
+          files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- '*.go')
           echo "Changed files: $files"
           # echo "Changed go files: $files" >> $GITHUB_ENV
           echo "::set-output name=files::$files"
