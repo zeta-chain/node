@@ -198,7 +198,6 @@ try:
             time.sleep(int(UPGRADE_DATA["upgrade_sleep_time"]))
             command_runner.docker_ps()
             command_runner.get_docker_container_logs()
-
 except Exception as e:
     logger.log.error(str(e))
     command_runner.get_docker_container_logs()
