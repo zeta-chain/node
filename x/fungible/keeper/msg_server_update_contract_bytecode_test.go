@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
