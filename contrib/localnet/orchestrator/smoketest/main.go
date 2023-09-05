@@ -38,12 +38,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	ContractsDeployed   = "CONTRACTS_DEPLOYED"
-	ZetaEthAddrEnv      = "ZETA_ETH_ADDR"
-	ConnectorEthAddrEnv = "CONN_ETH_ADDR"
-)
-
 var (
 	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
 	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
