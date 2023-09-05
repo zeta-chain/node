@@ -10,11 +10,13 @@ const TypeMsgUpdateContractBytecode = "update_contract_bytecode"
 
 var _ sdk.Msg = &MsgUpdateContractBytecode{}
 
-func NewMsgUpdateContractBytecode(creator string, contractAddress ethcommon.Address, newBytecode []byte) *MsgUpdateContractBytecode {
+func NewMsgUpdateContractBytecode(
+	creator string, contractAddress ethcommon.Address, newBytecodeAddress ethcommon.Address,
+) *MsgUpdateContractBytecode {
 	return &MsgUpdateContractBytecode{
-		Creator:         creator,
-		ContractAddress: contractAddress.Hex(),
-		NewBytecode:     newBytecode,
+		Creator:            creator,
+		ContractAddress:    contractAddress.Hex(),
+		NewBytecodeAddress: newBytecodeAddress.Hex(),
 	}
 }
 
@@ -44,8 +46,14 @@ func (msg *MsgUpdateContractBytecode) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	// check if the system contract address is valid
+
+	// check if the contract address is valid
 	if ethcommon.HexToAddress(msg.ContractAddress) == (ethcommon.Address{}) {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
+	}
+
+	// check if the bytecode contract address is valid
+	if ethcommon.HexToAddress(msg.NewBytecodeAddress) == (ethcommon.Address{}) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
 	}
 

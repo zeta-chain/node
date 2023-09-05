@@ -56,7 +56,7 @@ message MsgRemoveForeignCoinResponse {}
 message MsgUpdateContractBytecode {
   string creator = 1;
   string contract_address = 2;
-  bytes new_bytecode = 3;
+  string new_bytecode_address = 3;
 }
 
 message MsgUpdateContractBytecodeResponse {}

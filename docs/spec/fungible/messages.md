@@ -66,3 +66,13 @@ message MsgUpdateZRC20WithdrawFee {
 }
 ```
 
+## MsgUpdateContractBytecode
+
+```proto
+message MsgUpdateContractBytecode {
+	string creator = 1;
+	string contract_address = 2;
+	string new_bytecode_address = 3;
+}
+```
+

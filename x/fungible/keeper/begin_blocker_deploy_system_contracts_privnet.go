@@ -209,12 +209,12 @@ func (k Keeper) TestUpdateContractBytecode(goCtx context.Context) error {
 	coins := k.GetAllForeignCoins(ctx)
 	for _, coin := range coins {
 		zrc20Addr := ethcommon.HexToAddress(coin.Zrc20ContractAddress)
-		msg := types.NewMsgUpdateContractBytecode(creator, zrc20Addr, bytecode)
+		//msg := types.NewMsgUpdateContractBytecode(creator, zrc20Addr, bytecode)
 		//_, err = k.UpdateContractBytecode(ctx, msg)
 		//if err != nil {
 		//	panic(err)
 		//}
-		_ = msg
+		//_ = msg
 		k.Logger(ctx).Info("UpdateContractBytecode", "zrc20Addr", zrc20Addr.String(), "coin", coin.Name)
 		data, err := k.QueryZRC20Data(ctx, zrc20Addr)
 		if err != nil {
