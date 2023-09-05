@@ -15,7 +15,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	k, ctx, sdkk := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-	// Sample chainIDs and addresses
+	// sample chainIDs and addresses
 	chainList := zetacommon.DefaultChainsList()
 	require.True(t, len(chainList) > 1)
 	require.NotNil(t, chainList[0])
@@ -26,17 +26,17 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	addr1 := sample.EthAddress()
 	addr2 := sample.EthAddress()
 
-	// Deploy the system contract and a ZRC20 contract
+	// deploy the system contract and a ZRC20 contract
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID1, "alpha", "alpha")
 
-	// Do some operation to populate the state
+	// do some operation to populate the state
 	_, err := k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(100))
 	require.NoError(t, err)
 	_, err = k.DepositZRC20(ctx, zrc20, addr2, big.NewInt(200))
 	require.NoError(t, err)
 
-	// Check the state
+	// check the state
 	checkState := func() {
 		// state that should not change
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
@@ -55,7 +55,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, chainID1, chainID.Int64())
 
-	// Deploy new zrc20
+	// deploy new zrc20
 	newCodeAddress, err := k.DeployZRC20Contract(
 		ctx,
 		"beta",
@@ -68,7 +68,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Update the bytecode
+	// update the bytecode
 	_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 		sample.AccAddress(),
 		zrc20,
@@ -76,11 +76,18 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	))
 	require.NoError(t, err)
 
-	// Check the state
+	// check the state
 	// balances and total supply should remain
 	// BYTECODE value is immutable and therefore part of the code, this value should change
 	checkState()
 	chainID, err = k.QueryChainIDFromContract(ctx, zrc20)
 	require.NoError(t, err)
 	require.Equal(t, chainID2, chainID.Int64())
+
+	// can continue to interact with the contract
+	_, err = k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(1000))
+	require.NoError(t, err)
+	balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
+	require.NoError(t, err)
+	require.Equal(t, int64(1100), balance.Int64())
 }
