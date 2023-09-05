@@ -4,11 +4,10 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/testutil/sample"
-
 	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
