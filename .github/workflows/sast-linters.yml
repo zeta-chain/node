@@ -79,4 +79,4 @@ jobs:
 
         with:
           version: v1.50
-          skip-cache: false
+          skip-cache: true
