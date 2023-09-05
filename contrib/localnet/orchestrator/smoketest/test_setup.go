@@ -6,10 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/pelletier/go-toml/v2"
 	"math/big"
 	"os"
 	"time"
+
+	"github.com/pelletier/go-toml/v2"
 
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 
