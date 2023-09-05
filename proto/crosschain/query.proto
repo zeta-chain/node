@@ -34,7 +34,7 @@ service Query {
   }
 
   rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain";
+    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain/{Chain}";
   }
 
   // Queries a InTxHashToCctx by index.
