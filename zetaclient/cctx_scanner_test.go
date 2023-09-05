@@ -66,14 +66,14 @@ func (suite *CctxScannerTestSuite) Restart(tssPubkey string) {
 
 func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*CCTX, map[int64]uint64, map[int64]uint64) {
 	// expected nonce map
-	expFirstNonceToScan := make(map[int64]uint64)
+	expNextNonceToScanRestart := make(map[int64]uint64)
 	expNextNonceToScan := make(map[int64]uint64)
 	missedCctxMap := make(map[int64]map[uint64]*CCTX)
 
 	// range [0, 1000]
 	cctx0 := &CCTX{OutboundTxParams: []*OutTxParam{{OutboundTxTssNonce: 361}}}
 	goerliMissed := []*CCTX{cctx0}
-	expFirstNonceToScan[5] = 361
+	expNextNonceToScanRestart[5] = 361
 	expNextNonceToScan[5] = 1000
 	missedCctxMap[5] = make(map[uint64]*CCTX)
 	missedCctxMap[5][361] = cctx0
@@ -82,7 +82,7 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*
 	cctx1 := &CCTX{OutboundTxParams: []*OutTxParam{{OutboundTxTssNonce: 12359}}}
 	cctx2 := &CCTX{OutboundTxParams: []*OutTxParam{{OutboundTxTssNonce: 12007}}}
 	bscMissed := []*CCTX{cctx1, cctx2}
-	expFirstNonceToScan[97] = 12007
+	expNextNonceToScanRestart[97] = 12007
 	expNextNonceToScan[97] = 13000
 	missedCctxMap[97] = make(map[uint64]*CCTX)
 	missedCctxMap[97][12359] = cctx1
@@ -93,7 +93,7 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*
 	cctx4 := &CCTX{OutboundTxParams: []*OutTxParam{{OutboundTxTssNonce: 4602}}}
 	cctx5 := &CCTX{OutboundTxParams: []*OutTxParam{{OutboundTxTssNonce: 4600}}}
 	mumbaiMissed1 := []*CCTX{cctx3, cctx4, cctx5}
-	expFirstNonceToScan[80001] = 4081
+	expNextNonceToScanRestart[80001] = 4081
 	expNextNonceToScan[80001] = 5000
 	missedCctxMap[80001] = make(map[uint64]*CCTX)
 	missedCctxMap[80001][4081] = cctx3
@@ -115,7 +115,7 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*
 	suite.sc.addMissedPendingCctx(80001, 4000, 5000, mumbaiMissed1)
 	suite.sc.addMissedPendingCctx(80001, 11000, 12000, mumbaiMissed2)
 
-	return missedCctxMap, expFirstNonceToScan, expNextNonceToScan
+	return missedCctxMap, expNextNonceToScanRestart, expNextNonceToScan
 }
 
 func (suite *CctxScannerTestSuite) AddMissedCctxBatch2(missedCctxMap map[int64]map[uint64]*CCTX) map[int64]uint64 {
@@ -152,10 +152,6 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch2(missedCctxMap map[int64]m
 }
 
 func (suite *CctxScannerTestSuite) CheckEmptyNonces() {
-	suite.Equal(suite.sc.firstNonceToScan[5], uint64(0))
-	suite.Equal(suite.sc.firstNonceToScan[97], uint64(0))
-	suite.Equal(suite.sc.firstNonceToScan[80001], uint64(0))
-
 	suite.Equal(suite.sc.nextNonceToScan[5], uint64(0))
 	suite.Equal(suite.sc.nextNonceToScan[97], uint64(0))
 	suite.Equal(suite.sc.nextNonceToScan[80001], uint64(0))
@@ -173,11 +169,9 @@ func (suite *CctxScannerTestSuite) TestScannerDB() {
 	err := suite.sc.db.Find(&firstNonces1).Error
 	suite.NoError(err)
 	for _, firstNonce := range firstNonces1 {
-		want1 := suite.sc.firstNonceToScan[firstNonce.ID]
-		want2 := suite.sc.nextNonceToScan[firstNonce.ID]
+		want := suite.sc.nextNonceToScan[firstNonce.ID]
 		have := firstNonce.FirstNonce
-		suite.Equal(want1, have)
-		suite.Equal(want2, have)
+		suite.Equal(want, have)
 	}
 
 	// Update entries in the DB
@@ -188,11 +182,9 @@ func (suite *CctxScannerTestSuite) TestScannerDB() {
 	err = suite.sc.db.Find(&firstNonces2).Error
 	suite.NoError(err)
 	for _, firstNonce := range firstNonces2 {
-		want1 := suite.sc.firstNonceToScan[firstNonce.ID]
-		want2 := suite.sc.nextNonceToScan[firstNonce.ID]
+		want := suite.sc.nextNonceToScan[firstNonce.ID]
 		have := firstNonce.FirstNonce
-		suite.Equal(want1, have)
-		suite.Equal(want2, have)
+		suite.Equal(want, have)
 	}
 }
 
@@ -209,7 +201,7 @@ func (suite *CctxScannerTestSuite) TestScannerDBReset() {
 
 func (suite *CctxScannerTestSuite) TestCctxNonces() {
 	// Add some missed pending cctx
-	allMissedMap, expFirstNonceMap, expNextNonceMap := suite.AddMissedCctxBatch1()
+	allMissedMap, expFirstNonceMapRestart, expNextNonceMap := suite.AddMissedCctxBatch1()
 
 	// Check the next nonce to scan
 	for chainID, want := range expNextNonceMap {
@@ -220,22 +212,19 @@ func (suite *CctxScannerTestSuite) TestCctxNonces() {
 	// Add some more missed pending cctx
 	expNextNonceMap = suite.AddMissedCctxBatch2(allMissedMap)
 
-	// Check the first nonce and next nonce to scan
+	// Check the next nonce to scan
 	for chainID, want := range expNextNonceMap {
 		have := suite.sc.nextNonceToScan[chainID]
-		suite.Equal(want, have)                                    // next nonce should change
-		suite.Equal(uint64(0), suite.sc.firstNonceToScan[chainID]) // first nonce should never change in memory
+		suite.Equal(want, have) // next nonce should change
 	}
 
 	// Restart the scanner
 	suite.Restart(tssPubkey)
 
-	// Check the first nonce and next nonce to scan again
-	for chainID, want := range expFirstNonceMap {
-		haveFirst := suite.sc.firstNonceToScan[chainID]
-		haveNext := suite.sc.nextNonceToScan[chainID]
-		suite.Equal(want, haveFirst) // first nonce should change after restart
-		suite.Equal(want, haveNext)  // next nonce should fall back to first nonce after restart
+	// Check the next nonce to scan again
+	for chainID, want := range expFirstNonceMapRestart {
+		have := suite.sc.nextNonceToScan[chainID]
+		suite.Equal(want, have) // next nonce should fall back to first nonce after restart
 	}
 }
 
@@ -268,28 +257,28 @@ func (suite *CctxScannerTestSuite) TestGetMissedPendingCctxByChain() {
 
 func (suite *CctxScannerTestSuite) TestRemoveMissedPendingCctx() {
 	// Add some missed pending cctx
-	_, expFirstNonceMap, expNextNonceMap := suite.AddMissedCctxBatch1()
+	_, expNextNonceMapRestart, expNextNonceMap := suite.AddMissedCctxBatch1()
 
 	// Remove a goerli missed cctx, edge case: delete the only cctx
 	suite.sc.removeMissedPendingCctx(5, 361)
 	suite.Nil(suite.sc.missedPendingCctx[5][361])
-	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5]) // don't affect next nonce
+	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5]) // won't affect next nonce
 
 	// Remove some bsc missed cctx
 	suite.sc.removeMissedPendingCctx(97, 12359)
 	suite.Nil(suite.sc.missedPendingCctx[97][12359])
-	suite.Equal(expNextNonceMap[97], suite.sc.nextNonceToScan[97]) // don't affect next nonce
+	suite.Equal(expNextNonceMap[97], suite.sc.nextNonceToScan[97]) // won't affect next nonce
 
 	// Remove some mumbai missed cctx
 	suite.sc.removeMissedPendingCctx(80001, 4600)
 	suite.sc.removeMissedPendingCctx(80001, 11528)
 	suite.Nil(suite.sc.missedPendingCctx[80001][4600])
 	suite.Nil(suite.sc.missedPendingCctx[80001][11528])
-	suite.Equal(expNextNonceMap[80001], suite.sc.nextNonceToScan[80001]) // don't affect next nonce
+	suite.Equal(expNextNonceMap[80001], suite.sc.nextNonceToScan[80001]) // won't affect next nonce
 
 	// Restart the scanner anc check nonces
 	suite.Restart(tssPubkey)
-	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5])          // next nonce fall back to first nonce for goerli, , EDGE CASE: next nonce should be 1000
-	suite.Equal(expFirstNonceMap[97], suite.sc.nextNonceToScan[97])       // next nonce fall back to first nonce for bsc
-	suite.Equal(expFirstNonceMap[80001], suite.sc.nextNonceToScan[80001]) // next nonce fall back to first nonce for mumbai
+	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5])                // next nonce fall back to first nonce for goerli, , EDGE CASE: next nonce should be 1000
+	suite.Equal(expNextNonceMapRestart[97], suite.sc.nextNonceToScan[97])       // next nonce fall back to first nonce for bsc
+	suite.Equal(expNextNonceMapRestart[80001], suite.sc.nextNonceToScan[80001]) // next nonce fall back to first nonce for mumbai
 }

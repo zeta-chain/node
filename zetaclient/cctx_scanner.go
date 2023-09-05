@@ -15,30 +15,25 @@ import (
 )
 
 const (
-	RescanBatchSize      uint64 = 1000
-	MaxRetryOnMissedCctx uint64 = 300 // 30 minutes
+	RescanBatchSize uint64 = 1000
 )
 
 // CctxScanner scans missed pending cctx and updates their status
 type CctxScanner struct {
-	tssPubkey              string
-	db                     *gorm.DB
-	logger                 *zerolog.Logger
-	bridge                 *ZetaCoreBridge
-	firstNonceToScan       map[int64]uint64                                   // chainID -> the nonce to scan from when zetaclient starts
-	nextNonceToScan        map[int64]uint64                                   // chainID -> next nonce to scan from when zetaclient is running
-	missedPendingCctx      map[int64]map[uint64]*crosschaintypes.CrossChainTx // chainID -> nonce -> missed pending cctx
-	missedPendingCctxRetry map[int64]map[uint64]uint64                        // chainID -> nonce -> retry count
+	tssPubkey         string
+	db                *gorm.DB
+	logger            *zerolog.Logger
+	bridge            *ZetaCoreBridge
+	nextNonceToScan   map[int64]uint64                                   // chainID -> next nonce to scan from
+	missedPendingCctx map[int64]map[uint64]*crosschaintypes.CrossChainTx // chainID -> nonce -> missed pending cctx
 }
 
 func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, tssPubkey string, logger *zerolog.Logger) (*CctxScanner, error) {
 	sc := &CctxScanner{
-		logger:                 logger,
-		bridge:                 bridge,
-		firstNonceToScan:       make(map[int64]uint64),
-		nextNonceToScan:        make(map[int64]uint64),
-		missedPendingCctx:      make(map[int64]map[uint64]*crosschaintypes.CrossChainTx),
-		missedPendingCctxRetry: make(map[int64]map[uint64]uint64),
+		logger:            logger,
+		bridge:            bridge,
+		nextNonceToScan:   make(map[int64]uint64),
+		missedPendingCctx: make(map[int64]map[uint64]*crosschaintypes.CrossChainTx),
 	}
 	err := sc.LoadDB(dbpath, memDB)
 	if err != nil {
@@ -59,9 +54,9 @@ func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, tssPubkey
 func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
 	// calculate nonce range to scan
 	nonceFrom, found := sc.nextNonceToScan[chainID]
-	if !found { // uses db nonce on restart
-		nonceFrom = sc.firstNonceToScan[chainID]
-		sc.logger.Info().Msgf("scanner: chain %d starts from nonce %d", chainID, nonceFrom)
+	if !found {
+		sc.nextNonceToScan[chainID] = 0 // start from scratch if not specified in db
+		sc.logger.Info().Msgf("scanner: scan pending cctx for chain %d from nonce 0", chainID)
 	}
 	nonceTo := nonceFrom + RescanBatchSize
 	if nonceTo > uint64(pendingNonces.NonceLow) {
@@ -98,27 +93,16 @@ func (sc *CctxScanner) IsMissedPendingCctx(chainID int64, nonce uint64) bool {
 }
 
 // Re-check and update missed cctx's status
-func (sc *CctxScanner) UpdateMissedPendingCctx(chainID int64, nonce uint64) {
+func (sc *CctxScanner) UpdateMissedPendingCctxStatus(chainID int64, nonce uint64) {
 	send, err := sc.bridge.GetCctxByNonce(chainID, nonce)
 	if err != nil {
 		sc.logger.Error().Err(err).Msgf("scanner: error GetCctxByNonce for chain %d nonce %d", chainID, nonce)
 		return
 	}
-	if crosschaintypes.IsCctxStatusPending(send.CctxStatus.Status) {
-		// increase retry count
-		if _, found := sc.missedPendingCctxRetry[chainID]; !found {
-			sc.missedPendingCctxRetry[chainID] = make(map[uint64]uint64)
-		}
-		sc.missedPendingCctxRetry[chainID][nonce]++
-
-		// forget about this missed cctx as max retry reached, there could be 2 cases:
-		//    1. No tracker.   For some reason, no observer had reported outtx hash.
-		//    2. No true hash. Track exists but none of the hashes is true (can't be verified)
-		if sc.missedPendingCctxRetry[chainID][nonce] == MaxRetryOnMissedCctx {
-			sc.removeMissedPendingCctx(chainID, nonce)
-			sc.logger.Warn().Msgf("scanner: forget about missed pending cctx for chain %d nonce %d", chainID, nonce)
-		}
-	} else { // no longer pending
+	// A missed cctx will pend forever if:
+	//    1. No tracker.   For some reason(e.g., RPC failure), no observer had reported outtx hash to zetacore.
+	//    2. No true hash. Track exists but none of the hashes is true (can't be verified)
+	if !crosschaintypes.IsCctxStatusPending(send.CctxStatus.Status) { // no longer pending
 		sc.removeMissedPendingCctx(chainID, nonce)
 		sc.logger.Info().Msgf("scanner: removed missed pending cctx for chain %d nonce %d", chainID, nonce)
 	}
@@ -202,10 +186,8 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 
 func (sc *CctxScanner) Reset(tssPubkey string) error {
 	sc.tssPubkey = tssPubkey
-	sc.firstNonceToScan = make(map[int64]uint64)
 	sc.nextNonceToScan = make(map[int64]uint64)
 	sc.missedPendingCctx = make(map[int64]map[uint64]*crosschaintypes.CrossChainTx)
-	sc.missedPendingCctxRetry = make(map[int64]map[uint64]uint64)
 
 	// save current tss pubkey
 	if err := sc.db.Save(clienttypes.ToCurrentTssSQLType(tssPubkey)).Error; err != nil {
@@ -238,9 +220,8 @@ func (sc *CctxScanner) buildFirstNonceToScanMap() error {
 		return err
 	}
 	for _, nonce := range firstNonces {
-		sc.firstNonceToScan[nonce.ID] = nonce.FirstNonce
 		sc.nextNonceToScan[nonce.ID] = nonce.FirstNonce
-		sc.logger.Info().Msgf("scanner: first nonce to scan for chain %d is %d", nonce.ID, nonce.FirstNonce)
+		sc.logger.Info().Msgf("scanner: the next nonce to scan for chain %d is %d", nonce.ID, nonce.FirstNonce)
 	}
 	return nil
 }
