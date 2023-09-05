@@ -16,8 +16,15 @@ service Msg {
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
 }
 
+message MsgUpdateTssAddress {
+  string creator = 1;
+  string tss_pubkey = 2;
+}
+
+message MsgUpdateTssAddressResponse {}
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;
@@ -79,6 +86,11 @@ message MsgVoteOnObservedOutboundTx {
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
+  uint64 observed_outTx_gas_used = 10;
+  string observed_outTx_effective_gas_price = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
   string zeta_minted = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,

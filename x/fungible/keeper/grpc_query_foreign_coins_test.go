@@ -19,7 +19,7 @@ import (
 var _ = strconv.IntSize
 
 func TestForeignCoinsQuerySingle(t *testing.T) {
-	keeper, ctx := keepertest.FungibleKeeper(t)
+	keeper, ctx, _ := keepertest.FungibleKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNForeignCoins(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -70,7 +70,7 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 }
 
 func TestForeignCoinsQueryPaginated(t *testing.T) {
-	keeper, ctx := keepertest.FungibleKeeper(t)
+	keeper, ctx, _ := keepertest.FungibleKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNForeignCoins(keeper, ctx, 5)
 

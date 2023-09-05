@@ -73,6 +73,7 @@ type EVMChainClient struct {
 	KlaytnClient              *KlaytnClient
 	zetaClient                *ZetaCoreBridge
 	Tss                       TSSSigner
+	lastBlockScanned          int64
 	lastBlock                 int64
 	BlockTimeExternalChain    uint64 // block time in seconds
 	txWatchList               map[ethcommon.Hash]string
@@ -161,7 +162,7 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		return nil, err
 	}
 
-	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeight())
+	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
 
 	return &ob, nil
 }
@@ -235,6 +236,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			sendHash,
 			receipt.TxHash.Hex(),
 			receipt.BlockNumber.Uint64(),
+			receipt.GasUsed,
+			transaction.GasPrice(),
 			transaction.Value(),
 			recvStatus,
 			ob.chain,
@@ -253,6 +256,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
 				transaction.Value(),
 				common.ReceiveStatus_Success,
 				ob.chain,
@@ -266,7 +271,18 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Gas)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_Gas,
+			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
@@ -302,6 +318,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -333,6 +351,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -353,7 +373,18 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(sendHash, receipt.TxHash.Hex(), receipt.BlockNumber.Uint64(), big.NewInt(0), common.ReceiveStatus_Failed, ob.chain, nonce, common.CoinType_Zeta)
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_Zeta,
+			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
@@ -382,6 +413,8 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
+							receipt.GasUsed,
+							transaction.GasPrice(),
 							event.Amount,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -498,6 +531,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	if confHeight < 0 || confHeight >= math2.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
+
 	if int64(confHeight) > ob.GetLastBlockHeight() {
 		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
@@ -505,6 +539,31 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	return receipt, transaction, nil
 }
 
+// SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
+func (ob *EVMChainClient) SetLastBlockHeightScanned(block int64) {
+	if block < 0 {
+		panic("lastBlockScanned is negative")
+	}
+	if block >= math2.MaxInt64 {
+		panic("lastBlockScanned is too large")
+	}
+	atomic.StoreInt64(&ob.lastBlockScanned, block)
+	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, block)
+}
+
+// GetLastBlockHeightScanned get last block height scanned (not necessarily caught up with external block; could be slow/paused)
+func (ob *EVMChainClient) GetLastBlockHeightScanned() int64 {
+	height := atomic.LoadInt64(&ob.lastBlockScanned)
+	if height < 0 {
+		panic("lastBlockScanned is negative")
+	}
+	if height >= math2.MaxInt64 {
+		panic("lastBlockScanned is too large")
+	}
+	return height
+}
+
+// SetLastBlockHeight set external last block height (confirmed with confirmation count)
 func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
@@ -513,9 +572,9 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
-	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, block)
 }
 
+// GetLastBlockHeight get external last block height (confirmed with confirmation count)
 func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	height := atomic.LoadInt64(&ob.lastBlock)
 	if height < 0 {
@@ -548,16 +607,20 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
-	permssions, err := ob.zetaClient.GetInboundPermissions()
-	if err != nil {
-		return err
-	}
-	if !permssions.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
 	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
+	}
+	// "confirmed" current block number
+	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
+	ob.SetLastBlockHeight(int64(confirmedBlockNum))
+
+	permissions, err := ob.zetaClient.GetPermissionFlags()
+	if err != nil {
+		return err
+	}
+	if !permissions.IsInboundEnabled {
+		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
 	if err != nil {
@@ -565,19 +628,17 @@ func (ob *EVMChainClient) observeInTX() error {
 	}
 	counter.Inc()
 
-	// "confirmed" current block number
-	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
 		sampledLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
 		return nil
 	}
-	if confirmedBlockNum <= uint64(ob.GetLastBlockHeight()) {
+	if confirmedBlockNum <= uint64(ob.GetLastBlockHeightScanned()) {
 		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
 	}
-	lastBlock := ob.GetLastBlockHeight()
+	lastBlock := ob.GetLastBlockHeightScanned()
 	startBlock := lastBlock + 1
 	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
 	if uint64(toBlock) >= confirmedBlockNum {
@@ -806,8 +867,8 @@ func (ob *EVMChainClient) observeInTX() error {
 		}
 	}()
 	// ============= end of query the incoming tx to TSS address ==============
-	ob.SetLastBlockHeight(toBlock)
-	if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())).Error; err != nil {
+	ob.SetLastBlockHeightScanned(toBlock)
+	if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())).Error; err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error writing toBlock to db")
 	}
 	return nil
@@ -913,13 +974,13 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 			if err != nil {
 				return err
 			}
-			ob.SetLastBlockHeight(header.Number.Int64())
+			ob.SetLastBlockHeightScanned(header.Number.Int64())
 		} else {
 			scanFromBlockInt, err := strconv.ParseInt(scanFromBlock, 10, 64)
 			if err != nil {
 				return err
 			}
-			ob.SetLastBlockHeight(scanFromBlockInt)
+			ob.SetLastBlockHeightScanned(scanFromBlockInt)
 		}
 	} else { // last observed block
 		var lastBlockNum clienttypes.LastBlockSQLType
@@ -929,20 +990,20 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 			if err != nil {
 				logger.Warn().Err(err).Msg("getLastHeight error")
 			}
-			ob.SetLastBlockHeight(lastheight)
+			ob.SetLastBlockHeightScanned(lastheight)
 			// if ZetaCore does not have last heard block height, then use current
-			if ob.GetLastBlockHeight() == 0 {
+			if ob.GetLastBlockHeightScanned() == 0 {
 				header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return err
 				}
-				ob.SetLastBlockHeight(header.Number.Int64())
+				ob.SetLastBlockHeightScanned(header.Number.Int64())
 			}
-			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeight())); dbc.Error != nil {
+			if dbc := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())); dbc.Error != nil {
 				logger.Error().Err(dbc.Error).Msg("error writing ob.LastBlock to db: ")
 			}
 		} else {
-			ob.SetLastBlockHeight(lastBlockNum.Num)
+			ob.SetLastBlockHeightScanned(lastBlockNum.Num)
 		}
 	}
 	return nil

@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// Mint ZETA (gas token) to the given address
+// MintZetaToEVMAccount mints ZETA (gas token) to the given address
 func (k *Keeper) MintZetaToEVMAccount(ctx sdk.Context, to sdk.AccAddress, amount *big.Int) error {
 	balanceCoin := k.bankKeeper.GetBalance(ctx, to, config.BaseDenom)
 	coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(amount)))

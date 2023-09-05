@@ -3,8 +3,6 @@ package cli
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/x/observer/client/cli"
-
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -30,7 +28,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(
 		CmdListOutTxTracker(),
 		CmdShowOutTxTracker(),
-		cli.CmdShowKeygen(),
 		CmdShowTSS(),
 		CmdListGasPrice(),
 		CmdShowGasPrice(),
@@ -43,8 +40,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdListInTxHashToCctx(),
 		CmdShowInTxHashToCctx(),
 		CmdQueryParams(),
-		cli.CmdShowPermissionFlags(),
 		CmdGetTssAddress(),
+		CmdListTssHistory(),
 	)
 
 	return cmd

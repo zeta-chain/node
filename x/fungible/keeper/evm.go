@@ -7,30 +7,28 @@ import (
 	"math/big"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-
-	tmtypes "github.com/tendermint/tendermint/types"
-	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
-	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/server/config"
-
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
+	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
+	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	zetacommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
+	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // TODO USE string constant
@@ -42,23 +40,23 @@ var (
 func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArguments ...interface{}) (common.Address, error) {
 	abi, err := metadata.GetAbi()
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
 	}
 	ctorArgs, err := abi.Pack(
 		"",               // function--empty string for constructor
 		ctorArguments..., // feeToSetter
 	)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "failed to abi.Pack ctor arguments: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to abi.Pack ctor arguments: %s", err.Error())
 	}
 
 	if len(metadata.Bin) <= 2 {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIGet, "metadata Bin field too short: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "metadata Bin field too short: %s", err.Error())
 	}
 
 	bin, err := hex.DecodeString(metadata.Bin[2:])
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "error decoding %s hex bytecode string: %s", metadata.Bin[2:], err.Error())
 	}
 
 	data := make([]byte, len(bin)+len(ctorArgs))
@@ -71,9 +69,9 @@ func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArg
 	}
 
 	contractAddr := crypto.CreateAddress(types.ModuleAddressEVM, nonce)
-	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, BigIntZero, nil)
+	_, err = k.CallEVMWithData(ctx, types.ModuleAddressEVM, nil, data, true, false, BigIntZero, nil)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy contract")
+		return common.Address{}, cosmoserrors.Wrapf(err, "failed to deploy contract")
 	}
 
 	return contractAddr, nil
@@ -95,15 +93,15 @@ func (k Keeper) DeployZRC20Contract(
 ) (common.Address, error) {
 	chain := zetacommon.GetChainFromChainID(chainID)
 	if chain == nil {
-		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
+		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
 	}
 	chainStr := chain.ChainName.String()
 	if chain == nil {
-		return common.Address{}, sdkerrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
+		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
 	}
 	contractAddr, err := k.deployContract(ctx, zrc20.ZRC20MetaData,
 		name,                      // name
@@ -115,7 +113,7 @@ func (k Keeper) DeployZRC20Contract(
 		common.HexToAddress(system.SystemContract),
 	)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(types.ErrABIPack, "failed to deploy ZRC20 contract: %s, %s", name, err.Error())
+		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "failed to deploy ZRC20 contract: %s, %s", name, err.Error())
 	}
 
 	coin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
@@ -137,10 +135,9 @@ func (k Keeper) DeploySystemContract(ctx sdk.Context, wzeta common.Address, v2fa
 
 	contractAddr, err := k.deployContract(ctx, systemcontract.SystemContractMetaData, wzeta, v2factory, router02)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "failed to deploy SystemContract")
+		return common.Address{}, cosmoserrors.Wrapf(err, "failed to deploy SystemContract")
 	}
 
-	//system := types.SystemContract{}
 	system.SystemContract = contractAddr.String()
 	k.SetSystemContract(ctx, system)
 
@@ -154,7 +151,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 	uniswapv2factory.UniswapV2FactoryMetaData.Bin = refFactoryBytecode
 	contractAddr, err := k.deployContract(ctx, uniswapv2factory.UniswapV2FactoryMetaData, types.ModuleAddressEVM)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "UniswapV2FactoryContract")
+		return common.Address{}, cosmoserrors.Wrapf(err, "UniswapV2FactoryContract")
 	}
 
 	return contractAddr, nil
@@ -163,7 +160,7 @@ func (k Keeper) DeployUniswapV2Factory(ctx sdk.Context) (common.Address, error) 
 func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address, wzeta common.Address) (common.Address, error) {
 	contractAddr, err := k.deployContract(ctx, uniswapv2router02.UniswapV2Router02MetaData, factory, wzeta)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "UniswapV2Router02")
+		return common.Address{}, cosmoserrors.Wrapf(err, "UniswapV2Router02")
 	}
 	return contractAddr, nil
 }
@@ -171,7 +168,7 @@ func (k Keeper) DeployUniswapV2Router02(ctx sdk.Context, factory common.Address,
 func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 	contractAddr, err := k.deployContract(ctx, wzeta.WETH9MetaData)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "WZETA")
+		return common.Address{}, cosmoserrors.Wrapf(err, "WZETA")
 	}
 	return contractAddr, nil
 }
@@ -179,7 +176,7 @@ func (k Keeper) DeployWZETA(ctx sdk.Context) (common.Address, error) {
 func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (common.Address, error) {
 	contractAddr, err := k.deployContract(ctx, connectorzevm.ZetaConnectorZEVMMetaData, wzeta)
 	if err != nil {
-		return common.Address{}, sdkerrors.Wrapf(err, "ZetaConnectorZEVM")
+		return common.Address{}, cosmoserrors.Wrapf(err, "ZetaConnectorZEVM")
 	}
 	system, _ := k.GetSystemContract(ctx)
 	system.ConnectorZevm = contractAddr.Hex()
@@ -188,7 +185,7 @@ func (k Keeper) DeployConnectorZEVM(ctx sdk.Context, wzeta common.Address) (comm
 	return contractAddr, nil
 }
 
-// Depoisit ZRC4 tokens into to account;
+// DepositZRC20 deposits ZRC4 tokens into to account;
 // Callable only by the fungible module account
 // returns directly CallEVM()
 func (k Keeper) DepositZRC20(
@@ -202,10 +199,10 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
-	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, "deposit", to, amount)
+	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, false, "deposit", to, amount)
 }
 
-// Deposit into ZRC4 and call contract function in a single tx
+// DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
 // callable from fungible module
 // Returns directly results from CallEVM
 func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
@@ -216,7 +213,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
+		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
 	}
 	systemAddress := common.HexToAddress(system.SystemContract)
 
@@ -225,7 +222,7 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true,
+	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
 		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
 }
 
@@ -243,39 +240,33 @@ func (k Keeper) QueryZRC20Data(
 	zrc4, _ := zrc20.ZRC20MetaData.GetAbi()
 
 	// Name
-	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "name")
+	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "name")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&nameRes, "name", res.Ret); err != nil {
-		return types.ZRC20Data{}, sdkerrors.Wrapf(
-			types.ErrABIUnpack, "failed to unpack name: %s", err.Error(),
-		)
+		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack name: %s", err.Error())
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "symbol")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "symbol")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&symbolRes, "symbol", res.Ret); err != nil {
-		return types.ZRC20Data{}, sdkerrors.Wrapf(
-			types.ErrABIUnpack, "failed to unpack symbol: %s", err.Error(),
-		)
+		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack symbol: %s", err.Error())
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "decimals")
+	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "decimals")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
 	if err := zrc4.UnpackIntoInterface(&decimalRes, "decimals", res.Ret); err != nil {
-		return types.ZRC20Data{}, sdkerrors.Wrapf(
-			types.ErrABIUnpack, "failed to unpack decimals: %s", err.Error(),
-		)
+		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack decimals: %s", err.Error())
 	}
 
 	return types.NewZRC20Data(nameRes.Value, symbolRes.Value, decimalRes.Value), nil
@@ -285,29 +276,28 @@ func (k Keeper) QueryZRC20Data(
 func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
 	contract, account common.Address,
-) *big.Int {
+) (*big.Int, error) {
 	abi, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return nil
+		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, "balanceOf", account)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "balanceOf",
+		account)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	// TODO: return the error here, we loose the error message if we return a nil. Maybe use (big.Int, error)
-	// https://github.com/zeta-chain/node/issues/865
 	unpacked, err := abi.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
-		return nil
+		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
 
 	balance, ok := unpacked[0].(*big.Int)
 	if !ok {
-		return nil
+		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack balance")
 	}
 
-	return balance
+	return balance, nil
 }
 
 // CallEVM performs a smart contract method call using given args
@@ -317,24 +307,24 @@ func (k Keeper) CallEVM(
 	ctx sdk.Context,
 	abi abi.ABI,
 	from, contract common.Address,
-	value *big.Int,
-	gasLimit *big.Int,
+	value, gasLimit *big.Int,
 	commit bool,
+	noEthereumTxEvent bool,
 	method string,
 	args ...interface{},
 ) (*evmtypes.MsgEthereumTxResponse, error) {
 	data, err := abi.Pack(method, args...)
 	if err != nil {
-		return nil, sdkerrors.Wrap(
+		return nil, cosmoserrors.Wrap(
 			types.ErrABIPack,
-			sdkerrors.Wrap(err, "failed to create transaction data").Error(),
+			cosmoserrors.Wrap(err, "failed to create transaction data").Error(),
 		)
 	}
 
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
-	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, value, gasLimit)
+	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		return resp, sdkerrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
+		return resp, cosmoserrors.Wrapf(err, "contract call failed: method '%s', contract '%s'", method, contract)
 	}
 	return resp, nil
 }
@@ -352,6 +342,7 @@ func (k Keeper) CallEVMWithData(
 	contract *common.Address,
 	data []byte,
 	commit bool,
+	noEthereumTxEvent bool,
 	value *big.Int,
 	gasLimit *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
@@ -367,7 +358,7 @@ func (k Keeper) CallEVMWithData(
 			Data: (*hexutil.Bytes)(&data),
 		})
 		if err != nil {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal tx args: %s", err.Error())
+			return nil, cosmoserrors.Wrapf(sdkerrors.ErrJSONMarshal, "failed to marshal tx args: %s", err.Error())
 		}
 
 		gasRes, err := k.evmKeeper.EstimateGas(sdk.WrapSDKContext(ctx), &evmtypes.EthCallRequest{
@@ -405,72 +396,76 @@ func (k Keeper) CallEVMWithData(
 	}
 
 	if res.Failed() {
-		return res, sdkerrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
+		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
 	}
 
-	msgBytes, _ := json.Marshal(msg)
-	ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
-	attrs := []sdk.Attribute{}
-	if len(ctx.TxBytes()) > 0 {
-		// add event for tendermint transaction hash format
-		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
-		ethTxHash = common.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
-	}
-	attrs = append(attrs, []sdk.Attribute{
-		sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
-		// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
-		sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, ethTxHash.String()),
-		// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
-		sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
-		// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
-		sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
-	}...)
-
-	// recipient: contract address
-	if contract != nil {
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
-	}
-	if res.Failed() {
-		attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
-	}
-
-	txLogAttrs := make([]sdk.Attribute, len(res.Logs))
-	for i, log := range res.Logs {
-		log.TxHash = ethTxHash.String()
-		value, err := json.Marshal(log)
-		if err != nil {
-			return nil, sdkerrors.Wrap(err, "failed to encode log")
+	// Emit events and log for the transaction if it is committed
+	if commit {
+		msgBytes, _ := json.Marshal(msg)
+		ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
+		attrs := []sdk.Attribute{}
+		if len(ctx.TxBytes()) > 0 {
+			// add event for tendermint transaction hash format
+			hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+			ethTxHash = common.BytesToHash(hash) // NOTE(pwu): use cosmos tx hash as eth tx hash if available
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyTxHash, hash.String()))
 		}
-		txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
-	}
+		attrs = append(attrs, []sdk.Attribute{
+			sdk.NewAttribute(sdk.AttributeKeyAmount, value.String()),
+			// add event for ethereum transaction hash format; NOTE(pwu): this is a fake txhash
+			sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxHash, ethTxHash.String()),
+			// add event for index of valid ethereum tx; NOTE(pwu): fake txindex
+			sdk.NewAttribute(evmtypes.AttributeKeyTxIndex, strconv.FormatUint(8888, 10)),
+			// add event for eth tx gas used, we can't get it from cosmos tx result when it contains multiple eth tx msgs.
+			sdk.NewAttribute(evmtypes.AttributeKeyTxGasUsed, strconv.FormatUint(res.GasUsed, 10)),
+		}...)
 
-	// emit events
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			evmtypes.EventTypeEthereumTx,
-			attrs...,
-		),
-		sdk.NewEvent(
-			evmtypes.EventTypeTxLog,
-			txLogAttrs...,
-		),
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-			sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
-			sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
-		),
-	})
+		// recipient: contract address
+		if contract != nil {
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyRecipient, contract.Hex()))
+		}
+		if res.Failed() {
+			attrs = append(attrs, sdk.NewAttribute(evmtypes.AttributeKeyEthereumTxFailed, res.VmError))
+		}
 
-	logs := evmtypes.LogsToEthereum(res.Logs)
-	var bloomReceipt ethtypes.Bloom
-	if len(logs) > 0 {
-		bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
-		bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
-		bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
-		k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
-		k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
+		txLogAttrs := make([]sdk.Attribute, len(res.Logs))
+		for i, log := range res.Logs {
+			log.TxHash = ethTxHash.String()
+			value, err := json.Marshal(log)
+			if err != nil {
+				return nil, cosmoserrors.Wrap(err, "failed to encode log")
+			}
+			txLogAttrs[i] = sdk.NewAttribute(evmtypes.AttributeKeyTxLog, string(value))
+		}
+
+		if !noEthereumTxEvent {
+			ctx.EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					evmtypes.EventTypeEthereumTx,
+					attrs...,
+				),
+				sdk.NewEvent(
+					evmtypes.EventTypeTxLog,
+					txLogAttrs...,
+				),
+				sdk.NewEvent(
+					sdk.EventTypeMessage,
+					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+					sdk.NewAttribute(sdk.AttributeKeySender, from.Hex()),
+					sdk.NewAttribute(evmtypes.AttributeKeyTxType, "88"), // type 88: synthetic Eth tx
+				),
+			})
+		}
+
+		logs := evmtypes.LogsToEthereum(res.Logs)
+		var bloomReceipt ethtypes.Bloom
+		if len(logs) > 0 {
+			bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
+			bloom.Or(bloom, big.NewInt(0).SetBytes(ethtypes.LogsBloom(logs)))
+			bloomReceipt = ethtypes.BytesToBloom(bloom.Bytes())
+			k.evmKeeper.SetBlockBloomTransient(ctx, bloomReceipt.Big())
+			k.evmKeeper.SetLogSizeTransient(ctx, (k.evmKeeper.GetLogSizeTransient(ctx))+uint64(len(logs)))
+		}
 	}
 
 	return res, nil
