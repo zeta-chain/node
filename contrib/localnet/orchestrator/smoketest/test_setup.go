@@ -57,13 +57,9 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 		panic(err)
 	}
 
-	contractsDeployed := false
 	res, err := sm.fungibleClient.ForeignCoinsAll(context.Background(), &fungibletypes.QueryAllForeignCoinsRequest{})
 	if err != nil {
 		panic(err)
-	}
-	if len(res.ForeignCoins) > 0 {
-		contractsDeployed = true
 	}
 
 	if err := CheckNonce(goerliClient, DeployerAddress, initialNonce); err != nil {
@@ -125,11 +121,8 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	fmt.Printf("USDT contract address: %s, tx hash: %s\n", usdtAddr.Hex(), tx.Hash().Hex())
 	receipt = MustWaitForTxReceipt(goerliClient, tx)
 	fmt.Printf("USDT contract receipt: contract address %s, status %d\n", receipt.ContractAddress, receipt.Status)
-
-	if !contractsDeployed {
-		if receipt.ContractAddress != ethcommon.HexToAddress(USDTERC20Addr) {
-			panic("USDT contract address mismatch! check order of tx")
-		}
+	if receipt.ContractAddress != ethcommon.HexToAddress(USDTERC20Addr) {
+		panic("USDT contract address mismatch! check order of tx")
 	}
 
 	fmt.Printf("Step 6: Whitelist USDT\n")
@@ -166,10 +159,8 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 		panic(fmt.Sprintf("fungible module does not have foreign coin that represent USDT ERC20 %s", usdtAddr))
 	}
 	fmt.Printf("USDT ZRC20 Address: %s\n", zrc20addr)
-	if !contractsDeployed {
-		if HexToAddress(zrc20addr) != HexToAddress(USDTZRC20Addr) {
-			panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
-		}
+	if HexToAddress(zrc20addr) != HexToAddress(USDTZRC20Addr) {
+		panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
 	}
 
 	sm.USDTZRC20Addr = ethcommon.HexToAddress(zrc20addr)
