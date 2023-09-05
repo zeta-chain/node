@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/pelletier/go-toml/v2"
-
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testdapp"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
