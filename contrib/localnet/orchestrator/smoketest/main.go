@@ -315,8 +315,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	fmt.Printf("##   Ether on Ethereum private net\n")
 	fmt.Printf("##   ZETA on ZetaChain EVM\n")
 	fmt.Printf("##   ETH ZRC20 on ZetaChain\n")
-	//// The following tests are optional tests; comment out the ones you don't want to run
-	//// temporarily to reduce dev/test cycle turnaround time
+	// The following tests are optional tests; comment out the ones you don't want to run
+	// temporarily to reduce dev/test cycle turnaround time
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestContextUpgrade()
