@@ -89,6 +89,8 @@ jobs:
         id: getfile
         run: |
           echo "Getting list of changed go files..."
+          log=$(git log)
+          echo "Log: $log"
           files=$(git diff ${{ github.event.before }} ${{ github.sha }} --name-only '*.go')
           echo "Changed files: $files"
           # echo "Changed go files: $files" >> $GITHUB_ENV
