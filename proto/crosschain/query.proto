@@ -118,7 +118,7 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/cctx";
   }
 
-  // Queries a list of send items.
+  // Queries a list of cctx items in pending status.
   rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
   }
@@ -131,6 +131,17 @@ service Query {
   rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
   }
+
+  // Queries a list of count of cctx items in pending status.
+  rpc CctxAllPendingCount(QueryAllCctxPendingCountRequest) returns (QueryAllCctxPendingCountResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/cctxPendingCount";
+  }
+}
+
+message QueryAllCctxPendingCountRequest {}
+
+message QueryAllCctxPendingCountResponse {
+  int64 cctx_pending_count = 1;
 }
 
 message QueryTssHistoryRequest {}

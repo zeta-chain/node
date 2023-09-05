@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	goMath "math"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -157,16 +158,39 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
+	if req.ChainId > goMath.MaxInt64 {
+		return nil, status.Error(codes.InvalidArgument, "invalid chain id")
+	}
+	pendingCrossChainTxList, err := k.GetActualPendingCCTX(ctx, int64(req.ChainId))
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: pendingCrossChainTxList}, nil
+}
+
+func (k Keeper) CctxAllPendingCount(c context.Context, _ *types.QueryAllCctxPendingCountRequest) (*types.QueryAllCctxPendingCountResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	count := int64(0)
+	for _, chain := range common.DefaultChainsList() {
+		pendingCrossChainTxList, err := k.GetActualPendingCCTX(ctx, chain.ChainId)
+		if err != nil {
+			return nil, err
+		}
+		count += int64(len(pendingCrossChainTxList))
+	}
+	return &types.QueryAllCctxPendingCountResponse{CctxPendingCount: count}, nil
+}
+
+func (k Keeper) GetActualPendingCCTX(ctx sdk.Context, chainID int64) ([]*types.CrossChainTx, error) {
 	tss, found := k.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
-	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, uint64(chainID))
 	if !found {
 		return nil, status.Error(codes.Internal, "pending nonces not found")
 	}
 	sends := make([]*types.CrossChainTx, 0)
-
 	// now query the previous nonces up to 100 prior to find any pending cctx that we might have missed
 	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
 	// therefore might mask some lower nonce cctx that is still pending.
@@ -175,14 +199,15 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		startNonce = 0
 	}
 	for i := startNonce; i < p.NonceLow; i++ {
-		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, chainID, i)
 		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, chainID))
 		}
 		send, found := k.GetCrossChainTx(ctx, res.CctxIndex)
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
 		}
+		send.GetCurrentOutTxParam().ReceiverChainId = chainID
 		if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 			sends = append(sends, &send)
 		}
@@ -190,7 +215,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 
 	// now query the pending nonces that we know are pending
 	for i := p.NonceLow; i < p.NonceHigh; i++ {
-		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, chainID, i)
 		if !found {
 			return nil, status.Error(codes.Internal, "nonceToCctx not found")
 		}
@@ -200,10 +225,8 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		}
 		sends = append(sends, &cctx)
 	}
-
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
+	return sends, nil
 }
-
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
