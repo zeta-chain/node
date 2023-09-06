@@ -68,7 +68,7 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.pull_request.head.ref }} # Check out the PR head
+          ref: ${{ github.event.pull_request.head.sha }} # Check out the PR head
 
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
@@ -89,6 +89,8 @@ jobs:
         id: getfile
         run: |
           echo "Getting list of changed go files..."
+          show=$(git show)
+          echo "Show: $show"
           log=$(git log)
           echo "Log: $log"
           files=$(git diff ${{ github.event.before }} ${{ github.sha }} --name-only '*.go')
