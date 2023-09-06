@@ -41,10 +41,8 @@ func (k Keeper) CheckPausedZRC20(ctx sdk.Context, receipt *ethtypes.Receipt) err
 	// check if any of the addresses are from a paused ZRC20 contract
 	for _, address := range addresses {
 		fc, found := k.GetForeignCoins(ctx, address.Hex())
-		if found {
-			if fc.Paused {
-				return cosmoserrors.Wrap(types.ErrPausedZRC20, address.Hex())
-			}
+		if found && fc.Paused {
+			return cosmoserrors.Wrap(types.ErrPausedZRC20, address.Hex())
 		}
 	}
 
