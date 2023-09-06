@@ -68,20 +68,6 @@ func (_m *FungibleEVMKeeper) ChainID() *big.Int {
 	return r0
 }
 
-// DeleteAccount provides a mock function with given fields: ctx, addr
-func (_m *FungibleEVMKeeper) DeleteAccount(ctx types.Context, addr common.Address) error {
-	ret := _m.Called(ctx, addr)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address) error); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // EstimateGas provides a mock function with given fields: c, req
 func (_m *FungibleEVMKeeper) EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error) {
 	ret := _m.Called(c, req)
@@ -106,11 +92,6 @@ func (_m *FungibleEVMKeeper) EstimateGas(c context.Context, req *evmtypes.EthCal
 	}
 
 	return r0, r1
-}
-
-// ForEachStorage provides a mock function with given fields: ctx, addr, cb
-func (_m *FungibleEVMKeeper) ForEachStorage(ctx types.Context, addr common.Address, cb func(common.Hash, common.Hash) bool) {
-	_m.Called(ctx, addr, cb)
 }
 
 // GetAccount provides a mock function with given fields: ctx, addr
@@ -145,22 +126,6 @@ func (_m *FungibleEVMKeeper) GetBlockBloomTransient(ctx types.Context) *big.Int 
 	return r0
 }
 
-// GetCode provides a mock function with given fields: ctx, codeHash
-func (_m *FungibleEVMKeeper) GetCode(ctx types.Context, codeHash common.Hash) []byte {
-	ret := _m.Called(ctx, codeHash)
-
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func(types.Context, common.Hash) []byte); ok {
-		r0 = rf(ctx, codeHash)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	return r0
-}
-
 // GetLogSizeTransient provides a mock function with given fields: ctx
 func (_m *FungibleEVMKeeper) GetLogSizeTransient(ctx types.Context) uint64 {
 	ret := _m.Called(ctx)
@@ -170,22 +135,6 @@ func (_m *FungibleEVMKeeper) GetLogSizeTransient(ctx types.Context) uint64 {
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(uint64)
-	}
-
-	return r0
-}
-
-// GetState provides a mock function with given fields: ctx, addr, key
-func (_m *FungibleEVMKeeper) GetState(ctx types.Context, addr common.Address, key common.Hash) common.Hash {
-	ret := _m.Called(ctx, addr, key)
-
-	var r0 common.Hash
-	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Hash) common.Hash); ok {
-		r0 = rf(ctx, addr, key)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.Hash)
-		}
 	}
 
 	return r0
@@ -210,19 +159,9 @@ func (_m *FungibleEVMKeeper) SetBlockBloomTransient(ctx types.Context, bloom *bi
 	_m.Called(ctx, bloom)
 }
 
-// SetCode provides a mock function with given fields: ctx, codeHash, code
-func (_m *FungibleEVMKeeper) SetCode(ctx types.Context, codeHash []byte, code []byte) {
-	_m.Called(ctx, codeHash, code)
-}
-
 // SetLogSizeTransient provides a mock function with given fields: ctx, logSize
 func (_m *FungibleEVMKeeper) SetLogSizeTransient(ctx types.Context, logSize uint64) {
 	_m.Called(ctx, logSize)
-}
-
-// SetState provides a mock function with given fields: ctx, addr, key, value
-func (_m *FungibleEVMKeeper) SetState(ctx types.Context, addr common.Address, key common.Hash, value []byte) {
-	_m.Called(ctx, addr, key, value)
 }
 
 // WithChainID provides a mock function with given fields: ctx

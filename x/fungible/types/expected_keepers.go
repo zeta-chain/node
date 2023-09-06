@@ -65,13 +65,6 @@ type EVMKeeper interface {
 		tracer vm.EVMLogger,
 		commit bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
-	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
-	SetCode(ctx sdk.Context, codeHash, code []byte)
-
-	GetState(ctx sdk.Context, addr ethcommon.Address, key ethcommon.Hash) ethcommon.Hash
-	ForEachStorage(ctx sdk.Context, addr ethcommon.Address, cb func(key ethcommon.Hash, value ethcommon.Hash) bool)
-	SetState(ctx sdk.Context, addr ethcommon.Address, key ethcommon.Hash, value []byte)
-	DeleteAccount(ctx sdk.Context, addr ethcommon.Address) error
 }
