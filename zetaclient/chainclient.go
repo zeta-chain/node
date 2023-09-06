@@ -15,7 +15,7 @@ type ChainClient interface {
 	Start()
 	Stop()
 	//GetBaseGasPrice() *big.Int
-	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
+	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger, sendAmount float64) (bool, bool, error)
 	//PostNonceIfNotRecorded(logger zerolog.Logger) error
 	SetCoreParams(observertypes.CoreParams)
 	GetCoreParams() observertypes.CoreParams

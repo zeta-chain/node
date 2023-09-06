@@ -126,11 +126,11 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	tx.AddTxOut(txOut1)
 
 	// 2nd output: the payment to the recipient
-	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
-	if err != nil {
-		return nil, err
-	}
 	if validSendSofar { // skip payment to recipient on invalid cctx
+		pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
+		if err != nil {
+			return nil, err
+		}
 		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
 		tx.AddTxOut(txOut2)
 	}
@@ -240,7 +240,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger, float64(params.Amount.Uint64())/1e8)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
@@ -263,7 +263,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
 		validSendSofar = false
-		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
+		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
 		//return
 	}
 

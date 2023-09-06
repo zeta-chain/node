@@ -165,7 +165,7 @@ func (co *CoreObserver) startSendScheduler() {
 							}
 
 							// Monitor Core Logger for OutboundTxTssNonce
-							included, _, err := ob.IsSendOutTxProcessed(send.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
+							included, _, err := ob.IsSendOutTxProcessed(send.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher, float64(params.Amount.Uint64())/1e8)
 							if err != nil {
 								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail, Chain ID: %s", c.ChainName)
 								continue

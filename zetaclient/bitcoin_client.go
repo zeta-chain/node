@@ -331,7 +331,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger, sendAmount float64) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
@@ -368,8 +368,11 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
 		amount = res.Amount
 	} else if res.Amount == 0 {
+		// TODO: amount checking should be done in zeta core to block invalid cctx
+		// Note: we use original amount here as zetacore checks against cctx's amount
+		amount = sendAmount
 		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
-		return false, false, nil
+		//return false, false, nil
 	} else {
 		amount = -res.Amount
 	}
@@ -945,7 +948,7 @@ func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams)
 	}
 	_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
-		return fmt.Errorf("ValidateCctxParams: cannot decode receiver address %s ", params.Receiver)
+		return fmt.Errorf("ValidateCctxParams: cannot convert address %s to P2WPKH address", params.Receiver)
 	}
 
 	// validate amount
@@ -962,7 +965,7 @@ func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams)
 //   - The third output is the change to TSS (optional)
 func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.OutboundTxParams, nonce uint64) error {
 	if err := ob.ValidateCctxParams(&params); err != nil {
-		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkTSSVout: skip checking invalid cctx parameters: %v", params)
+		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkTSSVout: skip checking invalid cctx with nonce %d", nonce)
 		return nil
 	}
 
