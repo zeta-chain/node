@@ -69,6 +69,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.pull_request.head.sha }} # Check out the PR head
+          fetch-depth: 0
 
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
@@ -89,7 +90,7 @@ jobs:
         run: |
           declare -A nosec_list
           echo "Getting list of files that have been updated in the PR..."
-          diff_file_list=$(git diff origin/develop ${{ github.sha }} --name-only '*.go')
+          diff_file_list=$(git diff ${{ github.event.before }} ${{ github.sha }} --name-only '*.go')
           echo "Changed files: $diff_file_list"
           # echo "Changed go files: $files" >> $GITHUB_ENV
           # echo "::set-output name=files::$files"
