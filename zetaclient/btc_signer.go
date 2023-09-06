@@ -59,7 +59,7 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain, validSendSofar bool) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
@@ -84,7 +84,11 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	amountSatoshis, err := getSatoshis(amount)
 	if err != nil {
-		return nil, err
+		// TODO: amount validation should be done in zeta core to block invalid cctx
+		// We proceed regardless of error for now, otherwise it will block all other cctxes
+		validSendSofar = false
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: cannot convert amount %f to satoshis", amount)
+		//return nil, err
 	}
 
 	// fee checking
@@ -126,8 +130,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if err != nil {
 		return nil, err
 	}
-	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
-	tx.AddTxOut(txOut2)
+	if validSendSofar { // skip payment to recipient on invalid cctx
+		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+		tx.AddTxOut(txOut2)
+	}
 
 	// 3rd output: the remaining btc to TSS self
 	if remainingSats > 0 {
@@ -247,21 +253,24 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// FIXME: config chain params
+	validSendSofar := true // TODO: receiver validation should be done in zeta core to block invalid cctx
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
+		validSendSofar = false
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
-		return
+		//return
 	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
+		validSendSofar = false
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
-		return
+		//return
 	}
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height,
-		outboundTxTssNonce, &btcClient.chain)
+		outboundTxTssNonce, &btcClient.chain, validSendSofar)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return

@@ -930,11 +930,41 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 	return nil
 }
 
+// TODO: develop a well-defined cctx validation in zetacore.
+func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams) error {
+	// More broadly, we should probably think about the address format that we support
+	// 1. legacy P2PKH like 2Mz1XjXzgQCxXfazTAmsTAj46dQkmAdK5X2
+	// 2. segwit P2PKH like tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur, this is what we support for now
+	// 3. taproot P2PKH?
+	// 4. other P2SH?
+
+	// validate receiver address
+	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
+	if err != nil {
+		return err
+	}
+	_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
+	if err != nil || !ok {
+		return fmt.Errorf("ValidateCctxParams: cannot decode receiver address %s ", params.Receiver)
+	}
+
+	// validate amount
+	if params.Amount.Uint64() == 0 {
+		return fmt.Errorf("ValidateCctxParams: invalid amount %d", params.Amount)
+	}
+	return nil
+}
+
 // Vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)
 func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.OutboundTxParams, nonce uint64) error {
+	if err := ob.ValidateCctxParams(&params); err != nil {
+		ob.logger.ObserveOutTx.Info().Err(err).Msgf("checkTSSVout: skip checking invalid cctx parameters: %v", params)
+		return nil
+	}
+
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
 	if !(len(vouts) == 2 || len(vouts) == 3) {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
