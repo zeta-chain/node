@@ -59,4 +59,6 @@ message MsgUpdateContractBytecode {
   string new_bytecode_address = 3;
 }
 
-message MsgUpdateContractBytecodeResponse {}
+message MsgUpdateContractBytecodeResponse {
+  bytes new_bytecode_hash = 1;
+}

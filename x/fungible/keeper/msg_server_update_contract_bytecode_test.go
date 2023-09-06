@@ -93,12 +93,16 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NoError(t, err)
 
 		// update the bytecode
-		_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		res, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20,
 			newCodeAddress,
 		))
 		require.NoError(t, err)
+
+		// check the returned new bytecode hash matches the one in the account
+		acct := sdkk.EvmKeeper.GetAccount(ctx, zrc20)
+		require.Equal(t, acct.CodeHash, res.NewBytecodeHash)
 
 		// check the state
 		// balances and total supply should remain
@@ -114,6 +118,37 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
 		require.NoError(t, err)
 		require.Equal(t, int64(1100), balance.Int64())
+		totalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
+		require.NoError(t, err)
+		require.Equal(t, int64(10001300), totalSupply.Int64())
+
+		// can change again bytecode
+		newCodeAddress, err = k.DeployZRC20Contract(
+			ctx,
+			"gamma",
+			"GAMMA",
+			18,
+			chainID1,
+			zetacommon.CoinType_ERC20,
+			"gamma",
+			big.NewInt(90_000),
+		)
+		require.NoError(t, err)
+		_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+			admin,
+			zrc20,
+			newCodeAddress,
+		))
+		require.NoError(t, err)
+		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
+		require.NoError(t, err)
+		require.Equal(t, int64(1100), balance.Int64())
+		totalSupply, err = k.TotalSupplyZRC4(ctx, zrc20)
+		require.NoError(t, err)
+		require.Equal(t, int64(10001300), totalSupply.Int64())
+		chainID, err = k.QueryChainIDFromContract(ctx, zrc20)
+		require.NoError(t, err)
+		require.Equal(t, chainID1, chainID.Int64())
 	})
 
 	t.Run("should fail if unauthorized", func(t *testing.T) {

@@ -62,5 +62,7 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 		"newCodeHash", string(acct.CodeHash),
 	)
 
-	return &types.MsgUpdateContractBytecodeResponse{}, nil
+	return &types.MsgUpdateContractBytecodeResponse{
+		NewBytecodeHash: acct.CodeHash,
+	}, nil
 }
