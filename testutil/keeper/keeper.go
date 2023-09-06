@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	"math/rand"
 	"testing"
 
@@ -31,7 +33,9 @@ import (
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -44,6 +48,14 @@ type SDKKeepers struct {
 	StakingKeeper   stakingkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 	EvmKeeper       *evmkeeper.Keeper
+}
+
+// ZetaKeepers is a struct containing Zeta module keepers for test purposes
+type ZetaKeepers struct {
+	CrosschainKeeper *crosschainkeeper.Keeper
+	EmissionsKeeper  *emissionskeeper.Keeper
+	FungibleKeeper   *fungiblekeeper.Keeper
+	ObserverKeeper   *observerkeeper.Keeper
 }
 
 var moduleAccountPerms = map[string][]string{

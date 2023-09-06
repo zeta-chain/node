@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"testing"
 
@@ -12,8 +13,19 @@ import (
 )
 
 func TestKeeper_UpdateContractBytecode(t *testing.T) {
-	k, ctx, sdkk := keepertest.FungibleKeeper(t)
+	k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	admin := sample.AccAddress()
+
+	// set admin policy
+	zk.ObserverKeeper.SetParams(ctx, observertypes.Params{
+		AdminPolicy: []*observertypes.Admin_Policy{
+			{
+				PolicyType: observertypes.Policy_Type_deploy_fungible_coin,
+				Address:    admin,
+			},
+		},
+	})
 
 	// sample chainIDs and addresses
 	chainList := zetacommon.DefaultChainsList()
@@ -70,7 +82,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 	// update the bytecode
 	_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-		sample.AccAddress(),
+		admin,
 		zrc20,
 		newCodeAddress,
 	))
