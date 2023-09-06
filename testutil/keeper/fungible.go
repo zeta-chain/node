@@ -38,7 +38,7 @@ var (
 )
 
 // FungibleKeeperWithMocks initializes a fungible keeper for testing purposes with option to mock specific keepers
-func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers) {
+func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -51,13 +51,17 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create observer keeper
-	var observerKeeper types.ObserverKeeper = initObserverKeeper(
+	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.ParamsKeeper,
 	)
+	zetaKeepers := ZetaKeepers{
+		ObserverKeeper: observerKeeperTmp,
+	}
+	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -89,6 +93,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 
 	// Initialize modules genesis
 	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
 
 	// Add a proposer to the context
 	ctx = sdkKeepers.InitBlockProposer(t, ctx)
@@ -123,19 +128,19 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 
 	fungiblemodule.InitGenesis(ctx, *k, *types.DefaultGenesis())
 
-	return k, ctx, sdkKeepers
+	return k, ctx, sdkKeepers, zetaKeepers
 }
 
 // FungibleKeeperAllMocks initializes a fungible keeper for testing purposes with all keeper mocked
 func FungibleKeeperAllMocks(t testing.TB) (*keeper.Keeper, sdk.Context) {
-	k, ctx, _ := FungibleKeeperWithMocks(t, FungibleMocksAll)
+	k, ctx, _, _ := FungibleKeeperWithMocks(t, FungibleMocksAll)
 	return k, ctx
 }
 
 // FungibleKeeper initializes a fungible keeper for testing purposes
-func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers) {
-	k, ctx, sdkk := FungibleKeeperWithMocks(t, FungibleNoMocks)
-	return k, ctx, sdkk
+func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
+	k, ctx, sdkk, zk := FungibleKeeperWithMocks(t, FungibleNoMocks)
+	return k, ctx, sdkk, zk
 }
 
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {

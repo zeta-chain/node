@@ -11,7 +11,7 @@ const TypeMsgUpdateZRC20PausedStatus = "update_zrc20_withdraw_fee"
 
 var _ sdk.Msg = &MsgUpdateZRC20PausedStatus{}
 
-func NewMMsgUpdateZRC20PausedStatus(creator string, zrc20 []string, action UpdatePausedStatusAction) *MsgUpdateZRC20PausedStatus {
+func NewMsgUpdateZRC20PausedStatus(creator string, zrc20 []string, action UpdatePausedStatusAction) *MsgUpdateZRC20PausedStatus {
 	return &MsgUpdateZRC20PausedStatus{
 		Creator:        creator,
 		Zrc20Addresses: zrc20,

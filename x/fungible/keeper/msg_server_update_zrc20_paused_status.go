@@ -19,7 +19,7 @@ func (k Keeper) UpdateZRC20PausedStatus(
 ) (*types.MsgUpdateZRC20PausedStatusResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check message validaty
+	// check message validity
 	if err := msg.ValidateBasic(); err != nil {
 		return nil, err
 	}
