@@ -28,10 +28,17 @@ func (h EVMHooks) PostTxProcessing(ctx sdk.Context, _ core.Message, receipt *eth
 // CheckPausedZRC20 checks the events of the receipt
 // if an event is emitted from a paused ZRC20 contract it will revert the transaction
 func (k Keeper) CheckPausedZRC20(ctx sdk.Context, receipt *ethtypes.Receipt) error {
+	if receipt == nil {
+		return nil
+	}
+
 	// get non-duplicated list of all addresses that emitted logs
 	var addresses []ethcommon.Address
 	addressExist := make(map[ethcommon.Address]struct{})
 	for _, log := range receipt.Logs {
+		if log == nil {
+			continue
+		}
 		if _, ok := addressExist[log.Address]; !ok {
 			addressExist[log.Address] = struct{}{}
 			addresses = append(addresses, log.Address)
