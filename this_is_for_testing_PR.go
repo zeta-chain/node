@@ -3,8 +3,8 @@ package main
 import "fmt"
 
 func main() {
-	fmt.Println("hello world")
 	// #nosec TESTING
+	fmt.Println("hello world")
 }
 
 // here is another comment
