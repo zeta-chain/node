@@ -58,7 +58,7 @@ func (k Keeper) UpdateZRC20PausedStatus(
 			"event", "EventZRC20PausedStatusUpdated",
 			"error", err.Error(),
 		)
-		return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
 
 	return &types.MsgUpdateZRC20PausedStatusResponse{}, nil
