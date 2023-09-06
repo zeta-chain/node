@@ -27,4 +27,5 @@ var (
 	ErrGasPriceNotFound       = sdkerrors.Register(ModuleName, 1116, "gas price not found")
 	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
 	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
+	ErrPausedZRC20            = sdkerrors.Register(ModuleName, 1120, "ZRC20 is paused")
 )

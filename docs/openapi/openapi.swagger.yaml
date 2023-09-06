@@ -50580,6 +50580,8 @@ definitions:
       gas_limit:
         type: string
         format: uint64
+      paused:
+        type: boolean
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
   fungibleMsgRemoveForeignCoinResponse:
