@@ -27,4 +27,5 @@ var (
 	ErrGasPriceNotFound       = sdkerrors.Register(ModuleName, 1116, "gas price not found")
 	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
 	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
+	ErrSetBytecode            = sdkerrors.Register(ModuleName, 1119, "set bytecode error")
 )

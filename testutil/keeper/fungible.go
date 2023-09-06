@@ -93,6 +93,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 
 	// Initialize modules genesis
 	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
 
 	// Add a proposer to the context
 	ctx = sdkKeepers.InitBlockProposer(t, ctx)

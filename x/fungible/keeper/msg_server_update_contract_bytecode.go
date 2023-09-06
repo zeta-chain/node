@@ -39,7 +39,7 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 		return nil, cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.NewBytecodeAddress)
 	}
 	newBytecodeAcct := k.evmKeeper.GetAccount(ctx, newBytecodeAddress)
-	if acct == nil {
+	if newBytecodeAcct == nil {
 		return nil, cosmoserror.Wrapf(types.ErrContractNotFound, "contract (%s) not found", newBytecodeAddress.Hex())
 	}
 
@@ -49,7 +49,7 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 	err := k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
 	if err != nil {
 		return nil, cosmoserror.Wrapf(
-			types.ErrContractNotFound,
+			types.ErrSetBytecode,
 			"failed to update contract (%s) bytecode (%s)",
 			contractAddress.Hex(),
 			err.Error(),
