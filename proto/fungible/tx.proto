@@ -12,6 +12,7 @@ service Msg {
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
   rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
   rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
+  rpc UpdateZRC20PausedStatus(MsgUpdateZRC20PausedStatus) returns (MsgUpdateZRC20PausedStatusResponse);
 }
 
 message MsgUpdateZRC20WithdrawFee {
@@ -51,3 +52,16 @@ message MsgRemoveForeignCoin {
 }
 
 message MsgRemoveForeignCoinResponse {}
+
+enum UpdatePausedStatusAction {
+  PAUSE = 0;
+  UNPAUSE = 1;
+}
+
+message MsgUpdateZRC20PausedStatus {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+  UpdatePausedStatusAction action = 3;
+}
+
+message MsgUpdateZRC20PausedStatusResponse {}

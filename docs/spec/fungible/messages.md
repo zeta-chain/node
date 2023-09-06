@@ -66,3 +66,13 @@ message MsgUpdateZRC20WithdrawFee {
 }
 ```
 
+## MsgUpdateZRC20PausedStatus
+
+```proto
+message MsgUpdateZRC20PausedStatus {
+	string creator = 1;
+	string zrc20_addresses = 2;
+	UpdatePausedStatusAction action = 3;
+}
+```
+

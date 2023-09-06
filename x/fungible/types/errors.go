@@ -28,4 +28,5 @@ var (
 	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
 	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
 	ErrPausedZRC20            = sdkerrors.Register(ModuleName, 1120, "ZRC20 is paused")
+	ErrForeignCoinNotFound    = sdkerrors.Register(ModuleName, 1121, "foreign coin not found")
 )
