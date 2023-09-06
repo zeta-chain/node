@@ -106,6 +106,9 @@ jobs:
               fi
             done
           done
+          for file in "${!nosec_list[@]}"; do
+            echo -e "Line: ${nosec_list[$file]}\tFile: $file"
+          done
 
         # - name: Report nosec use
         # uses: mshick/add-pr-comment@v2
