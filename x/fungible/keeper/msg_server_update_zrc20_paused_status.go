@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -45,7 +44,21 @@ func (k Keeper) UpdateZRC20PausedStatus(
 		k.SetForeignCoins(ctx, fc)
 	}
 
-	// TODO: add event
+	err := ctx.EventManager().EmitTypedEvent(
+		&types.EventZRC20PausedStatusUpdated{
+			MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgUpdateZRC20PausedStatus{}),
+			Action:         msg.Action,
+			Zrc20Addresses: msg.Zrc20Addresses,
+			Signer:         msg.Creator,
+		},
+	)
+	if err != nil {
+		k.Logger(ctx).Error("failed to emit event",
+			"event", "EventZRC20PausedStatusUpdated",
+			"error", err.Error(),
+		)
+		return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
+	}
 
 	return &types.MsgUpdateZRC20PausedStatusResponse{}, nil
 }
