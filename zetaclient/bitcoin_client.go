@@ -949,7 +949,8 @@ func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams)
 	}
 
 	// validate amount
-	if params.Amount.Uint64() == 0 {
+	_, err = getSatoshis(float64(params.Amount.Uint64()) / 1e8)
+	if err != nil {
 		return fmt.Errorf("ValidateCctxParams: invalid amount %d", params.Amount)
 	}
 	return nil
@@ -961,7 +962,7 @@ func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams)
 //   - The third output is the change to TSS (optional)
 func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.OutboundTxParams, nonce uint64) error {
 	if err := ob.ValidateCctxParams(&params); err != nil {
-		ob.logger.ObserveOutTx.Info().Err(err).Msgf("checkTSSVout: skip checking invalid cctx parameters: %v", params)
+		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkTSSVout: skip checking invalid cctx parameters: %v", params)
 		return nil
 	}
 

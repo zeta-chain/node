@@ -253,13 +253,13 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	// FIXME: config chain params
-	validSendSofar := true // TODO: receiver validation should be done in zeta core to block invalid cctx
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
-		validSendSofar = false
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
-		//return
+		return
 	}
+
+	validSendSofar := true // TODO: receiver validation should be done in zeta core to block invalid cctx
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
 		validSendSofar = false
