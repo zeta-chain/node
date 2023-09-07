@@ -96,6 +96,7 @@ jobs:
           # Fetch base branch
           echo ">${{ github.ref_name }}<"
           git fetch origin ${{ github.ref_name }}
+          # git fetch origin ${{ github.event.pull_request.base.ref }}
 
           # Get the hash of the first commit that is on this PR branch but not on the base branch
           first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
@@ -103,7 +104,7 @@ jobs:
 
           declare -A nosec_list
           echo "Getting list of files that have been updated in the PR..."
-          diff_file_list=$(git diff $first_commit ${{ github.sha }} --name-only -- '*.go')
+          diff_file_list=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf ${{ github.sha }} --name-only -- '*.go')
           
           echo "Changed files: $diff_file_list"
           # echo "Changed go files: $files" >> $GITHUB_ENV
