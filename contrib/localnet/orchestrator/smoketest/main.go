@@ -12,6 +12,7 @@ import (
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -19,6 +20,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -44,6 +46,12 @@ var (
 	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 	HexToAddress = ethcommon.HexToAddress
+
+	// FungibleAdminMnemonic is the mnemonic for the admin account of the fungible module
+	//nolint:gosec - disable nosec because this is a test account
+	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass"
+	FungibleAdminName     = "fungibleadmin"
+	FungibleAdminAddress  = "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
 )
 
 var RootCmd = &cobra.Command{
@@ -79,6 +87,12 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		os.Exit(1)
 	}()
 
+	// set account prefix to zeta
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
+	cfg.Seal()
+
+	// initialize clients
 	connCfg := &rpcclient.ConnConfig{
 		Host:         "bitcoin:18443",
 		User:         "smoketest",
@@ -127,6 +141,16 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
+	// initialize client to send messages to ZetaChain
+	zetaTxServer, err := NewZetaTxServer(
+		"http://zetacore0:26657",
+		[]string{FungibleAdminName},
+		[]string{FungibleAdminMnemonic},
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
 	for {
@@ -162,7 +186,19 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, observerClient, goerliAuth, zevmAuth, btcRPCClient)
+	smokeTest := NewSmokeTest(
+		goerliClient,
+		zevmClient,
+		cctxClient,
+		zetaTxServer,
+		fungibleClient,
+		authClient,
+		bankClient,
+		observerClient,
+		goerliAuth,
+		zevmAuth,
+		btcRPCClient,
+	)
 
 	// The following deployment must happen here and in this order, please do not change
 	// ==================== Deploying contracts ====================

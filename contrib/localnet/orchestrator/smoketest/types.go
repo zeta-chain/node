@@ -51,6 +51,7 @@ type SmokeTest struct {
 	zevmClient   *ethclient.Client
 	goerliClient *ethclient.Client
 	btcRPCClient *rpcclient.Client
+	zetaTxServer ZetaTxServer
 
 	cctxClient     crosschaintypes.QueryClient
 	fungibleClient fungibletypes.QueryClient
@@ -90,11 +91,19 @@ type SmokeTest struct {
 	SystemContractAddr ethcommon.Address
 }
 
-func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
-	cctxClient crosschaintypes.QueryClient, fungibleClient fungibletypes.QueryClient,
-	authClient authtypes.QueryClient, bankClient banktypes.QueryClient, observerClient observertypes.QueryClient,
-	goerliAuth *bind.TransactOpts, zevmAuth *bind.TransactOpts,
-	btcRPCClient *rpcclient.Client) *SmokeTest {
+func NewSmokeTest(
+	goerliClient *ethclient.Client,
+	zevmClient *ethclient.Client,
+	cctxClient crosschaintypes.QueryClient,
+	zetaTxServer ZetaTxServer,
+	fungibleClient fungibletypes.QueryClient,
+	authClient authtypes.QueryClient,
+	bankClient banktypes.QueryClient,
+	observerClient observertypes.QueryClient,
+	goerliAuth *bind.TransactOpts,
+	zevmAuth *bind.TransactOpts,
+	btcRPCClient *rpcclient.Client,
+) *SmokeTest {
 	// query system contract address
 	systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
 	if err != nil {
@@ -127,6 +136,7 @@ func NewSmokeTest(goerliClient *ethclient.Client, zevmClient *ethclient.Client,
 	return &SmokeTest{
 		zevmClient:         zevmClient,
 		goerliClient:       goerliClient,
+		zetaTxServer:       zetaTxServer,
 		cctxClient:         cctxClient,
 		fungibleClient:     fungibleClient,
 		authClient:         authClient,
@@ -147,10 +157,9 @@ type ZetaTxServer struct {
 	txFactory tx.Factory
 }
 
-// NewTxServer returns a new TxServer with provided account
-func NewTxServer(names []string, mnemonics []string) (ZetaTxServer, error) {
+// NewZetaTxServer returns a new TxServer with provided account
+func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string) (ZetaTxServer, error) {
 	ctx := context.Background()
-	rpcAddr := "zetacore0:26657"
 
 	if len(names) != len(mnemonics) {
 		return ZetaTxServer{}, errors.New("invalid names and mnemonics")
@@ -159,10 +168,10 @@ func NewTxServer(names []string, mnemonics []string) (ZetaTxServer, error) {
 	// initialize rpc and check status
 	rpc, err := rpchttp.New(rpcAddr, "/websocket")
 	if err != nil {
-		return ZetaTxServer{}, err
+		return ZetaTxServer{}, fmt.Errorf("failed to initialize rpc: %s", err.Error())
 	}
 	if _, err = rpc.Status(ctx); err != nil {
-		return ZetaTxServer{}, err
+		return ZetaTxServer{}, fmt.Errorf("failed to query rpc: %s", err.Error())
 	}
 
 	// initialize codec
@@ -173,10 +182,20 @@ func NewTxServer(names []string, mnemonics []string) (ZetaTxServer, error) {
 
 	// create accounts
 	for i := range names {
-		_, err = kr.NewAccount(names[i], mnemonics[i], "", sdktypes.FullFundraiserPath, hd.Secp256k1)
+		r, err := kr.NewAccount(names[i], mnemonics[i], "", sdktypes.FullFundraiserPath, hd.Secp256k1)
 		if err != nil {
-			return ZetaTxServer{}, err
+			return ZetaTxServer{}, fmt.Errorf("failed to create account: %s", err.Error())
 		}
+		_, err = r.GetAddress()
+		if err != nil {
+			return ZetaTxServer{}, fmt.Errorf("failed to get account address: %s", err.Error())
+		}
+		//fmt.Printf(
+		//	"Added account for Zeta tx server\nname: %s\nmnemonic: %s\naddress: %s\n",
+		//	names[i],
+		//	mnemonics[i],
+		//	addr.String(),
+		//)
 	}
 
 	clientCtx := newContext(rpc, cdc, reg, kr)
