@@ -94,7 +94,7 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string) (ZetaTx
 	}, nil
 }
 
-// BroadcastTx broadcasts a tx to ZetaChain with the provided msg
+// BroadcastTx broadcasts a tx to ZetaChain with the provided msg from the account
 func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes.TxResponse, error) {
 	// Find number and sequence and set it
 	acc, err := zts.clientCtx.Keyring.Key(account)
@@ -110,9 +110,6 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 		return nil, err
 	}
 	zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
-
-	// Set the gas prices
-	// txf = txf.WithGasPrices(gasPrices)
 
 	txBuilder, err := zts.txFactory.BuildUnsignedTx(msg)
 	if err != nil {
@@ -177,7 +174,6 @@ func newContext(rpc *rpchttp.HTTP, cdc *codec.ProtoCodec, reg codectypes.Interfa
 		WithFromAddress(sdktypes.AccAddress{}).
 		WithKeyring(kr).
 		WithAccountRetriever(authtypes.AccountRetriever{})
-	//WithGenerateOnly(false)
 }
 
 // newFactory returns the tx factory for msg server
