@@ -7,6 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	etherminttypes "github.com/evmos/ethermint/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"os"
 	"sync"
 	"time"
@@ -209,11 +218,20 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string) (ZetaTx
 
 // BroadcastTx broadcasts a tx to ZetaChain with the provided msg
 func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes.TxResponse, error) {
-	// Set account number and sequence number
-	// txf := txf.WithAccountNumber(n).WithSequence(m)
-
-	// Set the fees
-	// txf = txf.WithFees(fees)
+	// Find number and sequence and set it
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return nil, err
+	}
+	accountNumber, accountSeq, err := zts.clientCtx.AccountRetriever.GetAccountNumberSequence(zts.clientCtx, addr)
+	if err != nil {
+		return nil, err
+	}
+	zts.txFactory = zts.txFactory.WithAccountNumber(accountNumber).WithSequence(accountSeq)
 
 	// Set the gas prices
 	// txf = txf.WithGasPrices(gasPrices)
@@ -242,10 +260,19 @@ func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
 
-	authtypes.RegisterInterfaces(interfaceRegistry)
-	cryptocodec.RegisterInterfaces(interfaceRegistry)
 	sdktypes.RegisterInterfaces(interfaceRegistry)
 	cryptocodec.RegisterInterfaces(interfaceRegistry)
+	authtypes.RegisterInterfaces(interfaceRegistry)
+	authz.RegisterInterfaces(interfaceRegistry)
+	banktypes.RegisterInterfaces(interfaceRegistry)
+	stakingtypes.RegisterInterfaces(interfaceRegistry)
+	slashingtypes.RegisterInterfaces(interfaceRegistry)
+	upgradetypes.RegisterInterfaces(interfaceRegistry)
+	distrtypes.RegisterInterfaces(interfaceRegistry)
+	evidencetypes.RegisterInterfaces(interfaceRegistry)
+	crisistypes.RegisterInterfaces(interfaceRegistry)
+	evmtypes.RegisterInterfaces(interfaceRegistry)
+	etherminttypes.RegisterInterfaces(interfaceRegistry)
 	crosschaintypes.RegisterInterfaces(interfaceRegistry)
 	emissionstypes.RegisterInterfaces(interfaceRegistry)
 	fungibletypes.RegisterInterfaces(interfaceRegistry)
@@ -270,8 +297,8 @@ func newContext(rpc *rpchttp.HTTP, cdc *codec.ProtoCodec, reg codectypes.Interfa
 		WithSkipConfirmation(true).
 		WithFromName("creator").
 		WithFromAddress(sdktypes.AccAddress{}).
-		WithKeyring(kr)
-	//WithAccountRetriever(accountRetriever)
+		WithKeyring(kr).
+		WithAccountRetriever(authtypes.AccountRetriever{})
 	//WithGenerateOnly(false)
 }
 
@@ -284,5 +311,6 @@ func newFactory(clientCtx client.Context) tx.Factory {
 		WithGasAdjustment(1.0).
 		WithSignMode(signing.SignMode_SIGN_MODE_UNSPECIFIED).
 		WithAccountRetriever(clientCtx.AccountRetriever).
-		WithTxConfig(clientCtx.TxConfig)
+		WithTxConfig(clientCtx.TxConfig).
+		WithFees("50azeta")
 }
