@@ -64,7 +64,6 @@ jobs:
     timeout-minutes: 10
     env:
       GO111MODULE: on
-      GITHUB_PULL_BASE_REF: ${{ github.event.pull_request.base.ref }}
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
@@ -90,7 +89,8 @@ jobs:
       - name: Report nosec usage
         run: |
           # Fetch base branch
-          git fetch origin $GITHUB_PULL_BASE_REF
+          echo ">${{ github.event.pull_request.base.ref }}<"
+          git fetch origin ${{ github.event.pull_request.base.ref }}
 
           # Get the hash of the first commit that is on this PR branch but not on the base branch
           first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
