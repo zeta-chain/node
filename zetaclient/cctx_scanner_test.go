@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
-	. "gopkg.in/check.v1"
 )
 
 const (
@@ -20,47 +19,36 @@ const (
 type CCTX = crosschaintypes.CrossChainTx
 type OutTxParam = crosschaintypes.OutboundTxParams
 
-type CctxScannerTestSuite struct {
-	suite.Suite
-	sc *CctxScanner
-}
-
-var _ = Suite(&CctxScannerTestSuite{})
-
-func TestCctxScanner(t *testing.T) {
-	suite.Run(t, new(CctxScannerTestSuite))
-}
-
-func (suite *CctxScannerTestSuite) SetupTest() {
+func SetupTest(t *testing.T) *CctxScanner {
 	logger := zerolog.New(os.Stdout)
 	sc, err := NewCctxScanner(nil, TempSQLiteDbPath, true, tssPubkey, &logger)
-	suite.NoError(err)
-	suite.sc = sc
+	require.NoError(t, err)
+	return sc
 }
 
-func (suite *CctxScannerTestSuite) SaveNLoadNonces(goerliNonce uint64, bsctestNonce uint64, mumbaiNonce uint64, btctestNonce uint64) {
+func SaveNLoadNonces(t *testing.T, sc *CctxScanner, goerliNonce uint64, bsctestNonce uint64, mumbaiNonce uint64, btctestNonce uint64) {
 	goerli := clienttypes.ToFirstNonceToScanSQLType(5, goerliNonce)
 	bsctest := clienttypes.ToFirstNonceToScanSQLType(97, bsctestNonce)
 	mumbai := clienttypes.ToFirstNonceToScanSQLType(80001, mumbaiNonce)
 	btctest := clienttypes.ToFirstNonceToScanSQLType(18332, btctestNonce)
 	firstNonces := []*clienttypes.FirstNonceToScanSQLType{goerli, bsctest, mumbai, btctest}
 	for _, firstNonce := range firstNonces {
-		dbc := suite.sc.db.Save(firstNonce)
-		suite.NoError(dbc.Error)
+		dbc := sc.db.Save(firstNonce)
+		require.NoError(t, dbc.Error)
 	}
-	err := suite.sc.LoadDB(TempSQLiteDbPath, true)
-	suite.NoError(err)
+	err := sc.LoadDB(TempSQLiteDbPath, true)
+	require.NoError(t, err)
 }
 
 // Restart the scanner by reloading the DB
-func (suite *CctxScannerTestSuite) Restart(tssPubkey string) {
+func Restart(t *testing.T, tssPubkey string) *CctxScanner {
 	logger := zerolog.New(os.Stdout)
 	sc, err := NewCctxScanner(nil, TempSQLiteDbPath, true, tssPubkey, &logger)
-	suite.NoError(err)
-	suite.sc = sc
+	require.NoError(t, err)
+	return sc
 }
 
-func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*CCTX, map[int64]uint64, map[int64]uint64) {
+func AddMissedCctxBatch1(sc *CctxScanner) (map[int64]map[uint64]*CCTX, map[int64]uint64, map[int64]uint64) {
 	// expected nonce map
 	expNextNonceToScanRestart := make(map[int64]uint64)
 	expNextNonceToScan := make(map[int64]uint64)
@@ -106,15 +94,15 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch1() (map[int64]map[uint64]*
 	missedCctxMap[80001][11292] = cctx7
 	missedCctxMap[80001][11528] = cctx8
 
-	suite.sc.addMissedPendingCctx(5, 0, 1000, goerliMissed)
-	suite.sc.addMissedPendingCctx(97, 12000, 13000, bscMissed)
-	suite.sc.addMissedPendingCctx(80001, 4000, 5000, mumbaiMissed1)
-	suite.sc.addMissedPendingCctx(80001, 11000, 12000, mumbaiMissed2)
+	sc.addMissedPendingCctx(5, 0, 1000, goerliMissed)
+	sc.addMissedPendingCctx(97, 12000, 13000, bscMissed)
+	sc.addMissedPendingCctx(80001, 4000, 5000, mumbaiMissed1)
+	sc.addMissedPendingCctx(80001, 11000, 12000, mumbaiMissed2)
 
 	return missedCctxMap, expNextNonceToScanRestart, expNextNonceToScan
 }
 
-func (suite *CctxScannerTestSuite) AddMissedCctxBatch2(missedCctxMap map[int64]map[uint64]*CCTX) map[int64]uint64 {
+func AddMissedCctxBatch2(sc *CctxScanner, missedCctxMap map[int64]map[uint64]*CCTX) map[int64]uint64 {
 	// expected nonce map
 	expNextNonceToScan := make(map[int64]uint64)
 
@@ -140,156 +128,166 @@ func (suite *CctxScannerTestSuite) AddMissedCctxBatch2(missedCctxMap map[int64]m
 	missedCctxMap[80001][23651] = cctx3
 	missedCctxMap[80001][23494] = cctx4
 
-	suite.sc.addMissedPendingCctx(5, 60000, 61000, goerliMissed)
-	suite.sc.addMissedPendingCctx(97, 14000, 15000, bscMissed)
-	suite.sc.addMissedPendingCctx(80001, 23000, 24000, mumbaiMissed)
+	sc.addMissedPendingCctx(5, 60000, 61000, goerliMissed)
+	sc.addMissedPendingCctx(97, 14000, 15000, bscMissed)
+	sc.addMissedPendingCctx(80001, 23000, 24000, mumbaiMissed)
 
 	return expNextNonceToScan
 }
 
-func (suite *CctxScannerTestSuite) CheckEmptyNonces() {
-	suite.Equal(suite.sc.nextNonceToScan[5], uint64(0))
-	suite.Equal(suite.sc.nextNonceToScan[97], uint64(0))
-	suite.Equal(suite.sc.nextNonceToScan[80001], uint64(0))
+func CheckEmptyNonces(t *testing.T, sc *CctxScanner) {
+	require.Equal(t, uint64(0), sc.nextNonceToScan[5])
+	require.Equal(t, uint64(0), sc.nextNonceToScan[97])
+	require.Equal(t, uint64(0), sc.nextNonceToScan[80001])
 }
 
-func (suite *CctxScannerTestSuite) TestScannerDB() {
+func TestScannerDB(t *testing.T) {
+	sc := SetupTest(t)
+
 	// Make sure all maps are empty
-	suite.CheckEmptyNonces()
+	CheckEmptyNonces(t, sc)
 
 	// Create some entries in the DB
-	suite.SaveNLoadNonces(1, 41806, 17490, 138)
+	SaveNLoadNonces(t, sc, 1, 41806, 17490, 138)
 
 	// Check the DB nonces
 	var firstNonces1 []clienttypes.FirstNonceToScanSQLType
-	err := suite.sc.db.Find(&firstNonces1).Error
-	suite.NoError(err)
+	err := sc.db.Find(&firstNonces1).Error
+	require.NoError(t, err)
 	for _, firstNonce := range firstNonces1 {
-		want := suite.sc.nextNonceToScan[firstNonce.ID]
+		want := sc.nextNonceToScan[firstNonce.ID]
 		have := firstNonce.FirstNonce
-		suite.Equal(want, have)
+		require.Equal(t, want, have)
 	}
 
 	// Update entries in the DB
-	suite.SaveNLoadNonces(2349, 51570, 21086, 259)
+	SaveNLoadNonces(t, sc, 2349, 51570, 21086, 259)
 
 	// Check the DB nonces again
 	var firstNonces2 []clienttypes.FirstNonceToScanSQLType
-	err = suite.sc.db.Find(&firstNonces2).Error
-	suite.NoError(err)
+	err = sc.db.Find(&firstNonces2).Error
+	require.NoError(t, err)
 	for _, firstNonce := range firstNonces2 {
-		want := suite.sc.nextNonceToScan[firstNonce.ID]
+		want := sc.nextNonceToScan[firstNonce.ID]
 		have := firstNonce.FirstNonce
-		suite.Equal(want, have)
+		require.Equal(t, want, have)
 	}
 
 	// Tear down
-	suite.sc.Reset("") // clean db after each test
+	sc.Reset("")
 }
 
-func (suite *CctxScannerTestSuite) TestScannerDBReset() {
+func TestScannerDBReset(t *testing.T) {
+	sc := SetupTest(t)
+
 	// Create some entries in the DB
-	suite.SaveNLoadNonces(1, 41806, 17490, 138)
+	SaveNLoadNonces(t, sc, 1, 41806, 17490, 138)
 
 	// Restart scanner with different tss pubkey
-	suite.Restart(tssPubkeyNew)
+	sc = Restart(t, tssPubkeyNew)
 
 	// Make sure all maps are empty again
-	suite.CheckEmptyNonces()
+	CheckEmptyNonces(t, sc)
 
 	// Tear down
-	suite.sc.Reset("") // clean db after each test
+	sc.Reset("")
 }
 
-func (suite *CctxScannerTestSuite) TestCctxNonces() {
+func TestCctxNonces(t *testing.T) {
+	sc := SetupTest(t)
+
 	// Add some missed pending cctx
-	allMissedMap, expFirstNonceMapRestart, expNextNonceMap := suite.AddMissedCctxBatch1()
+	allMissedMap, expFirstNonceMapRestart, expNextNonceMap := AddMissedCctxBatch1(sc)
 
 	// Check the next nonce to scan
 	for chainID, want := range expNextNonceMap {
-		have := suite.sc.nextNonceToScan[chainID]
-		suite.Equal(want, have)
+		have := sc.nextNonceToScan[chainID]
+		require.Equal(t, want, have)
 	}
 
 	// Add some more missed pending cctx
-	expNextNonceMap = suite.AddMissedCctxBatch2(allMissedMap)
+	expNextNonceMap = AddMissedCctxBatch2(sc, allMissedMap)
 
 	// Check the next nonce to scan
 	for chainID, want := range expNextNonceMap {
-		have := suite.sc.nextNonceToScan[chainID]
-		suite.Equal(want, have) // next nonce should change
+		have := sc.nextNonceToScan[chainID]
+		require.Equal(t, want, have) // next nonce should change
 	}
 
 	// Restart the scanner
-	suite.Restart(tssPubkey)
+	sc = Restart(t, tssPubkey)
 
 	// Check the next nonce to scan again
 	for chainID, want := range expFirstNonceMapRestart {
-		have := suite.sc.nextNonceToScan[chainID]
-		suite.Equal(want, have) // next nonce should fall back to first nonce after restart
+		have := sc.nextNonceToScan[chainID]
+		require.Equal(t, want, have) // next nonce should fall back to first nonce after restart
 	}
 
 	// Tear down
-	suite.sc.Reset("") // clean db after each test
+	sc.Reset("")
 }
 
-func (suite *CctxScannerTestSuite) CheckMissedCctxByChain(allMissedMap map[int64]map[uint64]*crosschaintypes.CrossChainTx, chainID int64) {
-	chainMissed := suite.sc.AllMissedPendingCctxByChain(chainID)
-	suite.Equal(len(chainMissed), len(allMissedMap[chainID]))
+func CheckMissedCctxByChain(t *testing.T, sc *CctxScanner, allMissedMap map[int64]map[uint64]*crosschaintypes.CrossChainTx, chainID int64) {
+	chainMissed := sc.AllMissedPendingCctxByChain(chainID)
+	require.Equal(t, len(allMissedMap[chainID]), len(chainMissed))
 	for _, have := range chainMissed {
 		want := allMissedMap[chainID][have.OutboundTxParams[0].OutboundTxTssNonce]
-		suite.Equal(*want, *have)
+		require.Equal(t, *want, *have)
 	}
 }
 
-func (suite *CctxScannerTestSuite) TestGetMissedPendingCctxByChain() {
+func TestGetMissedPendingCctxByChain(t *testing.T) {
+	sc := SetupTest(t)
+
 	// Add some missed pending cctx
-	allMissedMap, _, _ := suite.AddMissedCctxBatch1()
+	allMissedMap, _, _ := AddMissedCctxBatch1(sc)
 
 	// Check missed cctx list for goerli, bsc, mumbai
-	suite.CheckMissedCctxByChain(allMissedMap, 5)
-	suite.CheckMissedCctxByChain(allMissedMap, 97)
-	suite.CheckMissedCctxByChain(allMissedMap, 80001)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 5)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 97)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 80001)
 
 	// Add some more missed pending cctx
-	_ = suite.AddMissedCctxBatch2(allMissedMap)
+	_ = AddMissedCctxBatch2(sc, allMissedMap)
 
 	// Check missed cctx list for goerli, bsc, mumbai again
-	suite.CheckMissedCctxByChain(allMissedMap, 5)
-	suite.CheckMissedCctxByChain(allMissedMap, 97)
-	suite.CheckMissedCctxByChain(allMissedMap, 80001)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 5)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 97)
+	CheckMissedCctxByChain(t, sc, allMissedMap, 80001)
 
 	// Tear down
-	suite.sc.Reset("") // clean db after each test
+	sc.Reset("")
 }
 
-func (suite *CctxScannerTestSuite) TestRemoveMissedPendingCctx() {
+func TestRemoveMissedPendingCctx(t *testing.T) {
+	sc := SetupTest(t)
+
 	// Add some missed pending cctx
-	_, expNextNonceMapRestart, expNextNonceMap := suite.AddMissedCctxBatch1()
+	_, expNextNonceMapRestart, expNextNonceMap := AddMissedCctxBatch1(sc)
 
 	// Remove a goerli missed cctx, edge case: delete the only cctx
-	suite.sc.removeMissedPendingCctx(5, 361)
-	suite.Nil(suite.sc.missedPendingCctx[5][361])
-	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5]) // won't affect next nonce
+	sc.removeMissedPendingCctx(5, 361)
+	require.Nil(t, sc.missedPendingCctx[5][361])
+	require.Equal(t, expNextNonceMap[5], sc.nextNonceToScan[5]) // won't affect next nonce
 
 	// Remove some bsc missed cctx
-	suite.sc.removeMissedPendingCctx(97, 12359)
-	suite.Nil(suite.sc.missedPendingCctx[97][12359])
-	suite.Equal(expNextNonceMap[97], suite.sc.nextNonceToScan[97]) // won't affect next nonce
+	sc.removeMissedPendingCctx(97, 12359)
+	require.Nil(t, sc.missedPendingCctx[97][12359])
+	require.Equal(t, expNextNonceMap[97], sc.nextNonceToScan[97]) // won't affect next nonce
 
 	// Remove some mumbai missed cctx
-	suite.sc.removeMissedPendingCctx(80001, 4600)
-	suite.sc.removeMissedPendingCctx(80001, 11528)
-	suite.Nil(suite.sc.missedPendingCctx[80001][4600])
-	suite.Nil(suite.sc.missedPendingCctx[80001][11528])
-	suite.Equal(expNextNonceMap[80001], suite.sc.nextNonceToScan[80001]) // won't affect next nonce
+	sc.removeMissedPendingCctx(80001, 4600)
+	sc.removeMissedPendingCctx(80001, 11528)
+	require.Nil(t, sc.missedPendingCctx[80001][4600])
+	require.Nil(t, sc.missedPendingCctx[80001][11528])
+	require.Equal(t, expNextNonceMap[80001], sc.nextNonceToScan[80001]) // won't affect next nonce
 
 	// Restart the scanner anc check nonces
-	suite.Restart(tssPubkey)
-	suite.Equal(expNextNonceMap[5], suite.sc.nextNonceToScan[5])                // next nonce fall back to first nonce for goerli, , EDGE CASE: next nonce should be 1000
-	suite.Equal(expNextNonceMapRestart[97], suite.sc.nextNonceToScan[97])       // next nonce fall back to first nonce for bsc
-	suite.Equal(expNextNonceMapRestart[80001], suite.sc.nextNonceToScan[80001]) // next nonce fall back to first nonce for mumbai
+	sc = Restart(t, tssPubkey)
+	require.Equal(t, expNextNonceMap[5], sc.nextNonceToScan[5])                // next nonce fall back to first nonce for goerli, , EDGE CASE: next nonce should be 1000
+	require.Equal(t, expNextNonceMapRestart[97], sc.nextNonceToScan[97])       // next nonce fall back to first nonce for bsc
+	require.Equal(t, expNextNonceMapRestart[80001], sc.nextNonceToScan[80001]) // next nonce fall back to first nonce for mumbai
 
 	// Tear down
-	suite.sc.Reset("") // clean db after each test
+	sc.Reset("") // clean db after each test
 }
