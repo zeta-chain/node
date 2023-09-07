@@ -34,7 +34,7 @@ func (k Keeper) UpdateZRC20PausedStatus(
 		pausedStatus = false
 	}
 
-	// iterate all foreign coins
+	// iterate all foreign coins and set paused status
 	for _, zrc20 := range msg.Zrc20Addresses {
 		fc, found := k.GetForeignCoins(ctx, zrc20)
 		if !found {
