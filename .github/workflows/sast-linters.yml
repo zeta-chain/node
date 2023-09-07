@@ -10,6 +10,7 @@ on:
       - opened
       - edited
       - synchronize
+      - reopened
 
 concurrency:
   group: linters-${{ github.head_ref || github.run_id }}
