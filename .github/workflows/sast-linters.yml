@@ -94,8 +94,8 @@ jobs:
       - name: Report nosec usage
         run: |
           # Fetch base branch
-          echo ">${{ github.event.ref_name }}<"
-          git fetch origin ${{ github.event.ref_name }}
+          echo ">${{ github.ref_name }}<"
+          git fetch origin ${{ github.ref_name }}
 
           # Get the hash of the first commit that is on this PR branch but not on the base branch
           first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
