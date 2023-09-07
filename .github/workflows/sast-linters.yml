@@ -10,7 +10,6 @@ on:
       - opened
       - edited
       - synchronize
-      - reopened
 
 concurrency:
   group: linters-${{ github.head_ref || github.run_id }}
@@ -65,6 +64,7 @@ jobs:
     timeout-minutes: 10
     env:
       GO111MODULE: on
+      GITHUB_HEAD_REF: ${{ github.event.pull_request.base.ref }}
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
