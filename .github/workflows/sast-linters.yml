@@ -93,10 +93,12 @@ jobs:
 
           # Get the hash of the first commit that is on this PR branch but not on the base branch
           first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
+          echo "first_commit: $first_commit"
 
           declare -A nosec_list
           echo "Getting list of files that have been updated in the PR..."
           diff_file_list=$(git diff $first_commit ${{ github.sha }} --name-only -- '*.go')
+          
           echo "Changed files: $diff_file_list"
           # echo "Changed go files: $files" >> $GITHUB_ENV
           # echo "::set-output name=files::$files"
