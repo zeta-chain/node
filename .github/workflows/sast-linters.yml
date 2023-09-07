@@ -86,6 +86,11 @@ jobs:
           version: v1.50
           skip-cache: false
 
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Report nosec usage
         run: |
           # Fetch base branch
