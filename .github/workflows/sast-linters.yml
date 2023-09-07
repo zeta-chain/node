@@ -117,7 +117,7 @@ jobs:
             echo -e "Line: ${nosec_list[$file]}\tFile: $file"
           done
 
-        # - name: Report nosec use
+        # - name: Report nosec uses
         # uses: mshick/add-pr-comment@v2
         #   with:
         #     message:
