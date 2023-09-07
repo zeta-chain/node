@@ -27152,7 +27152,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTrackerByChain:
+  /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
     get:
       operationId: Query_OutTxTrackerAllByChain
       responses:
@@ -27166,8 +27166,8 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: chain
-          in: query
-          required: false
+          in: path
+          required: true
           type: string
           format: int64
         - name: pagination.key
