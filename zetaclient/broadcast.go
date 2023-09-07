@@ -119,7 +119,10 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithFromAddress(addr)
 	ctx = ctx.WithBroadcastMode("sync")
 
+	b.encodingLock.Lock()
 	encodingConfig := app.MakeEncodingConfig()
+	b.encodingLock.Unlock()
+
 	ctx = ctx.WithCodec(encodingConfig.Codec)
 	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
 	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)

@@ -103,6 +103,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		tssPubkey = optionalPubKey
 	}
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
+	//Encoding Data Race during keysign, will skip the lock for now to avoid slowing it down
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
@@ -141,10 +142,15 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		log.Warn().Err(err).Msgf("signature has length 0")
 		return [65]byte{}, fmt.Errorf("keysign fail: %s", err)
 	}
-	if !verifySignature(tssPubkey, signature, H) {
+
+	tss.CoreBridge.encodingLock.RLock()
+	verified := verifySignature(tssPubkey, signature, H)
+	tss.CoreBridge.encodingLock.RUnlock()
+	if !verified {
 		log.Error().Err(err).Msgf("signature verification failure")
 		return [65]byte{}, fmt.Errorf("signuature verification fail")
 	}
+
 	var sigbyte [65]byte
 	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
 	if err != nil {
@@ -173,6 +179,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
+	//Encoding Data Race during keysign, will skip the lock for now to avoid slowing it down
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
@@ -215,7 +222,9 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 	//	log.Error().Err(err).Msgf("signature verification failure")
 	//	return [][65]byte{}, fmt.Errorf("signuature verification fail")
 	//}
+	tss.CoreBridge.encodingLock.RLock()
 	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	tss.CoreBridge.encodingLock.Unlock()
 	if err != nil {
 		log.Error().Msg("get pubkey from bech32 fail")
 	}
@@ -275,6 +284,8 @@ func (tss *TSS) Validate() error {
 }
 
 func (tss *TSS) EVMAddress() ethcommon.Address {
+	tss.CoreBridge.encodingLock.RLock()
+	defer tss.CoreBridge.encodingLock.RUnlock()
 	addr, err := GetTssAddrEVM(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
@@ -285,6 +296,8 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // generate a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
+	tss.CoreBridge.encodingLock.RLock()
+	defer tss.CoreBridge.encodingLock.RUnlock()
 	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
@@ -303,6 +316,8 @@ func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash 
 }
 
 func (tss *TSS) PubKeyCompressedBytes() []byte {
+	tss.CoreBridge.encodingLock.RLock()
+	defer tss.CoreBridge.encodingLock.RUnlock()
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("PubKeyCompressedBytes error")

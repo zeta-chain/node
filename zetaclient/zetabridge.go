@@ -48,6 +48,7 @@ type ZetaCoreBridge struct {
 	cfg           config.ClientConfiguration
 	keys          *Keys
 	broadcastLock *sync.RWMutex
+	encodingLock  *sync.RWMutex
 	zetaChainID   string
 	//ChainNonces         map[string]uint64 // FIXME: Remove this?
 	lastOutTxReportTime map[string]time.Time
@@ -94,6 +95,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		cfg:                 cfg,
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
+		encodingLock:        &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
 		stop:                make(chan struct{}),
 		zetaChainID:         chainID,
@@ -192,9 +194,10 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetacore")
 	}
-	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
-	cfg.Keygen = *keyGen
+	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	cfg.SetKeygen(keyGen)
+
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")
