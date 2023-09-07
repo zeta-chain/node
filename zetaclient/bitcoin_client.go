@@ -331,7 +331,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // returns isIncluded, isConfirmed, Error
-func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger, sendAmount float64) (bool, bool, error) {
+func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger, params *types.OutboundTxParams) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
@@ -370,8 +370,8 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	} else if res.Amount == 0 {
 		// TODO: amount checking should be done in zeta core to block invalid cctx
 		// Note: we use original amount here as zetacore checks against cctx's amount
-		amount = sendAmount
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
+		amount = float64(params.Amount.Uint64()) / 1e8
+		ob.logger.ObserveOutTx.Error().Msgf("IsSendOutTxProcessed: res.Amount == 0, using original amount %f", amount)
 		//return false, false, nil
 	} else {
 		amount = -res.Amount
