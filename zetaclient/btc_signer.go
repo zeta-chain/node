@@ -34,10 +34,23 @@ type BTCSigner struct {
 
 var _ ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(tssSigner TSSSigner, rpcClient *rpcclient.Client, logger zerolog.Logger, ts *TelemetryServer) (*BTCSigner, error) {
+func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logger, ts *TelemetryServer) (*BTCSigner, error) {
+	connCfg := &rpcclient.ConnConfig{
+		Host:         cfg.RPCHost,
+		User:         cfg.RPCUsername,
+		Pass:         cfg.RPCPassword,
+		HTTPPostMode: true,
+		DisableTLS:   true,
+		Params:       cfg.RPCParams,
+	}
+	client, err := rpcclient.New(connCfg, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating bitcoin rpc client: %s", err)
+	}
+
 	return &BTCSigner{
 		tssSigner: tssSigner,
-		rpcClient: rpcClient,
+		rpcClient: client,
 		logger: logger.With().
 			Str("chain", "BTC").
 			Str("module", "BTCSigner").Logger(),
@@ -208,7 +221,15 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
-
+	flags, err := zetaBridge.GetPermissionFlags()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get permission flags")
+		return
+	}
+	if !flags.IsOutboundEnabled {
+		logger.Info().Msgf("outbound is disabled")
+		return
+	}
 	myid := zetaBridge.keys.GetAddress()
 	// Early return if the send is already processed
 	// FIXME: handle revert case
@@ -239,7 +260,8 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height, outboundTxTssNonce, &btcClient.chain)
+	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height,
+		outboundTxTssNonce, &btcClient.chain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return

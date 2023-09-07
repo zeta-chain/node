@@ -51,7 +51,7 @@ const (
 
 	GasBalanceKey = "GasBalance-value-"
 	TSSKey        = "TSS-value-"
-	TSSVoterKey   = "TSSVoter-value-"
+	TSSHistoryKey = "TSS-History-value-"
 
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 

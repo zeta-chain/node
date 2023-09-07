@@ -6,21 +6,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v7.0.0"
+const releaseVersion = "v9.0.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
 
-		// Updated version map to thelatest consensus versions from each module
+		// Updated version map to the latest consensus versions from each module
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
-		// Decrement the consensus version of the cross chain module to trigger the migration v1 -> v2
+		vm[observertypes.ModuleName] = vm[observertypes.ModuleName] - 1
 		vm[crosschaintypes.ModuleName] = vm[crosschaintypes.ModuleName] - 1
+		SetParams(app, ctx)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -38,4 +39,12 @@ func SetupHandlers(app *App) {
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
 		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+}
+
+// SetParams sets the default params for the observer module
+// A new policy has been added for add_observer.
+func SetParams(app *App, ctx sdk.Context) {
+	params := app.ZetaObserverKeeper.GetParamsIsExists(ctx)
+	params.AdminPolicy = observertypes.DefaultAdminPolicy()
+	app.ZetaObserverKeeper.SetParams(ctx, params)
 }

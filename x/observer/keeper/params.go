@@ -13,6 +13,11 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	return
 }
 
+func (k Keeper) GetParamsIsExists(ctx sdk.Context) (params types.Params) {
+	k.paramstore.GetParamSetIfExists(ctx, &params)
+	return
+}
+
 // SetParams set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)

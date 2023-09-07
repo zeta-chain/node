@@ -55,7 +55,8 @@ type ZetaObserverKeeper interface {
 	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount zetaObserverTypes.NodeAccount, found bool)
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []zetaObserverTypes.NodeAccount)
 	SetNodeAccount(ctx sdk.Context, nodeAccount zetaObserverTypes.NodeAccount)
-	IsInboundAllowed(ctx sdk.Context) (found bool)
+	IsInboundEnabled(ctx sdk.Context) (found bool)
+	IsOutboundAllowed(ctx sdk.Context) (found bool)
 	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
 	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
@@ -69,6 +70,8 @@ type ZetaObserverKeeper interface {
 
 type FungibleKeeper interface {
 	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
+	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
+	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
@@ -93,6 +96,16 @@ type FungibleKeeper interface {
 		to eth.Address,
 		amountIn *big.Int,
 		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
-	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int, noEthereumTxEvent bool) error
+	DeployZRC20Contract(
+		ctx sdk.Context,
+		name, symbol string,
+		decimals uint8,
+		chainID int64,
+		coinType common.CoinType,
+		erc20Contract string,
+		gasLimit *big.Int,
+	) (eth.Address, error)
 }

@@ -2,7 +2,7 @@
 
 ## MsgDeployFungibleCoinZRC20
 
-Deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
+DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
 
 If this is a gas coin, the following happens:
 
@@ -25,18 +25,18 @@ Only the admin policy account is authorized to broadcast this message.
 message MsgDeployFungibleCoinZRC20 {
 	string creator = 1;
 	string ERC20 = 2;
-	string foreignChain = 3;
+	int64 foreign_chain_id = 3;
 	uint32 decimals = 4;
 	string name = 5;
 	string symbol = 6;
-	common.CoinType coinType = 7;
-	int64 gasLimit = 8;
+	common.CoinType coin_type = 7;
+	int64 gas_limit = 8;
 }
 ```
 
 ## MsgRemoveForeignCoin
 
-Removes a coin from the list of foreign coins in the module's state.
+RemoveForeignCoin removes a coin from the list of foreign coins in the module's state.
 
 Only the admin policy account is authorized to broadcast this message.
 

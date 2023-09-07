@@ -2,13 +2,15 @@
 
 ## MsgAddObserver
 
-Not implemented.
+AddObserver adds in a new observer to the store.It can be executed using an admin policy account
+Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
 
 ```proto
 message MsgAddObserver {
 	string creator = 1;
-	int64 chain_id = 2;
-	ObservationType observationType = 3;
+	string observer_address = 2;
+	string zetaclient_grantee_pubkey = 3;
+	bool add_node_account_only = 4;
 }
 ```
 
@@ -50,6 +52,7 @@ Only the admin policy account is authorized to broadcast this message.
 message MsgUpdatePermissionFlags {
 	string creator = 1;
 	bool isInboundEnabled = 3;
+	bool isOutboundEnabled = 4;
 }
 ```
 

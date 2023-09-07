@@ -25,7 +25,16 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 	// set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
 	in.InTxHash = send.InboundTxParams.InboundTxObservedHash
-	in.CctxIndex = append(in.CctxIndex, send.Index)
+	found := false
+	for _, cctxIndex := range in.CctxIndex {
+		if cctxIndex == send.Index {
+			found = true
+			break
+		}
+	}
+	if !found {
+		in.CctxIndex = append(in.CctxIndex, send.Index)
+	}
 	k.SetInTxHashToCctx(ctx, in)
 
 	tss, found := k.GetTSS(ctx)
@@ -41,6 +50,14 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 			Tss:       tss.TssPubkey,
 		})
 	}
+}
+
+// SetCrossChainTx set a specific send in the store from its index
+func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+	b := k.cdc.MustMarshal(&send)
+	store.Set(types.KeyPrefix(send.Index), b)
 }
 
 // GetCrossChainTx returns a send from its index
@@ -196,7 +213,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
@@ -224,6 +241,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutboundTxObservedExternalHeight: 0,
 		CoinType:                         msg.CoinType, // FIXME: is this correct?
 		Amount:                           sdk.NewUint(0),
+		TssPubkey:                        tssPubkey,
 	}
 	status := &types.Status{
 		Status:              s,

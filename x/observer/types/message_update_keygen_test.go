@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,23 +6,24 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgUpdateKeygen_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgUpdateKeygen
+		msg  types.MsgUpdateKeygen
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgUpdateKeygen{
+			msg: types.MsgUpdateKeygen{
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgUpdateKeygen{
+			msg: types.MsgUpdateKeygen{
 				Creator: sample.AccAddress(),
 			},
 		},

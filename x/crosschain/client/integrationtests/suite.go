@@ -51,8 +51,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		"zeta1us2qpqdcctk6q7qv2c9d9jvjxlv88jscf68kav",
 		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t",
 	}
-	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList)
-
+	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList, true)
+	network.AddCrosschainData(s.T(), 0, s.cfg.GenesisState, s.cfg.Codec)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
 	s.network = net

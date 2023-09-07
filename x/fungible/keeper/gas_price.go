@@ -24,7 +24,7 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	if err != nil {
 		return 0, sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, "setGasPrice", chainid, gasPrice)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, false, "setGasPrice", chainid, gasPrice)
 	if err != nil || res.Failed() {
 		return res.GasUsed, sdkerrors.Wrapf(types.ErrContractCall, "setGasPrice")
 	}
@@ -45,7 +45,7 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, "setGasCoinZRC20", chainid, address)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasCoinZRC20", chainid, address)
 	if err != nil || res.Failed() {
 		return sdkerrors.Wrapf(types.ErrContractCall, "setGasCoinZRC20")
 	}
@@ -66,7 +66,7 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Ad
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, "SetGasZetaPool", chainid, pool)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "SetGasZetaPool", chainid, pool)
 	if err != nil || res.Failed() {
 		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasZetaPool")
 	}

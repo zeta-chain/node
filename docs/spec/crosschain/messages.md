@@ -132,6 +132,8 @@ message MsgVoteOnObservedOutboundTx {
 	string cctx_hash = 2;
 	string observed_outTx_hash = 3;
 	uint64 observed_outTx_blockHeight = 4;
+	uint64 observed_outTx_gas_used = 10;
+	string observed_outTx_effective_gas_price = 11;
 	string zeta_minted = 5;
 	common.ReceiveStatus status = 6;
 	int64 outTx_chain = 7;
@@ -199,6 +201,29 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
+}
+```
+
+## MsgWhitelistERC20
+
+```proto
+message MsgWhitelistERC20 {
+	string creator = 1;
+	string erc20_address = 2;
+	int64 chain_id = 3;
+	string name = 4;
+	string symbol = 5;
+	uint32 decimals = 6;
+	int64 gas_limit = 7;
+}
+```
+
+## MsgUpdateTssAddress
+
+```proto
+message MsgUpdateTssAddress {
+	string creator = 1;
+	string tss_pubkey = 2;
 }
 ```
 
