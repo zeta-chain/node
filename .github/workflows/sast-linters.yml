@@ -80,15 +80,9 @@ jobs:
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
-
         with:
           version: v1.50
           skip-cache: false
-
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
 
       - name: Getting files updated in the PR
         id: changed-files-specific
