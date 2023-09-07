@@ -94,13 +94,13 @@ jobs:
       - name: Report nosec usage
         run: |
           # Fetch base branch
-          echo ">${{ github.ref_name }}<"
-          git fetch origin ${{ github.ref_name }}
+          # echo ">${{ github.ref_name }}<"
+          # git fetch origin ${{ github.ref_name }}
           # git fetch origin ${{ github.event.pull_request.base.ref }}
 
           # Get the hash of the first commit that is on this PR branch but not on the base branch
-          first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
-          echo "first_commit: $first_commit"
+          # first_commit=$(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | tail -n 1)
+          # echo "first_commit: $first_commit"
 
           declare -A nosec_list
           echo "Getting list of files that have been updated in the PR..."
