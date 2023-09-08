@@ -111,9 +111,9 @@ jobs:
       - name: Getting files updated in the PR
         id: changed-files-specific
         uses: tj-actions/changed-files@v39
-        with:
+        # with:
           # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
-          base_sha: e4329f55a6874d3f0ff805b998818816c4a83bdf
+          # base_sha: e4329f55a6874d3f0ff805b998818816c4a83bdf
           # files: .**/*.go
 
       - name: List all changed files
