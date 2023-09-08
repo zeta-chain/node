@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -185,15 +184,15 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 			panic(err)
 		}
 	}
+
+	err := am.keeper.IterateAndUpdateCctxGasPrice(ctx)
+	if err != nil {
+		ctx.Logger().Error("Error iterating and updating pending cctx gas price", "err", err.Error())
+	}
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the crosschain module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-
 	return []abci.ValidatorUpdate{}
 }
-
-var (
-	ModuleAddress = authtypes.NewModuleAddress(types.ModuleName)
-)
