@@ -25,10 +25,10 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	// fetch account to update
-	contractAddress := ethcommon.HexToAddress(msg.ContractAddress)
-	if contractAddress == (ethcommon.Address{}) {
+	if !ethcommon.IsHexAddress(msg.ContractAddress) {
 		return nil, cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
 	}
+	contractAddress := ethcommon.HexToAddress(msg.ContractAddress)
 	acct := k.evmKeeper.GetAccount(ctx, contractAddress)
 	if acct == nil {
 		return nil, cosmoserror.Wrapf(types.ErrContractNotFound, "contract (%s) not found", contractAddress.Hex())
@@ -49,10 +49,10 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 	}
 
 	// fetch the account of the new bytecode
-	newBytecodeAddress := ethcommon.HexToAddress(msg.NewBytecodeAddress)
-	if newBytecodeAddress == (ethcommon.Address{}) {
+	if !ethcommon.IsHexAddress(msg.NewBytecodeAddress) {
 		return nil, cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.NewBytecodeAddress)
 	}
+	newBytecodeAddress := ethcommon.HexToAddress(msg.NewBytecodeAddress)
 	newBytecodeAcct := k.evmKeeper.GetAccount(ctx, newBytecodeAddress)
 	if newBytecodeAcct == nil {
 		return nil, cosmoserror.Wrapf(types.ErrContractNotFound, "contract (%s) not found", newBytecodeAddress.Hex())

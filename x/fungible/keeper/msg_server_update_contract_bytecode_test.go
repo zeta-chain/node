@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -191,11 +190,11 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminDeployFungibleCoin(ctx, zk, admin)
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			ethcommon.HexToAddress("invalid"),
-			sample.EthAddress(),
-		))
+		_, err := k.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
+			Creator:            admin,
+			ContractAddress:    "invalid",
+			NewBytecodeAddress: sample.EthAddress().Hex(),
+		})
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
@@ -281,11 +280,12 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			mock.Anything,
 		).Return(&statedb.Account{})
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			contract,
-			ethcommon.HexToAddress("invalid"),
-		))
+		_, err := k.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
+			Creator:            admin,
+			ContractAddress:    contract.Hex(),
+			NewBytecodeAddress: "invalid",
+		})
+
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 
 		mockEVMKeeper.AssertExpectations(t)

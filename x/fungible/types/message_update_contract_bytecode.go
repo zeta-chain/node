@@ -49,12 +49,12 @@ func (msg *MsgUpdateContractBytecode) ValidateBasic() error {
 	}
 
 	// check if the contract address is valid
-	if ethcommon.HexToAddress(msg.ContractAddress) == (ethcommon.Address{}) {
+	if !ethcommon.IsHexAddress(msg.ContractAddress) {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
 	}
 
 	// check if the bytecode contract address is valid
-	if ethcommon.HexToAddress(msg.NewBytecodeAddress) == (ethcommon.Address{}) {
+	if !ethcommon.IsHexAddress(msg.NewBytecodeAddress) {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
 	}
 
