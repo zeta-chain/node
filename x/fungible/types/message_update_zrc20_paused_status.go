@@ -56,7 +56,7 @@ func (msg *MsgUpdateZRC20PausedStatus) ValidateBasic() error {
 
 	// check if all zrc20 addresses are valid
 	for _, zrc20 := range msg.Zrc20Addresses {
-		if ethcommon.HexToAddress(zrc20) == (ethcommon.Address{}) {
+		if !ethcommon.IsHexAddress(zrc20) {
 			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", zrc20)
 		}
 	}
