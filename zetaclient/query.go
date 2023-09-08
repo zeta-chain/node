@@ -259,7 +259,7 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Ord
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
-			Limit:      1000,
+			Limit:      2000,
 			CountTotal: false,
 			Reverse:    false,
 		},
