@@ -28,6 +28,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdQueryParams(),
 		CmdListForeignCoins(),
 		CmdShowForeignCoins(),
+		CmdGasStabilityPoolAddress(),
+		CmdGasStabilityPoolBalance(),
 	)
 
 	return cmd
