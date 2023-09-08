@@ -1,3 +1,6 @@
+//go:build PRIVNET
+// +build PRIVNET
+
 package main
 
 import (
