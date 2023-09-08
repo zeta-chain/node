@@ -122,12 +122,8 @@ jobs:
           nosec_detected=0
       
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-
-          echo "Getting list of nosec occurences"
-          
+                    
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo $file
-
             if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
               echo "nosec detected in $file"
               nosec_list+=("$file")
@@ -148,7 +144,7 @@ jobs:
 
           echo "nosec_list_string: $nosec_list_string"
 
-          echo "nosec_files=$nosec_list_string" >> $GITHUB_OUTPUT
+          echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "testing env var"
           echo "$nosec_files"
           echo  ${{ env.nosec_files }}
