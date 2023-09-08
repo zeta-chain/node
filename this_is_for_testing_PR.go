@@ -8,3 +8,5 @@ func main() {
 }
 
 // here is another comment
+
+// #nosec TESTING
