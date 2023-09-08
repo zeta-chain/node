@@ -134,19 +134,34 @@ jobs:
 
           echo "Getting list of nosec occurences"
           
+
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "File: $file"
-            temp=$(git diff -U0 $file | grep -v '^diff\|^---\|^+++\|^index' | sed 's/^@@/^/' | tr "\n" " ")
-            echo temp
-            IFS='^'
-            read -ra my_array <<< "$temp"
-            for line in "${my_array[@]}"; do
-              if [ ! -z $line ] && [[ $line =~ "nosec" ]]; then
-                line=$(echo $line | awk '{split($2, a, ","); print a[1]}' | sed 's/+/ /')
-                nosec_list["$file"]="$line"
-              fi
-            done
-          done
+
+            nosec_detected=$(git diff ${{ github.event.pull_request.base.ref }} $file | grep -q nosec)
+            if [ $? -eq 0 ]; then
+              echo "nosec detected in $file"
+              nosec_list["$file"]="nosec"
+            fi
+
+
+          # for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          #   echo "File: $file"
+          #   temp=$(git diff -U0 $file | grep -v '^diff\|^---\|^+++\|^index' | sed 's/^@@/^/' | tr "\n" " ")
+          #   echo $temp
+          #   lines_with_nosec=$(echo "$git_diff_output" | grep -n "nosec" | awk -F ':' '{print $1}')
+
+          #   IFS='^'
+          #   read -ra my_array <<< "$temp"
+          #   for line in "${my_array[@]}"; do
+          #     echo $line
+          #     if [ ! -z $temp ] && [[ $temp =~ "nosec" ]]; then
+          #     echo "Trying to get line number"
+          #     temp=$(echo $temp | awk '{split($2, a, ","); print a[1]}' | sed 's/+/ /')
+          #       nosec_list["$file"]="$temp"
+          #     echo $temp
+          #     fi
+          #   done
+          # done
           
           for file in "${!nosec_list[@]}"; do
             echo -e "Line: ${nosec_list[$file]}\tFile: $file"
