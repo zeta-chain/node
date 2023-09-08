@@ -124,7 +124,7 @@ jobs:
           done
 
           nosec_list_string="${nosec_list[@]}"
-          nosec_list_string=${nosec_list_string%},
+          nosec_list_string=${nosec_list_string%,}
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
 
