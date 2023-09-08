@@ -62,6 +62,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+func (k Keeper) GetAuthKeeper() types.AccountKeeper {
+	return k.authKeeper
+}
+
+func (k Keeper) GetBankKeeper() types.BankKeeper {
+	return k.bankKeeper
+}
+
+func (k Keeper) GetStakingKeeper() types.StakingKeeper {
+	return k.StakingKeeper
+}
+
+func (k Keeper) GetFungibleKeeper() types.FungibleKeeper {
+	return k.fungibleKeeper
+}
+
 func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
 	return k.zetaObserverKeeper
 }
