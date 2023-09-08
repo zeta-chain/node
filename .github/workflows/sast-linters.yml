@@ -139,7 +139,7 @@ jobs:
             echo "$file"
           done
 
-          nosec_list_string="${my_array[@]}"
+          nosec_list_string="${nosec_list[@]}"
           # echo "::set-output name=nosec_files::$nosec_list_string"
           echo $nosec_list_string
           echo "NOSEC_FILES=$nosec_list_string" >> $GITHUB_OUTPUT
