@@ -87,8 +87,14 @@ jobs:
       - name: Getting files updated in the PR
         id: changed-files-specific
         uses: tj-actions/changed-files@v39
-        with:
-          files: '*.go'
+        # with:
+        #   files: '*.go'
+
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
 
       - name: Report nosec usage
         run: |
