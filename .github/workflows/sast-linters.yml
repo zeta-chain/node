@@ -124,30 +124,24 @@ jobs:
 
       - name: Report nosec usage
         run: |
-          declare -A nosec_list
+          # declare -A nosec_list
           # echo "Getting list of files that have been updated in the PR..."
           # diff_file_list=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf ${{ github.sha }} --name-only -- '*.go')
           # diff_file_list=$(git diff ${{ github.event.pull_request.base.ref }} --name-only -- '*.go')
 
           
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-          # echo "Changed go files: $files" >> $GITHUB_ENV
-          # echo "::set-output name=files::$files"
 
           echo "Getting list of nosec occurences"
-
-          IFS=' ' read -ra files <<< "${{ steps.changed-files.outputs.all_changed_files }}"
-          for word in "${files[@]}"; do
-            echo "Current word: $file"
-          done
           
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "File: $file"
             temp=$(git diff -U0 $file | grep -v '^diff\|^---\|^+++\|^index' | sed 's/^@@/^/' | tr "\n" " ")
+            echo temp
             IFS='^'
             read -ra my_array <<< "$temp"
             for line in "${my_array[@]}"; do
-              if [ ! -z $line ] && [[ $line =~ "#nosec" ]]; then
+              if [ ! -z $line ] && [[ $line =~ "nosec" ]]; then
                 line=$(echo $line | awk '{split($2, a, ","); print a[1]}' | sed 's/+/ /')
                 nosec_list["$file"]="$line"
               fi
