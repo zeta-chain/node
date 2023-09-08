@@ -6,11 +6,11 @@ on:
     branches:
       - highlight_nosec_use
       - highlight_nosec_use_fix
-  # pull_request:
-  #   types:
-  #     - opened
-  #     - edited
-  #     - synchronize
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
 
 concurrency:
   group: linters-${{ github.head_ref || github.run_id }}
@@ -126,8 +126,8 @@ jobs:
           
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
 
-            # nosec_detected=$(git diff ${{ github.event.pull_request.base.ref }} $file | grep -q nosec)
-            nosec_detected=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf $file | grep -q nosec)
+            nosec_detected=$(git diff ${{ github.base_ref }} $file | grep -q nosec)
+            # nosec_detected=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf $file | grep -q nosec)
 
             if [ $? -eq 0 ]; then
               echo "nosec detected in $file"
@@ -142,11 +142,11 @@ jobs:
           nosec_list_string="${nosec_list[@]}"
           # echo "::set-output name=nosec_files::$nosec_list_string"
           echo $nosec_list_string
-          echo "NOSEC_FILES=$nosec_list_string" >> $GITHUB_OUTPUT
-          echo "$NOSEC_FILES"
+          echo "nosec_files=$nosec_list_string" >> $GITHUB_OUTPUT
+          echo "$nosec_files"
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            `nosec` detected in the following files: $NOSEC_FILES
+            `nosec` detected in the following files: ${{ env.nosec_files }}
