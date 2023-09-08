@@ -123,7 +123,7 @@ jobs:
             fi
           done
 
-          nosec_list_string="${nosec_list[@]}"
+          nosec_list_string="${nosec_list[@]%,}"
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
 
@@ -138,7 +138,7 @@ jobs:
         with:
           message: |
             !!!WARNING!!!*
-            `nosec` detected in the following files: ${{ env.nosec_files%, }}
+            `nosec` detected in the following files: ${{ env.nosec_files }}
 
             Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
 
