@@ -136,20 +136,22 @@ jobs:
               echo "nosec not detected in $file"
             fi
 
-            echo "end of loop"
           done
-          
-          echo "Done Detecting nosec"
 
+          echo "Nosec Array:"
           for file in "${nosec_list[@]}"; do
             echo "$file"
           done
 
+
           nosec_list_string="${nosec_list[@]}"
-          # echo "::set-output name=nosec_files::$nosec_list_string"
-          echo $nosec_list_string
+
+          echo "nosec_list_string: $nosec_list_string"
+
           echo "nosec_files=$nosec_list_string" >> $GITHUB_OUTPUT
+          echo "testing env var"
           echo "$nosec_files"
+          echo  ${{ env.nosec_files }}
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
