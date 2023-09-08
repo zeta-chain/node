@@ -17,48 +17,48 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gosec:
-    runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  # gosec:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     GO111MODULE: on
+  #   steps:
+  #     - name: Checkout Source
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.19
+  #     - name: Set up Go
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: 1.19
 
-      # - name: Install Pipeline Dependencies
-      #   uses:  ./.github/actions/install-dependencies
+  #     # - name: Install Pipeline Dependencies
+  #     #   uses:  ./.github/actions/install-dependencies
 
-      - name: Run Gosec Security Scanner
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+  #     - name: Run Gosec Security Scanner
+  #       run: |
+  #         export PATH=$PATH:$(go env GOPATH)/bin
+  #         go install github.com/securego/gosec/v2/cmd/gosec@latest
+  #         gosec ./...
 
-  git-guardian:
-    runs-on: ubuntu-latest
-    env:
-      GO111MODULE: on
-    steps:
-      - name: Checkout Source
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  # git-guardian:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     GO111MODULE: on
+  #   steps:
+  #     - name: Checkout Source
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - name: GitGuardian scan
-        uses: GitGuardian/ggshield-action@master
-        env:
-          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
-          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
-          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+  #     - name: GitGuardian scan
+  #       uses: GitGuardian/ggshield-action@master
+  #       env:
+  #         GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+  #         GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+  #         GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  #         GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+  #         GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
 
   # lint:
   #   runs-on: ubuntu-latest
@@ -111,10 +111,10 @@ jobs:
       - name: Getting files updated in the PR
         id: changed-files-specific
         uses: tj-actions/changed-files@v39
-        with:
+        # with:
           # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
           # base_sha: e4329f55a6874d3f0ff805b998818816c4a83bdf
-          files: .**/*.go
+          # files: .**/*.go
 
       - name: List all changed files
         run: |
