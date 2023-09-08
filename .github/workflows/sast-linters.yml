@@ -134,7 +134,6 @@ jobs:
 
           echo "Getting list of nosec occurences"
           
-
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
 
             nosec_detected=$(git diff ${{ github.event.pull_request.base.ref }} $file | grep -q nosec)
@@ -142,6 +141,7 @@ jobs:
               echo "nosec detected in $file"
               nosec_list["$file"]="nosec"
             fi
+          done
 
 
           # for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
