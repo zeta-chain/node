@@ -126,7 +126,7 @@ jobs:
           
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
 
-            nosec_detected=$(git diff ${{ github.base_ref }} $file | grep -q nosec)
+            nosec_detected=$(git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec)
             # nosec_detected=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf $file | grep -q nosec)
 
             if [ $? -eq 0 ]; then
