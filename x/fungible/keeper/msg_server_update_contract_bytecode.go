@@ -33,6 +33,20 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 		return nil, cosmoserror.Wrapf(types.ErrContractNotFound, "contract (%s) not found", contractAddress.Hex())
 	}
 
+	// check the contract is a zrc20
+	_, found := k.GetForeignCoins(ctx, msg.ContractAddress)
+	if !found {
+		// check contract is wzeta connector contract
+		systemContract, found := k.GetSystemContract(ctx)
+		if !found {
+			return nil, types.ErrSystemContractNotFound
+		}
+		if msg.ContractAddress != systemContract.ConnectorZevm {
+			// not a zrc20 or wzeta connector contract, can't be updated
+			return nil, cosmoserror.Wrapf(types.ErrInvalidContract, "contract (%s) is neither a zrc20 nor wzeta connector", msg.ContractAddress)
+		}
+	}
+
 	// fetch the account of the new bytecode
 	newBytecodeAddress := ethcommon.HexToAddress(msg.NewBytecodeAddress)
 	if newBytecodeAddress == (ethcommon.Address{}) {

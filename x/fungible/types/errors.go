@@ -28,4 +28,5 @@ var (
 	ErrUpdateNonce            = sdkerrors.Register(ModuleName, 1117, "update nonce error")
 	ErrInvalidGasLimit        = sdkerrors.Register(ModuleName, 1118, "invalid gas limit")
 	ErrSetBytecode            = sdkerrors.Register(ModuleName, 1119, "set bytecode error")
+	ErrInvalidContract        = sdkerrors.Register(ModuleName, 1120, "invalid contract")
 )

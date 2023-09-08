@@ -151,6 +151,30 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.Equal(t, chainID1, chainID.Int64())
 	})
 
+	t.Run("can update the bytecode of the wzeta connector contract", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		admin := sample.AccAddress()
+
+		// deploy a connector
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+		wzeta, _, _, oldConnector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// deploy a new connector that will become official connector
+		newConnector, err := k.DeployConnectorZEVM(ctx, wzeta)
+		require.NoError(t, err)
+		require.NotEmpty(t, newConnector)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, newConnector)
+
+		// can update the bytecode of the new connector with the old connector contract
+		_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+			admin,
+			newConnector,
+			oldConnector,
+		))
+		require.NoError(t, err)
+	})
+
 	t.Run("should fail if unauthorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
@@ -198,6 +222,43 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 
 		mockEVMKeeper.AssertExpectations(t)
+	})
+
+	t.Run("should fail neither a zrc20 nor wzeta connector", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		admin := sample.AccAddress()
+
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// can't update the bytecode of the wzeta contract
+		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+			admin,
+			wzeta,
+			sample.EthAddress(),
+		))
+		require.ErrorIs(t, err, types.ErrInvalidContract)
+	})
+
+	t.Run("should fail if system contract not found", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		admin := sample.AccAddress()
+
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+		_, _, _, connector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		// remove system contract
+		k.RemoveSystemContract(ctx)
+
+		// can't update the bytecode of the wzeta contract
+		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+			admin,
+			connector,
+			sample.EthAddress(),
+		))
+		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
 	})
 
 	t.Run("should fail if invalid bytecode address", func(t *testing.T) {
