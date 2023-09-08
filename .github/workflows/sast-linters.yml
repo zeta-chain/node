@@ -109,7 +109,7 @@ jobs:
       #     workflow-id: 'test.yml'
 
       - name: Getting files updated in the PR
-        id: changed-files-specific
+        id: changed-files
         uses: tj-actions/changed-files@v39
         # with:
           # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
@@ -118,7 +118,7 @@ jobs:
 
       - name: List all changed files
         run: |
-          for file in ${{ steps.changed-files-specific.outputs.all_changed_files }}; do
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             echo "$file was changed"
           done
 
@@ -127,13 +127,22 @@ jobs:
           declare -A nosec_list
           # echo "Getting list of files that have been updated in the PR..."
           # diff_file_list=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf ${{ github.sha }} --name-only -- '*.go')
+          # diff_file_list=$(git diff ${{ github.event.pull_request.base.ref }} --name-only -- '*.go')
+
           
-          echo "Changed files: ${{ steps.changed-files-specific.outputs.all_changed_files }}"
+          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
           # echo "Changed go files: $files" >> $GITHUB_ENV
           # echo "::set-output name=files::$files"
 
           echo "Getting list of nosec occurences"
-          for file in ${{ steps.changed-files-specific.outputs.all_changed_files }}; do
+
+          IFS=' ' read -ra files <<< "${{ steps.changed-files.outputs.all_changed_files }}"
+          for word in "${files[@]}"; do
+            echo "Current word: $file"
+          done
+          
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "File: $file"
             temp=$(git diff -U0 $file | grep -v '^diff\|^---\|^+++\|^index' | sed 's/^@@/^/' | tr "\n" " ")
             IFS='^'
             read -ra my_array <<< "$temp"
