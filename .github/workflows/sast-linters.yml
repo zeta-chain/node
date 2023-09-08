@@ -4,6 +4,7 @@ on:
     tags:
       - "*"
     branches:
+      - develop
       - highlight_nosec_use
   pull_request:
     types:
