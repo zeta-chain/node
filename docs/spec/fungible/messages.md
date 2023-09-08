@@ -69,7 +69,8 @@ message MsgUpdateZRC20WithdrawFee {
 ## MsgUpdateContractBytecode
 
 UpdateContractBytecode updates the bytecode of a contract from the bytecode of an existing contract
-NOTE: the new contract bytecode must have the same storage layout as the old contract bytecode
+Only a ZRC20 contract or the WZeta connector contract can be updated
+IMPORTANT: the new contract bytecode must have the same storage layout as the old contract bytecode
 the new contract can add new variable but cannot remove any existing variable
 
 ```proto
