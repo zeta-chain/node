@@ -99,7 +99,6 @@ jobs:
         uses: tj-actions/changed-files@v39
         with:
           base_sha: ${{ github.event.pull_request.base.sha }} 
-          # files: .**/*.go
 
       - name: List all changed files
         run: |
@@ -122,7 +121,7 @@ jobs:
               echo "nosec not detected in $file"
             fi
           done
-
+          
           nosec_list_string="${nosec_list[@]}"
           nosec_list_string="${nosec_list_string%,}"
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV

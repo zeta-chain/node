@@ -15,8 +15,6 @@
 // along with the Ethermint library. If not, see https://github.com/evmos/ethermint/blob/main/LICENSE
 package backend
 
-// NoSec Testing
-
 import (
 	"bytes"
 	"context"
