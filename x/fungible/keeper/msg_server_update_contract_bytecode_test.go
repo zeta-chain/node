@@ -269,6 +269,12 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminDeployFungibleCoin(ctx, zk, admin)
 
+		// set the contract as the connector
+		contract := sample.EthAddress()
+		k.SetSystemContract(ctx, types.SystemContract{
+			ConnectorZevm: contract.Hex(),
+		})
+
 		mockEVMKeeper.On(
 			"GetAccount",
 			mock.Anything,
@@ -277,7 +283,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			sample.EthAddress(),
+			contract,
 			ethcommon.HexToAddress("invalid"),
 		))
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
@@ -294,6 +300,11 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		setAdminDeployFungibleCoin(ctx, zk, admin)
 		contractAddr := sample.EthAddress()
 		newBytecodeAddr := sample.EthAddress()
+
+		// set the contract as the connector
+		k.SetSystemContract(ctx, types.SystemContract{
+			ConnectorZevm: contractAddr.String(),
+		})
 
 		mockEVMKeeper.On(
 			"GetAccount",
@@ -326,6 +337,11 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		setAdminDeployFungibleCoin(ctx, zk, admin)
 		contractAddr := sample.EthAddress()
 		newBytecodeAddr := sample.EthAddress()
+
+		// set the contract as the connector
+		k.SetSystemContract(ctx, types.SystemContract{
+			ConnectorZevm: contractAddr.String(),
+		})
 
 		mockEVMKeeper.On(
 			"GetAccount",
