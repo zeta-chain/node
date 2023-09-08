@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/vault"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -18,11 +18,21 @@ func (sm *SmokeTest) TestPauseZRC20() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 
-	bal, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	// Setup vault to test zrc20 interactions
+	fmt.Println("Deploying vault")
+	vaultAddr, _, vaultContract, err := vault.DeployVault(sm.zevmAuth, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on ETH ZRC20: %s\n", bal.String())
+	// Approving vault to spend ZRC20
+	tx, err := sm.ETHZRC20.Approve(sm.zevmAuth, vaultAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("Vault approval should succeed")
+	}
 
 	// Pause ETH ZRC20
 	fmt.Println("Pausing ETH")
@@ -52,11 +62,11 @@ func (sm *SmokeTest) TestPauseZRC20() {
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can no longer do operations on ETH ZRC20")
-	tx, err := sm.ETHZRC20.Transfer(sm.zevmAuth, sample.EthAddress(), big.NewInt(1e5))
+	tx, err = sm.ETHZRC20.Transfer(sm.zevmAuth, sample.EthAddress(), big.NewInt(1e5))
 	if err != nil {
 		panic(err)
 	}
-	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	if receipt.Status == 1 {
 		panic("transfer should fail")
 	}
@@ -68,8 +78,20 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	if receipt.Status == 1 {
 		panic("burn should fail")
 	}
+
+	// Operation on a contract that interact with ETH ZRC20 should fail
+	fmt.Println("Vault contract can no longer interact with ETH ZRC20")
+	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 1 {
+		panic("deposit should fail")
+	}
 	fmt.Println("Operations all failed")
 
+	// Check we can still interact with BTC ZRC20
 	fmt.Println("Check other ZRC20 can still be operated")
 	tx, err = sm.BTCZRC20.Transfer(sm.zevmAuth, sample.EthAddress(), big.NewInt(1e3))
 	if err != nil {
@@ -124,5 +146,16 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	if receipt.Status == 0 {
 		panic("burn should succeed")
 	}
+
+	// Can deposit tokens into the vault again
+	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("deposit should succeed")
+	}
+
 	fmt.Println("Operations all succeeded")
 }
