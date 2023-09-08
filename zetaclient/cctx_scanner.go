@@ -50,7 +50,7 @@ func NewCctxScanner(bridge *ZetaCoreBridge, dbpath string, memDB bool, tssPubkey
 	return sc, nil
 }
 
-// Scan a new batch of missed pending cctx
+// ScanMissedPendingCctx scans a new batch of missed pending cctx
 func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, pendingNonces *crosschaintypes.PendingNonces) []*crosschaintypes.CrossChainTx {
 	// calculate nonce range to scan
 	nonceFrom, found := sc.nextNonceToScan[chainID]
@@ -158,6 +158,8 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 		if err != nil {
 			return err
 		}
+	} else if err != nil {
+		return err
 	}
 	path := dbpath
 	if !memDB { // memDB is used for uint test only

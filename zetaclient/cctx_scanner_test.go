@@ -136,9 +136,9 @@ func AddMissedCctxBatch2(sc *CctxScanner, missedCctxMap map[int64]map[uint64]*CC
 }
 
 func CheckEmptyNonces(t *testing.T, sc *CctxScanner) {
-	require.Equal(t, uint64(0), sc.nextNonceToScan[5])
-	require.Equal(t, uint64(0), sc.nextNonceToScan[97])
-	require.Equal(t, uint64(0), sc.nextNonceToScan[80001])
+	require.Zero(t, sc.nextNonceToScan[5])
+	require.Zero(t, sc.nextNonceToScan[97])
+	require.Zero(t, sc.nextNonceToScan[80001])
 }
 
 func TestScannerDB(t *testing.T) {
