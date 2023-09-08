@@ -141,9 +141,9 @@ func CmdCCTXInboundVoter() *cobra.Command {
 
 func CmdCCTXOutboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [ZetaMinted] [Status] [chain] [outTXNonce] [coinType]",
+		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [ZetaMinted] [Status] [chain] [outTXNonce] [coinType]",
 		Short: "Broadcast message receiveConfirmation",
-		Args:  cobra.ExactArgs(10),
+		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSendHash := args[0]
 			argsOutTxHash := args[1]
@@ -163,28 +163,33 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				return errors.New("invalid effective gas price, enter 0 if unused")
 			}
 
-			argsMMint := args[5]
+			argsOutEffectiveGasLimit, err := strconv.ParseUint(args[5], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			argsMMint := args[6]
 
 			var status common.ReceiveStatus
-			if args[6] == "0" {
+			if args[7] == "0" {
 				status = common.ReceiveStatus_Success
-			} else if args[6] == "1" {
+			} else if args[7] == "1" {
 				status = common.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
 			}
 
-			chain, err := strconv.ParseInt(args[7], 10, 64)
+			chain, err := strconv.ParseInt(args[8], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			outTxNonce, err := strconv.ParseUint(args[8], 10, 64)
+			outTxNonce, err := strconv.ParseUint(args[9], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
+			argsCoinType := common.CoinType(common.CoinType_value[args[10]])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -197,6 +202,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				argsOutBlockHeight,
 				argsOutGasUsed,
 				argsOutEffectiveGasPrice,
+				argsOutEffectiveGasLimit,
 				math.NewUintFromString(argsMMint),
 				status,
 				chain,
