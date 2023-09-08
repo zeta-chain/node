@@ -6,11 +6,11 @@ on:
     branches:
       - highlight_nosec_use
       - highlight_nosec_use_fix
-  pull_request:
-    types:
-      - opened
-      - edited
-      - synchronize
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - edited
+  #     - synchronize
 
 concurrency:
   group: linters-${{ github.head_ref || github.run_id }}
@@ -102,11 +102,11 @@ jobs:
       #   id: branch-name
       #   uses: tj-actions/branch-names@v6
 
-      # - uses: nrwl/nx-set-shas@v3
-      #   id: last_successful_commit_push
-      #   with:
-      #     main-branch-name: ${{ steps.branch-name.outputs.current_branch }} # Get the last successful commit for the current branch.
-      #     workflow-id: 'test.yml'
+      - uses: nrwl/nx-set-shas@v3
+        id: set_shas
+        with:
+          main-branch-name: ${{ steps.branch-name.outputs.current_branch }} # Get the last successful commit for the current branch.
+          workflow-id: 'test.yml'
 
       - name: Getting files updated in the PR
         id: changed-files
@@ -124,12 +124,8 @@ jobs:
 
       - name: Report nosec usage
         run: |
-          # declare -A nosec_list
-          # echo "Getting list of files that have been updated in the PR..."
-          # diff_file_list=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf ${{ github.sha }} --name-only -- '*.go')
-          # diff_file_list=$(git diff ${{ github.event.pull_request.base.ref }} --name-only -- '*.go')
-
-          
+          nosec_list=()
+      
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
 
           echo "Getting list of nosec occurences"
@@ -137,18 +133,20 @@ jobs:
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
 
             # nosec_detected=$(git diff ${{ github.event.pull_request.base.ref }} $file | grep -q nosec)
-            nosec_detected=$(git diff develop $file | grep -q nosec)
+            nosec_detected=$(git diff e4329f55a6874d3f0ff805b998818816c4a83bdf $file | grep -q nosec)
 
             if [ $? -eq 0 ]; then
               echo "nosec detected in $file"
-              nosec_list["$file"]="nosec"
+              nosec_list+=("$file")
             fi
           done
           
-          for file in "${!nosec_list[@]}"; do
-            echo -e "Line: ${nosec_list[$file]}\tFile: $file"
+          for file in "${nosec_list[@]}"; do
+            echo "$file"
           done
 
+          echo "::set-output name=nosec_fules::$nosec_list"
+          
         # - name: Report nosec uses
         # uses: mshick/add-pr-comment@v2
         #   with:
