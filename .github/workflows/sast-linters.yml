@@ -145,12 +145,16 @@ jobs:
           echo "nosec_list_string: $nosec_list_string"
 
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
+          echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
+
           echo "testing env var"
           echo "$nosec_files"
           echo  ${{ env.nosec_files }}
+          echo $nosec_detected
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
+        # if: env.nosec_detected == 1
         with:
           message: |
             `nosec` detected in the following files: ${{ env.nosec_files }}
