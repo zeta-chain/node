@@ -1,7 +1,7 @@
 ################
 # BUILD ZETAVISOR
 ################
-FROM golang:1.19 AS cosmovisor
+FROM golang:1.20 AS cosmovisor
 ENV GOBIN=/go/bin
 ENV GOPATH=/go
 ENV CGO_ENABLED=0
@@ -16,7 +16,7 @@ RUN apt update && \
 
 FROM ubuntu:latest
 RUN apt-get update && apt-get install -y curl ca-certificates
-ENV GO_VERSION 1.19
+ENV GO_VERSION 1.20
 RUN curl -L https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -o go.tar.gz && \
     tar -C /usr/local -xzf go.tar.gz && \
     rm go.tar.gz
