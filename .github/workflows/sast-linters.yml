@@ -4,7 +4,6 @@ on:
     tags:
       - "*"
     branches:
-      - develop
       - highlight_nosec_use
   pull_request:
     types:
@@ -67,7 +66,7 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
@@ -85,11 +84,23 @@ jobs:
           version: v1.50
           skip-cache: false
 
+      # nosec
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
+
+      - uses: nrwl/nx-set-shas@v3
+        id: last_successful_commit_push
+        with:
+          main-branch-name: ${{ steps.branch-name.outputs.current_branch }} # Get the last successful commit for the current branch.
+          workflow-id: 'test.yml'
+
       - name: Getting files updated in the PR
         id: changed-files-specific
         uses: tj-actions/changed-files@v39
-        # with:
-        #   files: '*.go'
+        with:
+          base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
+          # files: '*.go'
 
       - name: List all changed files
         run: |
