@@ -119,31 +119,28 @@ jobs:
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
             if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
               echo "nosec detected in $file"
-              nosec_list+=("$file")
+              nosec_list+=("$file,")
               nosec_detected=1
             else
               echo "nosec not detected in $file"
             fi
           done
 
-          # echo "Nosec Array:"
-          # for file in "${nosec_list[@]}"; do
-          #   echo "$file"
-          # done
-
           nosec_list_string="${nosec_list[@]}"
-          nosec_list_list="${nosec_list_string// /$'\n'}"
-          echo $nosec_list_list
-          
-          echo "nosec_files=$nosec_list_list" >> $GITHUB_ENV
+          echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
+
+          echo "testing env var"
+          echo "$nosec_files"
+          echo  ${{ env.nosec_files }}
+          echo $nosec_detected
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
         if: env.nosec_detected == 1
         with:
           message: |
-            *!!!WARNING!!!*
+            !!!WARNING!!!*
             `nosec` detected in the following files: ${{ env.nosec_files }}
 
             Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
