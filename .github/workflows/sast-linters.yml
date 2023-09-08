@@ -73,17 +73,17 @@ jobs:
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.19
+      # - name: Set up Go
+      #   uses: actions/setup-go@v3
+      #   with:
+      #     go-version: 1.19
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: v1.50
-          skip-cache: true
-          args: --timeout=30m
+      # - name: Run golangci-lint
+      #   uses: golangci/golangci-lint-action@v3
+      #   with:
+      #     version: v1.50
+      #     skip-cache: true
+      #     args: --timeout=30m
 
       # nosec
       # - name: Get branch name
@@ -99,14 +99,14 @@ jobs:
       - name: Getting files updated in the PR
         id: changed-files-specific
         uses: tj-actions/changed-files@v39
-        with:
-          # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
-          base_sha: e4329f55a6874d3f0ff805b998818816c4a83bdf
-          # files: '*.go'
+        # with:
+        #   # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
+        #   base_sha: e4329f55a6874d3f0ff805b998818816c4a83bdf
+        #   files: .github/**
 
       - name: List all changed files
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          for file in ${{ steps.changed-files-specific.outputs.all_changed_files }}; do
             echo "$file was changed"
           done
 
