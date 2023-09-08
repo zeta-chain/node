@@ -97,16 +97,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # nosec
-      # - name: Get branch name
-      #   id: branch-name
-      #   uses: tj-actions/branch-names@v6
-
       - name: Getting files updated in the PR
         id: changed-files
         uses: tj-actions/changed-files@v39
         with:
-          # base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
           base_sha: ${{ github.event.pull_request.base.sha }} 
           # files: .**/*.go
 
@@ -120,7 +114,6 @@ jobs:
         run: |
           nosec_list=()
           nosec_detected=0
-      
           echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
                     
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
@@ -131,19 +124,14 @@ jobs:
             else
               echo "nosec not detected in $file"
             fi
-
           done
 
-          echo "Nosec Array:"
-          for file in "${nosec_list[@]}"; do
-            echo "$file"
-          done
-
+          # echo "Nosec Array:"
+          # for file in "${nosec_list[@]}"; do
+          #   echo "$file"
+          # done
 
           nosec_list_string="${nosec_list[@]}"
-
-          echo "nosec_list_string: $nosec_list_string"
-
           echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
 
@@ -154,7 +142,12 @@ jobs:
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
-        # if: env.nosec_detected == 1
+        if: env.nosec_detected == 1
         with:
           message: |
+            *!!!WARNING!!!*
             `nosec` detected in the following files: ${{ env.nosec_files }}
+
+            Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
+
+            Pay extra attention to the way `#nosec` is used in the files listed above. 
