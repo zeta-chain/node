@@ -138,15 +138,3 @@ jobs:
             Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
 
             Pay extra attention to the way `#nosec` is being used in the files listed above. 
-
-
-      - name: Send Message to Securty channel about nosec usuage
-        id: slack
-        uses: slackapi/slack-github-action@v1.24.0
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
-        with:
-          channel-id: "C02RNH23T26"
-          slack-message: "!WARNING! nosec detected in PR: ${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
-       
-

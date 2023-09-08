@@ -7,18 +7,18 @@ on:
       - athens2-develop
     tags:
       - "*"
-  # pull_request:
-  #   branches:
-  #     - develop
-  #     - athens2-develop
-  #   types:
-  #     - synchronize
-  #     - opened
-  #     - reopened
-  #     - ready_for_review
+  pull_request:
+    branches:
+      - develop
+      - athens2-develop
+    types:
+      - synchronize
+      - opened
+      - reopened
+      - ready_for_review
 
 concurrency: 
-  group: build-node-workflow
+  group: build-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 env:
