@@ -133,14 +133,10 @@ jobs:
 
           nosec_list_string="${nosec_list[@]}"
           nosec_list_list="${nosec_list_string// /$'\n'}"
+          echo $nosec_list_list
           
           echo "nosec_files=$nosec_list_list" >> $GITHUB_ENV
           echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
-
-          # echo "testing env var"
-          # echo "$nosec_files"
-          # echo  ${{ env.nosec_files }}
-          # echo $nosec_detected
 
       - name: Report nosec uses
         uses: mshick/add-pr-comment@v2
