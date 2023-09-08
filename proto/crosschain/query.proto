@@ -41,6 +41,9 @@ service Query {
   rpc InTxTrackerAllByChain(QueryAllInTxTrackerByChainRequest) returns (QueryAllInTxTrackerByChainResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackerByChain/{chain_id}";
   }
+  rpc InTxTrackerAll(QueryAllInTxTrackersRequest) returns (QueryAllInTxTrackersResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackers";
+  }
 
   // Queries a InTxHashToCctx by index.
   rpc InTxHashToCctx(QueryGetInTxHashToCctxRequest) returns (QueryGetInTxHashToCctxResponse) {
@@ -189,6 +192,12 @@ message QueryAllInTxTrackerByChainRequest {
 message QueryAllInTxTrackerByChainResponse {
   repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllInTxTrackersRequest {}
+
+message QueryAllInTxTrackersResponse {
+  repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetInTxHashToCctxRequest {

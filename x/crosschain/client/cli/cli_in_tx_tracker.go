@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,5 +43,58 @@ func CmdAddToInTxTracker() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 
+	return cmd
+}
+
+func CmdListInTxTrackerByChain() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-in-tx-tracker [chainId]",
+		Short: "shows a list of in tx tracker by chainId",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			argChain, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+			params := &types.QueryAllInTxTrackerByChainRequest{
+				ChainId:    argChain,
+				Pagination: pageReq,
+			}
+			res, err := queryClient.InTxTrackerAllByChain(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	return cmd
+}
+
+func CmdListInTxTrackers() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-all-tx-trackers",
+		Short: "shows all inTxTrackers",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+			params := &types.QueryAllInTxTrackersRequest{}
+			res, err := queryClient.InTxTrackerAll(context.Background(), params)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+	flags.AddQueryFlagsToCmd(cmd)
 	return cmd
 }

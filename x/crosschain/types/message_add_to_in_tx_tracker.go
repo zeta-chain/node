@@ -46,9 +46,6 @@ func (msg *MsgAddToInTxTracker) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if msg.ChainId < 0 {
-		return errorsmod.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
-	}
 	if common.GetChainFromChainID(msg.ChainId) == nil {
 		return errorsmod.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}

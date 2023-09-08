@@ -42,6 +42,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdQueryParams(),
 		CmdGetTssAddress(),
 		CmdListTssHistory(),
+		CmdListInTxTrackerByChain(),
+		CmdListInTxTrackers(),
 	)
 
 	return cmd
