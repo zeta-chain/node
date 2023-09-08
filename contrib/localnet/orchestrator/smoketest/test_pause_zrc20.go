@@ -18,7 +18,7 @@ func (sm *SmokeTest) TestPauseZRC20() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 
-	// Setup vault to test zrc20 interactions
+	// Setup vault used to test zrc20 interactions
 	fmt.Println("Deploying vault")
 	vaultAddr, _, vaultContract, err := vault.DeployVault(sm.zevmAuth, sm.zevmClient)
 	if err != nil {
@@ -30,6 +30,14 @@ func (sm *SmokeTest) TestPauseZRC20() {
 		panic(err)
 	}
 	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("Vault approval should succeed")
+	}
+	tx, err = sm.BTCZRC20.Approve(sm.zevmAuth, vaultAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
@@ -100,6 +108,14 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	if receipt.Status == 0 {
 		panic("BTC transfer should succeed")
+	}
+	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.BTCZRC20Addr, big.NewInt(1e3))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("BTC vault deposit should succeed")
 	}
 
 	// Unpause ETH ZRC20
