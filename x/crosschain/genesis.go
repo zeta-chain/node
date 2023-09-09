@@ -119,5 +119,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	genesis.TssHistory = k.GetAllTSS(ctx)
 
+	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)
+
 	return &genesis
 }
