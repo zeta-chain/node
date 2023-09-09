@@ -16,6 +16,17 @@ message MsgAddToOutTxTracker {
 }
 ```
 
+## MsgAddToInTxTracker
+
+```proto
+message MsgAddToInTxTracker {
+	string creator = 1;
+	int64 chain_id = 2;
+	string tx_hash = 3;
+	common.CoinType coin_type = 4;
+}
+```
+
 ## MsgRemoveFromOutTxTracker
 
 Removes a record from the outbound transaction tracker by chain ID and nonce.
