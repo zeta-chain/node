@@ -903,7 +903,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 				height, _ := ob.zetaClient.GetBlockHeight()
 				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return
