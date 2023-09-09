@@ -71,7 +71,6 @@ type BitcoinChainClient struct {
 
 const (
 	minConfirmations = 0
-	chunkSize        = 1000
 	maxHeightDiff    = 10000
 	dustOffset       = 2000
 )
@@ -598,24 +597,13 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
 	addresses := []btcutil.Address{address}
-	var utxos []btcjson.ListUnspentResult
 
-	// populate utxos array
-	for i := minConfirmations; i < maxConfirmations; i += chunkSize {
-		unspents, err := ob.rpcClient.ListUnspentMinMaxAddresses(i, i+chunkSize, addresses)
-		if err != nil {
-			return err
-		}
-		utxos = append(utxos, unspents...)
-		//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
-		//for idx, utxo := range unspents {
-		//	fmt.Printf("utxo %d\n", idx)
-		//	fmt.Printf("  txid: %s\n", utxo.TxID)
-		//	fmt.Printf("  address: %s\n", utxo.Address)
-		//	fmt.Printf("  amount: %f\n", utxo.Amount)
-		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
-		//}
+	// fetching all TSS utxos takes 160ms
+	utxos, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, addresses)
+	if err != nil {
+		return err
 	}
+	//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos in confirmation range [0, %d]", len(unspents), maxConfirmations)
 
 	// rigid sort to make utxo list deterministic
 	sort.SliceStable(utxos, func(i, j int) bool {
