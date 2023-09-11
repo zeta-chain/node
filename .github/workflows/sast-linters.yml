@@ -20,12 +20,12 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v3
         with:
           go-version: '1.20'
 
@@ -64,7 +64,7 @@ jobs:
       GO111MODULE: on
     steps:
       - name: Checkout Source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
           
@@ -72,9 +72,9 @@ jobs:
         uses:  ./.github/actions/install-dependencies
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v3
         with:
-          go-version: '1.20'
+          go-version: '1.19'
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
