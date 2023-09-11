@@ -160,16 +160,16 @@ cp $GOPATH/bin/zetacored $GOPATH/bin/old/
 
 # Setup zetavisor
 # Genesis
-cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
-cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
+cp $GOPATH/bin/old/zetacored $DAEMON_HOME/zetavisor/genesis/bin
+cp $GOPATH/bin/zetaclientd $DAEMON_HOME/zetavisor/genesis/bin
 
 #Upgrades
-cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
+cp $GOPATH/bin/new/zetacored $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/
 
 #Permissions
-chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
-chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
-chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
+chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetacored
+chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetaclientd
+chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
 
 
 # 7 Start the nodes
