@@ -196,6 +196,58 @@ func (_m *CrosschainFungibleKeeper) GetSystemContract(ctx types.Context) (fungib
 	return r0, r1
 }
 
+// QueryGasLimit provides a mock function with given fields: ctx, contract
+func (_m *CrosschainFungibleKeeper) QueryGasLimit(ctx types.Context, contract common.Address) (*big.Int, error) {
+	ret := _m.Called(ctx, contract)
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address) (*big.Int, error)); ok {
+		return rf(ctx, contract)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address) *big.Int); ok {
+		r0 = rf(ctx, contract)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address) error); ok {
+		r1 = rf(ctx, contract)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// QueryProtocolFlatFee provides a mock function with given fields: ctx, contract
+func (_m *CrosschainFungibleKeeper) QueryProtocolFlatFee(ctx types.Context, contract common.Address) (*big.Int, error) {
+	ret := _m.Called(ctx, contract)
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address) (*big.Int, error)); ok {
+		return rf(ctx, contract)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address) *big.Int); ok {
+		r0 = rf(ctx, contract)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address) error); ok {
+		r1 = rf(ctx, contract)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // QuerySystemContractGasCoinZRC20 provides a mock function with given fields: ctx, chainID
 func (_m *CrosschainFungibleKeeper) QuerySystemContractGasCoinZRC20(ctx types.Context, chainID *big.Int) (common.Address, error) {
 	ret := _m.Called(ctx, chainID)
