@@ -2,9 +2,13 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	"errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"math/big"
 	"testing"
 
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -79,5 +83,84 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42)),
 		)
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+	})
+
+	t.Run("should fail if can't query old fee", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseEVMMock: true})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+
+		// setup
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+		zrc20 := sample.EthAddress()
+		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
+
+		// evm mocks - query will fail at ApplyMessage
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+		mockEVMKeeper.On(
+			"ApplyMessage",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("query failed"))
+
+		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+			admin,
+			zrc20.String(),
+			math.NewUint(42)),
+		)
+		require.ErrorIs(t, err, types.ErrContractCall)
+
+		mockEVMKeeper.AssertExpectations(t)
+	})
+
+	t.Skip("should fail if can't query old fee", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseEVMMock: true})
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+
+		// setup
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+		zrc20 := sample.EthAddress()
+		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
+
+		// evm mocks - query will fail at ApplyMessage
+		mockEVMKeeper.On("EstimateGas", mock.Anything, mock.Anything).Maybe().Return(
+			&evmtypes.EstimateGasResponse{Gas: 1000},
+			nil,
+		)
+		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
+		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
+
+		// this is the query (commit == false)
+		mockEVMKeeper.On(
+			"ApplyMessage",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			false,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, nil)
+
+		// this is the update call (commit == true)
+		mockEVMKeeper.On(
+			"ApplyMessage",
+			mock.Anything,
+			mock.Anything,
+			mock.Anything,
+			true,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("transaction failed"))
+
+		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+			admin,
+			zrc20.String(),
+			math.NewUint(42)),
+		)
+		require.ErrorIs(t, err, types.ErrContractCall)
+
+		mockEVMKeeper.AssertExpectations(t)
 	})
 }
