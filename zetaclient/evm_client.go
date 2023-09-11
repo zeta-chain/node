@@ -3,7 +3,6 @@ package zetaclient
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	math2 "math"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -683,43 +681,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		}
 		// Pull out arguments from logs
 		for logs.Next() {
-			event := logs.Event
-			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
-			if destChain == nil {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
-				continue
-			}
-			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-			cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-			if !found {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-				continue
-			}
-			if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-				continue
-			}
-			zetaHash, err := ob.zetaClient.PostSend(
-				event.ZetaTxSenderAddress.Hex(),
-				ob.chain.ChainId,
-				event.SourceTxOriginAddress.Hex(),
-				clienttypes.BytesToEthHex(event.DestinationAddress),
-				destChain.ChainId,
-				math.NewUintFromBigInt(event.ZetaValueAndGas),
-				base64.StdEncoding.EncodeToString(event.Message),
-				event.Raw.TxHash.Hex(),
-				event.Raw.BlockNumber,
-				event.DestinationGasLimit.Uint64(),
-				common.CoinType_Zeta,
-				PostSendNonEVMGasLimit,
-				"",
-			)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-				continue
-			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+			ob.PostInboundVoteForZetaSentEvent(logs.Event)
 		}
 	}()
 
@@ -750,33 +712,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		// Pull out arguments from logs
 		for depositedLogs.Next() {
-			event := depositedLogs.Event
-			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-			// TODO :add logger to POSTSEND
-			if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
-				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-				continue
-			}
-			zetaHash, err := ob.zetaClient.PostSend(
-				"",
-				ob.chain.ChainId,
-				"",
-				clienttypes.BytesToEthHex(event.Recipient),
-				common.ZetaChain().ChainId,
-				math.NewUintFromBigInt(event.Amount),
-				hex.EncodeToString(event.Message),
-				event.Raw.TxHash.Hex(),
-				event.Raw.BlockNumber,
-				1_500_000,
-				common.CoinType_ERC20,
-				PostSendEVMGasLimit,
-				event.Asset.String(),
-			)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-				continue
-			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
+			ob.PostInboundVoteForDepositedEvents(depositedLogs.Event)
 		}
 	}()
 
@@ -807,32 +743,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						continue
 					}
 					if *tx.To() == tssAddress {
-						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-						if err != nil {
-							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
-							continue
-						}
-						if receipt.Status != 1 { // 1: successful, 0: failed
-							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-							continue
-						}
-
-						from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-						if err != nil {
-							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-							signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-							from, err = signer.Sender(tx)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Err(err).Msg("local recovery of sender address failed")
-								continue
-							}
-						}
-						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
-						if err != nil {
-							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-							continue
-						}
-						ob.logger.ExternalChainWatcher.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
+						ob.CheckReceiptForCointypeGas(tx, block)
 					}
 				}
 			}
