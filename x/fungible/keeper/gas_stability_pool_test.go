@@ -11,7 +11,7 @@ import (
 
 func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 	t.Run("can create the gas stability pool account if doesn't exist", func(t *testing.T) {
-		k, ctx, _ := testkeeper.FungibleKeeper(t)
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
 
 		// account doesn't exist
 		acc := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
@@ -35,7 +35,7 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 
 func TestKeeper_FundGasStabilityPool(t *testing.T) {
 	t.Run("can fund the gas stability pool and withdraw", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)

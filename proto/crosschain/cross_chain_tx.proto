@@ -53,6 +53,7 @@ message OutboundTxParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  uint64 outbound_tx_effective_gas_limit = 22;
   string tss_pubkey = 11;
 }
 

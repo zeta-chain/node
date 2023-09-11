@@ -91,7 +91,7 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
-	return ethcommon.HexToAddress(AccAddress())
+	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
 // Bytes returns a sample byte array

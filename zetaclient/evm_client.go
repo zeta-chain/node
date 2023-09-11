@@ -238,6 +238,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			receipt.BlockNumber.Uint64(),
 			receipt.GasUsed,
 			transaction.GasPrice(),
+			transaction.Gas(),
 			transaction.Value(),
 			recvStatus,
 			ob.chain,
@@ -258,6 +259,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				receipt.BlockNumber.Uint64(),
 				receipt.GasUsed,
 				transaction.GasPrice(),
+				transaction.Gas(),
 				transaction.Value(),
 				common.ReceiveStatus_Success,
 				ob.chain,
@@ -277,6 +279,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				receipt.BlockNumber.Uint64(),
 				receipt.GasUsed,
 				transaction.GasPrice(),
+				transaction.Gas(),
 				big.NewInt(0),
 				common.ReceiveStatus_Failed,
 				ob.chain,
@@ -320,6 +323,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							vLog.BlockNumber,
 							receipt.GasUsed,
 							transaction.GasPrice(),
+							transaction.Gas(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -353,6 +357,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							vLog.BlockNumber,
 							receipt.GasUsed,
 							transaction.GasPrice(),
+							transaction.Gas(),
 							mMint,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -379,6 +384,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				receipt.BlockNumber.Uint64(),
 				receipt.GasUsed,
 				transaction.GasPrice(),
+				transaction.Gas(),
 				big.NewInt(0),
 				common.ReceiveStatus_Failed,
 				ob.chain,
@@ -415,6 +421,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							vLog.BlockNumber,
 							receipt.GasUsed,
 							transaction.GasPrice(),
+							transaction.Gas(),
 							event.Amount,
 							common.ReceiveStatus_Success,
 							ob.chain,
@@ -448,7 +455,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	}
 	rpcRestTime, err := strconv.Atoi(os.Getenv("OS_RPC_REST_TIME"))
 	if err != nil || rpcRestTime <= 0 {
-		rpcRestTime = 500 // 500ms
+		rpcRestTime = 20 // 20ms
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
 
@@ -473,9 +480,16 @@ func (ob *EVMChainClient) observeOutTx() {
 					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
-						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on nonce %d", nonceInt)
+						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
+						ob.mu.Lock()
+						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+						ob.mu.Unlock()
+						if found {
+							continue
+						}
+
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
