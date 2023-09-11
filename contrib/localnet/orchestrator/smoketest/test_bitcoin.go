@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -39,8 +40,11 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	btc := sm.btcRPCClient
 	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
 	if err != nil {
-		panic(err)
+		if !strings.Contains(err.Error(), "Database already exists") {
+			panic(err)
+		}
 	}
+
 	skBytes, err := hex.DecodeString(DeployerPrivateKey)
 	if err != nil {
 		panic(err)
@@ -153,6 +157,7 @@ func (sm *SmokeTest) DepositBTC() {
 		}
 		diff := big.NewInt(0)
 		diff.Sub(balance, initialBalance)
+		fmt.Printf("BTC Difference in balance: %d", diff.Uint64())
 		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
 			fmt.Printf("waiting for BTC balance to show up in ZRC contract... current bal %d\n", balance)
 		} else {
