@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"math/big"
-
 	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,33 +30,15 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 		return nil, cosmoserrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
 	}
 
+	// get the previous fee
+	oldWithdrawFee, err := k.QueryProtocolFlatFee(ctx, zrc20Addr)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query protocol flat fee (%s)", err.Error())
+	}
+
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get zrc20 abi")
-	}
-
-	// get the previous fee
-	res, err := k.CallEVM(
-		ctx,
-		*zrc20ABI,
-		types.ModuleAddressEVM,
-		zrc20Addr,
-		BigIntZero,
-		nil,
-		false,
-		false,
-		"PROTOCOL_FLAT_FEE",
-	)
-	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract PROTOCOL_FLAT_FEE method (%s)", err.Error())
-	}
-	unpacked, err := zrc20ABI.Unpack("PROTOCOL_FLAT_FEE", res.Ret)
-	if err != nil || len(unpacked) == 0 {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to unpack zrc20 contract PROTOCOL_FLAT_FEE method (%s)", err.Error())
-	}
-	oldWithdrawFee, ok := unpacked[0].(*big.Int)
-	if !ok {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to interpret the returned unpacked zrc20 contract PROTOCOL_FLAT_FEE method; ret %x", res.Ret)
 	}
 
 	// call the contract method to update the fee
