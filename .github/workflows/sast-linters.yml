@@ -141,6 +141,7 @@ jobs:
       
       - name: Add Label
         uses: actions/github-script@v6
+        if: env.nosec_detected == 1
         with:
           script: |
             github.rest.issues.addLabels({
