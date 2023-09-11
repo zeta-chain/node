@@ -35,9 +35,18 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
+	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observermodule "github.com/zeta-chain/zetacore/x/observer"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // NewContext creates a new sdk.Context for testing purposes with initialized header
@@ -74,6 +83,14 @@ type SDKKeepers struct {
 	StakingKeeper   stakingkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 	EvmKeeper       *evmkeeper.Keeper
+}
+
+// ZetaKeepers is a struct containing Zeta module keepers for test purposes
+type ZetaKeepers struct {
+	CrosschainKeeper *crosschainkeeper.Keeper
+	EmissionsKeeper  *emissionskeeper.Keeper
+	FungibleKeeper   *fungiblekeeper.Keeper
+	ObserverKeeper   *observerkeeper.Keeper
 }
 
 var moduleAccountPerms = map[string][]string{
@@ -338,4 +355,20 @@ func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Cont
 	consAddr, err := validator.GetConsAddr()
 	require.NoError(t, err)
 	return ctx.WithProposer(consAddr)
+}
+
+// InitGenesis initializes the test modules genesis state for defined Zeta modules
+func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
+	if zk.CrosschainKeeper != nil {
+		crosschainmodule.InitGenesis(ctx, *zk.CrosschainKeeper, *crosschaintypes.DefaultGenesis())
+	}
+	if zk.EmissionsKeeper != nil {
+		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *emissionstypes.DefaultGenesis())
+	}
+	if zk.FungibleKeeper != nil {
+		fungiblemodule.InitGenesis(ctx, *zk.FungibleKeeper, *fungibletypes.DefaultGenesis())
+	}
+	if zk.ObserverKeeper != nil {
+		observermodule.InitGenesis(ctx, *zk.ObserverKeeper, *observertypes.DefaultGenesis())
+	}
 }
