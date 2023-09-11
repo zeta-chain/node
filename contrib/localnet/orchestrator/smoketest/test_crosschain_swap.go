@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
@@ -64,7 +63,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on BTC ZRC20: %d\n", bal)
+	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
 	bal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
