@@ -37,7 +37,14 @@ func PubKey(r *rand.Rand) cryptotypes.PubKey {
 	return ed25519.GenPrivKeyFromSecret(seed).PubKey()
 }
 
-// AccAddress returns a sample account address
+// Bech32AccAddress returns a sample account address
+func Bech32AccAddress() sdk.AccAddress {
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := pk.Address()
+	return sdk.AccAddress(addr)
+}
+
+// AccAddress returns a sample account address in string
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := pk.Address()
