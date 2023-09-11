@@ -23,7 +23,6 @@ curl -sS http://eth:8545 \
 echo "running smoketest..."
 smoketest "$SMOKETEST_CMD"
 SMOKETEST_EXIT_CODE=$?
-
 if [ $SMOKETEST_EXIT_CODE -eq 0 ]; then
   echo "smoketest passed"
   exit 0
