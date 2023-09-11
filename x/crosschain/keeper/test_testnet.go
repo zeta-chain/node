@@ -7,6 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) TestWhitelistERC20(ctx sdk.Context) error {
+func (k Keeper) TestWhitelistERC20(_ sdk.Context) error {
 	return nil
 }

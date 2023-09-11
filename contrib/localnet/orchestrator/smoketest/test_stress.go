@@ -143,7 +143,19 @@ func StressTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, authClient, bankClient, observerClient, goerliAuth, zevmAuth, nil)
+	smokeTest := NewSmokeTest(
+		goerliClient,
+		zevmClient,
+		cctxClient,
+		ZetaTxServer{}, // not used in stress test
+		fungibleClient,
+		authClient,
+		bankClient,
+		observerClient,
+		goerliAuth,
+		zevmAuth,
+		nil,
+	)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.local {

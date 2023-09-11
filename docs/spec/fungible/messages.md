@@ -66,3 +66,16 @@ message MsgUpdateZRC20WithdrawFee {
 }
 ```
 
+## MsgUpdateZRC20PausedStatus
+
+UpdateZRC20PausedStatus updates the paused status of a ZRC20
+The list of ZRC20s are either paused or unpaused
+
+```proto
+message MsgUpdateZRC20PausedStatus {
+	string creator = 1;
+	string zrc20_addresses = 2;
+	UpdatePausedStatusAction action = 3;
+}
+```
+

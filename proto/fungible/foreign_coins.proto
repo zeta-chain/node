@@ -15,4 +15,5 @@ message ForeignCoins {
   string symbol = 7;
   common.CoinType coin_type = 8;
   uint64 gas_limit = 9;
+  bool paused = 10;
 }

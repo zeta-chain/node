@@ -62,14 +62,21 @@ func (sm *SmokeTest) TestSendZetaIn() {
 
 	sm.wg.Add(1)
 	go func() {
+		bn, _ := sm.zevmClient.BlockNumber(context.Background())
+		initialBal, _ := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+		fmt.Printf("Zeta block %d, Initial Deployer Zeta balance: %d\n", bn, initialBal)
+
 		defer sm.wg.Done()
 		for {
 			time.Sleep(5 * time.Second)
-			bn, _ := sm.zevmClient.BlockNumber(context.Background())
+			bn, _ = sm.zevmClient.BlockNumber(context.Background())
 			bal, _ := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
 			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
 
-			if bal.Cmp(amount) == 0 {
+			diff := big.NewInt(0)
+			diff.Sub(bal, initialBal)
+
+			if diff.Cmp(amount) == 0 {
 				fmt.Printf("Expected zeta balance; success!\n")
 				break
 			}
