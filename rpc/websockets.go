@@ -46,7 +46,7 @@ import (
 )
 
 const (
-	messageSizeLimit = 32 * 1024 * 1024 // 15MB
+	messageSizeLimit = 32 * 1024 * 1024 // 32MB
 )
 
 type WebsocketsServer interface {
