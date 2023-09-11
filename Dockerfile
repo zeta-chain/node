@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine
+FROM golang:1.20-alpine
 
 ENV GOPATH /go
 ENV GOOS=linux
@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 RUN --mount=type=cache,target=/root/.cache/go-build \
     make install-smoketest
 #
-#FROM golang:1.19-alpine
+#FROM golang:1.20-alpine
 
 #RUN apk --no-cache add openssh jq tmux vim curl bash
 RUN ssh-keygen -A

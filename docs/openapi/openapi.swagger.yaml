@@ -27121,7 +27121,7 @@ paths:
           format: uint64
       tags:
         - Query
-  /zeta-chain/crosschain/outTxTrackerByChain:
+  /zeta-chain/crosschain/outTxTrackerByChain/{chain}:
     get:
       operationId: Query_OutTxTrackerAllByChain
       responses:
@@ -27135,8 +27135,8 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: chain
-          in: query
-          required: false
+          in: path
+          required: true
           type: string
           format: int64
         - name: pagination.key
@@ -50323,6 +50323,9 @@ definitions:
         format: uint64
       outbound_tx_effective_gas_price:
         type: string
+      outbound_tx_effective_gas_limit:
+        type: string
+        format: uint64
       tss_pubkey:
         type: string
   crosschainPendingNonces:
@@ -50580,11 +50583,15 @@ definitions:
       gas_limit:
         type: string
         format: uint64
+      paused:
+        type: boolean
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
   fungibleMsgRemoveForeignCoinResponse:
     type: object
   fungibleMsgUpdateSystemContractResponse:
+    type: object
+  fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
@@ -50629,6 +50636,12 @@ definitions:
         type: string
       connector_zevm:
         type: string
+  fungibleUpdatePausedStatusAction:
+    type: string
+    enum:
+      - PAUSE
+      - UNPAUSE
+    default: PAUSE
   googlerpcStatus:
     type: object
     properties:

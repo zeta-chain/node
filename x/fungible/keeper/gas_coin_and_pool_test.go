@@ -38,7 +38,7 @@ func setupGasCoin(
 
 func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 	t.Run("can setup a new chain gas coin", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
