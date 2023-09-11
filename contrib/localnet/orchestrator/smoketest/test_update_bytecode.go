@@ -12,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/testzrc20"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 // TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
@@ -66,9 +67,17 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 		panic(err)
 	}
 
-	// TODO: update the bytecode of the ZRC20
 	fmt.Println("Updating the bytecode of the ZRC20")
-	_ = newZRC20Address
+	msg := fungibletypes.NewMsgUpdateContractBytecode(
+		FungibleAdminAddress,
+		sm.ETHZRC20Addr,
+		newZRC20Address,
+	)
+	res, err := sm.zetaTxServer.BroadcastTx(FungibleAdminName, msg)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Update zrc20 bytecode tx hash: %s\n", res.TxHash)
 
 	// Get new info of the ZRC20
 	fmt.Println("Checking the state of the ZRC20 remains the same")
@@ -136,7 +145,6 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 		panic("new field value mismatch")
 	}
 
-	// interacting with bytecode contract doesn't disrupt the zrc20 contract
 	fmt.Println("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
 	tx, err = newZRC20Contract.UpdateNewField(sm.zevmAuth, big.NewInt(1e5))
 	if err != nil {
@@ -176,6 +184,6 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 		panic(err)
 	}
 	if newBalance.Cmp(big.NewInt(1e14)) != 0 {
-		panic("transfer failed")
+		panic("balance not updated")
 	}
 }
