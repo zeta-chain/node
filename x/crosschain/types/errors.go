@@ -30,4 +30,5 @@ var (
 	ErrDeployContract    = errorsmod.Register(ModuleName, 1129, "Unable to deploy contract")
 	ErrUnableToUpdateTss = errorsmod.Register(ModuleName, 1130, "Unable to update TSS address")
 	ErrNotEnoughGas      = errorsmod.Register(ModuleName, 1131, "not enough gas")
+	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1132, "Not enough funds")
 )
