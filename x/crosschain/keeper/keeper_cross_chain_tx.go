@@ -25,7 +25,16 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 	// set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
 	in.InTxHash = send.InboundTxParams.InboundTxObservedHash
-	in.CctxIndex = append(in.CctxIndex, send.Index)
+	found := false
+	for _, cctxIndex := range in.CctxIndex {
+		if cctxIndex == send.Index {
+			found = true
+			break
+		}
+	}
+	if !found {
+		in.CctxIndex = append(in.CctxIndex, send.Index)
+	}
 	k.SetInTxHashToCctx(ctx, in)
 
 	tss, found := k.GetTSS(ctx)

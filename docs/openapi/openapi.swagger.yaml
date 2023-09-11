@@ -50323,6 +50323,9 @@ definitions:
         format: uint64
       outbound_tx_effective_gas_price:
         type: string
+      outbound_tx_effective_gas_limit:
+        type: string
+        format: uint64
       tss_pubkey:
         type: string
   crosschainPendingNonces:
@@ -50580,6 +50583,8 @@ definitions:
       gas_limit:
         type: string
         format: uint64
+      paused:
+        type: boolean
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
   fungibleMsgRemoveForeignCoinResponse:
@@ -50591,6 +50596,8 @@ definitions:
         type: string
         format: byte
   fungibleMsgUpdateSystemContractResponse:
+    type: object
+  fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
     type: object
@@ -50635,6 +50642,12 @@ definitions:
         type: string
       connector_zevm:
         type: string
+  fungibleUpdatePausedStatusAction:
+    type: string
+    enum:
+      - PAUSE
+      - UNPAUSE
+    default: PAUSE
   googlerpcStatus:
     type: object
     properties:

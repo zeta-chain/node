@@ -29,4 +29,5 @@ var (
 	ErrInvalidAddress    = errorsmod.Register(ModuleName, 1128, "Invalid address")
 	ErrDeployContract    = errorsmod.Register(ModuleName, 1129, "Unable to deploy contract")
 	ErrUnableToUpdateTss = errorsmod.Register(ModuleName, 1130, "Unable to update TSS address")
+	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1131, "Not enough funds")
 )
