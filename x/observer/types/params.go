@@ -44,6 +44,8 @@ func DefaultAdminPolicy() []*Admin_Policy {
 			PolicyType: Policy_Type_stop_inbound_cctx,
 			Address:    GroupID1Address,
 		},
+		// NOTE: smoke test setting depends on this type being at position 2
+		// contrib/localnet/scripts/genesis.sh:93
 		{
 			PolicyType: Policy_Type_deploy_fungible_coin,
 			Address:    GroupID1Address,

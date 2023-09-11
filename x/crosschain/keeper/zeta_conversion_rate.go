@@ -41,7 +41,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	}, nil
 }
 
-func (k Keeper) ProtocolFee(context context.Context, req *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
+func (k Keeper) ProtocolFee(_ context.Context, _ *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
 	return &types.QueryMessagePassingProtocolFeeResponse{
 		FeeInZeta: types.GetProtocolFee().String(),
 	}, nil
