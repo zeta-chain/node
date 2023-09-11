@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"cosmossdk.io/math"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	"testing"
@@ -41,5 +42,42 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		fee, err = k.QueryProtocolFlatFee(ctx, zrc20)
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), fee.Uint64())
+	})
+
+	t.Run("should fail if not authorized", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+
+		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+			sample.AccAddress(),
+			sample.EthAddress().String(),
+			math.NewUint(42)),
+		)
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+	})
+
+	t.Run("should fail if invalid zrc20 address", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+			admin,
+			"invalid_address",
+			math.NewUint(42)),
+		)
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
+	})
+
+	t.Run("should fail if can't retrieve the foreign coin", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+			admin,
+			sample.EthAddress().String(),
+			math.NewUint(42)),
+		)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 }

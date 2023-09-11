@@ -27,7 +27,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	}
 	coin, found := k.GetForeignCoins(ctx, msg.Zrc20Address)
 	if !found {
-		return nil, cosmoserrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
+		return nil, cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
 	}
 
 	// get the previous fee
