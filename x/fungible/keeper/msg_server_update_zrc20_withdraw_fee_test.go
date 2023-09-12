@@ -106,7 +106,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})
 
-	t.Run("should fail if can't query old fee", func(t *testing.T) {
+	t.Run("should fail if contract call for setting new fee fails", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseEVMMock: true})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
