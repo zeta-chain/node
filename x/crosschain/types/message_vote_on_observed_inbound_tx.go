@@ -8,9 +8,29 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
+// MaxMessageLength is the maximum length of a message in a cctx
+// TODO: should parameterize the hardcoded max len
+// FIXME: should allow this observation and handle errors in the state machine
+// https://github.com/zeta-chain/node/issues/862
+const MaxMessageLength = 10240
+
 var _ sdk.Msg = &MsgVoteOnObservedInboundTx{}
 
-func NewMsgSendVoter(creator string, sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, asset string) *MsgVoteOnObservedInboundTx {
+func NewMsgVoteOnObservedInboundTx(
+	creator,
+	sender string,
+	senderChain int64,
+	txOrigin,
+	receiver string,
+	receiverChain int64,
+	amount math.Uint,
+	message,
+	inTxHash string,
+	inBlockHeight,
+	gasLimit uint64,
+	coinType common.CoinType,
+	asset string,
+) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
 		Sender:        sender,
@@ -54,6 +74,7 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
 	}
+
 	if msg.SenderChainId < 0 {
 		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.SenderChainId)
 	}
@@ -62,10 +83,7 @@ func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ReceiverChain)
 	}
 
-	// TODO: should parameterize the hardcoded max len
-	// FIXME: should allow this observation and handle errors in the state machine
-	// https://github.com/zeta-chain/node/issues/862
-	if len(msg.Message) > 10240 {
+	if len(msg.Message) > MaxMessageLength {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
 	}
 

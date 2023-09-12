@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,24 +22,75 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ethermint "github.com/evmos/ethermint/types"
+	evmmodule "github.com/evmos/ethermint/x/evm"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/evmos/ethermint/x/evm/vm/geth"
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/crypto/tmhash"
+	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
+	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observermodule "github.com/zeta-chain/zetacore/x/observer"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-type SDKModules struct {
+// NewContext creates a new sdk.Context for testing purposes with initialized header
+func NewContext(stateStore sdk.CommitMultiStore) sdk.Context {
+	header := tmproto.Header{
+		Height:  1,
+		ChainID: "test_1-1",
+		Time:    time.Now().UTC(),
+		LastBlockId: tmproto.BlockID{
+			Hash: tmhash.Sum([]byte("block_id")),
+			PartSetHeader: tmproto.PartSetHeader{
+				Total: 11,
+				Hash:  tmhash.Sum([]byte("partset_header")),
+			},
+		},
+		AppHash:            tmhash.Sum([]byte("app")),
+		DataHash:           tmhash.Sum([]byte("data")),
+		EvidenceHash:       tmhash.Sum([]byte("evidence")),
+		ValidatorsHash:     tmhash.Sum([]byte("validators")),
+		NextValidatorsHash: tmhash.Sum([]byte("next_validators")),
+		ConsensusHash:      tmhash.Sum([]byte("consensus")),
+		LastResultsHash:    tmhash.Sum([]byte("last_result")),
+	}
+	ctx := sdk.NewContext(stateStore, header, false, log.NewNopLogger())
+	ctx = ctx.WithHeaderHash(tmhash.Sum([]byte("header")))
+	return ctx
+}
+
+// SDKKeepers is a struct containing regular SDK module keepers for test purposes
+type SDKKeepers struct {
 	ParamsKeeper    paramskeeper.Keeper
 	AuthKeeper      authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
 	StakingKeeper   stakingkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 	EvmKeeper       *evmkeeper.Keeper
+}
+
+// ZetaKeepers is a struct containing Zeta module keepers for test purposes
+type ZetaKeepers struct {
+	CrosschainKeeper *crosschainkeeper.Keeper
+	EmissionsKeeper  *emissionskeeper.Keeper
+	FungibleKeeper   *fungiblekeeper.Keeper
+	ObserverKeeper   *observerkeeper.Keeper
 }
 
 var moduleAccountPerms = map[string][]string{
@@ -96,7 +151,7 @@ func AccountKeeper(
 		cdc,
 		storeKey,
 		paramKeeper.Subspace(authtypes.ModuleName),
-		authtypes.ProtoBaseAccount,
+		ethermint.ProtoAccount,
 		moduleAccountPerms,
 		"zeta",
 	)
@@ -234,7 +289,7 @@ func EVMKeeper(
 	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	ss.MountStoreWithDB(transientKey, storetypes.StoreTypeTransient, db)
 
-	return evmkeeper.NewKeeper(
+	k := evmkeeper.NewKeeper(
 		cdc,
 		storeKey,
 		transientKey,
@@ -248,6 +303,8 @@ func EVMKeeper(
 		"",
 		paramKeeper.Subspace(evmtypes.ModuleName),
 	)
+
+	return k
 }
 
 // NewSDKKeepers instantiates regular Cosmos SDK keeper such as staking with local storage for testing purposes
@@ -255,7 +312,7 @@ func NewSDKKeepers(
 	cdc codec.Codec,
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
-) SDKModules {
+) SDKKeepers {
 	paramsKeeper := ParamsKeeper(cdc, db, ss)
 	authKeeper := AccountKeeper(cdc, db, ss, paramsKeeper)
 	bankKeeper := BankKeeper(cdc, db, ss, paramsKeeper, authKeeper)
@@ -263,12 +320,55 @@ func NewSDKKeepers(
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
 
-	return SDKModules{
+	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,
 		AuthKeeper:      authKeeper,
 		BankKeeper:      bankKeeper,
 		StakingKeeper:   stakingKeeper,
 		FeeMarketKeeper: feeMarketKeeper,
 		EvmKeeper:       evmKeeper,
+	}
+}
+
+// InitGenesis initializes the test modules genesis state
+func (sdkk SDKKeepers) InitGenesis(ctx sdk.Context) {
+	sdkk.AuthKeeper.InitGenesis(ctx, *authtypes.DefaultGenesisState())
+	sdkk.BankKeeper.InitGenesis(ctx, banktypes.DefaultGenesisState())
+	sdkk.StakingKeeper.InitGenesis(ctx, stakingtypes.DefaultGenesisState())
+	evmGenesis := *evmtypes.DefaultGenesisState()
+	evmGenesis.Params.EvmDenom = "azeta"
+	evmmodule.InitGenesis(ctx, sdkk.EvmKeeper, sdkk.AuthKeeper, evmGenesis)
+}
+
+// InitBlockProposer initialize the block proposer for test purposes with an associated validator
+func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Context {
+	// #nosec G404 test purpose - weak randomness is not an issue here
+	r := rand.New(rand.NewSource(42))
+
+	// Set validator in the store
+	validator := sample.Validator(t, r)
+	sdkk.StakingKeeper.SetValidator(ctx, validator)
+	err := sdkk.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(t, err)
+
+	// Validator is proposer
+	consAddr, err := validator.GetConsAddr()
+	require.NoError(t, err)
+	return ctx.WithProposer(consAddr)
+}
+
+// InitGenesis initializes the test modules genesis state for defined Zeta modules
+func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
+	if zk.CrosschainKeeper != nil {
+		crosschainmodule.InitGenesis(ctx, *zk.CrosschainKeeper, *crosschaintypes.DefaultGenesis())
+	}
+	if zk.EmissionsKeeper != nil {
+		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *emissionstypes.DefaultGenesis())
+	}
+	if zk.FungibleKeeper != nil {
+		fungiblemodule.InitGenesis(ctx, *zk.FungibleKeeper, *fungibletypes.DefaultGenesis())
+	}
+	if zk.ObserverKeeper != nil {
+		observermodule.InitGenesis(ctx, *zk.ObserverKeeper, *observertypes.DefaultGenesis())
 	}
 }

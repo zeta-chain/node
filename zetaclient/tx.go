@@ -66,7 +66,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 
 func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgSendVoter(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	for i := 0; i < DefaultRetryCount; i++ {
@@ -81,14 +81,39 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) PostReceiveConfirmation(sendHash string, outTxHash string, outBlockHeight uint64, amount *big.Int, status common.ReceiveStatus, chain common.Chain, nonce uint64, coinType common.CoinType) (string, error) {
+func (b *ZetaCoreBridge) PostReceiveConfirmation(
+	sendHash string,
+	outTxHash string,
+	outBlockHeight uint64,
+	outTxGasUsed uint64,
+	outTxEffectiveGasPrice *big.Int,
+	outTxEffectiveGasLimit uint64,
+	amount *big.Int,
+	status common.ReceiveStatus,
+	chain common.Chain,
+	nonce uint64,
+	coinType common.CoinType,
+) (string, error) {
 	lastReport, found := b.lastOutTxReportTime[outTxHash]
 	if found && time.Since(lastReport) < 10*time.Minute {
 		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
 	}
 
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgReceiveConfirmation(signerAddress, sendHash, outTxHash, outBlockHeight, math.NewUintFromBigInt(amount), status, chain.ChainId, nonce, coinType)
+	msg := types.NewMsgVoteOnObservedOutboundTx(
+		signerAddress,
+		sendHash,
+		outTxHash,
+		outBlockHeight,
+		outTxGasUsed,
+		math.NewIntFromBigInt(outTxEffectiveGasPrice),
+		outTxEffectiveGasLimit,
+		math.NewUintFromBigInt(amount),
+		status,
+		chain.ChainId,
+		nonce,
+		coinType,
+	)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.

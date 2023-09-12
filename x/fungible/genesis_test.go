@@ -15,15 +15,15 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
 		ForeignCoinsList: []types.ForeignCoins{
-			sample.ForeignCoins(t),
-			sample.ForeignCoins(t),
-			sample.ForeignCoins(t),
+			sample.ForeignCoins(t, sample.EthAddress().String()),
+			sample.ForeignCoins(t, sample.EthAddress().String()),
+			sample.ForeignCoins(t, sample.EthAddress().String()),
 		},
 		SystemContract: sample.SystemContract(),
 	}
 
 	// Init and export
-	k, ctx := keepertest.FungibleKeeper(t)
+	k, ctx, _, _ := keepertest.FungibleKeeper(t)
 	fungible.InitGenesis(ctx, *k, genesisState)
 	got := fungible.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
