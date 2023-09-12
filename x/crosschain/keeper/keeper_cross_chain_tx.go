@@ -211,10 +211,8 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	}
 
 	// return scanned nonce range
-	scannedNonces := &types.PendingNonces{}
-	*scannedNonces = p
-	scannedNonces.NonceLow = startNonce
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends, PendingNonces: scannedNonces}, nil
+	p.NonceLow = startNonce
+	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends, PendingNonces: &p}, nil
 }
 
 func (k Keeper) CctxAllPendingInNonceRange(c context.Context, req *types.QueryAllCctxPendingInNonceRangeRequest) (*types.QueryAllCctxPendingInNonceRangeResponse, error) {

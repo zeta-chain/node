@@ -1,9 +1,9 @@
 package zetaclient
 
 import (
-	"fmt"
 	"math"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"gorm.io/driver/sqlite"
@@ -163,7 +163,7 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	}
 	path := dbpath
 	if !memDB { // memDB is used for uint test only
-		path = fmt.Sprintf("%s/scanner", dbpath)
+		path = filepath.Join(dbpath, "scanner")
 	}
 	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{})
 	if err != nil {
@@ -181,9 +181,7 @@ func (sc *CctxScanner) LoadDB(dbpath string, memDB bool) error {
 	sc.loadCurrentTssPubkey()
 
 	// Load first nonce for each chain to start scanning from
-	err = sc.buildFirstNonceToScanMap()
-
-	return err
+	return sc.buildFirstNonceToScanMap()
 }
 
 func (sc *CctxScanner) Reset(tssPubkey string) error {
