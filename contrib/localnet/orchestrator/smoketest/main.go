@@ -65,8 +65,15 @@ var LocalCmd = &cobra.Command{
 	Run:   LocalSmokeTest,
 }
 
+type localArgs struct {
+	contractsDeployed bool
+}
+
+var localTestArgs = localArgs{}
+
 func init() {
 	RootCmd.AddCommand(LocalCmd)
+	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
 }
 
 func main() {
@@ -225,7 +232,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
 	smokeTest.ZEVMSwapApp = zevmSwapApp
 
-	// test system contract context upgrade
+	//test system contract context upgrade
 	contextAppAddr, tx, _, err := contextapp.DeployContextApp(smokeTest.zevmAuth, smokeTest.zevmClient)
 	if err != nil {
 		panic(err)

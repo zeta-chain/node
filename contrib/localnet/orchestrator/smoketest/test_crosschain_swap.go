@@ -28,22 +28,27 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	sm.zevmAuth.GasLimit = 10000000
-	tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
-	if err != nil {
-		panic(err)
+	if !localTestArgs.contractsDeployed {
+		tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
+		if err != nil {
+			panic(err)
+		}
+		receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
+		fmt.Printf("USDT-BTC pair receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	}
-	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
 	usdtBtcPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("USDT-BTC pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status, usdtBtcPair.Hex())
+	fmt.Printf("USDT-BTC pair addr %s\n", usdtBtcPair.Hex())
 
-	tx, err = sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err := sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("USDT ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
 	tx, err = sm.BTCZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
