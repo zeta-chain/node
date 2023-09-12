@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 	sampleTimestamp := time.Now()
-	retryIntervalReached := sampleTimestamp.Add(keeper.RetryInterval + time.Second)
-	retryIntervalNotReached := sampleTimestamp.Add(keeper.RetryInterval - time.Second)
+	retryIntervalReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval + time.Second)
+	retryIntervalNotReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval - time.Second)
 
 	tt := []struct {
 		name                                   string
@@ -189,7 +189,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			}
 
 			// check and update gas price
-			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx)
+			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx, observertypes.DefaultGasPriceIncreaseFlags)
 
 			if tc.isError {
 				require.Error(t, err)

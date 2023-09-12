@@ -199,6 +199,30 @@ func (_m *CrosschainObserverKeeper) GetCoreParamsByChainID(ctx types.Context, ch
 	return r0, r1
 }
 
+// GetCrosschainFlags provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetCrosschainFlags(ctx types.Context) (observertypes.CrosschainFlags, bool) {
+	ret := _m.Called(ctx)
+
+	var r0 observertypes.CrosschainFlags
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.CrosschainFlags, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) observertypes.CrosschainFlags); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(observertypes.CrosschainFlags)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetKeygen provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetKeygen(ctx types.Context) (observertypes.Keygen, bool) {
 	ret := _m.Called(ctx)
