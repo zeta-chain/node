@@ -9,19 +9,19 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdShowPermissionFlags() *cobra.Command {
+func CmdShowCrosschainFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-permission-flags",
-		Short: "shows PermissionFlags",
+		Use:   "show-crosschain-flags",
+		Short: "shows the crosschain flags",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetPermissionFlagsRequest{}
+			params := &types.QueryGetCrosschainFlagsRequest{}
 
-			res, err := queryClient.PermissionFlags(context.Background(), params)
+			res, err := queryClient.CrosschainFlags(context.Background(), params)
 			if err != nil {
 				return err
 			}

@@ -7,11 +7,11 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
+import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-import "observer/permission_flags.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -57,8 +57,8 @@ service Query {
   rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
     option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
   }
-  rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/permission_flags";
+  rpc CrosschainFlags(QueryGetCrosschainFlagsRequest) returns (QueryGetCrosschainFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/crosschain_flags";
   }
   // Queries a keygen by index.
   rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
@@ -154,10 +154,10 @@ message QueryAllNodeAccountResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetPermissionFlagsRequest {}
+message QueryGetCrosschainFlagsRequest {}
 
-message QueryGetPermissionFlagsResponse {
-  PermissionFlags permission_flags = 1 [(gogoproto.nullable) = false];
+message QueryGetCrosschainFlagsResponse {
+  CrosschainFlags crosschain_flags = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetKeygenRequest {}

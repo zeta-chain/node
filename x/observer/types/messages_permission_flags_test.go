@@ -9,21 +9,21 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgUpdatePermissionFlags_ValidateBasic(t *testing.T) {
+func TestMsgUpdateCrosschainFlags_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdatePermissionFlags
+		msg  types.MsgUpdateCrosschainFlags
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgUpdatePermissionFlags{
+			msg: types.MsgUpdateCrosschainFlags{
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: types.MsgUpdatePermissionFlags{
+			msg: types.MsgUpdateCrosschainFlags{
 				Creator: sample.AccAddress(),
 			},
 		},

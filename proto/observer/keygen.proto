@@ -11,6 +11,7 @@ enum KeygenStatus {
   KeyGenSuccess = 1;
   KeyGenFailed = 3;
 }
+
 message Keygen {
   KeygenStatus status = 2; // 0--to generate key; 1--generated; 2--error
   repeated string granteePubkeys = 3;

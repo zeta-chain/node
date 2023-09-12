@@ -353,7 +353,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	//	gasprice = specified
 	//}
 
-	flags, err := zetaBridge.GetPermissionFlags()
+	flags, err := zetaBridge.GetCrosschainFlags()
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get permission flags")
 		return

@@ -6,16 +6,16 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// SetPermissionFlags set permissionFlags in the store
-func (k Keeper) SetPermissionFlags(ctx sdk.Context, permissionFlags types.PermissionFlags) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
+// SetCrosschainFlags set the crosschain flags in the store
+func (k Keeper) SetCrosschainFlags(ctx sdk.Context, permissionFlags types.CrosschainFlags) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CrosschainFlagsKey))
 	b := k.cdc.MustMarshal(&permissionFlags)
 	store.Set([]byte{0}, b)
 }
 
-// GetPermissionFlags returns permissionFlags
-func (k Keeper) GetPermissionFlags(ctx sdk.Context) (val types.PermissionFlags, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
+// GetCrosschainFlags returns the crosschain flags
+func (k Keeper) GetCrosschainFlags(ctx sdk.Context) (val types.CrosschainFlags, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CrosschainFlagsKey))
 
 	b := store.Get([]byte{0})
 	if b == nil {
@@ -27,15 +27,15 @@ func (k Keeper) GetPermissionFlags(ctx sdk.Context) (val types.PermissionFlags, 
 }
 
 func (k Keeper) IsInboundEnabled(ctx sdk.Context) (found bool) {
-	flags, found := k.GetPermissionFlags(ctx)
+	flags, found := k.GetCrosschainFlags(ctx)
 	if !found {
 		return false
 	}
 	return flags.IsInboundEnabled
 }
 
-func (k Keeper) IsOutboundAllowed(ctx sdk.Context) (found bool) {
-	flags, found := k.GetPermissionFlags(ctx)
+func (k Keeper) IsOutboundEnabled(ctx sdk.Context) (found bool) {
+	flags, found := k.GetCrosschainFlags(ctx)
 	if !found {
 		return false
 	}
@@ -44,15 +44,15 @@ func (k Keeper) IsOutboundAllowed(ctx sdk.Context) (found bool) {
 
 // RemovePermissionFlags removes permissionFlags from the store
 func (k Keeper) RemovePermissionFlags(ctx sdk.Context) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PermissionFlagsKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CrosschainFlagsKey))
 	store.Delete([]byte{0})
 }
 
 func (k Keeper) DisableInboundOnly(ctx sdk.Context) {
-	flags, found := k.GetPermissionFlags(ctx)
+	flags, found := k.GetCrosschainFlags(ctx)
 	if !found {
 		flags.IsOutboundEnabled = true
 	}
 	flags.IsInboundEnabled = false
-	k.SetPermissionFlags(ctx, flags)
+	k.SetCrosschainFlags(ctx, flags)
 }

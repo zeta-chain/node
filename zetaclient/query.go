@@ -25,13 +25,13 @@ const (
 	Descending Order = "DESC"
 )
 
-func (b *ZetaCoreBridge) GetPermissionFlags() (zetaObserverTypes.PermissionFlags, error) {
+func (b *ZetaCoreBridge) GetCrosschainFlags() (zetaObserverTypes.CrosschainFlags, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
+	resp, err := client.CrosschainFlags(context.Background(), &zetaObserverTypes.QueryGetCrosschainFlagsRequest{})
 	if err != nil {
-		return zetaObserverTypes.PermissionFlags{}, err
+		return zetaObserverTypes.CrosschainFlags{}, err
 	}
-	return resp.PermissionFlags, nil
+	return resp.CrosschainFlags, nil
 }
 
 func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {

@@ -6,30 +6,28 @@ import (
 )
 
 const (
-	TypeMsgCreatePermissionFlags = "create_permission_flags"
-	TypeMsgUpdatePermissionFlags = "update_permission_flags"
-	TypeMsgDeletePermissionFlags = "delete_permission_flags"
+	TypeMsgUpdateCrosschainFlags = "update_crosschain_flags"
 )
 
-var _ sdk.Msg = &MsgUpdatePermissionFlags{}
+var _ sdk.Msg = &MsgUpdateCrosschainFlags{}
 
-func NewMsgUpdatePermissionFlags(creator string, isInboundEnabled, isOutboundEnabled bool) *MsgUpdatePermissionFlags {
-	return &MsgUpdatePermissionFlags{
+func NewMsgUpdateCrosschainFlags(creator string, isInboundEnabled, isOutboundEnabled bool) *MsgUpdateCrosschainFlags {
+	return &MsgUpdateCrosschainFlags{
 		Creator:           creator,
 		IsInboundEnabled:  isInboundEnabled,
 		IsOutboundEnabled: isOutboundEnabled,
 	}
 }
 
-func (msg *MsgUpdatePermissionFlags) Route() string {
+func (msg *MsgUpdateCrosschainFlags) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgUpdatePermissionFlags) Type() string {
-	return TypeMsgUpdatePermissionFlags
+func (msg *MsgUpdateCrosschainFlags) Type() string {
+	return TypeMsgUpdateCrosschainFlags
 }
 
-func (msg *MsgUpdatePermissionFlags) GetSigners() []sdk.AccAddress {
+func (msg *MsgUpdateCrosschainFlags) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -37,12 +35,12 @@ func (msg *MsgUpdatePermissionFlags) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgUpdatePermissionFlags) GetSignBytes() []byte {
+func (msg *MsgUpdateCrosschainFlags) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgUpdatePermissionFlags) ValidateBasic() error {
+func (msg *MsgUpdateCrosschainFlags) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

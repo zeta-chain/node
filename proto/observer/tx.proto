@@ -14,7 +14,7 @@ service Msg {
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
-  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags) returns (MsgUpdateCrosschainFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
 }
 
@@ -41,12 +41,13 @@ message MsgAddBlameVote {
 }
 
 message MsgAddBlameVoteResponse {}
-message MsgUpdatePermissionFlags {
+
+message MsgUpdateCrosschainFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
   bool isOutboundEnabled = 4;
 }
-message MsgUpdatePermissionFlagsResponse {}
+message MsgUpdateCrosschainFlagsResponse {}
 
 message MsgUpdateKeygen {
   string creator = 1;

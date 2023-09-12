@@ -629,7 +629,7 @@ func (ob *EVMChainClient) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
 	ob.SetLastBlockHeight(int64(confirmedBlockNum))
 
-	permissions, err := ob.zetaClient.GetPermissionFlags()
+	permissions, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
 	}
