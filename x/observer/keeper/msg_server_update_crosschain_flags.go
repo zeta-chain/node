@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
