@@ -679,7 +679,7 @@ func (ob *EVMChainClient) observeInTX() error {
 		}
 		// Pull out arguments from logs
 		for logs.Next() {
-			msg := ob.GetInboundVoteForZetaSentEvent(logs.Event)
+			msg := ob.GetInboundVoteMsgForZetaSentEvent(logs.Event)
 			if msg == nil {
 				continue
 			}
@@ -719,7 +719,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		// Pull out arguments from logs
 		for depositedLogs.Next() {
-			msg := ob.GetInboundVoteForDepositedEvent(depositedLogs.Event)
+			msg := ob.GetInboundVoteMsgForDepositedEvent(depositedLogs.Event)
 			if msg == nil {
 				continue
 			}
@@ -779,7 +779,7 @@ func (ob *EVMChainClient) observeInTX() error {
 								continue
 							}
 						}
-						msg := ob.GetInboundVoteForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+						msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 						if msg == nil {
 							continue
 						}
@@ -817,7 +817,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 						from := *tx.From
 						value := tx.Value.ToInt()
-						msg := ob.GetInboundVoteForTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
+						msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
 						if msg == nil {
 							continue
 						}

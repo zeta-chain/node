@@ -73,7 +73,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string) error {
 	for _, log := range receipt.Logs {
 		event, err := connector.ParseZetaSent(*log)
 		if err != nil {
-			msg = ob.GetInboundVoteForZetaSentEvent(event)
+			msg = ob.GetInboundVoteMsgForZetaSentEvent(event)
 			if msg != nil {
 				break
 			}
@@ -102,7 +102,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string) error {
 	for _, log := range receipt.Logs {
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err != nil {
-			msg := ob.GetInboundVoteForDepositedEvent(zetaDeposited)
+			msg := ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited)
 			if msg != nil {
 				break
 			}
@@ -134,7 +134,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string) error {
 	}
 	if receipt.Status != 1 { // 1: successful, 0: failed
 		ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-		return errors.New("Tx not successfull yet")
+		return errors.New("tx not successful yet")
 	}
 	block, err := ob.EvmClient.BlockByNumber(context.Background(), receipt.BlockNumber)
 	if err != nil {
@@ -151,7 +151,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string) error {
 			return err
 		}
 	}
-	msg := ob.GetInboundVoteForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+	msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 	zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")

@@ -87,7 +87,7 @@ func (t *DynamicTicker) Stop() {
 	t.impl.Stop()
 }
 
-func (ob *EVMChainClient) GetInboundVoteForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) *types.MsgVoteOnObservedInboundTx {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
@@ -110,7 +110,7 @@ func (ob *EVMChainClient) GetInboundVoteForDepositedEvent(event *erc20custody.ER
 	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
@@ -144,7 +144,7 @@ func (ob *EVMChainClient) GetInboundVoteForZetaSentEvent(event *zetaconnector.Ze
 	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteForTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) *types.MsgVoteOnObservedInboundTx {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
 	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx value: %s", value.String())
 	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx from: %s", from.Hex())
