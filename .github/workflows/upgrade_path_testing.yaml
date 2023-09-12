@@ -34,7 +34,6 @@ jobs:
           version: 2
 
       - name: "DOWNLOAD_STATE_EXPORT_AND_BINARY"
-        shell: shell
         run: |
           wget ${latest_state_export}
           wget github_binary_version_link
@@ -43,7 +42,6 @@ jobs:
           echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
 
       - name: "START_TESTING_NETWORK"
-        shell: shell
         run: |
           export DAEMON_HOME=~/.zetacored
           
@@ -148,6 +146,5 @@ jobs:
           git_env_file.close()
  
       - name: "CHECK_UPGRADE_TYPE"
-        shell: shell
         run: |
           echo ${UPGRADE_TYPE}
