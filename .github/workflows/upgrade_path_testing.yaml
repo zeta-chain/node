@@ -101,19 +101,16 @@ jobs:
           
           echo "Validating genesis file..."
           zetacored validate-genesis
-          
-          rm -rf ./genesis.json
-          rm -rf ./genesis-edited.json
-          
+                
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
+          ls -lah
           
-          cat genesis.json
-        
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
-          
+                    
           python .github/actions/upgrade-testing/create_genesis.py
+          
           
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
