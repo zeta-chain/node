@@ -71,9 +71,6 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	}()
 	sm.wg.Add(1)
 	go func() {
-		defer sm.wg.Done()
-		<-c
-
 		systemContract := sm.SystemContract
 		if err != nil {
 			panic(err)
@@ -89,14 +86,23 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			panic(err)
 		}
 		sm.ETHZRC20 = ethZRC20
-		ethZRC20Balance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
+		initialBalance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("eth zrc20 balance: %s\n", ethZRC20Balance.String())
-		if ethZRC20Balance.Cmp(value) != 0 {
-			fmt.Printf("eth zrc20 bal wanted %d, got %d\n", value, ethZRC20Balance)
+		defer sm.wg.Done()
+		<-c
+
+		currentBalance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
+		if err != nil {
+			panic(err)
+		}
+		diff := big.NewInt(0)
+		diff.Sub(currentBalance, initialBalance)
+		fmt.Printf("eth zrc20 balance: %s\n", currentBalance.String())
+		if diff.Cmp(value) != 0 {
+			fmt.Printf("eth zrc20 bal wanted %d, got %d\n", value, diff)
 			panic("bal mismatch")
 		}
 
