@@ -23,7 +23,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-// wait until cctx is mined; returns the cctxIndex (the last one)
+// WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
 	var cctxIndexes []string
 	for {
@@ -82,7 +82,7 @@ func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce 
 	return nil
 }
 
-// wait until a broadcasted tx to be mined and return its receipt
+// MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
 // timeout and panic after 30s.
 func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *ethtypes.Receipt {
 	start := time.Now()
@@ -104,7 +104,7 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 	}
 }
 
-// scriptPK is a hex string for P2WPKH script
+// ScriptPKToAddress is a hex string for P2WPKH script
 func ScriptPKToAddress(scriptPKHex string) string {
 	pkh, err := hex.DecodeString(scriptPKHex[4:])
 	if err == nil {
