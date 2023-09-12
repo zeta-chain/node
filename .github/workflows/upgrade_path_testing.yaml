@@ -35,8 +35,8 @@ jobs:
 
       - name: "DOWNLOAD_STATE_EXPORT_AND_BINARY"
         run: |
-          wget ${latest_state_export}
-          wget github_binary_version_link
+          wget -q ${latest_state_export}
+          wget -q ${github_binary_version_link}
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
           wget https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
           echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
