@@ -50729,6 +50729,19 @@ definitions:
         type: boolean
       isOutboundEnabled:
         type: boolean
+      gasPriceIncreaseFlags:
+        $ref: '#/definitions/observerGasPriceIncreaseFlags'
+  observerGasPriceIncreaseFlags:
+    type: object
+    properties:
+      epochLength:
+        type: string
+        format: int64
+      retryInterval:
+        type: string
+      gasPriceIncreasePercent:
+        type: integer
+        format: int64
   observerKeygen:
     type: object
     properties:

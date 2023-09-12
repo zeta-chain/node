@@ -4,6 +4,7 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
+import "observer/crosschain_flags.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 
@@ -46,6 +47,7 @@ message MsgUpdateCrosschainFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
   bool isOutboundEnabled = 4;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
 message MsgUpdateCrosschainFlagsResponse {}
 

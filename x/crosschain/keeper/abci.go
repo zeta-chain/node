@@ -27,7 +27,6 @@ const (
 	GasPriceIncreasePercent = 100
 
 	// RemainingFeesToStabilityPoolPercent is the percentage of remaining fees used to fund the gas stability pool
-	// TODO: determine value
 	RemainingFeesToStabilityPoolPercent = 95
 )
 

@@ -51,6 +51,7 @@ message MsgUpdateCrosschainFlags {
 	string creator = 1;
 	bool isInboundEnabled = 3;
 	bool isOutboundEnabled = 4;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
 ```
 

@@ -42,7 +42,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if genState.CrosschainFlags != nil {
 		k.SetCrosschainFlags(ctx, *genState.CrosschainFlags)
 	} else {
-		k.SetCrosschainFlags(ctx, types.CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true})
+		k.SetCrosschainFlags(ctx, *types.DefaultCrosschainFlags())
 	}
 
 	// Set if defined
@@ -92,10 +92,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// Get all permissionFlags
-	pf := types.CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true}
+	pf := types.DefaultCrosschainFlags()
 	permissionFlags, found := k.GetCrosschainFlags(ctx)
 	if found {
-		pf = permissionFlags
+		pf = &permissionFlags
 	}
 
 	kn := &types.Keygen{}
@@ -116,7 +116,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
-		CrosschainFlags:   &pf,
+		CrosschainFlags:   pf,
 		Keygen:            kn,
 		LastObserverCount: oc,
 	}
