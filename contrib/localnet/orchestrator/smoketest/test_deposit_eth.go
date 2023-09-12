@@ -194,12 +194,12 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 
 		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 			printTxInfo()
-			panic(fmt.Sprintf("expected cctx status PendingRevert; got %s", cctx.CctxStatus.Status))
+			panic(fmt.Sprintf("expected cctx status to be PendingRevert; got %s", cctx.CctxStatus.Status))
 		}
 
 		if receipt.Status == 0 {
 			printTxInfo()
-			panic("expected revert tx receipt status 1; got 0")
+			panic("expected the revert tx receipt to have status 1; got 0")
 		}
 
 		if *tx.To() != DeployerAddress {

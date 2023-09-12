@@ -110,7 +110,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// if the current outbound tx sent back after a revert on ZetaChain, it means that the ZRC20 have never been minted on ZetaChain
 	// we therefore skip the burn of the gas fee
-	revertFromZetaChain := cctx.OriginalDestinationChainID() == common.ZetaChain().ChainId && cctx.IsCurrentOutTxRevert()
+	revertFromZetaChain := cctx.IsCurrentOutTxRevert() && cctx.OriginalDestinationChainID() == common.ZetaChain().ChainId
 	if !revertFromZetaChain {
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
 		if err != nil {
