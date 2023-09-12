@@ -20,12 +20,12 @@ export DAEMON_NAME=zetacored
 export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
 export DAEMON_RESTART_AFTER_UPGRADE=true
 export CLIENT_DAEMON_NAME=zetaclientd
-export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,zeta"
+export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,hotkey"
 export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
 export UNSAFE_SKIP_BACKUP=true
-export UpgradeName=${UPGRADE_VERSION}
+export UpgradeName=${NEW_VERSION}
 
 # generate node list
 START=1
@@ -149,14 +149,17 @@ fi
 mkdir -p $DAEMON_HOME/zetavisor/genesis/bin
 mkdir -p $DAEMON_HOME/zetavisor/upgrades/"$UpgradeName"/bin
 
-# Setup old binary and start chain
+# Setup old binary
 mkdir -p  $GOPATH/bin/old
 mkdir -p  $GOPATH/bin/new
+cp $GOPATH/bin/zetacored $GOPATH/bin/old/
 
+# Build new binary and save it
+cd /go/delivery/zeta-node/node/
 git checkout "$UpgradeName"
 git pull
 make install-zetacore
-cp $GOPATH/bin/zetacored $GOPATH/bin/old/
+cp $GOPATH/bin/zetacored $GOPATH/bin/new/
 
 # Setup zetavisor
 # Genesis
@@ -173,4 +176,18 @@ chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
 
 
 # 7 Start the nodes
-zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
+sleep 8
+echo
+
+if [ $HOSTNAME = "zetacore0" ]
+then
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 320 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+fi
+
+sleep 8
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from hotkey --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+sleep 7
+/root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
+
+tail -f zetanode.log

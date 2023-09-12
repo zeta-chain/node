@@ -201,9 +201,9 @@ stop-stress-test:
 
 stateful-upgrade:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	$(DOCKER) build --build-arg version=v9.0.0 -t zetanode -f ./Dockerfile-versioned .
-	cd contrib/localnet/ && UPGRADE_VERSION=develop $(DOCKER) compose -f docker-compose-stateful.yml up -d
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	cd contrib/localnet/ && NEW_VERSION=develop $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
 stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans

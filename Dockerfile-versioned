@@ -14,7 +14,11 @@ WORKDIR /go/delivery/zeta-node
 RUN git clone https://github.com/zeta-chain/node.git
 RUN cd node && git checkout ${version}
 RUN cd node && go mod download
-RUN cd node && make install && make install-smoketest
+RUN cd node && make install
+
+RUN cd node && git checkout develop
+RUN cd node && go mod download
+RUN cd node && make install-smoketest
 
 RUN git clone https://github.com/zeta-chain/cosmos-sdk.git
 RUN cd cosmos-sdk && git checkout zetavisor-v0.1.5
