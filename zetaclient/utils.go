@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -15,11 +14,11 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -88,76 +87,13 @@ func (t *DynamicTicker) Stop() {
 	t.impl.Stop()
 }
 
-func (ob *EVMChainClient) CheckReceiptForCointypeZeta(txHash string) error {
-	hash := ethcommon.HexToHash(txHash)
-	receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), hash)
-	if err != nil {
-		return err
-	}
-	connector, err := ob.GetConnectorContract()
-	if err != nil {
-		return err
-	}
-	for _, log := range receipt.Logs {
-		event, err := connector.ParseZetaSent(*log)
-		if err != nil {
-			ob.PostInboundVoteForZetaSentEvent(event)
-		}
-	}
-	return nil
-}
-
-func (ob *EVMChainClient) CheckReceiptForCointypeERC20(txHash string, client *ethclient.Client, custody *erc20custody.ERC20Custody) error {
-	hash := ethcommon.HexToHash(txHash)
-	receipt, err := client.TransactionReceipt(context.Background(), hash)
-	if err != nil {
-		return err
-	}
-	for _, log := range receipt.Logs {
-		zetaDeposited, err := custody.ParseDeposited(*log)
-		if err != nil {
-			ob.PostInboundVoteForDepositedEvents(zetaDeposited)
-		}
-	}
-	return nil
-}
-
-func (ob *EVMChainClient) CheckReceiptForCointypeGas(tx *ethtypes.Transaction, block *ethtypes.Block) {
-	receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
-		return
-	}
-	if receipt.Status != 1 { // 1: successful, 0: failed
-		ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
-		return
-	}
-
-	from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
-		signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-		from, err = signer.Sender(tx)
-		if err != nil {
-			ob.logger.ExternalChainWatcher.Err(err).Msg("local recovery of sender address failed")
-			return
-		}
-	}
-	zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-		return
-	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
-}
-
-func (ob *EVMChainClient) PostInboundVoteForDepositedEvents(event *erc20custody.ERC20CustodyDeposited) {
+func (ob *EVMChainClient) GetInboundVoteForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) *types.MsgVoteOnObservedInboundTx {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-		return
+		return nil
 	}
-	zetaHash, err := ob.zetaClient.PostSend(
+	return GetInBoundVoteMessage(
 		"",
 		ob.chain.ChainId,
 		"",
@@ -169,34 +105,29 @@ func (ob *EVMChainClient) PostInboundVoteForDepositedEvents(event *erc20custody.
 		event.Raw.BlockNumber,
 		1_500_000,
 		common.CoinType_ERC20,
-		PostSendEVMGasLimit,
 		event.Asset.String(),
+		ob.zetaClient.keys.GetOperatorAddress().String(),
 	)
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-		return
-	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Custody Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 }
 
-func (ob *EVMChainClient) PostInboundVoteForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) {
+func (ob *EVMChainClient) GetInboundVoteForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
-		return
+		return nil
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 	cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 	if !found {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-		return
+		return nil
 	}
 	if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-		return
+		return nil
 	}
-	zetaHash, err := ob.zetaClient.PostSend(
+	return GetInBoundVoteMessage(
 		event.ZetaTxSenderAddress.Hex(),
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
@@ -208,12 +139,32 @@ func (ob *EVMChainClient) PostInboundVoteForZetaSentEvent(event *zetaconnector.Z
 		event.Raw.BlockNumber,
 		event.DestinationGasLimit.Uint64(),
 		common.CoinType_Zeta,
-		PostSendNonEVMGasLimit,
 		"",
+		ob.zetaClient.keys.GetOperatorAddress().String(),
 	)
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-		return
+}
+
+func (ob *EVMChainClient) GetInboundVoteForTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) *types.MsgVoteOnObservedInboundTx {
+	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
+	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx value: %s", value.String())
+	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx from: %s", from.Hex())
+	message := ""
+	if len(data) != 0 {
+		message = hex.EncodeToString(data)
 	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+	return GetInBoundVoteMessage(
+		from.Hex(),
+		ob.chain.ChainId,
+		from.Hex(),
+		from.Hex(),
+		common.ZetaChain().ChainId,
+		sdkmath.NewUintFromBigInt(value),
+		message,
+		txhash.Hex(),
+		receipt.BlockNumber.Uint64(),
+		90_000,
+		common.CoinType_Gas,
+		"",
+		ob.zetaClient.keys.GetOperatorAddress().String(),
+	)
 }

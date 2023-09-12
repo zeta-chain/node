@@ -222,6 +222,15 @@ func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 	return resp.Keygen, nil
 }
 
+func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTxTracker, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.InTxTrackerAllByChain(context.Background(), &types.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+	if err != nil {
+		return nil, err
+	}
+	return resp.InTxTracker, nil
+}
+
 func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
