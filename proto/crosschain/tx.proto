@@ -91,6 +91,7 @@ message MsgVoteOnObservedOutboundTx {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  uint64 observed_outTx_effective_gas_limit = 12;
   string zeta_minted = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,

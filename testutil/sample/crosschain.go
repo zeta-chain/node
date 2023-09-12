@@ -78,10 +78,12 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 		Amount:                           math.NewUint(uint64(r.Int63())),
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),
-		OutboundTxGasPrice:               String(),
+		OutboundTxGasPrice:               math.NewUint(uint64(r.Int63())).String(),
 		OutboundTxHash:                   StringRandom(r, 32),
 		OutboundTxBallotIndex:            StringRandom(r, 32),
 		OutboundTxObservedExternalHeight: r.Uint64(),
+		OutboundTxGasUsed:                r.Uint64(),
+		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
 	}
 }
 
