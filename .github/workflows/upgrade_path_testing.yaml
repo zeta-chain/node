@@ -34,7 +34,7 @@ jobs:
           version: 2
 
       - name: "DOWNLOAD_STATE_EXPORT_AND_BINARY"
-        shell: python
+        shell: shell
         run: |
           wget ${latest_state_export}
           wget github_binary_version_link
