@@ -214,7 +214,7 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger, _ *types.OutboundTxParams) (bool, bool, error) {
+func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	ob.mu.Lock()
 	params := ob.params
 	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]

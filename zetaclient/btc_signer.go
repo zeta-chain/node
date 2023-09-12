@@ -59,7 +59,7 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain, validSendSofar bool) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
@@ -84,11 +84,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	amountSatoshis, err := getSatoshis(amount)
 	if err != nil {
-		// TODO: amount validation should be done in zeta core to block invalid cctx
-		// We proceed regardless of error for now, otherwise it will block all other cctxes
-		validSendSofar = false
-		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: cannot convert amount %f to satoshis", amount)
-		//return nil, err
+		return nil, err
 	}
 
 	// fee checking
@@ -126,14 +122,12 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	tx.AddTxOut(txOut1)
 
 	// 2nd output: the payment to the recipient
-	if validSendSofar { // skip payment to recipient on invalid cctx
-		pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
-		if err != nil {
-			return nil, err
-		}
-		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
-		tx.AddTxOut(txOut2)
+	pkScript, err := payToWitnessPubKeyHashScript(to.WitnessProgram())
+	if err != nil {
+		return nil, err
 	}
+	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+	tx.AddTxOut(txOut2)
 
 	// 3rd output: the remaining btc to TSS self
 	if remainingSats > 0 {
@@ -240,7 +234,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger, params)
+	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
@@ -258,19 +252,16 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-
-	validSendSofar := true // TODO: receiver validation should be done in zeta core to block invalid cctx
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
-		validSendSofar = false
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
-		//return
+		return
 	}
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height,
-		outboundTxTssNonce, &btcClient.chain, validSendSofar)
+		outboundTxTssNonce, &btcClient.chain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return

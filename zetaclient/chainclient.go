@@ -4,7 +4,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -16,7 +15,7 @@ type ChainClient interface {
 	Start()
 	Stop()
 	//GetBaseGasPrice() *big.Int
-	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger, params *types.OutboundTxParams) (bool, bool, error)
+	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
 	//PostNonceIfNotRecorded(logger zerolog.Logger) error
 	SetCoreParams(observertypes.CoreParams)
 	GetCoreParams() observertypes.CoreParams
