@@ -88,9 +88,7 @@ jobs:
           cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
           cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
           cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          
-          contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
-          echo "${contents}" > $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="60s"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
           
           sed -i '/\[api\]/,+3 s/enable = false/enable = true/' $DAEMON_HOME/config/app.toml
           
@@ -108,6 +106,8 @@ jobs:
           rm -rf ./genesis-edited.json
           
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
+          
+          cat genesis.json
         
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
