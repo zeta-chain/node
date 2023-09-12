@@ -34,6 +34,7 @@ func TestGenesis(t *testing.T) {
 		PermissionFlags:   sample.PermissionFlags(),
 		Keygen:            sample.Keygen(t),
 		LastObserverCount: sample.LastObserverCount(1000),
+		CoreParamsList:    sample.CoreParamsList(),
 	}
 
 	// Init and export
