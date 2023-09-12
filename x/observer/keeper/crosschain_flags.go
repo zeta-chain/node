@@ -42,8 +42,8 @@ func (k Keeper) IsOutboundEnabled(ctx sdk.Context) (found bool) {
 	return flags.IsOutboundEnabled
 }
 
-// RemovePermissionFlags removes permissionFlags from the store
-func (k Keeper) RemovePermissionFlags(ctx sdk.Context) {
+// RemoveCrosschainFlags removes crosschain flags from the store
+func (k Keeper) RemoveCrosschainFlags(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CrosschainFlagsKey))
 	store.Delete([]byte{0})
 }
