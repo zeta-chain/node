@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-
+	
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -23,6 +23,7 @@ func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUp
 		flags = *types.DefaultCrosschainFlags()
 	}
 
+	// update values
 	flags.IsInboundEnabled = msg.IsInboundEnabled
 	flags.IsOutboundEnabled = msg.IsOutboundEnabled
 
@@ -31,6 +32,17 @@ func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUp
 	}
 
 	k.SetCrosschainFlags(ctx, flags)
+
+	err := ctx.EventManager().EmitTypedEvents(&types.EventCrosschainFlagsUpdated{
+		MsgTypeUrl:            sdk.MsgTypeURL(&types.MsgUpdateCrosschainFlags{}),
+		IsInboundEnabled:      msg.IsInboundEnabled,
+		IsOutboundEnabled:     msg.IsOutboundEnabled,
+		GasPriceIncreaseFlags: msg.GasPriceIncreaseFlags,
+		Signer:                msg.Creator,
+	})
+	if err != nil {
+		ctx.Logger().Error("Error emitting EventCrosschainFlagsUpdated :", err)
+	}
 
 	return &types.MsgUpdateCrosschainFlagsResponse{}, nil
 }
