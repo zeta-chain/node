@@ -18,7 +18,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 
 	// check signer permission
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
-		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "deploy can only be executed by the correct policy account")
 	}
 
 	// check the zrc20 exists
