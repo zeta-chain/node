@@ -3,12 +3,6 @@ name: "UPGRADE_PATH_TESTING"
 on:
   workflow_dispatch:
     inputs:
-      runner:
-        description: 'Select an Runner Set'
-        type: choice
-        required: true
-        default: 'zeta-runners-athens3'
-        options: [ 'zeta-runners', 'zeta-runners-athens3']
       version:
         description: 'The new version to upgrade to from latest state.'
         required: true
@@ -19,7 +13,7 @@ on:
 jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
-    runs-on: ["${{ github.event.inputs.runner }}"]
+    runs-on: ["buildjet-4vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
@@ -52,9 +46,7 @@ jobs:
           export KEYRING="test"
           
           rm -rf ~/.zetacored
-          
-          kill -9 $(lsof -ti:26657)
-          
+
           zetacored config keyring-backend $KEYRING --home ~/.zetacored
           
           zetacored config chain-id $CHAINID --home ~/.zetacored
