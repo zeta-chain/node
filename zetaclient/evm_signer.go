@@ -355,7 +355,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	flags, err := zetaBridge.GetCrosschainFlags()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get permission flags")
+		logger.Error().Err(err).Msgf("cannot get crosschain flags")
 		return
 	}
 

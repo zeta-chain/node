@@ -91,11 +91,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		nodeAccounts[i] = &elem
 	}
 
-	// Get all permissionFlags
-	pf := types.DefaultCrosschainFlags()
-	permissionFlags, found := k.GetCrosschainFlags(ctx)
+	// Get all crosschain flags
+	cf := types.DefaultCrosschainFlags()
+	crosschainFlags, found := k.GetCrosschainFlags(ctx)
 	if found {
-		pf = &permissionFlags
+		cf = &crosschainFlags
 	}
 
 	kn := &types.Keygen{}
@@ -116,7 +116,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
-		CrosschainFlags:   pf,
+		CrosschainFlags:   cf,
 		Keygen:            kn,
 		LastObserverCount: oc,
 	}

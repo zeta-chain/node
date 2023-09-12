@@ -7,9 +7,9 @@ import (
 )
 
 // SetCrosschainFlags set the crosschain flags in the store
-func (k Keeper) SetCrosschainFlags(ctx sdk.Context, permissionFlags types.CrosschainFlags) {
+func (k Keeper) SetCrosschainFlags(ctx sdk.Context, crosschainFlags types.CrosschainFlags) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CrosschainFlagsKey))
-	b := k.cdc.MustMarshal(&permissionFlags)
+	b := k.cdc.MustMarshal(&crosschainFlags)
 	store.Set([]byte{0}, b)
 }
 
