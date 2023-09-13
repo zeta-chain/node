@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
@@ -8,8 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"testing"
 )
 
 func TestKeeper_SetGasPrice(t *testing.T) {

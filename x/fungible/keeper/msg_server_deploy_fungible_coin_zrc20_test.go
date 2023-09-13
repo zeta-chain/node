@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
