@@ -194,7 +194,7 @@ jobs:
       - name: Report nosec usage
         run: |
 
-          REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)''
+          REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
           EXIT_CODE=$(git diff --stat | grep -c -E "$REGEX")
 
           if [ $? -eq 0 ]; then
