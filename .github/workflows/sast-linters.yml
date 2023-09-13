@@ -184,58 +184,8 @@ jobs:
               labels: ["nosec"]
             })
 
-      # - name: Block broad "#nosec" annotations without a specific rule
-      #   uses: pablo-statsig/gh-pr-content-checker@master
-      #   if: env.nosec_detected == 1
-      #   with:
-      #     github-token: ${{github.token}}
-      #     diffDoesNotContainRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
-
-      # - name: Report nosec usage
-      #   run: |
-
-      #     REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
-      #     # git diff --stat | grep -c -E "$REGEX"
-      #     EXIT_CODE=$(git diff --stat | grep -c -E "$REGEX")
-
-      #     if [ $? -eq 0 ]; then
-      #       echo "Broad '#nosec' annotation found in code without a specific rule"
-      #       echo "Make sure you specific which rule you are bypassed with '#nosec G999' with G999 being the gosec rule number"
-      #       exit 1
-      #     else
-      #         echo "Regex found nothing"
-      #         exit 0
-      #     fi
-      - uses: GrantBirki/git-diff-action@v2.1.1
-        id: git-diff-action
-        with:
-          json_diff_file_output: diff.json
-          raw_diff_file_output: diff.txt
-          file_output_only: "true"
-
-      # Print the diff in raw git format
-      - name: print raw diff
-        env:
-          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
-        run: cat $DIFF
-
-
-      # Print the diff in raw git format
-      - name: Report nosec usage
-        env:
-          DIFF: ${{ steps.git-diff-action.outputs.raw-diff-path }}
+      - name: Check for pattern
         run: |
-
-          REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
-
-          EXIT_CODE=$(cat $DIFF| grep -c -E '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)')
-          echo "Exit code: $EXIT_CODE"
-
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "Broad '#nosec' annotation found in code without a specific rule"
-            echo "Make sure you specific which rule you are bypassed with '#nosec G999' with G999 being the gosec rule number"
-            exit 1
-          else
-              echo "Regex found nothing"
-              exit 0
-          fi
+          DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
+          echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "Pattern found!" || echo "Pattern not found!"
+          
