@@ -186,6 +186,7 @@ func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody,
 }
 
 func (ob *EVMChainClient) Start() {
+	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
