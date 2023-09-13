@@ -195,6 +195,7 @@ jobs:
         run: |
 
           REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
+          git diff --stat | grep -c -E "$REGEX"
           EXIT_CODE=$(git diff --stat | grep -c -E "$REGEX")
 
           if [ $? -eq 0 ]; then
