@@ -20,7 +20,7 @@ export DAEMON_NAME=zetacored
 export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
 export DAEMON_RESTART_AFTER_UPGRADE=true
 export CLIENT_DAEMON_NAME=zetaclientd
-export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,hotkey"
+export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,operator"
 export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
 export CLIENT_SKIP_UPGRADE=true
 export CLIENT_START_PROCESS=false
@@ -156,6 +156,7 @@ cp $GOPATH/bin/zetacored $GOPATH/bin/old/
 
 # Build new binary and save it
 cd /go/delivery/zeta-node/node/
+git fetch
 git checkout "$UpgradeName"
 git pull
 make install-zetacore
@@ -182,11 +183,11 @@ echo
 
 if [ $HOSTNAME = "zetacore0" ]
 then
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 320 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 50 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
 fi
 
 sleep 8
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from hotkey --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
 sleep 7
 /root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
 
