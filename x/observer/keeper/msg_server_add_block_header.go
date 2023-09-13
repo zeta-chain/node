@@ -41,7 +41,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("block header with hash %s already exists", msg.TxHash))
 	}
 
-	phash, err := msg.ParentHash() // error is checked in BasicValidation in msg; check again for extra caution
+	pHash, err := msg.ParentHash() // error is checked in BasicValidation in msg; check again for extra caution
 	if err != nil {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to get parent hash: %s", err.Error()))
 	}
