@@ -6,7 +6,7 @@ on:
       version:
         description: 'The new version to upgrade to from latest state.'
         required: true
-        default: 'v10.0.0'
+        default: 'v9.0.6'
 
 
 
