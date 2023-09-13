@@ -36,6 +36,27 @@ jobs:
           sudo chmod a+x zetacored
           echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
 
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.19'
+
+      - name: "INSTALL_ZETAVISOR"
+        run: |
+          wget -q ${latest_state_export}
+          wget -q ${github_binary_version_link}
+          current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
+          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
+          sudo chmod a+x zetacored
+          echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
+
+          RUN apt update && \
+          apt install unzip psmisc -y && \
+          wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/zetavisor-v0.1.5.zip && \
+          unzip zetavisor-v0.1.5.zip && \
+          cd cosmos-sdk-zetavisor-v0.1.5/cosmovisor && \
+          go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor && \
+          go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+
       - name: "START_TESTING_NETWORK"
         run: |
           export DAEMON_HOME=~/.zetacored
@@ -116,7 +137,7 @@ jobs:
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
           echo "Start Network"
-          zetacored start
+          zetavisor start
 
       - name: "DETERMINE_UPGRADE_TYPE"
         shell: python
