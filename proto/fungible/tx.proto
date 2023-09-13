@@ -44,7 +44,9 @@ message MsgDeployFungibleCoinZRC20 {
   int64 gas_limit = 8;
 }
 
-message MsgDeployFungibleCoinZRC20Response {}
+message MsgDeployFungibleCoinZRC20Response {
+  string address = 1;
+}
 
 message MsgRemoveForeignCoin {
   string creator = 1;

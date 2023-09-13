@@ -2,11 +2,12 @@ package sample
 
 import (
 	"errors"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"hash/fnv"
 	"math/rand"
 	"strconv"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
