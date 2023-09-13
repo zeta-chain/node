@@ -827,7 +827,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				}
 
 				// this task scans the block for incoming tx from TSS addresses and report them as outtx
-				func() {
+				proveOutTx := func() {
 					blk, err := ob.GetBlockByNumberCached(bn - 2)
 					if err != nil {
 						ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting blk: %d", bn)
@@ -918,7 +918,9 @@ func (ob *EVMChainClient) observeInTX() error {
 							//	zetaHash, blk.Hash().Hex(), blk.Number().Int64())
 						}
 					}
-				}()
+				}
+				_ = proveOutTx
+				//proveOutTx()
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
