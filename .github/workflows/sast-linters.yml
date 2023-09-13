@@ -189,7 +189,7 @@ jobs:
         if: env.nosec_detected == 1
         with:
           github-token: ${{github.token}}
-          diffContainsRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
+          diffDoesNotContainRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
 
       # - name: Report nosec usage
       #   run: |
