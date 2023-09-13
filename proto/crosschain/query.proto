@@ -258,7 +258,7 @@ message QueryAllPendingNoncesResponse {
 }
 
 message QueryPendingNoncesByChainRequest {
-  uint64 chainId = 1;
+  uint64 chain_id = 1;
 }
 
 message QueryPendingNoncesByChainResponse {
