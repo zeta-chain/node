@@ -158,7 +158,7 @@ func (k msgServer) ProveOutboundTx(goCtx context.Context, msg *types.MsgProveOut
 					CoinType:           cctx.InboundTxParams.CoinType,
 					OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
 				})
-				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx)
+				err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx, false)
 				if err != nil {
 					return err
 				}
