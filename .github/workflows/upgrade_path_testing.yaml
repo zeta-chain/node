@@ -80,7 +80,7 @@ jobs:
       - name: "START_TESTING_NETWORK"
         env:
           LOG_LEVEL: "INFO"
-          CHAIN_ID: "localnet_101-1"
+          CHAINID: "localnet_101-1"
           GAS_PRICES: "0.1azeta"
           DAEMON_HOME: "/home/runner/.zetacored"
           DAEMON_NAME: "zetacored"
