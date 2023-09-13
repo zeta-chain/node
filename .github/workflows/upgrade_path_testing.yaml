@@ -31,46 +31,80 @@ jobs:
         with:
           go-version: '^1.19'
 
-      - name: "INSTALL_ZETAVISOR"
+      - name: "CLONE:ZETAVISOR:REPOSITORY"
+        uses: actions/checkout@v2
+        with:
+          repository: zeta-chain/cosmos-sdk
+          path: zetavisor/
+          ref: zetavisor-v0.1.5
+
+      - name: "INSTALL_APT_PACKAGES"
+        working-directory: "zetavisor/cosmovisor"
         run: |
-          wget -q ${latest_state_export}
-          wget -q ${github_binary_version_link}
-          current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
-          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
-          sudo chmod a+x zetacored
-          echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
+          echo "*********INSTALL SOME APT PACKAGES*********"
           sudo apt update 
           sudo apt install unzip psmisc -y 
-          wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/zetavisor-v0.1.5.zip
-          unzip zetavisor-v0.1.5.zip
-          cd cosmos-sdk-zetavisor-v0.1.5/cosmovisor
+
+      - name: "INSTALL_ZETAVISOR"
+        working-directory: "zetavisor/cosmovisor"
+        run: |
+          echo "*********INSTALL ZETAVISOR*********"
           go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
           go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          
+          zetavisor version || echo "zetavisor failed to install."
+          
+          echo "*********SETUP ZETAVISOR DIRECTORIES*********"
+          mkdir -p /home/runner/.zetacored/zetavisor
+          mkdir -p /home/runner/.zetacored/zetavisor/current/bin
+          mkdir -p /home/runner/.zetacored/zetavisor/genesis/bin
+          mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin
 
-      - name: "DOWNLOAD_STATE_EXPORT_AND_BINARY"
+      - name: "DOWNLOAD_STATE_EXPORT_AND_BINARIES"
         run: |
+          echo "*********DOWNLOAD STATE EXPORT*********"
           wget -q ${latest_state_export}
-          wget -q ${github_binary_version_link}
+          
+          echo "*********DOWNLOAD UPGRADE BINARY AND PUT IN ZETAVISOR UPGRADES FOLDER*********"
+          wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+          
+          echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
-          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
-          sudo chmod a+x zetacored
-          echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
+          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          cp /home/runner/.zetacored/zetavisor/current/bin/zetacored /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+                
+          echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
 
       - name: "START_TESTING_NETWORK"
-        run: |
-          export DAEMON_HOME=~/.zetacored
-          
-          export DAEMON_NAME=zetacored
-          
-          export CHAINID="localnet_101-1"
-          
-          export KEYRING="test"
-          
-          rm -rf ~/.zetacored
+        env:
+          LOG_LEVEL: "INFO"
+          CHAIN_ID: "localnet_101-1"
+          GAS_PRICES: "0.1azeta"
+          DAEMON_HOME: "/home/runner/.zetacored"
+          DAEMON_NAME: "zetacored"
+          DENOM: "azeta"
+          DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+          DAEMON_RESTART_AFTER_UPGRADE: "true"
+          MONIKER: "zeta"
+          BLOCK_TIME_SECONDS: "6"
+          PROPOSAL_TIME_SECONDS: "60"
+          UNSAFE_SKIP_BACKUP: "true"
+          CLIENT_DAEMON_NAME: "zetaclientd"
+          CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
+          CLIENT_SKIP_UPGRADE: "true"
+          CLIENT_START_PROCESS: "false"
+          BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
+          UPGRADES_SLEEP_TIME: 300
+          KEYRING: "test"
+        run: |          
+          rm -rf ${DAEMON_HOME}
 
-          zetacored config keyring-backend $KEYRING --home ~/.zetacored
+          zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
           
-          zetacored config chain-id $CHAINID --home ~/.zetacored
+          zetacored config chain-id $CHAINID --home ${DAEMON_HOME}
           
           zetacored keys delete zetaa --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
           zetacored keys delete executer_zeta --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
@@ -136,7 +170,9 @@ jobs:
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
           echo "Start Network"
-          zetavisor start
+          nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+          
+          tail -f cosmovisor.log
 
       - name: "DETERMINE_UPGRADE_TYPE"
         shell: python
