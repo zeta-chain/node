@@ -1,6 +1,9 @@
 package keeper_test
 
 import (
+	"math/big"
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
@@ -11,8 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"math/big"
-	"testing"
 )
 
 func TestKeeper_UpdateSystemContract(t *testing.T) {

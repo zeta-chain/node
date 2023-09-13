@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	"testing"
 )
 
 func TestMsgServer_RemoveForeignCoin(t *testing.T) {
