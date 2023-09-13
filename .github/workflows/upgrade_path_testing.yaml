@@ -13,7 +13,7 @@ on:
 jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
-    runs-on: ["buildjet-4vcpu-ubuntu-2204"]
+    runs-on: ["buildjet-8vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
