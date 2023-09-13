@@ -541,7 +541,6 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 	return tx, nil
 }
 
-// #nosec
 // function whitelist(
 // address asset,
 // ) external onlyTssAddress
