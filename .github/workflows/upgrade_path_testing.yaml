@@ -75,10 +75,6 @@ jobs:
           cp /home/runner/.zetacored/zetavisor/current/bin/zetacored /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           sudo chmod a+x /home/runner/.zetacored/zetavisor/current/bin/zetacored
           sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
-          sudo chmod 777 /home/runner/.zetacored/zetavisor/current/bin/zetacored
-          sudo chmod 777 /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
-          ls -lah /home/runner/.zetacored/zetavisor/genesis/bin
-          ls -lah /home/runner/.zetacored/zetavisor/current/bin
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:/home/runner/.zetacored/zetavisor/current/bin:$PATH" >> ${GITHUB_ENV}
 
       - name: "START_TESTING_NETWORK"
@@ -102,10 +98,7 @@ jobs:
           BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
           UPGRADES_SLEEP_TIME: 300
           KEYRING: "test"
-        run: |          
-          rm -rf ${DAEMON_HOME}
-          ls -lah /home/runner/.zetacored/zetavisor/genesis/bin
-          ls -lah /home/runner/.zetacored/zetavisor/current/bin
+        run: |
           zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
           
           zetacored config chain-id $CHAINID --home ${DAEMON_HOME}
