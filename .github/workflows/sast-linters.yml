@@ -33,10 +33,15 @@ jobs:
       #   uses:  ./.github/actions/install-dependencies
 
       - name: Run Gosec Security Scanner
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+        uses: securego/gosec@v2.17.0
+        with:
+          args: ./...
+
+      # - name: Run Gosec Security Scanner
+      #   run: |
+      #     export PATH=$PATH:$(go env GOPATH)/bin
+      #     go install github.com/securego/gosec/v2/cmd/gosec@latest
+      #     gosec ./...
 
       - name: Run Cosmos Gosec Security Scanner
         uses: cosmos/gosec@master
@@ -73,8 +78,8 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Install Pipeline Dependencies
-        uses:  ./.github/actions/install-dependencies
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -84,7 +89,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.53
+          version: v1.54
           skip-cache: true
           args: --timeout=15m
 
