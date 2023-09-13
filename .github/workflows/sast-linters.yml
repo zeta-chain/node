@@ -184,9 +184,24 @@ jobs:
               labels: ["nosec"]
             })
 
-      - name: Block broad "#nosec" annotations without a specific rule
-        uses: pablo-statsig/gh-pr-content-checker@master
-        if: env.nosec_detected == 1
-        with:
-          github-token: ${{github.token}}
-          diffContainsRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
+      # - name: Block broad "#nosec" annotations without a specific rule
+      #   uses: pablo-statsig/gh-pr-content-checker@master
+      #   if: env.nosec_detected == 1
+      #   with:
+      #     github-token: ${{github.token}}
+      #     diffContainsRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
+
+      - name: Report nosec usage
+        run: |
+
+          REGEX='#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)''
+          EXIT_CODE=$(git diff --stat | grep -c -E "$REGEX")
+
+          if [ $? -eq 0 ]; then
+            echo "Broad '#nosec' annotation found in code without a specific rule"
+            echo "Make sure you specific which rule you are bypassed with '#nosec G999' with G999 being the gosec rule number"
+            exit 1
+          else
+              echo "Regex found nothing"
+              exit 0
+          fi
