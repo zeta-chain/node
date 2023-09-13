@@ -35,6 +35,14 @@ func (k Keeper) GetInTxTracker(ctx sdk.Context, chainID int64, txHash string) (v
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
+
+func (k Keeper) RemoveInTxTrackerIfExists(ctx sdk.Context, chainID int64, txHash string) {
+	key := getInTrackerKey(chainID, txHash)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
+	if store.Has(types.KeyPrefix(key)) {
+		store.Delete(types.KeyPrefix(key))
+	}
+}
 func (k Keeper) GetAllInTxTracker(ctx sdk.Context) (list []types.InTxTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})

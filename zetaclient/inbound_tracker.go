@@ -38,6 +38,7 @@ func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
 		return err
 	}
 	for _, tracker := range trackers {
+		ob.logger.ExternalChainWatcher.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
 		switch tracker.CoinType {
 		case common.CoinType_Zeta:
 			err := ob.CheckReceiptForCoinTypeZeta(tracker.TxHash)

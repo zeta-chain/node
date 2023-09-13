@@ -184,6 +184,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		}
 		commit()
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 }
