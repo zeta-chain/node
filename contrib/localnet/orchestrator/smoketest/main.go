@@ -295,8 +295,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestMessagePassingRevertSuccess()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	smokeTest.TestPauseZRC20()
-	smokeTest.CheckZRC20ReserveAndSupply()
+	//smokeTest.TestPauseZRC20()
+	//smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

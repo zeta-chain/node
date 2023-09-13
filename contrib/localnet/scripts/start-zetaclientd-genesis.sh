@@ -11,7 +11,7 @@ node="zetacore$num"
 #mv /root/tss/$HOSTNAME /root/.tss
 
 echo "Wait for zetacore to exchange genesis file"
-sleep 90
+sleep 30
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"
