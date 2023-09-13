@@ -4,9 +4,9 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
+import "observer/headers.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-import "observer/headers.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -21,11 +21,11 @@ service Msg {
 }
 
 message MsgAddBlockHeader {
-    string creator = 1;
-    int64 chain_id = 2;
-    bytes tx_hash = 3;
-    bytes block_header = 4;
-    int64 height = 5;
+  string creator = 1;
+  int64 chain_id = 2;
+  bytes tx_hash = 3;
+  bytes block_header = 4;
+  int64 height = 5;
 }
 
 message MsgAddBlockHeaderResponse {}
@@ -39,8 +39,9 @@ message MsgUpdateCoreParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;
-  int64 chain_id = 2;
-  ObservationType observationType = 3;
+  string observer_address = 2;
+  string zetaclient_grantee_pubkey = 3;
+  bool add_node_account_only = 4;
 }
 
 message MsgAddObserverResponse {}
@@ -55,6 +56,7 @@ message MsgAddBlameVoteResponse {}
 message MsgUpdatePermissionFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
+  bool isOutboundEnabled = 4;
 }
 message MsgUpdatePermissionFlagsResponse {}
 

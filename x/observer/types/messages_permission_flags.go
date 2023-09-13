@@ -13,10 +13,11 @@ const (
 
 var _ sdk.Msg = &MsgUpdatePermissionFlags{}
 
-func NewMsgUpdatePermissionFlags(creator string, isInboundEnabled bool) *MsgUpdatePermissionFlags {
+func NewMsgUpdatePermissionFlags(creator string, isInboundEnabled, isOutboundEnabled bool) *MsgUpdatePermissionFlags {
 	return &MsgUpdatePermissionFlags{
-		Creator:          creator,
-		IsInboundEnabled: isInboundEnabled,
+		Creator:           creator,
+		IsInboundEnabled:  isInboundEnabled,
+		IsOutboundEnabled: isOutboundEnabled,
 	}
 }
 

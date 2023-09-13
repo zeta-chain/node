@@ -24,6 +24,12 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 	if msg.Block <= (ctx.BlockHeight() + 10) {
 		return nil, types.ErrKeygenBlockTooLow
 	}
+	nodeAccountList := k.GetAllNodeAccount(ctx)
+	granteePubKeys := make([]string, len(nodeAccountList))
+	for i, nodeAccount := range nodeAccountList {
+		granteePubKeys[i] = nodeAccount.GranteePubkey.Secp256k1.String()
+	}
+	keygen.GranteePubkeys = granteePubKeys
 	keygen.BlockNumber = msg.Block
 	keygen.Status = types.KeygenStatus_PendingKeygen
 	k.SetKeygen(ctx, keygen)

@@ -18,7 +18,7 @@ import (
 
 func (s *CliTestSuite) TestShowInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crossChainState.InTxHashToCctxList
+	objs := s.crosschainState.InTxHashToCctxList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -60,6 +60,7 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 				var resp types.QueryGetInTxHashToCctxResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.InTxHashToCctx)
+				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
 					nullify.Fill(&resp.InTxHashToCctx),
 				)
@@ -70,8 +71,8 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 
 func (s *CliTestSuite) TestListInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crossChainState.InTxHashToCctxList
-	cctxCount := len(s.crossChainState.CrossChainTxs)
+	objs := s.crosschainState.InTxHashToCctxList
+	cctxCount := len(s.crosschainState.CrossChainTxs)
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

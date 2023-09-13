@@ -23,7 +23,7 @@ func (k Keeper) GetCoreParamsForChain(goCtx context.Context, req *types.QueryGet
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	coreParams, found := k.GetCoreParamsByChainID(ctx, req.ChainID)
+	coreParams, found := k.GetCoreParamsByChainID(ctx, req.ChainId)
 	if !found {
 		return nil, status.Error(codes.NotFound, "core params not found")
 	}

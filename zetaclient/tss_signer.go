@@ -10,9 +10,12 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 
@@ -78,7 +81,8 @@ type TSS struct {
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
-	coreBridge    *ZetaCoreBridge
+	CoreBridge    *ZetaCoreBridge
+	Metrics       *ChainMetrics
 }
 
 var _ TSSSigner = (*TSS)(nil)
@@ -89,27 +93,42 @@ func (tss *TSS) Pubkey() []byte {
 }
 
 // digest should be Hashes of some data
-func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain) ([65]byte, error) {
+// Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
+func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
 	tssPubkey := tss.CurrentPubkey
+	if optionalPubKey != "" {
+		tssPubkey = optionalPubKey
+	}
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
 	if ksRes.Status == thorcommon.Fail {
-		log.Warn().Msg("keysign status FAIL posting blame to core")
+		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 	signature := ksRes.Signatures
@@ -164,11 +183,22 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digest := combineDigests(digestBase64)
 		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.coreBridge.PostBlameData(&ksRes.Blame, chain, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
 			log.Error().Err(err).Msg("error sending blame data to core")
 			return [][65]byte{}, err
 		}
+
+		// Increment Blame counter
+		for _, node := range ksRes.Blame.BlameNodes {
+			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+			if err != nil {
+				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+				continue
+			}
+			counter.Inc()
+		}
+
 		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 
@@ -334,22 +364,58 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	return addr, nil
 }
 
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge) (*TSS, error) {
+func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS) (*TSS, error) {
 	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
-	tss := TSS{
-		Server:     server,
-		Keys:       make(map[string]*TSSKey),
-		logger:     log.With().Str("module", "tss_signer").Logger(),
-		coreBridge: bridge,
+	newTss := TSS{
+		Server:        server,
+		Keys:          make(map[string]*TSSKey),
+		CurrentPubkey: cfg.CurrentTssPubkey,
+		logger:        log.With().Str("module", "tss_signer").Logger(),
+		CoreBridge:    bridge,
 	}
 
-	files, err := os.ReadDir(cfg.TssPath)
+	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
 	if err != nil {
-		fmt.Println("ReadDir error", err)
 		return nil, err
+	}
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
+	if err != nil {
+		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
+	}
+	return &newTss, nil
+}
+
+func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
+	for _, t := range tssList {
+		if WasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
+			if _, ok := tss.Keys[t.TssPubkey]; !ok {
+				return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
+			}
+		}
+	}
+	return nil
+}
+
+func WasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
+	for _, grantee := range granteeList {
+		if granteePubKey32 == grantee {
+			return true
+		}
+	}
+	return false
+}
+func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
+	files, err := os.ReadDir(tssPath)
+	if err != nil {
+		fmt.Println("ReadDir error :", err.Error())
+		return err
 	}
 	found := false
 	var sharefiles []os.DirEntry
@@ -371,26 +437,20 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 			if len(filearray) == 2 {
 				log.Info().Msgf("Found stored Pubkey in local state: %s", filearray[1])
 				pk := strings.TrimSuffix(filearray[1], ".json")
+
 				err = tss.InsertPubKey(pk)
-				tss.logger.Info().Msgf("registering TSS pubkey %s (eth hex %s)", pk, tss.Keys[pk].AddressInHex)
 				if err != nil {
 					log.Error().Err(err).Msg("InsertPubKey  in NewTSS fail")
-				} else {
-					if found == false { // when reading the first file, set the current pubkey to the first one
-						log.Info().Msgf("setting current pubkey to %s", pk)
-						tss.CurrentPubkey = pk
-					}
-					found = true
-
 				}
+				tss.logger.Info().Msgf("registering TSS pubkey %s (eth hex %s)", pk, tss.Keys[pk].AddressInHex)
+				found = true
 			}
 		}
 	}
 	if !found {
 		log.Info().Msg("TSS Keyshare file NOT found")
 	}
-
-	return &tss, nil
+	return nil
 }
 
 func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
@@ -408,9 +468,9 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		tsspath = path.Join(homedir, ".Tss")
 		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
 	}
-	IP := os.Getenv("MYIP")
+	IP := cfg.PublicIP
 	if len(IP) == 0 {
-		log.Info().Msg("empty env MYIP")
+		log.Info().Msg("empty public IP in config")
 	}
 	tssServer, err := tss.NewTss(
 		bootstrapPeers,
@@ -505,4 +565,19 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
+}
+
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.Metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

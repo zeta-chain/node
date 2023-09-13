@@ -134,6 +134,9 @@ func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string,
 		cctxIndex,
 		outTxHash,
 		"1",
+		"0",
+		"0",
+		"0",
 		zetaminted,
 		status,
 		strconv.FormatInt(common.GoerliChain().ChainId, 10),
@@ -189,7 +192,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 }
 
 func GetBallotIdentifier(message string) string {
-	msg := types.NewMsgSendVoter(
+	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
 		common.GoerliChain().ChainId,
@@ -210,11 +213,14 @@ func GetBallotIdentifier(message string) string {
 func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string {
 	math.NewUintFromString(zetaminted)
 
-	msg := types.NewMsgReceiveConfirmation(
+	msg := types.NewMsgVoteOnObservedOutboundTx(
 		"",
 		cctxindex,
 		outtxHash,
 		1,
+		0,
+		math.ZeroInt(),
+		0,
 		math.NewUintFromString(zetaminted),
 		0,
 		common.GoerliChain().ChainId,

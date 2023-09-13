@@ -81,12 +81,12 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_localnet.String(), "ETH", "gETH", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_regtest.String(), "BTC", "tBTC", 8)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
@@ -95,7 +95,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 	// for localnet only: USDT ZRC20
 	USDTAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	USDTZRC20Addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliChain().ChainName.String(), common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
+	USDTZRC20Addr, err := k.DeployZRC20Contract(ctx, "USDT", "USDT", uint8(6), common.GoerliChain().ChainId, common.CoinType_ERC20, USDTAddr, big.NewInt(90_000))
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeployZRC20Contract USDT")
 	}
@@ -117,7 +117,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetWZetaContractAddress")
 	}
-	uniswapV2Factory, err := k.GetUniswapv2FacotryAddress(ctx)
+	uniswapV2Factory, err := k.GetUniswapV2FactoryAddress(ctx)
 	if err != nil {
 		return sdkerrors.Wrap(err, "failed to GetUniswapv2FacotryAddress")
 	}

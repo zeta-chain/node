@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+// IsAuthorizedNodeAccount checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
 func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
 	if found {
@@ -26,7 +26,12 @@ func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
 // it also makes a trade to fulfill the outbound tx gas fee in ZETA by swapping ZETA for some gas ZRC20 balances
 // The gas ZRC20 balance is subsequently burned to account for the expense of TSS address gas fee payment in the outbound tx.
 // **Caller should feed temporary ctx into this function**
-func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx) error {
+func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *types.CrossChainTx, noEthereumTxEvent bool) error {
+	// TODO: this check currently break the integration tests, enable it when integration tests are fixed
+	// https://github.com/zeta-chain/node/issues/1022
+	//if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
+	//	return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
+	//}
 
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
@@ -34,7 +39,10 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
 	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ", cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.LogIdentifierForCCTX()))
+		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ",
+			cctx.GetCurrentOutTxParam().ReceiverChainId,
+			cctx.LogIdentifierForCCTX()),
+		)
 	}
 	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
 	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = medianGasPrice.String()
@@ -46,6 +54,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 	if err != nil {
 		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
 	}
+
 	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
 	if err != nil {
 		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
@@ -54,26 +63,41 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(ctx sdk.Context, chainID int64, cctx *
 
 	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
 
-	if cctx.ZetaFees.GT(cctx.InboundTxParams.Amount) && cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
-		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ", cctx.ZetaFees, cctx.InboundTxParams.Amount, cctx.LogIdentifierForCCTX()))
+	if cctx.ZetaFees.GT(cctx.InboundTxParams.Amount) {
+		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
+			cctx.ZetaFees,
+			cctx.InboundTxParams.Amount,
+			cctx.LogIdentifierForCCTX()),
+		)
 	}
+
+	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", cctx.InboundTxParams.Amount.String(), "feeInZeta",
+		cctx.ZetaFees.String())
 	cctx.GetCurrentOutTxParam().Amount = cctx.InboundTxParams.Amount.Sub(cctx.ZetaFees)
 
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
 	// swap the outTxGasFeeInZeta portion of zeta to the real gas ZRC20 and burn it, in a temporary context.
 	{
 		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
-		err = k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
+		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 		if err != nil {
 			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
 		}
-		amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, outTxGasFeeInZeta, gasZRC20)
+
+		amounts, err := k.fungibleKeeper.CallUniswapv2RouterSwapExactETHForToken(
+			ctx,
+			types.ModuleAddressEVM,
+			types.ModuleAddressEVM,
+			outTxGasFeeInZeta,
+			gasZRC20,
+			noEthereumTxEvent,
+		)
 		if err != nil {
 			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
 		}
 		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
 		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
-		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1])
+		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
 			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
 		}

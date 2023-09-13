@@ -6,5 +6,4 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
 // Msg defines the Msg service.
-service Msg {
-}
+service Msg {}

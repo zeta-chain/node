@@ -76,20 +76,20 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_goerli_testnet.String(), "ETH", "gETH", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_bsc_testnet.String(), "BNB", "tBNB", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BscTestnetChain().ChainId, "BNB", "tBNB", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_mumbai_testnet.String(), "MATIC", "tMATIC", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.MumbaiChain().ChainId, "MATIC", "tMATIC", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
-	_, err = k.setupChainGasCoinAndPool(ctx, common.ChainName_btc_regtest.String(), "BTC", "tBTC", 8)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcTestNetChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}

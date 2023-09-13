@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.fungible;
 
 import "common/common.proto";
+import "fungible/tx.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
@@ -15,14 +16,14 @@ message EventSystemContractUpdated {
 
 message EventZRC20Deployed {
   string msg_type_url = 1;
-  string chain = 2;
+  int64 chain_id = 2;
   string contract = 3;
   string name = 4;
   string symbol = 5;
   int64 decimals = 6;
   common.CoinType coin_type = 7;
   string erc20 = 8;
-  int64 gasLimit = 9;
+  int64 gas_limit = 9;
 }
 
 message EventZRC20WithdrawFeeUpdated {
@@ -33,4 +34,11 @@ message EventZRC20WithdrawFeeUpdated {
   string old_withdraw_fee = 5;
   string new_withdraw_fee = 6;
   string signer = 7;
+}
+
+message EventZRC20PausedStatusUpdated {
+  string msg_type_url = 1;
+  repeated string zrc20_addresses = 2;
+  UpdatePausedStatusAction action = 3;
+  string signer = 4;
 }

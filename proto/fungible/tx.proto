@@ -12,6 +12,7 @@ service Msg {
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
   rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
   rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
+  rpc UpdateZRC20PausedStatus(MsgUpdateZRC20PausedStatus) returns (MsgUpdateZRC20PausedStatusResponse);
 }
 
 message MsgUpdateZRC20WithdrawFee {
@@ -35,12 +36,12 @@ message MsgUpdateSystemContractResponse {}
 message MsgDeployFungibleCoinZRC20 {
   string creator = 1;
   string ERC20 = 2;
-  string foreignChain = 3;
+  int64 foreign_chain_id = 3;
   uint32 decimals = 4;
   string name = 5;
   string symbol = 6;
-  common.CoinType coinType = 7;
-  int64 gasLimit = 8;
+  common.CoinType coin_type = 7;
+  int64 gas_limit = 8;
 }
 
 message MsgDeployFungibleCoinZRC20Response {}
@@ -51,3 +52,16 @@ message MsgRemoveForeignCoin {
 }
 
 message MsgRemoveForeignCoinResponse {}
+
+enum UpdatePausedStatusAction {
+  PAUSE = 0;
+  UNPAUSE = 1;
+}
+
+message MsgUpdateZRC20PausedStatus {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+  UpdatePausedStatusAction action = 3;
+}
+
+message MsgUpdateZRC20PausedStatusResponse {}

@@ -58,7 +58,7 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := observerTypes.ObservationType_InBoundTx
-	if !k.zetaObserverKeeper.IsInboundAllowed(ctx) {
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
@@ -69,6 +69,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ReceiverChain)
 	if receiverChain == nil {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
+	}
+	tssPub := ""
+	tss, tssFound := k.GetTSS(ctx)
+	if tssFound {
+		tssPub = tss.TssPubkey
 	}
 	// IsAuthorized does various checks against the list of observer mappers
 	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
@@ -112,7 +117,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// ******************************************************************************
 
 	// Inbound Ballot has been finalized , Create CCTX
-	cctx := k.CreateNewCCTX(ctx, msg, index, types.CctxStatus_PendingInbound, observationChain, receiverChain)
+	cctx := k.CreateNewCCTX(ctx, msg, index, tssPub, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
 		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
@@ -162,7 +167,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	} else { // Cross Chain SWAP
 		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
-			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx)
+			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx, false)
 			if err != nil {
 				return err
 			}

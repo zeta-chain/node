@@ -8,14 +8,22 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message EventBallotCreated {
   string msg_type_url = 1;
-  string ballot_identifier = 3;
-  string observation_hash = 4;
-  string observation_chain = 5;
-  string ballot_type = 6;
+  string ballot_identifier = 2;
+  string observation_hash = 3;
+  string observation_chain = 4;
+  string ballot_type = 5;
 }
 
 message EventKeygenBlockUpdated {
   string msg_type_url = 1;
   string keygen_block = 2;
   string keygen_pubkeys = 3;
+}
+
+message EventNewObserverAdded {
+  string msg_type_url = 1;
+  string observer_address = 2;
+  string zetaclient_grantee_address = 3;
+  string zetaclient_grantee_pubkey = 4;
+  uint64 observer_last_block_count = 5;
 }

@@ -26,7 +26,12 @@ var (
 	ErrNotFoundCoreParams      = errorsmod.Register(ModuleName, 1126, "Not found chain core params")
 	ErrUnableToSendCoinType    = errorsmod.Register(ModuleName, 1127, "Unable to send this coin type to a receiver chain")
 
-	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1128, "Proof verification fail")
-	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1129, "Cannot find cctx")
-	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1130, "Status not pending")
+	ErrInvalidAddress    = errorsmod.Register(ModuleName, 1128, "Invalid address")
+	ErrDeployContract    = errorsmod.Register(ModuleName, 1129, "Unable to deploy contract")
+	ErrUnableToUpdateTss = errorsmod.Register(ModuleName, 1130, "Unable to update TSS address")
+	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1131, "Not enough funds")
+
+	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1132, "Proof verification fail")
+	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1133, "Cannot find cctx")
+	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1134, "Status not pending")
 )

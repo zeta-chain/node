@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"context"
 	"fmt"
+	"sort"
+
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -15,19 +17,26 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (b *ZetaCoreBridge) GetInboundPermissions() (zetaObserverTypes.PermissionFlags, error) {
+type Order string
+
+const (
+	NoOrder    Order = ""
+	Ascending  Order = "ASC"
+	Descending Order = "DESC"
+)
+
+func (b *ZetaCoreBridge) GetPermissionFlags() (zetaObserverTypes.PermissionFlags, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.PermissionFlags(context.Background(), &zetaObserverTypes.QueryGetPermissionFlagsRequest{})
 	if err != nil {
 		return zetaObserverTypes.PermissionFlags{}, err
 	}
 	return resp.PermissionFlags, nil
-
 }
 
 func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: externalChainID})
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainId: externalChainID})
 	if err != nil {
 		return &zetaObserverTypes.CoreParams{}, err
 	}
@@ -100,15 +109,30 @@ func (b *ZetaCoreBridge) GetCctxByHash(sendHash string) (*types.CrossChainTx, er
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxByNonce(context.Background(), &types.QueryGetCctxByNonceRequest{
+		ChainID: chainID,
+		Nonce:   nonce,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CrossChainTx, nil
+}
+
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.ObserversByChain(context.Background(), &zetaObserverTypes.QueryObserversByChainRequest{
 		ObservationChain: chain.ChainName.String(),
 	})
-	if err != nil {
-		return nil, err
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return resp.Observers, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return resp.Observers, nil
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
@@ -138,6 +162,18 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 		return nil, err
 	}
 	return res.Block, nil
+}
+
+func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
+	client := tmservice.NewServiceClient(b.grpcConn)
+	res, err := client.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
+	for i := 0; i <= DefaultRetryCount; i++ {
+		if err == nil {
+			return res, nil
+		}
+		time.Sleep(DefaultRetryInterval * time.Second)
+	}
+	return nil, err
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
@@ -181,10 +217,27 @@ func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 	if err != nil {
-		//log.Error().Err(err).Msg("query GetKeyGen error")
 		return nil, err
 	}
 	return resp.Keygen, nil
+}
+
+func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TSS, nil
+}
+
+func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.TssList, nil
 }
 
 func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
@@ -199,14 +252,14 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
 		Chain: chain.ChainId,
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
-			Limit:      300,
+			Limit:      1000,
 			CountTotal: false,
 			Reverse:    false,
 		},
@@ -214,12 +267,22 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain) ([]types.
 	if err != nil {
 		return nil, err
 	}
+	if order == Ascending {
+		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
+			return resp.OutTxTracker[i].Nonce < resp.OutTxTracker[j].Nonce
+		})
+	}
+	if order == Descending {
+		sort.SliceStable(resp.OutTxTracker, func(i, j int) bool {
+			return resp.OutTxTracker[i].Nonce > resp.OutTxTracker[j].Nonce
+		})
+	}
 	return resp.OutTxTracker, nil
 }
 
 func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.QueryGetCoreParamsForChainResponse, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainID: chainID})
+	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainId: chainID})
 	if err != nil {
 		return zetaObserverTypes.QueryGetCoreParamsForChainResponse{}, err
 	}

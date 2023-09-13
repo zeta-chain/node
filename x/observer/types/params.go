@@ -16,8 +16,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy) Params {
-	return Params{ObserverParams: observerParams, AdminPolicy: adminParams}
+func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy, ballotMaturityBlocks int64) Params {
+	return Params{ObserverParams: observerParams, AdminPolicy: adminParams, BallotMaturityBlocks: ballotMaturityBlocks}
 }
 
 func DefaultParams() Params {
@@ -31,30 +31,38 @@ func DefaultParams() Params {
 			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
 		}
 	}
-	adminPolicy := []*Admin_Policy{
+	return NewParams(observerParams, DefaultAdminPolicy(), 100)
+}
+
+func DefaultAdminPolicy() []*Admin_Policy {
+	return []*Admin_Policy{
 		{
 			PolicyType: Policy_Type_out_tx_tracker,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_stop_inbound_cctx,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
+		// NOTE: smoke test setting depends on this type being at position 2
+		// contrib/localnet/scripts/genesis.sh:93
 		{
 			PolicyType: Policy_Type_deploy_fungible_coin,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_client_params,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
 		},
 		{
 			PolicyType: Policy_Type_update_keygen_block,
-			Address:    "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73",
+			Address:    GroupID1Address,
+		},
+		{
+			PolicyType: Policy_Type_add_observer,
+			Address:    GroupID1Address,
 		},
 	}
-
-	return NewParams(observerParams, adminPolicy)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -62,6 +70,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyPrefix(ObserverParamsKey), &p.ObserverParams, validateVotingThresholds),
 		paramtypes.NewParamSetPair(KeyPrefix(AdminPolicyParamsKey), &p.AdminPolicy, validateAdminPolicy),
+		paramtypes.NewParamSetPair(KeyPrefix(BallotMaturityBlocksParamsKey), &p.BallotMaturityBlocks, validateBallotMaturityBlocks),
 	}
 }
 
@@ -90,6 +99,14 @@ func validateVotingThresholds(i interface{}) error {
 }
 func validateAdminPolicy(i interface{}) error {
 	_, ok := i.([]*Admin_Policy)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
+}
+func validateBallotMaturityBlocks(i interface{}) error {
+	_, ok := i.(int64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

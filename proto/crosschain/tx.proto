@@ -2,8 +2,8 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "common/common.proto";
-import "gogoproto/gogo.proto";
 import "common/ethereum/ethereum.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
@@ -16,10 +16,28 @@ service Msg {
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
+  rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
 
+message MsgUpdateTssAddress {
+  string creator = 1;
+  string tss_pubkey = 2;
+}
 
+message MsgUpdateTssAddressResponse {}
+message MsgWhitelistERC20 {
+  string creator = 1;
+  string erc20_address = 2;
+  int64 chain_id = 3;
+  string name = 4;
+  string symbol = 5;
+  uint32 decimals = 6;
+  int64 gas_limit = 7;
+}
+
+message MsgWhitelistERC20Response {}
 
 message MsgAddToOutTxTracker {
   string creator = 1;
@@ -83,6 +101,12 @@ message MsgVoteOnObservedOutboundTx {
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
+  uint64 observed_outTx_gas_used = 10;
+  string observed_outTx_effective_gas_price = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 observed_outTx_effective_gas_limit = 12;
   string zeta_minted = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
