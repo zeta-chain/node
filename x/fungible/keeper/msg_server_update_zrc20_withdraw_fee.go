@@ -59,7 +59,6 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateProtocolFlatFee method (%s)", err.Error())
 	}
-	commit()
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventZRC20WithdrawFeeUpdated{
@@ -76,6 +75,7 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
 		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
+	commit()
 
 	return &types.MsgUpdateZRC20WithdrawFeeResponse{}, nil
 }
