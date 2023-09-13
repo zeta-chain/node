@@ -19,6 +19,25 @@ jobs:
       github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
       downloaded_binary_name: "zetacored-ubuntu-22-amd64"
       aws_region: "us-east-1"
+      LOG_LEVEL: "INFO"
+      CHAINID: "localnet_101-1"
+      GAS_PRICES: "0.1azeta"
+      DAEMON_HOME: "/home/runner/.zetacored"
+      DAEMON_NAME: "zetacored"
+      DENOM: "azeta"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+      DAEMON_RESTART_AFTER_UPGRADE: "true"
+      MONIKER: "zeta"
+      BLOCK_TIME_SECONDS: "6"
+      PROPOSAL_TIME_SECONDS: "60"
+      UNSAFE_SKIP_BACKUP: "true"
+      CLIENT_DAEMON_NAME: "zetaclientd"
+      CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
+      CLIENT_SKIP_UPGRADE: "true"
+      CLIENT_START_PROCESS: "false"
+      BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
+      UPGRADES_SLEEP_TIME: 300
+      KEYRING: "test"
     steps:
       - uses: actions/checkout@v1
 
@@ -77,26 +96,6 @@ jobs:
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
 
       - name: "START_TESTING_NETWORK"
-        env:
-          LOG_LEVEL: "INFO"
-          CHAINID: "localnet_101-1"
-          GAS_PRICES: "0.1azeta"
-          DAEMON_HOME: "/home/runner/.zetacored"
-          DAEMON_NAME: "zetacored"
-          DENOM: "azeta"
-          DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
-          DAEMON_RESTART_AFTER_UPGRADE: "true"
-          MONIKER: "zeta"
-          BLOCK_TIME_SECONDS: "6"
-          PROPOSAL_TIME_SECONDS: "60"
-          UNSAFE_SKIP_BACKUP: "true"
-          CLIENT_DAEMON_NAME: "zetaclientd"
-          CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
-          CLIENT_SKIP_UPGRADE: "true"
-          CLIENT_START_PROCESS: "false"
-          BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
-          UPGRADES_SLEEP_TIME: 300
-          KEYRING: "test"
         run: |
           zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
           
