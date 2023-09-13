@@ -164,9 +164,9 @@ jobs:
               labels: ["nosec"]
             })
 
-      - name: Block broad "#nosec" annotations 
+      - name: Block broad "#nosec" annotations without a specific rule
         uses: pablo-statsig/gh-pr-content-checker@master
         if: env.nosec_detected == 1
         with:
           github-token: ${{github.token}}
-          diffContainsRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
+          diffDoesNotContainRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'
