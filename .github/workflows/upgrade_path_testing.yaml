@@ -71,6 +71,7 @@ jobs:
           
           echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
+          echo "STARTING_VERSION=${current_version}" >> ${GITHUB_ENV}
           wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
@@ -160,7 +161,6 @@ jobs:
                     
           python .github/actions/upgrade-testing/create_genesis.py
           
-          
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
@@ -174,10 +174,17 @@ jobs:
         shell: python
         run: |
           import os
+          
+          first_version=os.environ["STARTING_VERSION"]
+          first_major_version = first_version.split(".")[0]
+          first_minor_version = first_version.split(".")[1]
+          first_sub_version = first_version.split(".")[2]
+          
           version="${{ github.event.inputs.version }}"
           major_version = version.split(".")[0]
           minor_version = version.split(".")[1]
           sub_version = version.split(".")[2]
+          
           git_env_file = open(os.environ["GITHUB_ENV"], "a+")
           if major_version == first_major_version and minor_version != first_minor_version:
               git_env_file.write("UPGRADE_TYPE=NONCON")
