@@ -214,9 +214,26 @@ jobs:
           sleep 240
           cat cosmovisor.log
           echo "*********CHECK VERSION AFTER BINARY SWITCH*********"
-          zetavisor version
+          check_version=$(zetavisor version | tr -d '\n')
+          http_version=$(curl http://127.0.0.1:26657/abci_info | jq .result.response.version -r | tr -d '\n')
           
-
+          echo "END_VERSION=${{ github.event.inputs.version }}"
+          echo "CURRENT_VERSION_BINARY=${check_version}"
+          echo "CURRENT_VERSION_HTTP=${http_version}"
+          
+          if [ "${{ github.event.inputs.version }}" == "${check_version}" ]; then
+            if [ "${{ github.event.inputs.version }}" == "${http_version}" ]; then
+              echo "*********VERSION MATCHES UPGRADE SUCCESS*********"
+              exit 0
+            else
+              echo "*********VERSION DOESN'T MATCH UPGRADE FAILED*********"
+              exit 2
+            fi
+          else
+            echo "*********VERSION DOESN'T MATCH UPGRADE FAILED*********"
+            exit 2
+          fi
+          
       - name: "CONCENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'NONCON'
         run: |
