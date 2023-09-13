@@ -167,7 +167,7 @@ jobs:
           echo "Start Network"
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           
-          sleep 120
+          sleep 240
           cat cosmovisor.log
 
       - name: "DETERMINE_UPGRADE_TYPE"
@@ -194,6 +194,28 @@ jobs:
               git_env_file.write("UPGRADE_TYPE=GOV")
           git_env_file.close()
  
-      - name: "CHECK_UPGRADE_TYPE"
+      - name: "NON_CONCENSUS_BREAKING_UPGRADE"
+        if: env.UPGRADE_TYPE == 'NONCON'
+        run: |
+          echo ${UPGRADE_TYPE}
+          echo "*********CHECK VERSION BEFORE BINARY SWITCH*********"
+          zetavisor version
+          
+          echo "*********KILLALL ZETAVISOR*********"
+          killall zetavisor
+          
+          echo "*********COPY UPGRADE BINARY TO NEW LOCATION*********"
+          cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+
+          sleep 240
+          cat cosmovisor.log
+          echo "*********CHECK VERSION AFTER BINARY SWITCH*********"
+          zetavisor version
+          
+
+      - name: "CONCENSUS_BREAKING_UPGRADE"
+        if: env.UPGRADE_TYPE == 'NONCON'
         run: |
           echo ${UPGRADE_TYPE}
