@@ -93,3 +93,23 @@ func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNo
 		PendingNonces: list,
 	}, nil
 }
+
+func (k Keeper) PendingNoncesByChain(c context.Context, req *types.QueryPendingNoncesByChainRequest) (*types.QueryPendingNoncesByChainResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "tss not found")
+	}
+	list, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("pending nonces not found for chain id : %d", req.ChainId))
+	}
+
+	return &types.QueryPendingNoncesByChainResponse{
+		PendingNonces: list,
+	}, nil
+}
