@@ -204,6 +204,9 @@ jobs:
           killall zetavisor
           
           echo "*********COPY UPGRADE BINARY TO NEW LOCATION*********"
+          rm -rf /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          rm -rf /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          
           cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/current/bin/zetacored
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
