@@ -39,8 +39,8 @@ jobs:
           wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
           sudo chmod a+x zetacored
           echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
-          apt update 
-          apt install unzip psmisc -y 
+          sudo apt update 
+          sudo apt install unzip psmisc -y 
           wget https://github.com/zeta-chain/cosmos-sdk/archive/refs/heads/zetavisor-v0.1.5.zip
           unzip zetavisor-v0.1.5.zip
           cd cosmos-sdk-zetavisor-v0.1.5/cosmovisor
