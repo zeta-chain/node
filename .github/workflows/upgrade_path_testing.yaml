@@ -55,8 +55,8 @@ jobs:
           zetavisor version || echo "zetavisor failed to install."
           
           echo "*********SETUP ZETAVISOR DIRECTORIES*********"
+          rm -rf /home/runner/.zetacored
           mkdir -p /home/runner/.zetacored/zetavisor
-          mkdir -p /home/runner/.zetacored/zetavisor/current/bin
           mkdir -p /home/runner/.zetacored/zetavisor/genesis/bin
           mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin
 
