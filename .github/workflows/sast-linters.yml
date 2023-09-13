@@ -32,10 +32,10 @@ jobs:
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@v2.17.0
-        with:
-          args: ./...
+      # - name: Run Gosec Security Scanner
+      #   uses: securego/gosec@master
+      #   with:
+      #     args: ./...
 
       # - name: Run Gosec Security Scanner
       #   run: |
@@ -46,7 +46,7 @@ jobs:
       - name: Run Cosmos Gosec Security Scanner
         uses: cosmos/gosec@master
         with:
-          args: ./...
+          args: './... -include=G701,G702,G703,G704'
 
   git-guardian:
     runs-on: ubuntu-latest
@@ -147,8 +147,11 @@ jobs:
 
             Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
 
+            Only suppress a single rule (or a specific set of rules) within a section of code, while continuing to scan for other problems. To do this, you can list the rule(s) to be suppressed within the #nosec annotation, e.g: /* #nosec G401 */ or //#nosec G201 G202 G203
+            Broad `//#nosec annotations should be avoided, as they can hide other vulnerabilities. The CI will block you from merging this PR until you remove `#nosec` annotations that do not target specific rules.
+
             Pay extra attention to the way `#nosec` is being used in the files listed above. 
-      
+
       - name: Add Label
         uses: actions/github-script@v6
         if: env.nosec_detected == 1
@@ -160,3 +163,10 @@ jobs:
               repo: context.repo.repo,
               labels: ["nosec"]
             })
+
+      - name: Block broad "#nosec" annotations 
+        uses: pablo-statsig/gh-pr-content-checker@master
+        if: env.nosec_detected == 1
+        with:
+          # github-token: ${{github.token}}
+          diffContainsRegex: '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)'

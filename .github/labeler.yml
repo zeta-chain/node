@@ -5,5 +5,5 @@ breaking:cli:
   - "x/*/client/cli/*.go"
   - "cmd/**/*.go"
 
-CI/CD:
+ci:
   - ".github/**"

@@ -10,6 +10,7 @@ import (
 )
 
 /* #nosec */
+/* #nosec */
 const (
 	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
 	defaultWeightMsgUpdateClientParams int = 100
