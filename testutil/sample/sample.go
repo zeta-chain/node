@@ -2,6 +2,7 @@ package sample
 
 import (
 	"errors"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"hash/fnv"
 	"math/rand"
 	"strconv"
@@ -112,4 +113,9 @@ func StringRandom(r *rand.Rand, length int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// Coins returns a sample sdk.Coins
+func Coins() sdk.Coins {
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }
