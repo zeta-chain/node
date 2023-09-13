@@ -4,17 +4,32 @@ ENV GOPATH /go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
 
-ARG version
+ARG old_version
+ARG new_version
 
 RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux
 RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 
 WORKDIR /go/delivery/zeta-node
 
+RUN mkdir -p  $GOPATH/bin/old
+RUN mkdir -p  $GOPATH/bin/new
+
+ENV NEW_VERSION=${new_version}
+
+# Checkout and build base binary
 RUN git clone https://github.com/zeta-chain/node.git
-RUN cd node && git checkout ${version}
+RUN cd node && git fetch
+RUN cd node && git checkout ${old_version}
 RUN cd node && go mod download
 RUN cd node && make install
+RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
+
+# Checkout and build new binary
+RUN cd node && git checkout ${new_version}
+RUN cd node && go mod download
+RUN cd node && make install
+RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/
 
 RUN cd node && git checkout develop
 RUN cd node && go mod download

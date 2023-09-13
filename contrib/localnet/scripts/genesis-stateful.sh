@@ -149,19 +149,6 @@ fi
 mkdir -p $DAEMON_HOME/zetavisor/genesis/bin
 mkdir -p $DAEMON_HOME/zetavisor/upgrades/"$UpgradeName"/bin
 
-# Setup old binary
-mkdir -p  $GOPATH/bin/old
-mkdir -p  $GOPATH/bin/new
-cp $GOPATH/bin/zetacored $GOPATH/bin/old/
-
-# Build new binary and save it
-cd /go/delivery/zeta-node/node/
-git fetch
-git checkout "$UpgradeName"
-git pull
-make install-zetacore
-cp $GOPATH/bin/zetacored $GOPATH/bin/new/
-
 # Setup zetavisor
 # Genesis
 cp $GOPATH/bin/old/zetacored $DAEMON_HOME/zetavisor/genesis/bin

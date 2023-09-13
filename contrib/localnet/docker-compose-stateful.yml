@@ -15,8 +15,6 @@ services:
       context: ../../.
       dockerfile: Dockerfile
     hostname: zetacore0
-    environment:
-      - NEW_VERSION=v9.0.6-test
     ports:
       - "1317:1317"
       - "9545:8545"
@@ -34,8 +32,6 @@ services:
       context: ../../.
       dockerfile: Dockerfile
     hostname: zetacore1
-    environment:
-      - NEW_VERSION=v9.0.6-test
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
