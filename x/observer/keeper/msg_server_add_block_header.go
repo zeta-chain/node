@@ -31,7 +31,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	if err != nil {
 		return nil, sdkerrors.Wrap(err, "failed to add vote to ballot")
 	}
-	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
+	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgAddBlockHeaderResponse{}, nil
 	}
