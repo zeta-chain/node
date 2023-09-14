@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"math/big"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -261,9 +263,27 @@ func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*z
 		return nil, err
 	}
 
-	_, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
+	coin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
 	if !found {
 		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+	}
+	chainID := coin.ForeignChainId
+	if common.IsBitcoinChain(chainID) {
+		if event.Value.Cmp(big.NewInt(0)) <= 0 {
+			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
+		}
+		btcChainParams, err := common.GetBTCChainParams(chainID)
+		if err != nil {
+			return nil, err
+		}
+		addr, err := btcutil.DecodeAddress(string(event.To), btcChainParams)
+		if err != nil {
+			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
+		}
+		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
+		if !ok {
+			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
+		}
 	}
 	return event, nil
 }
