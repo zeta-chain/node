@@ -1,19 +1,28 @@
 package types
 
 import (
+	"context"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/vm"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+
 	"github.com/zeta-chain/zetacore/common"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
-	// Methods imported from account should be defined here
 	GetSequence(ctx sdk.Context, addr sdk.AccAddress) (uint64, error)
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
+	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
+	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	SetAccount(ctx sdk.Context, acc types.AccountI)
 }
 
 type BankKeeper interface {
@@ -29,13 +38,29 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
-type ZetaObserverKeeper interface {
-	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val zetaObserverTypes.ObserverMapper, found bool)
-	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
-	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
-	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
-	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
-	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
-	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *zetaObserverTypes.CoreParams, found bool)
+type ObserverKeeper interface {
+	SetObserverMapper(ctx sdk.Context, om *observertypes.ObserverMapper)
+	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val observertypes.ObserverMapper, found bool)
+	GetAllObserverMappers(ctx sdk.Context) (mappers []*observertypes.ObserverMapper)
+	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
+	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
+	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
+	GetParams(ctx sdk.Context) (params observertypes.Params)
+	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
+}
+
+type EVMKeeper interface {
+	ChainID() *big.Int
+	GetBlockBloomTransient(ctx sdk.Context) *big.Int
+	GetLogSizeTransient(ctx sdk.Context) uint64
+	WithChainID(ctx sdk.Context)
+	SetBlockBloomTransient(ctx sdk.Context, bloom *big.Int)
+	SetLogSizeTransient(ctx sdk.Context, logSize uint64)
+	EstimateGas(c context.Context, req *evmtypes.EthCallRequest) (*evmtypes.EstimateGasResponse, error)
+	ApplyMessage(
+		ctx sdk.Context,
+		msg core.Message,
+		tracer vm.EVMLogger,
+		commit bool,
+	) (*evmtypes.MsgEthereumTxResponse, error)
 }

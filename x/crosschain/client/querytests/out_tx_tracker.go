@@ -2,6 +2,7 @@ package querytests
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -12,7 +13,7 @@ import (
 
 func (s *CliTestSuite) TestListOutTxTracker() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.OutTxTrackerList
+	objs := s.crosschainState.OutTxTrackerList
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

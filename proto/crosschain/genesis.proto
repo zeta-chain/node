@@ -1,33 +1,28 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
-import "crosschain/out_tx_tracker.proto";
-import "crosschain/in_tx_hash_to_cctx.proto";
-import "crosschain/permission_flags.proto";
-// this line is used by starport scaffolding # genesis/proto/import
-import "gogoproto/gogo.proto";
-import "crosschain/keygen.proto";
-import "crosschain/tss.proto";
-import "crosschain/gas_price.proto";
 import "crosschain/chain_nonces.proto";
-import "crosschain/last_block_height.proto";
 import "crosschain/cross_chain_tx.proto";
-import "crosschain/node_account.proto";
+import "crosschain/gas_price.proto";
+import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/last_block_height.proto";
+import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
+import "crosschain/tss.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // GenesisState defines the metacore module's genesis state.
 message GenesisState {
-		Params params = 1 [(gogoproto.nullable) = false];
-		repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
-		Keygen keygen = 3;
-		TSS tss = 4;
-		repeated GasPrice gasPriceList = 5;
-		repeated ChainNonces chainNoncesList = 6;
-		repeated CrossChainTx CrossChainTxs = 7;
-		repeated NodeAccount nodeAccountList = 8;
-		repeated LastBlockHeight lastBlockHeightList = 9;
-	repeated InTxHashToCctx inTxHashToCctxList = 10 [(gogoproto.nullable) = false];
-  PermissionFlags permissionFlags = 11;
-  // this line is used by starport scaffolding # genesis/proto/state
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
+  TSS tss = 4;
+  repeated GasPrice gasPriceList = 5;
+  repeated ChainNonces chainNoncesList = 6;
+  repeated CrossChainTx CrossChainTxs = 7;
+
+  repeated LastBlockHeight lastBlockHeightList = 8;
+  repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
+  repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
 }

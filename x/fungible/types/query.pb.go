@@ -6,6 +6,10 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
@@ -14,9 +18,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -377,6 +378,194 @@ func (m *QueryGetSystemContractResponse) GetSystemContract() SystemContract {
 	return SystemContract{}
 }
 
+type QueryGetGasStabilityPoolAddress struct {
+}
+
+func (m *QueryGetGasStabilityPoolAddress) Reset()         { *m = QueryGetGasStabilityPoolAddress{} }
+func (m *QueryGetGasStabilityPoolAddress) String() string { return proto.CompactTextString(m) }
+func (*QueryGetGasStabilityPoolAddress) ProtoMessage()    {}
+func (*QueryGetGasStabilityPoolAddress) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d671b6e9298b37cd, []int{8}
+}
+func (m *QueryGetGasStabilityPoolAddress) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetGasStabilityPoolAddress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetGasStabilityPoolAddress.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetGasStabilityPoolAddress) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetGasStabilityPoolAddress.Merge(m, src)
+}
+func (m *QueryGetGasStabilityPoolAddress) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetGasStabilityPoolAddress) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetGasStabilityPoolAddress.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetGasStabilityPoolAddress proto.InternalMessageInfo
+
+type QueryGetGasStabilityPoolAddressResponse struct {
+	CosmosAddress string `protobuf:"bytes,1,opt,name=cosmos_address,json=cosmosAddress,proto3" json:"cosmos_address,omitempty"`
+	EvmAddress    string `protobuf:"bytes,2,opt,name=evm_address,json=evmAddress,proto3" json:"evm_address,omitempty"`
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) Reset() {
+	*m = QueryGetGasStabilityPoolAddressResponse{}
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetGasStabilityPoolAddressResponse) ProtoMessage()    {}
+func (*QueryGetGasStabilityPoolAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d671b6e9298b37cd, []int{9}
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetGasStabilityPoolAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetGasStabilityPoolAddressResponse.Merge(m, src)
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetGasStabilityPoolAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetGasStabilityPoolAddressResponse proto.InternalMessageInfo
+
+func (m *QueryGetGasStabilityPoolAddressResponse) GetCosmosAddress() string {
+	if m != nil {
+		return m.CosmosAddress
+	}
+	return ""
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) GetEvmAddress() string {
+	if m != nil {
+		return m.EvmAddress
+	}
+	return ""
+}
+
+type QueryGetGasStabilityPoolBalance struct {
+	ChainId int64 `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+}
+
+func (m *QueryGetGasStabilityPoolBalance) Reset()         { *m = QueryGetGasStabilityPoolBalance{} }
+func (m *QueryGetGasStabilityPoolBalance) String() string { return proto.CompactTextString(m) }
+func (*QueryGetGasStabilityPoolBalance) ProtoMessage()    {}
+func (*QueryGetGasStabilityPoolBalance) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d671b6e9298b37cd, []int{10}
+}
+func (m *QueryGetGasStabilityPoolBalance) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetGasStabilityPoolBalance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetGasStabilityPoolBalance.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetGasStabilityPoolBalance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetGasStabilityPoolBalance.Merge(m, src)
+}
+func (m *QueryGetGasStabilityPoolBalance) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetGasStabilityPoolBalance) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetGasStabilityPoolBalance.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetGasStabilityPoolBalance proto.InternalMessageInfo
+
+func (m *QueryGetGasStabilityPoolBalance) GetChainId() int64 {
+	if m != nil {
+		return m.ChainId
+	}
+	return 0
+}
+
+type QueryGetGasStabilityPoolBalanceResponse struct {
+	ContractAddress string `protobuf:"bytes,1,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	Balance         string `protobuf:"bytes,2,opt,name=balance,proto3" json:"balance,omitempty"`
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) Reset() {
+	*m = QueryGetGasStabilityPoolBalanceResponse{}
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetGasStabilityPoolBalanceResponse) ProtoMessage()    {}
+func (*QueryGetGasStabilityPoolBalanceResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d671b6e9298b37cd, []int{11}
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetGasStabilityPoolBalanceResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetGasStabilityPoolBalanceResponse.Merge(m, src)
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetGasStabilityPoolBalanceResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetGasStabilityPoolBalanceResponse proto.InternalMessageInfo
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) GetContractAddress() string {
+	if m != nil {
+		return m.ContractAddress
+	}
+	return ""
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) GetBalance() string {
+	if m != nil {
+		return m.Balance
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "zetachain.zetacore.fungible.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "zetachain.zetacore.fungible.QueryParamsResponse")
@@ -386,50 +575,66 @@ func init() {
 	proto.RegisterType((*QueryAllForeignCoinsResponse)(nil), "zetachain.zetacore.fungible.QueryAllForeignCoinsResponse")
 	proto.RegisterType((*QueryGetSystemContractRequest)(nil), "zetachain.zetacore.fungible.QueryGetSystemContractRequest")
 	proto.RegisterType((*QueryGetSystemContractResponse)(nil), "zetachain.zetacore.fungible.QueryGetSystemContractResponse")
+	proto.RegisterType((*QueryGetGasStabilityPoolAddress)(nil), "zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddress")
+	proto.RegisterType((*QueryGetGasStabilityPoolAddressResponse)(nil), "zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddressResponse")
+	proto.RegisterType((*QueryGetGasStabilityPoolBalance)(nil), "zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalance")
+	proto.RegisterType((*QueryGetGasStabilityPoolBalanceResponse)(nil), "zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalanceResponse")
 }
 
 func init() { proto.RegisterFile("fungible/query.proto", fileDescriptor_d671b6e9298b37cd) }
 
 var fileDescriptor_d671b6e9298b37cd = []byte{
-	// 598 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4d, 0x6f, 0xd3, 0x3e,
-	0x18, 0x6f, 0xf6, 0xff, 0xb7, 0x12, 0x66, 0x02, 0xc9, 0x14, 0x09, 0x75, 0x25, 0x43, 0x01, 0x8d,
-	0x97, 0x51, 0x9b, 0xad, 0x9a, 0x04, 0xec, 0xd4, 0x4d, 0xda, 0xc4, 0x6d, 0x74, 0x17, 0xe0, 0x32,
-	0xb9, 0xc1, 0xcd, 0x22, 0xa5, 0x76, 0x16, 0xbb, 0x68, 0x65, 0xe2, 0xc2, 0x27, 0x40, 0xe2, 0xc4,
-	0x67, 0x81, 0x03, 0xc7, 0x1d, 0x27, 0x71, 0xe1, 0x84, 0x50, 0x8b, 0xc4, 0xd7, 0x40, 0xb1, 0x9d,
-	0x2e, 0xe9, 0xd2, 0xac, 0x8c, 0x5b, 0x1a, 0x3f, 0xbf, 0x37, 0x3f, 0xcf, 0x93, 0x82, 0x6a, 0xb7,
-	0xcf, 0x3c, 0xbf, 0x13, 0x50, 0x7c, 0xd0, 0xa7, 0xd1, 0x00, 0x85, 0x11, 0x97, 0x1c, 0x2e, 0xbc,
-	0xa5, 0x92, 0xb8, 0xfb, 0xc4, 0x67, 0x48, 0x3d, 0xf1, 0x88, 0xa2, 0xa4, 0xb0, 0x56, 0xf5, 0xb8,
-	0xc7, 0x55, 0x1d, 0x8e, 0x9f, 0x34, 0xa4, 0x56, 0xf7, 0x38, 0xf7, 0x02, 0x8a, 0x49, 0xe8, 0x63,
-	0xc2, 0x18, 0x97, 0x44, 0xfa, 0x9c, 0x09, 0x73, 0xfa, 0xc0, 0xe5, 0xa2, 0xc7, 0x05, 0xee, 0x10,
-	0x61, 0x94, 0xf0, 0x9b, 0x95, 0x0e, 0x95, 0x64, 0x05, 0x87, 0xc4, 0xf3, 0x99, 0x2a, 0x36, 0xb5,
-	0xd7, 0xc7, 0x96, 0x42, 0x12, 0x91, 0x5e, 0x42, 0x51, 0x1f, 0xbf, 0xee, 0xf2, 0x88, 0xfa, 0x1e,
-	0xdb, 0x73, 0xb9, 0x3f, 0x16, 0xb0, 0xc7, 0xa7, 0x62, 0x20, 0x24, 0xed, 0xed, 0xb9, 0x9c, 0xc9,
-	0x88, 0xb8, 0x52, 0x9f, 0x3b, 0x55, 0x00, 0x9f, 0xc7, 0xb2, 0x3b, 0x8a, 0xb2, 0x4d, 0x0f, 0xfa,
-	0x54, 0x48, 0xe7, 0x05, 0xb8, 0x96, 0x79, 0x2b, 0x42, 0xce, 0x04, 0x85, 0x2d, 0x50, 0xd1, 0xd2,
-	0x37, 0xac, 0x5b, 0xd6, 0xbd, 0xcb, 0xab, 0xb7, 0x51, 0xc1, 0x7d, 0x20, 0x0d, 0xde, 0xf8, 0xff,
-	0xf8, 0xc7, 0x62, 0xa9, 0x6d, 0x80, 0x4e, 0x13, 0x2c, 0x28, 0xe6, 0x6d, 0x2a, 0xb7, 0xb4, 0xdd,
-	0xcd, 0xd8, 0xad, 0x11, 0x86, 0x55, 0x50, 0xf6, 0xd9, 0x6b, 0x7a, 0xa8, 0x04, 0x2e, 0xb5, 0xf5,
-	0x0f, 0x47, 0x80, 0x7a, 0x3e, 0xc8, 0xf8, 0xda, 0x05, 0xf3, 0xdd, 0xd4, 0x7b, 0xe3, 0xee, 0x7e,
-	0xa1, 0xbb, 0x34, 0x91, 0xf1, 0x98, 0x21, 0x71, 0xa8, 0x71, 0xda, 0x0a, 0x82, 0x3c, 0xa7, 0x5b,
-	0x00, 0x9c, 0x76, 0xc8, 0x28, 0x2e, 0x21, 0xdd, 0x4e, 0x14, 0xb7, 0x13, 0xe9, 0xc1, 0x31, 0xed,
-	0x44, 0x3b, 0xc4, 0xa3, 0x06, 0xdb, 0x4e, 0x21, 0x9d, 0x2f, 0x96, 0x09, 0x77, 0x46, 0x67, 0x6a,
-	0xb8, 0xff, 0xfe, 0x39, 0x1c, 0xdc, 0xce, 0xb8, 0x9f, 0x53, 0xee, 0xef, 0x9e, 0xeb, 0x5e, 0x3b,
-	0xca, 0xd8, 0x5f, 0x04, 0x37, 0x93, 0xd6, 0xec, 0xaa, 0x01, 0xdb, 0x34, 0xf3, 0x95, 0x8c, 0xd2,
-	0x11, 0xb0, 0xa7, 0x15, 0x98, 0x80, 0x2f, 0xc1, 0x95, 0xec, 0x89, 0xb9, 0xcd, 0xe5, 0xc2, 0x88,
-	0x59, 0x88, 0x09, 0x39, 0x41, 0xb4, 0xfa, 0xbb, 0x0c, 0xca, 0x4a, 0x1d, 0x7e, 0xb2, 0x40, 0x45,
-	0x0f, 0x24, 0xc4, 0x85, 0xbc, 0x67, 0xb7, 0xa1, 0xf6, 0x68, 0x76, 0x80, 0x8e, 0xe4, 0x3c, 0x7c,
-	0xff, 0xed, 0xd7, 0xc7, 0xb9, 0x25, 0x78, 0x07, 0xc7, 0xf5, 0x0d, 0x05, 0xc5, 0x09, 0x14, 0x4f,
-	0xec, 0x31, 0xfc, 0x6a, 0x81, 0xf9, 0x74, 0xc7, 0xe0, 0xe3, 0xf3, 0x05, 0xf3, 0xf7, 0xa7, 0xf6,
-	0xe4, 0x02, 0x48, 0xe3, 0x79, 0x5d, 0x79, 0x5e, 0x83, 0xcd, 0x62, 0xcf, 0x99, 0x8f, 0x0c, 0x3e,
-	0x52, 0x0b, 0xfa, 0x0e, 0x7e, 0xb6, 0xc0, 0xd5, 0x34, 0x6b, 0x2b, 0x08, 0x66, 0x49, 0x91, 0xbf,
-	0x5b, 0xb3, 0xa4, 0x98, 0xb2, 0x2d, 0x4e, 0x53, 0xa5, 0x68, 0xc0, 0xe5, 0xbf, 0x48, 0x11, 0x37,
-	0x60, 0x62, 0x72, 0xe0, 0xd3, 0x99, 0x2e, 0x32, 0x77, 0xe4, 0x6b, 0xeb, 0x17, 0xc2, 0x9a, 0x00,
-	0x6b, 0x2a, 0x00, 0x86, 0x8d, 0xe2, 0x00, 0x13, 0x5f, 0xf3, 0x8d, 0x67, 0xc7, 0x43, 0xdb, 0x3a,
-	0x19, 0xda, 0xd6, 0xcf, 0xa1, 0x6d, 0x7d, 0x18, 0xd9, 0xa5, 0x93, 0x91, 0x5d, 0xfa, 0x3e, 0xb2,
-	0x4b, 0xaf, 0xb0, 0xe7, 0xcb, 0xfd, 0x7e, 0x07, 0xb9, 0xbc, 0x97, 0x4b, 0x79, 0x78, 0x4a, 0x2a,
-	0x07, 0x21, 0x15, 0x9d, 0x8a, 0xfa, 0x67, 0x68, 0xfe, 0x09, 0x00, 0x00, 0xff, 0xff, 0xd6, 0xe8,
-	0x04, 0xbd, 0x03, 0x07, 0x00, 0x00,
+	// 785 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0x4f, 0x4f, 0x13, 0x41,
+	0x1c, 0xed, 0x82, 0x80, 0x0c, 0x08, 0x66, 0xac, 0x11, 0x0b, 0x6e, 0x75, 0x55, 0x10, 0x91, 0x1d,
+	0xa1, 0x21, 0x41, 0xe0, 0x60, 0x41, 0x21, 0xc4, 0x0b, 0x96, 0x8b, 0x7a, 0x69, 0xa6, 0xed, 0xb0,
+	0x6c, 0xb2, 0xdd, 0x29, 0x9d, 0x29, 0xa1, 0x12, 0x2e, 0x7e, 0x02, 0x13, 0x4f, 0x7e, 0x11, 0x2f,
+	0x7a, 0xf0, 0xc8, 0x91, 0xc4, 0x8b, 0x27, 0x35, 0xe0, 0xc9, 0x4f, 0x61, 0x3a, 0x7f, 0x4a, 0x5b,
+	0x76, 0x97, 0x52, 0x6e, 0xbb, 0x33, 0xbf, 0xf7, 0x7b, 0xef, 0xcd, 0xfc, 0xf6, 0xb5, 0x20, 0xbe,
+	0x55, 0xf1, 0x1d, 0x37, 0xe7, 0x11, 0xb4, 0x53, 0x21, 0xe5, 0xaa, 0x5d, 0x2a, 0x53, 0x4e, 0xe1,
+	0xe8, 0x7b, 0xc2, 0x71, 0x7e, 0x1b, 0xbb, 0xbe, 0x2d, 0x9e, 0x68, 0x99, 0xd8, 0xba, 0x30, 0xf1,
+	0x38, 0x4f, 0x59, 0x91, 0x32, 0x94, 0xc3, 0x4c, 0xa1, 0xd0, 0xee, 0x4c, 0x8e, 0x70, 0x3c, 0x83,
+	0x4a, 0xd8, 0x71, 0x7d, 0xcc, 0x5d, 0xea, 0xcb, 0x46, 0x89, 0xb1, 0x7a, 0xfb, 0x2d, 0x5a, 0x26,
+	0xae, 0xe3, 0x67, 0xf3, 0xd4, 0xf5, 0x99, 0xda, 0xbd, 0x59, 0xdf, 0x2d, 0xe1, 0x32, 0x2e, 0xea,
+	0x65, 0xb3, 0xbe, 0xcc, 0xaa, 0x8c, 0x93, 0x62, 0x36, 0x4f, 0x7d, 0x5e, 0xc6, 0x79, 0xae, 0xf6,
+	0xe3, 0x0e, 0x75, 0xa8, 0x78, 0x44, 0xb5, 0x27, 0x4d, 0xe5, 0x50, 0xea, 0x78, 0x04, 0xe1, 0x92,
+	0x8b, 0xb0, 0xef, 0x53, 0x2e, 0x74, 0xa8, 0x9e, 0x56, 0x1c, 0xc0, 0xd7, 0x35, 0xa9, 0x1b, 0x82,
+	0x28, 0x43, 0x76, 0x2a, 0x84, 0x71, 0xeb, 0x0d, 0xb8, 0xd1, 0xb4, 0xca, 0x4a, 0xd4, 0x67, 0x04,
+	0xa6, 0x41, 0xaf, 0x14, 0x34, 0x62, 0xdc, 0x35, 0x1e, 0x0d, 0xcc, 0xde, 0xb7, 0x23, 0xce, 0xc3,
+	0x96, 0xe0, 0xe5, 0x2b, 0x87, 0xbf, 0x92, 0xb1, 0x8c, 0x02, 0x5a, 0x29, 0x30, 0x2a, 0x3a, 0xaf,
+	0x11, 0xbe, 0x2a, 0x9d, 0xaf, 0xd4, 0x8c, 0x2b, 0x62, 0x18, 0x07, 0x3d, 0xae, 0x5f, 0x20, 0x7b,
+	0x82, 0xa0, 0x3f, 0x23, 0x5f, 0x2c, 0x06, 0xc6, 0x82, 0x41, 0x4a, 0xd7, 0x26, 0x18, 0xdc, 0x6a,
+	0x58, 0x57, 0xea, 0x26, 0x23, 0xd5, 0x35, 0x36, 0x52, 0x1a, 0x9b, 0x9a, 0x58, 0x44, 0x29, 0x4d,
+	0x7b, 0x5e, 0x90, 0xd2, 0x55, 0x00, 0x4e, 0x6f, 0x55, 0x31, 0x8e, 0xdb, 0x72, 0x04, 0xec, 0xda,
+	0x08, 0xd8, 0x72, 0x70, 0xd4, 0x08, 0xd8, 0x1b, 0xd8, 0x21, 0x0a, 0x9b, 0x69, 0x40, 0x5a, 0xdf,
+	0x0c, 0x65, 0xee, 0x0c, 0x4f, 0xa8, 0xb9, 0xee, 0x4b, 0x9b, 0x83, 0x6b, 0x4d, 0xea, 0xbb, 0x84,
+	0xfa, 0x89, 0x73, 0xd5, 0x4b, 0x45, 0x4d, 0xf2, 0x93, 0xe0, 0x8e, 0xbe, 0x9a, 0x4d, 0x31, 0x94,
+	0x2b, 0x6a, 0x26, 0xf5, 0x28, 0xed, 0x03, 0x33, 0xac, 0x40, 0x19, 0x7c, 0x0b, 0x86, 0x9a, 0x77,
+	0xd4, 0x69, 0x4e, 0x45, 0x5a, 0x6c, 0x86, 0x28, 0x93, 0x2d, 0x8d, 0xac, 0x7b, 0x20, 0xa9, 0xc9,
+	0xd7, 0x30, 0xdb, 0xe4, 0x38, 0xe7, 0x7a, 0x2e, 0xaf, 0x6e, 0x50, 0xea, 0xa5, 0x0b, 0x85, 0x32,
+	0x61, 0xcc, 0xda, 0x01, 0x13, 0xe7, 0x94, 0xd4, 0x85, 0x3e, 0x04, 0x43, 0xf2, 0x84, 0xb2, 0x58,
+	0xee, 0xa8, 0x29, 0xbd, 0x26, 0x57, 0x55, 0x39, 0x4c, 0x82, 0x01, 0xb2, 0x5b, 0xac, 0xd7, 0x74,
+	0x89, 0x1a, 0x40, 0x76, 0x8b, 0x9a, 0x72, 0x29, 0x5c, 0xd5, 0x32, 0xf6, 0xb0, 0x9f, 0x27, 0xf0,
+	0x36, 0xb8, 0x2a, 0x8c, 0x67, 0xdd, 0x82, 0x20, 0xe9, 0xce, 0xf4, 0x89, 0xf7, 0xf5, 0x82, 0xe5,
+	0x87, 0x0b, 0x56, 0xe8, 0xba, 0xe0, 0x49, 0x70, 0x5d, 0x47, 0x44, 0x8b, 0xe4, 0x61, 0xbd, 0xae,
+	0x45, 0x8f, 0x80, 0xbe, 0x9c, 0x44, 0x2b, 0xc1, 0xfa, 0x75, 0xf6, 0x4b, 0x3f, 0xe8, 0x11, 0x84,
+	0xf0, 0xb3, 0x01, 0x7a, 0xe5, 0x47, 0x0d, 0x51, 0xe4, 0xdd, 0x9c, 0x4d, 0x94, 0xc4, 0xd3, 0xf6,
+	0x01, 0x52, 0xbc, 0xf5, 0xe4, 0xc3, 0x8f, 0xbf, 0x9f, 0xba, 0xc6, 0xe1, 0x03, 0x54, 0xab, 0x9f,
+	0x16, 0x50, 0xa4, 0xa1, 0xa8, 0x25, 0x21, 0xe1, 0x77, 0x03, 0x0c, 0x36, 0x4e, 0x3d, 0x9c, 0x3f,
+	0x9f, 0x30, 0x38, 0x83, 0x12, 0xcf, 0x3a, 0x40, 0x2a, 0xcd, 0x8b, 0x42, 0xf3, 0x1c, 0x4c, 0x45,
+	0x6b, 0x6e, 0xca, 0x7c, 0xb4, 0x2f, 0x42, 0xee, 0x00, 0x7e, 0x35, 0xc0, 0x70, 0x63, 0xd7, 0xb4,
+	0xe7, 0xb5, 0xe3, 0x22, 0x38, 0x9f, 0xda, 0x71, 0x11, 0x92, 0x38, 0x56, 0x4a, 0xb8, 0x98, 0x86,
+	0x53, 0x17, 0x70, 0x51, 0xbb, 0x80, 0x96, 0xaf, 0x0f, 0x2e, 0xb4, 0x75, 0x90, 0x81, 0xb1, 0x91,
+	0x58, 0xec, 0x08, 0xab, 0x0c, 0xcc, 0x09, 0x03, 0x08, 0x4e, 0x47, 0x1b, 0x68, 0xf9, 0x15, 0x85,
+	0xbf, 0x0d, 0x70, 0x2b, 0x24, 0x03, 0xe0, 0x52, 0x5b, 0x7a, 0x42, 0xd0, 0x89, 0x17, 0x97, 0x41,
+	0xd7, 0x6d, 0x3d, 0x17, 0xb6, 0x16, 0xe0, 0x7c, 0xb4, 0x2d, 0x07, 0xb3, 0x2c, 0xd3, 0x7d, 0xb2,
+	0x25, 0x4a, 0x3d, 0xfd, 0xf1, 0xc3, 0x7f, 0x01, 0x0e, 0x75, 0xe4, 0x74, 0xe6, 0x50, 0xa1, 0x3b,
+	0x74, 0xd8, 0x12, 0x58, 0xd6, 0x2b, 0xe1, 0xf0, 0x25, 0x5c, 0xb9, 0xb0, 0x43, 0x95, 0x56, 0x68,
+	0x5f, 0xc7, 0xe6, 0xc1, 0xf2, 0xfa, 0xe1, 0xb1, 0x69, 0x1c, 0x1d, 0x9b, 0xc6, 0x9f, 0x63, 0xd3,
+	0xf8, 0x78, 0x62, 0xc6, 0x8e, 0x4e, 0xcc, 0xd8, 0xcf, 0x13, 0x33, 0xf6, 0x0e, 0x39, 0x2e, 0xdf,
+	0xae, 0xe4, 0xec, 0x3c, 0x2d, 0x06, 0x12, 0xed, 0x9d, 0x52, 0xf1, 0x6a, 0x89, 0xb0, 0x5c, 0xaf,
+	0xf8, 0xb3, 0x94, 0xfa, 0x1f, 0x00, 0x00, 0xff, 0xff, 0xd3, 0x77, 0x16, 0x8c, 0x16, 0x0a, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -452,6 +657,10 @@ type QueryClient interface {
 	ForeignCoinsAll(ctx context.Context, in *QueryAllForeignCoinsRequest, opts ...grpc.CallOption) (*QueryAllForeignCoinsResponse, error)
 	// Queries a ZetaDepositAndCallContract by index.
 	SystemContract(ctx context.Context, in *QueryGetSystemContractRequest, opts ...grpc.CallOption) (*QueryGetSystemContractResponse, error)
+	// Queries the address of a gas stability pool on a given chain.
+	GasStabilityPoolAddress(ctx context.Context, in *QueryGetGasStabilityPoolAddress, opts ...grpc.CallOption) (*QueryGetGasStabilityPoolAddressResponse, error)
+	// Queries the balance of a gas stability pool on a given chain.
+	GasStabilityPoolBalance(ctx context.Context, in *QueryGetGasStabilityPoolBalance, opts ...grpc.CallOption) (*QueryGetGasStabilityPoolBalanceResponse, error)
 }
 
 type queryClient struct {
@@ -498,6 +707,24 @@ func (c *queryClient) SystemContract(ctx context.Context, in *QueryGetSystemCont
 	return out, nil
 }
 
+func (c *queryClient) GasStabilityPoolAddress(ctx context.Context, in *QueryGetGasStabilityPoolAddress, opts ...grpc.CallOption) (*QueryGetGasStabilityPoolAddressResponse, error) {
+	out := new(QueryGetGasStabilityPoolAddressResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Query/GasStabilityPoolAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GasStabilityPoolBalance(ctx context.Context, in *QueryGetGasStabilityPoolBalance, opts ...grpc.CallOption) (*QueryGetGasStabilityPoolBalanceResponse, error) {
+	out := new(QueryGetGasStabilityPoolBalanceResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Query/GasStabilityPoolBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -508,6 +735,10 @@ type QueryServer interface {
 	ForeignCoinsAll(context.Context, *QueryAllForeignCoinsRequest) (*QueryAllForeignCoinsResponse, error)
 	// Queries a ZetaDepositAndCallContract by index.
 	SystemContract(context.Context, *QueryGetSystemContractRequest) (*QueryGetSystemContractResponse, error)
+	// Queries the address of a gas stability pool on a given chain.
+	GasStabilityPoolAddress(context.Context, *QueryGetGasStabilityPoolAddress) (*QueryGetGasStabilityPoolAddressResponse, error)
+	// Queries the balance of a gas stability pool on a given chain.
+	GasStabilityPoolBalance(context.Context, *QueryGetGasStabilityPoolBalance) (*QueryGetGasStabilityPoolBalanceResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -525,6 +756,12 @@ func (*UnimplementedQueryServer) ForeignCoinsAll(ctx context.Context, req *Query
 }
 func (*UnimplementedQueryServer) SystemContract(ctx context.Context, req *QueryGetSystemContractRequest) (*QueryGetSystemContractResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SystemContract not implemented")
+}
+func (*UnimplementedQueryServer) GasStabilityPoolAddress(ctx context.Context, req *QueryGetGasStabilityPoolAddress) (*QueryGetGasStabilityPoolAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GasStabilityPoolAddress not implemented")
+}
+func (*UnimplementedQueryServer) GasStabilityPoolBalance(ctx context.Context, req *QueryGetGasStabilityPoolBalance) (*QueryGetGasStabilityPoolBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GasStabilityPoolBalance not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -603,6 +840,42 @@ func _Query_SystemContract_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GasStabilityPoolAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetGasStabilityPoolAddress)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GasStabilityPoolAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Query/GasStabilityPoolAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GasStabilityPoolAddress(ctx, req.(*QueryGetGasStabilityPoolAddress))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GasStabilityPoolBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetGasStabilityPoolBalance)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GasStabilityPoolBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Query/GasStabilityPoolBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GasStabilityPoolBalance(ctx, req.(*QueryGetGasStabilityPoolBalance))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.fungible.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -622,6 +895,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SystemContract",
 			Handler:    _Query_SystemContract_Handler,
+		},
+		{
+			MethodName: "GasStabilityPoolAddress",
+			Handler:    _Query_GasStabilityPoolAddress_Handler,
+		},
+		{
+			MethodName: "GasStabilityPoolBalance",
+			Handler:    _Query_GasStabilityPoolBalance_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -887,6 +1168,131 @@ func (m *QueryGetSystemContractResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetGasStabilityPoolAddress) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetGasStabilityPoolAddress) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetGasStabilityPoolAddress) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EvmAddress) > 0 {
+		i -= len(m.EvmAddress)
+		copy(dAtA[i:], m.EvmAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.EvmAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.CosmosAddress) > 0 {
+		i -= len(m.CosmosAddress)
+		copy(dAtA[i:], m.CosmosAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.CosmosAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetGasStabilityPoolBalance) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetGasStabilityPoolBalance) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetGasStabilityPoolBalance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ChainId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Balance) > 0 {
+		i -= len(m.Balance)
+		copy(dAtA[i:], m.Balance)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Balance)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ContractAddress) > 0 {
+		i -= len(m.ContractAddress)
+		copy(dAtA[i:], m.ContractAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ContractAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -991,6 +1397,61 @@ func (m *QueryGetSystemContractResponse) Size() (n int) {
 	_ = l
 	l = m.SystemContract.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryGetGasStabilityPoolAddress) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetGasStabilityPoolAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.CosmosAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.EvmAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetGasStabilityPoolBalance) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ChainId != 0 {
+		n += 1 + sovQuery(uint64(m.ChainId))
+	}
+	return n
+}
+
+func (m *QueryGetGasStabilityPoolBalanceResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ContractAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.Balance)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
 	return n
 }
 
@@ -1615,6 +2076,353 @@ func (m *QueryGetSystemContractResponse) Unmarshal(dAtA []byte) error {
 			if err := m.SystemContract.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetGasStabilityPoolAddress) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolAddress: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolAddress: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetGasStabilityPoolAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CosmosAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CosmosAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EvmAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EvmAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetGasStabilityPoolBalance) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolBalance: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolBalance: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			m.ChainId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChainId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetGasStabilityPoolBalanceResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolBalanceResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetGasStabilityPoolBalanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Balance", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Balance = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

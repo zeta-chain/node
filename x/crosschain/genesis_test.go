@@ -1,49 +1,60 @@
 package crosschain_test
 
 import (
-	"github.com/zeta-chain/zetacore/x/crosschain"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
+		Params: types.DefaultParams(),
 		OutTxTrackerList: []types.OutTxTracker{
-			{
-				Index: "0",
-			},
-			{
-				Index: "1",
-			},
+			sample.OutTxTracker(t, "0"),
+			sample.OutTxTracker(t, "1"),
+			sample.OutTxTracker(t, "2"),
+		},
+		Tss: sample.Tss(),
+		GasPriceList: []*types.GasPrice{
+			sample.GasPrice(t, "0"),
+			sample.GasPrice(t, "1"),
+			sample.GasPrice(t, "2"),
+		},
+		ChainNoncesList: []*types.ChainNonces{
+			sample.ChainNonces(t, "0"),
+			sample.ChainNonces(t, "1"),
+			sample.ChainNonces(t, "2"),
+		},
+		CrossChainTxs: []*types.CrossChainTx{
+			sample.CrossChainTx(t, "0"),
+			sample.CrossChainTx(t, "1"),
+			sample.CrossChainTx(t, "2"),
+		},
+		LastBlockHeightList: []*types.LastBlockHeight{
+			sample.LastBlockHeight(t, "0"),
+			sample.LastBlockHeight(t, "1"),
+			sample.LastBlockHeight(t, "2"),
 		},
 		InTxHashToCctxList: []types.InTxHashToCctx{
-			{
-				InTxHash: "0",
-			},
-			{
-				InTxHash: "1",
-			},
+			sample.InTxHashToCctx(t, "0x0"),
+			sample.InTxHashToCctx(t, "0x1"),
+			sample.InTxHashToCctx(t, "0x2"),
 		},
-		PermissionFlags: &types.PermissionFlags{
-			IsInboundEnabled: true,
-		},
-		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.ZetacoreKeeper(t)
+	// Init and export
+	k, ctx := keepertest.CrosschainKeeper(t)
 	crosschain.InitGenesis(ctx, *k, genesisState)
 	got := crosschain.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
 
+	// Compare genesis after init and export
 	nullify.Fill(&genesisState)
 	nullify.Fill(got)
-
-	require.ElementsMatch(t, genesisState.OutTxTrackerList, got.OutTxTrackerList)
-	require.ElementsMatch(t, genesisState.InTxHashToCctxList, got.InTxHashToCctxList)
-	require.Equal(t, genesisState.PermissionFlags, got.PermissionFlags)
-	// this line is used by starport scaffolding # genesis/test/assert
+	require.Equal(t, genesisState, *got)
 }

@@ -1,13 +1,12 @@
 syntax = "proto3";
 package zetachain.zetacore.fungible;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "fungible/foreign_coins.proto";
+import "fungible/params.proto";
+import "fungible/system_contract.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "fungible/params.proto";
-import "fungible/foreign_coins.proto";
-import "fungible/system_contract.proto";
-// this line is used by starport scaffolding # 1
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -18,20 +17,29 @@ service Query {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/params";
   }
   // Queries a ForeignCoins by index.
-	rpc ForeignCoins(QueryGetForeignCoinsRequest) returns (QueryGetForeignCoinsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins/{index}";
-	}
+  rpc ForeignCoins(QueryGetForeignCoinsRequest) returns (QueryGetForeignCoinsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins/{index}";
+  }
 
-	// Queries a list of ForeignCoins items.
-	rpc ForeignCoinsAll(QueryAllForeignCoinsRequest) returns (QueryAllForeignCoinsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins";
-	}
+  // Queries a list of ForeignCoins items.
+  rpc ForeignCoinsAll(QueryAllForeignCoinsRequest) returns (QueryAllForeignCoinsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins";
+  }
 
-// Queries a ZetaDepositAndCallContract by index.
-	rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
-	}
-// this line is used by starport scaffolding # 2
+  // Queries a ZetaDepositAndCallContract by index.
+  rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
+  }
+
+  // Queries the address of a gas stability pool on a given chain.
+  rpc GasStabilityPoolAddress(QueryGetGasStabilityPoolAddress) returns (QueryGetGasStabilityPoolAddressResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_address";
+  }
+
+  // Queries the balance of a gas stability pool on a given chain.
+  rpc GasStabilityPoolBalance(QueryGetGasStabilityPoolBalance) returns (QueryGetGasStabilityPoolBalanceResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -44,26 +52,40 @@ message QueryParamsResponse {
 }
 
 message QueryGetForeignCoinsRequest {
-	  string index = 1;
-
+  string index = 1;
 }
 
 message QueryGetForeignCoinsResponse {
-	ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+  ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllForeignCoinsRequest {
-	cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
 message QueryAllForeignCoinsResponse {
-	repeated ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
-	cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetSystemContractRequest {}
 
 message QueryGetSystemContractResponse {
-	SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
+  SystemContract SystemContract = 1 [(gogoproto.nullable) = false];
 }
-// this line is used by starport scaffolding # 3
+
+message QueryGetGasStabilityPoolAddress {}
+
+message QueryGetGasStabilityPoolAddressResponse {
+  string cosmos_address = 1;
+  string evm_address = 2;
+}
+
+message QueryGetGasStabilityPoolBalance {
+  int64 chain_id = 1;
+}
+
+message QueryGetGasStabilityPoolBalanceResponse {
+  string contract_address = 1;
+  string balance = 2;
+}

@@ -14,7 +14,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd(_ string) *cobra.Command {
 	// Group observer queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -24,18 +24,22 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(CmdBallotByIdentifier())
-
-	cmd.AddCommand(CmdObserversByChainAndType())
-	cmd.AddCommand(CmdAllObserverMappers())
-	cmd.AddCommand(CmdGetSupportedChains())
-
-	cmd.AddCommand(CmdGetCoreParamsForChain())
-
-	cmd.AddCommand(CmdGetCoreParams())
-
-	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(
+		CmdQueryParams(),
+		CmdBallotByIdentifier(),
+		CmdObserversByChainAndType(),
+		CmdAllObserverMappers(),
+		CmdGetSupportedChains(),
+		CmdGetCoreParamsForChain(),
+		CmdGetCoreParams(),
+		CmdListNodeAccount(),
+		CmdShowNodeAccount(),
+		CmdShowPermissionFlags(),
+		CmdShowKeygen(),
+		CmdShowObserverCount(),
+		CmdBlameByIdentifier(),
+		CmdGetAllBlameRecords(),
+	)
 
 	return cmd
 }

@@ -6,13 +6,13 @@ linters:
     - ineffassign
     - unconvert
     - misspell
+    - goimports
     - govet
     - gosec
     - stylecheck
     - typecheck
     - misspell
     - prealloc
-    - depguard
     - dogsled
     - goconst
     - bodyclose

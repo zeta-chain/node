@@ -1,14 +1,14 @@
 syntax = "proto3";
 package zetachain.zetacore.emissions;
 
-import "gogoproto/gogo.proto";
 import "emissions/params.proto";
-// this line is used by starport scaffolding # genesis/proto/import
+import "emissions/withdrawable_emissions.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 
 // GenesisState defines the emissions module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
-  // this line is used by starport scaffolding # genesis/proto/state
+  repeated WithdrawableEmissions withdrawableEmissions = 2 [(gogoproto.nullable) = false];
 }

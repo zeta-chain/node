@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,6 +15,24 @@ import (
 
 func GetObserverMapperIndex(chain *common.Chain) string {
 	return fmt.Sprintf("%d", chain.ChainId)
+}
+
+func (k Keeper) SetLastObserverCount(ctx sdk.Context, lbc *types.LastObserverCount) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
+	b := k.cdc.MustMarshal(lbc)
+	store.Set([]byte{0}, b)
+}
+
+func (k Keeper) GetLastObserverCount(ctx sdk.Context) (val types.LastObserverCount, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LastBlockObserverCountKey))
+
+	b := store.Get([]byte{0})
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
 }
 
 func (k Keeper) SetObserverMapper(ctx sdk.Context, om *types.ObserverMapper) {
@@ -67,9 +86,41 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 
 // Tx
 
-// Not implemented.
+// AddObserver adds in a new observer to the store.It can be executed using an admin policy account
+// Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
+		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
+	}
+	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
+	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	k.DisableInboundOnly(ctx)
+	// AddNodeAccountOnly flag usage
+	// True: adds observer into the Node Account list but returns without adding to the observer list
+	// False: adds observer to the observer list, and not the node account list
+	// Inbound is disabled in both cases and needs to be enabled manually using an admin TX
+	if msg.AddNodeAccountOnly {
+		pubkeySet := common.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator:       msg.ObserverAddress,
+			GranteeAddress: granteeAddress.String(),
+			GranteePubkey:  &pubkeySet,
+			NodeStatus:     types.NodeStatus_Active,
+		})
+		k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+		return &types.MsgAddObserverResponse{}, nil
+	}
+
+	observerMappers := k.GetAllObserverMappers(ctx)
+	totalObserverCountCurrentBlock := uint64(0)
+	for _, mapper := range observerMappers {
+		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
+		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
+		k.SetObserverMapper(ctx, mapper)
+	}
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
+	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
 }
 
@@ -81,7 +132,10 @@ func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserver
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	// TODO move parsing to client
+	// https://github.com/zeta-chain/node/issues/867
+
 	chainName := common.ParseChainName(req.ObservationChain)
 	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
 	if chain == nil {

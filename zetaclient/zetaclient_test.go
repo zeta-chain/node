@@ -7,10 +7,11 @@
 package zetaclient
 
 import (
-	"github.com/rs/zerolog/log"
-	. "gopkg.in/check.v1"
 	"os"
 	"path/filepath"
+
+	"github.com/rs/zerolog/log"
+	. "gopkg.in/check.v1"
 )
 
 type MySuite struct {

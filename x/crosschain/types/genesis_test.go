@@ -1,9 +1,10 @@
 package types_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"testing"
 )
 
 // FIXME: make it work
@@ -46,10 +47,9 @@ func TestGenesisState_Validate(t *testing.T) {
 						InTxHash: "1",
 					},
 				},
-				PermissionFlags: &types.PermissionFlags{
-					IsInboundEnabled: true,
-				},
-				// this line is used by starport scaffolding # types/genesis/validField
+				//PermissionFlags: &types.PermissionFlags{
+				//	IsInboundEnabled: true,
+				//},
 			},
 			valid: true,
 		},
@@ -81,7 +81,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			valid: false,
 		},
-		// this line is used by starport scaffolding # types/genesis/testcase
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := tc.genState.Validate()

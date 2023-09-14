@@ -9,8 +9,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-var _ = strconv.Itoa(0)
-
 func CmdGetCoreParamsForChain() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-core-params [chain-id]",
@@ -28,7 +26,7 @@ func CmdGetCoreParamsForChain() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryGetCoreParamsForChainRequest{
-				ChainID: reqChainID,
+				ChainId: reqChainID,
 			}
 			res, err := queryClient.GetCoreParamsForChain(cmd.Context(), params)
 			if err != nil {

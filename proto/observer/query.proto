@@ -1,74 +1,107 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-
-import "google/api/annotations.proto";
-// this line is used by starport scaffolding # 1
-import "gogoproto/gogo.proto";
-import "observer/params.proto";
-import "observer/observer.proto";
-import "observer/ballot.proto";
 import "common/common.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "observer/ballot.proto";
+import "observer/blame.proto";
+import "observer/keygen.proto";
+import "observer/node_account.proto";
+import "observer/observer.proto";
+import "observer/params.proto";
+import "observer/permission_flags.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 // Query defines the gRPC querier service.
 service Query {
-	// Parameters queries the parameters of the module.
-	rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/params";
-	}
-	// Queries a list of VoterByIdentifier items.
-	rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
-	}
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/params";
+  }
+  // Queries a list of VoterByIdentifier items.
+  rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
+  }
 
-// Queries a list of ObserversByChainAndType items.
-	rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
-	}
-	rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
-	}
+  // Queries a list of ObserversByChainAndType items.
+  rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
+  }
+  rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
+  }
 
-	rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
-		option (google.api.http).get = "/zeta-chain/observer/supportedChains";
-	}
+  rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/supportedChains";
+  }
 
-// Queries a list of GetClientParamsForChain items.
-	rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_client_params_for_chain/{chainID}";
-	}
+  // Queries a list of GetClientParamsForChain items.
+  rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chain_id}";
+  }
 
-// Queries a list of GetCoreParams items.
-	rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
-		option (google.api.http).get = "/zeta-chain/zetacore/observer/get_core_params";
-	}
+  // Queries a list of GetCoreParams items.
+  rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_core_params";
+  }
 
-// this line is used by starport scaffolding # 2
+  // Queries a nodeAccount by index.
+  rpc NodeAccount(QueryGetNodeAccountRequest) returns (QueryGetNodeAccountResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/nodeAccount/{index}";
+  }
+
+  // Queries a list of nodeAccount items.
+  rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
+  }
+  rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/permission_flags";
+  }
+  // Queries a keygen by index.
+  rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/keygen";
+  }
+
+  // Queries a list of ShowObserverCount items.
+  rpc ShowObserverCount(QueryShowObserverCountRequest) returns (QueryShowObserverCountResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/observer/show_observer_count";
+  }
+
+  // Queries a list of VoterByIdentifier items.
+  rpc BlameByIdentifier(QueryBlameByIdentifierRequest) returns (QueryBlameByIdentifierResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/blame_by_identifier/{blame_identifier}";
+  }
+
+  // Queries a list of VoterByIdentifier items.
+  rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
+  }
 }
 
 message QueryParamsRequest {}
 
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
-	// params holds all the parameters of this module.
-	Params params = 1 [(gogoproto.nullable) = false];
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryBallotByIdentifierRequest {
   string ballot_identifier = 1;
 }
 message VoterList {
-	string voter_address = 1;
-	VoteType vote_type = 2;
+  string voter_address = 1;
+  VoteType vote_type = 2;
 }
 
 message QueryBallotByIdentifierResponse {
-	string BallotIdentifier = 1;
-	repeated VoterList voters = 2;
-	ObservationType observation_type = 3;
-	BallotStatus ballot_status = 4;
+  string ballot_identifier = 1;
+  repeated VoterList voters = 2;
+  ObservationType observation_type = 3;
+  BallotStatus ballot_status = 4;
 }
 
 message QueryObserversByChainRequest {
@@ -79,34 +112,76 @@ message QueryObserversByChainResponse {
   repeated string observers = 1;
 }
 
-message QueryAllObserverMappersRequest {
-}
+message QueryAllObserverMappersRequest {}
 message QueryAllObserverMappersResponse {
-	repeated ObserverMapper observer_mappers = 1;
+  repeated ObserverMapper observer_mappers = 1;
 }
 
-
-message QuerySupportedChains {
-}
+message QuerySupportedChains {}
 
 message QuerySupportedChainsResponse {
-	repeated common.Chain chains = 1;
+  repeated common.Chain chains = 1;
 }
 
-
 message QueryGetCoreParamsForChainRequest {
-  int64 chainID = 1;
+  int64 chain_id = 1;
 }
 
 message QueryGetCoreParamsForChainResponse {
-	CoreParams core_params = 1;
+  CoreParams core_params = 1;
 }
 
-message QueryGetCoreParamsRequest {
-}
+message QueryGetCoreParamsRequest {}
 
 message QueryGetCoreParamsResponse {
-	CoreParamsList core_params = 1;
+  CoreParamsList core_params = 1;
 }
 
-// this line is used by starport scaffolding # 3
+message QueryGetNodeAccountRequest {
+  string index = 1;
+}
+
+message QueryGetNodeAccountResponse {
+  NodeAccount node_account = 1;
+}
+
+message QueryAllNodeAccountRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllNodeAccountResponse {
+  repeated NodeAccount NodeAccount = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetPermissionFlagsRequest {}
+
+message QueryGetPermissionFlagsResponse {
+  PermissionFlags permission_flags = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetKeygenRequest {}
+
+message QueryGetKeygenResponse {
+  Keygen keygen = 1;
+}
+
+message QueryShowObserverCountRequest {}
+
+message QueryShowObserverCountResponse {
+  LastObserverCount last_observer_count = 1;
+}
+
+message QueryBlameByIdentifierRequest {
+  string blame_identifier = 1;
+}
+
+message QueryBlameByIdentifierResponse {
+  Blame blame_info = 1;
+}
+
+message QueryAllBlameRecordsRequest {}
+
+message QueryAllBlameRecordsResponse {
+  repeated Blame blame_info = 1;
+}

@@ -6,6 +6,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"os"
+	"sort"
+	"time"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -15,11 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
-	"math/big"
-	"os"
-	"sort"
-	"time"
 )
 
 const (
@@ -101,6 +105,9 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 	cctxClient := types.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
+	bankClient := banktypes.NewQueryClient(grpcConn)
+	authClient := authtypes.NewQueryClient(grpcConn)
+	observerClient := observertypes.NewQueryClient(grpcConn)
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
@@ -137,7 +144,19 @@ func StressTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	smokeTest := NewSmokeTest(goerliClient, zevmClient, cctxClient, fungibleClient, goerliAuth, zevmAuth, nil)
+	smokeTest := NewSmokeTest(
+		goerliClient,
+		zevmClient,
+		cctxClient,
+		ZetaTxServer{}, // not used in stress test
+		fungibleClient,
+		authClient,
+		bankClient,
+		observerClient,
+		goerliAuth,
+		zevmAuth,
+		nil,
+	)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.network == "PRIVNET" {

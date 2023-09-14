@@ -5,14 +5,15 @@ package zetaclient
 
 import (
 	"encoding/hex"
+	"math/big"
+	"testing"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
-	"testing"
 )
 
 type BitcoinClientTestSuite struct {

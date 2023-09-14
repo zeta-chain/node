@@ -1,22 +1,24 @@
 syntax = "proto3";
 package zetachain.zetacore.crosschain;
-import "gogoproto/gogo.proto";
+
 import "common/common.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 enum CctxStatus {
   option (gogoproto.goproto_enum_stringer) = true;
   PendingInbound = 0; // some observer sees inbound tx
   PendingOutbound = 1; // super majority observer see inbound tx
-  OutboundMined = 3;  // the corresponding outbound tx is mined
+  OutboundMined = 3; // the corresponding outbound tx is mined
   PendingRevert = 4; // outbound cannot succeed; should revert inbound
   Reverted = 5; // inbound reverted.
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
 }
 
-message InboundTxParams{
+message InboundTxParams {
   string sender = 1; // this address is the immediate contract/EOA that calls the Connector.send()
-  int64  sender_chain_id = 2;
+  int64 sender_chain_id = 2;
   string tx_origin = 3; // this address is the EOA that signs the inbound tx
   common.CoinType coin_type = 4;
   string asset = 5; // for ERC20 coin type, the asset is an address of the ERC20 contract
@@ -27,7 +29,7 @@ message InboundTxParams{
   string inbound_tx_observed_hash = 7;
   uint64 inbound_tx_observed_external_height = 8;
   string inbound_tx_ballot_index = 9;
-  uint64 inbound_tx_finalized_zeta_height = 10; 
+  uint64 inbound_tx_finalized_zeta_height = 10;
 }
 
 message OutboundTxParams {
@@ -42,16 +44,23 @@ message OutboundTxParams {
   uint64 outbound_tx_gas_limit = 6;
   string outbound_tx_gas_price = 7;
   // the above are commands for zetaclients
-  // the following fields are used for the outbound tx are mined
+  // the following fields are used when the outbound tx is mined
   string outbound_tx_hash = 8;
   string outbound_tx_ballot_index = 9;
   uint64 outbound_tx_observed_external_height = 10;
+  uint64 outbound_tx_gas_used = 20;
+  string outbound_tx_effective_gas_price = 21 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 outbound_tx_effective_gas_limit = 22;
+  string tss_pubkey = 11;
 }
 
 message Status {
   CctxStatus status = 1;
   string status_message = 2;
-  int64  lastUpdate_timestamp = 3;
+  int64 lastUpdate_timestamp = 3;
 }
 
 message CrossChainTx {
@@ -64,6 +73,6 @@ message CrossChainTx {
   ];
   string relayed_message = 6; // Not used by protocol , just relayed across
   Status cctx_status = 8;
-  InboundTxParams  inbound_tx_params = 9;
+  InboundTxParams inbound_tx_params = 9;
   repeated OutboundTxParams outbound_tx_params = 10;
 }

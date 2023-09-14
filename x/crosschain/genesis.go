@@ -2,100 +2,102 @@ package crosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	// Params
+	k.SetParams(ctx, genState.Params)
+
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
 	}
+
 	// Set all the inTxHashToCctx
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
 	}
-	// Set if defined
-	if genState.PermissionFlags != nil {
-		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
-	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
-	}
-	// this line is used by starport scaffolding # genesis/module/init
-	// Set if defined
-	if genState.Keygen != nil {
-		k.SetKeygen(ctx, *genState.Keygen)
-	}
 
 	// Set all the gasPrice
 	for _, elem := range genState.GasPriceList {
-		k.SetGasPrice(ctx, *elem)
+		if elem != nil {
+			k.SetGasPrice(ctx, *elem)
+		}
 	}
 
-	// Set all the chainNonces
+	// Set all the chain nonces
 	for _, elem := range genState.ChainNoncesList {
-		k.SetChainNonces(ctx, *elem)
+		if elem != nil {
+			k.SetChainNonces(ctx, *elem)
+		}
 	}
 
-	// Set all the lastBlockHeight
+	// Set all the last block heights
 	for _, elem := range genState.LastBlockHeightList {
-		k.SetLastBlockHeight(ctx, *elem)
+		if elem != nil {
+			k.SetLastBlockHeight(ctx, *elem)
+		}
 	}
 
-	// Set all the send
+	// Set all the cross-chain txs
 	for _, elem := range genState.CrossChainTxs {
-		k.SetCrossChainTx(ctx, *elem)
-	}
-
-	// Set all the nodeAccount
-	for _, elem := range genState.NodeAccountList {
-		k.SetNodeAccount(ctx, *elem)
+		if elem != nil {
+			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
+		}
 	}
 
 	if genState.Tss != nil {
-		k.SetTSS(ctx, *genState.Tss)
+		if genState.Tss != nil {
+			k.SetTSS(ctx, *genState.Tss)
+		}
+		for _, chain := range common.DefaultChainsList() {
+			k.SetPendingNonces(ctx, types.PendingNonces{
+				NonceLow:  0,
+				NonceHigh: 0,
+				ChainId:   chain.ChainId,
+				Tss:       genState.Tss.TssPubkey,
+			})
+		}
+		for _, elem := range genState.TssHistory {
+			k.SetTSSHistory(ctx, elem)
+		}
 	}
-
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the crosschain module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	genesis := types.DefaultGenesis()
+	var genesis types.GenesisState
 
+	genesis.Params = k.GetParams(ctx)
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
-	// Get all permissionFlags
-	permissionFlags, found := k.GetPermissionFlags(ctx)
+
+	// Get tss
+	tss, found := k.GetTSS(ctx)
 	if found {
-		genesis.PermissionFlags = &permissionFlags
-	}
-	// this line is used by starport scaffolding # genesis/module/export
-	// Get all keygen
-	keygen, found := k.GetKeygen(ctx)
-	if found {
-		genesis.Keygen = &keygen
+		genesis.Tss = &tss
 	}
 
-	// Get all tSSVoter
-	// TODO : ADD for single TSS
-
-	// Get all gasPrice
+	// Get all gas prices
 	gasPriceList := k.GetAllGasPrice(ctx)
 	for _, elem := range gasPriceList {
 		elem := elem
 		genesis.GasPriceList = append(genesis.GasPriceList, &elem)
 	}
 
-	// Get all chainNonces
+	// Get all chain nonces
 	chainNoncesList := k.GetAllChainNonces(ctx)
 	for _, elem := range chainNoncesList {
 		elem := elem
 		genesis.ChainNoncesList = append(genesis.ChainNoncesList, &elem)
 	}
 
-	// Get all lastBlockHeight
+	// Get all last block heights
 	lastBlockHeightList := k.GetAllLastBlockHeight(ctx)
 	for _, elem := range lastBlockHeightList {
 		elem := elem
@@ -105,17 +107,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	// Get all send
 	sendList := k.GetAllCrossChainTx(ctx)
 	for _, elem := range sendList {
-		e := elem
-		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &e)
+		elem := elem
+		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &elem)
 	}
 
-	// Get all nodeAccount
-	nodeAccountList := k.GetAllNodeAccount(ctx)
-	for _, elem := range nodeAccountList {
-		e := elem
-		genesis.NodeAccountList = append(genesis.NodeAccountList, &e)
-	}
-	return genesis
+	genesis.TssHistory = k.GetAllTSS(ctx)
+
+	return &genesis
 }
-
-// TODO : Verify genesis import and export

@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func TestKeeper_GetBallot(t *testing.T) {

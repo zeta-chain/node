@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"io/ioutil"
 	"math/big"
 	"net/http"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
 func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
@@ -86,7 +87,7 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		}
 		zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 		if zetaLocked.Cmp(zetaSupply) < 0 {
-			fmt.Printf(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d) ", zetaLocked, zetaSupply))
+			fmt.Printf(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d) \n", zetaLocked, zetaSupply))
 		} else {
 			fmt.Printf("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", zetaLocked, zetaSupply)
 		}

@@ -18,22 +18,21 @@ package ante
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
 	ethante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
 func NewLegacyCosmosAnteHandlerEip712(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
-		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
+		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
+		NewVestingAccountDecorator(),
 		ante.NewSetUpContextDecorator(),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
@@ -72,8 +71,8 @@ func newEthAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
-		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
+		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
+		NewVestingAccountDecorator(),
 		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
@@ -96,8 +95,8 @@ func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 func newCosmosAnteHandlerNoGasLimit(options ethante.HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
-		NewAuthzLimiterDecorator(sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}), // disable the Msg types that cannot be included on an authz.MsgExec msgs field
-			sdk.MsgTypeURL(&types.MsgCreateVestingAccount{})),
+		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
+		NewVestingAccountDecorator(),
 		NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
@@ -171,7 +170,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.
-func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
+func SetGasMeter(_ bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	//if simulate || ctx.BlockHeight() == 0 {

@@ -34,7 +34,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	file = filepath.Clean(file)
-	cfg := &Config{}
+	cfg := NewConfig()
 	input, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -45,6 +45,9 @@ func Load(path string) (*Config, error) {
 	}
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
+	cfg.CurrentTssPubkey = ""
+	cfg.ZetaCoreHome = path
+	cfg.SignerPass = "password"
 	return cfg, nil
 }
 

@@ -3,6 +3,9 @@ package zetaclient
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto"
@@ -13,8 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	"io"
-	"os"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 // Keys manages all the keys used by zeta client
@@ -40,13 +42,16 @@ func GetGranteeKeyName(signerName string) string {
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(granteeName, chainHomeFolder, password string) (ckeys.Keyring, error) {
+func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
+	granteeName := cfg.AuthzHotkey
+	chainHomeFolder := cfg.ZetaCoreHome
+	password := cfg.SignerPass
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
 	if len(granteeName) == 0 {
-		return nil, fmt.Errorf("signer name is empty")
+		return nil, "", fmt.Errorf("signer name is empty")
 	}
 	if len(password) == 0 {
-		return nil, fmt.Errorf("password is empty")
+		return nil, "", fmt.Errorf("password is empty")
 	}
 
 	buf := bytes.NewBufferString(password)
@@ -56,21 +61,23 @@ func GetKeyringKeybase(granteeName, chainHomeFolder, password string) (ckeys.Key
 	buf.WriteByte('\n')
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
-		return nil, fmt.Errorf("fail to get keybase,err:%w", err)
+		return nil, "", fmt.Errorf("fail to get keybase,err:%w", err)
 	}
 	oldStdIn := os.Stdin
 	defer func() {
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
-
 	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
-	_, err = kb.Key(granteeName)
+	rc, err := kb.Key(granteeName)
 	if err != nil {
-		return nil, fmt.Errorf("key not presnt with name (%s): %w", granteeName, err)
+		return nil, "", fmt.Errorf("key not presnt with name (%s): %w", granteeName, err)
 	}
-
-	return kb, nil
+	pubkeyBech32, err := common.GetPubkeyBech32FromRecord(rc)
+	if err != nil {
+		return nil, "", fmt.Errorf("fail to get pubkey from record,err:%w", err)
+	}
+	return kb, pubkeyBech32, nil
 }
 
 // getKeybase will create an instance of Keybase

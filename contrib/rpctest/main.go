@@ -21,6 +21,7 @@ import (
 )
 
 var (
+	// #nosec
 	ZetaEthPriv           = "9D00E4D7A8A14384E01CD90B83745BCA847A66AD8797A9904A200C28C2648E64"
 	SystemContractAddress = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 )
@@ -135,7 +136,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, big.NewInt(2_100_000_000))
+	zetaContractAddress, tx2, zetaContract, err := zetaeth.DeployZetaEth(zevmAuth, zevmClient, zevmAuth.From, big.NewInt(2_100_000_000))
 	_, _ = zetaContractAddress, zetaContract
 	if err != nil {
 		panic(err)

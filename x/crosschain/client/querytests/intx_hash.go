@@ -2,21 +2,23 @@ package querytests
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"google.golang.org/grpc/codes"
+
+	"strconv"
 
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/status"
-	"strconv"
 )
 
 func (s *CliTestSuite) TestShowInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.InTxHashToCctxList
+	objs := s.crosschainState.InTxHashToCctxList
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -58,6 +60,7 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 				var resp types.QueryGetInTxHashToCctxResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.InTxHashToCctx)
+				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
 					nullify.Fill(&resp.InTxHashToCctx),
 				)
@@ -68,8 +71,8 @@ func (s *CliTestSuite) TestShowInTxHashToCctx() {
 
 func (s *CliTestSuite) TestListInTxHashToCctx() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.state.InTxHashToCctxList
-	cctxCount := len(s.state.CrossChainTxs)
+	objs := s.crosschainState.InTxHashToCctxList
+	cctxCount := len(s.crosschainState.CrossChainTxs)
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),

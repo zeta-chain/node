@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+
 	// "strings"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd(_ string) *cobra.Command {
 	// Group crosschain queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -24,26 +25,24 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdListOutTxTracker())
-	cmd.AddCommand(CmdShowOutTxTracker())
-	cmd.AddCommand(CmdShowKeygen())
-	cmd.AddCommand(CmdShowTSS())
-	cmd.AddCommand(CmdListGasPrice())
-	cmd.AddCommand(CmdShowGasPrice())
-	cmd.AddCommand(CmdListChainNonces())
-	cmd.AddCommand(CmdShowChainNonces())
-	cmd.AddCommand(CmdListSend())
-	cmd.AddCommand(CmdShowSend())
-	cmd.AddCommand(CmdListNodeAccount())
-	cmd.AddCommand(CmdShowNodeAccount())
-	cmd.AddCommand(CmdLastZetaHeight())
-	cmd.AddCommand(CmdListInTxHashToCctx())
-	cmd.AddCommand(CmdShowInTxHashToCctx())
-	cmd.AddCommand(CmdQueryParams())
-	cmd.AddCommand(CmdShowPermissionFlags())
-	cmd.AddCommand(CmdGetTssAddress())
-
-	// this line is used by starport scaffolding # 1
+	cmd.AddCommand(
+		CmdListOutTxTracker(),
+		CmdShowOutTxTracker(),
+		CmdShowTSS(),
+		CmdListGasPrice(),
+		CmdShowGasPrice(),
+		CmdListChainNonces(),
+		CmdShowChainNonces(),
+		CmdListSend(),
+		CmdShowSend(),
+		CmdLastZetaHeight(),
+		CmdInTxHashToCctxData(),
+		CmdListInTxHashToCctx(),
+		CmdShowInTxHashToCctx(),
+		CmdQueryParams(),
+		CmdGetTssAddress(),
+		CmdListTssHistory(),
+	)
 
 	return cmd
 }

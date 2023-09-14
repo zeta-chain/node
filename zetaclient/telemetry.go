@@ -27,6 +27,7 @@ type TelemetryServer struct {
 	mu                     sync.Mutex
 	lastStartTimestamp     time.Time
 	status                 types.Status
+	ipAddress              string
 }
 
 // NewTelemetryServer should only listen to the loopback
@@ -65,6 +66,19 @@ func (t *TelemetryServer) GetP2PID() string {
 	return t.p2pid
 }
 
+// setter/getter for p2pid
+func (t *TelemetryServer) SetIPAddress(ip string) {
+	t.mu.Lock()
+	t.ipAddress = ip
+	t.mu.Unlock()
+}
+
+func (t *TelemetryServer) GetIPAddress() string {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return t.ipAddress
+}
+
 // setter for lastScanned block number
 func (t *TelemetryServer) SetLastScannedBlockNumber(chainID int64, blockNumber int64) {
 	t.mu.Lock()
@@ -90,18 +104,6 @@ func (t *TelemetryServer) GetCoreBlockNumber() int64 {
 	return t.lastCoreBlockNumber
 }
 
-func (t *TelemetryServer) SetNextNonce(nextNonce int) {
-	t.mu.Lock()
-	t.status.BTCNextNonce = nextNonce
-	t.mu.Unlock()
-}
-
-func (t *TelemetryServer) GetNextNonce() int {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	return t.status.BTCNextNonce
-}
-
 func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Lock()
 	t.status.BTCNumberOfUTXOs = numberOfUTXOs
@@ -118,6 +120,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/laststarttimestamp", http.HandlerFunc(t.lastStartTimestampHandler)).Methods(http.MethodGet)
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
+	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	// router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	// router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	// router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -174,6 +177,13 @@ func (t *TelemetryServer) p2pHandler(w http.ResponseWriter, _ *http.Request) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%s", t.p2pid)
+}
+
+func (t *TelemetryServer) ipHandler(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	fmt.Fprintf(w, "%s", t.ipAddress)
 }
 
 func (t *TelemetryServer) lastScannedBlockHandler(w http.ResponseWriter, _ *http.Request) {

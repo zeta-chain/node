@@ -4,16 +4,14 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-// Prevent strconv unused error
-var _ = strconv.IntSize
 
 func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.InTxHashToCctx {
 	items := make([]types.InTxHashToCctx, n)
@@ -26,7 +24,7 @@ func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []type
 }
 
 func TestInTxHashToCctxGet(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetInTxHashToCctx(ctx,
@@ -40,7 +38,7 @@ func TestInTxHashToCctxGet(t *testing.T) {
 	}
 }
 func TestInTxHashToCctxRemove(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveInTxHashToCctx(ctx,
@@ -54,7 +52,7 @@ func TestInTxHashToCctxRemove(t *testing.T) {
 }
 
 func TestInTxHashToCctxGetAll(t *testing.T) {
-	keeper, ctx := keepertest.ZetacoreKeeper(t)
+	keeper, ctx := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),

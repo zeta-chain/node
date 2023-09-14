@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -9,6 +10,11 @@ import (
 // GetParams get all parameters as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramstore.GetParamSet(ctx, &params)
+	return
+}
+
+func (k Keeper) GetParamsIsExists(ctx sdk.Context) (params types.Params) {
+	k.paramstore.GetParamSetIfExists(ctx, &params)
 	return
 }
 
