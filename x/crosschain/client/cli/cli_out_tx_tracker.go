@@ -110,7 +110,7 @@ func CmdAddToWatchList() *cobra.Command {
 				argChain,
 				uint64(argNonce),
 				argTxHash,
-				nil, // TODO: add option to provide a proof from CLI arguments
+				nil, // TODO: add option to provide a proof from CLI arguments https://github.com/zeta-chain/node/issues/1134
 				"",
 				-1,
 			)
