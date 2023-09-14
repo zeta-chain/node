@@ -36,9 +36,9 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return &types.MsgAddBlockHeaderResponse{}, nil
 	}
 
-	_, found := k.GetBlockHeader(ctx, msg.TxHash)
+	_, found := k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("block header with hash %s already exists", msg.TxHash))
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("block header with hash %s already exists", msg.BlockHeader))
 	}
 
 	pHash, err := msg.ParentHash() // error is checked in BasicValidation in msg; check again for extra caution
@@ -51,7 +51,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	bh := types.BlockHeader{
 		Header:     msg.BlockHeader,
 		Height:     msg.Height,
-		Hash:       msg.TxHash,
+		Hash:       msg.BlockHash,
 		ParentHash: pHash,
 		ChainId:    msg.ChainId,
 	}

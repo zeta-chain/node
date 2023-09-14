@@ -99,9 +99,6 @@ service Query {
 message QueryProveRequest {
   uint64 chain_id = 1;
   string tx_hash = 2;
-  ethereum.Proof proof = 3;
-  string block_hash = 4;
-  int64 tx_index = 5;
   ethereum.Proof proof = 5;
   string block_hash = 6;
   int64 tx_index = 7;

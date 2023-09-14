@@ -17,11 +17,11 @@ const (
 	TypeMsgAddBlockHeader = "add_block_header"
 )
 
-func NewMsgAddBlockHeader(creator string, chainId int64, txHash []byte, height int64, header []byte) *MsgAddBlockHeader {
+func NewMsgAddBlockHeader(creator string, chainId int64, blockHash []byte, height int64, header []byte) *MsgAddBlockHeader {
 	return &MsgAddBlockHeader{
 		Creator:     creator,
 		ChainId:     chainId,
-		TxHash:      txHash,
+		BlockHash:   blockHash,
 		Height:      height,
 		BlockHeader: header,
 	}
@@ -54,8 +54,8 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if len(msg.TxHash) > 32 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.TxHash))
+	if len(msg.BlockHash) > 32 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.BlockHash))
 	}
 	if len(msg.BlockHeader) > 1024 { // on ethereum the block header is ~538 bytes in RLP encoding
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.blockheader; too long (%d)", len(msg.BlockHeader))
@@ -70,7 +70,7 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 		if err = header.SanityCheck(); err != nil {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; sanity check failed (%s)", err)
 		}
-		if bytes.Compare(msg.TxHash, header.Hash().Bytes()) != 0 {
+		if bytes.Compare(msg.BlockHash, header.Hash().Bytes()) != 0 {
 			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; tx hash mismatch")
 		}
 		if msg.Height != header.Number.Int64() {
