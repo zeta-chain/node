@@ -92,13 +92,6 @@ func (c *Config) GetKeygen() observertypes.Keygen {
 	}
 }
 
-func (c *Config) SetKeygen(keygen *observertypes.Keygen) {
-	c.cfgLock.Lock()
-	defer c.cfgLock.Unlock()
-
-	c.Keygen = *keygen
-}
-
 func (c *Config) GetEnabledChains() []common.Chain {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
