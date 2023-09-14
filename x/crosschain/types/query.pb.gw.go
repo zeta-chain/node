@@ -678,15 +678,15 @@ func request_Query_PendingNoncesByChain_0(ctx context.Context, marshaler runtime
 		_   = err
 	)
 
-	val, ok = pathParams["chainId"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
 	protoReq.ChainId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	msg, err := client.PendingNoncesByChain(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -705,15 +705,15 @@ func local_request_Query_PendingNoncesByChain_0(ctx context.Context, marshaler r
 		_   = err
 	)
 
-	val, ok = pathParams["chainId"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chainId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
 	protoReq.ChainId, err = runtime.Uint64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chainId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	msg, err := server.PendingNoncesByChain(ctx, &protoReq)
@@ -2207,7 +2207,7 @@ var (
 
 	pattern_Query_PendingNoncesAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "crosschain", "pendingNonces"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_PendingNoncesByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "pendingNonces", "chainId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_PendingNoncesByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "pendingNonces", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_LastBlockHeight_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "crosschain", "lastBlockHeight", "index"}, "", runtime.AssumeColonVerbOpt(false)))
 

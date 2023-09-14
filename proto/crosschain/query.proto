@@ -95,7 +95,7 @@ service Query {
   }
 
   rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chainId}";
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
   }
 
   // Queries a lastBlockHeight by index.

@@ -27213,7 +27213,7 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/crosschain/pendingNonces/{chainId}:
+  /zeta-chain/crosschain/pendingNonces/{chain_id}:
     get:
       operationId: Query_PendingNoncesByChain
       responses:
@@ -27226,7 +27226,7 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainId
+        - name: chain_id
           in: path
           required: true
           type: string
