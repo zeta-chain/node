@@ -6,7 +6,6 @@ package main
 import (
 	"context"
 	"fmt"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"math/big"
 	"os"
 	"time"
@@ -304,19 +303,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestMessagePassingRevertSuccess()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
+	//DISABLED temporarily since older binaries might not work with this due to admin account
 	//smokeTest.TestPauseZRC20()
 	//smokeTest.CheckZRC20ReserveAndSupply()
-
-	// initialize rpc and check status
-	rpc, err := rpchttp.New("http://zetacore0:26657", "/websocket")
-	if err != nil {
-		panic(err)
-	}
-	status, err := rpc.Status(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("status: %+v", status)
 
 	// add your dev test here
 	smokeTest.TestMyTest()
