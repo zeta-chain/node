@@ -128,7 +128,10 @@ func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
 	var indexBuf []byte
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(txIndex))
 	proof := NewProof()
-	t.Prove(indexBuf, 0, proof)
+	err := t.Prove(indexBuf, 0, proof)
+	if err != nil {
+		return nil, err
+	}
 	return proof, nil
 }
 

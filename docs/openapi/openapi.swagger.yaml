@@ -27567,6 +27567,56 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/prove:
+    get:
+      summary: merkle proof verification
+      operationId: Query_Prove
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryProveResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: tx_hash
+          in: query
+          required: false
+          type: string
+        - name: proof.keys
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.values
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: block_hash
+          in: query
+          required: false
+          type: string
+        - name: tx_index
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/supportedChains:
     get:
       operationId: Query_SupportedChains
@@ -51049,6 +51099,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryProveResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
   observerQueryShowObserverCountResponse:
     type: object
     properties:
