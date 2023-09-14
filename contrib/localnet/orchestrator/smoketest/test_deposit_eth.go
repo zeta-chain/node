@@ -9,15 +9,16 @@ import (
 	"math/big"
 	"time"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
+	ethereum2 "github.com/zeta-chain/zetacore/common/ethereum"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
@@ -52,6 +53,49 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	fmt.Printf("  to: %s\n", signedTx.To().String())
 	fmt.Printf("  value: %d\n", signedTx.Value())
 	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
+
+	{
+		LoudPrintf("Merkle Proof\n")
+		txHash := receipt.TxHash
+		blockHash := receipt.BlockHash
+		txIndex := int(receipt.TransactionIndex)
+		block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)
+		if err != nil {
+			panic(err)
+		}
+
+		trie := ethereum2.NewTrie(block.Transactions())
+		if trie.Hash() != block.Header().TxHash {
+			panic("tx root hash & block tx root mismatch") // FIXME: don't do this in production
+		}
+		txProof, err := trie.GenerateProof(txIndex)
+		if err != nil {
+			panic("error generating txProof") // FIXME: don't do this in production
+		}
+		val, err := txProof.Verify(block.TxHash(), txIndex)
+		if err != nil {
+			panic("error verifying txProof") // FIXME: don't do this in production
+		}
+		var txx ethtypes.Transaction
+		err = txx.UnmarshalBinary(val)
+		if err != nil {
+			panic("error unmarshalling txProof'd tx") // FIXME: don't do this in production
+		}
+		res, err := sm.observerClient.Prove(context.Background(), &observertypes.QueryProveRequest{
+			BlockHash: blockHash.Hex(),
+			TxIndex:   int64(txIndex),
+			TxHash:    txHash.Hex(),
+			Proof:     txProof,
+			ChainId:   0,
+		})
+		if err != nil {
+			panic(err)
+		}
+		if !res.Valid {
+			panic("txProof invalid") // FIXME: don't do this in production
+		}
+		fmt.Printf("OK: txProof verified\n")
+	}
 
 	{
 		tx, err := sm.SendEther(TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
