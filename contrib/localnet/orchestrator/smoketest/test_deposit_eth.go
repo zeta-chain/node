@@ -104,20 +104,20 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 
 		trie := ethereum2.NewTrie(block.Transactions())
 		if trie.Hash() != block.Header().TxHash {
-			panic("tx root hash & block tx root mismatch") // FIXME: don't do this in production
+			panic("tx root hash & block tx root mismatch")
 		}
 		txProof, err := trie.GenerateProof(txIndex)
 		if err != nil {
-			panic("error generating txProof") // FIXME: don't do this in production
+			panic("error generating txProof")
 		}
 		val, err := txProof.Verify(block.TxHash(), txIndex)
 		if err != nil {
-			panic("error verifying txProof") // FIXME: don't do this in production
+			panic("error verifying txProof")
 		}
 		var txx ethtypes.Transaction
 		err = txx.UnmarshalBinary(val)
 		if err != nil {
-			panic("error unmarshalling txProof'd tx") // FIXME: don't do this in production
+			panic("error unmarshalling txProof'd tx")
 		}
 		res, err := sm.observerClient.Prove(context.Background(), &observertypes.QueryProveRequest{
 			BlockHash: blockHash.Hex(),
