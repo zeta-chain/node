@@ -180,7 +180,7 @@ jobs:
       - name: Check for '#nosec' without a specific rule
         run: |
           DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
-          echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specificed rule found!" && exit 1 || exit 0
+          echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specified rule found!" && exit 1 || exit 0
 
 
           
