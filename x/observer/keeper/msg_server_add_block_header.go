@@ -46,7 +46,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to get parent hash: %s", err.Error()))
 	}
 
-	// TODO: add check for parent block header's existence here
+	// TODO: add check for parent block header's existence here https://github.com/zeta-chain/node/issues/1133
 
 	bh := types.BlockHeader{
 		Header:     msg.BlockHeader,
