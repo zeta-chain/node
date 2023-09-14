@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
@@ -32,6 +34,33 @@ var (
 	}
 	FungibleNoMocks = FungibleMockOptions{}
 )
+
+func initFungibleKeeper(
+	cdc codec.Codec,
+	db *tmdb.MemDB,
+	ss store.CommitMultiStore,
+	paramKeeper paramskeeper.Keeper,
+	authKeeper types.AccountKeeper,
+	bankKeepr types.BankKeeper,
+	evmKeeper types.EVMKeeper,
+	observerKeeper types.ObserverKeeper,
+) *keeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	ss.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)
+
+	return keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memKey,
+		paramKeeper.Subspace(types.ModuleName),
+		authKeeper,
+		evmKeeper,
+		bankKeepr,
+		observerKeeper,
+	)
+}
 
 // FungibleKeeperWithMocks initializes a fungible keeper for testing purposes with option to mock specific keepers
 func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {

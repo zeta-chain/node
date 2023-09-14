@@ -12,7 +12,6 @@ import (
 	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 )
 
 type CrosschainMockOptions struct {
@@ -35,7 +34,10 @@ var (
 )
 
 // CrosschainKeeper initializes a crosschain keeper for testing purposes with option to mock specific keepers
-func CrosschainKeeperWithMocks(t testing.TB, mockOptions CrosschainMockOptions) (*keeper.Keeper, sdk.Context) {
+func CrosschainKeeperWithMocks(
+	t testing.TB,
+	mockOptions CrosschainMockOptions,
+) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -47,14 +49,30 @@ func CrosschainKeeperWithMocks(t testing.TB, mockOptions CrosschainMockOptions) 
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
-	// Create observer keeper
-	var observerKeeper types.ZetaObserverKeeper = initObserverKeeper(
+	// Create zeta keepers
+	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
 		stateStore,
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.ParamsKeeper,
 	)
+	fungiblekeeperTmp := initFungibleKeeper(
+		cdc,
+		db,
+		stateStore,
+		sdkKeepers.ParamsKeeper,
+		sdkKeepers.AuthKeeper,
+		sdkKeepers.BankKeeper,
+		sdkKeepers.EvmKeeper,
+		observerKeeperTmp,
+	)
+	zetaKeepers := ZetaKeepers{
+		ObserverKeeper: observerKeeperTmp,
+		FungibleKeeper: fungiblekeeperTmp,
+	}
+	var observerKeeper types.ZetaObserverKeeper = observerKeeperTmp
+	var fungibleKeeper types.FungibleKeeper = fungiblekeeperTmp
 
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -65,6 +83,7 @@ func CrosschainKeeperWithMocks(t testing.TB, mockOptions CrosschainMockOptions) 
 
 	// Initialize modules genesis
 	sdkKeepers.InitGenesis(ctx)
+	zetaKeepers.InitGenesis(ctx)
 
 	// Add a proposer to the context
 	ctx = sdkKeepers.InitBlockProposer(t, ctx)
@@ -73,7 +92,6 @@ func CrosschainKeeperWithMocks(t testing.TB, mockOptions CrosschainMockOptions) 
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
 	var bankKeeper types.BankKeeper = sdkKeepers.BankKeeper
 	var stakingKeeper types.StakingKeeper = sdkKeepers.StakingKeeper
-	var fungibleKeeper types.FungibleKeeper = &fungiblekeeper.Keeper{}
 	if mockOptions.UseAccountMock {
 		authKeeper = crosschainmocks.NewCrosschainAccountKeeper(t)
 	}
@@ -102,16 +120,17 @@ func CrosschainKeeperWithMocks(t testing.TB, mockOptions CrosschainMockOptions) 
 		fungibleKeeper,
 	)
 
-	return k, ctx
+	return k, ctx, sdkKeepers, zetaKeepers
 }
 
 // CrosschainKeeperAllMocks initializes a crosschain keeper for testing purposes with all mocks
 func CrosschainKeeperAllMocks(t testing.TB) (*keeper.Keeper, sdk.Context) {
-	return CrosschainKeeperWithMocks(t, CrosschainMocksAll)
+	k, ctx, _, _ := CrosschainKeeperWithMocks(t, CrosschainMocksAll)
+	return k, ctx
 }
 
 // CrosschainKeeper initializes a crosschain keeper for testing purposes
-func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
+func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	return CrosschainKeeperWithMocks(t, CrosschainNoMocks)
 }
 
