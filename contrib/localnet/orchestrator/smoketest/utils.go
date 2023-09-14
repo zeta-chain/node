@@ -115,3 +115,7 @@ func ScriptPKToAddress(scriptPKHex string) string {
 	}
 	return ""
 }
+
+func WaitForBlockHeight(height uint64) {
+
+}

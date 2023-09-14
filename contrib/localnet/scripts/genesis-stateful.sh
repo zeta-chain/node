@@ -167,15 +167,15 @@ chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
 zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
 sleep 8
 echo
-
-if [ $HOSTNAME = "zetacore0" ]
-then
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 50 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
-fi
-
-sleep 8
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
-sleep 7
-/root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
+#
+#if [ $HOSTNAME = "zetacore0" ]
+#then
+#/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 50 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+#fi
+#
+#sleep 8
+#/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+#sleep 7
+#/root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
 
 tail -f zetanode.log

@@ -68,6 +68,7 @@ var LocalCmd = &cobra.Command{
 
 type localArgs struct {
 	contractsDeployed bool
+	waitForHeight     uint64
 }
 
 var localTestArgs = localArgs{}
@@ -75,6 +76,7 @@ var localTestArgs = localArgs{}
 func init() {
 	RootCmd.AddCommand(LocalCmd)
 	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
+	LocalCmd.Flags().Uint64Var(&localTestArgs.waitForHeight, "wait-for", 0, "block height for smoketest to begin, ex. --wait-for 100")
 }
 
 func main() {
@@ -94,6 +96,10 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	if localTestArgs.waitForHeight != 0 {
+
+	}
 
 	// set account prefix to zeta
 	cfg := sdk.GetConfig()
@@ -149,6 +155,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
+	time.Sleep(20 * time.Second)
+
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := NewZetaTxServer(
 		"http://zetacore0:26657",
@@ -160,7 +168,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	}
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
-	time.Sleep(20 * time.Second)
+
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
