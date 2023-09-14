@@ -25,18 +25,41 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.20'
 
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
 
       - name: Run Gosec Security Scanner
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+  gosec-cosmos:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
+
+      - name: Run Cosmos Gosec Security Scanner
+        uses: cosmos/gosec@master
+        with:
+          args: './... -include=G701,G703,G704' # Disabled G702 as it doesn't seem to be relevant 2023-09-14
+
 
   git-guardian:
     runs-on: ubuntu-latest
@@ -59,24 +82,105 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       GO111MODULE: on
     steps:
       - name: Checkout Source
         uses: actions/checkout@v2
-
+        with:
+          fetch-depth: 0
+          
       # - name: Install Pipeline Dependencies
       #   uses:  ./.github/actions/install-dependencies
 
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: '1.20'
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.50
+          version: v1.54
           skip-cache: true
-          args: --timeout=30m
+          args: --timeout=15m
+
+  nosec_alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Getting files updated in the PR
+        id: changed-files
+        uses: tj-actions/changed-files@v39
+        with:
+          base_sha: ${{ github.event.pull_request.base.sha }} 
+
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+
+      - name: Report nosec usage
+        run: |
+          nosec_list=()
+          nosec_detected=0
+          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
+                    
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if git diff ${{ github.event.pull_request.base.sha }} $file | grep -q nosec; then
+              echo "nosec detected in $file"
+              nosec_list+=("$file,")
+              nosec_detected=1
+            else
+              echo "nosec not detected in $file"
+            fi
+          done
+
+          nosec_list_string="${nosec_list[@]}"
+          nosec_list_string="${nosec_list_string%,}"
+          echo "nosec_files=$nosec_list_string" >> $GITHUB_ENV
+          echo "nosec_detected=$nosec_detected" >> $GITHUB_ENV
+
+      - name: Report nosec uses
+        uses: mshick/add-pr-comment@v2
+        if: env.nosec_detected == 1
+        with:
+          message: |
+            *!!!WARNING!!!*
+            `nosec` detected in the following files: ${{ env.nosec_files }}
+
+            Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
+
+            Only suppress a single rule (or a specific set of rules) within a section of code, while continuing to scan for other problems. To do this, you can list the rule(s) to be suppressed within the #nosec annotation, e.g: /* #nosec G401 */ or //#nosec G201 G202 G203
+            Broad `#nosec` annotations should be avoided, as they can hide other vulnerabilities. **The CI will block you from merging this PR until you remove `#nosec` annotations that do not target specific rules**.
+
+            Pay extra attention to the way `#nosec` is being used in the files listed above. 
+
+      - name: Add Label
+        uses: actions/github-script@v6
+        if: env.nosec_detected == 1
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["nosec"]
+            })
+
+      - name: Check for '#nosec' without a specific rule
+        run: |
+          DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
+          echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specified rule found!" && exit 1 || exit 0
+
+
+          
