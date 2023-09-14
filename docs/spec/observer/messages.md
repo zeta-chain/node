@@ -81,7 +81,7 @@ Only the admin policy account is authorized to broadcast this message.
 message MsgAddBlockHeader {
 	string creator = 1;
 	int64 chain_id = 2;
-	bytes tx_hash = 3;
+	bytes block_hash = 3;
 	bytes block_header = 4;
 	int64 height = 5;
 }
