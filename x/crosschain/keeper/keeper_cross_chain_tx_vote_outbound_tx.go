@@ -151,7 +151,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
-			if msg.CoinType == common.CoinType_Cmd {
+			if msg.CoinType == common.CoinType_Cmd || cctx.InboundTxParams.SenderChainId == common.ZetaChain().ChainId {
+				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
 			} else {
 				switch oldStatus {
