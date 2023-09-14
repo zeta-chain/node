@@ -189,41 +189,40 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if msg.Proof != nil {
 		blockHash := eth.HexToHash(msg.BlockHash)
 		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
+		if !found {
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
+		}
 		var header ethtypes.Header
 		err := rlp.DecodeBytes(res.Header, &header)
 		if err != nil {
 			return nil, err
 		}
-		if found {
-			val, err := msg.Proof.Verify(header.TxHash, int(msg.TxIndex))
-			if err == nil {
-				var txx ethtypes.Transaction
-				err = txx.UnmarshalBinary(val)
-				if err != nil {
-					return nil, err
-				}
-				signer := ethtypes.NewLondonSigner(txx.ChainId())
-				sender, err := ethtypes.Sender(signer, &txx)
-				res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
-				if err != nil {
-					return nil, err
-				}
-				tssAddr := eth.HexToAddress(res.Eth)
-				if tssAddr == (eth.Address{}) {
-					return nil, fmt.Errorf("tss address not found")
-				}
-				if sender != tssAddr {
-					return nil, fmt.Errorf("sender is not tss address")
-				}
-				if txx.Nonce() != msg.Nonce {
-					return nil, fmt.Errorf("nonce mismatch")
-				}
-				proven = true
+		val, err := msg.Proof.Verify(header.TxHash, int(msg.TxIndex))
+		if err == nil {
+			var txx ethtypes.Transaction
+			err = txx.UnmarshalBinary(val)
+			if err != nil {
+				return nil, err
 			}
-		} else {
-			k.Logger(ctx).Error("Block header not found", "hash", blockHash.Hex())
-			return nil, fmt.Errorf("block header not found")
+			signer := ethtypes.NewLondonSigner(txx.ChainId())
+			sender, err := ethtypes.Sender(signer, &txx)
+			res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+			if err != nil {
+				return nil, err
+			}
+			tssAddr := eth.HexToAddress(res.Eth)
+			if tssAddr == (eth.Address{}) {
+				return nil, fmt.Errorf("tss address not found")
+			}
+			if sender != tssAddr {
+				return nil, fmt.Errorf("sender is not tss address")
+			}
+			if txx.Nonce() != msg.Nonce {
+				return nil, fmt.Errorf("nonce mismatch")
+			}
+			proven = true
 		}
+
 		if !proven {
 			return nil, fmt.Errorf("proof failed")
 		}

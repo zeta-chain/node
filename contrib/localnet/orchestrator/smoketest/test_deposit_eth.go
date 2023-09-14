@@ -40,6 +40,26 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	}
 	fmt.Printf("GOERLI deployer balance: %s\n", bal.String())
 
+	systemContract := sm.SystemContract
+	if err != nil {
+		panic(err)
+	}
+	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliChain().ChainId))
+	if err != nil {
+		panic(err)
+	}
+	sm.ETHZRC20Addr = ethZRC20Addr
+	fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
+	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.ETHZRC20 = ethZRC20
+	initialBalance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
 	value := big.NewInt(1000000000000000000) // in wei (1 eth)
 	signedTx, err := sm.SendEther(TSSAddress, value, nil)
 	if err != nil {
@@ -59,9 +79,27 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		txHash := receipt.TxHash
 		blockHash := receipt.BlockHash
 		txIndex := int(receipt.TransactionIndex)
+
 		block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)
 		if err != nil {
 			panic(err)
+		}
+		i := 0
+		for {
+			if i > 20 {
+				panic("block header not found")
+			}
+			_, err := sm.observerClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
+				BlockHash: blockHash.Bytes(),
+			})
+			if err != nil {
+				fmt.Printf("WARN: block header not found; retrying...\n")
+				time.Sleep(2 * time.Second)
+			} else {
+				fmt.Printf("OK: block header found\n")
+				break
+			}
+			i++
 		}
 
 		trie := ethereum2.NewTrie(block.Transactions())
@@ -115,26 +153,6 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	}()
 	sm.wg.Add(1)
 	go func() {
-		systemContract := sm.SystemContract
-		if err != nil {
-			panic(err)
-		}
-		ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliChain().ChainId))
-		if err != nil {
-			panic(err)
-		}
-		sm.ETHZRC20Addr = ethZRC20Addr
-		fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
-		ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.zevmClient)
-		if err != nil {
-			panic(err)
-		}
-		sm.ETHZRC20 = ethZRC20
-		initialBalance, err := ethZRC20.BalanceOf(nil, DeployerAddress)
-		if err != nil {
-			panic(err)
-		}
-
 		defer sm.wg.Done()
 		<-c
 
