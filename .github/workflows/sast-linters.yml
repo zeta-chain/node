@@ -33,10 +33,33 @@ jobs:
       #   uses:  ./.github/actions/install-dependencies
 
       - name: Run Gosec Security Scanner
-        run: |
-          export PATH=$PATH:$(go env GOPATH)/bin
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          gosec ./...
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+  gosec-cosmos:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
+
+      - name: Run Cosmos Gosec Security Scanner
+        uses: cosmos/gosec@master
+        with:
+          args: './... -include=G701,G703,G704' # Disabled G702 as it doesn't seem to be relevant 2023-09-14
+
 
   git-guardian:
     runs-on: ubuntu-latest
@@ -68,18 +91,18 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Install Pipeline Dependencies
-        uses:  ./.github/actions/install-dependencies
+      # - name: Install Pipeline Dependencies
+      #   uses:  ./.github/actions/install-dependencies
 
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '1.19'
+          go-version: '1.20'
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.50
+          version: v1.54
           skip-cache: true
           args: --timeout=15m
 
@@ -137,8 +160,11 @@ jobs:
 
             Be very careful about using `#nosec` in code. It can be a quick way to suppress security warnings and move forward with development, it should be employed with caution. Suppressing warnings with #nosec can hide potentially serious vulnerabilities. Only use #nosec when you're absolutely certain that the security issue is either a false positive or has been mitigated in another way.
 
+            Only suppress a single rule (or a specific set of rules) within a section of code, while continuing to scan for other problems. To do this, you can list the rule(s) to be suppressed within the #nosec annotation, e.g: /* #nosec G401 */ or //#nosec G201 G202 G203
+            Broad `#nosec` annotations should be avoided, as they can hide other vulnerabilities. **The CI will block you from merging this PR until you remove `#nosec` annotations that do not target specific rules**.
+
             Pay extra attention to the way `#nosec` is being used in the files listed above. 
-      
+
       - name: Add Label
         uses: actions/github-script@v6
         if: env.nosec_detected == 1
@@ -150,3 +176,11 @@ jobs:
               repo: context.repo.repo,
               labels: ["nosec"]
             })
+
+      - name: Check for '#nosec' without a specific rule
+        run: |
+          DIFF=$(git diff ${{ github.event.pull_request.base.sha }})
+          echo "$DIFF" | grep -P '#nosec(?!(\sG\d{3}))(?![^\s\t])([\s\t]*|$)' && echo "nosec without specified rule found!" && exit 1 || exit 0
+
+
+          
