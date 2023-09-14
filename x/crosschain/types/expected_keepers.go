@@ -108,4 +108,6 @@ type FungibleKeeper interface {
 		erc20Contract string,
 		gasLimit *big.Int,
 	) (eth.Address, error)
+	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
+	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 }

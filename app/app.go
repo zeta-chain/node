@@ -431,7 +431,10 @@ func New(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.EvmKeeper = app.EvmKeeper.SetHooks(app.ZetaCoreKeeper.Hooks())
+	app.EvmKeeper = app.EvmKeeper.SetHooks(evmkeeper.NewMultiEvmHooks(
+		app.ZetaCoreKeeper.Hooks(),
+		app.FungibleKeeper.EVMHooks(),
+	))
 
 	/****  Module Options ****/
 

@@ -1,0 +1,153 @@
+name: "UPGRADE_PATH_TESTING"
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: 'Select an Runner Set'
+        type: choice
+        required: true
+        default: 'zeta-runners-athens3'
+        options: [ 'zeta-runners', 'zeta-runners-athens3']
+      version:
+        description: 'The new version to upgrade to from latest state.'
+        required: true
+        default: 'v10.0.0'
+
+
+
+jobs:
+  upgrade_path_test_state_export:
+    name: "UPGRADE_PATH_TEST_STATE_EXPORT"
+    runs-on: ["${{ github.event.inputs.runner }}"]
+    env:
+      latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
+      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
+      downloaded_binary_name: "zetacored-ubuntu-22-amd64"
+      aws_region: "us-east-1"
+    steps:
+      - uses: actions/checkout@v1
+
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2
+
+      - name: "DOWNLOAD_STATE_EXPORT_AND_BINARY"
+        shell: python
+        run: |
+          wget ${latest_state_export}
+          wget github_binary_version_link
+          current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
+          wget https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O ./zetacored
+          echo "PATH=$(pwd):$PATH" >> ${GITHUB_ENV}
+
+      - name: "START_TESTING_NETWORK"
+        shell: shell
+        run: |
+          export DAEMON_HOME=~/.zetacored
+          
+          export DAEMON_NAME=zetacored
+          
+          export CHAINID="localnet_101-1"
+          
+          export KEYRING="test"
+          
+          rm -rf ~/.zetacored
+          
+          kill -9 $(lsof -ti:26657)
+          
+          zetacored config keyring-backend $KEYRING --home ~/.zetacored
+          
+          zetacored config chain-id $CHAINID --home ~/.zetacored
+          
+          zetacored keys delete zetaa --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          zetacored keys delete executer_zeta --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          zetacored keys delete mario --keyring-backend $KEYRING -y > /dev/null 2>&1  || echo "doesn't exist"
+          zetacored keys delete executer_mario --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          
+          echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=$KEYRING
+          echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=$KEYRING
+          echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer_zeta --recover --keyring-backend=$KEYRING --algo secp256k1
+          echo "debris dumb among crew celery derive judge spoon road oyster dad panic adult song attack net pole merge mystery pig actual penalty neither peasant"| zetacored keys add executer_mario --algo=secp256k1 --recover --keyring-backend=$KEYRING
+          
+          echo '
+          [
+            {
+              "IsObserver": "y",
+              "ObserverAddress": "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+              "ZetaClientGranteeAddress": "zeta10up34mvwjhjd9xkq56fwsf0k75vtg287uav69n",
+              "ZetaClientGranteePubKey": "zetapub1addwnpepqtlu7fykuh875xjckz4mn4x0mzc25rrqk5qne7mrwxqmatgllv3nx6lrkdp"
+            },
+            {
+              "IsObserver": "y",
+              "ObserverAddress": "zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
+              "ZetaClientGranteeAddress": "zeta1unzpyll3tmutf0r8sqpxpnj46vtdr59mw8qepx",
+              "ZetaClientGranteePubKey": "zetapub1addwnpepqwy5pmg39regpq0gkggxehmfm8hwmxxw94sch7qzh4smava0szs07kk5045"
+            }
+          ]
+          ' > observers.json
+          
+          zetacored init Zetanode-Localnet --chain-id=$CHAINID
+          
+          #Set config to use azeta
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > ~/.zetacored/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          
+          contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
+          echo "${contents}" > $DAEMON_HOME/config/genesis.json
+          
+          sed -i '/\[api\]/,+3 s/enable = false/enable = true/' $DAEMON_HOME/config/app.toml
+          
+          zetacored add-observer-list observers.json --keygen-block=5
+          
+          zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+          
+          echo "Collecting genesis txs..."
+          zetacored collect-gentxs
+          
+          echo "Validating genesis file..."
+          zetacored validate-genesis
+          
+          rm -rf ./genesis.json
+          rm -rf ./genesis-edited.json
+          
+          cp $DAEMON_HOME/config/genesis.json ./genesis.json
+        
+          echo "Do Genesis Manipulation"
+          export OLD_GENESIS=./latest.json
+          export NEW_GENESIS=./genesis.json
+          
+          python .github/actions/upgrade-testing/create_genesis.py
+          
+          echo "Move Manipulated Genesis"
+          cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
+          
+          echo "Start Network"
+          zetacored start
+
+      - name: "DETERMINE_UPGRADE_TYPE"
+        shell: python
+        run: |
+          import os
+          version="${{ github.event.inputs.version }}"
+          major_version = version.split(".")[0]
+          minor_version = version.split(".")[1]
+          sub_version = version.split(".")[2]
+          git_env_file = open(os.environ["GITHUB_ENV"], "a+")
+          if major_version == first_major_version and minor_version != first_minor_version:
+              git_env_file.write("UPGRADE_TYPE=NONCON")
+          elif major_version == first_major_version and minor_version == first_minor_version and sub_version != first_sub_version:
+              git_env_file.write("UPGRADE_TYPE=NONCON")
+          else:
+              git_env_file.write("UPGRADE_TYPE=GOV")
+          git_env_file.close()
+ 
+      - name: "CHECK_UPGRADE_TYPE"
+        shell: shell
+        run: |
+          echo ${UPGRADE_TYPE}

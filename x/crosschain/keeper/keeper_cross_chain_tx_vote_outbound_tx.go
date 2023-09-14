@@ -3,6 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -111,19 +114,29 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ZetaMinted.Equal(cctx.GetCurrentOutTxParam().Amount) {
-			log.Error().Msgf("ReceiveConfirmation: Mint mismatch: %s zeta minted vs %s cctx amount",
+			log.Error().Msgf("VoteOnObservedOutboundTx: Mint mismatch: %s zeta minted vs %s cctx amount",
 				msg.ZetaMinted,
 				cctx.GetCurrentOutTxParam().Amount)
 			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount))
 		}
 	}
 
+	// Update CCTX values
 	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
 	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = msg.ObservedOutTxGasUsed
 	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice = msg.ObservedOutTxEffectiveGasPrice
+	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = msg.ObservedOutTxEffectiveGasLimit
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
+	// Fund the gas stability pool with the remaining funds
+	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutTxParam(), msg.OutTxChain); err != nil {
+		log.Error().Msgf(
+			"VoteOnObservedOutboundTx: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error(),
+		)
+	}
+
 	tss, _ := k.GetTSS(ctx)
+
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
 
@@ -142,7 +155,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
-			if msg.CoinType == common.CoinType_Cmd {
+			if msg.CoinType == common.CoinType_Cmd || cctx.InboundTxParams.SenderChainId == common.ZetaChain().ChainId {
+				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
 			} else {
 				switch oldStatus {
@@ -189,4 +203,36 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
+}
+
+func percentOf(n *big.Int, percent int64) *big.Int {
+	n = n.Mul(n, big.NewInt(percent))
+	n = n.Div(n, big.NewInt(100))
+	return n
+}
+
+// FundGasStabilityPoolFromRemainingFees funds the gas stability pool with the remaining fees of an outbound tx
+func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundTxParams types.OutboundTxParams, chainID int64) error {
+	gasUsed := outboundTxParams.OutboundTxGasUsed
+	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
+	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
+
+	// We skip gas stability pool funding if one of the params is zero
+	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
+		if gasLimit >= gasUsed {
+			remainingGas := gasLimit - gasUsed
+			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
+
+			// We fund the stability pool with a portion of the remaining fees
+			remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
+
+			// Fund the gas stability pool
+			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("VoteOnObservedOutboundTx: The gas limit %d is less than the gas used %d", gasLimit, gasUsed)
+		}
+	}
+	return nil
 }

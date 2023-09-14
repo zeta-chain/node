@@ -40,11 +40,7 @@ func (gs GenesisState) Validate() error {
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
-	if err := VerifyObserverMapper(gs.Observers); err != nil {
-		return err
-	}
-
-	return nil
+	return VerifyObserverMapper(gs.Observers)
 }
 
 func GetGenesisStateFromAppState(marshaler codec.JSONCodec, appState map[string]json.RawMessage) GenesisState {
