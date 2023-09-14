@@ -240,14 +240,24 @@ jobs:
       - name: "CONCENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'NONCON' #GOV
         run: |
+          echo "*****UPGRADE TYPE*****"
           echo ${UPGRADE_TYPE}
           
+          echo "*****BUILD GOV PROPOSAL*****"
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"
+          
           GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
           
-          TX_HASH=$(echo ${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}')
+          echo "*****GOV PROPOSAL OUTPUT*****"
+          echo ${GOV_PROPOSAL_OUTPUT}
+          
+          echo "*****GET TX HASH*****"
+          TX_HASH=$(echo ${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}' | tr -d '\n' | tr -d ' ')
           echo "****TXHASH: ${TX_HASH}****"
+          
+          echo "*****SLEEP FOR 1 MIN TO ALLOW TX TO MAKE IT ON NETWORK*****"
+          sleep 60
           zetacored query tx --type=hash ${TX_HASH}
           
           proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
