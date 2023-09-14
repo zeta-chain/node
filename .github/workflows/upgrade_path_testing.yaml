@@ -262,5 +262,103 @@ jobs:
           
           proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
           echo "****PROPOSAL_ID: ${proposal_id}****"
+          
+          source ${GITHUB_ENV}
+          
+          TARGET_HEIGHT=${UPGRADE_HEIGHT}
+          ENDPOINT="http://127.0.0.1:26657"
+          MAX_TRIES=100
+          count=0
+          
+          while [[ $count -lt $MAX_TRIES ]]
+          do
+              response=$(curl -s "$ENDPOINT/status")
+              current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
+              if [[ $current_height -ge $TARGET_HEIGHT ]]; then
+                  echo "Reached target height: $current_height. Sleep and wait for upgrade to take place."
+                  sleep 120
+                  break
+              fi
+              ((count++))
+              sleep 10
+          done
+          
+          if [[ $count -eq $MAX_TRIES ]]; then
+              echo "Max tries reached without achieving target height."
+          fi
+
+          STATUS_ENDPOINT="$ENDPOINT/status"  
+          ABCI_ENDPOINT="$ENDPOINT/status" 
+          VERSION="${VERSION}" 
+          MAX_TRIES=50
+          SLEEP_DURATION=5
+          previous_height=-1
+          stalled_count=0
+          
+          for (( i=1; i<=MAX_TRIES; i++ ))
+          do
+              pgrep zetavisor > /dev/null
+              if [[ $? -ne 0 ]]; then
+                  echo "zetavisor process not found."
+                  exit 2
+              fi
+          
+              response=$(curl -s "$STATUS_ENDPOINT")
+              
+              # If curl fails
+              if [[ $? -ne 0 ]]; then
+                  echo "Failed to get a response from the status endpoint on try $i."
+                  exit 2
+              fi
+          
+              # Extracting the current height from the response
+              current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
+              
+              # If jq fails or height is empty
+              if [[ $? -ne 0 || -z "$current_height" ]]; then
+                  echo "Failed to extract block height from the response on try $i."
+                  exit 2
+              fi
+          
+              # If the block height has changed since last check
+              if [[ $current_height -ne $previous_height ]]; then
+                  stalled_count=0
+          
+                  # Query the ABCI endpoint for version info
+                  abci_response=$(curl -s "$ABCI_ENDPOINT")
+          
+                  # Extracting the version from the response
+                  app_version=$(echo $abci_response | jq '.result.response.version' | tr -d '"')
+                  
+                  # If jq fails or version is empty
+                  if [[ $? -ne 0 || -z "$app_version" ]]; then
+                      echo "Failed to extract version from the ABCI response on try $i."
+                      exit 2
+                  fi
+          
+                  # Compare the extracted version with the expected version
+                  if [[ "$app_version" == "$VERSION" ]]; then
+                      echo "Version matches the expected version. Exiting..."
+                      exit 0
+                  else
+                      echo "Version mismatch. Expected: $VERSION, Found: $app_version"
+                      exit 2
+                  fi
+              else
+                  ((stalled_count++))
+              fi
+              
+              # Update the previous height
+              previous_height=$current_height
+          
+              # If we're on the last iteration and the block height hasn't changed for all tries
+              if [[ $i -eq $MAX_TRIES && $stalled_count -eq $MAX_TRIES ]]; then
+                  echo "Block height hasn't changed for $MAX_TRIES consecutive checks. Network might be stalled."
+                  exit 2
+              fi
+          
+              # Sleep for the specified duration
+              sleep $SLEEP_DURATION
+          done
 
           
