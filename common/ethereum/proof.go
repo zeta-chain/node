@@ -58,7 +58,7 @@ func (m *Proof) Delete(key []byte) error {
 		if bytes.Equal(m.Keys[i], key) {
 			found = true
 			index = i
-			continue
+			break
 		}
 	}
 	if !found {
@@ -73,15 +73,13 @@ func (m *Proof) Delete(key []byte) error {
 }
 
 func (m *Proof) Has(key []byte) (bool, error) {
-	found := false
 	for i := 0; i < len(m.Keys); i++ {
 		if bytes.Equal(m.Keys[i], key) {
-			found = true
-			continue
+
+			return true, nil
 		}
 	}
-
-	return found, nil
+	return false, nil
 }
 
 func (m *Proof) Get(key []byte) ([]byte, error) {
