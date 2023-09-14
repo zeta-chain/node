@@ -99,6 +99,9 @@ func (m *Proof) Get(key []byte) ([]byte, error) {
 	return m.Values[index], nil
 }
 
+// Verify verifies the proof against the given root hash and key.
+// Typically, the rootHash is from a trusted source (e.g. a trusted block header),
+// and the key is the index of the transaction in the block.
 func (m *Proof) Verify(rootHash common.Hash, key int) ([]byte, error) {
 	var indexBuf []byte
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(key))
