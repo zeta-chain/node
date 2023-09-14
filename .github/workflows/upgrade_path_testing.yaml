@@ -248,7 +248,7 @@ jobs:
           
           TX_HASH=$(echo ${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}')
           echo "****TXHASH: ${TX_HASH}****"
-          zetacored query tx ${TX_HASH}
+          zetacored query tx --type=hash ${TX_HASH}
           
           proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
           echo "****PROPOSAL_ID: ${proposal_id}****"
