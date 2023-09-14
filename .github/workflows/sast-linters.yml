@@ -58,7 +58,7 @@ jobs:
       - name: Run Cosmos Gosec Security Scanner
         uses: cosmos/gosec@master
         with:
-          args: './... -include=G701,G702,G703,G704'
+          args: './... -include=G701,G703,G704' # Disabled G702 as it doesn't seem to be relevant 2023-09-14
 
 
   git-guardian:
