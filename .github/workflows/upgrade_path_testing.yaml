@@ -241,10 +241,16 @@ jobs:
         if: env.UPGRADE_TYPE == 'NONCON' #GOV
         run: |
           echo ${UPGRADE_TYPE}
+          
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"
           GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
+          
           TX_HASH=$(echo ${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}')
           echo "****TXHASH: ${TX_HASH}****"
+          zetacored query tx ${TX_HASH}
+          
+          proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
+          echo "****PROPOSAL_ID: ${proposal_id}****"
 
           
