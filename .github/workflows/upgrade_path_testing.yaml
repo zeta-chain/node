@@ -241,7 +241,7 @@ jobs:
         if: env.UPGRADE_TYPE == 'NONCON' #GOV
         run: |
           echo ${UPGRADE_TYPE}
-          GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/create_genesis.py)
+          GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"
           GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
           echo ${GOV_PROPOSAL_OUTPUT}
