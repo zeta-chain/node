@@ -18,7 +18,10 @@ jobs:
       latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
       downloaded_binary_name: "zetacored-ubuntu-22-amd64"
+      VERSION: "${{ github.event.inputs.version }}"
       aws_region: "us-east-1"
+      FEES: "20000azeta"
+      DEPOSIT: "10000000000000000000azeta"
       LOG_LEVEL: "INFO"
       CHAINID: "localnet_101-1"
       GAS_PRICES: "0.1azeta"
@@ -36,8 +39,9 @@ jobs:
       CLIENT_SKIP_UPGRADE: "true"
       CLIENT_START_PROCESS: "false"
       BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
-      UPGRADES_SLEEP_TIME: 300
+      UPGRADES_SLEEP_TIME: "300"
       KEYRING: "test"
+      UPGRADE_INFO: '{"binaries": {"zetacored-linux/amd64": "${{ env.github_binary_version_link }}"}}'
     steps:
       - uses: actions/checkout@v1
 
@@ -152,13 +156,12 @@ jobs:
           zetacored validate-genesis
                 
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
-          ls -lah
           
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
                     
-          python .github/actions/upgrade-testing/create_genesis.py
+          python .github/actions/upgrade-testing/scripts/create_genesis.py
           
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
@@ -166,7 +169,7 @@ jobs:
           echo "Start Network"
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           
-          sleep 240
+          sleep ${UPGRADES_SLEEP_TIME}
           cat cosmovisor.log
 
       - name: "DETERMINE_UPGRADE_TYPE"
@@ -211,7 +214,7 @@ jobs:
           cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/current/bin/zetacored
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
 
-          sleep 240
+          sleep ${UPGRADES_SLEEP_TIME}
           cat cosmovisor.log
           echo "*********CHECK VERSION AFTER BINARY SWITCH*********"
           check_version=$(zetavisor version | tr -d '\n')
@@ -233,8 +236,14 @@ jobs:
             echo "*********VERSION DOESN'T MATCH UPGRADE FAILED*********"
             exit 2
           fi
-          
+
       - name: "CONCENSUS_BREAKING_UPGRADE"
-        if: env.UPGRADE_TYPE == 'NONCON'
+        if: env.UPGRADE_TYPE == 'NONCON' #GOV
         run: |
           echo ${UPGRADE_TYPE}
+          GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/create_genesis.py)
+          echo "${GOV_PROPOSAL}"
+          GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
+          echo ${GOV_PROPOSAL_OUTPUT}
+
+          
