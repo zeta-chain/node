@@ -91,7 +91,7 @@ func (m *Proof) Get(key []byte) ([]byte, error) {
 		if bytes.Equal(m.Keys[i], key) {
 			found = true
 			index = i
-			continue
+			break
 		}
 	}
 	if !found {
