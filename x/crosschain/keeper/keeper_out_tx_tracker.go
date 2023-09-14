@@ -206,6 +206,9 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			}
 			signer := ethtypes.NewLondonSigner(txx.ChainId())
 			sender, err := ethtypes.Sender(signer, &txx)
+			if err != nil {
+				return nil, err
+			}
 			res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
 			if err != nil {
 				return nil, err
