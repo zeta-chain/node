@@ -197,7 +197,7 @@ jobs:
           git_env_file.close()
  
       - name: "NON_CONCENSUS_BREAKING_UPGRADE"
-        if: env.UPGRADE_TYPE == 'NONCON'
+        if: env.UPGRADE_TYPE == 'NONCONN'
         run: |
           echo ${UPGRADE_TYPE}
           echo "*********CHECK VERSION BEFORE BINARY SWITCH*********"
@@ -244,6 +244,7 @@ jobs:
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"
           GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
-          echo ${GOV_PROPOSAL_OUTPUT}
+          TX_HASH=$(${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}')
+          echo "****TXHASH: ${TX_HASH}****"
 
           
