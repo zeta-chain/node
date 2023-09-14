@@ -68,7 +68,7 @@ var LocalCmd = &cobra.Command{
 
 type localArgs struct {
 	contractsDeployed bool
-	waitForHeight     uint64
+	waitForHeight     int64
 }
 
 var localTestArgs = localArgs{}
@@ -76,7 +76,7 @@ var localTestArgs = localArgs{}
 func init() {
 	RootCmd.AddCommand(LocalCmd)
 	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
-	LocalCmd.Flags().Uint64Var(&localTestArgs.waitForHeight, "wait-for", 0, "block height for smoketest to begin, ex. --wait-for 100")
+	LocalCmd.Flags().Int64Var(&localTestArgs.waitForHeight, "wait-for", 0, "block height for smoketest to begin, ex. --wait-for 100")
 }
 
 func main() {
@@ -98,7 +98,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	}()
 
 	if localTestArgs.waitForHeight != 0 {
-
+		WaitForBlockHeight(localTestArgs.waitForHeight)
 	}
 
 	// set account prefix to zeta
