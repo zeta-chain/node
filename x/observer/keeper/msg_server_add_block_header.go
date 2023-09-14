@@ -52,7 +52,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		Header:     msg.BlockHeader,
 		Height:     msg.Height,
 		Hash:       msg.TxHash,
-		ParentHash: phash,
+		ParentHash: pHash,
 		ChainId:    msg.ChainId,
 	}
 

@@ -83,22 +83,6 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) PostProveOutboundTx(txProof, receiptProof ethereum.Proof, blockHash string, txIndex int64) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgProveOutboundTx(signerAddress, txProof, receiptProof, blockHash, txIndex)
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	gasLimit := PostProveOutboundTxGasLimit
-	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(uint64(gasLimit), authzMsg, authzSigner)
-		if err == nil {
-			return zetaTxHash, nil
-		}
-		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-	return "", fmt.Errorf("PostProveOutboundTx failed after %d retries", DefaultRetryCount)
-}
-
 func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	sendHash string,
 	outTxHash string,

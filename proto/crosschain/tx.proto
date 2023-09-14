@@ -18,7 +18,7 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
-  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
+  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
 
 message MsgUpdateTssAddress {
@@ -85,16 +85,6 @@ message MsgNonceVoter {
 }
 
 message MsgNonceVoterResponse {}
-
-message MsgProveOutboundTx {
-  string creator = 1;
-  ethereum.Proof txProof = 2;
-  ethereum.Proof receiptProof = 3;
-  string block_hash = 4;
-  int64 tx_index = 5;
-}
-
-message MsgProveOutboundTxResponse {}
 
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;

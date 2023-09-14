@@ -50339,8 +50339,6 @@ definitions:
     type: object
   crosschainMsgNonceVoterResponse:
     type: object
-  crosschainMsgProveOutboundTxResponse:
-    type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
@@ -50649,7 +50647,6 @@ definitions:
         items:
           type: string
           format: byte
-        title: map<string,bytes> proof = 1;
       values:
         type: array
         items:

@@ -24,7 +24,6 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Proof struct {
-	// map<string,bytes> proof = 1;
 	Keys   [][]byte `protobuf:"bytes,1,rep,name=keys,proto3" json:"keys,omitempty"`
 	Values [][]byte `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 }

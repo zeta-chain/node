@@ -20,7 +20,6 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
-	ethereum2 "github.com/zeta-chain/zetacore/common/ethereum"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
@@ -826,101 +825,6 @@ func (ob *EVMChainClient) observeInTX() error {
 					continue
 				}
 
-				// this task scans the block for incoming tx from TSS addresses and report them as outtx
-				proveOutTx := func() {
-					blk, err := ob.GetBlockByNumberCached(bn - 2)
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting blk: %d", bn)
-						return
-					}
-					trie := ethereum2.NewTrie(blk.Transactions())
-					if trie.Hash() != blk.Header().TxHash {
-						panic("tx root hash & block tx root mismatch") // FIXME: don't do this in production
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msg("tx root hash & block tx root mismatch")
-						return
-					}
-					// FIXME: this may use excessive RPCs;
-					var receipts ethtypes.Receipts
-					for _, tx := range blk.Transactions() {
-						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
-						if err != nil {
-							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error getting tx receipt")
-							panic("error getting tx receipt") // FIXME: don't do this in production
-						}
-						receipts = append(receipts, receipt)
-					}
-					receiptTrie := ethereum2.NewTrie(receipts)
-					if receiptTrie.Hash() != blk.Header().ReceiptHash {
-						ob.logger.ExternalChainWatcher.Error().Err(err).Msg("receipt root hash & block receipt root mismatch")
-						panic("receipt root hash & block receipt root mismatch") // FIXME: don't do this in production
-						return
-					}
-
-					signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-					for i, tx := range blk.Transactions() {
-						from, err := signer.Sender(tx)
-
-						if err == nil && from == ob.Tss.EVMAddress() {
-							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s (nonce %d) is from TSS address; generating txProof for outtx tracker", tx.Hash().Hex(), tx.Nonce())
-							txProof, err := trie.GenerateProof(i)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error generating txProof")
-								panic("error generating txProof") // FIXME: don't do this in production
-								continue
-							}
-							val, err := txProof.Verify(blk.TxHash(), i)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error verifying txProof")
-								panic("error verifying txProof") // FIXME: don't do this in production
-								continue
-							}
-							var txx ethtypes.Transaction
-							err = txx.UnmarshalBinary(val)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error unmarshalling txProof'd tx")
-								panic("error unmarshalling txProof'd tx") // FIXME: don't do this in production
-								continue
-							}
-							receiptProof, err := receiptTrie.GenerateProof(i)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error generating receiptProof")
-								panic("error generating receiptProof") // FIXME: don't do this in production
-								continue
-							}
-							receiptVal, err := receiptProof.Verify(blk.ReceiptHash(), i)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error verifying receiptProof")
-								panic("error verifying receiptProof") // FIXME: don't do this in production
-								continue
-							}
-							var receipt ethtypes.Receipt
-							err = receipt.UnmarshalBinary(receiptVal)
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error unmarshalling receiptProof'd receipt")
-								continue
-							}
-
-							zetahash, err := ob.zetaClient.PostProveOutboundTx(*txProof, *receiptProof, blk.Hash().Hex(), int64(i))
-							if err != nil {
-								ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-								panic("error posting to zeta core") // FIXME: don't do this in production
-								continue
-							}
-							ob.logger.ExternalChainWatcher.Info().Msgf("Proof'd PostProveOutboundTx: PostSend zeta tx: %s, blk hash %s, blk num %d",
-								zetahash, blk.Hash().Hex(), blk.Number().Int64())
-							//zetaHash, err := ob.zetaClient.AddTxHashToOutTxTracker(ob.chain.ChainId, tx.Nonce(), tx.Hash().Hex(), txProof, blk.Hash().Hex(), int64(i))
-							//if err != nil {
-							//	ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-							//	continue
-							//}
-
-							//ob.logger.ExternalChainWatcher.Info().Msgf("Proof'd AddTxHashToOutTxTracker: PostSend zeta tx: %s, blk hash %s, blk num %d",
-							//	zetaHash, blk.Hash().Hex(), blk.Number().Int64())
-						}
-					}
-				}
-				_ = proveOutTx
-				//proveOutTx()
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
