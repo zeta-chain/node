@@ -4,7 +4,6 @@ package mocks
 
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"

@@ -3,8 +3,9 @@
 package mocks
 
 import (
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	mock "github.com/stretchr/testify/mock"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )

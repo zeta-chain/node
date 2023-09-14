@@ -4,7 +4,6 @@ package mocks
 
 import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"

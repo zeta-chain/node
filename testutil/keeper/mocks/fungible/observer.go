@@ -3,9 +3,8 @@
 package mocks
 
 import (
-	common "github.com/zeta-chain/zetacore/common"
-
 	mock "github.com/stretchr/testify/mock"
+	common "github.com/zeta-chain/zetacore/common"
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
