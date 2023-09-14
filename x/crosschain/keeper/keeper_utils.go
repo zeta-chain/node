@@ -36,9 +36,10 @@ func (k Keeper) PayGasAndUpdateCctx(
 	case common.CoinType_Zeta:
 		return k.PayGasInZetaAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
 	case common.CoinType_Gas:
-		return k.PayGasNativeAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
+		return k.PayGasNativeAndUpdateCctx(ctx, chainID, cctx, inputAmount)
 	default:
-		return fmt.Errorf("can't pay gas with coin type %s", cctx.InboundTxParams.CoinType.String())
+		// can't pay gas with coin type
+		return nil
 	}
 }
 
@@ -49,12 +50,12 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	chainID int64,
 	cctx *types.CrossChainTx,
 	inputAmount math.Uint,
-	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
 		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
+
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -108,21 +109,9 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", inputAmount.String(), "fee", outTxGasFee.String())
 	newAmount := inputAmount.Sub(outTxGasFee)
 
-	// if the current outbound tx sent back after a revert on ZetaChain, it means that the ZRC20 have never been minted on ZetaChain
-	// we therefore skip the burn of the gas fee
-	revertFromZetaChain := cctx.IsCurrentOutTxRevert() && cctx.OriginalDestinationChainID() == common.ZetaChain().ChainId
-	if !revertFromZetaChain {
-		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, outTxGasFee.BigInt(), noEthereumTxEvent)
-		if err != nil {
-			return sdkerrors.Wrapf(
-				err,
-				"PayGasNativeAndUpdateCctx: unable to CallZRC20Burn for gas fee %s, chain ID %d, from %s",
-				outTxGasFee.String(),
-				chain.ChainId,
-				types.ModuleAddressEVM.String(),
-			)
-		}
-	}
+	// erc20/gas outbound txs can only be reverted from ZetaChain
+	//it means that the ZRC20 have never been minted on ZetaChain
+	// there is therefore no gas fee to burn on ZetaChain
 
 	// update cctx
 	cctx.GetCurrentOutTxParam().Amount = newAmount
