@@ -210,7 +210,11 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	// Update the cctx
 	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = gasPrice.String()
 	cctx.GetCurrentOutTxParam().Amount = newAmount
-	cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
+	if cctx.ZetaFees.IsNil() {
+		cctx.ZetaFees = feeInZeta
+	} else {
+		cctx.ZetaFees = cctx.ZetaFees.Add(feeInZeta)
+	}
 
 	return nil
 }

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -251,5 +252,164 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		// 42999 < 43000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(42999))
 		require.ErrorIs(t, err, types.ErrNotEnoughGas)
+	})
+}
+
+func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
+	t.Run("can pay gas in zeta", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		// deploy gas coin and set fee params
+		chainID := getValidEthChainID(t)
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+		k.SetGasPrice(ctx, types.GasPrice{
+			ChainId:     chainID,
+			MedianIndex: 0,
+			Prices:      []uint64{gasPrice},
+		})
+
+		// create a cctx reverted from zeta
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Zeta,
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{
+					ReceiverChainId:    chainID,
+					OutboundTxGasLimit: 1000,
+				},
+			},
+			ZetaFees: math.NewUint(100),
+		}
+		// gasLimit * gasPrice * 2 = 1000 * 2 * 2 = 4000
+		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		require.NoError(t, err)
+
+		// the output amount must be input amount - (out tx fee in zeta + protocol flat fee)
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		inputAmount := expectedFeeInZeta.Add(math.NewUint(100000))
+		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
+		require.NoError(t, err)
+		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta.Add(math.NewUint(100))), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
+
+		// can call with undefined zeta fees
+		cctx = types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Zeta,
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{
+					ReceiverChainId:    chainID,
+					OutboundTxGasLimit: 1000,
+				},
+			},
+		}
+		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		require.NoError(t, err)
+		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+		inputAmount = expectedFeeInZeta.Add(math.NewUint(100000))
+		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
+		require.NoError(t, err)
+		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
+	})
+
+	t.Run("can pay gas in zeta with coin type other than zeta", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
+		chainID := getValidEthChainID(t)
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Gas,
+			},
+		}
+		err := k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(100000), false)
+		require.ErrorIs(t, err, observertypes.ErrInvalidCoinType)
+	})
+
+	t.Run("should fail if chain is not supported", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Zeta,
+			},
+		}
+		err := k.PayGasInZetaAndUpdateCctx(ctx, 999999, &cctx, math.NewUint(100000), false)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
+	})
+
+	t.Run("should fail if can't query the gas price", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		// deploy gas coin and set fee params
+		chainID := getValidEthChainID(t)
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		// gas price not set
+
+		// create a cctx reverted from zeta
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Zeta,
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{
+					ReceiverChainId:    chainID,
+					OutboundTxGasLimit: 1000,
+				},
+			},
+		}
+
+		err := k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(100000), false)
+		require.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
+	})
+
+	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		// deploy gas coin and set fee params
+		chainID := getValidEthChainID(t)
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+		k.SetGasPrice(ctx, types.GasPrice{
+			ChainId:     chainID,
+			MedianIndex: 0,
+			Prices:      []uint64{gasPrice},
+		})
+
+		// create a cctx reverted from zeta
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_Zeta,
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{
+					ReceiverChainId:    chainID,
+					OutboundTxGasLimit: 1000,
+				},
+			},
+			ZetaFees: math.NewUint(100),
+		}
+		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		require.NoError(t, err)
+		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
+
+		// set input amount lower than total zeta fee
+		inputAmount := expectedFeeInZeta.Sub(math.NewUint(1))
+		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
+		require.ErrorIs(t, err, types.ErrNotEnoughZetaBurnt)
 	})
 }
