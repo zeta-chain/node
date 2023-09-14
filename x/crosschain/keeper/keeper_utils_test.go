@@ -321,7 +321,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
 	})
 
-	t.Run("can pay gas in zeta with coin type other than zeta", func(t *testing.T) {
+	t.Run("should fail if pay gas in zeta with coin type other than zeta", func(t *testing.T) {
 		k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 		chainID := getValidEthChainID(t)
 		cctx := types.CrossChainTx{
