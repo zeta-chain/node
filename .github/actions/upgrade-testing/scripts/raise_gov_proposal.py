@@ -6,7 +6,7 @@ UPGRADE_HEIGHT = int(CURRENT_HEIGHT) + (int(os.environ['PROPOSAL_TIME_SECONDS'])
 GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os.environ['VERSION']}" \
     --from "{os.environ['MONIKER']}" \
     --deposit {os.environ["DEPOSIT"]} \
-    --upgrade-height "{UPGRADE_HEIGHT}" \
+    --upgrade-height "{str(UPGRADE_HEIGHT).split('.')[0]}" \
     --upgrade-info "{os.environ['UPGRADE_INFO']}" \
     --title "{os.environ['VERSION']}" \
     --description "Zeta Release {os.environ['VERSION']}" \
