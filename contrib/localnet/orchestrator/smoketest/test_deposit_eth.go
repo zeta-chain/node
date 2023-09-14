@@ -15,7 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	ethereum2 "github.com/zeta-chain/zetacore/common/ethereum"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
@@ -102,7 +102,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			i++
 		}
 
-		trie := ethereum2.NewTrie(block.Transactions())
+		trie := ethereum.NewTrie(block.Transactions())
 		if trie.Hash() != block.Header().TxHash {
 			panic("tx root hash & block tx root mismatch")
 		}
