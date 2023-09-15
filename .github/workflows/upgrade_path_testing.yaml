@@ -290,7 +290,7 @@ jobs:
           fi
 
           STATUS_ENDPOINT="$ENDPOINT/status"  
-          ABCI_ENDPOINT="$ENDPOINT/status" 
+          ABCI_ENDPOINT="$ENDPOINT/abci_info" 
           VERSION="${VERSION}" 
           MAX_TRIES=50
           SLEEP_DURATION=5
