@@ -148,6 +148,30 @@ func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context
 	return r0
 }
 
+// GetForeignCoinFromAsset provides a mock function with given fields: ctx, asset, chainID
+func (_m *CrosschainFungibleKeeper) GetForeignCoinFromAsset(ctx types.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool) {
+	ret := _m.Called(ctx, asset, chainID)
+
+	var r0 fungibletypes.ForeignCoins
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) (fungibletypes.ForeignCoins, bool)); ok {
+		return rf(ctx, asset, chainID)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) fungibletypes.ForeignCoins); ok {
+		r0 = rf(ctx, asset, chainID)
+	} else {
+		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, int64) bool); ok {
+		r1 = rf(ctx, asset, chainID)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetForeignCoins provides a mock function with given fields: ctx, zrc20Addr
 func (_m *CrosschainFungibleKeeper) GetForeignCoins(ctx types.Context, zrc20Addr string) (fungibletypes.ForeignCoins, bool) {
 	ret := _m.Called(ctx, zrc20Addr)
@@ -267,6 +291,32 @@ func (_m *CrosschainFungibleKeeper) QuerySystemContractGasCoinZRC20(ctx types.Co
 
 	if rf, ok := ret.Get(1).(func(types.Context, *big.Int) error); ok {
 		r1 = rf(ctx, chainID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// QueryUniswapV2RouterGetZRC4AmountsIn provides a mock function with given fields: ctx, amountOut, inZRC4
+func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx types.Context, amountOut *big.Int, inZRC4 common.Address) (*big.Int, error) {
+	ret := _m.Called(ctx, amountOut, inZRC4)
+
+	var r0 *big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, common.Address) (*big.Int, error)); ok {
+		return rf(ctx, amountOut, inZRC4)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, common.Address) *big.Int); ok {
+		r0 = rf(ctx, amountOut, inZRC4)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *big.Int, common.Address) error); ok {
+		r1 = rf(ctx, amountOut, inZRC4)
 	} else {
 		r1 = ret.Error(1)
 	}

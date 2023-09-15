@@ -365,15 +365,67 @@ func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to GetWZetaContractAddress")
 	}
-
 	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
 	}
+
 	//function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts);
 	k.Logger(ctx).Info("getAmountsIn", "outZRC20", outZRC4.Hex(), "amountOut", amountOut, "wzeta", wzetaAddr.Hex())
-	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, BigIntZero, nil, false, false,
-		"getAmountsIn", amountOut, []ethcommon.Address{wzetaAddr, outZRC4})
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		types.ModuleAddressEVM,
+		routerAddress,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"getAmountsIn",
+		amountOut,
+		[]ethcommon.Address{wzetaAddr, outZRC4},
+	)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
+	}
+
+	amounts := new([2]*big.Int)
+	err = routerABI.UnpackIntoInterface(&amounts, "getAmountsIn", res.Ret)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to unpack getAmountsIn")
+	}
+	return (*amounts)[0], nil
+}
+
+// QueryUniswapV2RouterGetZRC4AmountsIn returns the amount of ZRC4 tokens needed to buy the given amount of zeta
+func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 ethcommon.Address) (*big.Int, error) {
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
+	}
+	wzetaAddr, err := k.GetWZetaContractAddress(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetWZetaContractAddress")
+	}
+	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+	}
+
+	//function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts);
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		types.ModuleAddressEVM,
+		routerAddress,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"getAmountsIn",
+		amountOut,
+		[]ethcommon.Address{inZRC4, wzetaAddr},
+	)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
 	}
