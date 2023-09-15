@@ -16,11 +16,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/rlp"
+	lru "github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-
-	"cosmossdk.io/math"
-	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -90,6 +91,8 @@ type EVMChainClient struct {
 	cfg                       *config.Config
 	params                    observertypes.CoreParams
 	ts                        *TelemetryServer
+
+	BlockCache *lru.Cache
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
@@ -133,6 +136,12 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		return nil, err
 	}
 	ob.EvmClient = client
+
+	ob.BlockCache, err = lru.New(1000)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache")
+		return nil, err
+	}
 
 	if ob.chain.IsKlaytnChain() {
 		kclient, err := Dial(evmCfg.Endpoint)
@@ -810,12 +819,23 @@ func (ob *EVMChainClient) observeInTX() error {
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
 				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-				block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
+				block, err := ob.GetBlockByNumberCached(bn)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+				_ = ob.BlockCache.Add(block.Hash(), block)
+				headerRLP, err := rlp.EncodeToBytes(block.Header())
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
+					continue
+				}
+				_, err = ob.zetaClient.PostAddBlockHeader(ob.chain.ChainId, block.Hash().Bytes(), block.Number().Int64(), headerRLP)
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
+					continue
+				}
+
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
@@ -824,6 +844,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", tx.Hash().Hex())
 						continue
 					}
+
 					if *tx.To() == tssAddress {
 						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
 						if err != nil {
@@ -845,6 +866,7 @@ func (ob *EVMChainClient) observeInTX() error {
 								continue
 							}
 						}
+
 						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
@@ -1139,4 +1161,16 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error
 func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
+
+func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber int64) (*ethtypes.Block, error) {
+	if block, ok := ob.BlockCache.Get(blockNumber); ok {
+		return block.(*ethtypes.Block), nil
+	}
+	block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(blockNumber))
+	if err != nil {
+		return nil, err
+	}
+	ob.BlockCache.Add(blockNumber, block)
+	return block, nil
 }
