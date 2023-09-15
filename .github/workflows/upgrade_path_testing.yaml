@@ -257,13 +257,22 @@ jobs:
           echo "****TXHASH: ${TX_HASH}****"
           
           echo "*****SLEEP FOR 1 MIN TO ALLOW TX TO MAKE IT ON NETWORK*****"
-          sleep 60
+          sleep 15
+
           zetacored query tx --type=hash ${TX_HASH}
           
           proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
           echo "****PROPOSAL_ID: ${proposal_id}****"
           
           source ${GITHUB_ENV}
+          
+          zetacored tx gov vote "${proposal_id}" yes \
+            --from ${MONIKER} \
+            --keyring-backend test \
+            --chain-id ${CHAINID} \
+            --node http://127.0.0.1:26657 \
+            --fees ${FEES} \
+            -y
           
           TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
           ENDPOINT="http://127.0.0.1:26657"
