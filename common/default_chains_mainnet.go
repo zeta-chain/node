@@ -41,7 +41,6 @@ func PolygonChain() Chain {
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcMainnetChain(),
-		PolygonChain(),
 		BscMainnetChain(),
 		EthChain(),
 		ZetaChain(),
