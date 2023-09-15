@@ -258,9 +258,72 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	return zrc20Res.Value, nil
 }
 
+// CallUniswapV2RouterSwapExactTokenForETH calls the swapExactTokensForETH method of the uniswapv2 router contract
+func (k *Keeper) CallUniswapV2RouterSwapExactTokenForETH(
+	ctx sdk.Context,
+	sender ethcommon.Address,
+	to ethcommon.Address,
+	amountIn *big.Int,
+	outZRC4 ethcommon.Address,
+	noEthereumTxEvent bool,
+) ([]*big.Int, error) {
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
+	}
+	wzetaAddr, err := k.GetWZetaContractAddress(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetWZetaContractAddress")
+	}
+	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+	}
+
+	//function swapExactTokensForETH(
+	//	uint amountIn,
+	//	uint amountOutMin,
+	//	address[] calldata path,
+	//	address to,
+	//	uint deadline
+	//)
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		sender,
+		routerAddress,
+		BigIntZero,
+		big.NewInt(300_000),
+		true,
+		noEthereumTxEvent,
+		"swapExactTokensForETH",
+		amountIn,
+		BigIntZero,
+		[]ethcommon.Address{outZRC4, wzetaAddr},
+		to,
+		big.NewInt(1e17),
+	)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactETHForTokens")
+	}
+
+	amounts := new([2]*big.Int)
+	err = routerABI.UnpackIntoInterface(&amounts, "swapExactETHForTokens", res.Ret)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface swapExactETHForTokens")
+	}
+	return (*amounts)[:], nil
+}
+
 // CallUniswapV2RouterSwapExactETHForToken calls the swapExactETHForTokens method of the uniswapv2 router contract
-func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(ctx sdk.Context, sender ethcommon.Address,
-	to ethcommon.Address, amountIn *big.Int, outZRC4 ethcommon.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
+func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(
+	ctx sdk.Context,
+	sender ethcommon.Address,
+	to ethcommon.Address,
+	amountIn *big.Int,
+	outZRC4 ethcommon.Address,
+	noEthereumTxEvent bool,
+) ([]*big.Int, error) {
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
@@ -439,8 +502,13 @@ func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut
 }
 
 // CallZRC20Burn calls the burn method of the zrc20 contract
-func (k *Keeper) CallZRC20Burn(ctx sdk.Context, sender ethcommon.Address, zrc20address ethcommon.Address,
-	amount *big.Int, noEthereumTxEvent bool) error {
+func (k *Keeper) CallZRC20Burn(
+	ctx sdk.Context,
+	sender ethcommon.Address,
+	zrc20address ethcommon.Address,
+	amount *big.Int,
+	noEthereumTxEvent bool,
+) error {
 	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return cosmoserrors.Wrapf(err, "failed to get zrc20 abi")

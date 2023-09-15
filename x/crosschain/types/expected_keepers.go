@@ -94,6 +94,14 @@ type FungibleKeeper interface {
 		coinType common.CoinType,
 		asset string,
 	) (*evmtypes.MsgEthereumTxResponse, error)
+	CallUniswapV2RouterSwapExactTokenForETH(
+		ctx sdk.Context,
+		sender eth.Address,
+		to eth.Address,
+		amountIn *big.Int,
+		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
+	) ([]*big.Int, error)
 	CallUniswapV2RouterSwapExactETHForToken(
 		ctx sdk.Context,
 		sender eth.Address,

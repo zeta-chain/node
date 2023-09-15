@@ -48,6 +48,32 @@ func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactETHForToken(ctx 
 	return r0, r1
 }
 
+// CallUniswapV2RouterSwapExactTokenForETH provides a mock function with given fields: ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent
+func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactTokenForETH(ctx types.Context, sender common.Address, to common.Address, amountIn *big.Int, outZRC4 common.Address, noEthereumTxEvent bool) ([]*big.Int, error) {
+	ret := _m.Called(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+
+	var r0 []*big.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) ([]*big.Int, error)); ok {
+		return rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) []*big.Int); ok {
+		r0 = rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*big.Int)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, common.Address, common.Address, *big.Int, common.Address, bool) error); ok {
+		r1 = rf(ctx, sender, to, amountIn, outZRC4, noEthereumTxEvent)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CallZRC20Burn provides a mock function with given fields: ctx, sender, zrc20address, amount, noEthereumTxEvent
 func (_m *CrosschainFungibleKeeper) CallZRC20Burn(ctx types.Context, sender common.Address, zrc20address common.Address, amount *big.Int, noEthereumTxEvent bool) error {
 	ret := _m.Called(ctx, sender, zrc20address, amount, noEthereumTxEvent)
