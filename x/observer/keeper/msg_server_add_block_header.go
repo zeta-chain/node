@@ -10,10 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Updates permissions. Currently, this is only used to enable/disable the
-// inbound transactions.
-//
-// Only the admin policy account is authorized to broadcast this message.
+// MsgAddBlockHeader handles adding a block header to the store, through majority voting of observers
 func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockHeader) (*types.MsgAddBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := types.ObservationType_InBoundTx
