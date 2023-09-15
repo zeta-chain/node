@@ -197,7 +197,7 @@ jobs:
           git_env_file.close()
 
       - name: "NON_CONCENSUS_BREAKING_UPGRADE"
-        if: env.UPGRADE_TYPE == 'NONCONN'
+        if: env.UPGRADE_TYPE == 'NONCON'
         run: |
           echo ${UPGRADE_TYPE}
           echo "*********CHECK VERSION BEFORE BINARY SWITCH*********"
@@ -238,7 +238,7 @@ jobs:
           fi
 
       - name: "CONCENSUS_BREAKING_UPGRADE"
-        if: env.UPGRADE_TYPE == 'NONCON' #GOV
+        if: env.UPGRADE_TYPE == 'GOV' #GOV
         run: |
           echo "*****UPGRADE TYPE*****"
           echo ${UPGRADE_TYPE}
