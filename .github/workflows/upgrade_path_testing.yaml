@@ -28,7 +28,7 @@ jobs:
       DAEMON_HOME: "/home/runner/.zetacored"
       DAEMON_NAME: "zetacored"
       DENOM: "azeta"
-      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "true"
       DAEMON_RESTART_AFTER_UPGRADE: "true"
       MONIKER: "zeta"
       BLOCK_TIME_SECONDS: "6"
