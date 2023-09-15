@@ -30,17 +30,17 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to decode header: %s", err))
 	}
 	proven := false
-	if found {
-		val, err := req.Proof.Verify(header.TxHash, int(req.TxIndex))
-		if err == nil {
-			var txx ethtypes.Transaction
-			err = txx.UnmarshalBinary(val)
-			if err != nil {
-				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal transaction: %s", err))
-			}
-			proven = true
+
+	val, err := req.Proof.Verify(header.TxHash, int(req.TxIndex))
+	if err == nil {
+		var txx ethtypes.Transaction
+		err = txx.UnmarshalBinary(val)
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal transaction: %s", err))
 		}
+		proven = true
 	}
+
 	return &types.QueryProveResponse{
 		Valid: proven,
 	}, nil
