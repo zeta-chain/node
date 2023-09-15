@@ -138,7 +138,7 @@ message MsgVoteOnObservedOutboundTx {
 	uint64 observed_outTx_gas_used = 10;
 	string observed_outTx_effective_gas_price = 11;
 	uint64 observed_outTx_effective_gas_limit = 12;
-	string zeta_minted = 5;
+	string value_received = 5;
 	common.ReceiveStatus status = 6;
 	int64 outTx_chain = 7;
 	uint64 outTx_tss_nonce = 8;

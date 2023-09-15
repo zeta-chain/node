@@ -97,10 +97,10 @@ message MsgVoteOnObservedOutboundTx {
     (gogoproto.nullable) = false
   ];
   uint64 observed_outTx_effective_gas_limit = 12;
-  string zeta_minted = 5 [
+  string value_received = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zeta_minted\""
+    (gogoproto.moretags) = "yaml:\"value_received\""
   ];
   common.ReceiveStatus status = 6;
   int64 outTx_chain = 7;
