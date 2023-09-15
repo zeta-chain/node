@@ -250,6 +250,12 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	for _, hash := range tracker.HashList {
 		if strings.EqualFold(hash.TxHash, msg.TxHash) {
 			isDup = true
+			if proven {
+				hash.Proved = true
+				k.SetOutTxTracker(ctx, tracker)
+				k.Logger(ctx).Info("Proof'd outbound transaction")
+				return &types.MsgAddToOutTxTrackerResponse{}, nil
+			}
 			break
 		}
 	}
