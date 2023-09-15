@@ -379,7 +379,7 @@ jobs:
                     fi
                   fi
               else
-                  ((stalled_count++))
+                  ((stalled_count=stalled_count+1))
               fi
               
               # Update the previous height
