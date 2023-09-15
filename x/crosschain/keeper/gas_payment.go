@@ -145,15 +145,95 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if err != nil {
 		return err
 	}
-
-	// calculate the final gas fee
 	outTxGasFee := gasLimit.Mul(gasPrice).Add(protocolFlatFee)
 
+	// get address of the zrc20
+	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, chainID)
+	if !found {
+		return fmt.Errorf("zrc20 from asset %s not found", cctx.InboundTxParams.Asset)
+	}
+	zrc20 := ethcommon.HexToAddress(fc.Zrc20ContractAddress)
+	if zrc20 == (ethcommon.Address{}) {
+		return fmt.Errorf("zrc20 from asset %s invalid address", cctx.InboundTxParams.Asset)
+	}
+
 	// get the necessary ERC20 amount for gas
-	_, err = k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
+	feeInZeta, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
 	if err != nil {
 		return err
 	}
+	feeInZRC20, err := k.fungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, feeInZeta, zrc20)
+	if err != nil {
+		return err
+	}
+
+	// subtract the withdraw fee from the input amount
+	if math.NewUintFromBigInt(feeInZRC20).GT(inputAmount) {
+		return sdkerrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("feeInZRC20(%s) more than available gas for tx (%s) | Identifiers : %s ",
+			feeInZRC20,
+			inputAmount,
+			cctx.LogIdentifierForCCTX()),
+		)
+	}
+	newAmount := inputAmount.Sub(math.NewUintFromBigInt(feeInZRC20))
+
+	// mint the amount of ERC20 to be burnt as gas fee
+	_, err = k.fungibleKeeper.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, feeInZRC20)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Info("Minting ERC20 for gas fee",
+		"zrc20", zrc20.Hex(),
+		"amount", feeInZRC20,
+	)
+
+	// swap the fee in ERC20 into gas passing through Zeta and burn the gas ZRC20
+	zetaAmounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactTokenForETH(
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		feeInZRC20,
+		zrc20,
+		noEthereumTxEvent,
+	)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Info("CallUniswapV2RouterSwapExactTokenForETH",
+		"zrc20AmountIn", zetaAmounts[0],
+		"zetaAmountOut", zetaAmounts[1],
+	)
+
+	gasAmount, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactETHForToken(
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		zetaAmounts[1],
+		gasZRC20,
+		noEthereumTxEvent,
+	)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Info("CallUniswapV2RouterSwapExactETHForToken",
+		"zetaAmountIn", gasAmount[0],
+		"gasAmountOut", gasAmount[1],
+	)
+
+	// burn the gas ZRC20
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, gasAmount[1], noEthereumTxEvent)
+	if err != nil {
+		return err
+	}
+	ctx.Logger().Info("Burning gas ZRC20",
+		"zrc20", gasZRC20.Hex(),
+		"amount", gasAmount[1],
+	)
+
+	// update cctx
+	cctx.GetCurrentOutTxParam().Amount = newAmount
+	cctx.GetCurrentOutTxParam().OutboundTxGasLimit = gasLimit.Uint64()
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = gasPrice.String()
 
 	return nil
 }
@@ -212,7 +292,10 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			cctx.LogIdentifierForCCTX()),
 		)
 	}
-	ctx.Logger().Info("Subtracting amount from inbound tx", "amount", zetaBurnt.String(), "feeInZeta", feeInZeta.String())
+	ctx.Logger().Info("Subtracting amount from inbound tx",
+		"amount", zetaBurnt.String(),
+		"feeInZeta", feeInZeta.String(),
+	)
 	newAmount := zetaBurnt.Sub(feeInZeta)
 
 	// ** The following logic converts the outTxGasFeeInZeta into gasZRC20 and burns it **
@@ -237,7 +320,10 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		}
 
 		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
-		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken", "zetaAmountIn", amounts[0], "zrc20AmountOut", amounts[1])
+		ctx.Logger().Info("CallUniswapv2RouterSwapExactETHForToken",
+			"zetaAmountIn", amounts[0],
+			"zrc20AmountOut", amounts[1],
+		)
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
 			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")

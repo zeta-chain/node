@@ -82,6 +82,12 @@ type FungibleKeeper interface {
 	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
 	DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error
+	DepositZRC20(
+		ctx sdk.Context,
+		contract eth.Address,
+		to eth.Address,
+		amount *big.Int,
+	) (*evmtypes.MsgEthereumTxResponse, error)
 	ZRC20DepositAndCallContract(
 		ctx sdk.Context,
 		from []byte,
