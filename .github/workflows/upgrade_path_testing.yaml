@@ -195,7 +195,7 @@ jobs:
           else:
               git_env_file.write("UPGRADE_TYPE=GOV")
           git_env_file.close()
- 
+
       - name: "NON_CONCENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'NONCONN'
         run: |
@@ -387,5 +387,3 @@ jobs:
               # Sleep for the specified duration
               sleep $SLEEP_DURATION
           done
-
-          
