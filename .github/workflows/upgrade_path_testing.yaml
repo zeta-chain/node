@@ -283,8 +283,13 @@ jobs:
           
           while [[ $count -lt $MAX_TRIES ]]
           do
+              echo "CURL FOR CURRENT HEIGHT"
+              cat cosmovisor.log
               response=$(curl -s "$ENDPOINT/status")
+              echo "${response}"
               current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
+              echo "$current_height"
+              echo "$TARGET_HEIGHT"
               if [[ $current_height -ge $TARGET_HEIGHT ]]; then
                   echo "Reached target height: $current_height. Sleep and wait for upgrade to take place."
                   sleep 120
