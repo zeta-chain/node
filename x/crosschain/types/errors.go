@@ -29,4 +29,7 @@ var (
 	ErrUnableToUpdateTss = errorsmod.Register(ModuleName, 1130, "unable to update TSS address")
 	ErrNotEnoughGas      = errorsmod.Register(ModuleName, 1131, "not enough gas")
 	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1132, "not enough funds")
+
+	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1133, "cannot find gas params")
+	ErrInvalidGasAmount    = errorsmod.Register(ModuleName, 1134, "invalid gas amount")
 )
