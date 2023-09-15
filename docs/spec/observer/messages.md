@@ -72,10 +72,7 @@ message MsgUpdateKeygen {
 
 ## MsgAddBlockHeader
 
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
-Only the admin policy account is authorized to broadcast this message.
+MsgAddBlockHeader handles adding a block header to the store, through majority voting of observers
 
 ```proto
 message MsgAddBlockHeader {
