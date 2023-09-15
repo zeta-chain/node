@@ -16,5 +16,5 @@ const (
 )
 
 var (
-	CHAINID = "zeta_7000-1"
+	CHAINID = "zeta_70000-1"
 )
