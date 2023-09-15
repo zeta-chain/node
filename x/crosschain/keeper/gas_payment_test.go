@@ -286,7 +286,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			ZetaFees: math.NewUint(100),
 		}
 		// gasLimit * gasPrice * 2 = 1000 * 2 * 2 = 4000
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
 
 		// the output amount must be input amount - (out tx fee in zeta + protocol flat fee)
@@ -310,7 +310,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 				},
 			},
 		}
-		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
 		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
 		inputAmount = expectedFeeInZeta.Add(math.NewUint(100000))
@@ -403,7 +403,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 			ZetaFees: math.NewUint(100),
 		}
-		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, big.NewInt(4000), zrc20)
+		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
 		require.NoError(t, err)
 		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
 
