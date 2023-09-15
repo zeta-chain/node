@@ -74,6 +74,20 @@ func (_m *CrosschainFungibleKeeper) CallUniswapV2RouterSwapExactTokenForETH(ctx 
 	return r0, r1
 }
 
+// CallZRC20Approve provides a mock function with given fields: ctx, owner, zrc20address, spender, amount, noEthereumTxEvent
+func (_m *CrosschainFungibleKeeper) CallZRC20Approve(ctx types.Context, owner common.Address, zrc20address common.Address, spender common.Address, amount *big.Int, noEthereumTxEvent bool) error {
+	ret := _m.Called(ctx, owner, zrc20address, spender, amount, noEthereumTxEvent)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, common.Address, common.Address, common.Address, *big.Int, bool) error); ok {
+		r0 = rf(ctx, owner, zrc20address, spender, amount, noEthereumTxEvent)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // CallZRC20Burn provides a mock function with given fields: ctx, sender, zrc20address, amount, noEthereumTxEvent
 func (_m *CrosschainFungibleKeeper) CallZRC20Burn(ctx types.Context, sender common.Address, zrc20address common.Address, amount *big.Int, noEthereumTxEvent bool) error {
 	ret := _m.Called(ctx, sender, zrc20address, amount, noEthereumTxEvent)
@@ -267,6 +281,32 @@ func (_m *CrosschainFungibleKeeper) GetSystemContract(ctx types.Context) (fungib
 		r1 = rf(ctx)
 	} else {
 		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetUniswapV2Router02Address provides a mock function with given fields: ctx
+func (_m *CrosschainFungibleKeeper) GetUniswapV2Router02Address(ctx types.Context) (common.Address, error) {
+	ret := _m.Called(ctx)
+
+	var r0 common.Address
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context) (common.Address, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) common.Address); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.Address)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
 	}
 
 	return r0, r1

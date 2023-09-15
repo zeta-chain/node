@@ -97,6 +97,32 @@ func setupGasCoin(
 	return addr
 }
 
+// deployZRC20 deploys a ZRC20 contract and returns its address
+func deployZRC20(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+	chainID int64,
+	assetName string,
+	assetAddress string,
+	symbol string,
+) (zrc20 common.Address) {
+	addr, err := k.DeployZRC20Contract(
+		ctx,
+		assetName,
+		symbol,
+		8,
+		chainID,
+		0,
+		assetAddress,
+		big.NewInt(21_000),
+	)
+	require.NoError(t, err)
+	assertContractDeployment(t, evmk, ctx, addr)
+	return addr
+}
+
 func setAdminDeployFungibleCoin(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) {
 	params := zk.ObserverKeeper.GetParams(ctx)
 	params.AdminPolicy = []*observertypes.Admin_Policy{
@@ -156,7 +182,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		// if the input amount of the cctx is 100000, the output amount must be 100000-43000=57000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
 		require.NoError(t, err)
-		require.Equal(t, uint64(57000), cctx.GetCurrentOutTxParam().Amount.Uint64(), "output amount must be 57000 but is %d", cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(57000), cctx.GetCurrentOutTxParam().Amount.Uint64())
 		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
@@ -252,6 +278,70 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		// 42999 < 43000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(42999))
 		require.ErrorIs(t, err, types.ErrNotEnoughGas)
+	})
+}
+
+func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
+	t.Run("can pay gas in erc20", func(t *testing.T) {
+		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		admin := sample.AccAddress()
+		setAdminDeployFungibleCoin(ctx, zk, admin)
+
+		// deploy gas coin, erc20 and set fee params
+		chainID := getValidEthChainID(t)
+		assetAddress := sample.EthAddress().String()
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "foo")
+		zrc20 := deployZRC20(
+			t,
+			ctx,
+			zk.FungibleKeeper,
+			sdkk.EvmKeeper,
+			chainID,
+			"bar",
+			assetAddress,
+			"bar",
+		)
+		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+			sdk.UnwrapSDKContext(ctx),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+		)
+		require.NoError(t, err)
+		k.SetGasPrice(ctx, types.GasPrice{
+			ChainId:     chainID,
+			MedianIndex: 0,
+			Prices:      []uint64{gasPrice},
+		})
+
+		// create a cctx reverted from zeta
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: zetacommon.CoinType_ERC20,
+				Asset:    assetAddress,
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{
+					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+				},
+				{
+					ReceiverChainId: chainID,
+				},
+			},
+		}
+
+		// total fees in gas must be 21000*2+1000=43000
+		// we calculate what it represents in erc20
+		expectedInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(43000), gasZRC20)
+		require.NoError(t, err)
+		expectedInZRC20, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, expectedInZeta, zrc20)
+		require.NoError(t, err)
+
+		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
+		require.NoError(t, err)
+		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
 }
 

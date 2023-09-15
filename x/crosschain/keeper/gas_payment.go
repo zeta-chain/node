@@ -188,6 +188,20 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		"amount", feeInZRC20,
 	)
 
+	// approve the uniswapv2 router to spend the ERC20
+	routerAddress, err := k.fungibleKeeper.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return err
+	}
+	err = k.fungibleKeeper.CallZRC20Approve(
+		ctx,
+		types.ModuleAddressEVM,
+		zrc20,
+		routerAddress,
+		feeInZRC20,
+		noEthereumTxEvent,
+	)
+
 	// swap the fee in ERC20 into gas passing through Zeta and burn the gas ZRC20
 	zetaAmounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactTokenForETH(
 		ctx,

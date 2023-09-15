@@ -564,3 +564,37 @@ func (k *Keeper) CallZRC20Deposit(
 	}
 	return nil
 }
+
+// CallZRC20Approve calls the approve method of the zrc20 contract
+func (k *Keeper) CallZRC20Approve(
+	ctx sdk.Context,
+	owner ethcommon.Address,
+	zrc20address ethcommon.Address,
+	spender ethcommon.Address,
+	amount *big.Int,
+	noEthereumTxEvent bool,
+) error {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return cosmoserrors.Wrapf(err, "failed to get zrc20 abi")
+	}
+
+	_, err = k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		owner,
+		zrc20address,
+		BigIntZero,
+		nil,
+		true,
+		noEthereumTxEvent,
+		"approve",
+		spender,
+		amount,
+	)
+	if err != nil {
+		return cosmoserrors.Wrapf(err, "failed to CallEVM method approve")
+	}
+
+	return nil
+}

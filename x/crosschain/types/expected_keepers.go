@@ -76,6 +76,7 @@ type FungibleKeeper interface {
 	GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
+	GetUniswapV2Router02Address(ctx sdk.Context) (eth.Address, error)
 	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
 	QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 eth.Address) (*big.Int, error)
 	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
@@ -117,6 +118,14 @@ type FungibleKeeper interface {
 		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
 	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int, noEthereumTxEvent bool) error
+	CallZRC20Approve(
+		ctx sdk.Context,
+		owner eth.Address,
+		zrc20address eth.Address,
+		spender eth.Address,
+		amount *big.Int,
+		noEthereumTxEvent bool,
+	) error
 	DeployZRC20Contract(
 		ctx sdk.Context,
 		name, symbol string,
