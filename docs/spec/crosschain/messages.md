@@ -13,6 +13,9 @@ message MsgAddToOutTxTracker {
 	int64 chain_id = 2;
 	uint64 nonce = 3;
 	string tx_hash = 4;
+	ethereum.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
 }
 ```
 
