@@ -75,7 +75,7 @@ type FungibleKeeper interface {
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
-	QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
+	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
 	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
@@ -92,7 +92,7 @@ type FungibleKeeper interface {
 		coinType common.CoinType,
 		asset string,
 	) (*evmtypes.MsgEthereumTxResponse, error)
-	CallUniswapv2RouterSwapExactETHForToken(
+	CallUniswapV2RouterSwapExactETHForToken(
 		ctx sdk.Context,
 		sender eth.Address,
 		to eth.Address,
