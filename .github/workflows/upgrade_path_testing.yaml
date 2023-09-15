@@ -265,10 +265,12 @@ jobs:
           
           source ${GITHUB_ENV}
           
-          TARGET_HEIGHT=${UPGRADE_HEIGHT}
+          TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
           ENDPOINT="http://127.0.0.1:26657"
           MAX_TRIES=100
           count=0
+          
+          echo "**** CHECK FOR HEIGHT ${TARGET_HEIGHT} ****"
           
           while [[ $count -lt $MAX_TRIES ]]
           do
