@@ -1,14 +1,15 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"errors"
 	"fmt"
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"math/big"
 
+	cosmoserrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -88,7 +89,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
-		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -105,7 +106,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 
 	// subtract the withdraw fee from the input amount
 	if outTxGasFee.GT(inputAmount) {
-		return sdkerrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
+		return cosmoserrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("outTxGasFee(%s) more than available gas for tx (%s) | Identifiers : %s ",
 			outTxGasFee,
 			inputAmount,
 			cctx.LogIdentifierForCCTX()),
@@ -134,7 +135,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
-		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -169,7 +170,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 
 	// subtract the withdraw fee from the input amount
 	if math.NewUintFromBigInt(feeInZRC20).GT(inputAmount) {
-		return sdkerrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("feeInZRC20(%s) more than available gas for tx (%s) | Identifiers : %s ",
+		return cosmoserrors.Wrap(types.ErrNotEnoughGas, fmt.Sprintf("feeInZRC20(%s) more than available gas for tx (%s) | Identifiers : %s ",
 			feeInZRC20,
 			inputAmount,
 			cctx.LogIdentifierForCCTX()),
@@ -252,7 +253,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
-		return sdkerrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -260,13 +261,13 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
+		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
 	}
 
 	// get the gas price
 	gasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
-		return sdkerrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ",
+		return cosmoserrors.Wrap(types.ErrUnableToGetGasPrice, fmt.Sprintf(" chain %d | Identifiers : %s ",
 			chainID,
 			cctx.LogIdentifierForCCTX()),
 		)
@@ -280,13 +281,13 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	// get the gas fee in Zeta using system uniswapv2 pool wzeta/gasZRC20 and adding the protocol fee
 	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
 	if err != nil {
-		return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
+		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to QueryUniswapv2RouterGetAmountsIn")
 	}
 	feeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(outTxGasFeeInZeta))
 
 	// reduce the amount of the outbound tx
 	if feeInZeta.GT(zetaBurnt) {
-		return sdkerrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
+		return cosmoserrors.Wrap(types.ErrNotEnoughZetaBurnt, fmt.Sprintf("feeInZeta(%s) more than zetaBurnt (%s) | Identifiers : %s ",
 			feeInZeta,
 			zetaBurnt,
 			cctx.LogIdentifierForCCTX()),
@@ -304,7 +305,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		coins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(feeInZeta.BigInt())))
 		err := k.bankKeeper.MintCoins(ctx, types.ModuleName, coins)
 		if err != nil {
-			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
+			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to mint coins")
 		}
 
 		amounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactETHForToken(
@@ -316,7 +317,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			noEthereumTxEvent,
 		)
 		if err != nil {
-			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
+			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallUniswapv2RouterSwapExactETHForToken")
 		}
 
 		ctx.Logger().Info("gas fee", "outTxGasFee", outTxGasFee, "outTxGasFeeInZeta", outTxGasFeeInZeta)
@@ -326,7 +327,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 		)
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
-			return sdkerrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
+			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
 		}
 	}
 
