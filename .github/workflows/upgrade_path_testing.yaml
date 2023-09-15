@@ -296,6 +296,7 @@ jobs:
           SLEEP_DURATION=5
           previous_height=-1
           stalled_count=0
+          first="true"
           
           for (( i=1; i<=MAX_TRIES; i++ ))
           do
@@ -324,27 +325,34 @@ jobs:
           
               # If the block height has changed since last check
               if [[ $current_height -ne $previous_height ]]; then
-                  stalled_count=0
-          
-                  # Query the ABCI endpoint for version info
-                  abci_response=$(curl -s "$ABCI_ENDPOINT")
-          
-                  # Extracting the version from the response
-                  app_version=$(echo $abci_response | jq '.result.response.version' | tr -d '"')
-                  
-                  # If jq fails or version is empty
-                  if [[ $? -ne 0 || -z "$app_version" ]]; then
-                      echo "Failed to extract version from the ABCI response on try $i."
-                      exit 2
-                  fi
-          
-                  # Compare the extracted version with the expected version
-                  if [[ "$app_version" == "$VERSION" ]]; then
-                      echo "Version matches the expected version. Exiting..."
-                      exit 0
+                  if [ "${first}" == "true" ]; then
+                    stalled_count=0
+                    first="false"
                   else
-                      echo "Version mismatch. Expected: $VERSION, Found: $app_version"
-                      exit 2
+                    echo "Network appears to be processing blocks"
+                    stalled_count=0
+            
+                    # Query the ABCI endpoint for version info
+                    abci_response=$(curl -s "$ABCI_ENDPOINT")
+            
+                    # Extracting the version from the response
+                    app_version=$(echo $abci_response | jq '.result.response.version' | tr -d '"')
+                    
+                    # If jq fails or version is empty
+                    if [[ $? -ne 0 || -z "$app_version" ]]; then
+                        echo "Failed to extract version from the ABCI response on try $i."
+                        exit 2
+                    fi
+            
+                    # Compare the extracted version with the expected version
+                    if [[ "$app_version" == "$VERSION" ]]; then
+                        echo "Version matches the expected version. Exiting..."
+                        exit 0
+                    else
+                        echo "Version mismatch. Expected: $VERSION, Found: $app_version"
+                        echo "ABCI RESPONSE \n ${abci_response}"
+                        exit 2
+                    fi
                   fi
               else
                   ((stalled_count++))
