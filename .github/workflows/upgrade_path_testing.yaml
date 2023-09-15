@@ -296,8 +296,9 @@ jobs:
                   sleep 120
                   break
               fi
-              echo "attempt number ${count} of ${MAX_TRIES}, sleep and ty again."
-              ((count++))
+              echo "attempt number ${count} of ${MAX_TRIES}"
+              ((count=count+1))
+              echo "sleep and ty again."
               sleep 10
           done
           
