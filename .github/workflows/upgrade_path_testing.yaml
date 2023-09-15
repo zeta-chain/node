@@ -286,7 +286,9 @@ jobs:
           done
           
           if [[ $count -eq $MAX_TRIES ]]; then
+              cat cosmovisor.log
               echo "Max tries reached without achieving target height."
+              exit 2
           fi
 
           STATUS_ENDPOINT="$ENDPOINT/status"  
@@ -302,6 +304,7 @@ jobs:
           do
               pgrep zetavisor > /dev/null
               if [[ $? -ne 0 ]]; then
+                  cat cosmovisor.log
                   echo "zetavisor process not found."
                   exit 2
               fi
@@ -310,6 +313,7 @@ jobs:
               
               # If curl fails
               if [[ $? -ne 0 ]]; then
+                  cat cosmovisor.log
                   echo "Failed to get a response from the status endpoint on try $i."
                   exit 2
               fi
@@ -319,6 +323,7 @@ jobs:
               
               # If jq fails or height is empty
               if [[ $? -ne 0 || -z "$current_height" ]]; then
+                  cat cosmovisor.log
                   echo "Failed to extract block height from the response on try $i."
                   exit 2
               fi
@@ -340,6 +345,7 @@ jobs:
                     
                     # If jq fails or version is empty
                     if [[ $? -ne 0 || -z "$app_version" ]]; then
+                        cat cosmovisor.log
                         echo "Failed to extract version from the ABCI response on try $i."
                         exit 2
                     fi
@@ -349,6 +355,7 @@ jobs:
                         echo "Version matches the expected version. Exiting..."
                         exit 0
                     else
+                        cat cosmovisor.log
                         echo "Version mismatch. Expected: $VERSION, Found: $app_version"
                         echo "ABCI RESPONSE \n ${abci_response}"
                         exit 2
@@ -363,6 +370,7 @@ jobs:
           
               # If we're on the last iteration and the block height hasn't changed for all tries
               if [[ $i -eq $MAX_TRIES && $stalled_count -eq $MAX_TRIES ]]; then
+                  cat cosmovisor.log
                   echo "Block height hasn't changed for $MAX_TRIES consecutive checks. Network might be stalled."
                   exit 2
               fi
