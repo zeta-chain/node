@@ -276,6 +276,9 @@ jobs:
             --gas-prices=${{ env.GAS_PRICES }} \
             -y
           
+          sleep 5
+          zetacored query gov proposal ${proposal_id} --node http://127.0.0.1:26657
+          
           TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
           ENDPOINT="http://127.0.0.1:26657"
           MAX_TRIES=100
