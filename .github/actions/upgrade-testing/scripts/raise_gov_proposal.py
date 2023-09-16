@@ -11,7 +11,7 @@ GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os
     --from "{os.environ['MONIKER']}" \
     --deposit {os.environ["DEPOSIT"]} \
     --upgrade-height "{str(UPGRADE_HEIGHT).split('.')[0]}" \
-    --upgrade-info "{os.environ['UPGRADE_INFO']}" \
+    --upgrade-info '{os.environ["UPGRADE_INFO"]}' \
     --title "{os.environ['VERSION']}" \
     --description "Zeta Release {os.environ['VERSION']}" \
     --chain-id "{os.environ['CHAINID']}" \
