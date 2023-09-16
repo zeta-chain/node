@@ -454,6 +454,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	return false, false, nil
 }
 
+// The lowest nonce we observe outTx for each chain
+var lowestOutTxNonceToObserve = map[int64]uint64{
+	5:     70000,  // Goerli
+	97:    95000,  // BSC testnet
+	80001: 120000, // Mumbai
+}
+
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -482,8 +489,12 @@ func (ob *EVMChainClient) observeOutTx() {
 			})
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
+			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
+				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
+					continue
+				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
 					//inTimeout := time.After(3000 * time.Millisecond)
@@ -953,7 +964,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 				height, _ := ob.zetaClient.GetBlockHeight()
 				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return
