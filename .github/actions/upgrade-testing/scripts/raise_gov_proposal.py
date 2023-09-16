@@ -17,7 +17,9 @@ GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os
     --chain-id "{os.environ['CHAINID']}" \
     --node "{os.environ['NODE']}" \
     --keyring-backend test \
-    --fees {os.environ['FEES']} \
+    --gas=auto \
+    --gas-adjustment=2 \
+    --gas-prices={os.environ['GAS_PRICES']} \
     -y \
     --no-validate"""
 print(GOV_PROPOSAL)

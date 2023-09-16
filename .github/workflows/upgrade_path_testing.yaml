@@ -20,11 +20,10 @@ jobs:
       downloaded_binary_name: "zetacored-ubuntu-22-amd64"
       VERSION: "${{ github.event.inputs.version }}"
       aws_region: "us-east-1"
-      FEES: "20000azeta"
+      GAS_PRICES: "1.0azeta"
       DEPOSIT: "10000000000000000000azeta"
       LOG_LEVEL: "INFO"
       CHAINID: "localnet_101-1"
-      GAS_PRICES: "0.1azeta"
       DAEMON_HOME: "/home/runner/.zetacored"
       DAEMON_NAME: "zetacored"
       DENOM: "azeta"
@@ -272,7 +271,9 @@ jobs:
             --keyring-backend test \
             --chain-id ${CHAINID} \
             --node http://127.0.0.1:26657 \
-            --fees ${FEES} \
+            --gas=auto \
+            --gas-adjustment=2 \
+            --gas-prices=${{ env.GAS_PRICES }} \
             -y
           
           TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
