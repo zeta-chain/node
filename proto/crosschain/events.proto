@@ -48,7 +48,7 @@ message EventOutboundFailure {
   string cctx_index = 2;
   string old_status = 3;
   string new_status = 4;
-  string zeta_minted = 5;
+  string value_received = 5;
 }
 
 message EventOutboundSuccess {
@@ -56,5 +56,5 @@ message EventOutboundSuccess {
   string cctx_index = 2;
   string old_status = 3;
   string new_status = 4;
-  string zeta_minted = 5;
+  string value_received = 5;
 }

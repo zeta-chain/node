@@ -22,7 +22,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 	tt := []struct {
 		name                  string
 		votes                 []Vote
-		zetaMinted            string // TODO : calculate this value
+		valueReceived         string // TODO : calculate this value
 		correctBallotResult   observerTypes.BallotStatus
 		cctxStatus            crosschaintypes.CctxStatus
 		falseBallotIdentifier string
@@ -43,7 +43,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
 			cctxStatus:          crosschaintypes.CctxStatus_OutboundMined,
-			zetaMinted:          "7991636132140714751",
+			valueReceived:       "7991636132140714751",
 		},
 		{
 			name: "1 fake vote but ballot still success",
@@ -61,7 +61,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotFinalized_SuccessObservation,
 			cctxStatus:          crosschaintypes.CctxStatus_OutboundMined,
-			zetaMinted:          "7990439496224753106",
+			valueReceived:       "7990439496224753106",
 		},
 		{
 			name: "Half success and half false",
@@ -79,7 +79,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotInProgress,
 			cctxStatus:          crosschaintypes.CctxStatus_PendingOutbound,
-			zetaMinted:          "7993442360774956232",
+			valueReceived:       "7993442360774956232",
 		},
 		{
 			name: "Fake ballot has more votes outbound gets finalized",
@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotInProgress,
 			cctxStatus:          crosschaintypes.CctxStatus_OutboundMined,
-			zetaMinted:          "7987124742653889020",
+			valueReceived:       "7987124742653889020",
 		},
 		{
 			name: "5 success 5 Failed votes ",
@@ -115,7 +115,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotInProgress,
 			cctxStatus:          crosschaintypes.CctxStatus_PendingOutbound,
-			zetaMinted:          "7991636132140714751",
+			valueReceived:       "7991636132140714751",
 		},
 	}
 	for _, test := range tt {
@@ -184,7 +184,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 					votestring = "1"
 				}
 
-				signedTx := BuildSignedOutboundVote(s.T(), val, s.cfg.BondDenom, account, cctxIdentifier, outTxhash, test.zetaMinted, votestring)
+				signedTx := BuildSignedOutboundVote(s.T(), val, s.cfg.BondDenom, account, cctxIdentifier, outTxhash, test.valueReceived, votestring)
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			cctx = crosschaintypes.QueryGetCctxResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
 			s.Assert().Equal(test.cctxStatus, cctx.CrossChainTx.CctxStatus.Status)
-			outboundBallotIdentifier := GetBallotIdentifierOutBound(cctxIdentifier, test.name, test.zetaMinted)
+			outboundBallotIdentifier := GetBallotIdentifierOutBound(cctxIdentifier, test.name, test.valueReceived)
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{outboundBallotIdentifier, "--output", "json"})
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
@@ -213,7 +213,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 				}
 			}
 			if len(fakeVotes) > 0 {
-				outboundFakeBallotIdentifier := GetBallotIdentifierOutBound(cctxIdentifier, test.name+"falseVote", test.zetaMinted)
+				outboundFakeBallotIdentifier := GetBallotIdentifierOutBound(cctxIdentifier, test.name+"falseVote", test.valueReceived)
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{outboundFakeBallotIdentifier, "--output", "json"})
 				s.Require().NoError(err)
 				fakeBallot := observerTypes.QueryBallotByIdentifierResponse{}

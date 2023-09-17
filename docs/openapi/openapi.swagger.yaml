@@ -27310,6 +27310,84 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/get_all_block_headers:
+    get:
+      operationId: Query_GetAllBlockHeaders
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryAllBlockHeaderResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/observer/get_block_header_by_hash/{block_hash}:
+    get:
+      operationId: Query_GetBlockHeaderByHash
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetBlockHeaderByHashResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: block_hash
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
   /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
     get:
       summary: Queries a list of GetClientParamsForChain items.
@@ -27487,6 +27565,56 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/prove:
+    get:
+      summary: merkle proof verification
+      operationId: Query_Prove
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryProveResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: tx_hash
+          in: query
+          required: false
+          type: string
+        - name: proof.keys
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.values
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: block_hash
+          in: query
+          required: false
+          type: string
+        - name: tx_index
+          in: query
+          required: false
+          type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/observer/supportedChains:
@@ -50536,6 +50664,8 @@ definitions:
         type: string
       tx_signer:
         type: string
+      proved:
+        type: boolean
   emissionsQueryGetEmmisonsFactorsResponse:
     type: object
     properties:
@@ -50559,6 +50689,19 @@ definitions:
     properties:
       amount:
         type: string
+  ethereumProof:
+    type: object
+    properties:
+      keys:
+        type: array
+        items:
+          type: string
+          format: byte
+      values:
+        type: array
+        items:
+          type: string
+          format: byte
   fungibleForeignCoins:
     type: object
     properties:
@@ -50681,6 +50824,25 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
+  observerBlockHeader:
+    type: object
+    properties:
+      header:
+        type: string
+        format: byte
+        title: binary encoded headers; RLP for ethereum
+      height:
+        type: string
+        format: int64
+      hash:
+        type: string
+        format: byte
+      parentHash:
+        type: string
+        format: byte
+      chain_id:
+        type: string
+        format: int64
   observerCoreParams:
     type: object
     properties:
@@ -50753,6 +50915,8 @@ definitions:
         type: string
         format: int64
   observerMsgAddBlameVoteResponse:
+    type: object
+  observerMsgAddBlockHeaderResponse:
     type: object
   observerMsgAddObserverResponse:
     type: object
@@ -50851,6 +51015,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerBlame'
+  observerQueryAllBlockHeaderResponse:
+    type: object
+    properties:
+      block_headers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerBlockHeader'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllNodeAccountResponse:
     type: object
     properties:
@@ -50888,6 +51062,11 @@ definitions:
     properties:
       blame_info:
         $ref: '#/definitions/observerBlame'
+  observerQueryGetBlockHeaderByHashResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/observerBlockHeader'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
@@ -50920,6 +51099,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryProveResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
   observerQueryShowObserverCountResponse:
     type: object
     properties:
