@@ -32,4 +32,5 @@ var (
 
 	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1133, "cannot find gas params")
 	ErrInvalidGasAmount    = errorsmod.Register(ModuleName, 1134, "invalid gas amount")
+	ErrNoLiquidityPool     = errorsmod.Register(ModuleName, 1135, "no liquidity pool")
 )

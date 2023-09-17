@@ -569,7 +569,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		}
 
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
+		require.ErrorIs(t, err, types.ErrNoLiquidityPool)
 	})
 
 	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {

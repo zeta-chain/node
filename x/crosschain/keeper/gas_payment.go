@@ -167,7 +167,8 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 	feeInZRC20, err := k.fungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, feeInZeta, zrc20)
 	if err != nil {
-		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
+		// NOTE: this is the first method that fails when a liquidity pool is not set for the gas ZRC20, so we return a specific error
+		return cosmoserrors.Wrap(types.ErrNoLiquidityPool, err.Error())
 	}
 
 	// subtract the withdraw fee from the input amount
