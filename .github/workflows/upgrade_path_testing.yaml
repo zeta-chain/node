@@ -380,6 +380,8 @@ jobs:
                     # Compare the extracted version with the expected version
                     if [[ "$app_version" == "$VERSION" ]]; then
                         echo "Version matches the expected version. Exiting..."
+                        echo "ABCI RESPONSE \n ${abci_response}"
+                        echo "Versions: $VERSION, Found: $app_version"
                         exit 0
                     else
                         cat cosmovisor.log
