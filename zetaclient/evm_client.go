@@ -16,11 +16,12 @@ import (
 	"sync/atomic"
 	"time"
 
+	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/rlp"
+	lru "github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-
-	"cosmossdk.io/math"
-	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -90,6 +91,8 @@ type EVMChainClient struct {
 	cfg                       *config.Config
 	params                    observertypes.CoreParams
 	ts                        *TelemetryServer
+
+	BlockCache *lru.Cache
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
@@ -133,6 +136,12 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		return nil, err
 	}
 	ob.EvmClient = client
+
+	ob.BlockCache, err = lru.New(1000)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache")
+		return nil, err
+	}
 
 	if ob.chain.IsKlaytnChain() {
 		kclient, err := Dial(evmCfg.Endpoint)
@@ -445,6 +454,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	return false, false, nil
 }
 
+// The lowest nonce we observe outTx for each chain
+var lowestOutTxNonceToObserve = map[int64]uint64{
+	5:     70000,  // Goerli
+	97:    95000,  // BSC testnet
+	80001: 120000, // Mumbai
+}
+
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -473,8 +489,12 @@ func (ob *EVMChainClient) observeOutTx() {
 			})
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
+			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
+				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
+					continue
+				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
 					//inTimeout := time.After(3000 * time.Millisecond)
@@ -799,12 +819,23 @@ func (ob *EVMChainClient) observeInTX() error {
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
 				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
-				block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(bn))
+				block, err := ob.GetBlockByNumberCached(bn)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				//ob.logger.ExternalChainWatcher.Debug().Msgf("block %d: num txs: %d", bn, len(block.Transactions()))
+				_ = ob.BlockCache.Add(block.Hash(), block)
+				headerRLP, err := rlp.EncodeToBytes(block.Header())
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
+					continue
+				}
+				_, err = ob.zetaClient.PostAddBlockHeader(ob.chain.ChainId, block.Hash().Bytes(), block.Number().Int64(), headerRLP)
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
+					continue
+				}
+
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
@@ -813,6 +844,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", tx.Hash().Hex())
 						continue
 					}
+
 					if *tx.To() == tssAddress {
 						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
 						if err != nil {
@@ -834,6 +866,7 @@ func (ob *EVMChainClient) observeInTX() error {
 								continue
 							}
 						}
+
 						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
@@ -931,7 +964,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 				height, _ := ob.zetaClient.GetBlockHeight()
 				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return
@@ -1128,4 +1161,16 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error
 func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
+}
+
+func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber int64) (*ethtypes.Block, error) {
+	if block, ok := ob.BlockCache.Get(blockNumber); ok {
+		return block.(*ethtypes.Block), nil
+	}
+	block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(blockNumber))
+	if err != nil {
+		return nil, err
+	}
+	ob.BlockCache.Add(blockNumber, block)
+	return block, nil
 }

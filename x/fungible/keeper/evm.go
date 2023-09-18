@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -223,6 +224,43 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 
 	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
 		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
+}
+
+// QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20
+func (k Keeper) QueryProtocolFlatFee(ctx sdk.Context, contract common.Address) (*big.Int, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"PROTOCOL_FLAT_FEE",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	unpacked, err := zrc20ABI.Unpack("PROTOCOL_FLAT_FEE", res.Ret)
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) == 0 {
+		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
+	}
+
+	protocolGasFee, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return protocolGasFee, nil
 }
 
 // QueryZRC20Data returns the data of a deployed ZRC20 contract

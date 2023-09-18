@@ -109,11 +109,11 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
-		if !msg.ZetaMinted.Equal(cctx.GetCurrentOutTxParam().Amount) {
-			log.Error().Msgf("VoteOnObservedOutboundTx: Mint mismatch: %s zeta minted vs %s cctx amount",
-				msg.ZetaMinted,
+		if !msg.ValueReceived.Equal(cctx.GetCurrentOutTxParam().Amount) {
+			log.Error().Msgf("VoteOnObservedOutboundTx: Mint mismatch: %s value received vs %s cctx amount",
+				msg.ValueReceived,
 				cctx.GetCurrentOutTxParam().Amount)
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ZetaMinted %s does not match send ZetaMint %s", msg.ZetaMinted, cctx.GetCurrentOutTxParam().Amount))
+			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ValueReceived %s does not match sent value %s", msg.ValueReceived, cctx.GetCurrentOutTxParam().Amount))
 		}
 	}
 
@@ -151,7 +151,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
-			if msg.CoinType == common.CoinType_Cmd {
+			if msg.CoinType == common.CoinType_Cmd || cctx.InboundTxParams.SenderChainId == common.ZetaChain().ChainId {
+				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
 			} else {
 				switch oldStatus {

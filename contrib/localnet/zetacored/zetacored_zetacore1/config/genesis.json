@@ -481,6 +481,7 @@
       }
     },
     "observer": {
+      "core_params_list": [],
       "observers": [
         {
           "observer_chain": {

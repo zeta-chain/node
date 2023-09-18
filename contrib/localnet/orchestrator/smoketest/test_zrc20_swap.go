@@ -18,22 +18,27 @@ func (sm *SmokeTest) TestZRC20Swap() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
 	LoudPrintf("Swap ZRC20 USDT for ZRC20 ETH\n")
-	tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
-	if err != nil {
-		panic(err)
+	if !localTestArgs.contractsDeployed {
+		tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
+		if err != nil {
+			panic(err)
+		}
+		receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
+		fmt.Printf("USDT-ETH pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status)
 	}
-	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
 	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("USDT-ETH pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status, usdtEthPair.Hex())
+	fmt.Printf("USDT-ETH pair receipt pair addr %s\n", usdtEthPair.Hex())
 
-	tx, err = sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err := sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("USDT ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
 	tx, err = sm.ETHZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
