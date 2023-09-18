@@ -71,10 +71,10 @@ func GetCoreParams() CoreParamsList {
 				Erc20CustodyContractAddress: "",
 				WatchUtxoTicker:             30,
 				InTxTicker:                  120,
-				OutTxTicker:                 60,
+				OutTxTicker:                 12,
 				GasPriceTicker:              30,
 				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
+				OutboundTxScheduleLookahead: 100,
 			},
 		},
 	}

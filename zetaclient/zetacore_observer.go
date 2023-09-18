@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
@@ -108,6 +108,10 @@ func (co *CoreObserver) startSendScheduler() {
 					co.logger.ZetaChainWatcher.Error().Msg("GetZetaBlockHeight fail in startSendScheduler")
 					continue
 				}
+				if bn < 0 {
+					co.logger.ZetaChainWatcher.Error().Msg("GetZetaBlockHeight returned negative height")
+					continue
+				}
 				if lastBlockNum == 0 {
 					lastBlockNum = bn - 1
 				}
@@ -124,8 +128,7 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 						signer := co.signerMap[*c]
-						chainClient := co.clientMap[*c]
-						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
+						sendList, err := co.bridge.GetAllPendingCctx(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
@@ -160,7 +163,18 @@ func (co *CoreObserver) startSendScheduler() {
 						for idx, send := range sendList {
 							params := send.GetCurrentOutTxParam()
 							if params.ReceiverChainId != c.ChainId {
-								log.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
+								co.logger.ZetaChainWatcher.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
+								continue
+							}
+							currentHeight := uint64(bn)
+							nonce := params.OutboundTxTssNonce
+							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce) // should be the outTxID?
+
+							// Process Bitcoin OutTx
+							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
+								if stop := co.processBitcoinOutTx(outTxMan, idx, send, signer, ob, currentHeight); stop {
+									break
+								}
 								continue
 							}
 
@@ -174,14 +188,6 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 								continue
 							}
-							nonce := params.OutboundTxTssNonce
-							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce) // should be the outTxID?
-
-							// FIXME: config this schedule; this value is for localnet fast testing
-							if bn >= math.MaxInt64 {
-								continue
-							}
-							currentHeight := uint64(bn)
 							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
 							lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
 
@@ -209,10 +215,10 @@ func (co *CoreObserver) startSendScheduler() {
 							// otherwise, the normal interval is used
 							if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 								outTxMan.StartTryProcess(outTxID)
-								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
-								go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
+								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, outTxID, send.GetCurrentOutTxParam().Amount)
+								go signer.TryProcessOutTx(send, outTxMan, outTxID, ob, co.bridge, currentHeight)
 							}
-							if idx > int(lookahead) { // only look at 50 sends per chain
+							if idx >= int(lookahead)-1 { // only look at 30 sends per chain
 								break
 							}
 						}
@@ -225,6 +231,40 @@ func (co *CoreObserver) startSendScheduler() {
 
 		}
 	}
+}
+
+// Bitcoin outtx is processed in a different way
+// 1. schedule one keysign on each ticker
+// 2. schedule keysign only when nonce-mark UTXO is available
+// 3. stop processing cctx when pendingNonce/lookahead is reached
+//
+// Returns whether to stop processing cctx
+func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx int, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
+	params := send.GetCurrentOutTxParam()
+	nonce := params.OutboundTxTssNonce
+	lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
+	outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce)
+
+	// start go routine to process outtx
+	outTxMan.StartTryProcess(outTxID)
+	co.logger.ZetaChainWatcher.Debug().Msgf("Sign bitcoin outtx %s with value %d\n", outTxID, params.Amount)
+	go signer.TryProcessOutTx(send, outTxMan, outTxID, ob, co.bridge, currentHeight)
+
+	// get bitcoin client
+	btcClient, ok := ob.(*BitcoinChainClient)
+	if !ok { // should never happen
+		co.logger.ZetaChainWatcher.Error().Msgf("chain client is not a bitcoin client")
+		return true
+	}
+	// stop if the nonce being processed reaches the artificial pending nonce
+	if nonce >= btcClient.GetPendingNonce() {
+		return true
+	}
+	// stop if lookahead is reached. 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
+	if idx >= int(lookahead)-1 {
+		return true
+	}
+	return false // otherwise, continue
 }
 
 func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {

@@ -218,7 +218,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			numTicks++
 			// Get all pending outbound transactions
 			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
-				ChainId: uint64(common.GoerliChain().ChainId),
+				ChainId: common.GoerliChain().ChainId,
 			})
 			if err != nil {
 				continue

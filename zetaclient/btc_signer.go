@@ -64,6 +64,12 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
 
+	// refresh unspent UTXOs and continue with keysign regardless of error
+	err := btcClient.FetchUTXOS()
+	if err != nil {
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+	}
+
 	// select N UTXOs to cover the total expense
 	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, false)
 	if err != nil {
@@ -236,7 +242,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	outboundTxTssNonce := params.OutboundTxTssNonce
 	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
 	if included || confirmed {
-		logger.Info().Msgf("CCTX already processed; exit signer")
+		logger.Info().Msgf("CCTX %s already processed; exit signer", outTxID)
 		return
 	}
 
@@ -294,7 +300,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 
 			// Save successfully broadcasted transaction to btc chain client
-			btcClient.SaveBroadcastedTx(tx.TxHash(), outboundTxTssNonce)
+			btcClient.SaveBroadcastedTx(outTxHash, outboundTxTssNonce)
 
 			break // successful broadcast; no need to retry
 		}

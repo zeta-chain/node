@@ -90,6 +90,11 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
   }
 
+  // Queries a pendingNonces by chain.
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingNoncesByChain/{chain_id}";
+  }
+
   rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
   }
@@ -247,6 +252,14 @@ message QueryAllChainNoncesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+message QueryPendingNoncesByChainRequest {
+  int64 chain_id = 1;
+}
+
+message QueryPendingNoncesByChainResponse {
+  PendingNonces pending_nonces = 1;
+}
+
 message QueryAllPendingNoncesRequest {}
 
 message QueryAllPendingNoncesResponse {
@@ -293,7 +306,7 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-  uint64 chainId = 1;
+  int64 chainId = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 

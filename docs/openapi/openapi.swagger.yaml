@@ -26600,7 +26600,7 @@ paths:
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -27211,6 +27211,27 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/crosschain/pendingNoncesByChain/{chain_id}:
+    get:
+      summary: Queries a pendingNonces by chain.
+      operationId: Query_PendingNoncesByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryPendingNoncesByChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/protocolFee:
@@ -50630,6 +50651,11 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryPendingNoncesByChainResponse:
+    type: object
+    properties:
+      pending_nonces:
+        $ref: '#/definitions/crosschainPendingNonces'
   crosschainQueryTssHistoryResponse:
     type: object
     properties:

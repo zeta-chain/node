@@ -41,7 +41,7 @@ func (k Keeper) SetPendingNonces(ctx sdk.Context, pendingNonces types.PendingNon
 	store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d", pendingNonces.Tss, pendingNonces.ChainId)), b)
 }
 
-func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainID uint64) (val types.PendingNonces, found bool) {
+func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainID int64) (val types.PendingNonces, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
 
 	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s-%d", tss, chainID)))
@@ -74,11 +74,29 @@ func (k Keeper) RemovePendingNonces(ctx sdk.Context, pendingNonces types.Pending
 
 // utility
 func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) {
-	p, found := k.GetPendingNonces(ctx, tssPubkey, uint64(chainID))
+	p, found := k.GetPendingNonces(ctx, tssPubkey, chainID)
 	if found && nonce >= p.NonceLow && nonce <= p.NonceHigh {
 		p.NonceLow = nonce + 1
 		k.SetPendingNonces(ctx, p)
 	}
+}
+
+func (k Keeper) PendingNoncesByChain(c context.Context, req *types.QueryPendingNoncesByChainRequest) (*types.QueryPendingNoncesByChainResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	if !found {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("pending nonces not found for chain %d", req.ChainId))
+	}
+
+	return &types.QueryPendingNoncesByChainResponse{PendingNonces: &p}, nil
 }
 
 func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNoncesRequest) (*types.QueryAllPendingNoncesResponse, error) {
