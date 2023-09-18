@@ -289,15 +289,18 @@ jobs:
           do
               echo "CURL FOR CURRENT HEIGHT"
               response=$(curl -s "$ENDPOINT/status")
+              echo "curl success"
               echo "${response}"
               current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
               echo "Current Height: $current_height"
               echo "Target Height: $TARGET_HEIGHT"
+          
               if [[ $current_height -ge $TARGET_HEIGHT ]]; then
                   echo "Reached target height: $current_height. Sleep and wait for upgrade to take place."
                   sleep 120
                   break
               fi
+          
               echo "attempt number ${count} of ${MAX_TRIES}"
               ((count=count+1))
               echo "sleep and ty again."
