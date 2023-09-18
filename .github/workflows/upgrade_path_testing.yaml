@@ -289,6 +289,11 @@ jobs:
           do
               echo "CURL FOR CURRENT HEIGHT"
               response=$(curl -s "$ENDPOINT/status")
+              if [ $? -ne 0 ]; then
+                  echo "CURL failed with exit code $?"
+              else
+                  echo "curl success"
+              fi
               echo "curl success"
               echo "${response}"
               current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
