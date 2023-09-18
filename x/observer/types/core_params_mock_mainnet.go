@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
-// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
+//go:build MOCK_MAINNET
+// +build MOCK_MAINNET
 
 package types
 

@@ -22,6 +22,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 
 BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb,ledger
 TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb,ledger
+MOCK_MAINNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags MOCK_MAINNET,pebbledb,ledger
 MAINNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR?="./..."
@@ -91,6 +92,12 @@ install-mainnet: go.sum
 		@go install -mod=readonly $(MAINNET_BUILD_FLAGS) ./cmd/zetacored
 		@go install -mod=readonly $(MAINNET_BUILD_FLAGS) ./cmd/zetaclientd
 
+install-mock-mainnet: go.sum
+		@echo "--> Installing zetacored & zetaclientd"
+		@go install -mod=readonly $(MOCK_MAINNET_BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(MOCK_MAINNET_BUILD_FLAGS) ./cmd/zetaclientd
+
+
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
@@ -135,8 +142,8 @@ chain-stop:
 chain-init-testnet: clean install-zetacore-testnet init
 chain-run-testnet: clean install-zetacore-testnet init run
 
-chain-init-mainnet: clean install-mainnet init
-chain-run-mainnet: clean install-mainnet init run
+chain-init-mock-mainnet: clean install-mock-mainnet init
+chain-run-mock-mainnet: clean install-mock-mainnet init run
 
 lint-pre:
 	@test -z $(gofmt -l .)
