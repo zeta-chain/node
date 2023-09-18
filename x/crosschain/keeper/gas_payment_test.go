@@ -306,7 +306,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		}
 
 		err := k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
-		require.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
+		require.ErrorIs(t, err, types.ErrCannotFindGasParams)
 	})
 
 	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {
@@ -471,7 +471,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		}
 
 		err := k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		require.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
+		require.ErrorIs(t, err, types.ErrCannotFindGasParams)
 	})
 
 	t.Run("should fail if can't find the ZRC20", func(t *testing.T) {
