@@ -50259,6 +50259,8 @@ definitions:
     type: object
   crosschainMsgGasPriceVoterResponse:
     type: object
+  crosschainMsgMigrateTssFundsResponse:
+    type: object
   crosschainMsgNonceVoterResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
