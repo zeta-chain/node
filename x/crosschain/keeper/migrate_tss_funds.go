@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"fmt"
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -16,7 +17,7 @@ func (k Keeper) MigrateTSSFunds(ctx sdk.Context) error {
 	}
 	tssList := k.GetAllTSS(ctx)
 	if len(tssList) < 2 {
-		return errors.New("crosschain", 1999999, "Cannot migrate TSS funds, only one TSS found")
+		return errorsmod.Wrap(types.ErrCannotMigrateTss, "only one TSS found")
 	}
 	// Sort tssList by FinalizedZetaHeight
 	sort.SliceStable(tssList, func(i, j int) bool {
@@ -24,14 +25,6 @@ func (k Keeper) MigrateTSSFunds(ctx sdk.Context) error {
 	})
 	newTssAdress := tssList[len(tssList)-1]
 
-	//ethAddressOld, err := getTssAddrEVM(currentTssAddress.TssPubkey)
-	//if err != nil {
-	//	return err
-	//}
-	//btcAddressOld, err := getTssAddrBTC(currentTssAddress.TssPubkey)
-	//if err != nil {
-	//	return err
-	//}
 	ethAddressNew, err := getTssAddrEVM(newTssAdress.TssPubkey)
 	if err != nil {
 		return err
@@ -76,6 +69,9 @@ func (k Keeper) MigrateTSSFunds(ctx sdk.Context) error {
 		}
 		if common.IsBitcoinChain(chain.ChainId) {
 			cctx.GetCurrentOutTxParam().Receiver = btcAddressNew
+		}
+		if cctx.GetCurrentOutTxParam().Receiver == "" {
+			return errorsmod.Wrap(types.ErrCannotMigrateTss, fmt.Sprintf("chain %d is not supported", chain.ChainId))
 		}
 		err := k.UpdateNonce(ctx, chain.ChainId, &cctx)
 		if err != nil {
