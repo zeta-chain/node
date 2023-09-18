@@ -38,6 +38,13 @@ for index, account in enumerate(evm["accounts"]):
 evm["accounts"] = evm_accounts
 genesis_json_object["app_state"]["evm"] = evm
 
+genesis_json_object["staking"]["params"]["bond_denom"] = os.environ["DENOM"]
+genesis_json_object["gov"]["deposit_params"]["min_deposit"][0]["denom"] = os.environ["DENOM"]
+genesis_json_object["mint"]["params"]["mint_denom"] = os.environ["DENOM"]
+genesis_json_object["evm"]["params"]["evm_denom"] = os.environ["DENOM"]
+genesis_json_object["block"]["max_gas"] = os.environ["MAX_GAS"]
+genesis_json_object["gov"]["voting_params"]["voting_period"] = f'{os.environ["PROPOSAL_TIME_SECONDS"]}s'
+
 genesis = open("genesis-edited.json", "w")
 genesis_string = json.dumps(genesis_json_object, indent=2)
 dumped_genesis_object = genesis_string.replace("0x0000000000000000000000000000000000000001","0x387A12B28fe02DcAa467c6a1070D19B82F718Bb5")

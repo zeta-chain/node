@@ -245,7 +245,6 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           git config --global --add safe.directory '*'
-          #go mod tidy
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
