@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "gogoproto/gogo.proto";
+import "observer/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message BlockHeader {
+  bytes header = 1; // binary encoded headers; RLP for ethereum
+  int64 height = 2;
+  bytes hash = 3;
+  bytes parentHash = 4;
+  int64 chain_id = 5;
+}

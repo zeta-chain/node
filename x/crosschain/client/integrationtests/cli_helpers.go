@@ -122,7 +122,8 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, cctxIndex, outTxHash, zetaminted, status string) *os.File {
+func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI,
+	cctxIndex, outTxHash, valueReceived, status string) *os.File {
 	cmd := cli.CmdCCTXOutboundVoter()
 	outboundVoterArgs := []string{
 		cctxIndex,
@@ -131,7 +132,7 @@ func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string,
 		"0",
 		"0",
 		"0",
-		zetaminted,
+		valueReceived,
 		status,
 		strconv.FormatInt(common.GoerliChain().ChainId, 10),
 		"1",
@@ -204,9 +205,7 @@ func GetBallotIdentifier(message string) string {
 	return msg.Digest()
 }
 
-func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string {
-	math.NewUintFromString(zetaminted)
-
+func GetBallotIdentifierOutBound(cctxindex, outtxHash, valueReceived string) string {
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		"",
 		cctxindex,
@@ -215,7 +214,7 @@ func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string
 		0,
 		math.ZeroInt(),
 		0,
-		math.NewUintFromString(zetaminted),
+		math.NewUintFromString(valueReceived),
 		0,
 		common.GoerliChain().ChainId,
 		1,

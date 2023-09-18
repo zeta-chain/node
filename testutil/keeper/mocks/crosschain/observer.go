@@ -172,6 +172,30 @@ func (_m *CrosschainObserverKeeper) GetBallot(ctx types.Context, index string) (
 	return r0, r1
 }
 
+// GetBlockHeader provides a mock function with given fields: ctx, hash
+func (_m *CrosschainObserverKeeper) GetBlockHeader(ctx types.Context, hash []byte) (observertypes.BlockHeader, bool) {
+	ret := _m.Called(ctx, hash)
+
+	var r0 observertypes.BlockHeader
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, []byte) (observertypes.BlockHeader, bool)); ok {
+		return rf(ctx, hash)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, []byte) observertypes.BlockHeader); ok {
+		r0 = rf(ctx, hash)
+	} else {
+		r0 = ret.Get(0).(observertypes.BlockHeader)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, []byte) bool); ok {
+		r1 = rf(ctx, hash)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetCoreParamsByChainID provides a mock function with given fields: ctx, chainID
 func (_m *CrosschainObserverKeeper) GetCoreParamsByChainID(ctx types.Context, chainID int64) (*observertypes.CoreParams, bool) {
 	ret := _m.Called(ctx, chainID)

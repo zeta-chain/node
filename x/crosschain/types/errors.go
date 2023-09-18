@@ -30,7 +30,11 @@ var (
 	ErrNotEnoughGas      = errorsmod.Register(ModuleName, 1131, "not enough gas")
 	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1132, "not enough funds")
 
-	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1133, "cannot find gas params")
-	ErrInvalidGasAmount    = errorsmod.Register(ModuleName, 1134, "invalid gas amount")
-	ErrNoLiquidityPool     = errorsmod.Register(ModuleName, 1135, "no liquidity pool")
+	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1133, "Proof verification fail")
+	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1134, "Cannot find cctx")
+	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1135, "Status not pending")
+
+	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1136, "cannot find gas params")
+	ErrInvalidGasAmount    = errorsmod.Register(ModuleName, 1137, "invalid gas amount")
+	ErrNoLiquidityPool     = errorsmod.Register(ModuleName, 1138, "no liquidity pool")
 )
