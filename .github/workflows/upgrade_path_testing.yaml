@@ -288,7 +288,7 @@ jobs:
           while [[ $count -lt $MAX_TRIES ]]
           do
               echo "CURL FOR CURRENT HEIGHT"
-              response=$(curl -v "$ENDPOINT/status" || echo "failed curl")
+              response=$(curl -s "$ENDPOINT/status" || echo "failed curl")
               if [ $? -ne 0 ]; then
                   echo "CURL failed with exit code $?"
               else
