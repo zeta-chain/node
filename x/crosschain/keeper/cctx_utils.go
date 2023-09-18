@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -50,7 +52,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 // RefundAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
 // NOTE: GetCurrentOutTxParam should contain the last up to date cctx amount
-func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx) error {
+func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, inputAmount math.Uint) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")
@@ -62,8 +64,7 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 	if sender == (ethcommon.Address{}) {
 		return errors.New("invalid sender address")
 	}
-	amount := cctx.GetCurrentOutTxParam().Amount
-	if amount.IsNil() || amount.IsZero() {
+	if inputAmount.IsNil() || inputAmount.IsZero() {
 		return errors.New("no amount to refund")
 	}
 
@@ -78,7 +79,7 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 	}
 
 	// deposit the amount to the sender
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, sender, amount.BigInt()); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, sender, inputAmount.BigInt()); err != nil {
 		return errors.New("failed to deposit zrc20 on ZetaChain" + err.Error())
 	}
 

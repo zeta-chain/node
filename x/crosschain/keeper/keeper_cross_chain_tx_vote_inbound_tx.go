@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -57,6 +56,7 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	observationType := observerTypes.ObservationType_InBoundTx
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
@@ -175,9 +175,14 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				// gas payment for erc20 type might fail because no liquidity pool is defined to swap the zrc20 token into the gas token
 				// in this gas we should refund the sender on ZetaChain
 				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
-					if err := k.RefundAmountOnZetaChain(ctx, cctx); err != nil {
+
+					if err := k.RefundAmountOnZetaChain(ctx, cctx, cctx.InboundTxParams.Amount); err != nil {
 						// log the error
-						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain", "error", err)
+						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
+							"error", err,
+							"sender", cctx.InboundTxParams.Sender,
+							"amount", cctx.InboundTxParams.Amount.String(),
+						)
 					}
 				}
 
