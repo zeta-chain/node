@@ -50,8 +50,12 @@ jobs:
         with:
           version: 2
 
+      - name: Remove pre-installed Go versions (might require sudo)
+        run: sudo rm -rf /opt/hostedtoolcache/go/
+
       - uses: actions/setup-go@v4
         with:
+          check-latest: false
           go-version: '^1.19'
 
       - name: "CLONE:ZETAVISOR:REPOSITORY"
