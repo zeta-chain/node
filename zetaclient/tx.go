@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/blame"
 
@@ -25,6 +26,7 @@ const (
 	PostReceiveConfirmationGasLimit = 200_000
 	PostBlameDataGasLimit           = 200_000
 	DefaultGasLimit                 = 200_000
+	PostProveOutboundTxGasLimit     = 400_000
 	DefaultRetryCount               = 5
 	DefaultRetryInterval            = 5
 )
@@ -53,9 +55,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string, proof *ethereum.Proof, blockHash string, txIndex int64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
@@ -188,4 +190,20 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
+}
+
+func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header []byte) (string, error) {
+	signerAddress := b.keys.GetOperatorAddress().String()
+	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, txhash, height, header)
+	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
+	var gasLimit uint64 = DefaultGasLimit
+	for i := 0; i < DefaultRetryCount; i++ {
+		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		if err == nil {
+			return zetaTxHash, nil
+		}
+		b.logger.Error().Err(err).Msgf("PostAddBlockHeader broadcast fail | Retry count : %d", i+1)
+		time.Sleep(DefaultRetryInterval * time.Second)
+	}
+	return "", fmt.Errorf("post add block header failed after %d retries", DefaultRetryCount)
 }
