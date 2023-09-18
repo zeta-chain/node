@@ -27,4 +27,5 @@ var (
 	ErrInvalidCoinType         = errorsmod.Register(ModuleName, 1117, "Invalid coin type")
 	ErrObserverCountNegative   = errorsmod.Register(ModuleName, 1118, "Observer count cannot be negative")
 	ErrInvalidPubKey           = errorsmod.Register(ModuleName, 1119, "Invalid PubKey")
+	ErrBlockHeaderNotFound     = errorsmod.Register(ModuleName, 1120, "Block header not found")
 )
