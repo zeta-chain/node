@@ -15,7 +15,7 @@ func GetCoreParams() CoreParamsList {
 		CoreParams: []*CoreParams{
 			{
 				ChainId:                     common.EthChain().ChainId,
-				ConfirmationCount:           6,
+				ConfirmationCount:           14,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
@@ -28,7 +28,7 @@ func GetCoreParams() CoreParamsList {
 			},
 			{
 				ChainId:                     common.BscMainnetChain().ChainId,
-				ConfirmationCount:           6,
+				ConfirmationCount:           14,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
