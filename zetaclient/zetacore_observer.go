@@ -236,9 +236,9 @@ func (co *CoreObserver) startSendScheduler() {
 // Bitcoin outtx is processed in a different way
 // 1. schedule one keysign on each ticker
 // 2. schedule keysign only when nonce-mark UTXO is available
-// 3. stop processing cctx when pendingNonce/lookahead is reached
+// 3. stop processing when pendingNonce/lookahead is reached
 //
-// Returns whether to stop processing cctx
+// Returns whether to stop processing
 func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx int, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
 	params := send.GetCurrentOutTxParam()
 	nonce := params.OutboundTxTssNonce

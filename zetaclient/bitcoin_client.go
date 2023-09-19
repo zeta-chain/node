@@ -642,10 +642,6 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
 func (ob *BitcoinChainClient) refreshPendingNonce() {
-	ob.mu.Lock()
-	pendingNonce := ob.pendingNonce
-	ob.mu.Unlock()
-
 	// get pending nonces from zetacore
 	p, err := ob.zetaClient.GetPendingNoncesByChain(ob.chain.ChainId)
 	if err != nil {
@@ -653,6 +649,10 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	}
 
 	// increase pending nonce if lagged behind
+	ob.mu.Lock()
+	pendingNonce := ob.pendingNonce
+	ob.mu.Unlock()
+
 	if p.NonceLow > 0 && uint64(p.NonceLow) >= pendingNonce {
 		// get the last included outTx hash
 		txid, err := ob.getOutTxidByNonce(uint64(p.NonceLow)-1, false)
@@ -680,27 +680,26 @@ func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string
 	if included {
 		return res.TxID, nil
 	}
-	if !test {
-		// if not unit test, get cctx from zetacore
+	if !test { // if not unit test, get cctx from zetacore
 		send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 		if err != nil {
-			return "", errors.Wrapf(err, "getNonceMarkTxID: error getting cctx for nonce %d", nonce)
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting cctx for nonce %d", nonce)
 		}
 		txid := send.GetCurrentOutTxParam().OutboundTxHash
 		if txid == "" {
-			return "", fmt.Errorf("getNonceMarkTxID: cannot find outTx txid for nonce %d", nonce)
+			return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
 		_, getTxResult, err := ob.GetTxResultByHash(txid)
 		if err != nil {
-			return "", errors.Wrapf(err, "getNonceMarkTxID: error getting outTx result for nonce %d hash %s", nonce, txid)
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting outTx result for nonce %d hash %s", nonce, txid)
 		}
 		if getTxResult.Confirmations <= 0 { // just a double check
-			return "", fmt.Errorf("getNonceMarkTxID: outTx txid %s for nonce %d is not confirmed", txid, nonce)
+			return "", fmt.Errorf("getOutTxidByNonce: outTx txid %s for nonce %d is not confirmed", txid, nonce)
 		}
 		return txid, nil
 	}
-	return "", fmt.Errorf("getNonceMarkTxID: cannot find outTx txid for nonce %d", nonce)
+	return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
@@ -879,7 +878,7 @@ func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.O
 			}
 			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s", txHash, outTxID)
 		}
-		// update saved tx result as confirmations increase
+		// update saved tx result as confirmations may increase
 		if foundHash && foundRes {
 			ob.includedTxResults[outTxID] = *getTxResult
 			if getTxResult.Confirmations > res.Confirmations {
