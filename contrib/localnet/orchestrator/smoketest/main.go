@@ -298,10 +298,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestPauseZRC20()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	// TODO: uncomment once erc20 deposit contains the sender address
-	//https://github.com/zeta-chain/node/issues/1140
-	//smokeTest.TestERC20DepositAndCallRefund()
-	//smokeTest.CheckZRC20ReserveAndSupply()
+	smokeTest.TestERC20DepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here
 	smokeTest.TestMyTest()

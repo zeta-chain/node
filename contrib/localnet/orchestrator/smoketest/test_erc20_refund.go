@@ -22,9 +22,7 @@ func (sm *SmokeTest) TestERC20DepositAndCallRefund() {
 	}()
 	LoudPrintf("Deposit a non-gas ZRC20 into ZEVM and call a contract that reverts; should refund on ZetaChain if no liquidity pool, should refund on origin if liquidity pool\n")
 
-	// TODO: uncomment once erc20 deposit contains the sender address
-	//https://github.com/zeta-chain/node/issues/1140
-	//// Get the initial balance of the deployer
+	// Get the initial balance of the deployer
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -46,9 +44,7 @@ func (sm *SmokeTest) TestERC20DepositAndCallRefund() {
 		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
 	}
 
-	// TODO: uncomment once erc20 deposit contains the sender address
-	//https://github.com/zeta-chain/node/issues/1140
-	//// Check that the erc20 in the aborted cctx was refunded on ZetaChain
+	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
 	newBalance, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -84,8 +80,6 @@ func (sm *SmokeTest) TestERC20DepositAndCallRefund() {
 	cctx = WaitCctxMinedByInTxHash(inTxHash, sm.cctxClient)
 
 	// the revert tx creation will fail because the sender, used as the recipient, is not defined in the cctx
-	// TODO: uncomment once erc20 deposit contains the sender address
-	//https://github.com/zeta-chain/node/issues/1140
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be PendingRevert; got %s", cctx.CctxStatus.Status))
 	}
