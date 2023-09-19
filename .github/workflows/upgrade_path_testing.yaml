@@ -41,6 +41,15 @@ jobs:
       UPGRADES_SLEEP_TIME: "300"
       KEYRING: "test"
       UPGRADE_INFO: '{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"}}'
+      STATUS_ENDPOINT: "http://127.0.0.1:26657/status"
+      ABCI_ENDPOINT: "http://127.0.0.1:26657/abci_info"
+      ENDPOINT: "http://127.0.0.1:26657"
+      SLEEP_DURATION: "5"
+      previous_height: "-1"
+      stalled_count: "0"
+      first: "true"
+      MAX_TRIES: "100"
+      count: "0"
     steps:
       - uses: actions/checkout@v1
 
@@ -136,14 +145,14 @@ jobs:
           zetacored init Zetanode-Localnet --chain-id=$CHAINID
           
           #Set config to use azeta
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > ~/.zetacored/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="60s"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
-          
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > ~/.zetacored/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="60s"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+#
           sed -i '/\[api\]/,+3 s/enable = false/enable = true/' $DAEMON_HOME/config/app.toml
           
           zetacored add-observer-list observers.json --keygen-block=5
@@ -281,9 +290,6 @@ jobs:
           zetacored query gov proposal ${proposal_id} --node http://127.0.0.1:26657
           
           TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
-          ENDPOINT="http://127.0.0.1:26657"
-          MAX_TRIES=100
-          count=0
           
           echo "**** CHECK FOR HEIGHT ${TARGET_HEIGHT} ****"
           while [[ $count -lt $MAX_TRIES ]]
@@ -318,15 +324,6 @@ jobs:
               echo "Max tries reached without achieving target height."
               exit 2
           fi
-
-          STATUS_ENDPOINT="$ENDPOINT/status"  
-          ABCI_ENDPOINT="$ENDPOINT/abci_info" 
-          VERSION="${VERSION}" 
-          MAX_TRIES=50
-          SLEEP_DURATION=5
-          previous_height=-1
-          stalled_count=0
-          first="true"
           
           for (( i=1; i<=MAX_TRIES; i++ ))
           do
