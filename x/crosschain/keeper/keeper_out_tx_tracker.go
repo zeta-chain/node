@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"strings"
 
+	cosmoserrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -159,29 +159,27 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 
 // Messages
 
-// Adds a new record to the outbound transaction tracker.
-//
-// Only the admin policy account and the observer validators are authorized to
-// broadcast this message.
+// AddToOutTxTracker adds a new record to the outbound transaction tracker.
+// only the admin policy account and the observer validators are authorized to broadcast this message.
 func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
 	if chain == nil {
-		return nil, zetaObserverTypes.ErrSupportedChains
+		return nil, observertypes.ErrSupportedChains
 	}
 
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
-		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
+		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_out_tx_tracker)
 		isAdmin := msg.Creator == adminPolicyAccount
 
 		isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
 		if err != nil {
 			ctx.Logger().Error("Error while checking if the account is an observer", err)
-			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("error  IsAuthorized %s", msg.Creator))
+			return nil, cosmoserrors.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("error  IsAuthorized %s", msg.Creator))
 		}
 		// Sender needs to be either the admin policy account or an observer
 		if !(isAdmin || isObserver) {
-			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+			return nil, cosmoserrors.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}
 	}
 
@@ -190,14 +188,11 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		blockHash := eth.HexToHash(msg.BlockHash)
 		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
 		if !found {
-			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
+			return nil, cosmoserrors.Wrap(observertypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
 		}
-		var header ethtypes.Header
-		err := rlp.DecodeBytes(res.Header, &header)
-		if err != nil {
-			return nil, err
-		}
-		val, err := msg.Proof.Verify(header.TxHash, int(msg.TxIndex))
+
+		// verify and process the proof
+		val, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
 		if err == nil {
 			var txx ethtypes.Transaction
 			err = txx.UnmarshalBinary(val)
@@ -272,13 +267,12 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
 }
 
-// Removes a record from the outbound transaction tracker by chain ID and nonce.
-//
-// Only the admin policy account is authorized to broadcast this message.
+// RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
+// only the admin policy account is authorized to broadcast this message.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker) {
-		return &types.MsgRemoveFromOutTxTrackerResponse{}, zetaObserverTypes.ErrNotAuthorizedPolicy
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_out_tx_tracker) {
+		return &types.MsgRemoveFromOutTxTrackerResponse{}, observertypes.ErrNotAuthorizedPolicy
 	}
 
 	k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
