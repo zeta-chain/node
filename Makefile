@@ -173,6 +173,10 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
+mocks:
+	@echo "--> Generating mocks"
+	@bash ./scripts/mocks-generate.sh
+
 generate: proto openapi specs
 .PHONY: generate
 

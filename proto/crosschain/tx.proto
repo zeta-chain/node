@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "common/common.proto";
+import "common/ethereum/ethereum.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
@@ -17,6 +18,7 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
 
 message MsgUpdateTssAddress {
@@ -42,6 +44,9 @@ message MsgAddToOutTxTracker {
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
+  ethereum.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
 }
 
 message MsgAddToOutTxTrackerResponse {}
