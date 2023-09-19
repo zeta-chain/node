@@ -21,7 +21,7 @@ const (
 	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly
+	PostSendEVMGasLimit             = 1_500_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
 	PostBlameDataGasLimit           = 200_000
