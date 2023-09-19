@@ -4,6 +4,14 @@ import os
 genesis = open(os.environ["NEW_GENESIS"], "r").read()
 genesis_json_object = json.loads(genesis)
 
+genesis_json_object["staking"]["params"]["bond_denom"] = os.environ["DENOM"]
+genesis_json_object["gov"]["deposit_params"]["min_deposit"][0]["denom"] = os.environ["DENOM"]
+genesis_json_object["mint"]["params"]["mint_denom"] = os.environ["DENOM"]
+genesis_json_object["evm"]["params"]["evm_denom"] = os.environ["DENOM"]
+genesis_json_object["block"]["max_gas"] = os.environ["MAX_GAS"]
+genesis_json_object["gov"]["voting_params"]["voting_period"] = f'{os.environ["PROPOSAL_TIME_SECONDS"]}s'
+
+
 exported_genesis = open(os.environ["OLD_GENESIS"], "r").read()
 exported_genesis_json_object = json.loads(exported_genesis)
 
@@ -37,13 +45,6 @@ for index, account in enumerate(evm["accounts"]):
 
 evm["accounts"] = evm_accounts
 genesis_json_object["app_state"]["evm"] = evm
-
-genesis_json_object["staking"]["params"]["bond_denom"] = os.environ["DENOM"]
-genesis_json_object["gov"]["deposit_params"]["min_deposit"][0]["denom"] = os.environ["DENOM"]
-genesis_json_object["mint"]["params"]["mint_denom"] = os.environ["DENOM"]
-genesis_json_object["evm"]["params"]["evm_denom"] = os.environ["DENOM"]
-genesis_json_object["block"]["max_gas"] = os.environ["MAX_GAS"]
-genesis_json_object["gov"]["voting_params"]["voting_period"] = f'{os.environ["PROPOSAL_TIME_SECONDS"]}s'
 
 genesis = open("genesis-edited.json", "w")
 genesis_string = json.dumps(genesis_json_object, indent=2)
