@@ -80,6 +80,7 @@ type FungibleKeeper interface {
 	GetUniswapV2Router02Address(ctx sdk.Context) (eth.Address, error)
 	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
 	QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 eth.Address) (*big.Int, error)
+	QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 eth.Address) (*big.Int, error)
 	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
@@ -102,14 +103,15 @@ type FungibleKeeper interface {
 		coinType common.CoinType,
 		asset string,
 	) (*evmtypes.MsgEthereumTxResponse, error)
-	CallUniswapV2RouterSwapExactTokenForETH(
+	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender eth.Address,
 		to eth.Address,
 		amountIn *big.Int,
+		inZRC4,
 		outZRC4 eth.Address,
 		noEthereumTxEvent bool,
-	) ([]*big.Int, error)
+	) (ret []*big.Int, err error)
 	CallUniswapV2RouterSwapExactETHForToken(
 		ctx sdk.Context,
 		sender eth.Address,

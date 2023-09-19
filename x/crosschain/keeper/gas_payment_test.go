@@ -353,6 +353,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 	t.Run("can pay gas in erc20", func(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
+
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminDeployFungibleCoin(ctx, zk, admin)

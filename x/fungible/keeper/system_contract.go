@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+	"fmt"
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -258,15 +260,82 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	return zrc20Res.Value, nil
 }
 
-// CallUniswapV2RouterSwapExactTokenForETH calls the swapExactTokensForETH method of the uniswapv2 router contract
-func (k *Keeper) CallUniswapV2RouterSwapExactTokenForETH(
+// CallUniswapV2RouterSwapExactTokensForTokens calls the swapExactTokensForETH method of the uniswapv2 router contract
+// to swap tokens to another tokens using wZeta as intermediary
+func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 	ctx sdk.Context,
 	sender ethcommon.Address,
 	to ethcommon.Address,
 	amountIn *big.Int,
+	inZRC4,
 	outZRC4 ethcommon.Address,
 	noEthereumTxEvent bool,
-) ([]*big.Int, error) {
+) (ret []*big.Int, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			ctx.Logger().Error(fmt.Sprintf("caught a panic: %v", r))
+			err = errors.New(fmt.Sprintf("caught a panic: %v", r))
+		}
+	}()
+
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
+	}
+	wzetaAddr, err := k.GetWZetaContractAddress(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetWZetaContractAddress")
+	}
+	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+	}
+
+	//function swapExactTokensForTokens(
+	//	uint amountIn,
+	//	uint amountOutMin,
+	//	address[] calldata path,
+	//	address to,
+	//	uint deadline
+	//)
+	ctx.Logger().Error("Calling swapExactTokensForTokens")
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		sender,
+		routerAddress,
+		BigIntZero,
+		big.NewInt(1000_000),
+		true,
+		noEthereumTxEvent,
+		"swapExactTokensForTokens",
+		amountIn,
+		BigIntZero,
+		[]ethcommon.Address{inZRC4, wzetaAddr, outZRC4},
+		to,
+		big.NewInt(1e17),
+	)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactTokensForTokens")
+	}
+
+	amounts := new([3]*big.Int)
+	err = routerABI.UnpackIntoInterface(&amounts, "swapExactTokensForTokens", res.Ret)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface swapExactTokensForTokens")
+	}
+	return (*amounts)[:], nil
+}
+
+// CallUniswapV2RouterSwapExactTokensForETH calls the swapExactTokensForETH method of the uniswapv2 router contract
+func (k *Keeper) CallUniswapV2RouterSwapExactTokensForETH(
+	ctx sdk.Context,
+	sender ethcommon.Address,
+	to ethcommon.Address,
+	amountIn *big.Int,
+	inZRC4 ethcommon.Address,
+	noEthereumTxEvent bool,
+) (ret []*big.Int, err error) {
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
@@ -287,6 +356,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokenForETH(
 	//	address to,
 	//	uint deadline
 	//)
+	ctx.Logger().Error("Calling swapExactTokensForETH")
 	res, err := k.CallEVM(
 		ctx,
 		*routerABI,
@@ -299,18 +369,18 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokenForETH(
 		"swapExactTokensForETH",
 		amountIn,
 		BigIntZero,
-		[]ethcommon.Address{outZRC4, wzetaAddr},
+		[]ethcommon.Address{inZRC4, wzetaAddr},
 		to,
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactETHForTokens")
+		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactTokensForETH")
 	}
 
 	amounts := new([2]*big.Int)
-	err = routerABI.UnpackIntoInterface(&amounts, "swapExactETHForTokens", res.Ret)
+	err = routerABI.UnpackIntoInterface(&amounts, "swapExactTokensForETH", res.Ret)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface swapExactETHForTokens")
+		return nil, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface swapExactTokensForETH")
 	}
 	return (*amounts)[:], nil
 }
@@ -494,6 +564,47 @@ func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut
 	}
 
 	amounts := new([2]*big.Int)
+	err = routerABI.UnpackIntoInterface(&amounts, "getAmountsIn", res.Ret)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to unpack getAmountsIn")
+	}
+	return (*amounts)[0], nil
+}
+
+// QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn returns the amount of ZRC4 tokens needed to buy another ZRC4 token, it uses the WZeta contract as a bridge
+func (k *Keeper) QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 ethcommon.Address) (*big.Int, error) {
+	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
+	}
+	wzetaAddr, err := k.GetWZetaContractAddress(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetWZetaContractAddress")
+	}
+	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+	}
+
+	//function getAmountsIn(uint amountOut, address[] memory path) public view returns (uint[] memory amounts);
+	res, err := k.CallEVM(
+		ctx,
+		*routerABI,
+		types.ModuleAddressEVM,
+		routerAddress,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"getAmountsIn",
+		amountOut,
+		[]ethcommon.Address{inZRC4, wzetaAddr, outZRC4},
+	)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
+	}
+
+	amounts := new([3]*big.Int)
 	err = routerABI.UnpackIntoInterface(&amounts, "getAmountsIn", res.Ret)
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to unpack getAmountsIn")

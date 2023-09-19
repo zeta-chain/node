@@ -161,11 +161,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	// get the necessary ERC20 amount for gas
-	feeInZeta, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), gasZRC20)
-	if err != nil {
-		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
-	}
-	feeInZRC20, err := k.fungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, feeInZeta, zrc20)
+	feeInZRC20, err := k.fungibleKeeper.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, outTxGasFee.BigInt(), zrc20, gasZRC20)
 	if err != nil {
 		// NOTE: this is the first method that fails when a liquidity pool is not set for the gas ZRC20, so we return a specific error
 		return cosmoserrors.Wrap(types.ErrNoLiquidityPool, err.Error())
@@ -186,7 +182,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}
-	ctx.Logger().Info("Minting ERC20 for gas fee",
+	ctx.Logger().Info("Minted ERC20 for gas fee",
 		"zrc20", zrc20.Hex(),
 		"amount", feeInZRC20,
 	)
@@ -204,54 +200,46 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		feeInZRC20,
 		noEthereumTxEvent,
 	)
+	if err != nil {
+		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
+	}
 
 	// swap the fee in ERC20 into gas passing through Zeta and burn the gas ZRC20
-	zetaAmounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactTokenForETH(
+	gasMeter := ctx.GasMeter()
+	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
+	amounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx,
 		types.ModuleAddressEVM,
 		types.ModuleAddressEVM,
 		feeInZRC20,
 		zrc20,
-		noEthereumTxEvent,
-	)
-	if err != nil {
-		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
-	}
-	ctx.Logger().Info("CallUniswapV2RouterSwapExactTokenForETH",
-		"zrc20AmountIn", zetaAmounts[0],
-		"zetaAmountOut", zetaAmounts[1],
-	)
-
-	gasAmount, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactETHForToken(
-		ctx,
-		types.ModuleAddressEVM,
-		types.ModuleAddressEVM,
-		zetaAmounts[1],
 		gasZRC20,
 		noEthereumTxEvent,
 	)
+	ctx = ctx.WithGasMeter(gasMeter)
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}
-	ctx.Logger().Info("CallUniswapV2RouterSwapExactETHForToken",
-		"zetaAmountIn", gasAmount[0],
-		"gasAmountOut", gasAmount[1],
+	ctx.Logger().Info("CallUniswapV2RouterSwapExactTokensForTokens",
+		"zrc20AmountIn", amounts[0],
+		"gasAmountOut", amounts[2],
 	)
+	gasObtained := amounts[2]
 
 	// check if the final gas received after swap matches the gas fee defined
 	// if not there might be issues with the pool liquidity and it is safer from an accounting perspective to return an error
-	if gasAmount[1].Cmp(outTxGasFee.BigInt()) != 0 {
-		return cosmoserrors.Wrapf(types.ErrInvalidGasAmount, "gas obtained for burn (%s) not equal to gas fee(%s)", gasAmount[1], outTxGasFee)
+	if gasObtained.Cmp(outTxGasFee.BigInt()) != 0 {
+		return cosmoserrors.Wrapf(types.ErrInvalidGasAmount, "gas obtained for burn (%s) not equal to gas fee(%s)", gasObtained, outTxGasFee)
 	}
 
 	// burn the gas ZRC20
-	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, gasAmount[1], noEthereumTxEvent)
+	err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, gasObtained, noEthereumTxEvent)
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}
 	ctx.Logger().Info("Burning gas ZRC20",
 		"zrc20", gasZRC20.Hex(),
-		"amount", gasAmount[1],
+		"amount", gasObtained,
 	)
 
 	// update cctx
