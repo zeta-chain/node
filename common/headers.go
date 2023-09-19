@@ -53,10 +53,10 @@ func validateEthereumHeader(headerBytes []byte, blockHash []byte, height int64) 
 	// RLP encoded block header
 	var header ethtypes.Header
 	if err := rlp.DecodeBytes(headerBytes, &header); err != nil {
-		return fmt.Errorf("cannot decode RLP (%s)")
+		return fmt.Errorf("cannot decode RLP (%s)", err)
 	}
 	if err := header.SanityCheck(); err != nil {
-		return fmt.Errorf("sanity check failed (%s)")
+		return fmt.Errorf("sanity check failed (%s)", err)
 	}
 	if bytes.Compare(blockHash, header.Hash().Bytes()) != 0 {
 		return fmt.Errorf("tx hash mismatch (%s) vs (%s)", hex.EncodeToString(blockHash), header.Hash().Hex())
