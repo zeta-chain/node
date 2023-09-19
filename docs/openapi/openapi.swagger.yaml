@@ -27590,7 +27590,12 @@ paths:
           in: query
           required: false
           type: string
-        - name: proof.keys
+        - name: proof.chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: proof.eth_proof.keys
           in: query
           required: false
           type: array
@@ -27598,7 +27603,7 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
-        - name: proof.values
+        - name: proof.eth_proof.values
           in: query
           required: false
           type: array
@@ -50227,6 +50232,14 @@ definitions:
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
        - Cmd: not a real coin, rather a command
+  commonProof:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      eth_proof:
+        $ref: '#/definitions/ethereumProof'
   commonPubKeySet:
     type: object
     properties:
@@ -50827,22 +50840,21 @@ definitions:
   observerBlockHeader:
     type: object
     properties:
-      header:
-        type: string
-        format: byte
-        title: binary encoded headers; RLP for ethereum
       height:
         type: string
         format: int64
       hash:
         type: string
         format: byte
-      parentHash:
+      parent_hash:
         type: string
         format: byte
       chain_id:
         type: string
         format: int64
+      header:
+        $ref: '#/definitions/observerHeaderData'
+        title: chain specific header
   observerCoreParams:
     type: object
     properties:
@@ -50884,6 +50896,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
+  observerHeaderData:
+    type: object
+    properties:
+      ethereum_header:
+        type: string
+        format: byte
+        title: binary encoded headers; RLP for ethereum
   observerKeygen:
     type: object
     properties:

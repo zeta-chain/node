@@ -79,8 +79,8 @@ message MsgAddBlockHeader {
 	string creator = 1;
 	int64 chain_id = 2;
 	bytes block_hash = 3;
-	bytes block_header = 4;
-	int64 height = 5;
+	int64 height = 4;
+	HeaderData header = 5;
 }
 ```
 
