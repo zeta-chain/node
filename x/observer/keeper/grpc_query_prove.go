@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -24,14 +24,13 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 	if !found {
 		return nil, status.Error(codes.NotFound, "block header not found")
 	}
-	var header ethtypes.Header
-	err := rlp.DecodeBytes(res.Header, &header)
-	if err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to decode header: %s", err))
-	}
+
 	proven := false
 
-	val, err := req.Proof.Verify(header.TxHash, int(req.TxIndex))
+	val, err := req.Proof.Verify(res.Header, int(req.TxIndex))
+	if err != nil && !common.IsErrorInvalidProof(err) {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	if err == nil {
 		var txx ethtypes.Transaction
 		err = txx.UnmarshalBinary(val)

@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -193,6 +194,9 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 		// verify and process the proof
 		val, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
+		if err != nil && !common.IsErrorInvalidProof(err) {
+			return nil, err
+		}
 		if err == nil {
 			var txx ethtypes.Transaction
 			err = txx.UnmarshalBinary(val)

@@ -7,6 +7,26 @@ import (
 	"github.com/zeta-chain/zetacore/common/ethereum"
 )
 
+// ErrInvalidProof is a error type for invalid proofs embedding the underlying error
+type ErrInvalidProof struct {
+	Err error
+}
+
+func NewErrInvalidProof(err error) ErrInvalidProof {
+	return ErrInvalidProof{
+		Err: err,
+	}
+}
+
+func (e ErrInvalidProof) Error() string {
+	return e.Err.Error()
+}
+
+// IsErrorInvalidProof returns true if the error is an ErrInvalidProof
+func IsErrorInvalidProof(err error) bool {
+	return errors.As(err, &ErrInvalidProof{})
+}
+
 // NewEthereumProof returns a new Proof containing an Ethereum proof
 func NewEthereumProof(proof ethereum.Proof) *Proof {
 	return &Proof{
@@ -29,7 +49,11 @@ func (p Proof) Verify(headerData HeaderData, txIndex int) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		return proof.EthereumProof.Verify(ethHeader.TxHash, txIndex)
+		val, err := proof.EthereumProof.Verify(ethHeader.TxHash, txIndex)
+		if err != nil {
+			return nil, NewErrInvalidProof(err)
+		}
+		return val, nil
 	default:
 		return nil, errors.New("unrecognized proof type")
 	}
