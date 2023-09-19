@@ -66,6 +66,7 @@ type ZetaObserverKeeper interface {
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
+	GetBlockHeader(ctx sdk.Context, hash []byte) (val zetaObserverTypes.BlockHeader, found bool)
 }
 
 type FungibleKeeper interface {

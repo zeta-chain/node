@@ -9,6 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	eth "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -167,16 +170,65 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 
-	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
-	isAdmin := msg.Creator == adminPolicyAccount
+	if msg.Proof == nil { // without proof, only certain accounts can send this message
+		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
+		isAdmin := msg.Creator == adminPolicyAccount
 
-	isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
-	if err != nil {
-		ctx.Logger().Error("Error while checking if the account is an observer", err)
+		isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+		if err != nil {
+			ctx.Logger().Error("Error while checking if the account is an observer", err)
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("error  IsAuthorized %s", msg.Creator))
+		}
+		// Sender needs to be either the admin policy account or an observer
+		if !(isAdmin || isObserver) {
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		}
 	}
-	// Sender needs to be either the admin policy account or an observer
-	if !(isAdmin || isObserver) {
-		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+
+	proven := false
+	if msg.Proof != nil {
+		blockHash := eth.HexToHash(msg.BlockHash)
+		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
+		if !found {
+			return nil, sdkerrors.Wrap(zetaObserverTypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
+		}
+		var header ethtypes.Header
+		err := rlp.DecodeBytes(res.Header, &header)
+		if err != nil {
+			return nil, err
+		}
+		val, err := msg.Proof.Verify(header.TxHash, int(msg.TxIndex))
+		if err == nil {
+			var txx ethtypes.Transaction
+			err = txx.UnmarshalBinary(val)
+			if err != nil {
+				return nil, err
+			}
+			signer := ethtypes.NewLondonSigner(txx.ChainId())
+			sender, err := ethtypes.Sender(signer, &txx)
+			if err != nil {
+				return nil, err
+			}
+			res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+			if err != nil {
+				return nil, err
+			}
+			tssAddr := eth.HexToAddress(res.Eth)
+			if tssAddr == (eth.Address{}) {
+				return nil, fmt.Errorf("tss address not found")
+			}
+			if sender != tssAddr {
+				return nil, fmt.Errorf("sender is not tss address")
+			}
+			if txx.Nonce() != msg.Nonce {
+				return nil, fmt.Errorf("nonce mismatch")
+			}
+			proven = true
+		}
+
+		if !proven {
+			return nil, fmt.Errorf("proof failed")
+		}
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
@@ -198,11 +250,23 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	for _, hash := range tracker.HashList {
 		if strings.EqualFold(hash.TxHash, msg.TxHash) {
 			isDup = true
+			if proven {
+				hash.Proved = true
+				k.SetOutTxTracker(ctx, tracker)
+				k.Logger(ctx).Info("Proof'd outbound transaction")
+				return &types.MsgAddToOutTxTrackerResponse{}, nil
+			}
 			break
 		}
 	}
 	if !isDup {
-		tracker.HashList = append(tracker.HashList, &hash)
+		if proven {
+			hash.Proved = true
+			tracker.HashList = append([]*types.TxHashList{&hash}, tracker.HashList...)
+			k.Logger(ctx).Info("Proof'd outbound transaction")
+		} else {
+			tracker.HashList = append(tracker.HashList, &hash)
+		}
 		k.SetOutTxTracker(ctx, tracker)
 	}
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
