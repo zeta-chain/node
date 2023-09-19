@@ -205,8 +205,6 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	// swap the fee in ERC20 into gas passing through Zeta and burn the gas ZRC20
-	gasMeter := ctx.GasMeter()
-	ctx = ctx.WithGasMeter(sdk.NewInfiniteGasMeter())
 	amounts, err := k.fungibleKeeper.CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx,
 		types.ModuleAddressEVM,
@@ -216,7 +214,6 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 		gasZRC20,
 		noEthereumTxEvent,
 	)
-	ctx = ctx.WithGasMeter(gasMeter)
 	if err != nil {
 		return cosmoserrors.Wrap(fungibletypes.ErrContractCall, err.Error())
 	}

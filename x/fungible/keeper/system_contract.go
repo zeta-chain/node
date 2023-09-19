@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"errors"
-	"fmt"
 	"math/big"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -271,13 +269,6 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 	outZRC4 ethcommon.Address,
 	noEthereumTxEvent bool,
 ) (ret []*big.Int, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			ctx.Logger().Error(fmt.Sprintf("caught a panic: %v", r))
-			err = errors.New(fmt.Sprintf("caught a panic: %v", r))
-		}
-	}()
-
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get router abi")
@@ -298,7 +289,6 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 	//	address to,
 	//	uint deadline
 	//)
-	ctx.Logger().Error("Calling swapExactTokensForTokens")
 	res, err := k.CallEVM(
 		ctx,
 		*routerABI,
