@@ -2,57 +2,63 @@ package keeper
 
 import (
 	"context"
-	"fmt"
+	cosmoserrors "cosmossdk.io/errors"
+	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// MsgAddBlockHeader handles adding a block header to the store, through majority voting of observers
+// AddBlockHeader handles adding a block header to the store, through majority voting of observers
 func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockHeader) (*types.MsgAddBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := types.ObservationType_InBoundTx
+
+	// check authorization for this chain
 	chain := common.GetChainFromChainID(msg.ChainId)
 	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
 	if !ok {
-		return nil, err
+		return nil, cosmoserrors.Wrap(types.ErrNotAuthorizedPolicy, err.Error())
 	}
 
-	ballot, _, err := k.FindBallot(ctx, msg.Digest(), chain, observationType)
+	// add vote to ballot
+	ballot, _, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InBoundTx)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to find ballot")
+		return nil, cosmoserrors.Wrap(err, "failed to find ballot")
 	}
 	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, types.VoteType_SuccessObservation)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "failed to add vote to ballot")
+		return nil, cosmoserrors.Wrap(err, "failed to add vote to ballot")
 	}
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
 		return &types.MsgAddBlockHeaderResponse{}, nil
 	}
 
+	/**
+	 * Vote finalized, add block header to store
+	 */
 	_, found := k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("block header with hash %s already exists", msg.BlockHeader))
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hex.EncodeToString(msg.BlockHash))
 	}
 
-	pHash, err := msg.ParentHash() // error is checked in BasicValidation in msg; check again for extra caution
+	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
+	pHash, err := msg.Header.ParentHash()
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("failed to get parent hash: %s", err.Error()))
+		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
 	}
 
 	// TODO: add check for parent block header's existence here https://github.com/zeta-chain/node/issues/1133
 
 	bh := types.BlockHeader{
-		Header:     msg.BlockHeader,
+		Header:     msg.Header,
 		Height:     msg.Height,
 		Hash:       msg.BlockHash,
 		ParentHash: pHash,
 		ChainId:    msg.ChainId,
 	}
-
 	k.SetBlockHeader(ctx, bh)
+
 	return &types.MsgAddBlockHeaderResponse{}, nil
 }
