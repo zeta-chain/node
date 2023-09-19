@@ -165,7 +165,7 @@ chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
 
 # 7 Start the nodes
 zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
-sleep 10
+sleep 20
 echo
 
 if [ $HOSTNAME = "zetacore0" ]

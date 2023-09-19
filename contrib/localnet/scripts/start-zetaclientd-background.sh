@@ -32,4 +32,5 @@ else
   zetaclientd start > $HOME/zetaclient.log 2>&1 &
 fi
 
+sleep 3
 tail -f $HOME/zetaclient.log

@@ -28,7 +28,10 @@ if [ $SMOKETEST_EXIT_CODE -ne 0 ]; then
   exit 1
 fi
 
-smoketest "$SMOKETEST_CMD" --deployed --wait-for 325
+# Restart zetaclients at upgrade height
+/work/restart-zetaclientd.sh -u 330 -n 2
+
+smoketest "$SMOKETEST_CMD" --deployed --wait-for 335
 
 if [ $SMOKETEST_EXIT_CODE -eq 0 ]; then
   echo "smoketest passed"

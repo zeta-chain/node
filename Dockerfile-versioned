@@ -17,19 +17,21 @@ RUN mkdir -p  $GOPATH/bin/new
 
 ENV NEW_VERSION=${new_version}
 
-# Checkout and build base binary
+# Checkout and build new binary
 RUN git clone https://github.com/zeta-chain/node.git
 RUN cd node && git fetch
-RUN cd node && git checkout ${old_version}
-RUN cd node && go mod download
-RUN cd node && make install
-RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
-
-# Checkout and build new binary
 RUN cd node && git checkout ${new_version}
 RUN cd node && go mod download
 RUN cd node && make install
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/
+RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/new/
+
+# Checkout and build old binary
+RUN cd node && git checkout ${old_version}
+RUN cd node && go mod download
+RUN cd node && make install
+RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
+RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/old/
 
 RUN cd node && git checkout stateful-upgrade
 RUN cd node && git pull
