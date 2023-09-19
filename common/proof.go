@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/common/ethereum"
