@@ -26,6 +26,7 @@ message MsgUpdateTssAddress {
 }
 
 message MsgUpdateTssAddressResponse {}
+
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;

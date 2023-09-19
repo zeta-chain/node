@@ -12,7 +12,7 @@ message BlockHeader {
   bytes parent_hash = 3;
   int64 chain_id = 4;
   // chain specific header
-  HeaderData header = 5;
+  HeaderData header = 5 [(gogoproto.nullable) = false];
 }
 
 message HeaderData {
