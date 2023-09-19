@@ -197,7 +197,7 @@ jobs:
               git_env_file.write("UPGRADE_TYPE=GOV")
           git_env_file.close()
 
-      - name: "NON_CONCENSUS_BREAKING_UPGRADE"
+      - name: "NON_CONSENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'NONCON'
         run: |
           echo ${UPGRADE_TYPE}
@@ -238,7 +238,7 @@ jobs:
             exit 2
           fi
 
-      - name: "CONCENSUS_BREAKING_UPGRADE"
+      - name: "CONSENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'GOV' #GOV
         run: |
           echo "*****UPGRADE TYPE*****"
