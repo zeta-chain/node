@@ -27590,12 +27590,7 @@ paths:
           in: query
           required: false
           type: string
-        - name: proof.chain_id
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: proof.eth_proof.keys
+        - name: proof.ethereum_proof.keys
           in: query
           required: false
           type: array
@@ -27603,7 +27598,7 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
-        - name: proof.eth_proof.values
+        - name: proof.ethereum_proof.values
           in: query
           required: false
           type: array
@@ -50187,6 +50182,24 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  commonBlockHeader:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      hash:
+        type: string
+        format: byte
+      parent_hash:
+        type: string
+        format: byte
+      chain_id:
+        type: string
+        format: int64
+      header:
+        $ref: '#/definitions/commonHeaderData'
+        title: chain specific header
   commonChain:
     type: object
     properties:
@@ -50232,13 +50245,17 @@ definitions:
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
        - Cmd: not a real coin, rather a command
+  commonHeaderData:
+    type: object
+    properties:
+      ethereum_header:
+        type: string
+        format: byte
+        title: binary encoded headers; RLP for ethereum
   commonProof:
     type: object
     properties:
-      chain_id:
-        type: string
-        format: int64
-      eth_proof:
+      ethereum_proof:
         $ref: '#/definitions/ethereumProof'
   commonPubKeySet:
     type: object
@@ -50837,24 +50854,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerBlockHeader:
-    type: object
-    properties:
-      height:
-        type: string
-        format: int64
-      hash:
-        type: string
-        format: byte
-      parent_hash:
-        type: string
-        format: byte
-      chain_id:
-        type: string
-        format: int64
-      header:
-        $ref: '#/definitions/observerHeaderData'
-        title: chain specific header
   observerCoreParams:
     type: object
     properties:
@@ -50896,13 +50895,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
-  observerHeaderData:
-    type: object
-    properties:
-      ethereum_header:
-        type: string
-        format: byte
-        title: binary encoded headers; RLP for ethereum
   observerKeygen:
     type: object
     properties:
@@ -51041,7 +51033,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerBlockHeader'
+          $ref: '#/definitions/commonBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllNodeAccountResponse:
@@ -51085,7 +51077,7 @@ definitions:
     type: object
     properties:
       block_header:
-        $ref: '#/definitions/observerBlockHeader'
+        $ref: '#/definitions/commonBlockHeader'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:

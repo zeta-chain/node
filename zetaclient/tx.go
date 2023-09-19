@@ -192,7 +192,7 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header observerTypes.HeaderData) (string, error) {
+func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, txhash, height, header)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)

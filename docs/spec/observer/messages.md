@@ -72,7 +72,7 @@ message MsgUpdateKeygen {
 
 ## MsgAddBlockHeader
 
-MsgAddBlockHeader handles adding a block header to the store, through majority voting of observers
+AddBlockHeader handles adding a block header to the store, through majority voting of observers
 
 ```proto
 message MsgAddBlockHeader {
@@ -80,7 +80,7 @@ message MsgAddBlockHeader {
 	int64 chain_id = 2;
 	bytes block_hash = 3;
 	int64 height = 4;
-	HeaderData header = 5;
+	common.HeaderData header = 5;
 }
 ```
 

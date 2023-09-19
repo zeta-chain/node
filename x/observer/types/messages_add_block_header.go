@@ -15,7 +15,7 @@ const (
 	TypeMsgAddBlockHeader = "add_block_header"
 )
 
-func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header HeaderData) *MsgAddBlockHeader {
+func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header common.HeaderData) *MsgAddBlockHeader {
 	return &MsgAddBlockHeader{
 		Creator:   creator,
 		ChainId:   chainID,

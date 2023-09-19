@@ -2,10 +2,8 @@
 
 ## MsgAddToOutTxTracker
 
-Adds a new record to the outbound transaction tracker.
-
-Only the admin policy account and the observer validators are authorized to
-broadcast this message.
+AddToOutTxTracker adds a new record to the outbound transaction tracker.
+only the admin policy account and the observer validators are authorized to broadcast this message.
 
 ```proto
 message MsgAddToOutTxTracker {
@@ -21,9 +19,8 @@ message MsgAddToOutTxTracker {
 
 ## MsgRemoveFromOutTxTracker
 
-Removes a record from the outbound transaction tracker by chain ID and nonce.
-
-Only the admin policy account is authorized to broadcast this message.
+RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
+only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgRemoveFromOutTxTracker {

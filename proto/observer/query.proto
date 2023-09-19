@@ -7,7 +7,6 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
-import "observer/headers.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
@@ -217,7 +216,7 @@ message QueryAllBlockHeaderRequest {
 }
 
 message QueryAllBlockHeaderResponse {
-  repeated BlockHeader block_headers = 1;
+  repeated common.BlockHeader block_headers = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -226,5 +225,5 @@ message QueryGetBlockHeaderByHashRequest {
 }
 
 message QueryGetBlockHeaderByHashResponse {
-  BlockHeader block_header = 1;
+  common.BlockHeader block_header = 1;
 }

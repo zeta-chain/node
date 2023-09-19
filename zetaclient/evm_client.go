@@ -835,7 +835,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.chain.ChainId,
 					block.Hash().Bytes(),
 					block.Number().Int64(),
-					observertypes.NewEthereumHeader(headerRLP),
+					common.NewEthereumHeader(headerRLP),
 				)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)

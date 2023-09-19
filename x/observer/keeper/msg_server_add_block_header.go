@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	cosmoserrors "cosmossdk.io/errors"
 	"encoding/hex"
+
+	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -51,7 +52,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	// TODO: add check for parent block header's existence here https://github.com/zeta-chain/node/issues/1133
 
-	bh := types.BlockHeader{
+	bh := common.BlockHeader{
 		Header:     msg.Header,
 		Height:     msg.Height,
 		Hash:       msg.BlockHash,

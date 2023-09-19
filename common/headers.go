@@ -1,8 +1,9 @@
-package types
+package common
 
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -28,7 +29,7 @@ func (h HeaderData) ParentHash() ([]byte, error) {
 		}
 		return header.ParentHash.Bytes(), nil
 	default:
-		return nil, ErrUnrecognizedBlockHeader
+		return nil, errors.New("unrecognized header type")
 	}
 }
 
@@ -38,7 +39,7 @@ func (h HeaderData) Validate(blockHash []byte, height int64) error {
 	case *HeaderData_EthereumHeader:
 		return validateEthereumHeader(data.EthereumHeader, blockHash, height)
 	default:
-		return ErrUnrecognizedBlockHeader
+		return errors.New("unrecognized header type")
 	}
 }
 

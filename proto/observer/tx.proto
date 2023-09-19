@@ -4,7 +4,6 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
-import "observer/headers.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 
@@ -25,7 +24,7 @@ message MsgAddBlockHeader {
   int64 chain_id = 2;
   bytes block_hash = 3;
   int64 height = 4;
-  HeaderData header = 5 [(gogoproto.nullable) = false];
+  common.HeaderData header = 5 [(gogoproto.nullable) = false];
 }
 
 message MsgAddBlockHeaderResponse {}
