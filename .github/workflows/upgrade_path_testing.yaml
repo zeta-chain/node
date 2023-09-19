@@ -27,7 +27,6 @@ jobs:
       DAEMON_HOME: "/home/runner/.zetacored"
       DAEMON_NAME: "zetacored"
       DENOM: "azeta"
-      MAX_GAS: "10000000"
       DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
       DAEMON_RESTART_AFTER_UPGRADE: "true"
       MONIKER: "zeta"
@@ -49,9 +48,6 @@ jobs:
         uses: unfor19/install-aws-cli-action@v1
         with:
           version: 2
-
-      - name: Remove pre-installed Go versions (might require sudo)
-        run: sudo rm -rf /opt/hostedtoolcache/go/
 
       - uses: actions/setup-go@v4
         with:
@@ -106,26 +102,20 @@ jobs:
 
       - name: "START_TESTING_NETWORK"
         run: |
-          
-          echo "**** Configure the keyring ****"
           zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
           
-          echo "**** Run the config command to set the chainid and home directory ****"
           zetacored config chain-id $CHAINID --home ${DAEMON_HOME}
           
-          echo "**** Delete incase there is exsiting state ****"
           zetacored keys delete zetaa --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
           zetacored keys delete executer_zeta --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
           zetacored keys delete mario --keyring-backend $KEYRING -y > /dev/null 2>&1  || echo "doesn't exist"
           zetacored keys delete executer_mario --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
           
-          echo "**** Load the dev keys for the testnet network that correspond to the accounts below and the accounts for genesis manipulation ****"
           echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=$KEYRING
           echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=$KEYRING
           echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer_zeta --recover --keyring-backend=$KEYRING --algo secp256k1
           echo "debris dumb among crew celery derive judge spoon road oyster dad panic adult song attack net pole merge mystery pig actual penalty neither peasant"| zetacored keys add executer_mario --algo=secp256k1 --recover --keyring-backend=$KEYRING
           
-          echo "**** generate the observers.json file for going the gentx and network setup ****"
           echo '
           [
             {
@@ -143,47 +133,43 @@ jobs:
           ]
           ' > observers.json
           
-          echo "**** Run zetacored init to setup the base default genesis to copy state into. ****"
           zetacored init Zetanode-Localnet --chain-id=$CHAINID
           
-          echo "**** Enable the api in teh config ****"
-          cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          cat $HOME/.zetacored/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          cat $HOME/.zetacored/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-          contents="$(jq '.app_state.gov.voting_params.voting_period = "10s"' $DAEMON_HOME/config/genesis.json)" && \
-          echo "${contents}" > $DAEMON_HOME/config/genesis.json
-          sed -i '/\[api\]/,+3 s/enable = false/enable = true/' ~/.zetacored/config/app.toml
+          #Set config to use azeta
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > ~/.zetacored/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="60s"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
           
-          echo "**** Set the observer list form observers.json generated above ****"
+          sed -i '/\[api\]/,+3 s/enable = false/enable = true/' $DAEMON_HOME/config/app.toml
+          
           zetacored add-observer-list observers.json --keygen-block=5
           
-          echo "**** Set the GENTX for the new network, they don't copy with state export. ****"
           zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
           
-          echo "**** Collecting genesis txs **** "
+          echo "Collecting genesis txs..."
           zetacored collect-gentxs
           
-          echo "**** Validating genesis file ****"
+          echo "Validating genesis file..."
           zetacored validate-genesis
                 
-          echo "**** Copy the newly generated genesis.json for manipulation ****"
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
           
-          echo "**** Do Genesis Manipulation**** "
+          echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
+                    
           python .github/actions/upgrade-testing/scripts/create_genesis.py
           
-          echo "**** Move Manipulated Genesis **** "
+          echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
-          echo "**** Start Network ****"
+          echo "Start Network"
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           
-          echo "**** Sleep to let the network start up and start processing blocks ****"
           sleep ${UPGRADES_SLEEP_TIME}
           cat cosmovisor.log
 
