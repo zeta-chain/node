@@ -1,0 +1,400 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*.*.*-rc*"
+
+concurrency: 
+  group: build-release
+  cancel-in-progress: false
+
+env:
+  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
+
+jobs:
+  build-and-test-multi-arch:
+    strategy:
+      matrix:
+        runs-on:
+          [
+            buildjet-4vcpu-ubuntu-2204-arm,
+            buildjet-4vcpu-ubuntu-2204,
+            buildjet-4vcpu-ubuntu-2004
+          ]
+
+    runs-on: ${{matrix.runs-on}}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "true"
+
+      # - uses: buildjet/cache
+      #   timeout-minutes: 5
+      #   with:
+      #     path: |
+      #       ~/.cache/go-build
+      #       ~/go/pkg/mod
+      #     key: ${{ matrix.runs-on }}-go-${{ hashFiles('**/go.sum') }}
+      #     restore-keys: |
+      #       ${{ matrix.runs-on }}-go-
+
+      - name: Test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install-testnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-testnet
+          mv zetaclientd zetaclientd-testnet
+
+          make install-mainnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-mainnet
+          mv zetaclientd zetaclientd-mainnet
+
+          make install-mock-mainnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-mock-mainnet
+          mv zetaclientd zetaclientd-mock-mainnet
+
+      - name: Name Binaries
+        env:
+          CPU_ARCH: ${{ env.CPU_ARCH }}
+        run: |
+            OS_VERSION=$(cat /etc/lsb-release | grep DISTRIB_RELEASE | cut -d '=' -f 2 | cut -d '.' -f 1)
+            cp zetacored-testnet zetacored-testnet-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetaclientd-testnet zetaclientd-testnet-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetacored-mainnet zetacored-mainnet-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetaclientd-mainnet zetaclientd-mainnet-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetacored-mock-mainnet zetacored-mock-mainnet-ubuntu-$OS_VERSION-$CPU_ARCH
+            cp zetaclientd-mock-mainnet zetaclientd-mock-mainnet-ubuntu-$OS_VERSION-$CPU_ARCH
+
+      - name: Save Binaries as Artifacts
+        uses: actions/upload-artifact@v3
+        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        with:
+          name: binaries-${{ github.sha }}
+          path: |
+            zetacored-testnet-ubuntu-*
+            zetaclientd-mainnet-ubuntu-*
+            zetacored-testnet-ubuntu-*
+            zetaclientd-mainnet-ubuntu-*
+            zetacored-mock-mainnet-ubuntu-*
+            zetaclientd-mock-mainnet-ubuntu-*
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  build-alpine-and-test:
+    runs-on: ["ubuntu-latest"]
+    timeout-minutes: 30
+    concurrency:
+      group: "alpine-build-test"
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+
+      - uses: jirutka/setup-alpine@v1
+        with:
+          branch: v3.17
+          arch: x86_64
+          packages: >
+            build-base
+            pkgconf
+            lld
+            go
+            gcc 
+            g++
+            libusb-dev 
+            linux-headers
+            git
+          shell-name: alpine.sh
+
+      - name: Test
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+            echo "Running Build Tests"
+            apk add --no-cache --update
+            make clean
+            make test
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+          git config --global --add safe.directory '*'
+
+          make install-testnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-testnet
+          mv zetaclientd zetaclientd-testnet
+
+          make install-mainnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-mainnet
+          mv zetaclientd zetaclientd-mainnet
+
+          make install-mock-mainnet
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-mock-mainnet
+          mv zetaclientd zetaclientd-mock-mainnet
+
+      - name: Binary Docker Test
+        env:
+          CPU_ARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored-testnet zetacored-testnet-alpine-$CPU_ARCH
+          mv zetaclientd-testnet zetaclientd-testnet-alpine-$CPU_ARCH
+          mv zetacored-mainnet zetacored-mainnet-alpine-$CPU_ARCH
+          mv zetaclientd-mainnet zetaclientd-mainnet-alpine-$CPU_ARCH
+          mv zetacored-mock-mainnet zetacored-mock-mainnet-alpine-$CPU_ARCH
+          mv zetaclientd-mock-mainnet zetaclientd-mock-mainnet-alpine-$CPU_ARCH
+
+      - name: Save Binaries as Artifacts
+        if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ github.sha }}
+          path: |
+            zetacored-testnet-alpine-*
+            zetaclientd-mainnet-alpine-*
+            zetacored-testnet-alpine-*
+            zetaclientd-mainnet-alpine-*
+            zetacored-mock-mainnet-alpine-*
+            zetaclientd-mock-mainnet-alpine-*
+            
+      - name: Clean Up Alpine Workspace
+        if: always()
+        shell: alpine.sh --root {0}
+        run: |
+          set -e # fail on error
+          rm -rf *
+        
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  smoke-test:
+    runs-on: ["zeta-runners"]
+    #runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "false"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        if: github.event.repository.full_name == 'zetachain-chain/node'
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Start Private Network
+        run: |
+          make zetanode
+          cd contrib/localnet/ 
+          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+
+      - name: Run Smoke Test
+        run: |
+          cd contrib/localnet
+          docker-compose up orchestrator --exit-code-from orchestrator
+          if [ $? -ne 0 ]; then
+            echo "Smoke Test Failed"
+            exit 1
+          fi
+
+      - name: Stop Private Network
+        if: always()
+        run: |
+          cd contrib/localnet/
+          docker compose down
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  upload:
+    runs-on: ["zeta-runners"]
+    #runs-on: ubuntu-latest
+
+    timeout-minutes: 15
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/develop')
+    needs:
+      - build-and-test-multi-arch
+      - smoke-test
+      - build-alpine-and-test
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "false"
+          skip_docker_compose: "true"
+
+      - name: Get branch name
+        id: branch-name
+        uses: tj-actions/branch-names@v6
+
+      - name: Git Hash
+        run: |
+          echo "GIT_HASH=$(git rev-parse --short HEAD)" >> ${GITHUB_ENV}
+          echo "WORKSPACE_DIR=$(pwd)" >> ${GITHUB_ENV}
+
+      - name: set-branch-name
+        uses: ./.github/actions/set-branch-name
+        with:
+          github_ref: "${{github.ref}}"
+          github_event: "${{ github.event_name }}"
+          github_head_ref: "${{ github.event.pull_request.head.ref }}"
+          github_commit_sha: "${{ env.GIT_HASH }}"
+          current_branch_name: "${{ steps.branch-name.outputs.current_branch }}"
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: binaries-${{ github.sha }}
+          path: ./
+
+      # # Approval will be required closer to mainnet
+      # - name: Require Approval To Create a Release
+      #   uses: softprops/action-gh-release@v1
+      #   if: startsWith(github.ref, 'refs/tags/v')
+      #   with:
+      #     token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      #     files: |
+      # zetacored-alpine-amd64
+      # zetaclientd-alpine-amd64
+      # zetacored-ubuntu-22-arm64
+      # zetaclientd-ubuntu-22-arm64
+      # zetacored-ubuntu-22-amd64
+      # zetaclientd-ubuntu-22-amd64
+      # zetacored-ubuntu-20-amd64
+      # zetaclientd-ubuntu-20-amd64
+
+      - name: Build, tag, and push docker images
+        uses: ./.github/actions/build-docker-images
+        with:
+          DOCKER_FILENAME: Dockerfile
+          REPOSITORY_NAME: zeta-node
+          IMAGE_TAG: ${{ env.TAG_NAME }}
+          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+
+      - name: Create GitHub Release for ZetaCore/ZetaClient
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          generate_release_notes: true
+          prerelease: true
+          files: |
+            zetacored-*
+            zetaclientd-*
+ 
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
