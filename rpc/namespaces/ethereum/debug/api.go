@@ -27,18 +27,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
-
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-
-	stderrors "github.com/pkg/errors"
-
 	"github.com/cosmos/cosmos-sdk/server"
-
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/rlp"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	stderrors "github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	rpctypes "github.com/zeta-chain/zetacore/rpc/types"
