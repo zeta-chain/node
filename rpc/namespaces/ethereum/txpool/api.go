@@ -16,10 +16,8 @@
 package txpool
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/ethereum/go-ethereum/common/hexutil"
-
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/rpc/types"
 )
 
