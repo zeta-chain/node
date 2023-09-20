@@ -45,7 +45,7 @@ func (msg *MsgUpdateZRC20WithdrawFee) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
-	if ethcommon.HexToAddress(msg.Zrc20Address) == (ethcommon.Address{}) {
+	if !ethcommon.IsHexAddress(msg.Zrc20Address) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20Address)
 	}
 	if msg.NewWithdrawFee.IsNil() {
