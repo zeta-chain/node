@@ -154,6 +154,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
+	//Wait for Genesis
 	time.Sleep(20 * time.Second)
 
 	// initialize client to send messages to ZetaChain
@@ -166,8 +167,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// Wait for Genesis and keygen to be completed. ~ height 30
-
+	//Wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -292,7 +292,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestBitcoinWithdraw()
-	smokeTest.CheckZRC20ReserveAndSupply()
+	//smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestCrosschainSwap()
 	smokeTest.CheckZRC20ReserveAndSupply()

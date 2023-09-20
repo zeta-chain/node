@@ -12,6 +12,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
@@ -259,7 +260,7 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Ord
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
-			Limit:      1000,
+			Limit:      2000,
 			CountTotal: false,
 			Reverse:    false,
 		},
@@ -296,4 +297,19 @@ func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesRespons
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *ethereum.Proof, chainID uint64) (bool, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Prove(context.Background(), &zetaObserverTypes.QueryProveRequest{
+		BlockHash: blockHash,
+		TxIndex:   txIndex,
+		Proof:     proof,
+		ChainId:   chainID,
+		TxHash:    txHash,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Valid, nil
 }
