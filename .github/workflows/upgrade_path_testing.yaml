@@ -253,8 +253,7 @@ jobs:
         run: |
           echo "*****UPGRADE TYPE*****"
           echo ${UPGRADE_TYPE}          
-          export GOV_ADDRESS=$(zetacored query gov params deposit --chain-id=${CHAINID} | jq -r '.pool_address')
-          echo "GOV_ADDRESS: ${GOV_ADDRESS}"
+
           echo "*****BUILD GOV PROPOSAL*****"
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"

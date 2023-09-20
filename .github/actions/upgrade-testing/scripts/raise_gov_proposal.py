@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import hashlib
+import bech32
 
 os.environ['NODE'] = "http://127.0.0.1:26657"
 CURRENT_HEIGHT = requests.get(f"{os.environ['NODE']}/status").json()["result"]["sync_info"]["latest_block_height"]
@@ -10,11 +12,18 @@ github_file = open(os.environ["GITHUB_ENV"], "a+")
 github_file.write(f"UPGRADE_HEIGHT={UPGRADE_HEIGHT}")
 github_file.close()
 
+def derive_module_address(module_name: str, prefix="cosmos") -> str:
+    hash_bytes = hashlib.sha256(module_name.encode()).digest()
+    address_bytes = hash_bytes[:20]
+    address = bech32.bech32_encode(prefix, bech32.convertbits(address_bytes, 8, 5))
+    return address
+
+gov_address = derive_module_address("gov")
 proposal_json = {
     "messages": [
         {
             "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-            "authority": os.environ["GOV_ADDRESS"],
+            "authority": gov_address,
             "plan": {
                 "name": os.environ['VERSION'],
                 "time": "0001-01-01T00:00:00Z",
