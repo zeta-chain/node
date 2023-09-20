@@ -109,7 +109,7 @@ jobs:
           echo ${UPGRADE_INFO}
           echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
           
-          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+          #sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
                     
           echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
