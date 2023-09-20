@@ -129,6 +129,7 @@ func (s *CliTestSuite) TestListInTxHashToCctx() {
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
 		// saving CCTX also adds a new mapping
+		// #nosec G701 always in range
 		s.Require().Equal(len(objs)+cctxCount, int(resp.Pagination.Total))
 		s.Require().ElementsMatch(nullify.Fill(objs),
 			nullify.Fill(resp.InTxHashToCctx),

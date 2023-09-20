@@ -125,6 +125,7 @@ func (co *CoreObserver) startSendScheduler() {
 						}
 						signer := co.signerMap[*c]
 						chainClient := co.clientMap[*c]
+						// #nosec G701 always positive
 						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
@@ -181,9 +182,11 @@ func (co *CoreObserver) startSendScheduler() {
 							if bn >= math.MaxInt64 {
 								continue
 							}
+							// #nosec G701 checked in range
 							currentHeight := uint64(bn)
+							// #nosec G701 always positive
 							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
-							lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
+							lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 
 							// determining critical outtx; if it satisfies following criteria
 							// 1. it's the first pending outtx for this chain
@@ -212,7 +215,7 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, send.Index, send.GetCurrentOutTxParam().Amount)
 								go signer.TryProcessOutTx(send, outTxMan, outTxID, chainClient, co.bridge, currentHeight)
 							}
-							if idx > int(lookahead) { // only look at 50 sends per chain
+							if int64(idx) > lookahead { // only look at 50 sends per chain
 								break
 							}
 						}

@@ -81,7 +81,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 			if len(matches) != 3 {
 				return "", err
 			}
-			expectedSeq, err := strconv.Atoi(matches[1])
+			expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
 			if err != nil {
 				b.logger.Warn().Msgf("cannot parse expected seq %s", matches[1])
 				return "", err
@@ -91,7 +91,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 				b.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
 				return "", err
 			}
-			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
+			b.seqNumber[authzSigner.KeyType] = expectedSeq
 			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)

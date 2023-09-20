@@ -90,8 +90,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// fee checking
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
+	// #nosec G701 always in range
 	if fees.Int64() < int64(minFee*1e8) {
 		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
+		// #nosec G701 always in range
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 

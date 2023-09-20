@@ -46,7 +46,7 @@ func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaOb
 
 func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	err := error(nil)
+	var err error
 	resp := &zetaObserverTypes.QueryGetCoreParamsResponse{}
 	for i := 0; i <= DefaultRetryCount; i++ {
 		resp, err = client.GetCoreParams(context.Background(), &zetaObserverTypes.QueryGetCoreParamsRequest{})

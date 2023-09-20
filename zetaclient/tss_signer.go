@@ -102,6 +102,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 	if optionalPubKey != "" {
 		tssPubkey = optionalPubKey
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
@@ -172,6 +173,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {

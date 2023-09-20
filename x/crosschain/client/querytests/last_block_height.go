@@ -114,6 +114,7 @@ func (s *CliTestSuite) TestListLastBlockHeight() {
 		var resp types.QueryAllLastBlockHeightResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
+		// #nosec G701 always in range
 		s.Require().Equal(len(objs), int(resp.Pagination.Total))
 		s.Require().Equal(objs, resp.LastBlockHeight)
 	})

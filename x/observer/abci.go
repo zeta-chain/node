@@ -34,5 +34,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	}
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+	// #nosec G701 always positive
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
 }
