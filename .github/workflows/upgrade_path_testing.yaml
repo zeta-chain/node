@@ -257,7 +257,9 @@ jobs:
 
           echo "*****BUILD GOV PROPOSAL*****"
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
+          
           echo "${GOV_PROPOSAL}"
+          cat gov.json
           
           GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
           

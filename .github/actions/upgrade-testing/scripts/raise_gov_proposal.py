@@ -50,8 +50,7 @@ GOV_PROPOSAL = f"""zetacored tx gov submit-proposal gov.json \
 --gas=auto \
 --gas-adjustment=2 \
 --gas-prices={os.environ['GAS_PRICES']} \
--y \
---no-validate
+-y 
 """
 
 # GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os.environ['VERSION']}" \
