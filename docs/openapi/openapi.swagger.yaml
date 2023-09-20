@@ -27213,9 +27213,8 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/crosschain/pendingNoncesByChain/{chain_id}:
+  /zeta-chain/crosschain/pendingNonces/{chain_id}:
     get:
-      summary: Queries a pendingNonces by chain.
       operationId: Query_PendingNoncesByChain
       responses:
         "200":
