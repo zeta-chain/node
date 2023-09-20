@@ -14,7 +14,7 @@ const (
 )
 
 const (
-	// #nosec
+	// #nosec G101
 	TssTestPrivkey = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
 	TssTestAddress = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
 )
