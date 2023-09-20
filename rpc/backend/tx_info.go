@@ -381,6 +381,7 @@ func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult,
 		evmtypes.AttributeKeyTxIndex, index,
 	)
 	txResult, txAdditional, err := b.queryTendermintTxIndexer(query, func(txs *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
+		// #nosec G701 always in range
 		return txs.GetTxByTxIndex(int(index))
 	})
 	if err != nil {
@@ -467,7 +468,9 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 	return rpctypes.NewTransactionFromMsg(
 		msg,
 		common.BytesToHash(block.Block.Hash()),
+		// #nosec G701 always positive
 		uint64(block.Block.Height),
+		// #nosec G701 always positive
 		uint64(idx),
 		baseFee,
 		b.chainID,

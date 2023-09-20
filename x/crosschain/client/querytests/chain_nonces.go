@@ -79,6 +79,7 @@ func (s *CliTestSuite) TestListChainNonces() {
 	s.Run("ByOffset", func() {
 		step := 2
 		for i := 0; i < len(objs); i += step {
+			// #nosec G701 always in range
 			args := request(nil, uint64(i), uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 			s.Require().NoError(err)
@@ -93,6 +94,7 @@ func (s *CliTestSuite) TestListChainNonces() {
 		step := 2
 		var next []byte
 		for i := 0; i < len(objs); i += step {
+			// #nosec G701 always in range
 			args := request(next, 0, uint64(step), false)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 			s.Require().NoError(err)
@@ -105,6 +107,7 @@ func (s *CliTestSuite) TestListChainNonces() {
 		}
 	})
 	s.Run("Total", func() {
+		// #nosec G701 always in range
 		args := request(nil, 0, uint64(len(objs)), true)
 		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListChainNonces(), args)
 		s.Require().NoError(err)

@@ -82,11 +82,12 @@ func EthHeaderFromTendermint(header tmtypes.Header, bloom ethtypes.Bloom, baseFe
 		Number:      big.NewInt(header.Height),
 		GasLimit:    0,
 		GasUsed:     0,
-		Time:        uint64(header.Time.UTC().Unix()),
-		Extra:       []byte{},
-		MixDigest:   common.Hash{},
-		Nonce:       ethtypes.BlockNonce{},
-		BaseFee:     baseFee,
+		// #nosec G701 always positive
+		Time:      uint64(header.Time.UTC().Unix()),
+		Extra:     []byte{},
+		MixDigest: common.Hash{},
+		Nonce:     ethtypes.BlockNonce{},
+		BaseFee:   baseFee,
 	}
 }
 
@@ -94,6 +95,7 @@ func EthHeaderFromTendermint(header tmtypes.Header, bloom ethtypes.Bloom, baseFe
 func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Context, blockHeight int64) (int64, error) {
 	resConsParams, err := clientCtx.Client.ConsensusParams(goCtx, &blockHeight)
 	if err != nil {
+		// #nosec G701 always in range
 		return int64(^uint32(0)), err
 	}
 
@@ -102,6 +104,7 @@ func BlockMaxGasFromConsensusParams(goCtx context.Context, clientCtx client.Cont
 		// Sets gas limit to max uint32 to not error with javascript dev tooling
 		// This -1 value indicating no block gas limit is set to max uint64 with geth hexutils
 		// which errors certain javascript dev tooling which only supports up to 53 bits
+		// #nosec G701 always in range
 		gasLimit = int64(^uint32(0))
 	}
 

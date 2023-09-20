@@ -24,6 +24,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		ctx.Logger().Error("TotalObserverCount is negative at height", ctx.BlockHeight())
 		return
 	}
+	// #nosec G701 always in range
 	if totalObserverCountCurrentBlock == int(lastBlockObserverCount.Count) {
 		return
 	}

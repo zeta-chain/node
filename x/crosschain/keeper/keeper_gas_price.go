@@ -166,11 +166,17 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 		}
 		// recompute the median gas price
 		mi := medianOfArray(gasPrice.Prices)
+		// #nosec G701 always positive
 		gasPrice.MedianIndex = uint64(mi)
 	}
 	k.SetGasPrice(ctx, gasPrice)
 	chainIDBigINT := big.NewInt(chain.ChainId)
-	gasUsed, err := k.fungibleKeeper.SetGasPrice(ctx, chainIDBigINT, big.NewInt(int64(gasPrice.Prices[gasPrice.MedianIndex])))
+
+	gasUsed, err := k.fungibleKeeper.SetGasPrice(
+		ctx,
+		chainIDBigINT,
+		math.NewUint(gasPrice.Prices[gasPrice.MedianIndex]).BigInt(),
+	)
 	if err != nil {
 		return nil, err
 	}

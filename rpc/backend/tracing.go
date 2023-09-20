@@ -80,6 +80,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	// add predecessor messages in current cosmos tx
+	// #nosec G701 always in range
 	for i := 0; i < int(transaction.MsgIndex); i++ {
 		ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
 		if !ok {

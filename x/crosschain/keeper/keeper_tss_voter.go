@@ -64,7 +64,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		}
 		k.zetaObserverKeeper.AddBallotToList(ctx, ballot)
 	}
-	err := error(nil)
+	var err error
 	if msg.Status == common.ReceiveStatus_Success {
 		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 		if err != nil {

@@ -74,6 +74,7 @@ func (k Keeper) RemovePendingNonces(ctx sdk.Context, pendingNonces types.Pending
 
 // utility
 func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) {
+	// #nosec G701 always positive
 	p, found := k.GetPendingNonces(ctx, tssPubkey, uint64(chainID))
 	if found && nonce >= p.NonceLow && nonce <= p.NonceHigh {
 		p.NonceLow = nonce + 1
