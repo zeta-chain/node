@@ -7,6 +7,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	tmbytes "github.com/tendermint/tendermint/libs/bytes"
+	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -49,10 +51,12 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	cctx := types.CrossChainTx{
 		Creator:        "",
 		Index:          "",
-		ZetaFees:       sdk.Uint{},
+		ZetaFees:       sdkmath.Uint{},
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
 		CctxStatus: &types.Status{
-			Status: types.CctxStatus_PendingOutbound,
+			Status:              types.CctxStatus_PendingOutbound,
+			StatusMessage:       "",
+			LastUpdateTimestamp: 0,
 		},
 		InboundTxParams: &types.InboundTxParams{
 			Sender:                          "",
@@ -61,7 +65,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			CoinType:                        common.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          amount,
-			InboundTxObservedHash:           "",
+			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
 			InboundTxObservedExternalHeight: 0,
 			InboundTxBallotIndex:            "",
 			InboundTxFinalizedZetaHeight:    0,
@@ -78,7 +82,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			OutboundTxBallotIndex:            "",
 			OutboundTxObservedExternalHeight: 0,
 			OutboundTxGasUsed:                0,
-			OutboundTxEffectiveGasPrice:      sdk.Int{},
+			OutboundTxEffectiveGasPrice:      sdkmath.Int{},
 			OutboundTxEffectiveGasLimit:      0,
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
@@ -98,6 +102,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if err != nil {
 		return err
 	}
-	k.SetCrossChainTx(ctx, cctx)
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	EmitEventInboundFinalized(ctx, &cctx)
 	return nil
 }
