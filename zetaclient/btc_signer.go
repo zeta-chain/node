@@ -202,6 +202,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
 	defer func() {
+		outTxMan.EndTryProcess(outTxID)
 		if err := recover(); err != nil {
 			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", send.Index, err)
 		}
@@ -219,9 +220,6 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, params.Amount.BigInt(), params.Receiver)
-	defer func() {
-		outTxMan.EndTryProcess(outTxID)
-	}()
 	btcClient, ok := chainclient.(*BitcoinChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
