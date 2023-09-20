@@ -120,7 +120,9 @@ func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
 
 func Recover(logger tmlog.Logger, err *error) {
 	if r := recover(); r != nil {
-		*err = errorsmod.Wrapf(errortypes.ErrPanic, "%v", r)
+		if err != nil {
+			*err = errorsmod.Wrapf(errortypes.ErrPanic, "%v", r)
+		}
 
 		if e, ok := r.(error); ok {
 			logger.Error(

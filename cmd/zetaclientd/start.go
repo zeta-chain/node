@@ -39,8 +39,13 @@ func init() {
 }
 
 func start(_ *cobra.Command, _ []string) error {
-	setHomeDir()
+	err := setHomeDir()
+	if err != nil {
+		return err
+	}
+
 	SetupConfigForTest()
+
 	//Load Config file given path
 	cfg, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
@@ -211,7 +216,11 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	metrics.Start()
 
-	userDir, _ := os.UserHomeDir()
+	userDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Error().Err(err).Msg("os.UserHomeDir")
+		return err
+	}
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// Register zetaclient.TSS prometheus metrics

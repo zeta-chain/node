@@ -40,8 +40,14 @@ func main() {
 		panic(err)
 	}
 	addresses = removeDuplicates(addresses)
-	fileS, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
-	fileF, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
+	fileS, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
+	if err != nil {
+		panic(err)
+	}
+	fileF, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
+	if err != nil {
+		panic(err)
+	}
 
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
@@ -112,10 +118,15 @@ func main() {
 		}
 	}
 	successFile, _ := json.MarshalIndent(successfullDistributions, "", " ")
-	_ = os.WriteFile(fileS, successFile, 0600)
+	err = os.WriteFile(fileS, successFile, 0600)
+	if err != nil {
+		panic(err)
+	}
 	failedFile, _ := json.MarshalIndent(failedDistributions, "", " ")
-	_ = os.WriteFile(fileF, failedFile, 0600)
-
+	err = os.WriteFile(fileF, failedFile, 0600)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func readLines(path string) ([]string, error) {

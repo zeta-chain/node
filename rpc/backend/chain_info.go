@@ -104,7 +104,11 @@ func (b *Backend) BaseFee(blockRes *tmrpctypes.ResultBlockResults) (*big.Int, er
 
 // CurrentHeader returns the latest block header
 func (b *Backend) CurrentHeader() *ethtypes.Header {
-	header, _ := b.HeaderByNumber(rpctypes.EthLatestBlockNumber)
+	header, err := b.HeaderByNumber(rpctypes.EthLatestBlockNumber)
+	if err != nil {
+		b.logger.Debug("failed to fetch latest header", "error", err.Error())
+		return nil
+	}
 	return header
 }
 
@@ -149,7 +153,10 @@ func (b *Backend) GetCoinbase() (sdk.AccAddress, error) {
 		return nil, err
 	}
 
-	address, _ := sdk.AccAddressFromBech32(res.AccountAddress)
+	address, err := sdk.AccAddressFromBech32(res.AccountAddress)
+	if err != nil {
+		return nil, err
+	}
 	return address, nil
 }
 
