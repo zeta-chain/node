@@ -637,7 +637,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	return nil
 }
 
-// This func tries increasing the artificial pending nonce of outTx (if lagged behind).
+// refreshPendingNonce tries increasing the artificial pending nonce of outTx (if lagged behind).
 // There could be many (unpredictable) reasons for a pending nonce lagging behind, for example:
 // 1. The zetaclient gets restarted.
 // 2. The tracker is missing in zetacore.
@@ -695,7 +695,7 @@ func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string
 			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting outTx result for nonce %d hash %s", nonce, txid)
 		}
 		if getTxResult.Confirmations <= 0 { // just a double check
-			return "", fmt.Errorf("getOutTxidByNonce: outTx txid %s for nonce %d is not confirmed", txid, nonce)
+			return "", fmt.Errorf("getOutTxidByNonce: outTx txid %s for nonce %d is not included", txid, nonce)
 		}
 		return txid, nil
 	}

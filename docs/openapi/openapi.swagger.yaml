@@ -26596,7 +26596,7 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainId
+        - name: chain_id
           in: query
           required: false
           type: string

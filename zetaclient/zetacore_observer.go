@@ -128,7 +128,7 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 						signer := co.signerMap[*c]
-						sendList, err := co.bridge.GetAllPendingCctx(c.ChainId)
+						cctxList, err := co.bridge.GetAllPendingCctx(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
@@ -158,28 +158,29 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to get prometheus gauge: %s", metrics.PendingTxs)
 							continue
 						}
-						gauge.Set(float64(len(sendList)))
+						gauge.Set(float64(len(cctxList)))
 
-						for idx, send := range sendList {
-							params := send.GetCurrentOutTxParam()
+						for idx, cctx := range cctxList {
+							params := cctx.GetCurrentOutTxParam()
 							if params.ReceiverChainId != c.ChainId {
-								co.logger.ZetaChainWatcher.Warn().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
+								co.logger.ZetaChainWatcher.Error().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
 								continue
 							}
+							// #nosec G701 range is verified
 							currentHeight := uint64(bn)
 							nonce := params.OutboundTxTssNonce
-							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce) // should be the outTxID?
+							outTxID := fmt.Sprintf("%s-%d-%d", cctx.Index, params.ReceiverChainId, nonce) // would outTxID a better ID?
 
 							// Process Bitcoin OutTx
 							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
-								if stop := co.processBitcoinOutTx(outTxMan, idx, send, signer, ob, currentHeight); stop {
+								if stop := co.processBitcoinOutTx(outTxMan, idx, cctx, signer, ob, currentHeight); stop {
 									break
 								}
 								continue
 							}
 
 							// Monitor Core Logger for OutboundTxTssNonce
-							included, _, err := ob.IsSendOutTxProcessed(send.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
+							included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
 							if err != nil {
 								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail, Chain ID: %s", c.ChainName)
 								continue
@@ -215,8 +216,8 @@ func (co *CoreObserver) startSendScheduler() {
 							// otherwise, the normal interval is used
 							if nonce%interval == currentHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 								outTxMan.StartTryProcess(outTxID)
-								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, outTxID, send.GetCurrentOutTxParam().Amount)
-								go signer.TryProcessOutTx(send, outTxMan, outTxID, ob, co.bridge, currentHeight)
+								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, outTxID, cctx.GetCurrentOutTxParam().Amount)
+								go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, currentHeight)
 							}
 							if idx >= int(lookahead)-1 { // only look at 30 sends per chain
 								break
