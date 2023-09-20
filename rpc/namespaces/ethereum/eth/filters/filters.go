@@ -21,17 +21,15 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/rpc/backend"
-	"github.com/zeta-chain/zetacore/rpc/types"
-
-	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/libs/log"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
-
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/pkg/errors"
+	"github.com/tendermint/tendermint/libs/log"
+	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/zeta-chain/zetacore/rpc/backend"
+	"github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong
