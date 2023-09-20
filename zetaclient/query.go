@@ -290,6 +290,15 @@ func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.Query
 	return *resp, nil
 }
 
+func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.SupportedChains(context.Background(), &zetaObserverTypes.QuerySupportedChains{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChains(), nil
+}
+
 func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.PendingNoncesAll(context.Background(), &types.QueryAllPendingNoncesRequest{})
