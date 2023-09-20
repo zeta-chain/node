@@ -43,6 +43,7 @@ const (
 	LastBlockObserverCountKey = "ObserverCount-value-"
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
+	BlockHeaderKey            = "BlockHeader-value-"
 
 	BallotListKey = "BallotList-value-"
 )

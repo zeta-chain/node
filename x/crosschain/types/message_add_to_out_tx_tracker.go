@@ -3,18 +3,22 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 )
 
 const TypeMsgAddToOutTxTracker = "AddToTracker"
 
 var _ sdk.Msg = &MsgAddToOutTxTracker{}
 
-func NewMsgAddToOutTxTracker(creator string, chain int64, nonce uint64, txHash string) *MsgAddToOutTxTracker {
+func NewMsgAddToOutTxTracker(creator string, chain int64, nonce uint64, txHash string, proof *ethereum.Proof, blockHash string, txIndex int64) *MsgAddToOutTxTracker {
 	return &MsgAddToOutTxTracker{
-		Creator: creator,
-		ChainId: chain,
-		Nonce:   nonce,
-		TxHash:  txHash,
+		Creator:   creator,
+		ChainId:   chain,
+		Nonce:     nonce,
+		TxHash:    txHash,
+		Proof:     proof,
+		BlockHash: blockHash,
+		TxIndex:   txIndex,
 	}
 }
 
