@@ -22,6 +22,7 @@ jobs:
       aws_region: "us-east-1"
       GAS_PRICES: "1.0azeta"
       DEPOSIT: "10000000000000000000azeta"
+      METADATA: "ipfs://QmeABfwZ2nAxDzYyqZ1LEypPgQFMjEyrx8FfnoPLkF8R3f"
       LOG_LEVEL: "INFO"
       CHAINID: "localnet_101-1"
       DAEMON_HOME: "/home/runner/.zetacored"
@@ -251,8 +252,9 @@ jobs:
         if: env.UPGRADE_TYPE == 'GOV' #GOV
         run: |
           echo "*****UPGRADE TYPE*****"
-          echo ${UPGRADE_TYPE}
-          
+          echo ${UPGRADE_TYPE}          
+          export GOV_ADDRESS=$(zetacored query gov params deposit --chain-id=${CHAINID} | jq -r '.pool_address')
+          echo "GOV_ADDRESS: ${GOV_ADDRESS}"
           echo "*****BUILD GOV PROPOSAL*****"
           GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
           echo "${GOV_PROPOSAL}"
