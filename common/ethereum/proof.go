@@ -103,7 +103,11 @@ func (m *Proof) Get(key []byte) ([]byte, error) {
 // Typically, the rootHash is from a trusted source (e.g. a trusted block header),
 // and the key is the index of the transaction in the block.
 func (m *Proof) Verify(rootHash common.Hash, key int) ([]byte, error) {
+	if key < 0 || key >= len(m.Keys) {
+		return nil, errors.New("key not found")
+	}
 	var indexBuf []byte
+	// #nosec G701 key range is checked above
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(key))
 	return trie.VerifyProof(rootHash, indexBuf, m)
 }
@@ -126,7 +130,11 @@ func encodeForDerive(list types.DerivableList, i int, buf *bytes.Buffer) []byte 
 }
 
 func (t *Trie) GenerateProof(txIndex int) (*Proof, error) {
+	if txIndex < 0 {
+		return nil, errors.New("transaction index out of range")
+	}
 	var indexBuf []byte
+	// #nosec G701 checked as non-negative
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(txIndex))
 	proof := NewProof()
 	err := t.Prove(indexBuf, 0, proof)
@@ -150,6 +158,7 @@ func NewTrie(list types.DerivableList) Trie {
 	// order is correct.
 	var indexBuf []byte
 	for i := 1; i < list.Len() && i <= 0x7f; i++ {
+		// #nosec G701 iterator
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := encodeForDerive(list, i, valueBuf)
 		hasher.Update(indexBuf, value)
@@ -160,6 +169,7 @@ func NewTrie(list types.DerivableList) Trie {
 		hasher.Update(indexBuf, value)
 	}
 	for i := 0x80; i < list.Len(); i++ {
+		// #nosec G701 iterator
 		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
 		value := encodeForDerive(list, i, valueBuf)
 		hasher.Update(indexBuf, value)

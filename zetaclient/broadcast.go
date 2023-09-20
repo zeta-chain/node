@@ -110,8 +110,11 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 // GetContext return a valid context with all relevant values set
 func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx := client.Context{}
-	addr, _ := b.keys.GetSignerInfo().GetAddress()
-	// TODO : Handle error
+	addr, err := b.keys.GetSignerInfo().GetAddress()
+	if err != nil {
+		// TODO : Handle error
+		b.logger.Error().Err(err).Msg("fail to get address from key")
+	}
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)

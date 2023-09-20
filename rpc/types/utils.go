@@ -186,7 +186,10 @@ func NewRPCTransaction(
 	} else {
 		signer = ethtypes.HomesteadSigner{}
 	}
-	from, _ := ethtypes.Sender(signer, tx)
+	from, err := ethtypes.Sender(signer, tx)
+	if err != nil {
+		return nil, err
+	}
 	v, r, s := tx.RawSignatureValues()
 	result := &RPCTransaction{
 		Type:     hexutil.Uint64(tx.Type()),

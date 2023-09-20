@@ -121,6 +121,7 @@ func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
 func Recover(logger tmlog.Logger, err *error) {
 	if r := recover(); r != nil {
 		if err != nil {
+			// #nosec G703 err is checked non-nil above
 			*err = errorsmod.Wrapf(errortypes.ErrPanic, "%v", r)
 		}
 

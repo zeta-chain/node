@@ -34,7 +34,10 @@ type TokenDistribution struct {
 }
 
 func main() {
-	file, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "address-list.json"))
+	file, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "address-list.json"))
+	if err != nil {
+		panic(err)
+	}
 	addresses, err := readLines(file)
 	if err != nil {
 		panic(err)
@@ -117,12 +120,18 @@ func main() {
 			failedDistributions = append(failedDistributions, distribution)
 		}
 	}
-	successFile, _ := json.MarshalIndent(successfullDistributions, "", " ")
+	successFile, err := json.MarshalIndent(successfullDistributions, "", " ")
+	if err != nil {
+		panic(err)
+	}
 	err = os.WriteFile(fileS, successFile, 0600)
 	if err != nil {
 		panic(err)
 	}
-	failedFile, _ := json.MarshalIndent(failedDistributions, "", " ")
+	failedFile, err := json.MarshalIndent(failedDistributions, "", " ")
+	if err != nil {
+		panic(err)
+	}
 	err = os.WriteFile(fileF, failedFile, 0600)
 	if err != nil {
 		panic(err)

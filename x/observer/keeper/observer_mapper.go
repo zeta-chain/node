@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	cosmoserrors "cosmossdk.io/errors"
 	"fmt"
 	"math"
 
@@ -93,8 +94,14 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
-	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
-	granteeAddress, _ := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	pubkey, err := common.NewPubKey(msg.ZetaclientGranteePubkey)
+	if err != nil {
+		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(types.ErrInvalidPubKey, err.Error())
+	}
+	granteeAddress, err := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	if err != nil {
+		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(types.ErrInvalidPubKey, err.Error())
+	}
 	k.DisableInboundOnly(ctx)
 	// AddNodeAccountOnly flag usage
 	// True: adds observer into the Node Account list but returns without adding to the observer list

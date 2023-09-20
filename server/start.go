@@ -135,7 +135,10 @@ which accepts a path for the resulting pprof file.
 				return err
 			}
 
-			withTM, _ := cmd.Flags().GetBool(srvflags.WithTendermint)
+			withTM, err := cmd.Flags().GetBool(srvflags.WithTendermint)
+			if err != nil {
+				return err
+			}
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
 				return startStandAlone(serverCtx, opts)
@@ -144,7 +147,10 @@ which accepts a path for the resulting pprof file.
 			serverCtx.Logger.Info("Unlocking keyring")
 
 			// fire unlock precess for keyring
-			keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
+			if err != nil {
+				return err
+			}
 			if keyringBackend == keyring.BackendFile {
 				_, err = clientCtx.Keyring.List()
 				if err != nil {
@@ -393,7 +399,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 
 		defer func() {
 			if tmNode.IsRunning() {
-				_ = tmNode.Stop()
+				err = tmNode.Stop()
 			}
 		}()
 	}

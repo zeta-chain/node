@@ -275,7 +275,10 @@ func (k Keeper) QueryZRC20Data(
 		decimalRes types.ZRC20Uint8Response
 	)
 
-	zrc4, _ := zrc20.ZRC20MetaData.GetAbi()
+	zrc4, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return types.ZRC20Data{}, err
+	}
 
 	// Name
 	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "name")
@@ -439,7 +442,10 @@ func (k Keeper) CallEVMWithData(
 
 	// Emit events and log for the transaction if it is committed
 	if commit {
-		msgBytes, _ := json.Marshal(msg)
+		msgBytes, err := json.Marshal(msg)
+		if err != nil {
+			return nil, cosmoserrors.Wrap(err, "failed to encode msg")
+		}
 		ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
 		attrs := []sdk.Attribute{}
 		if len(ctx.TxBytes()) > 0 {

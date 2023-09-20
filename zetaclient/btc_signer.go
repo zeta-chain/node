@@ -182,7 +182,10 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
 	var outBuff bytes.Buffer
-	_ = signedTx.Serialize(&outBuff)
+	err := signedTx.Serialize(&outBuff)
+	if err != nil {
+		return err
+	}
 	str := hex.EncodeToString(outBuff.Bytes())
 	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
 
@@ -191,7 +194,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 		return err
 	}
 	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
-	return err
+	return nil
 }
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
@@ -234,7 +237,11 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	included, confirmed, err := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot check if send %s is processed", send.Index)
+		return
+	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return

@@ -951,8 +951,12 @@ func (ob *EVMChainClient) WatchGasPrice() {
 
 	err := ob.PostGasPrice()
 	if err != nil {
-		height, _ := ob.zetaClient.GetBlockHeight()
-		ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+		height, err := ob.zetaClient.GetBlockHeight()
+		if err != nil {
+			ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
+		} else {
+			ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+		}
 	}
 	ticker := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
 	defer ticker.Stop()
@@ -961,8 +965,12 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		case <-ticker.C():
 			err := ob.PostGasPrice()
 			if err != nil {
-				height, _ := ob.zetaClient.GetBlockHeight()
-				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+				height, err := ob.zetaClient.GetBlockHeight()
+				if err != nil {
+					ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
+				} else {
+					ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+				}
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
