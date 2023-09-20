@@ -712,7 +712,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			cnt.Inc()
 		}
 		logs, err := connector.FilterZetaSent(&bind.FilterOpts{
-			// #nosec G701 always postive
+			// #nosec G701 always positive
 			Start:   uint64(startBlock),
 			End:     &tb,
 			Context: context.TODO(),
