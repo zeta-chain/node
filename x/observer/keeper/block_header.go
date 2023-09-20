@@ -6,20 +6,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// SetNodeAccount set a specific nodeAccount in the store from its index
-func (k Keeper) SetBlockHeader(ctx sdk.Context, header types.BlockHeader) {
+// SetBlockHeader set a specific block header in the store from its index
+func (k Keeper) SetBlockHeader(ctx sdk.Context, header common.BlockHeader) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockHeaderKey))
 	b := k.cdc.MustMarshal(&header)
 	store.Set(header.Hash, b)
 }
 
-// GetNodeAccount returns a nodeAccount from its index
-func (k Keeper) GetBlockHeader(ctx sdk.Context, hash []byte) (val types.BlockHeader, found bool) {
+// GetBlockHeader returns a block header from its hash
+func (k Keeper) GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockHeaderKey))
 
 	b := store.Get(hash)
@@ -31,13 +32,13 @@ func (k Keeper) GetBlockHeader(ctx sdk.Context, hash []byte) (val types.BlockHea
 	return val, true
 }
 
-// RemoveNodeAccount removes a nodeAccount from the store
+// RemoveBlockHeader removes a block header from the store
 func (k Keeper) RemoveBlockHeader(ctx sdk.Context, hash []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockHeaderKey))
 	store.Delete(hash)
 }
 
-// GRPC querier for block header
+// GetAllBlockHeaders queries all for block header
 func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHeaderRequest) (*types.QueryAllBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -46,9 +47,9 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	store := ctx.KVStore(k.storeKey)
 	blockHeaderStore := prefix.NewStore(store, types.KeyPrefix(types.BlockHeaderKey))
 
-	var blockHeaders []*types.BlockHeader
+	var blockHeaders []*common.BlockHeader
 	pageRes, err := query.Paginate(blockHeaderStore, req.Pagination, func(key []byte, value []byte) error {
-		var blockHeader types.BlockHeader
+		var blockHeader common.BlockHeader
 		if err := k.cdc.Unmarshal(value, &blockHeader); err != nil {
 			return err
 		}
@@ -62,13 +63,10 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	return &types.QueryAllBlockHeaderResponse{BlockHeaders: blockHeaders, Pagination: pageRes}, nil
 }
 
+// GetBlockHeaderByHash queries block header by hash
 func (k Keeper) GetBlockHeaderByHash(c context.Context, req *types.QueryGetBlockHeaderByHashRequest) (*types.QueryGetBlockHeaderByHashResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	if len(req.BlockHash) != 32 {
-		return nil, status.Error(codes.InvalidArgument, "invalid hash")
 	}
 
 	header, found := k.GetBlockHeader(sdk.UnwrapSDKContext(c), req.BlockHash)
