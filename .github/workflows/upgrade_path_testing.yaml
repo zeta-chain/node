@@ -77,6 +77,7 @@ jobs:
           echo "*********INSTALL SOME APT PACKAGES*********"
           sudo apt update 
           sudo apt install unzip psmisc -y 
+          pip install bech32
 
       - name: "INSTALL_ZETAVISOR"
         working-directory: "zetavisor/cosmovisor"
