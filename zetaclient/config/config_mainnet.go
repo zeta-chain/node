@@ -54,10 +54,6 @@ func New() Config {
 var BitcoinConfig = &BTCConfig{}
 
 var evmChainConfigs = map[int64]*EVMConfig{
-
-	common.ZetaChain().ChainId: {
-		Chain: common.ZetaChain(),
-	},
 	common.EthChain().ChainId: {
 		Chain: common.EthChain(),
 	},
