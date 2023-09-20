@@ -46,3 +46,9 @@ localnet/ganache/storage
 localnet/zetachain-monorepo
 /standalone-network/authz/tx.json
 /zetanode.log
+
+dist/
+
+## TMP 
+
+contrib/local-athens
