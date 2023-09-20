@@ -123,7 +123,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			BlockHash: blockHash.Hex(),
 			TxIndex:   int64(txIndex),
 			TxHash:    txHash.Hex(),
-			Proof:     common.NewEthereumProof(*txProof),
+			Proof:     common.NewEthereumProof(txProof),
 			ChainId:   0,
 		})
 		if err != nil {

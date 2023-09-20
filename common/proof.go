@@ -29,10 +29,10 @@ func IsErrorInvalidProof(err error) bool {
 }
 
 // NewEthereumProof returns a new Proof containing an Ethereum proof
-func NewEthereumProof(proof ethereum.Proof) *Proof {
+func NewEthereumProof(proof *ethereum.Proof) *Proof {
 	return &Proof{
 		Proof: &Proof_EthereumProof{
-			EthereumProof: &proof,
+			EthereumProof: proof,
 		},
 	}
 }
