@@ -13,7 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/zeta-chain/zetacore/app"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
@@ -119,11 +118,10 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithFromAddress(addr)
 	ctx = ctx.WithBroadcastMode("sync")
 
-	encodingConfig := app.MakeEncodingConfig()
-	ctx = ctx.WithCodec(encodingConfig.Codec)
-	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)
-	ctx = ctx.WithLegacyAmino(encodingConfig.Amino)
+	ctx = ctx.WithCodec(b.encodingCfg.Codec)
+	ctx = ctx.WithInterfaceRegistry(b.encodingCfg.InterfaceRegistry)
+	ctx = ctx.WithTxConfig(b.encodingCfg.TxConfig)
+	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
 	remote := b.cfg.ChainRPC
