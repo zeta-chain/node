@@ -1,13 +1,11 @@
 package types
 
 import (
-	"bytes"
+	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/zeta-chain/zetacore/common"
 )
 
@@ -17,13 +15,13 @@ const (
 	TypeMsgAddBlockHeader = "add_block_header"
 )
 
-func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header []byte) *MsgAddBlockHeader {
+func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header common.HeaderData) *MsgAddBlockHeader {
 	return &MsgAddBlockHeader{
-		Creator:     creator,
-		ChainId:     chainID,
-		BlockHash:   blockHash,
-		Height:      height,
-		BlockHeader: header,
+		Creator:   creator,
+		ChainId:   chainID,
+		BlockHash: blockHash,
+		Height:    height,
+		Header:    header,
 	}
 }
 
@@ -51,33 +49,23 @@ func (msg *MsgAddBlockHeader) GetSignBytes() []byte {
 func (msg *MsgAddBlockHeader) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if len(msg.BlockHash) > 32 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.BlockHash))
-	}
-	if len(msg.BlockHeader) > 1024 { // on ethereum the block header is ~538 bytes in RLP encoding
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.blockheader; too long (%d)", len(msg.BlockHeader))
-	}
 	if common.IsEthereum(msg.ChainId) {
-		// RLP encoded block header
-		var header types.Header
-		err = rlp.DecodeBytes(msg.BlockHeader, &header)
-		if err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; cannot decode RLP (%s)", err)
-		}
-		if err = header.SanityCheck(); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; sanity check failed (%s)", err)
-		}
-		if bytes.Compare(msg.BlockHash, header.Hash().Bytes()) != 0 {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; tx hash mismatch")
-		}
-		if msg.Height != header.Number.Int64() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header; height mismatch")
+		if len(msg.BlockHash) > 32 {
+			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.BlockHash))
 		}
 	} else {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
+	}
+
+	if err := msg.Header.Validate(msg.BlockHash, msg.Height); err != nil {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header (%s)", err)
+	}
+
+	if _, err := msg.Header.ParentHash(); err != nil {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "can't get parent hash (%s)", err)
 	}
 
 	return nil
@@ -88,14 +76,4 @@ func (msg *MsgAddBlockHeader) Digest() string {
 	m.Creator = ""
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()
-}
-
-func (msg *MsgAddBlockHeader) ParentHash() ([]byte, error) {
-	var header types.Header
-	err := rlp.DecodeBytes(msg.BlockHeader, &header)
-	if err != nil {
-		return nil, err
-	}
-
-	return header.ParentHash.Bytes(), nil
 }
