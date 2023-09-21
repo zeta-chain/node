@@ -81,15 +81,17 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
+	ETHZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	ctx.Logger().Info("Deployed ETH ZRC20 at " + ETHZRC20Addr.String())
 
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
+	BTCZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	ctx.Logger().Info("Deployed BTC ZRC20 at " + BTCZRC20Addr.String())
 
 	//FIXME: clean up and config the above based on localnet/testnet/mainnet
 
@@ -131,8 +133,9 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
 	}
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
-	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
+	msg := types.NewMsgUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
+	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
 	return err
 }
 

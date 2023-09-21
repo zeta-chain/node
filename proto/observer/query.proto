@@ -79,6 +79,31 @@ service Query {
   rpc GetAllBlameRecords(QueryAllBlameRecordsRequest) returns (QueryAllBlameRecordsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
   }
+
+  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
+  }
+
+  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_block_header_by_hash/{block_hash}";
+  }
+
+  // merkle proof verification
+  rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/prove";
+  }
+}
+
+message QueryProveRequest {
+  uint64 chain_id = 1;
+  string tx_hash = 2;
+  common.Proof proof = 3;
+  string block_hash = 4;
+  int64 tx_index = 5;
+}
+
+message QueryProveResponse {
+  bool valid = 1;
 }
 
 message QueryParamsRequest {}
@@ -184,4 +209,21 @@ message QueryAllBlameRecordsRequest {}
 
 message QueryAllBlameRecordsResponse {
   repeated Blame blame_info = 1;
+}
+
+message QueryAllBlockHeaderRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBlockHeaderResponse {
+  repeated common.BlockHeader block_headers = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetBlockHeaderByHashRequest {
+  bytes block_hash = 1;
+}
+
+message QueryGetBlockHeaderByHashResponse {
+  common.BlockHeader block_header = 1;
 }

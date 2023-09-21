@@ -52,3 +52,17 @@ func DefaultChainsList() []*Chain {
 	}
 	return c
 }
+
+func ExternalChainList() []*Chain {
+	chains := []Chain{
+		BtcTestNetChain(),
+		MumbaiChain(),
+		BscTestnetChain(),
+		GoerliChain(),
+	}
+	var c []*Chain
+	for i := 0; i < len(chains); i++ {
+		c = append(c, &chains[i])
+	}
+	return c
+}

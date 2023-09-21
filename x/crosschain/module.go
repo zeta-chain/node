@@ -107,16 +107,20 @@ type AppModule struct {
 
 	keeper        keeper.Keeper
 	stakingKeeper types.StakingKeeper
+	authKeeper    types.AccountKeeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
-	stakingKeeper types.StakingKeeper) AppModule {
+	stakingKeeper types.StakingKeeper,
+	authKeeper types.AccountKeeper,
+) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		stakingKeeper:  stakingKeeper,
+		authKeeper:     authKeeper,
 	}
 }
 
@@ -163,6 +167,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	InitGenesis(ctx, am.keeper, genState)
+
+	// ensure account is created
+	am.authKeeper.GetModuleAccount(ctx, types.ModuleName)
 
 	return []abci.ValidatorUpdate{}
 }

@@ -3,25 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func setAdminDeployFungibleCoin(ctx sdk.Context, zk keepertest.ZetaKeepers, admin string) {
-	zk.ObserverKeeper.SetParams(ctx, observertypes.Params{
-		AdminPolicy: []*observertypes.Admin_Policy{
-			{
-				PolicyType: observertypes.Policy_Type_deploy_fungible_coin,
-				Address:    admin,
-			},
-		},
-	})
-}
 
 func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("can update the paused status of zrc20", func(t *testing.T) {

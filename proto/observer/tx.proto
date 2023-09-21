@@ -16,7 +16,18 @@ service Msg {
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
   rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
+  rpc AddBlockHeader(MsgAddBlockHeader) returns (MsgAddBlockHeaderResponse);
 }
+
+message MsgAddBlockHeader {
+  string creator = 1;
+  int64 chain_id = 2;
+  bytes block_hash = 3;
+  int64 height = 4;
+  common.HeaderData header = 5 [(gogoproto.nullable) = false];
+}
+
+message MsgAddBlockHeaderResponse {}
 
 message MsgUpdateCoreParams {
   string creator = 1;
