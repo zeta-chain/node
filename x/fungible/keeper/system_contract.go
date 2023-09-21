@@ -7,7 +7,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -188,9 +187,10 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get wzeta contract address")
 	}
-	wzetaABI, err := connectorzevm.WZETAMetaData.GetAbi()
+
+	wzetaABI, err := wzeta.WETH9MetaData.GetAbi()
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to get wzeta abi")
+		return nil, cosmoserrors.Wrapf(err, "failed to get ABI")
 	}
 
 	res, err := k.CallEVM(
