@@ -94,6 +94,10 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
   }
 
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
+  }
+
   // Queries a lastBlockHeight by index.
   rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight/{index}";
@@ -251,6 +255,14 @@ message QueryAllPendingNoncesRequest {}
 
 message QueryAllPendingNoncesResponse {
   repeated PendingNonces pending_nonces = 1;
+}
+
+message QueryPendingNoncesByChainRequest {
+  uint64 chain_id = 1;
+}
+
+message QueryPendingNoncesByChainResponse {
+  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetLastBlockHeightRequest {

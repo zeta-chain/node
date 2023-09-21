@@ -845,7 +845,13 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
 					continue
 				}
-				_, err = ob.zetaClient.PostAddBlockHeader(ob.chain.ChainId, block.Hash().Bytes(), block.Number().Int64(), headerRLP)
+
+				_, err = ob.zetaClient.PostAddBlockHeader(
+					ob.chain.ChainId,
+					block.Hash().Bytes(),
+					block.Number().Int64(),
+					common.NewEthereumHeader(headerRLP),
+				)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 					continue
