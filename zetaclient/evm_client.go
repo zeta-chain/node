@@ -786,8 +786,22 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
 				continue
 			}
+
+			// get the sender of the event's transaction
+			tx, _, err := ob.EvmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
+				continue
+			}
+			signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+			sender, err := signer.Sender(tx)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
+				continue
+			}
+
 			zetaHash, err := ob.zetaClient.PostSend(
-				"",
+				sender.Hex(),
 				ob.chain.ChainId,
 				"",
 				clienttypes.BytesToEthHex(event.Recipient),
@@ -805,7 +819,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 				continue
 			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
+			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Custody Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 	}()
 
