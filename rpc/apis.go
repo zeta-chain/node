@@ -20,21 +20,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-
 	"github.com/ethereum/go-ethereum/rpc"
-
 	ethermint "github.com/evmos/ethermint/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/zeta-chain/zetacore/rpc/backend"
-	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
-	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/miner"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/net"
-	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/personal"
-	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/txpool"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/web3"
-
-	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
 
 // RPC namespaces and API version
@@ -47,8 +40,8 @@ const (
 
 	Web3Namespace     = "web3"
 	EthNamespace      = "eth"
-	PersonalNamespace = "personal"
 	NetNamespace      = "net"
+	PersonalNamespace = "personal"
 	TxPoolNamespace   = "txpool"
 	DebugNamespace    = "debug"
 	MinerNamespace    = "miner"
@@ -112,64 +105,66 @@ func init() {
 				},
 			}
 		},
-		PersonalNamespace: func(ctx *server.Context,
-			clientCtx client.Context,
-			_ *rpcclient.WSClient,
-			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
-		) []rpc.API {
-			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
-			return []rpc.API{
-				{
-					Namespace: PersonalNamespace,
-					Version:   apiVersion,
-					Service:   personal.NewAPI(ctx.Logger, evmBackend),
-					Public:    false,
-				},
-			}
-		},
-		TxPoolNamespace: func(ctx *server.Context, _ client.Context, _ *rpcclient.WSClient, _ bool, _ ethermint.EVMTxIndexer) []rpc.API {
-			return []rpc.API{
-				{
-					Namespace: TxPoolNamespace,
-					Version:   apiVersion,
-					Service:   txpool.NewPublicAPI(ctx.Logger),
-					Public:    true,
-				},
-			}
-		},
-		DebugNamespace: func(ctx *server.Context,
-			clientCtx client.Context,
-			_ *rpcclient.WSClient,
-			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
-		) []rpc.API {
-			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
-			return []rpc.API{
-				{
-					Namespace: DebugNamespace,
-					Version:   apiVersion,
-					Service:   debug.NewAPI(ctx, evmBackend),
-					Public:    true,
-				},
-			}
-		},
-		MinerNamespace: func(ctx *server.Context,
-			clientCtx client.Context,
-			_ *rpcclient.WSClient,
-			allowUnprotectedTxs bool,
-			indexer ethermint.EVMTxIndexer,
-		) []rpc.API {
-			evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
-			return []rpc.API{
-				{
-					Namespace: MinerNamespace,
-					Version:   apiVersion,
-					Service:   miner.NewPrivateAPI(ctx, evmBackend),
-					Public:    false,
-				},
-			}
-		},
+		// Disabled
+		// NOTE: Public field of API is deprecated and defined only for compatibility.
+		//PersonalNamespace: func(ctx *server.Context,
+		//	clientCtx client.Context,
+		//	_ *rpcclient.WSClient,
+		//	allowUnprotectedTxs bool,
+		//	indexer ethermint.EVMTxIndexer,
+		//) []rpc.API {
+		//	evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
+		//	return []rpc.API{
+		//		{
+		//			Namespace: PersonalNamespace,
+		//			Version:   apiVersion,
+		//			Service:   personal.NewAPI(ctx.Logger, evmBackend),
+		//			Public:    false,
+		//		},
+		//	}
+		//},
+		//TxPoolNamespace: func(ctx *server.Context, _ client.Context, _ *rpcclient.WSClient, _ bool, _ ethermint.EVMTxIndexer) []rpc.API {
+		//	return []rpc.API{
+		//		{
+		//			Namespace: TxPoolNamespace,
+		//			Version:   apiVersion,
+		//			Service:   txpool.NewPublicAPI(ctx.Logger),
+		//			Public:    true,
+		//		},
+		//	}
+		//},
+		//DebugNamespace: func(ctx *server.Context,
+		//	clientCtx client.Context,
+		//	_ *rpcclient.WSClient,
+		//	allowUnprotectedTxs bool,
+		//	indexer ethermint.EVMTxIndexer,
+		//) []rpc.API {
+		//	evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
+		//	return []rpc.API{
+		//		{
+		//			Namespace: DebugNamespace,
+		//			Version:   apiVersion,
+		//			Service:   debug.NewAPI(ctx, evmBackend),
+		//			Public:    true,
+		//		},
+		//	}
+		//},
+		//MinerNamespace: func(ctx *server.Context,
+		//	clientCtx client.Context,
+		//	_ *rpcclient.WSClient,
+		//	allowUnprotectedTxs bool,
+		//	indexer ethermint.EVMTxIndexer,
+		//) []rpc.API {
+		//	evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
+		//	return []rpc.API{
+		//		{
+		//			Namespace: MinerNamespace,
+		//			Version:   apiVersion,
+		//			Service:   miner.NewPrivateAPI(ctx, evmBackend),
+		//			Public:    false,
+		//		},
+		//	}
+		//},
 	}
 }
 
