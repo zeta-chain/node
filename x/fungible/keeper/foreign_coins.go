@@ -80,10 +80,22 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 	return
 }
 
+// GetGasCoinForForeignCoin returns the gas coin for a given chain
 func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (types.ForeignCoins, bool) {
 	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
 	for _, coin := range foreignCoinList {
 		if coin.CoinType == common.CoinType_Gas {
+			return coin, true
+		}
+	}
+	return types.ForeignCoins{}, false
+}
+
+// GetForeignCoinFromAsset returns the foreign coin for a given asset for a given chain
+func (k Keeper) GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (types.ForeignCoins, bool) {
+	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
+	for _, coin := range foreignCoinList {
+		if coin.Asset == asset && coin.ForeignChainId == chainID {
 			return coin, true
 		}
 	}

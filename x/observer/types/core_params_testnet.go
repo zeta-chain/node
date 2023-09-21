@@ -14,9 +14,10 @@ func GetCoreParams() CoreParamsList {
 	params := CoreParamsList{
 		CoreParams: []*CoreParams{
 			{
-				ChainId:                     common.GoerliChain().ChainId,
-				ConfirmationCount:           6,
-				ZetaTokenContractAddress:    "",
+				ChainId:           common.GoerliChain().ChainId,
+				ConfirmationCount: 6,
+				// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
+				ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
 				InTxTicker:                  12,
