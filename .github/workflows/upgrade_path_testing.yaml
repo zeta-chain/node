@@ -83,7 +83,7 @@ jobs:
         run: |
           echo "*********INSTALL ZETAVISOR*********"
           make cosmovisor
-          find / -name 'zetavisor'
+          sudo find / -name 'zetavisor'
           #go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
           #go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
           
