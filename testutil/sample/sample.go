@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -112,4 +114,9 @@ func StringRandom(r *rand.Rand, length int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// Coins returns a sample sdk.Coins
+func Coins() sdk.Coins {
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }

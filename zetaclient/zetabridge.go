@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+
 	"github.com/zeta-chain/zetacore/common"
 
 	"sync"
@@ -32,6 +34,7 @@ import (
 	//"strconv"
 	//"strings"
 
+	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -46,6 +49,7 @@ type ZetaCoreBridge struct {
 	grpcConn      *grpc.ClientConn
 	httpClient    *retryablehttp.Client
 	cfg           config.ClientConfiguration
+	encodingCfg   params.EncodingConfig
 	keys          *Keys
 	broadcastLock *sync.RWMutex
 	zetaChainID   string
@@ -92,6 +96,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		accountNumber:       accountsMap,
 		seqNumber:           seqMap,
 		cfg:                 cfg,
+		encodingCfg:         app.MakeEncodingConfig(),
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
@@ -194,7 +199,6 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	}
 	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
-	cfg.Keygen = *keyGen
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")

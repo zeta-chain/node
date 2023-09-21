@@ -148,6 +148,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
+	//Wait for Genesis
+	time.Sleep(20 * time.Second)
+
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := NewZetaTxServer(
 		"http://zetacore0:26657",
@@ -158,8 +161,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// Wait for Genesis and keygen to be completed. ~ height 30
-	time.Sleep(20 * time.Second)
+	//Wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -296,6 +298,12 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestPauseZRC20()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20DepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestUpdateBytecode()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here
