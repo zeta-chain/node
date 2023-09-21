@@ -303,6 +303,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestERC20DepositAndCallRefund()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
+	smokeTest.TestUpdateBytecode()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	// add your dev test here
 	smokeTest.TestMyTest()
 
