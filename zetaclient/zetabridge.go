@@ -116,6 +116,12 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
+func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
+	if b.zetaChainID != chainID {
+		b.zetaChainID = chainID
+	}
+}
+
 func (b *ZetaCoreBridge) Stop() {
 	b.logger.Info().Msgf("ZetaBridge is stopping")
 	close(b.stop) // this notifies all configupdater to stop
@@ -146,7 +152,7 @@ func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
 		}
 		retryCount++
 		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
-		if retryCount > DefaultRetryCount {
+		if retryCount > ExtendedRetryCount {
 			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
@@ -176,22 +182,30 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		return err
 	}
-	newChains := make([]common.Chain, len(coreParams))
+
 	newEVMParams := make(map[int64]*observertypes.CoreParams)
 	var newBTCParams *observertypes.CoreParams
 
 	// check and update core params for each chain
-	for i, params := range coreParams {
+	for _, params := range coreParams {
 		err := config.ValidateCoreParams(params)
 		if err != nil {
-			b.logger.Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
+			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
 		}
-		newChains[i] = *common.GetChainFromChainID(params.ChainId)
 		if common.IsBitcoinChain(params.ChainId) {
 			newBTCParams = params
 		} else {
 			newEVMParams[params.ChainId] = params
 		}
+	}
+
+	chains, err := b.GetSupportedChains()
+	if err != nil {
+		return err
+	}
+	newChains := make([]common.Chain, len(chains))
+	for i, chain := range chains {
+		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
@@ -201,7 +215,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {
-		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")
+		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetacore")
 	} else {
 		cfg.CurrentTssPubkey = tss.GetTssPubkey()
 	}

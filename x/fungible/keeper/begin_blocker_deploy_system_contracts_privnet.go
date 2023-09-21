@@ -133,7 +133,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
 	}
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
-	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
+	msg := types.NewMsgUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
 	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
 	return err
