@@ -265,7 +265,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
-		require.ErrorIs(t, err, common.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
@@ -431,7 +431,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		require.ErrorIs(t, err, common.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
@@ -717,7 +717,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(100000), false)
-		require.ErrorIs(t, err, common.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
