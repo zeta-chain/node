@@ -14,9 +14,10 @@ func GetCoreParams() CoreParamsList {
 	params := CoreParamsList{
 		CoreParams: []*CoreParams{
 			{
-				ChainId:                     common.GoerliChain().ChainId,
-				ConfirmationCount:           6,
-				ZetaTokenContractAddress:    "",
+				ChainId:           common.GoerliChain().ChainId,
+				ConfirmationCount: 6,
+				// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
+				ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
 				InTxTicker:                  12,
@@ -53,17 +54,6 @@ func GetCoreParams() CoreParamsList {
 				OutboundTxScheduleLookahead: 60,
 			},
 			{
-				ChainId:                     common.ZetaChain().ChainId,
-				ConfirmationCount:           3,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
-				InTxTicker:                  2,
-				OutTxTicker:                 3,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              5,
-			},
-			{
 				ChainId:                     common.BtcTestNetChain().ChainId,
 				ConfirmationCount:           2,
 				ZetaTokenContractAddress:    "",
@@ -78,7 +68,7 @@ func GetCoreParams() CoreParamsList {
 			},
 		},
 	}
-	chainList := common.DefaultChainsList()
+	chainList := common.ExternalChainList()
 	requiredParams := len(chainList)
 	availableParams := 0
 	for _, chain := range chainList {

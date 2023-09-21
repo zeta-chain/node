@@ -135,7 +135,7 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return nil, err
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAllPendingCctx(chainID uint64) ([]*types.CrossChainTx, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
 	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
@@ -296,6 +296,15 @@ func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (types.PendingNo
 		return types.PendingNonces{}, err
 	}
 	return resp.PendingNonces, nil
+}
+
+func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.SupportedChains(context.Background(), &zetaObserverTypes.QuerySupportedChains{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChains(), nil
 }
 
 func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
