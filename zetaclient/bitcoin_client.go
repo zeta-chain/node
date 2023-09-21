@@ -334,7 +334,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return 2
 }
 
-// returns isIncluded, isConfirmed, Error
+// returns isIncluded(or inMempool), isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
@@ -356,10 +356,14 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		}
 
 		// Try including this outTx broadcasted by myself
-		err = ob.checkNSaveIncludedTx(txnHash, params)
+		inMempool, err := ob.checkNSaveIncludedTx(txnHash, params)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
 			return false, false, nil
+		}
+		if inMempool { // to avoid unnecessary Tss keysign
+			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
+			return true, false, nil
 		}
 
 		// Get tx result again in case it is just included
@@ -837,7 +841,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				}
 				// verify outTx hashes
 				for _, txHash := range tracker.HashList {
-					err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
+					_, err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
 					if err != nil {
 						ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: checkNSaveIncludedTx failed")
 					}
@@ -851,17 +855,18 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
-// The func either includes a new outTx or update an existing outTx result.
-func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) error {
+// checkNSaveIncludedTx either includes a new outTx or update an existing outTx result.
+// Returns inMempool, error
+func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) (bool, error) {
 	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
 	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
 	if err != nil {
-		return errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
+		return false, errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
 	}
 	if getTxResult.Confirmations >= 0 { // check included tx only
 		err = ob.checkTssOutTxResult(hash, getTxResult, params, params.OutboundTxTssNonce)
 		if err != nil {
-			return errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
+			return false, errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
 		}
 
 		ob.mu.Lock()
@@ -891,8 +896,9 @@ func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.O
 		if foundHash && !foundRes {
 			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: unreachable code path! outTx %s outTxID %s, prior nonce %d, current nonce %d", txHash, outTxID, nonce, params.OutboundTxTssNonce)
 		}
+		return false, nil
 	}
-	return nil
+	return true, nil // in mempool
 }
 
 // Basic TSS outTX checks:
