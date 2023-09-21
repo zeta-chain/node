@@ -10,7 +10,7 @@ const TypeMsgUpdateSystemContract = "update_system_contract"
 
 var _ sdk.Msg = &MsgUpdateSystemContract{}
 
-func NewMessageUpdateSystemContract(creator string, systemContractAddr string) *MsgUpdateSystemContract {
+func NewMsgUpdateSystemContract(creator string, systemContractAddr string) *MsgUpdateSystemContract {
 	return &MsgUpdateSystemContract{
 		Creator:                  creator,
 		NewSystemContractAddress: systemContractAddr,

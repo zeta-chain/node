@@ -50785,6 +50785,9 @@ definitions:
         type: boolean
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
+    properties:
+      address:
+        type: string
   fungibleMsgRemoveForeignCoinResponse:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
