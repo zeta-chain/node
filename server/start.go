@@ -137,7 +137,7 @@ which accepts a path for the resulting pprof file.
 
 			withTM, err := cmd.Flags().GetBool(srvflags.WithTendermint)
 			if err != nil {
-				return err
+				withTM = false
 			}
 			if !withTM {
 				serverCtx.Logger.Info("starting ABCI without Tendermint")
@@ -149,7 +149,7 @@ which accepts a path for the resulting pprof file.
 			// fire unlock precess for keyring
 			keyringBackend, err := cmd.Flags().GetString(flags.FlagKeyringBackend)
 			if err != nil {
-				return err
+				keyringBackend = ""
 			}
 			if keyringBackend == keyring.BackendFile {
 				_, err = clientCtx.Keyring.List()
