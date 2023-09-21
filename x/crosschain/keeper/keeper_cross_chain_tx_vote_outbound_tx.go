@@ -16,7 +16,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Casts a vote on an outbound transaction observed on a connected chain (after
+// VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, the outbound
@@ -159,13 +159,21 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 				case types.CctxStatus_PendingOutbound:
 					// create new OutboundTxParams for the revert
 					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-						Receiver:           cctx.InboundTxParams.Sender,
-						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-						Amount:             cctx.InboundTxParams.Amount,
-						CoinType:           cctx.InboundTxParams.CoinType,
-						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+						Receiver:        cctx.InboundTxParams.Sender,
+						ReceiverChainId: cctx.InboundTxParams.SenderChainId,
+						Amount:          cctx.InboundTxParams.Amount,
+						CoinType:        cctx.InboundTxParams.CoinType,
+						// NOTE(pwu): revert gas limit = initial outbound gas limit set by user
+						//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
+						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit,
 					})
-					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx, false)
+					err := k.PayGasAndUpdateCctx(
+						tmpCtx,
+						cctx.InboundTxParams.SenderChainId,
+						&cctx,
+						cctx.OutboundTxParams[0].Amount,
+						false,
+					)
 					if err != nil {
 						return err
 					}
