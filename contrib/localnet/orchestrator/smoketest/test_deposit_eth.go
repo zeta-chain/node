@@ -123,7 +123,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			BlockHash: blockHash.Hex(),
 			TxIndex:   int64(txIndex),
 			TxHash:    txHash.Hex(),
-			Proof:     txProof,
+			Proof:     common.NewEthereumProof(txProof),
 			ChainId:   0,
 		})
 		if err != nil {
@@ -194,12 +194,17 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 	if err != nil {
 		panic(err)
 	}
-	value := big.NewInt(100000000000000000) // in wei (1 eth)
-	gasLimit := uint64(23000)               // in units
+
+	// in wei (10 eth)
+	value := big.NewInt(1e18)
+	value = value.Mul(value, big.NewInt(10))
+
+	gasLimit := uint64(23000) // in units
 	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		panic(err)
 	}
+
 	data := append(sm.BTCZRC20Addr.Bytes(), []byte("hello sailors")...) // this data
 	tx := ethtypes.NewTransaction(nonce, TSSAddress, value, gasLimit, gasPrice, data)
 	chainID, err := goerliClient.NetworkID(context.Background())
@@ -232,6 +237,7 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 		fmt.Printf("cctx status message: %s", cctx.CctxStatus.StatusMessage)
 		revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		fmt.Printf("GOERLI revert tx receipt: status %d\n", receipt.Status)
+
 		tx, _, err := sm.goerliClient.TransactionByHash(context.Background(), ethcommon.HexToHash(revertTxHash))
 		if err != nil {
 			panic(err)
@@ -240,13 +246,41 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 		if err != nil {
 			panic(err)
 		}
-		if cctx.CctxStatus.Status != types.CctxStatus_Reverted || receipt.Status == 0 || *tx.To() != DeployerAddress || tx.Value().Cmp(value) != 0 {
+
+		printTxInfo := func() {
 			// debug info when test fails
 			fmt.Printf("  tx: %+v\n", tx)
 			fmt.Printf("  receipt: %+v\n", receipt)
 			fmt.Printf("cctx http://localhost:1317/zeta-chain/crosschain/cctx/%s\n", cctx.Index)
-			panic(fmt.Sprintf("expected cctx status PendingRevert; got %s", cctx.CctxStatus.Status))
 		}
+
+		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+			printTxInfo()
+			panic(fmt.Sprintf("expected cctx status to be PendingRevert; got %s", cctx.CctxStatus.Status))
+		}
+
+		if receipt.Status == 0 {
+			printTxInfo()
+			panic("expected the revert tx receipt to have status 1; got 0")
+		}
+
+		if *tx.To() != DeployerAddress {
+			printTxInfo()
+			panic(fmt.Sprintf("expected tx to %s; got %s", DeployerAddress.Hex(), tx.To().Hex()))
+		}
+
+		// the received value must be lower than the original value because of the paid fees for the revert tx
+		// we check that the value is still greater than 0
+		if tx.Value().Cmp(value) != -1 || tx.Value().Cmp(big.NewInt(0)) != 1 {
+			printTxInfo()
+			panic(fmt.Sprintf("expected tx value %s; should be non-null and lower than %s", tx.Value().String(), value.String()))
+		}
+
+		fmt.Printf("REVERT tx receipt: %d\n", receipt.Status)
+		fmt.Printf("  tx hash: %s\n", receipt.TxHash.String())
+		fmt.Printf("  to: %s\n", tx.To().String())
+		fmt.Printf("  value: %s\n", tx.Value().String())
+		fmt.Printf("  block num: %d\n", receipt.BlockNumber)
 	}()
 }
 
