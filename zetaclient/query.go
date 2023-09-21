@@ -221,7 +221,7 @@ func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 		if err == nil {
 			return resp.Keygen, nil
 		}
-		time.Sleep(DefaultRetryInterval * time.Second)
+		time.Sleep(ExtendedRetryCount * time.Second)
 	}
 	return nil, fmt.Errorf("failed to get keygen | err %s", err.Error())
 
