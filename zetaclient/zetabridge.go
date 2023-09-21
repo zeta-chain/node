@@ -116,6 +116,12 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
+func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
+	if b.zetaChainID != chainID {
+		b.zetaChainID = chainID
+	}
+}
+
 func (b *ZetaCoreBridge) Stop() {
 	b.logger.Info().Msgf("ZetaBridge is stopping")
 	close(b.stop) // this notifies all configupdater to stop
@@ -146,7 +152,7 @@ func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
 		}
 		retryCount++
 		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
-		if retryCount > DefaultRetryCount {
+		if retryCount > ExtendedRetryCount {
 			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
