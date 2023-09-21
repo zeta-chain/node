@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -20,14 +21,22 @@ import (
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer, tssHistoricalList []types.TSS) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge, tssHistoricalList)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")
 		return nil, err
 	}
+	// Register zetaclient.TSS prometheus metrics
+	err = tss.RegisterMetrics(metrics)
+	if err != nil {
+		keygenLogger.Err(err).Msg("tss.RegisterMetrics")
+		return nil, err
+	}
+	// Set PeerID in telemetry server
 	ts.SetP2PID(tss.Server.GetLocalPeerID())
+
 	// If Keygen block is set it will try to generate new TSS at the block
 	// This is a blocking thread and will wait until the ceremony is complete successfully
 	// If the TSS generation is unsuccessful , it will loop indefinitely until a new TSS is generated
