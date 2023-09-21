@@ -201,7 +201,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(err, "failed to get wzeta abi")
 	}
-	
+
 	res, err := k.CallEVM(
 		ctx,
 		*wzetaABI,
