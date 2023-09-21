@@ -718,14 +718,16 @@ func (ob *EVMChainClient) observeInTX() error {
 				continue
 			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-			cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-			if !found {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-				continue
-			}
-			if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-				continue
+			if destChain.IsExternalChain() {
+				cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
+				if !found {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+					continue
+				}
+				if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+					continue
+				}
 			}
 			zetaHash, err := ob.zetaClient.PostSend(
 				event.ZetaTxSenderAddress.Hex(),

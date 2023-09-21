@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
-// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
+//go:build MOCK_MAINNET
+// +build MOCK_MAINNET
 
 package types
 
@@ -15,7 +15,7 @@ func GetCoreParams() CoreParamsList {
 		CoreParams: []*CoreParams{
 			{
 				ChainId:                     common.EthChain().ChainId,
-				ConfirmationCount:           14,
+				ConfirmationCount:           6,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
@@ -28,7 +28,7 @@ func GetCoreParams() CoreParamsList {
 			},
 			{
 				ChainId:                     common.BscMainnetChain().ChainId,
-				ConfirmationCount:           14,
+				ConfirmationCount:           6,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
