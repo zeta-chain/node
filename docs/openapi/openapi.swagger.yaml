@@ -27213,6 +27213,26 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/pendingNonces/{chain_id}:
+    get:
+      operationId: Query_PendingNoncesByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryPendingNoncesByChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /zeta-chain/crosschain/protocolFee:
     get:
       operationId: Query_ProtocolFee
@@ -50660,6 +50680,11 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryPendingNoncesByChainResponse:
+    type: object
+    properties:
+      pending_nonces:
+        $ref: '#/definitions/crosschainPendingNonces'
   crosschainQueryTssHistoryResponse:
     type: object
     properties:
