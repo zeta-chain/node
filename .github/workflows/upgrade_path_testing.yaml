@@ -69,7 +69,7 @@ jobs:
         with:
           repository: zeta-chain/cosmos-sdk
           path: zetavisor/
-          ref: zetavisor-v0.1.5
+          ref: debug/zetavisor
 
       - name: "INSTALL_APT_PACKAGES"
         working-directory: "zetavisor/cosmovisor"
