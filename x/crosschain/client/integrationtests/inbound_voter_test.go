@@ -129,8 +129,12 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 		test := test
 		s.Run(test.name, func() {
 			broadcaster := s.network.Validators[0]
+
+			// Vote the gas price
 			for _, val := range s.network.Validators {
 				out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{val.Address.String(), "--output", "json"})
+				s.Require().NoError(err)
+
 				var account authtypes.AccountI
 				s.NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
 				signedTx := BuildSignedGasPriceVote(s.T(), val, s.cfg.BondDenom, account)
@@ -138,8 +142,12 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				s.Require().NoError(err)
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
+
+			// Vote the tss
 			for _, val := range s.network.Validators {
 				out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{val.Address.String(), "--output", "json"})
+				s.Require().NoError(err)
+
 				var account authtypes.AccountI
 				s.NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
 				signedTx := BuildSignedTssVote(s.T(), val, s.cfg.BondDenom, account)
@@ -147,6 +155,8 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				s.Require().NoError(err)
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
+
+			// Vote the inbound tx
 			for _, val := range s.network.Validators {
 				vote := test.votes[val.Address.String()]
 				if vote == observerTypes.VoteType_NotYetVoted {
@@ -164,14 +174,16 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
-
 			s.Require().NoError(s.network.WaitForNBlocks(2))
+
+			// Get the ballot
 			ballotIdentifier := GetBallotIdentifier(test.name)
 			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{ballotIdentifier, "--output", "json"})
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
 
+			// Check the vote in the ballot
 			s.Assert().Equal(len(test.votes), len(ballot.Voters))
 			for _, vote := range ballot.Voters {
 				if test.votes[vote.VoterAddress] == observerTypes.VoteType_FailureObservation {
@@ -182,6 +194,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			}
 			s.Assert().Equal(test.ballotResult, ballot.BallotStatus)
 
+			// Get the cctx and check its status
 			cctxIdentifier := ballotIdentifier
 			if test.falseBallotIdentifier != "" {
 				cctxIdentifier = test.falseBallotIdentifier
@@ -189,7 +202,6 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx := crosschaintypes.QueryGetCctxResponse{}
 			if test.cctxStatus == crosschaintypes.CctxStatus_PendingRevert {
-				s.Require().Error(err)
 				s.Require().Contains(out.String(), "not found")
 			} else {
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))

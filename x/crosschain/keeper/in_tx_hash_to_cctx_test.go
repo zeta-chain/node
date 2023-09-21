@@ -24,7 +24,7 @@ func createNInTxHashToCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []type
 }
 
 func TestInTxHashToCctxGet(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetInTxHashToCctx(ctx,
@@ -38,7 +38,7 @@ func TestInTxHashToCctxGet(t *testing.T) {
 	}
 }
 func TestInTxHashToCctxRemove(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	for _, item := range items {
 		keeper.RemoveInTxHashToCctx(ctx,
@@ -52,7 +52,7 @@ func TestInTxHashToCctxRemove(t *testing.T) {
 }
 
 func TestInTxHashToCctxGetAll(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
 	require.ElementsMatch(t,
 		nullify.Fill(items),

@@ -128,3 +128,12 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 
 	return &types.MsgUpdateTssAddressResponse{}, nil
 }
+
+// IsAuthorizedNodeAccount checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+func (k Keeper) IsAuthorizedNodeAccount(ctx sdk.Context, address string) bool {
+	_, found := k.zetaObserverKeeper.GetNodeAccount(ctx, address)
+	if found {
+		return true
+	}
+	return false
+}
