@@ -39,11 +39,11 @@ var (
 )
 
 func (k Keeper) deployContract(ctx sdk.Context, metadata *bind.MetaData, ctorArguments ...interface{}) (common.Address, error) {
-	abi, err := metadata.GetAbi()
+	contractABI, err := metadata.GetAbi()
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get  ABI: %s", err.Error())
 	}
-	ctorArgs, err := abi.Pack(
+	ctorArgs, err := contractABI.Pack(
 		"",               // function--empty string for constructor
 		ctorArguments..., // feeToSetter
 	)
@@ -195,11 +195,11 @@ func (k Keeper) DepositZRC20(
 	to common.Address,
 	amount *big.Int,
 ) (*evmtypes.MsgEthereumTxResponse, error) {
-	abi, err := zrc20.ZRC20MetaData.GetAbi()
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, err
 	}
-	return k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, true, false, "deposit", to, amount)
+	return k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, true, false, "deposit", to, amount)
 }
 
 // DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
@@ -224,6 +224,43 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 
 	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
 		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
+}
+
+// QueryWithdrawGasFee returns the gas fee for a withdrawal transaction associated with a given zrc20
+func (k Keeper) QueryWithdrawGasFee(ctx sdk.Context, contract common.Address) (*big.Int, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"withdrawGasFee",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	unpacked, err := zrc20ABI.Unpack("withdrawGasFee", res.Ret)
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) < 2 {
+		return nil, fmt.Errorf("expect 2 returned values, got %d", len(unpacked))
+	}
+
+	GasFee, ok := unpacked[1].(*big.Int)
+	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return GasFee, nil
 }
 
 // QueryProtocolFlatFee returns the protocol flat fee associated with a given zrc20
@@ -263,6 +300,43 @@ func (k Keeper) QueryProtocolFlatFee(ctx sdk.Context, contract common.Address) (
 	return protocolGasFee, nil
 }
 
+// QueryGasLimit returns the gas limit for a withdrawal transaction associated with a given zrc20
+func (k Keeper) QueryGasLimit(ctx sdk.Context, contract common.Address) (*big.Int, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	res, err := k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		false,
+		false,
+		"GAS_LIMIT",
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	unpacked, err := zrc20ABI.Unpack("GAS_LIMIT", res.Ret)
+	if err != nil {
+		return nil, err
+	}
+	if len(unpacked) == 0 {
+		return nil, fmt.Errorf("expect 1 returned values, got %d", len(unpacked))
+	}
+
+	gasLimit, ok := unpacked[0].(*big.Int)
+	if !ok {
+		return nil, errors.New("can't read returned value as big.Int")
+	}
+
+	return gasLimit, nil
+}
+
 // QueryZRC20Data returns the data of a deployed ZRC20 contract
 func (k Keeper) QueryZRC20Data(
 	ctx sdk.Context,
@@ -274,35 +348,40 @@ func (k Keeper) QueryZRC20Data(
 		decimalRes types.ZRC20Uint8Response
 	)
 
-	zrc4, _ := zrc20.ZRC20MetaData.GetAbi()
+	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return types.ZRC20Data{}, sdkerrors.Wrapf(
+			types.ErrABIUnpack, "failed to get ABI: %s", err.Error(),
+		)
+	}
 
 	// Name
-	res, err := k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "name")
+	res, err := k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "name")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
-	if err := zrc4.UnpackIntoInterface(&nameRes, "name", res.Ret); err != nil {
+	if err := zrc4ABI.UnpackIntoInterface(&nameRes, "name", res.Ret); err != nil {
 		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack name: %s", err.Error())
 	}
 
 	// Symbol
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "symbol")
+	res, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "symbol")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
-	if err := zrc4.UnpackIntoInterface(&symbolRes, "symbol", res.Ret); err != nil {
+	if err := zrc4ABI.UnpackIntoInterface(&symbolRes, "symbol", res.Ret); err != nil {
 		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack symbol: %s", err.Error())
 	}
 
 	// Decimals
-	res, err = k.CallEVM(ctx, *zrc4, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "decimals")
+	res, err = k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "decimals")
 	if err != nil {
 		return types.ZRC20Data{}, err
 	}
 
-	if err := zrc4.UnpackIntoInterface(&decimalRes, "decimals", res.Ret); err != nil {
+	if err := zrc4ABI.UnpackIntoInterface(&decimalRes, "decimals", res.Ret); err != nil {
 		return types.ZRC20Data{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack decimals: %s", err.Error())
 	}
 
@@ -314,17 +393,17 @@ func (k Keeper) BalanceOfZRC4(
 	ctx sdk.Context,
 	contract, account common.Address,
 ) (*big.Int, error) {
-	abi, err := zrc20.ZRC20MetaData.GetAbi()
+	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "balanceOf",
+	res, err := k.CallEVM(ctx, *zrc4ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, false, false, "balanceOf",
 		account)
 	if err != nil {
 		return nil, err
 	}
 
-	unpacked, err := abi.Unpack("balanceOf", res.Ret)
+	unpacked, err := zrc4ABI.Unpack("balanceOf", res.Ret)
 	if err != nil || len(unpacked) == 0 {
 		return nil, cosmoserrors.Wrapf(types.ErrABIUnpack, err.Error())
 	}
