@@ -216,12 +216,12 @@ func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*zetaObserverTypes.NodeAccount,
 func (b *ZetaCoreBridge) GetKeyGen() (*zetaObserverTypes.Keygen, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	err := error(nil)
-	for i := 0; i <= DefaultRetryCount; i++ {
+	for i := 0; i <= ExtendedRetryCount; i++ {
 		resp, err := client.Keygen(context.Background(), &zetaObserverTypes.QueryGetKeygenRequest{})
 		if err == nil {
 			return resp.Keygen, nil
 		}
-		time.Sleep(ExtendedRetryCount * time.Second)
+		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return nil, fmt.Errorf("failed to get keygen | err %s", err.Error())
 
