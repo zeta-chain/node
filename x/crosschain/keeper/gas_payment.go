@@ -90,7 +90,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
-		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(common.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -137,7 +137,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
-		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(common.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
@@ -261,7 +261,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 ) error {
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
-		return cosmoserrors.Wrapf(zetaObserverTypes.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
+		return cosmoserrors.Wrapf(common.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
