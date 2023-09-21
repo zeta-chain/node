@@ -5,6 +5,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -163,10 +164,13 @@ func StressTest(_ *cobra.Command, _ []string) {
 		smokeTest.TestSetupZetaTokenAndConnectorAndZEVMContracts()
 		smokeTest.TestDepositEtherIntoZRC20()
 		smokeTest.TestSendZetaIn()
-	} else {
+	} else if stressTestArgs.network == "TESTNET" {
 		ethZRC20Addr, _ := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
 		smokeTest.ETHZRC20Addr = ethZRC20Addr
 		smokeTest.ETHZRC20, _ = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
+	} else {
+		err := errors.New("invalid network argument: " + stressTestArgs.network)
+		panic(err)
 	}
 
 	// Check zrc20 balance of Deployer address
