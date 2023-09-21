@@ -103,11 +103,11 @@ func (m *Proof) Get(key []byte) ([]byte, error) {
 // Typically, the rootHash is from a trusted source (e.g. a trusted block header),
 // and the key is the index of the transaction in the block.
 func (m *Proof) Verify(rootHash common.Hash, key int) ([]byte, error) {
-	if key < 0 || key >= len(m.Keys) {
+	if key < 0 {
 		return nil, errors.New("key not found")
 	}
 	var indexBuf []byte
-	// #nosec G701 key range is checked above
+	// #nosec G701 range is valid
 	indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(key))
 	return trie.VerifyProof(rootHash, indexBuf, m)
 }
