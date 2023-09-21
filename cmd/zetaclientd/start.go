@@ -81,6 +81,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
 		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
+		zetaBridge.UpdateChainID(cfg.ChainID)
 	}
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
