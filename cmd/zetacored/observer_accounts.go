@@ -28,6 +28,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Token distribution
+// Validators Only = ValidatorTokens sent to their operator address
+// Observer = ObserverTokens sent to their operator address + HotkeyTokens sent to their hotkey address
+// HotkeyTokens are for operational expenses such as paying for gas fees
 const (
 	ValidatorTokens = "100000000000000000000000"
 	ObserverTokens  = "4100000000000000000000000"
