@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -97,11 +98,11 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	}
 	pubkey, err := common.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
-		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(types.ErrInvalidPubKey, err.Error())
+		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 	}
 	granteeAddress, err := common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
 	if err != nil {
-		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(types.ErrInvalidPubKey, err.Error())
+		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 	}
 	k.DisableInboundOnly(ctx)
 	// AddNodeAccountOnly flag usage
