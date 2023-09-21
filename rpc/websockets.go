@@ -95,7 +95,6 @@ func NewWebsocketsServer(clientCtx client.Context, logger log.Logger, tmWSClient
 	_, port, err := net.SplitHostPort(cfg.JSONRPC.Address)
 	if err != nil {
 		logger.Error("failed to parse rpc address", "error", err.Error())
-		return nil
 	}
 
 	return &websocketsServer{
