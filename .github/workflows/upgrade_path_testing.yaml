@@ -82,8 +82,9 @@ jobs:
         working-directory: "zetavisor/cosmovisor"
         run: |
           echo "*********INSTALL ZETAVISOR*********"
-          go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
-          go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          make cosmovisor
+          #go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          #go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
           
           zetavisor version || echo "zetavisor failed to install."
           
