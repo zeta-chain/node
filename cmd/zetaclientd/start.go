@@ -238,11 +238,14 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// stop zetacore observer
 	for _, chain := range cfg.GetEnabledChains() {
+		_, ok := chainClientMap[chain]
+		if !ok {
+			continue
+		}
 		// zeta chain does not have a chain client
 		if chain.IsExternalChain() {
 			(chainClientMap)[chain].Stop()
 		}
-
 	}
 	zetaBridge.Stop()
 
