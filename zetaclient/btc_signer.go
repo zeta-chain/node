@@ -64,6 +64,12 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
 
+	// refresh unspent UTXOs and continue with keysign regardless of error
+	err := btcClient.FetchUTXOS()
+	if err != nil {
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: FetchUTXOS error: nonce %d chain %d", nonce, chain.ChainId)
+	}
+
 	// select N UTXOs to cover the total expense
 	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, false)
 	if err != nil {
@@ -196,6 +202,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 
 func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
 	defer func() {
+		outTxMan.EndTryProcess(outTxID)
 		if err := recover(); err != nil {
 			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", send.Index, err)
 		}
@@ -213,17 +220,14 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, params.Amount.BigInt(), params.Receiver)
-	defer func() {
-		outTxMan.EndTryProcess(outTxID)
-	}()
 	btcClient, ok := chainclient.(*BitcoinChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
-	flags, err := zetaBridge.GetPermissionFlags()
+	flags, err := zetaBridge.GetCrosschainFlags()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get permission flags")
+		logger.Error().Err(err).Msgf("cannot get crosschain flags")
 		return
 	}
 	if !flags.IsOutboundEnabled {
@@ -236,7 +240,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	outboundTxTssNonce := params.OutboundTxTssNonce
 	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
 	if included || confirmed {
-		logger.Info().Msgf("CCTX already processed; exit signer")
+		logger.Info().Msgf("CCTX %s already processed; exit signer", outTxID)
 		return
 	}
 
@@ -294,7 +298,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
 
 			// Save successfully broadcasted transaction to btc chain client
-			btcClient.SaveBroadcastedTx(tx.TxHash(), outboundTxTssNonce)
+			btcClient.SaveBroadcastedTx(outTxHash, outboundTxTssNonce)
 
 			break // successful broadcast; no need to retry
 		}

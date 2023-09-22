@@ -41,18 +41,17 @@ message MsgAddBlameVote {
 }
 ```
 
-## MsgUpdatePermissionFlags
+## MsgUpdateCrosschainFlags
 
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
+UpdateCrosschainFlags updates the crosschain related flags.
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
-message MsgUpdatePermissionFlags {
+message MsgUpdateCrosschainFlags {
 	string creator = 1;
 	bool isInboundEnabled = 3;
 	bool isOutboundEnabled = 4;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
 ```
 
