@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"gorm.io/gorm"
 )
 
@@ -29,10 +28,10 @@ type TransactionResultSQLType struct {
 	Tx  TransactionResultDB `gorm:"embedded"`
 }
 
-type TransactionHashSQLType struct {
+type OutTxHashSQLType struct {
 	gorm.Model
 	Key  string
-	Hash chainhash.Hash
+	Hash string
 }
 
 func ToTransactionResultDB(txResult btcjson.GetTransactionResult) (TransactionResultDB, error) {
@@ -98,8 +97,8 @@ func FromTransactionResultSQLType(txSQL TransactionResultSQLType) (btcjson.GetTr
 	return FromTransactionResultDB(txSQL.Tx)
 }
 
-func ToTransactionHashSQLType(hash chainhash.Hash, key string) TransactionHashSQLType {
-	return TransactionHashSQLType{
+func ToOutTxHashSQLType(hash string, key string) OutTxHashSQLType {
+	return OutTxHashSQLType{
 		Key:  key,
 		Hash: hash,
 	}

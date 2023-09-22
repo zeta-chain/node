@@ -4,15 +4,12 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -41,23 +38,39 @@ func initObserverKeeper(
 
 // ObserverKeeper instantiates an observer keeper for testing purposes
 func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
+	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+
+	// Initialize local store
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
+	cdc := NewCodec()
 
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	// Create regular keepers
+	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
-	k := initObserverKeeper(
-		cdc,
-		db,
-		stateStore,
-		stakingkeeper.Keeper{},
-		ParamsKeeper(cdc, db, stateStore),
-	)
-
+	// Create the observer keeper
+	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := NewContext(stateStore)
+
+	// Initialize modules genesis
+	sdkKeepers.InitGenesis(ctx)
+
+	// Add a proposer to the context
+	ctx = sdkKeepers.InitBlockProposer(t, ctx)
+
+	k := keeper.NewKeeper(
+		cdc,
+		storeKey,
+		memStoreKey,
+		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
+		sdkKeepers.StakingKeeper,
+	)
+
 	k.SetParams(ctx, types.DefaultParams())
+
 	return k, ctx
 }

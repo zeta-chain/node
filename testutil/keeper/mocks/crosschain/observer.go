@@ -222,6 +222,30 @@ func (_m *CrosschainObserverKeeper) GetCoreParamsByChainID(ctx types.Context, ch
 	return r0, r1
 }
 
+// GetCrosschainFlags provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetCrosschainFlags(ctx types.Context) (observertypes.CrosschainFlags, bool) {
+	ret := _m.Called(ctx)
+
+	var r0 observertypes.CrosschainFlags
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.CrosschainFlags, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) observertypes.CrosschainFlags); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(observertypes.CrosschainFlags)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetKeygen provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetKeygen(ctx types.Context) (observertypes.Keygen, bool) {
 	ret := _m.Called(ctx)
@@ -346,23 +370,14 @@ func (_m *CrosschainObserverKeeper) IsInboundEnabled(ctx types.Context) bool {
 	return r0
 }
 
-// IsOutboundAllowed provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) IsOutboundAllowed(ctx types.Context) bool {
-	ret := _m.Called(ctx)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context) bool); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
 // SetBallot provides a mock function with given fields: ctx, ballot
 func (_m *CrosschainObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
 	_m.Called(ctx, ballot)
+}
+
+// SetCrosschainFlags provides a mock function with given fields: ctx, crosschainFlags
+func (_m *CrosschainObserverKeeper) SetCrosschainFlags(ctx types.Context, crosschainFlags observertypes.CrosschainFlags) {
+	_m.Called(ctx, crosschainFlags)
 }
 
 // SetKeygen provides a mock function with given fields: ctx, keygen
@@ -383,11 +398,6 @@ func (_m *CrosschainObserverKeeper) SetNodeAccount(ctx types.Context, nodeAccoun
 // SetObserverMapper provides a mock function with given fields: ctx, om
 func (_m *CrosschainObserverKeeper) SetObserverMapper(ctx types.Context, om *observertypes.ObserverMapper) {
 	_m.Called(ctx, om)
-}
-
-// SetPermissionFlags provides a mock function with given fields: ctx, permissionFlags
-func (_m *CrosschainObserverKeeper) SetPermissionFlags(ctx types.Context, permissionFlags observertypes.PermissionFlags) {
-	_m.Called(ctx, permissionFlags)
 }
 
 // NewCrosschainObserverKeeper creates a new instance of CrosschainObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

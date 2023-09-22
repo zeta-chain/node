@@ -258,7 +258,7 @@ message QueryAllPendingNoncesResponse {
 }
 
 message QueryPendingNoncesByChainRequest {
-  uint64 chain_id = 1;
+  int64 chain_id = 1;
 }
 
 message QueryPendingNoncesByChainResponse {
@@ -305,7 +305,7 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-  uint64 chainId = 1;
+  int64 chain_id = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
