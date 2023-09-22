@@ -47,9 +47,6 @@ func TestGenesisState_Validate(t *testing.T) {
 						InTxHash: "1",
 					},
 				},
-				//PermissionFlags: &types.PermissionFlags{
-				//	IsInboundEnabled: true,
-				//},
 			},
 			valid: true,
 		},

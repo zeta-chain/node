@@ -9,14 +9,14 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateCoreParams{}, "observer/UpdateClientParams", nil)
-	cdc.RegisterConcrete(&MsgUpdatePermissionFlags{}, "crosschain/UpdatePermissionFlags", nil)
+	cdc.RegisterConcrete(&MsgUpdateCrosschainFlags{}, "crosschain/UpdateCrosschainFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateKeygen{}, "crosschain/UpdateKeygen", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateCoreParams{},
-		&MsgUpdatePermissionFlags{},
+		&MsgUpdateCrosschainFlags{},
 		&MsgUpdateKeygen{},
 	)
 

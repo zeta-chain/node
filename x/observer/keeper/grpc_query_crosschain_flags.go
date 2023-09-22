@@ -9,16 +9,16 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) PermissionFlags(c context.Context, req *types.QueryGetPermissionFlagsRequest) (*types.QueryGetPermissionFlagsResponse, error) {
+func (k Keeper) CrosschainFlags(c context.Context, req *types.QueryGetCrosschainFlagsRequest) (*types.QueryGetCrosschainFlagsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, found := k.GetPermissionFlags(ctx)
+	val, found := k.GetCrosschainFlags(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	return &types.QueryGetPermissionFlagsResponse{PermissionFlags: val}, nil
+	return &types.QueryGetCrosschainFlagsResponse{CrosschainFlags: val}, nil
 }

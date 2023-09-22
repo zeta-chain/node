@@ -34,7 +34,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 		return sdkerrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
-	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, uint64(receiveChainID))
+	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
 	if !found {
 		return sdkerrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
 	}
