@@ -51044,14 +51044,9 @@ definitions:
   observerPolicy_Type:
     type: string
     enum:
-      - stop_inbound_cctx
-      - deploy_fungible_coin
-      - update_client_params
-      - update_keygen_block
-      - out_tx_tracker
-      - add_observer
-    default: stop_inbound_cctx
-    title: '- stop_inbound_cctx: some observer sees inbound tx'
+      - group1
+      - group2
+    default: group1
   observerQueryAllBlameRecordsResponse:
     type: object
     properties:
