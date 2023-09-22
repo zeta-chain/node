@@ -1,6 +1,10 @@
 package types
 
 import (
+	"errors"
+
+	cosmoserrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -41,9 +45,25 @@ func (msg *MsgUpdateCrosschainFlags) GetSignBytes() []byte {
 }
 
 func (msg *MsgUpdateCrosschainFlags) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	if msg.GasPriceIncreaseFlags != nil {
+		if err := msg.GasPriceIncreaseFlags.Validate(); err != nil {
+			return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		}
+	}
+
+	return nil
+}
+
+func (gpf GasPriceIncreaseFlags) Validate() error {
+	if gpf.EpochLength <= 0 {
+		return errors.New("epoch length must be positive")
+	}
+	if gpf.RetryInterval <= 0 {
+		return errors.New("retry interval must be positive")
 	}
 	return nil
 }
