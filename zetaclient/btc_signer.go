@@ -108,7 +108,12 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	remaining := total - amount
 	remainingSats, err := getSatoshis(remaining)
 	if err != nil {
-		return nil, err
+		// TODO: amount validation should be done in zeta core to block invalid cctx
+		// We ignore invalid amount for now, otherwise it will block all other cctxes
+		// 'remaining' is supposed to be > 0 as we have checked total >= amount + fees
+		validSendSofar = false
+		signer.logger.Error().Err(err).Msgf("SignWithdrawTx: cannot convert remaining amount %f to satoshis", remaining)
+		//return nil, err
 	}
 	remainingSats -= fees.Int64()
 	remainingSats -= nonceMark
