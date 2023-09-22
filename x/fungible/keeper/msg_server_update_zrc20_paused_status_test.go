@@ -14,7 +14,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("can update the paused status of zrc20", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		requireUnpaused := func(zrc20 string) {
 			fc, found := k.GetForeignCoins(ctx, zrc20)
@@ -123,7 +123,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("should fail if invalid message", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		invalidMsg := types.NewMsgUpdateZRC20PausedStatus(admin, []string{}, types.UpdatePausedStatusAction_PAUSE)
 		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
@@ -146,7 +146,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		zrc20A, zrc20B := sample.EthAddress().String(), sample.EthAddress().String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))

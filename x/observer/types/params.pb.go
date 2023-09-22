@@ -387,7 +387,7 @@ func (m *Params) GetBallotMaturityBlocks() int64 {
 
 func init() {
 	proto.RegisterEnum("zetachain.zetacore.observer.Policy_Type", Policy_Type_name, Policy_Type_value)
-	proto.RegisterType((*CoreParamsList)(nil), "zetachain.zetacore.observer.CoreParamsList")
+	proto.RegisterType((*CoreParamsList)(nil), "zetachainout_tx_tracker.zetacore.observer.CoreParamsList")
 	proto.RegisterType((*CoreParams)(nil), "zetachain.zetacore.observer.CoreParams")
 	proto.RegisterType((*ObserverParams)(nil), "zetachain.zetacore.observer.ObserverParams")
 	proto.RegisterType((*Admin_Policy)(nil), "zetachain.zetacore.observer.Admin_Policy")

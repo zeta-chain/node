@@ -21,7 +21,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		queryZRC20SystemContract := func(contract common.Address) string {
 			abi, err := zrc20.ZRC20MetaData.GetAbi()
@@ -92,7 +92,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy a new system contracts
 		wzeta, factory, router, _, oldSystemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
