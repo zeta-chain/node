@@ -17,15 +17,11 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func setAdminPolicies(ctx sdk.Context, zk keepertest.ZetaKeepers, admin string) {
+func setAdminPolicies(ctx sdk.Context, zk keepertest.ZetaKeepers, admin string, policyType observertypes.Policy_Type) {
 	zk.ObserverKeeper.SetParams(ctx, observertypes.Params{
 		AdminPolicy: []*observertypes.Admin_Policy{
 			{
-				PolicyType: observertypes.Policy_Type_group1,
-				Address:    admin,
-			},
-			{
-				PolicyType: observertypes.Policy_Type_group2,
+				PolicyType: policyType,
 				Address:    admin,
 			},
 		},
@@ -39,7 +35,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		// set admin policy
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// sample chainIDs and addresses
 		chainList := zetacommon.DefaultChainsList()
@@ -160,7 +156,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 
 		// deploy a connector
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		wzeta, _, _, oldConnector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// deploy a new connector that will become official connector
@@ -192,7 +188,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	t.Run("should fail invalid contract address", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := k.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
 			Creator:            admin,
@@ -208,7 +204,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		contractAddr := sample.EthAddress()
 
 		mockEVMKeeper.On(
@@ -232,7 +228,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// can't update the bytecode of the wzeta contract
@@ -249,7 +245,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		_, _, _, connector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// remove system contract
@@ -270,7 +266,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// set the contract as the connector
 		contract := sample.EthAddress()
@@ -301,7 +297,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		contractAddr := sample.EthAddress()
 		newBytecodeAddr := sample.EthAddress()
 
@@ -338,7 +334,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		})
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		contractAddr := sample.EthAddress()
 		newBytecodeAddr := sample.EthAddress()
 

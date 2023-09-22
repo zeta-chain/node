@@ -8,13 +8,13 @@ import (
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("can update the paused status of zrc20", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
 
 		requireUnpaused := func(zrc20 string) {
 			fc, found := k.GetForeignCoins(ctx, zrc20)
@@ -36,6 +36,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requireUnpaused(zrc20B)
 		requireUnpaused(zrc20C)
 
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
+
 		// can pause zrc20
 		_, err := k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
@@ -50,6 +52,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requirePaused(zrc20B)
 		requireUnpaused(zrc20C)
 
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
 		// can unpause zrc20
 		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
@@ -62,6 +66,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requireUnpaused(zrc20A)
 		requirePaused(zrc20B)
 		requireUnpaused(zrc20C)
+
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		// can pause already paused zrc20
 		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -76,6 +82,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requirePaused(zrc20B)
 		requireUnpaused(zrc20C)
 
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
 		// can unpause already unpaused zrc20
 		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
@@ -88,6 +96,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requireUnpaused(zrc20A)
 		requirePaused(zrc20B)
 		requireUnpaused(zrc20C)
+
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		// can pause all zrc20
 		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -103,6 +113,8 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		requirePaused(zrc20A)
 		requirePaused(zrc20B)
 		requirePaused(zrc20C)
+
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// can unpause all zrc20
 		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -123,7 +135,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("should fail if invalid message", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		invalidMsg := types.NewMsgUpdateZRC20PausedStatus(admin, []string{}, types.UpdatePausedStatusAction_PAUSE)
 		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
@@ -133,20 +145,30 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 
 		_, err := k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			sample.AccAddress(),
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
+
+		admin := sample.AccAddress()
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
+
+		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+			sample.AccAddress(),
+			[]string{sample.EthAddress().String()},
+			types.UpdatePausedStatusAction_UNPAUSE,
+		))
+
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		zrc20A, zrc20B := sample.EthAddress().String(), sample.EthAddress().String()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))

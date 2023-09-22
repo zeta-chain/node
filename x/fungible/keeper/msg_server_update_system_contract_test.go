@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestKeeper_UpdateSystemContract(t *testing.T) {
@@ -21,7 +22,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		queryZRC20SystemContract := func(contract common.Address) string {
 			abi, err := zrc20.ZRC20MetaData.GetAbi()
@@ -92,7 +93,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// deploy a new system contracts
 		wzeta, factory, router, _, oldSystemContract := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)

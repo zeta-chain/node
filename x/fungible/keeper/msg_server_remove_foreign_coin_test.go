@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_RemoveForeignCoin(t *testing.T) {
@@ -17,7 +18,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -51,7 +52,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, sample.EthAddress().Hex()))
 		require.Error(t, err)
