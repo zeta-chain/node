@@ -237,15 +237,8 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
-	for _, chain := range cfg.GetEnabledChains() {
-		_, ok := chainClientMap[chain]
-		if !ok {
-			continue
-		}
-		// zeta chain does not have a chain client
-		if chain.IsExternalChain() {
-			(chainClientMap)[chain].Stop()
-		}
+	for _, client := range chainClientMap {
+		client.Stop()
 	}
 	zetaBridge.Stop()
 
