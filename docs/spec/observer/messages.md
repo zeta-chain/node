@@ -41,18 +41,17 @@ message MsgAddBlameVote {
 }
 ```
 
-## MsgUpdatePermissionFlags
+## MsgUpdateCrosschainFlags
 
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
+UpdateCrosschainFlags updates the crosschain related flags.
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
-message MsgUpdatePermissionFlags {
+message MsgUpdateCrosschainFlags {
 	string creator = 1;
 	bool isInboundEnabled = 3;
 	bool isOutboundEnabled = 4;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
 ```
 
@@ -72,15 +71,15 @@ message MsgUpdateKeygen {
 
 ## MsgAddBlockHeader
 
-MsgAddBlockHeader handles adding a block header to the store, through majority voting of observers
+AddBlockHeader handles adding a block header to the store, through majority voting of observers
 
 ```proto
 message MsgAddBlockHeader {
 	string creator = 1;
 	int64 chain_id = 2;
 	bytes block_hash = 3;
-	bytes block_header = 4;
-	int64 height = 5;
+	int64 height = 4;
+	common.HeaderData header = 5;
 }
 ```
 

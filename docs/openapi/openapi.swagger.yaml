@@ -26596,11 +26596,11 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainId
+        - name: chain_id
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -27213,6 +27213,26 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/pendingNonces/{chain_id}:
+    get:
+      operationId: Query_PendingNoncesByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryPendingNoncesByChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/crosschain/protocolFee:
     get:
       operationId: Query_ProtocolFee
@@ -27293,6 +27313,20 @@ paths:
           in: path
           required: true
           type: string
+      tags:
+        - Query
+  /zeta-chain/observer/crosschain_flags:
+    get:
+      operationId: Query_CrosschainFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetCrosschainFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/get_all_blame_records:
@@ -27553,20 +27587,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/permission_flags:
-    get:
-      operationId: Query_PermissionFlags
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetPermissionFlagsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/observer/prove:
     get:
       summary: merkle proof verification
@@ -27590,7 +27610,7 @@ paths:
           in: query
           required: false
           type: string
-        - name: proof.keys
+        - name: proof.ethereum_proof.keys
           in: query
           required: false
           type: array
@@ -27598,7 +27618,7 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
-        - name: proof.values
+        - name: proof.ethereum_proof.values
           in: query
           required: false
           type: array
@@ -50182,6 +50202,24 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  commonBlockHeader:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      hash:
+        type: string
+        format: byte
+      parent_hash:
+        type: string
+        format: byte
+      chain_id:
+        type: string
+        format: int64
+      header:
+        $ref: '#/definitions/commonHeaderData'
+        title: chain specific header
   commonChain:
     type: object
     properties:
@@ -50227,6 +50265,18 @@ definitions:
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
        - Cmd: not a real coin, rather a command
+  commonHeaderData:
+    type: object
+    properties:
+      ethereum_header:
+        type: string
+        format: byte
+        title: binary encoded headers; RLP for ethereum
+  commonProof:
+    type: object
+    properties:
+      ethereum_proof:
+        $ref: '#/definitions/ethereumProof'
   commonPubKeySet:
     type: object
     properties:
@@ -50630,6 +50680,11 @@ definitions:
     properties:
       feeInZeta:
         type: string
+  crosschainQueryPendingNoncesByChainResponse:
+    type: object
+    properties:
+      pending_nonces:
+        $ref: '#/definitions/crosschainPendingNonces'
   crosschainQueryTssHistoryResponse:
     type: object
     properties:
@@ -50730,8 +50785,17 @@ definitions:
         type: boolean
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
+    properties:
+      address:
+        type: string
   fungibleMsgRemoveForeignCoinResponse:
     type: object
+  fungibleMsgUpdateContractBytecodeResponse:
+    type: object
+    properties:
+      new_bytecode_hash:
+        type: string
+        format: byte
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20PausedStatusResponse:
@@ -50824,25 +50888,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerBlockHeader:
-    type: object
-    properties:
-      header:
-        type: string
-        format: byte
-        title: binary encoded headers; RLP for ethereum
-      height:
-        type: string
-        format: int64
-      hash:
-        type: string
-        format: byte
-      parentHash:
-        type: string
-        format: byte
-      chain_id:
-        type: string
-        format: int64
   observerCoreParams:
     type: object
     properties:
@@ -50884,6 +50929,26 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
+  observerCrosschainFlags:
+    type: object
+    properties:
+      isInboundEnabled:
+        type: boolean
+      isOutboundEnabled:
+        type: boolean
+      gasPriceIncreaseFlags:
+        $ref: '#/definitions/observerGasPriceIncreaseFlags'
+  observerGasPriceIncreaseFlags:
+    type: object
+    properties:
+      epochLength:
+        type: string
+        format: int64
+      retryInterval:
+        type: string
+      gasPriceIncreasePercent:
+        type: integer
+        format: int64
   observerKeygen:
     type: object
     properties:
@@ -50922,9 +50987,9 @@ definitions:
     type: object
   observerMsgUpdateCoreParamsResponse:
     type: object
-  observerMsgUpdateKeygenResponse:
+  observerMsgUpdateCrosschainFlagsResponse:
     type: object
-  observerMsgUpdatePermissionFlagsResponse:
+  observerMsgUpdateKeygenResponse:
     type: object
   observerNode:
     type: object
@@ -50989,13 +51054,6 @@ definitions:
         type: string
       is_supported:
         type: boolean
-  observerPermissionFlags:
-    type: object
-    properties:
-      isInboundEnabled:
-        type: boolean
-      isOutboundEnabled:
-        type: boolean
   observerPolicy_Type:
     type: string
     enum:
@@ -51022,7 +51080,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerBlockHeader'
+          $ref: '#/definitions/commonBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllNodeAccountResponse:
@@ -51066,7 +51124,7 @@ definitions:
     type: object
     properties:
       block_header:
-        $ref: '#/definitions/observerBlockHeader'
+        $ref: '#/definitions/commonBlockHeader'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
@@ -51077,6 +51135,11 @@ definitions:
     properties:
       core_params:
         $ref: '#/definitions/observerCoreParamsList'
+  observerQueryGetCrosschainFlagsResponse:
+    type: object
+    properties:
+      crosschain_flags:
+        $ref: '#/definitions/observerCrosschainFlags'
   observerQueryGetKeygenResponse:
     type: object
     properties:
@@ -51087,11 +51150,6 @@ definitions:
     properties:
       node_account:
         $ref: '#/definitions/observerNodeAccount'
-  observerQueryGetPermissionFlagsResponse:
-    type: object
-    properties:
-      permission_flags:
-        $ref: '#/definitions/observerPermissionFlags'
   observerQueryObserversByChainResponse:
     type: object
     properties:

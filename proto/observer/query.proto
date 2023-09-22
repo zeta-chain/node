@@ -2,18 +2,16 @@ syntax = "proto3";
 package zetachain.zetacore.observer;
 
 import "common/common.proto";
-import "common/ethereum/ethereum.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
-import "observer/headers.proto";
+import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
-import "observer/permission_flags.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -59,8 +57,8 @@ service Query {
   rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
     option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
   }
-  rpc PermissionFlags(QueryGetPermissionFlagsRequest) returns (QueryGetPermissionFlagsResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/permission_flags";
+  rpc CrosschainFlags(QueryGetCrosschainFlagsRequest) returns (QueryGetCrosschainFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/crosschain_flags";
   }
   // Queries a keygen by index.
   rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
@@ -99,9 +97,9 @@ service Query {
 message QueryProveRequest {
   uint64 chain_id = 1;
   string tx_hash = 2;
-  ethereum.Proof proof = 5;
-  string block_hash = 6;
-  int64 tx_index = 7;
+  common.Proof proof = 3;
+  string block_hash = 4;
+  int64 tx_index = 5;
 }
 
 message QueryProveResponse {
@@ -181,10 +179,10 @@ message QueryAllNodeAccountResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetPermissionFlagsRequest {}
+message QueryGetCrosschainFlagsRequest {}
 
-message QueryGetPermissionFlagsResponse {
-  PermissionFlags permission_flags = 1 [(gogoproto.nullable) = false];
+message QueryGetCrosschainFlagsResponse {
+  CrosschainFlags crosschain_flags = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetKeygenRequest {}
@@ -218,7 +216,7 @@ message QueryAllBlockHeaderRequest {
 }
 
 message QueryAllBlockHeaderResponse {
-  repeated BlockHeader block_headers = 1;
+  repeated common.BlockHeader block_headers = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -227,5 +225,5 @@ message QueryGetBlockHeaderByHashRequest {
 }
 
 message QueryGetBlockHeaderByHashResponse {
-  BlockHeader block_header = 1;
+  common.BlockHeader block_header = 1;
 }

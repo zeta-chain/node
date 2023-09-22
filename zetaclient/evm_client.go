@@ -649,11 +649,11 @@ func (ob *EVMChainClient) observeInTX() error {
 	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
 	ob.SetLastBlockHeight(int64(confirmedBlockNum))
 
-	permissions, err := ob.zetaClient.GetPermissionFlags()
+	crosschainFlags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
 	}
-	if !permissions.IsInboundEnabled {
+	if !crosschainFlags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
@@ -718,14 +718,16 @@ func (ob *EVMChainClient) observeInTX() error {
 				continue
 			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-			cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-			if !found {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-				continue
-			}
-			if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-				continue
+			if destChain.IsExternalChain() {
+				cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
+				if !found {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+					continue
+				}
+				if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+					continue
+				}
 			}
 			zetaHash, err := ob.zetaClient.PostSend(
 				event.ZetaTxSenderAddress.Hex(),
@@ -784,8 +786,22 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
 				continue
 			}
+
+			// get the sender of the event's transaction
+			tx, _, err := ob.EvmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
+				continue
+			}
+			signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+			sender, err := signer.Sender(tx)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
+				continue
+			}
+
 			zetaHash, err := ob.zetaClient.PostSend(
-				"",
+				sender.Hex(),
 				ob.chain.ChainId,
 				"",
 				clienttypes.BytesToEthHex(event.Recipient),
@@ -803,7 +819,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 				continue
 			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Cusotdy Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
+			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Custody Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 	}()
 
@@ -830,7 +846,13 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
 					continue
 				}
-				_, err = ob.zetaClient.PostAddBlockHeader(ob.chain.ChainId, block.Hash().Bytes(), block.Number().Int64(), headerRLP)
+
+				_, err = ob.zetaClient.PostAddBlockHeader(
+					ob.chain.ChainId,
+					block.Hash().Bytes(),
+					block.Number().Int64(),
+					common.NewEthereumHeader(headerRLP),
+				)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 					continue

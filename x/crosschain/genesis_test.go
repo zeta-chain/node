@@ -48,7 +48,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	// Init and export
-	k, ctx := keepertest.CrosschainKeeper(t)
+	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	crosschain.InitGenesis(ctx, *k, genesisState)
 	got := crosschain.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)

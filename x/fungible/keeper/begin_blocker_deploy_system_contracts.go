@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package keeper
 
