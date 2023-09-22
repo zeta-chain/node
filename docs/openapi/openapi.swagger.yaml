@@ -27315,6 +27315,20 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/crosschain_flags:
+    get:
+      operationId: Query_CrosschainFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetCrosschainFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/get_all_blame_records:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -27567,20 +27581,6 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/zetacoreobserverQueryParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
-  /zeta-chain/observer/permission_flags:
-    get:
-      operationId: Query_PermissionFlags
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetPermissionFlagsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50929,6 +50929,26 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerCoreParams'
+  observerCrosschainFlags:
+    type: object
+    properties:
+      isInboundEnabled:
+        type: boolean
+      isOutboundEnabled:
+        type: boolean
+      gasPriceIncreaseFlags:
+        $ref: '#/definitions/observerGasPriceIncreaseFlags'
+  observerGasPriceIncreaseFlags:
+    type: object
+    properties:
+      epochLength:
+        type: string
+        format: int64
+      retryInterval:
+        type: string
+      gasPriceIncreasePercent:
+        type: integer
+        format: int64
   observerKeygen:
     type: object
     properties:
@@ -50967,9 +50987,9 @@ definitions:
     type: object
   observerMsgUpdateCoreParamsResponse:
     type: object
-  observerMsgUpdateKeygenResponse:
+  observerMsgUpdateCrosschainFlagsResponse:
     type: object
-  observerMsgUpdatePermissionFlagsResponse:
+  observerMsgUpdateKeygenResponse:
     type: object
   observerNode:
     type: object
@@ -51033,13 +51053,6 @@ definitions:
       min_observer_delegation:
         type: string
       is_supported:
-        type: boolean
-  observerPermissionFlags:
-    type: object
-    properties:
-      isInboundEnabled:
-        type: boolean
-      isOutboundEnabled:
         type: boolean
   observerPolicy_Type:
     type: string
@@ -51122,6 +51135,11 @@ definitions:
     properties:
       core_params:
         $ref: '#/definitions/observerCoreParamsList'
+  observerQueryGetCrosschainFlagsResponse:
+    type: object
+    properties:
+      crosschain_flags:
+        $ref: '#/definitions/observerCrosschainFlags'
   observerQueryGetKeygenResponse:
     type: object
     properties:
@@ -51132,11 +51150,6 @@ definitions:
     properties:
       node_account:
         $ref: '#/definitions/observerNodeAccount'
-  observerQueryGetPermissionFlagsResponse:
-    type: object
-    properties:
-      permission_flags:
-        $ref: '#/definitions/observerPermissionFlags'
   observerQueryObserversByChainResponse:
     type: object
     properties:

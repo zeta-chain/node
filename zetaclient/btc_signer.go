@@ -225,9 +225,9 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
-	flags, err := zetaBridge.GetPermissionFlags()
+	flags, err := zetaBridge.GetCrosschainFlags()
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get permission flags")
+		logger.Error().Err(err).Msgf("cannot get crosschain flags")
 		return
 	}
 	if !flags.IsOutboundEnabled {

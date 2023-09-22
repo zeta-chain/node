@@ -1,9 +1,0 @@
-syntax = "proto3";
-package zetachain.zetacore.observer;
-
-option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
-
-message PermissionFlags {
-  bool isInboundEnabled = 1;
-  bool isOutboundEnabled = 2;
-}

@@ -251,11 +251,11 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	}
 	ob.SetLastBlockHeight(confirmedBlockNum)
 
-	permissions, err := ob.zetaClient.GetPermissionFlags()
+	flags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
 	}
-	if !permissions.IsInboundEnabled {
+	if !flags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
