@@ -365,7 +365,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	return addr, nil
 }
 
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS) (*TSS, error) {
+func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*TSS, error) {
 	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
@@ -390,6 +390,12 @@ func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.Local
 	if err != nil {
 		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
+	err = newTss.RegisterMetrics(metrics)
+	if err != nil {
+		bridge.logger.Err(err).Msg("tss.RegisterMetrics")
+		return nil, err
+	}
+
 	return &newTss, nil
 }
 

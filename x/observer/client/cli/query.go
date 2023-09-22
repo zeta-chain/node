@@ -34,7 +34,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdGetCoreParams(),
 		CmdListNodeAccount(),
 		CmdShowNodeAccount(),
-		CmdShowPermissionFlags(),
+		CmdShowCrosschainFlags(),
 		CmdShowKeygen(),
 		CmdShowObserverCount(),
 		CmdBlameByIdentifier(),

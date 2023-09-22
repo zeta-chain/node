@@ -11,9 +11,9 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *CliTestSuite) TestShowPermissionFlags() {
+func (s *CliTestSuite) TestShowCrosschainFlags() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.observerState.PermissionFlags
+	obj := s.observerState.CrosschainFlags
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -21,7 +21,7 @@ func (s *CliTestSuite) TestShowPermissionFlags() {
 		desc string
 		args []string
 		err  error
-		obj  *types.PermissionFlags
+		obj  *types.CrosschainFlags
 	}{
 		{
 			desc: "get",
@@ -32,19 +32,19 @@ func (s *CliTestSuite) TestShowPermissionFlags() {
 		s.Run(tc.desc, func() {
 			var args []string
 			args = append(args, tc.args...)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowPermissionFlags(), args)
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowCrosschainFlags(), args)
 			if tc.err != nil {
 				stat, ok := status.FromError(tc.err)
 				s.Require().True(ok)
 				s.Require().ErrorIs(stat.Err(), tc.err)
 			} else {
 				s.Require().NoError(err)
-				var resp types.QueryGetPermissionFlagsResponse
+				var resp types.QueryGetCrosschainFlagsResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-				s.Require().NotNil(resp.PermissionFlags)
+				s.Require().NotNil(resp.CrosschainFlags)
 				tc := tc
 				s.Require().Equal(nullify.Fill(&tc.obj),
-					nullify.Fill(&resp.PermissionFlags),
+					nullify.Fill(&resp.CrosschainFlags),
 				)
 			}
 		})
