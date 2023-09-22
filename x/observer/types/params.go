@@ -28,7 +28,7 @@ func DefaultParams() Params {
 			IsSupported:           true,
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
-			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000"), // 1000 ZETA
 		}
 	}
 	return NewParams(observerParams, DefaultAdminPolicy(), 100)

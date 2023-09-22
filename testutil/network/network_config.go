@@ -24,6 +24,7 @@ import (
 // genesis and single validator. All other parameters are inherited from cosmos-sdk/testutil/network.DefaultConfig
 func DefaultConfig() Config {
 	encoding := app.MakeEncodingConfig()
+
 	return Config{
 		Codec:             encoding.Codec,
 		TxConfig:          encoding.TxConfig,

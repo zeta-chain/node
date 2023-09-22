@@ -205,7 +205,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 }
 
 func TestKeeper_IncreaseCctxGasPrice(t *testing.T) {
-	k, ctx := testkeeper.CrosschainKeeper(t)
+	k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
 
 	t.Run("can increase gas", func(t *testing.T) {
 		// sample cctx

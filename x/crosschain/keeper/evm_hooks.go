@@ -224,8 +224,13 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Create the CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 
-	// Pay gas in Zeta and update the amount for the cctx
-	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx, true); err != nil {
+	if err := k.PayGasAndUpdateCctx(
+		ctx,
+		receiverChain.ChainId,
+		&cctx,
+		amount,
+		true,
+	); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
 	}
 
