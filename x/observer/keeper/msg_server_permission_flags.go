@@ -14,7 +14,8 @@ import (
 // Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) UpdatePermissionFlags(goCtx context.Context, msg *types.MsgUpdatePermissionFlags) (*types.MsgUpdatePermissionFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_stop_inbound_cctx) {
+	// TODO(refactor): set group 1 for disable
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
 		return &types.MsgUpdatePermissionFlagsResponse{}, types.ErrNotAuthorizedPolicy
 	}
 	// Check if the value exists
