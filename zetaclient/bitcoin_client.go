@@ -940,9 +940,8 @@ func (ob *BitcoinChainClient) ValidateCctxParams(params *types.OutboundTxParams)
 	}
 
 	// validate amount
-	_, err = getSatoshis(float64(params.Amount.Uint64()) / 1e8)
-	if err != nil {
-		return fmt.Errorf("ValidateCctxParams: invalid amount %d", params.Amount)
+	if params.Amount.Uint64() == 0 {
+		return fmt.Errorf("ValidateCctxParams: zero amount not allowed in cctx")
 	}
 	return nil
 }
