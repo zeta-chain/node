@@ -26596,11 +26596,11 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: chainId
+        - name: chain_id
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -27230,7 +27230,7 @@ paths:
           in: path
           required: true
           type: string
-          format: uint64
+          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/protocolFee:
