@@ -9,7 +9,7 @@ clibuilder()
    exit 1 # Exit script after printing help
 }
 
-while getopts "u:n" opt
+while getopts "u:n:" opt
 do
    case "$opt" in
       u ) UPGRADE_HEIGHT="$OPTARG" ;;
@@ -18,10 +18,9 @@ do
    esac
 done
 
-# generate node list
-START=1
-END=$((NUM_OF_NODES - 1))
-
+# generate client list
+START=0
+END=$((NUM_OF_NODES-1))
 CLIENT_LIST=()
 for i in $(eval echo "{$START..$END}")
 do
@@ -39,9 +38,6 @@ do
 done
 
 echo current height is "$CURRENT_HEIGHT", restarting zetaclients
-for NODE in "${NODELIST[@]}"; do
+for NODE in "${CLIENT_LIST[@]}"; do
     ssh $NODE "killall zetaclientd; $GOPATH/bin/new/zetaclientd start > $HOME/zetaclient.log 2>&1 &"
 done
-
-
-
