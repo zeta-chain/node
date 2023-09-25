@@ -662,9 +662,12 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	pendingNonce := ob.pendingNonce
 	ob.mu.Unlock()
 
-	if p.NonceLow > 0 && uint64(p.NonceLow) >= pendingNonce {
+	// #nosec G701 always positive
+	nonceLow := uint64(p.NonceLow)
+
+	if nonceLow > 0 && nonceLow >= pendingNonce {
 		// get the last included outTx hash
-		txid, err := ob.getOutTxidByNonce(uint64(p.NonceLow)-1, false)
+		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
 		if err != nil {
 			ob.logger.ChainLogger.Error().Err(err).Msg("refreshPendingNonce: error getting last outTx txid")
 		}
@@ -672,7 +675,7 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 		// set 'NonceLow' as the new pending nonce
 		ob.mu.Lock()
 		defer ob.mu.Unlock()
-		ob.pendingNonce = uint64(p.NonceLow)
+		ob.pendingNonce = nonceLow
 		ob.logger.ChainLogger.Info().Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
 	}
 }

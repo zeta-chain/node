@@ -173,7 +173,8 @@ func (co *CoreObserver) startSendScheduler() {
 
 							// Process Bitcoin OutTx
 							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
-								if stop := co.processBitcoinOutTx(outTxMan, idx, cctx, signer, ob, currentHeight); stop {
+								// #nosec G701 positive
+								if stop := co.processBitcoinOutTx(outTxMan, uint64(idx), cctx, signer, ob, currentHeight); stop {
 									break
 								}
 								continue
@@ -190,6 +191,7 @@ func (co *CoreObserver) startSendScheduler() {
 								continue
 							}
 
+							// #nosec G701 positive
 							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
 							lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 
@@ -221,6 +223,7 @@ func (co *CoreObserver) startSendScheduler() {
 								go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, currentHeight)
 							}
 
+							// #nosec G701 always in range
 							if int64(idx) >= lookahead-1 { // only look at 30 sends per chain
 								break
 							}
@@ -242,10 +245,10 @@ func (co *CoreObserver) startSendScheduler() {
 // 3. stop processing when pendingNonce/lookahead is reached
 //
 // Returns whether to stop processing
-func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx int, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
+func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx uint64, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
 	params := send.GetCurrentOutTxParam()
 	nonce := params.OutboundTxTssNonce
-	lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
+	lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 	outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce)
 
 	// start go routine to process outtx
@@ -264,7 +267,8 @@ func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx
 		return true
 	}
 	// stop if lookahead is reached. 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-	if idx >= int(lookahead)-1 {
+	// #nosec G701 always in range
+	if int64(idx) >= lookahead-1 {
 		return true
 	}
 	return false // otherwise, continue
