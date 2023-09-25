@@ -56,9 +56,10 @@ jobs:
       #   uses:  ./.github/actions/install-dependencies
 
       - name: Run Cosmos Gosec Security Scanner
-        uses: cosmos/gosec@master
-        with:
-          args: '-include=G701,G703,G704 ./...' # Disabled G702 as it doesn't seem to be relevant 2023-09-14
+        run: make lint-cosmos-gosec
+#        uses: cosmos/gosec@master
+#        with:
+#          args: '-include=G701,G703,G704 ./...' # Disabled G702 as it doesn't seem to be relevant 2023-09-14
 
 
   git-guardian:
