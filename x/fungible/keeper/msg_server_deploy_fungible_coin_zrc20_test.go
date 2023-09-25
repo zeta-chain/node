@@ -21,7 +21,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -102,7 +102,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -126,7 +126,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
