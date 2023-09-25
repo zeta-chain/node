@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	prom "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -128,13 +127,8 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 						signer := co.signerMap[*c]
-<<<<<<< HEAD
-						chainClient := co.clientMap[*c]
-						// #nosec G701 always positive
-						sendList, err := co.bridge.GetAllPendingCctx(uint64(c.ChainId))
-=======
+
 						cctxList, err := co.bridge.GetAllPendingCctx(c.ChainId)
->>>>>>> develop
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
@@ -195,19 +189,7 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 								continue
 							}
-<<<<<<< HEAD
-							nonce := params.OutboundTxTssNonce
-							outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce) // should be the outTxID?
 
-							// FIXME: config this schedule; this value is for localnet fast testing
-							if bn >= math.MaxInt64 {
-								continue
-							}
-							// #nosec G701 checked in range
-							currentHeight := uint64(bn)
-							// #nosec G701 always positive
-=======
->>>>>>> develop
 							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
 							lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 
@@ -238,11 +220,8 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, outTxID, cctx.GetCurrentOutTxParam().Amount)
 								go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, currentHeight)
 							}
-<<<<<<< HEAD
-							if int64(idx) > lookahead { // only look at 50 sends per chain
-=======
-							if idx >= int(lookahead)-1 { // only look at 30 sends per chain
->>>>>>> develop
+
+							if int64(idx) >= lookahead-1 { // only look at 30 sends per chain
 								break
 							}
 						}
