@@ -4,6 +4,7 @@ package zetachain.zetacore.observer;
 import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
+import "observer/crosschain_flags.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 
@@ -14,7 +15,7 @@ service Msg {
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
-  rpc UpdatePermissionFlags(MsgUpdatePermissionFlags) returns (MsgUpdatePermissionFlagsResponse);
+  rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags) returns (MsgUpdateCrosschainFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
   rpc AddBlockHeader(MsgAddBlockHeader) returns (MsgAddBlockHeaderResponse);
 }
@@ -52,12 +53,14 @@ message MsgAddBlameVote {
 }
 
 message MsgAddBlameVoteResponse {}
-message MsgUpdatePermissionFlags {
+
+message MsgUpdateCrosschainFlags {
   string creator = 1;
   bool isInboundEnabled = 3;
   bool isOutboundEnabled = 4;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
-message MsgUpdatePermissionFlagsResponse {}
+message MsgUpdateCrosschainFlagsResponse {}
 
 message MsgUpdateKeygen {
   string creator = 1;

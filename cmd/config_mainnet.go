@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package cmd
 
@@ -13,9 +13,4 @@ const (
 	DenomRegex                  = `[a-zA-Z][a-zA-Z0-9:\\/\\\-\\_\\.]{2,127}`
 	ZetaChainCoinType    uint32 = 60
 	ZetaChainHDPath      string = `m/44'/60'/0'/0/0`
-	NET                         = "TESTNET"
-)
-
-var (
-	CHAINID = "zeta_7001-1"
 )

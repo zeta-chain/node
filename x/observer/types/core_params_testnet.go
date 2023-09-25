@@ -54,17 +54,6 @@ func GetCoreParams() CoreParamsList {
 				OutboundTxScheduleLookahead: 60,
 			},
 			{
-				ChainId:                     common.ZetaChain().ChainId,
-				ConfirmationCount:           3,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
-				InTxTicker:                  2,
-				OutTxTicker:                 3,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              5,
-			},
-			{
 				ChainId:                     common.BtcTestNetChain().ChainId,
 				ConfirmationCount:           2,
 				ZetaTokenContractAddress:    "",
@@ -72,14 +61,14 @@ func GetCoreParams() CoreParamsList {
 				Erc20CustodyContractAddress: "",
 				WatchUtxoTicker:             30,
 				InTxTicker:                  120,
-				OutTxTicker:                 60,
+				OutTxTicker:                 12,
 				GasPriceTicker:              30,
 				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
+				OutboundTxScheduleLookahead: 100,
 			},
 		},
 	}
-	chainList := common.DefaultChainsList()
+	chainList := common.ExternalChainList()
 	requiredParams := len(chainList)
 	availableParams := 0
 	for _, chain := range chainList {

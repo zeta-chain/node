@@ -657,11 +657,11 @@ func (ob *EVMChainClient) observeInTX() error {
 	// #nosec G701 always in range
 	ob.SetLastBlockHeight(int64(confirmedBlockNum))
 
-	permissions, err := ob.zetaClient.GetPermissionFlags()
+	crosschainFlags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
 	}
-	if !permissions.IsInboundEnabled {
+	if !crosschainFlags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
@@ -731,14 +731,16 @@ func (ob *EVMChainClient) observeInTX() error {
 				continue
 			}
 			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-			cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-			if !found {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-				continue
-			}
-			if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-				continue
+			if destChain.IsExternalChain() {
+				cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
+				if !found {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+					continue
+				}
+				if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
+					ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+					continue
+				}
 			}
 			zetaHash, err := ob.zetaClient.PostSend(
 				event.ZetaTxSenderAddress.Hex(),

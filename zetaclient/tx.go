@@ -27,6 +27,7 @@ const (
 	DefaultGasLimit                 = 200_000
 	PostProveOutboundTxGasLimit     = 400_000
 	DefaultRetryCount               = 5
+	ExtendedRetryCount              = 15
 	DefaultRetryInterval            = 5
 )
 

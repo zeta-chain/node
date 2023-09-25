@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	zetacommon "github.com/zeta-chain/zetacore/common"
@@ -31,6 +33,10 @@ import (
 // Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	var address common.Address
+	var err error
+
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
@@ -39,36 +45,37 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	}
 	if msg.CoinType == zetacommon.CoinType_Gas {
 		// #nosec G701 always in range
-		_, err := k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals))
+		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
 	} else {
 		// #nosec G701 always in range
-		addr, err := k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
+		address, err = k.DeployZRC20Contract(ctx, msg.Name, msg.Symbol, uint8(msg.Decimals), msg.ForeignChainId, msg.CoinType, msg.ERC20, big.NewInt(msg.GasLimit))
 		if err != nil {
 			return nil, err
 		}
-
-		err = ctx.EventManager().EmitTypedEvent(
-			&types.EventZRC20Deployed{
-				MsgTypeUrl: sdk.MsgTypeURL(&types.MsgDeployFungibleCoinZRC20{}),
-				ChainId:    msg.ForeignChainId,
-				Contract:   addr.String(),
-				Name:       msg.Name,
-				Symbol:     msg.Symbol,
-				// #nosec G701 always in range
-				Decimals: int64(msg.Decimals),
-				CoinType: msg.CoinType,
-				Erc20:    msg.ERC20,
-				GasLimit: msg.GasLimit,
-			},
-		)
-		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to emit event")
-		}
-
 	}
 
-	return &types.MsgDeployFungibleCoinZRC20Response{}, nil
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventZRC20Deployed{
+			MsgTypeUrl: sdk.MsgTypeURL(&types.MsgDeployFungibleCoinZRC20{}),
+			ChainId:    msg.ForeignChainId,
+			Contract:   address.String(),
+			Name:       msg.Name,
+			Symbol:     msg.Symbol,
+			// #nosec G701 always in range
+			Decimals: int64(msg.Decimals),
+			CoinType: msg.CoinType,
+			Erc20:    msg.ERC20,
+			GasLimit: msg.GasLimit,
+		},
+	)
+	if err != nil {
+		return nil, sdkerrors.Wrapf(err, "failed to emit event")
+	}
+
+	return &types.MsgDeployFungibleCoinZRC20Response{
+		Address: address.Hex(),
+	}, nil
 }

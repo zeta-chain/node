@@ -66,9 +66,10 @@ func (t *DynamicTicker) C() <-chan time.Time {
 func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
 	if newInterval > 0 && t.interval != newInterval {
 		t.impl.Stop()
+		oldInterval := t.interval
 		t.interval = newInterval
 		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
-		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, t.interval, newInterval)
+		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, oldInterval, newInterval)
 	}
 }
 
