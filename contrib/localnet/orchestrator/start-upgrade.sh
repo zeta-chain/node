@@ -21,7 +21,7 @@ curl -sS http://eth:8545 \
   -H "Content-Type: application/json" \
   --data '{"method":"eth_getBalance","params":["0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", "latest"],"id":1,"jsonrpc":"2.0"}'
 echo "running smoketest..."
-smoketest "$SMOKETEST_CMD"
+smoketest-old "$SMOKETEST_CMD"
 SMOKETEST_EXIT_CODE=$?
 if [ $SMOKETEST_EXIT_CODE -ne 0 ]; then
   echo "smoketest failed"
@@ -31,7 +31,7 @@ fi
 # Restart zetaclients at upgrade height
 /work/restart-zetaclientd.sh -u 330 -n 2
 
-smoketest "$SMOKETEST_CMD" --deployed --wait-for 335
+smoketest-new "$SMOKETEST_CMD" --deployed --wait-for 335
 
 if [ $SMOKETEST_EXIT_CODE -eq 0 ]; then
   echo "smoketest passed"
