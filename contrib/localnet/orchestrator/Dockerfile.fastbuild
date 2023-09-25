@@ -17,8 +17,8 @@ COPY contrib/localnet/orchestrator/restart-zetaclientd.sh /work/
 RUN chmod +x /work/*.sh
 
 
-COPY --from=zeta /usr/local/bin/old/smoketest /usr/local/bin/smoketest-old
-COPY --from=zeta /usr/local/bin/new/smoketest /usr/local/bin/smoketest-new
+COPY --from=zeta /go/bin/old/smoketest /usr/local/bin/smoketest-old
+COPY --from=zeta /go/bin/new/smoketest /usr/local/bin/smoketest-new
 RUN chmod +x /usr/local/bin/smoketest-*
 
 WORKDIR /work
