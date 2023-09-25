@@ -45,9 +45,10 @@ func NodeAccount() *types.NodeAccount {
 	}
 }
 
-func PermissionFlags() *types.PermissionFlags {
-	return &types.PermissionFlags{
-		IsInboundEnabled: true,
+func CrosschainFlags() *types.CrosschainFlags {
+	return &types.CrosschainFlags{
+		IsInboundEnabled:  true,
+		IsOutboundEnabled: true,
 	}
 }
 

@@ -295,7 +295,7 @@ func (sm *SmokeTest) WithdrawETHZRC20() {
 }
 
 // Get ETH based chain ID - Build flags are conflicting with current lib, need to do this manually
-func getChainID() uint64 {
+func getChainID() int64 {
 	switch stressTestArgs.network {
 	case "PRIVNET":
 		return 1337

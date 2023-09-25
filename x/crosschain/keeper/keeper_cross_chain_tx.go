@@ -184,7 +184,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		startNonce = 0
 	}
 	for i := startNonce; i < p.NonceLow; i++ {
-		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
 		}
@@ -199,7 +199,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 
 	// now query the pending nonces that we know are pending
 	for i := p.NonceLow; i < p.NonceHigh; i++ {
-		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, "nonceToCctx not found")
 		}

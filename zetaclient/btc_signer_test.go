@@ -261,7 +261,7 @@ func TestSelectUTXOs(t *testing.T) {
 	require.NotNil(t, err)
 	require.Nil(t, result)
 	require.Zero(t, amount)
-	require.Equal(t, "findTxIDByNonce: error getting cctx for nonce 0", err.Error())
+	require.Equal(t, "getOutTxidByNonce: cannot find outTx txid for nonce 0", err.Error())
 	mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction for nonce 0
 
 	// Case3: nonce = 1, must FAIL without nonce mark utxo

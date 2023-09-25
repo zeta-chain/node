@@ -41,7 +41,7 @@ func (k Keeper) SetPendingNonces(ctx sdk.Context, pendingNonces types.PendingNon
 	store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d", pendingNonces.Tss, pendingNonces.ChainId)), b)
 }
 
-func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainID uint64) (val types.PendingNonces, found bool) {
+func (k Keeper) GetPendingNonces(ctx sdk.Context, tss string, chainID int64) (val types.PendingNonces, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PendingNoncesKeyPrefix))
 
 	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s-%d", tss, chainID)))
@@ -74,7 +74,7 @@ func (k Keeper) RemovePendingNonces(ctx sdk.Context, pendingNonces types.Pending
 
 // utility
 func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chainID int64, nonce int64) {
-	p, found := k.GetPendingNonces(ctx, tssPubkey, uint64(chainID))
+	p, found := k.GetPendingNonces(ctx, tssPubkey, chainID)
 	if found && nonce >= p.NonceLow && nonce <= p.NonceHigh {
 		p.NonceLow = nonce + 1
 		k.SetPendingNonces(ctx, p)
