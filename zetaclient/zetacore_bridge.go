@@ -79,7 +79,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("grpc dial fail")
+		logger.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
 	accountsMap := make(map[common.KeyType]uint64)
