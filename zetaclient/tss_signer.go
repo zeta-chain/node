@@ -322,6 +322,21 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.Metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
+	if err != nil {
+		return err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
@@ -572,19 +587,4 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
-}
-
-func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
-	tss.Metrics = NewChainMetrics("tss", metrics)
-	keygenRes, err := tss.CoreBridge.GetKeyGen()
-	if err != nil {
-		return err
-	}
-	for _, key := range keygenRes.GranteePubkeys {
-		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

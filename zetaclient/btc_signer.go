@@ -59,7 +59,15 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
+func (signer *BTCSigner) SignWithdrawTx(
+	to *btcutil.AddressWitnessPubKeyHash,
+	amount float64,
+	gasPrice *big.Int,
+	btcClient *BitcoinChainClient,
+	height uint64,
+	nonce uint64,
+	chain *common.Chain,
+) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
 	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
@@ -200,7 +208,14 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	return err
 }
 
-func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, chainclient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
+func (signer *BTCSigner) TryProcessOutTx(
+	send *types.CrossChainTx,
+	outTxMan *OutTxProcessorManager,
+	outTxID string,
+	chainclient ChainClient,
+	zetaBridge ZetaCoreBridger,
+	height uint64,
+) {
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 		if err := recover(); err != nil {
@@ -234,7 +249,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Info().Msgf("outbound is disabled")
 		return
 	}
-	myid := zetaBridge.keys.GetAddress()
+	myid := zetaBridge.GetKeys().GetAddress()
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce

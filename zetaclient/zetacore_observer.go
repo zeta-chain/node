@@ -27,7 +27,7 @@ type ZetaCoreLog struct {
 
 // CoreObserver wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
-	bridge    *ZetaCoreBridge
+	bridge    ZetaCoreBridger
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
@@ -39,7 +39,7 @@ type CoreObserver struct {
 }
 
 func NewCoreObserver(
-	bridge *ZetaCoreBridge,
+	bridge ZetaCoreBridger,
 	signerMap map[common.Chain]ChainSigner,
 	clientMap map[common.Chain]ChainClient,
 	metrics *metrics.Metrics,
@@ -85,13 +85,13 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetAddress()
+	myid := co.bridge.GetKeys().GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
 
 	go func() {
 		// bridge queries UpgradePlan from zetacore and send to its pause channel if upgrade height is reached
-		<-co.bridge.pause
+		co.bridge.Pause()
 		// now stop everything
 		close(co.stop) // this stops the startSendScheduler() loop
 		for _, c := range co.clientMap {
@@ -313,7 +313,7 @@ func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
 	return chainOb, nil
 }
 
-// returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")

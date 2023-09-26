@@ -40,24 +40,24 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
+var _ ZetaCoreBridger = &ZetaCoreBridge{}
+
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger        zerolog.Logger
-	blockHeight   int64
-	accountNumber map[common.KeyType]uint64
-	seqNumber     map[common.KeyType]uint64
-	grpcConn      *grpc.ClientConn
-	httpClient    *retryablehttp.Client
-	cfg           config.ClientConfiguration
-	encodingCfg   params.EncodingConfig
-	keys          *Keys
-	broadcastLock *sync.RWMutex
-	zetaChainID   string
-	//ChainNonces         map[string]uint64 // FIXME: Remove this?
+	logger              zerolog.Logger
+	blockHeight         int64
+	accountNumber       map[common.KeyType]uint64
+	seqNumber           map[common.KeyType]uint64
+	grpcConn            *grpc.ClientConn
+	httpClient          *retryablehttp.Client
+	cfg                 config.ClientConfiguration
+	encodingCfg         params.EncodingConfig
+	keys                *Keys
+	broadcastLock       *sync.RWMutex
+	zetaChainID         string
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
-
-	pause chan struct{}
+	pause               chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -220,4 +220,12 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		cfg.CurrentTssPubkey = tss.GetTssPubkey()
 	}
 	return nil
+}
+
+func (b *ZetaCoreBridge) Pause() {
+	<-b.pause
+}
+
+func (b *ZetaCoreBridge) Unpause() {
+	b.pause <- struct{}{}
 }

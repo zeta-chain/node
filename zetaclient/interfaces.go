@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -23,11 +23,31 @@ type ChainClient interface {
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
 	TryProcessOutTx(
-		send *types.CrossChainTx,
+		send *crosschaintypes.CrossChainTx,
 		outTxMan *OutTxProcessorManager,
 		outTxID string,
 		evmClient ChainClient,
-		zetaBridge *ZetaCoreBridge,
+		zetaBridge ZetaCoreBridger,
 		height uint64,
 	)
+}
+
+// ZetaCoreBridger is the interface to interact with ZetaCore
+type ZetaCoreBridger interface {
+	AddTxHashToOutTxTracker(
+		chainID int64,
+		nonce uint64,
+		txHash string,
+		proof *common.Proof,
+		blockHash string,
+		txIndex int64,
+	) (string, error)
+	GetKeys() *Keys
+	GetZetaBlockHeight() (int64, error)
+	GetAllPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, error)
+	GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]crosschaintypes.OutTxTracker, error)
+	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
+	GetObserverList(chain common.Chain) ([]string, error)
+	Pause()
+	Unpause()
 }
