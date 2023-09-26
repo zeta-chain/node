@@ -93,8 +93,8 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 				BlockHash: blockHash.Bytes(),
 			})
 			if err != nil {
-				fmt.Printf("WARN: block header not found; retrying...\n")
-				time.Sleep(2 * time.Second)
+				fmt.Printf("WARN: block header not found; retrying... error: %s \n", err.Error())
+				time.Sleep(5 * time.Second)
 			} else {
 				fmt.Printf("OK: block header found\n")
 				break
