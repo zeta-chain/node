@@ -32,7 +32,7 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgCreateTSSVoter
 
-Vote on creating a TSS key and recording the information about it (public
+CreateTSSVoter votes on creating a TSS key and recording the information about it (public
 key, participant and operator addresses, finalized and keygen heights).
 
 If the vote passes, the information about the TSS key is recorded on chain

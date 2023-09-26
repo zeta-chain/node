@@ -20,7 +20,7 @@ func (k Keeper) UpdateContractBytecode(goCtx context.Context, msg *types.MsgUpda
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin) {
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group2) {
 		return nil, cosmoserror.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 

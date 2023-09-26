@@ -13,11 +13,11 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func setAdminCrossChainFlags(ctx sdk.Context, k *keeper.Keeper, admin string) {
+func setAdminCrossChainFlags(ctx sdk.Context, k *keeper.Keeper, admin string, group types.Policy_Type) {
 	k.SetParams(ctx, observertypes.Params{
 		AdminPolicy: []*observertypes.Admin_Policy{
 			{
-				PolicyType: observertypes.Policy_Type_stop_inbound_cctx,
+				PolicyType: group,
 				Address:    admin,
 			},
 		},
@@ -29,7 +29,8 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin)
+
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
 
 		_, err := srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -50,6 +51,8 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Equal(t, int64(42), flags.GasPriceIncreaseFlags.EpochLength)
 		require.Equal(t, time.Minute*42, flags.GasPriceIncreaseFlags.RetryInterval)
 		require.Equal(t, uint32(42), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
+
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
 
 		// can update flags again
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
@@ -72,6 +75,9 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Equal(t, time.Minute*43, flags.GasPriceIncreaseFlags.RetryInterval)
 		require.Equal(t, uint32(43), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
 
+		// group 1 should be able to disable inbound and outbound
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+
 		// if gas price increase flags is nil, it should not be updated
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -92,6 +98,8 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		k.RemoveCrosschainFlags(ctx)
 		_, found = k.GetCrosschainFlags(ctx)
 		require.False(t, found)
+
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
 
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -117,6 +125,17 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 			Creator:           sample.AccAddress(),
 			IsInboundEnabled:  false,
 			IsOutboundEnabled: false,
+		})
+		require.Error(t, err)
+		require.Equal(t, types.ErrNotAuthorizedPolicy, err)
+
+		admin := sample.AccAddress()
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+
+		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
+			Creator:           admin,
+			IsInboundEnabled:  false,
+			IsOutboundEnabled: true,
 		})
 		require.Error(t, err)
 		require.Equal(t, types.ErrNotAuthorizedPolicy, err)

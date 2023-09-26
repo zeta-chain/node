@@ -90,7 +90,7 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 // Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_add_observer) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
 	pubkey, _ := common.NewPubKey(msg.ZetaclientGranteePubkey)
