@@ -25,7 +25,7 @@ import (
 )
 
 type EVMSigner struct {
-	client                      *ethclient.Client
+	client                      EVMRPCClient
 	chain                       *common.Chain
 	chainID                     *big.Int
 	tssSigner                   TSSSigner
@@ -87,7 +87,7 @@ func NewEVMSigner(
 	}, nil
 }
 
-// given data, and metadata (gas, nonce, etc)
+// Sign given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
 func (signer *EVMSigner) Sign(
 	data []byte,
@@ -119,13 +119,14 @@ func (signer *EVMSigner) Sign(
 	return signedTX, sig[:], hashBytes[:], nil
 }
 
-// takes in signed tx, broadcast to external chain node
+// Broadcast takes in signed tx, broadcast to external chain node
 func (signer *EVMSigner) Broadcast(tx *ethtypes.Transaction) error {
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
+// SignOutboundTx
 // function onReceive(
 //
 //	bytes calldata originSenderAddress,
@@ -166,6 +167,7 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
 	return tx, nil
 }
 
+// SignRevertTx
 // function onRevert(
 // address originSenderAddress,
 // uint256 originChainId,
@@ -566,10 +568,9 @@ func (signer *EVMSigner) TryProcessOutTx(
 		}
 
 	}
-	//}
-
 }
 
+// SignERC20WithdrawTx
 // function withdraw(
 // address recipient,
 // address asset,
@@ -599,6 +600,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(
 	return tx, nil
 }
 
+// SignWhitelistTx
 // function whitelist(
 // address asset,
 // ) external onlyTssAddress

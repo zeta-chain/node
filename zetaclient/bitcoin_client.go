@@ -42,7 +42,7 @@ type BTCLog struct {
 	WatchGasPrice zerolog.Logger
 }
 
-// BitcoinChainClient represents chain configuration struct
+// BitcoinChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BitcoinChainClient struct {
 	*ChainMetrics
@@ -70,9 +70,8 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 0
-	maxHeightDiff    = 10000
-	dustOffset       = 2000
+	maxHeightDiff = 10000
+	dustOffset    = 2000
 )
 
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
@@ -87,7 +86,7 @@ func (ob *BitcoinChainClient) GetCoreParams() observertypes.CoreParams {
 	return ob.params
 }
 
-// NewBitcoinClient returns a new client based on supplied target chain
+// NewBitcoinClient returns a new configuration based on supplied target chain
 func NewBitcoinClient(
 	chain common.Chain,
 	bridge ZetaCoreBridger,

@@ -26,7 +26,7 @@ type TSSSigner interface {
 
 var _ TSSSigner = (*TestSigner)(nil)
 
-// a fake signer for testing
+// TestSigner is a fake signer for testing
 type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
@@ -46,7 +46,7 @@ func (s TestSigner) Pubkey() []byte {
 	return publicKeyBytes
 }
 
-// return 33B compressed pubkey
+// PubKeyCompressedBytes returns 33B compressed pubkey
 func (s TestSigner) PubKeyCompressedBytes() []byte {
 	pkBytes := crypto.FromECDSAPub(&s.PrivKey.PublicKey)
 	pk, err := btcec.ParsePubKey(pkBytes)

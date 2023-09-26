@@ -65,14 +65,14 @@ const (
 	DonationMessage = "I am rich!"
 )
 
-// Chain configuration struct
+// EVMChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	EvmClient                 *ethclient.Client
-	KlaytnClient              *KlaytnClient
-	zetaClient                *ZetaCoreBridge
+	EvmClient                 EVMRPCClient
+	KlaytnClient              KlaytnRPCClient
+	zetaClient                ZetaCoreBridger
 	Tss                       TSSSigner
 	lastBlockScanned          int64
 	lastBlock                 int64
@@ -97,8 +97,17 @@ type EVMChainClient struct {
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
-// Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, evmCfg config.EVMConfig, ts *TelemetryServer) (*EVMChainClient, error) {
+// NewEVMChainClient returns a new configuration based on supplied target chain
+func NewEVMChainClient(
+	bridge ZetaCoreBridger,
+	tss TSSSigner,
+	dbpath string,
+	metrics *metricsPkg.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	evmCfg config.EVMConfig,
+	ts *TelemetryServer,
+) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -144,12 +153,12 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	}
 
 	if ob.chain.IsKlaytnChain() {
-		kclient, err := Dial(evmCfg.Endpoint)
+		kClient, err := Dial(evmCfg.Endpoint)
 		if err != nil {
 			ob.logger.ChainLogger.Err(err).Msg("klaytn Client Dial")
 			return nil, err
 		}
-		ob.KlaytnClient = kclient
+		ob.KlaytnClient = kClient
 	}
 
 	// create metric counters

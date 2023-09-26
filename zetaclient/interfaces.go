@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"context"
 	"math/big"
 
 	"cosmossdk.io/math"
@@ -8,6 +9,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
@@ -70,6 +74,7 @@ type ZetaCoreBridger interface {
 		coinType common.CoinType,
 	) (string, error)
 	PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
+	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error)
 	AddTxHashToOutTxTracker(
 		chainID int64,
 		nonce uint64,
@@ -79,7 +84,9 @@ type ZetaCoreBridger interface {
 		txIndex int64,
 	) (string, error)
 	GetKeys() *Keys
+	GetBlockHeight() (int64, error)
 	GetZetaBlockHeight() (int64, error)
+	GetLastBlockHeightByChain(chain common.Chain) (*crosschaintypes.LastBlockHeight, error)
 	GetAllPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, error)
 	GetPendingNoncesByChain(chainID int64) (crosschaintypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
@@ -101,4 +108,22 @@ type BTCRPCClient interface {
 	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
 	GetBlockVerbose(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseResult, error)
 	GetBlockVerboseTx(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+}
+
+// EVMRPCClient is the interface for EVM RPC client
+type EVMRPCClient interface {
+	bind.ContractBackend
+	SendTransaction(ctx context.Context, tx *ethtypes.Transaction) error
+	SuggestGasPrice(ctx context.Context) (*big.Int, error)
+	BlockNumber(ctx context.Context) (uint64, error)
+	BlockByNumber(ctx context.Context, number *big.Int) (*ethtypes.Block, error)
+	HeaderByNumber(ctx context.Context, number *big.Int) (*ethtypes.Header, error)
+	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
+	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
+	TransactionSender(ctx context.Context, tx *ethtypes.Transaction, block ethcommon.Hash, index uint) (ethcommon.Address, error)
+}
+
+// KlaytnRPCClient is the interface for Klaytn RPC client
+type KlaytnRPCClient interface {
+	BlockByNumber(ctx context.Context, number *big.Int) (*RPCBlock, error)
 }
