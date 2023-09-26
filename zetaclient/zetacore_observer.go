@@ -25,6 +25,7 @@ type ZetaCoreLog struct {
 	ZetaChainWatcher zerolog.Logger
 }
 
+// CoreObserver wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]ChainSigner
@@ -37,7 +38,16 @@ type CoreObserver struct {
 	stop      chan struct{}
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+func NewCoreObserver(
+	bridge *ZetaCoreBridge,
+	signerMap map[common.Chain]ChainSigner,
+	clientMap map[common.Chain]ChainClient,
+	metrics *metrics.Metrics,
+	tss *TSS,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *TelemetryServer,
+) *CoreObserver {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
