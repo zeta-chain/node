@@ -192,11 +192,15 @@ func setupZRC20Pool(
 	require.NoError(t, err)
 }
 
-func setAdminDeployFungibleCoin(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) {
+func setAdminPolicies(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) {
 	params := zk.ObserverKeeper.GetParams(ctx)
 	params.AdminPolicy = []*observertypes.Admin_Policy{
 		{
-			PolicyType: observertypes.Policy_Type_deploy_fungible_coin,
+			PolicyType: observertypes.Policy_Type_group1,
+			Address:    admin,
+		},
+		{
+			PolicyType: observertypes.Policy_Type_group2,
 			Address:    admin,
 		},
 	}
@@ -215,7 +219,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -283,7 +287,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -313,7 +317,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -356,7 +360,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -449,7 +453,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -479,7 +483,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -523,7 +527,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -577,7 +581,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -647,7 +651,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -735,7 +739,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
@@ -765,7 +769,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		k, ctx, sdkk, zk := testkeeper.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)

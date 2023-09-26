@@ -15,6 +15,7 @@ import (
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
@@ -25,7 +26,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// set coin admin
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// deploy the system contract and a ZRC20 contract
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -64,7 +65,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 	t.Run("should fail if invalid zrc20 address", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
@@ -77,7 +78,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 	t.Run("should fail if can't retrieve the foreign coin", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
@@ -93,7 +94,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// setup
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		zrc20 := sample.EthAddress()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
 
@@ -113,7 +114,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// setup
 		admin := sample.AccAddress()
-		setAdminDeployFungibleCoin(ctx, zk, admin)
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		zrc20Addr := sample.EthAddress()
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20Addr.String()))
 
