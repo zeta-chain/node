@@ -259,7 +259,7 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Ord
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
-			Limit:      1000,
+			Limit:      2000,
 			CountTotal: false,
 			Reverse:    false,
 		},
@@ -289,6 +289,15 @@ func (b *ZetaCoreBridge) GetClientParams(chainID int64) (zetaObserverTypes.Query
 	return *resp, nil
 }
 
+func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.SupportedChains(context.Background(), &zetaObserverTypes.QuerySupportedChains{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.GetChains(), nil
+}
+
 func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.PendingNoncesAll(context.Background(), &types.QueryAllPendingNoncesRequest{})
@@ -296,4 +305,19 @@ func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesRespons
 		return nil, err
 	}
 	return resp, nil
+}
+
+func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *common.Proof, chainID uint64) (bool, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Prove(context.Background(), &zetaObserverTypes.QueryProveRequest{
+		BlockHash: blockHash,
+		TxIndex:   txIndex,
+		Proof:     proof,
+		ChainId:   chainID,
+		TxHash:    txHash,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.Valid, nil
 }

@@ -1,0 +1,432 @@
+name: "UPGRADE_PATH_TESTING"
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The new version of tag you are going to download the binary from..'
+        required: true
+        default: 'v10.0.0-rc2'
+      upgrade_name:
+        description: 'The version that is set in setup_handlers.go'
+        required: true
+        default: 'v10.0.0'
+
+jobs:
+  upgrade_path_test_state_export:
+    name: "UPGRADE_PATH_TEST_STATE_EXPORT"
+    runs-on: ["buildjet-8vcpu-ubuntu-2204"]
+    env:
+      latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
+      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
+      downloaded_binary_name: "zetacored-ubuntu-22-amd64"
+      VERSION: "${{ github.event.inputs.version }}"
+      aws_region: "us-east-1"
+      GAS_PRICES: "1.0azeta"
+      DEPOSIT: "10000000000000000000azeta"
+      METADATA: "ipfs://QmeABfwZ2nAxDzYyqZ1LEypPgQFMjEyrx8FfnoPLkF8R3f"
+      LOG_LEVEL: "INFO"
+      CHAINID: "localnet_101-1"
+      DAEMON_HOME: "/home/runner/.zetacored"
+      UPGRADE_NAME: "${{ github.event.inputs.upgrade_name }}"
+      DAEMON_NAME: "zetacored"
+      DENOM: "azeta"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "true"
+      DAEMON_RESTART_AFTER_UPGRADE: "true"
+      MONIKER: "zeta"
+      BLOCK_TIME_SECONDS: "6"
+      PROPOSAL_TIME_SECONDS: "60"
+      UNSAFE_SKIP_BACKUP: "true"
+      CLIENT_DAEMON_NAME: "zetaclientd"
+      CLIENT_DAEMON_ARGS: "-enable-chains,GOERLI,-val,zeta"
+      CLIENT_SKIP_UPGRADE: "true"
+      CLIENT_START_PROCESS: "false"
+      BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
+      UPGRADES_SLEEP_TIME: "300"
+      KEYRING: "test"
+      STATUS_ENDPOINT: "http://127.0.0.1:26657/status"
+      ABCI_ENDPOINT: "http://127.0.0.1:26657/abci_info"
+      ENDPOINT: "http://127.0.0.1:26657"
+      SLEEP_DURATION: "5"
+      GOV_ADDRESS: "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr"
+      previous_height: "-1"
+      stalled_count: "0"
+      first: "true"
+      MAX_TRIES: "100"
+      count: "0"
+    steps:
+      - uses: actions/checkout@v1
+
+      - id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2
+
+      - uses: actions/setup-go@v4
+        with:
+          check-latest: false
+          go-version: '^1.20'
+
+      - name: "CLONE:ZETAVISOR:REPOSITORY"
+        uses: actions/checkout@v2
+        with:
+          repository: zeta-chain/cosmos-sdk
+          path: zetavisor/
+          ref: zetavisor-v0.1.5
+
+      - name: "INSTALL_APT_PACKAGES"
+        working-directory: "zetavisor/cosmovisor"
+        run: |
+          echo "*********INSTALL SOME APT PACKAGES*********"
+          sudo apt update 
+          sudo apt install unzip psmisc -y 
+
+      - name: "INSTALL_ZETAVISOR"
+        working-directory: "zetavisor/cosmovisor"
+        run: |
+          echo "*********INSTALL ZETAVISOR*********"
+          go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          zetavisor version || echo "zetavisor failed to install."
+          
+          echo "*********SETUP ZETAVISOR DIRECTORIES*********"
+          rm -rf /home/runner/.zetacored
+          mkdir -p /home/runner/.zetacored/zetavisor
+          mkdir -p /home/runner/.zetacored/zetavisor/genesis/bin
+          mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin
+          mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin
+
+      - name: "DOWNLOAD_STATE_EXPORT_AND_BINARIES"
+        run: |
+          echo "*********DOWNLOAD STATE EXPORT*********"
+          wget -q ${latest_state_export}
+          
+          echo "*********DOWNLOAD UPGRADE BINARY AND PUT IN ZETAVISOR UPGRADES FOLDER*********"
+          wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+          ZETACORED_CHECKSUM=$(shasum -b -a 256 /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored | cut -d ' ' -f 1)
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+
+          echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+
+          wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+          ZETACORED_CHECKSUM=$(shasum -b -a 256 /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored | cut -d ' ' -f 1)
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+
+          echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+
+          echo "ZETACORED_CHECKSUM=${ZETACORED_CHECKSUM}" >> ${GITHUB_ENV}
+          UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
+          echo ${UPGRADE_INFO}
+
+          
+          
+          echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
+          current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
+          echo "STARTING_VERSION=${current_version}" >> ${GITHUB_ENV}
+          echo "STARTING_VERSION=${current_version}"
+          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
+
+      - name: "START_TESTING_NETWORK"
+        run: |
+          zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
+          
+          zetacored config chain-id $CHAINID --home ${DAEMON_HOME}
+          
+          zetacored keys delete zetaa --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          zetacored keys delete executer_zeta --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          zetacored keys delete mario --keyring-backend $KEYRING -y > /dev/null 2>&1  || echo "doesn't exist"
+          zetacored keys delete executer_mario --keyring-backend $KEYRING -y > /dev/null 2>&1 || echo "doesn't exist"
+          
+          echo "race draft rival universe maid cheese steel logic crowd fork comic easy truth drift tomorrow eye buddy head time cash swing swift midnight borrow" | zetacored keys add zeta --algo=secp256k1 --recover --keyring-backend=$KEYRING
+          echo "hand inmate canvas head lunar naive increase recycle dog ecology inhale december wide bubble hockey dice worth gravity ketchup feed balance parent secret orchard" | zetacored keys add mario --algo secp256k1 --recover --keyring-backend=$KEYRING
+          echo "lounge supply patch festival retire duck foster decline theme horror decline poverty behind clever harsh layer primary syrup depart fantasy session fossil dismiss east" | zetacored keys add executer_zeta --recover --keyring-backend=$KEYRING --algo secp256k1
+          echo "debris dumb among crew celery derive judge spoon road oyster dad panic adult song attack net pole merge mystery pig actual penalty neither peasant"| zetacored keys add executer_mario --algo=secp256k1 --recover --keyring-backend=$KEYRING
+          
+          echo '
+          [
+            {
+              "IsObserver": "y",
+              "ObserverAddress": "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+              "ZetaClientGranteeAddress": "zeta10up34mvwjhjd9xkq56fwsf0k75vtg287uav69n",
+              "ZetaClientGranteePubKey": "zetapub1addwnpepqtlu7fykuh875xjckz4mn4x0mzc25rrqk5qne7mrwxqmatgllv3nx6lrkdp"
+            },
+            {
+              "IsObserver": "y",
+              "ObserverAddress": "zeta1f203dypqg5jh9hqfx0gfkmmnkdfuat3jr45ep2",
+              "ZetaClientGranteeAddress": "zeta1unzpyll3tmutf0r8sqpxpnj46vtdr59mw8qepx",
+              "ZetaClientGranteePubKey": "zetapub1addwnpepqwy5pmg39regpq0gkggxehmfm8hwmxxw94sch7qzh4smava0szs07kk5045"
+            }
+          ]
+          ' > observers.json
+          
+          zetacored init Zetanode-Localnet --chain-id=$CHAINID
+          
+          #Set config to use azeta
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > ~/.zetacored/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["mint"]["params"]["mint_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["evm"]["params"]["evm_denom"]="azeta"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="10000000"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+          cat $DAEMON_HOME/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="60s"' > $DAEMON_HOME/config/tmp_genesis.json && mv $DAEMON_HOME/config/tmp_genesis.json $DAEMON_HOME/config/genesis.json
+
+          sed -i '/\[api\]/,+3 s/enable = false/enable = true/' $DAEMON_HOME/config/app.toml
+          
+          zetacored add-observer-list observers.json --keygen-block=5
+          
+          zetacored gentx zeta 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
+          
+          echo "Collecting genesis txs..."
+          zetacored collect-gentxs
+          
+          echo "Validating genesis file..."
+          zetacored validate-genesis
+                
+          cp $DAEMON_HOME/config/genesis.json ./genesis.json
+          
+          echo "Do Genesis Manipulation"
+          export OLD_GENESIS=./latest.json
+          export NEW_GENESIS=./genesis.json
+                    
+          python .github/actions/upgrade-testing/scripts/create_genesis.py
+          
+          echo "Move Manipulated Genesis"
+          cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
+          
+          echo "Start Network"
+          nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+          
+          sleep ${UPGRADES_SLEEP_TIME}
+          cat cosmovisor.log
+
+      - name: "DETERMINE_UPGRADE_TYPE"
+        shell: python
+        run: |
+          import os
+          
+          first_version=os.environ["STARTING_VERSION"]
+          first_major_version = first_version.split(".")[0]
+          first_minor_version = first_version.split(".")[1]
+          first_sub_version = first_version.split(".")[2]
+          
+          version="${{ github.event.inputs.version }}"
+          major_version = version.split(".")[0]
+          minor_version = version.split(".")[1]
+          sub_version = version.split(".")[2]
+          
+          git_env_file = open(os.environ["GITHUB_ENV"], "a+")
+          if major_version == first_major_version and minor_version != first_minor_version:
+              git_env_file.write("UPGRADE_TYPE=NONCON")
+          elif major_version == first_major_version and minor_version == first_minor_version and sub_version != first_sub_version:
+              git_env_file.write("UPGRADE_TYPE=NONCON")
+          else:
+              git_env_file.write("UPGRADE_TYPE=GOV")
+          git_env_file.close()
+
+      - name: "NON_CONSENSUS_BREAKING_UPGRADE"
+        if: env.UPGRADE_TYPE == 'NONCON'
+        run: |
+          echo ${UPGRADE_TYPE}
+          echo "*********CHECK VERSION BEFORE BINARY SWITCH*********"
+          zetavisor version
+          
+          echo "*********KILLALL ZETAVISOR*********"
+          killall zetavisor
+          
+          echo "*********COPY UPGRADE BINARY TO NEW LOCATION*********"
+          rm -rf /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          rm -rf /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          
+          cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          cp /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored /home/runner/.zetacored/zetavisor/current/bin/zetacored
+          nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
+
+          sleep ${UPGRADES_SLEEP_TIME}
+          cat cosmovisor.log
+          echo "*********CHECK VERSION AFTER BINARY SWITCH*********"
+          check_version=$(zetavisor version | tr -d '\n')
+          http_version=$(curl http://127.0.0.1:26657/abci_info | jq .result.response.version -r | tr -d '\n')
+          
+          echo "END_VERSION=${{ github.event.inputs.version }}"
+          echo "CURRENT_VERSION_BINARY=${check_version}"
+          echo "CURRENT_VERSION_HTTP=${http_version}"
+          
+          if [ "${{ github.event.inputs.version }}" == "${check_version}" ]; then
+            if [ "${{ github.event.inputs.version }}" == "${http_version}" ]; then
+              echo "*********VERSION MATCHES UPGRADE SUCCESS*********"
+              exit 0
+            else
+              echo "*********VERSION DOESN'T MATCH UPGRADE FAILED*********"
+              exit 2
+            fi
+          else
+            echo "*********VERSION DOESN'T MATCH UPGRADE FAILED*********"
+            exit 2
+          fi
+
+      - name: "CONSENSUS_BREAKING_UPGRADE"
+        if: env.UPGRADE_TYPE == 'GOV' #GOV
+        run: |
+          echo "*****UPGRADE TYPE*****"
+          echo ${UPGRADE_TYPE}          
+
+          echo "*****BUILD GOV PROPOSAL*****"
+          GOV_PROPOSAL=$(python .github/actions/upgrade-testing/scripts/raise_gov_proposal.py)
+          
+          echo "${GOV_PROPOSAL}"
+          cat gov.json
+          
+          GOV_PROPOSAL_OUTPUT=$(eval ${GOV_PROPOSAL})
+          
+          echo "*****GOV PROPOSAL OUTPUT*****"
+          echo ${GOV_PROPOSAL_OUTPUT}
+          
+          echo "*****GET TX HASH*****"
+          TX_HASH=$(echo ${GOV_PROPOSAL_OUTPUT} | awk -F'txhash: ' '{print $2}' | tr -d '\n' | tr -d ' ')
+          echo "****TXHASH: ${TX_HASH}****"
+          
+          echo "*****SLEEP FOR 1 MIN TO ALLOW TX TO MAKE IT ON NETWORK*****"
+          sleep 15
+
+          zetacored query tx --type=hash ${TX_HASH}
+          
+          proposal_id=$(python .github/actions/upgrade-testing/scripts/get_proposal_id.py)
+          echo "****PROPOSAL_ID: ${proposal_id}****"
+          
+          source ${GITHUB_ENV}
+          
+          zetacored tx gov vote "${proposal_id}" yes \
+            --from ${MONIKER} \
+            --keyring-backend test \
+            --chain-id ${CHAINID} \
+            --node http://127.0.0.1:26657 \
+            --gas=auto \
+            --gas-adjustment=2 \
+            --gas-prices=${{ env.GAS_PRICES }} \
+            -y
+          
+          sleep 5
+          zetacored query gov proposal ${proposal_id} --node http://127.0.0.1:26657
+          
+          TARGET_HEIGHT=$(echo ${UPGRADE_HEIGHT} | cut -d '.' -f 1)
+          
+          echo "**** CHECK FOR HEIGHT ${TARGET_HEIGHT} ****"
+          while [[ $count -lt $MAX_TRIES ]]
+          do
+              echo "CURL FOR CURRENT HEIGHT"
+              response=$(curl -s "$ENDPOINT/status" || echo "failed curl")
+              if [ $? -ne 0 ]; then
+                  echo "CURL failed with exit code $?"
+              else
+                  echo "curl success"
+              fi
+              echo "curl success"
+              echo "${response}"
+              current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
+              echo "Current Height: $current_height"
+              echo "Target Height: $TARGET_HEIGHT"
+          
+              if [[ $current_height -ge $TARGET_HEIGHT ]]; then
+                  echo "Reached target height: $current_height. Sleep and wait for upgrade to take place."
+                  sleep 120
+                  break
+              fi
+          
+              echo "attempt number ${count} of ${MAX_TRIES}"
+              ((count=count+1))
+              echo "sleep and ty again."
+              sleep 10
+          done
+          
+          if [[ $count -eq $MAX_TRIES ]]; then
+              cat cosmovisor.log
+              echo "Max tries reached without achieving target height."
+              exit 2
+          fi
+          
+          for (( i=1; i<=MAX_TRIES; i++ ))
+          do
+              pgrep zetavisor > /dev/null
+              if [[ $? -ne 0 ]]; then
+                  cat cosmovisor.log
+                  echo "zetavisor process not found."
+                  exit 2
+              fi
+          
+              response=$(curl -s "$STATUS_ENDPOINT")
+              
+              # If curl fails
+              if [[ $? -ne 0 ]]; then
+                  cat cosmovisor.log
+                  echo "Failed to get a response from the status endpoint on try $i."
+                  exit 2
+              fi
+          
+              # Extracting the current height from the response
+              current_height=$(echo $response | jq '.result.sync_info.latest_block_height' | tr -d '"')
+              
+              # If jq fails or height is empty
+              if [[ $? -ne 0 || -z "$current_height" ]]; then
+                  cat cosmovisor.log
+                  echo "Failed to extract block height from the response on try $i."
+                  exit 2
+              fi
+          
+              # If the block height has changed since last check
+              if [[ $current_height -ne $previous_height ]]; then
+                  if [ "${first}" == "true" ]; then
+                    stalled_count=0
+                    first="false"
+                  else
+                    echo "Network appears to be processing blocks"
+                    stalled_count=0
+            
+                    # Query the ABCI endpoint for version info
+                    abci_response=$(curl -s "$ABCI_ENDPOINT")
+            
+                    # Extracting the version from the response
+                    app_version=$(echo $abci_response | jq '.result.response.version' | tr -d '"')
+                    
+                    # If jq fails or version is empty
+                    if [[ $? -ne 0 || -z "$app_version" ]]; then
+                        cat cosmovisor.log
+                        echo "Failed to extract version from the ABCI response on try $i."
+                        exit 2
+                    fi
+            
+                    # Compare the extracted version with the expected version
+                    if [[ "$app_version" == "$VERSION" ]]; then
+                        echo "Version matches the expected version. Exiting..."
+                        echo "ABCI RESPONSE \n ${abci_response}"
+                        echo "Versions: $VERSION, Found: $app_version"
+                        exit 0
+                    else
+                        cat cosmovisor.log
+                        echo "Version mismatch. Expected: $VERSION, Found: $app_version"
+                        echo "ABCI RESPONSE \n ${abci_response}"
+                        exit 2
+                    fi
+                  fi
+              else
+                  ((stalled_count=stalled_count+1))
+              fi
+              
+              # Update the previous height
+              previous_height=$current_height
+          
+              # If we're on the last iteration and the block height hasn't changed for all tries
+              if [[ $i -eq $MAX_TRIES && $stalled_count -eq $MAX_TRIES ]]; then
+                  cat cosmovisor.log
+                  echo "Block height hasn't changed for $MAX_TRIES consecutive checks. Network might be stalled."
+                  exit 2
+              fi
+          
+              # Sleep for the specified duration
+              sleep $SLEEP_DURATION
+          done

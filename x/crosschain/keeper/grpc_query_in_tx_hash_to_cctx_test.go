@@ -20,7 +20,7 @@ import (
 )
 
 func TestInTxHashToCctxQuerySingle(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNInTxHashToCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -71,7 +71,7 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 }
 
 func TestInTxHashToCctxQueryPaginated(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNInTxHashToCctx(keeper, ctx, 5)
 
@@ -148,7 +148,7 @@ func createInTxHashToCctxWithCctxs(keeper *crosschainkeeper.Keeper, ctx sdk.Cont
 }
 
 func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
-	keeper, ctx := keepertest.CrosschainKeeper(t)
+	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 
 	t.Run("can query all cctxs data with in tx hash", func(t *testing.T) {
