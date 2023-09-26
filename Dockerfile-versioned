@@ -30,6 +30,7 @@ RUN cp $GOPATH/bin/smoketest $GOPATH/bin/new/
 
 # Checkout and build old binary
 RUN cd node && git checkout ${old_version}
+RUN cd node && git pull
 RUN cd node && go mod download
 RUN cd node && make install
 RUN cd node && make install-smoketest
