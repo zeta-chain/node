@@ -245,7 +245,6 @@ jobs:
         shell: alpine.sh --root {0}
         run: |
           git config --global --add safe.directory '*'
-          go mod tidy
           make install-testnet
           cp "$HOME"/go/bin/* ./
 
@@ -498,7 +497,9 @@ jobs:
     timeout-minutes: 15
     if: startsWith(github.ref, 'refs/tags/')
     needs:
-      - upgrade_path_testing
+      - build-and-test-multi-arch
+      - build-alpine-and-test
+      - upload
 
     steps:
       - uses: actions/checkout@v3

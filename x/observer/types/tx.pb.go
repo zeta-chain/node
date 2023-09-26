@@ -13,7 +13,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/zeta-chain/zetacore/common"
+	common "github.com/zeta-chain/zetacore/common"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -30,6 +30,118 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type MsgAddBlockHeader struct {
+	Creator   string            `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ChainId   int64             `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	BlockHash []byte            `protobuf:"bytes,3,opt,name=block_hash,json=blockHash,proto3" json:"block_hash,omitempty"`
+	Height    int64             `protobuf:"varint,4,opt,name=height,proto3" json:"height,omitempty"`
+	Header    common.HeaderData `protobuf:"bytes,5,opt,name=header,proto3" json:"header"`
+}
+
+func (m *MsgAddBlockHeader) Reset()         { *m = MsgAddBlockHeader{} }
+func (m *MsgAddBlockHeader) String() string { return proto.CompactTextString(m) }
+func (*MsgAddBlockHeader) ProtoMessage()    {}
+func (*MsgAddBlockHeader) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bcd40fa296a2b1d, []int{0}
+}
+func (m *MsgAddBlockHeader) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddBlockHeader) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddBlockHeader.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddBlockHeader) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddBlockHeader.Merge(m, src)
+}
+func (m *MsgAddBlockHeader) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddBlockHeader) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddBlockHeader.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddBlockHeader proto.InternalMessageInfo
+
+func (m *MsgAddBlockHeader) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgAddBlockHeader) GetChainId() int64 {
+	if m != nil {
+		return m.ChainId
+	}
+	return 0
+}
+
+func (m *MsgAddBlockHeader) GetBlockHash() []byte {
+	if m != nil {
+		return m.BlockHash
+	}
+	return nil
+}
+
+func (m *MsgAddBlockHeader) GetHeight() int64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *MsgAddBlockHeader) GetHeader() common.HeaderData {
+	if m != nil {
+		return m.Header
+	}
+	return common.HeaderData{}
+}
+
+type MsgAddBlockHeaderResponse struct {
+}
+
+func (m *MsgAddBlockHeaderResponse) Reset()         { *m = MsgAddBlockHeaderResponse{} }
+func (m *MsgAddBlockHeaderResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgAddBlockHeaderResponse) ProtoMessage()    {}
+func (*MsgAddBlockHeaderResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bcd40fa296a2b1d, []int{1}
+}
+func (m *MsgAddBlockHeaderResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgAddBlockHeaderResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgAddBlockHeaderResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgAddBlockHeaderResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgAddBlockHeaderResponse.Merge(m, src)
+}
+func (m *MsgAddBlockHeaderResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgAddBlockHeaderResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgAddBlockHeaderResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgAddBlockHeaderResponse proto.InternalMessageInfo
+
 type MsgUpdateCoreParams struct {
 	Creator    string      `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	CoreParams *CoreParams `protobuf:"bytes,2,opt,name=coreParams,proto3" json:"coreParams,omitempty"`
@@ -39,7 +151,7 @@ func (m *MsgUpdateCoreParams) Reset()         { *m = MsgUpdateCoreParams{} }
 func (m *MsgUpdateCoreParams) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateCoreParams) ProtoMessage()    {}
 func (*MsgUpdateCoreParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{0}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{2}
 }
 func (m *MsgUpdateCoreParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -89,7 +201,7 @@ func (m *MsgUpdateCoreParamsResponse) Reset()         { *m = MsgUpdateCoreParams
 func (m *MsgUpdateCoreParamsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateCoreParamsResponse) ProtoMessage()    {}
 func (*MsgUpdateCoreParamsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{1}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{3}
 }
 func (m *MsgUpdateCoreParamsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -122,13 +234,14 @@ type MsgAddObserver struct {
 	Creator                 string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	ObserverAddress         string `protobuf:"bytes,2,opt,name=observer_address,json=observerAddress,proto3" json:"observer_address,omitempty"`
 	ZetaclientGranteePubkey string `protobuf:"bytes,3,opt,name=zetaclient_grantee_pubkey,json=zetaclientGranteePubkey,proto3" json:"zetaclient_grantee_pubkey,omitempty"`
+	AddNodeAccountOnly      bool   `protobuf:"varint,4,opt,name=add_node_account_only,json=addNodeAccountOnly,proto3" json:"add_node_account_only,omitempty"`
 }
 
 func (m *MsgAddObserver) Reset()         { *m = MsgAddObserver{} }
 func (m *MsgAddObserver) String() string { return proto.CompactTextString(m) }
 func (*MsgAddObserver) ProtoMessage()    {}
 func (*MsgAddObserver) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{2}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{4}
 }
 func (m *MsgAddObserver) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -178,6 +291,13 @@ func (m *MsgAddObserver) GetZetaclientGranteePubkey() string {
 	return ""
 }
 
+func (m *MsgAddObserver) GetAddNodeAccountOnly() bool {
+	if m != nil {
+		return m.AddNodeAccountOnly
+	}
+	return false
+}
+
 type MsgAddObserverResponse struct {
 }
 
@@ -185,7 +305,7 @@ func (m *MsgAddObserverResponse) Reset()         { *m = MsgAddObserverResponse{}
 func (m *MsgAddObserverResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddObserverResponse) ProtoMessage()    {}
 func (*MsgAddObserverResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{3}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{5}
 }
 func (m *MsgAddObserverResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -224,7 +344,7 @@ func (m *MsgAddBlameVote) Reset()         { *m = MsgAddBlameVote{} }
 func (m *MsgAddBlameVote) String() string { return proto.CompactTextString(m) }
 func (*MsgAddBlameVote) ProtoMessage()    {}
 func (*MsgAddBlameVote) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{4}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{6}
 }
 func (m *MsgAddBlameVote) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -281,7 +401,7 @@ func (m *MsgAddBlameVoteResponse) Reset()         { *m = MsgAddBlameVoteResponse
 func (m *MsgAddBlameVoteResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddBlameVoteResponse) ProtoMessage()    {}
 func (*MsgAddBlameVoteResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{5}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{7}
 }
 func (m *MsgAddBlameVoteResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -310,24 +430,25 @@ func (m *MsgAddBlameVoteResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddBlameVoteResponse proto.InternalMessageInfo
 
-type MsgUpdatePermissionFlags struct {
-	Creator           string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	IsInboundEnabled  bool   `protobuf:"varint,3,opt,name=isInboundEnabled,proto3" json:"isInboundEnabled,omitempty"`
-	IsOutboundEnabled bool   `protobuf:"varint,4,opt,name=isOutboundEnabled,proto3" json:"isOutboundEnabled,omitempty"`
+type MsgUpdateCrosschainFlags struct {
+	Creator               string                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	IsInboundEnabled      bool                   `protobuf:"varint,3,opt,name=isInboundEnabled,proto3" json:"isInboundEnabled,omitempty"`
+	IsOutboundEnabled     bool                   `protobuf:"varint,4,opt,name=isOutboundEnabled,proto3" json:"isOutboundEnabled,omitempty"`
+	GasPriceIncreaseFlags *GasPriceIncreaseFlags `protobuf:"bytes,5,opt,name=gasPriceIncreaseFlags,proto3" json:"gasPriceIncreaseFlags,omitempty"`
 }
 
-func (m *MsgUpdatePermissionFlags) Reset()         { *m = MsgUpdatePermissionFlags{} }
-func (m *MsgUpdatePermissionFlags) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdatePermissionFlags) ProtoMessage()    {}
-func (*MsgUpdatePermissionFlags) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{6}
+func (m *MsgUpdateCrosschainFlags) Reset()         { *m = MsgUpdateCrosschainFlags{} }
+func (m *MsgUpdateCrosschainFlags) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateCrosschainFlags) ProtoMessage()    {}
+func (*MsgUpdateCrosschainFlags) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bcd40fa296a2b1d, []int{8}
 }
-func (m *MsgUpdatePermissionFlags) XXX_Unmarshal(b []byte) error {
+func (m *MsgUpdateCrosschainFlags) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdatePermissionFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateCrosschainFlags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdatePermissionFlags.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateCrosschainFlags.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -337,54 +458,61 @@ func (m *MsgUpdatePermissionFlags) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdatePermissionFlags) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdatePermissionFlags.Merge(m, src)
+func (m *MsgUpdateCrosschainFlags) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateCrosschainFlags.Merge(m, src)
 }
-func (m *MsgUpdatePermissionFlags) XXX_Size() int {
+func (m *MsgUpdateCrosschainFlags) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdatePermissionFlags) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdatePermissionFlags.DiscardUnknown(m)
+func (m *MsgUpdateCrosschainFlags) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateCrosschainFlags.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdatePermissionFlags proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateCrosschainFlags proto.InternalMessageInfo
 
-func (m *MsgUpdatePermissionFlags) GetCreator() string {
+func (m *MsgUpdateCrosschainFlags) GetCreator() string {
 	if m != nil {
 		return m.Creator
 	}
 	return ""
 }
 
-func (m *MsgUpdatePermissionFlags) GetIsInboundEnabled() bool {
+func (m *MsgUpdateCrosschainFlags) GetIsInboundEnabled() bool {
 	if m != nil {
 		return m.IsInboundEnabled
 	}
 	return false
 }
 
-func (m *MsgUpdatePermissionFlags) GetIsOutboundEnabled() bool {
+func (m *MsgUpdateCrosschainFlags) GetIsOutboundEnabled() bool {
 	if m != nil {
 		return m.IsOutboundEnabled
 	}
 	return false
 }
 
-type MsgUpdatePermissionFlagsResponse struct {
+func (m *MsgUpdateCrosschainFlags) GetGasPriceIncreaseFlags() *GasPriceIncreaseFlags {
+	if m != nil {
+		return m.GasPriceIncreaseFlags
+	}
+	return nil
 }
 
-func (m *MsgUpdatePermissionFlagsResponse) Reset()         { *m = MsgUpdatePermissionFlagsResponse{} }
-func (m *MsgUpdatePermissionFlagsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUpdatePermissionFlagsResponse) ProtoMessage()    {}
-func (*MsgUpdatePermissionFlagsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{7}
+type MsgUpdateCrosschainFlagsResponse struct {
 }
-func (m *MsgUpdatePermissionFlagsResponse) XXX_Unmarshal(b []byte) error {
+
+func (m *MsgUpdateCrosschainFlagsResponse) Reset()         { *m = MsgUpdateCrosschainFlagsResponse{} }
+func (m *MsgUpdateCrosschainFlagsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateCrosschainFlagsResponse) ProtoMessage()    {}
+func (*MsgUpdateCrosschainFlagsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bcd40fa296a2b1d, []int{9}
+}
+func (m *MsgUpdateCrosschainFlagsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUpdatePermissionFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgUpdateCrosschainFlagsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUpdatePermissionFlagsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -394,17 +522,17 @@ func (m *MsgUpdatePermissionFlagsResponse) XXX_Marshal(b []byte, deterministic b
 		return b[:n], nil
 	}
 }
-func (m *MsgUpdatePermissionFlagsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUpdatePermissionFlagsResponse.Merge(m, src)
+func (m *MsgUpdateCrosschainFlagsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.Merge(m, src)
 }
-func (m *MsgUpdatePermissionFlagsResponse) XXX_Size() int {
+func (m *MsgUpdateCrosschainFlagsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUpdatePermissionFlagsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUpdatePermissionFlagsResponse.DiscardUnknown(m)
+func (m *MsgUpdateCrosschainFlagsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateCrosschainFlagsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUpdatePermissionFlagsResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgUpdateCrosschainFlagsResponse proto.InternalMessageInfo
 
 type MsgUpdateKeygen struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -415,7 +543,7 @@ func (m *MsgUpdateKeygen) Reset()         { *m = MsgUpdateKeygen{} }
 func (m *MsgUpdateKeygen) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateKeygen) ProtoMessage()    {}
 func (*MsgUpdateKeygen) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{8}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{10}
 }
 func (m *MsgUpdateKeygen) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -465,7 +593,7 @@ func (m *MsgUpdateKeygenResponse) Reset()         { *m = MsgUpdateKeygenResponse
 func (m *MsgUpdateKeygenResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateKeygenResponse) ProtoMessage()    {}
 func (*MsgUpdateKeygenResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bcd40fa296a2b1d, []int{9}
+	return fileDescriptor_1bcd40fa296a2b1d, []int{11}
 }
 func (m *MsgUpdateKeygenResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -495,14 +623,16 @@ func (m *MsgUpdateKeygenResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateKeygenResponse proto.InternalMessageInfo
 
 func init() {
+	proto.RegisterType((*MsgAddBlockHeader)(nil), "zetachain.zetacore.observer.MsgAddBlockHeader")
+	proto.RegisterType((*MsgAddBlockHeaderResponse)(nil), "zetachain.zetacore.observer.MsgAddBlockHeaderResponse")
 	proto.RegisterType((*MsgUpdateCoreParams)(nil), "zetachain.zetacore.observer.MsgUpdateCoreParams")
 	proto.RegisterType((*MsgUpdateCoreParamsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateCoreParamsResponse")
 	proto.RegisterType((*MsgAddObserver)(nil), "zetachain.zetacore.observer.MsgAddObserver")
 	proto.RegisterType((*MsgAddObserverResponse)(nil), "zetachain.zetacore.observer.MsgAddObserverResponse")
 	proto.RegisterType((*MsgAddBlameVote)(nil), "zetachain.zetacore.observer.MsgAddBlameVote")
 	proto.RegisterType((*MsgAddBlameVoteResponse)(nil), "zetachain.zetacore.observer.MsgAddBlameVoteResponse")
-	proto.RegisterType((*MsgUpdatePermissionFlags)(nil), "zetachain.zetacore.observer.MsgUpdatePermissionFlags")
-	proto.RegisterType((*MsgUpdatePermissionFlagsResponse)(nil), "zetachain.zetacore.observer.MsgUpdatePermissionFlagsResponse")
+	proto.RegisterType((*MsgUpdateCrosschainFlags)(nil), "zetachain.zetacore.observer.MsgUpdateCrosschainFlags")
+	proto.RegisterType((*MsgUpdateCrosschainFlagsResponse)(nil), "zetachain.zetacore.observer.MsgUpdateCrosschainFlagsResponse")
 	proto.RegisterType((*MsgUpdateKeygen)(nil), "zetachain.zetacore.observer.MsgUpdateKeygen")
 	proto.RegisterType((*MsgUpdateKeygenResponse)(nil), "zetachain.zetacore.observer.MsgUpdateKeygenResponse")
 }
@@ -510,44 +640,56 @@ func init() {
 func init() { proto.RegisterFile("observer/tx.proto", fileDescriptor_1bcd40fa296a2b1d) }
 
 var fileDescriptor_1bcd40fa296a2b1d = []byte{
-	// 590 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x55, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xad, 0x49, 0xa1, 0xcd, 0x04, 0xd1, 0xd4, 0x6d, 0x89, 0xe3, 0x0a, 0x2b, 0xf2, 0x85, 0x02,
-	0xc1, 0x46, 0x29, 0x48, 0x08, 0x89, 0x43, 0x8a, 0xa0, 0x8a, 0x50, 0xd4, 0xc8, 0x12, 0x1c, 0xb8,
-	0x44, 0xfe, 0xd8, 0xba, 0x56, 0xe3, 0x5d, 0x6b, 0xd7, 0x41, 0x09, 0x07, 0xee, 0x1c, 0x40, 0xf0,
-	0xaf, 0x38, 0xf6, 0xc8, 0x11, 0x25, 0x77, 0x7e, 0x03, 0xca, 0x3a, 0xde, 0x7c, 0xe2, 0x26, 0x9c,
-	0x32, 0x3b, 0xf3, 0xe6, 0xcd, 0xdb, 0xb7, 0x93, 0x04, 0x76, 0x89, 0xc3, 0x10, 0xfd, 0x88, 0xa8,
-	0x19, 0xf7, 0x8c, 0x88, 0x92, 0x98, 0xc8, 0x87, 0x9f, 0x50, 0x6c, 0xbb, 0x17, 0x76, 0x80, 0x0d,
-	0x1e, 0x11, 0x8a, 0x8c, 0x14, 0xa5, 0xee, 0xb9, 0x24, 0x0c, 0x09, 0x36, 0x93, 0x8f, 0xa4, 0x43,
-	0xdd, 0xf7, 0x89, 0x4f, 0x78, 0x68, 0x8e, 0xa2, 0x34, 0x2b, 0xa8, 0x9d, 0x8e, 0x1d, 0xa2, 0x71,
-	0xb6, 0x24, 0xb2, 0x69, 0x30, 0x2e, 0x1c, 0x88, 0x42, 0x64, 0x53, 0x3b, 0x64, 0x49, 0x5a, 0xef,
-	0xc1, 0x5e, 0x93, 0xf9, 0xef, 0x22, 0xcf, 0x8e, 0xd1, 0x2b, 0x42, 0x51, 0x8b, 0x17, 0x65, 0x05,
-	0xb6, 0x5c, 0x8a, 0xec, 0x98, 0x50, 0x45, 0xaa, 0x48, 0x47, 0x79, 0x2b, 0x3d, 0xca, 0xa7, 0x00,
-	0xae, 0xc0, 0x29, 0x37, 0x2a, 0xd2, 0x51, 0xa1, 0x76, 0xdf, 0xc8, 0xb8, 0x93, 0x31, 0xa1, 0xb5,
-	0xa6, 0x5a, 0xf5, 0x7b, 0x70, 0xb8, 0x64, 0xb2, 0x85, 0x58, 0x44, 0x30, 0x43, 0xfa, 0x0f, 0x09,
-	0xee, 0x34, 0x99, 0x5f, 0xf7, 0xbc, 0xb3, 0x31, 0x51, 0x86, 0xa8, 0x07, 0x50, 0x4c, 0xc7, 0xb5,
-	0x6d, 0xcf, 0xa3, 0x88, 0x25, 0xd2, 0xf2, 0xd6, 0x4e, 0x9a, 0xaf, 0x27, 0x69, 0xf9, 0x05, 0x94,
-	0xb9, 0xc4, 0x4e, 0x80, 0x70, 0xdc, 0xf6, 0xa9, 0x8d, 0x63, 0x84, 0xda, 0x51, 0xd7, 0xb9, 0x44,
-	0x7d, 0x25, 0xc7, 0x7b, 0x4a, 0x13, 0xc0, 0x69, 0x52, 0x6f, 0xf1, 0xb2, 0xae, 0xc0, 0xdd, 0x59,
-	0x49, 0x42, 0xed, 0x17, 0x09, 0x76, 0x92, 0xd2, 0xc9, 0xe8, 0x31, 0xde, 0x93, 0x18, 0x65, 0xc8,
-	0x2d, 0xc3, 0x36, 0x37, 0xab, 0x1d, 0x78, 0x5c, 0x66, 0xce, 0xda, 0xe2, 0xe7, 0x86, 0x27, 0xd7,
-	0x01, 0xf8, 0x73, 0xb6, 0x03, 0x7c, 0x4e, 0xb8, 0x9e, 0x42, 0x4d, 0xcf, 0xb4, 0x97, 0x0f, 0xb4,
-	0xf2, 0xbc, 0xab, 0x81, 0xcf, 0x89, 0x5e, 0x86, 0xd2, 0x9c, 0x14, 0x21, 0xf3, 0x9b, 0x04, 0x8a,
-	0x30, 0xbd, 0x85, 0x68, 0x18, 0x30, 0x16, 0x10, 0xfc, 0xa6, 0x63, 0xfb, 0x59, 0x6f, 0xfe, 0x10,
-	0x8a, 0x01, 0x6b, 0x60, 0x87, 0x74, 0xb1, 0xf7, 0x1a, 0xdb, 0x4e, 0x07, 0x79, 0x5c, 0xda, 0xb6,
-	0xb5, 0x90, 0x97, 0xab, 0xb0, 0x1b, 0xb0, 0xb3, 0x6e, 0x3c, 0x03, 0xde, 0xe4, 0xe0, 0xc5, 0x82,
-	0xae, 0x43, 0xe5, 0x5f, 0x7a, 0x84, 0xe8, 0x3a, 0xb7, 0x36, 0xc1, 0xbc, 0x45, 0x7d, 0x1f, 0xe1,
-	0x0c, 0xa9, 0xfb, 0x70, 0xd3, 0xe9, 0x10, 0xf7, 0x72, 0xec, 0x6b, 0x72, 0x18, 0x5b, 0x32, 0x4d,
-	0x91, 0xb2, 0xd7, 0xfe, 0x6c, 0x42, 0xae, 0xc9, 0x7c, 0x99, 0x40, 0x61, 0x7a, 0xd7, 0x1e, 0x65,
-	0x7a, 0x3e, 0xbb, 0x05, 0xea, 0xf1, 0x1a, 0xe0, 0x74, 0xb0, 0xfc, 0x19, 0x8a, 0x0b, 0x5f, 0xbb,
-	0x27, 0xd7, 0x11, 0xcd, 0x77, 0xa8, 0xcf, 0xd7, 0xed, 0x10, 0xf3, 0x29, 0xdc, 0x9e, 0x59, 0xd7,
-	0xea, 0x0a, 0x97, 0x10, 0x68, 0xf5, 0xe9, 0x3a, 0x68, 0x31, 0xf3, 0xab, 0x04, 0x07, 0xcb, 0x97,
-	0xef, 0xd9, 0x6a, 0xf7, 0x98, 0x6b, 0x53, 0x5f, 0xfe, 0x57, 0xdb, 0xb4, 0x07, 0x33, 0x7b, 0x55,
-	0x5d, 0x8d, 0x2e, 0x41, 0x5f, 0xef, 0xc1, 0xb2, 0x85, 0x3b, 0x69, 0xfc, 0x1c, 0x68, 0xd2, 0xd5,
-	0x40, 0x93, 0x7e, 0x0f, 0x34, 0xe9, 0xfb, 0x50, 0xdb, 0xb8, 0x1a, 0x6a, 0x1b, 0xbf, 0x86, 0xda,
-	0xc6, 0x07, 0xd3, 0x0f, 0xe2, 0x8b, 0xae, 0x63, 0xb8, 0x24, 0x34, 0x47, 0x7c, 0x8f, 0x39, 0xb5,
-	0x99, 0x52, 0x9b, 0x3d, 0x73, 0xf2, 0x6f, 0xd2, 0x8f, 0x10, 0x73, 0x6e, 0xf1, 0xdf, 0xf0, 0xe3,
-	0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x1d, 0x14, 0x1a, 0x66, 0x06, 0x00, 0x00,
+	// 774 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x4d, 0x4f, 0xdb, 0x48,
+	0x18, 0x8e, 0x97, 0xcf, 0xbc, 0x41, 0x7c, 0x18, 0x02, 0x4e, 0x10, 0x21, 0xf2, 0x65, 0xb3, 0xbb,
+	0x6c, 0xcc, 0x86, 0xdd, 0x55, 0x55, 0xa9, 0x87, 0xd0, 0x0f, 0x88, 0x2a, 0x0a, 0xb2, 0xd4, 0x1e,
+	0x7a, 0xb1, 0xc6, 0x9e, 0xc1, 0xb6, 0x48, 0x66, 0x22, 0x8f, 0x53, 0x25, 0x3d, 0xf4, 0xde, 0x43,
+	0xa5, 0xfe, 0x95, 0xfe, 0x87, 0x1e, 0x38, 0x72, 0xec, 0xa9, 0xaa, 0xe0, 0xd2, 0x9f, 0xd0, 0x63,
+	0xe5, 0xf1, 0x47, 0x12, 0x92, 0x9a, 0x84, 0x13, 0x33, 0xef, 0x3c, 0xef, 0xf3, 0x3e, 0xef, 0x17,
+	0x0e, 0xac, 0x31, 0x93, 0x13, 0xef, 0x0d, 0xf1, 0x34, 0xbf, 0x5b, 0x6d, 0x7b, 0xcc, 0x67, 0xf2,
+	0xf6, 0x5b, 0xe2, 0x23, 0xcb, 0x41, 0x2e, 0xad, 0x8a, 0x13, 0xf3, 0x48, 0x35, 0x46, 0x15, 0xd7,
+	0x2d, 0xd6, 0x6a, 0x31, 0xaa, 0x85, 0x7f, 0x42, 0x8f, 0xe2, 0x86, 0xcd, 0x6c, 0x26, 0x8e, 0x5a,
+	0x70, 0x8a, 0xad, 0x09, 0xb5, 0xd9, 0x44, 0x2d, 0x12, 0x59, 0x77, 0x13, 0xab, 0xe5, 0x31, 0xce,
+	0x45, 0x1c, 0xe3, 0xbc, 0x89, 0x6c, 0x1e, 0x01, 0xb6, 0x12, 0x40, 0x7c, 0x88, 0x1e, 0xf2, 0xc9,
+	0x43, 0x1b, 0x79, 0xa8, 0x15, 0xe1, 0xd5, 0x4f, 0x12, 0xac, 0x9d, 0x70, 0xbb, 0x8e, 0xf1, 0x61,
+	0x93, 0x59, 0x17, 0xc7, 0x04, 0x61, 0xe2, 0xc9, 0x0a, 0x2c, 0x58, 0x1e, 0x41, 0x3e, 0xf3, 0x14,
+	0xa9, 0x2c, 0x55, 0xb2, 0x7a, 0x7c, 0x95, 0x0b, 0xb0, 0x18, 0x06, 0x75, 0xb1, 0xf2, 0x5b, 0x59,
+	0xaa, 0xcc, 0xe8, 0x0b, 0xe2, 0xde, 0xc0, 0xf2, 0x0e, 0x80, 0x19, 0x70, 0x18, 0x0e, 0xe2, 0x8e,
+	0x32, 0x53, 0x96, 0x2a, 0x4b, 0x7a, 0x56, 0x58, 0x8e, 0x11, 0x77, 0xe4, 0x4d, 0x98, 0x77, 0x88,
+	0x6b, 0x3b, 0xbe, 0x32, 0x2b, 0xfc, 0xa2, 0x9b, 0xbc, 0x1f, 0xd8, 0x83, 0xa8, 0xca, 0x5c, 0x59,
+	0xaa, 0xe4, 0x6a, 0x72, 0x35, 0xaa, 0x4e, 0xa8, 0xe5, 0x09, 0xf2, 0xd1, 0xe1, 0xec, 0xe5, 0xd7,
+	0xdd, 0x8c, 0x1e, 0xe1, 0xd4, 0x6d, 0x28, 0x8c, 0x48, 0xd6, 0x09, 0x6f, 0x33, 0xca, 0x89, 0xda,
+	0x85, 0xf5, 0x13, 0x6e, 0xbf, 0x6c, 0x63, 0xe4, 0x93, 0xc7, 0xcc, 0x23, 0x67, 0x22, 0xdb, 0x94,
+	0x8c, 0x8e, 0x00, 0xac, 0x04, 0x27, 0x72, 0xca, 0xd5, 0x7e, 0xaf, 0xa6, 0x74, 0xb1, 0xda, 0xa7,
+	0xd5, 0x07, 0x5c, 0xd5, 0x1d, 0xd8, 0x1e, 0x13, 0x39, 0x11, 0xf6, 0x59, 0x82, 0xe5, 0x50, 0xf6,
+	0x69, 0x44, 0x94, 0x22, 0xea, 0x0f, 0x58, 0x8d, 0xc3, 0x19, 0x08, 0x63, 0x8f, 0xf0, 0x50, 0x5a,
+	0x56, 0x5f, 0x89, 0xed, 0xf5, 0xd0, 0x2c, 0x3f, 0x84, 0x82, 0x90, 0xd8, 0x74, 0x09, 0xf5, 0x0d,
+	0xdb, 0x43, 0xd4, 0x27, 0xc4, 0x68, 0x77, 0xcc, 0x0b, 0xd2, 0x13, 0x5d, 0xc8, 0xea, 0x5b, 0x7d,
+	0xc0, 0x51, 0xf8, 0x7e, 0x26, 0x9e, 0xe5, 0x7f, 0x20, 0x8f, 0x30, 0x36, 0x28, 0xc3, 0xc4, 0x40,
+	0x96, 0xc5, 0x3a, 0xd4, 0x37, 0x18, 0x6d, 0xf6, 0x44, 0x8b, 0x16, 0x75, 0x19, 0x61, 0xfc, 0x82,
+	0x61, 0x52, 0x0f, 0x9f, 0x4e, 0x69, 0xb3, 0xa7, 0x2a, 0xb0, 0x39, 0x9c, 0x45, 0x92, 0xe0, 0x7b,
+	0x09, 0x56, 0xe2, 0xbe, 0xa0, 0x16, 0x79, 0xc5, 0x7c, 0x72, 0xbf, 0x41, 0xaa, 0x07, 0x83, 0x84,
+	0x5a, 0xc4, 0x70, 0xe9, 0x39, 0x13, 0x29, 0xe4, 0x6a, 0x6a, 0x6a, 0x47, 0x44, 0xc0, 0x60, 0xd8,
+	0x50, 0x8b, 0x34, 0xe8, 0x39, 0x53, 0x0b, 0xb0, 0x75, 0x4b, 0x4a, 0x22, 0xf3, 0x87, 0x04, 0x4a,
+	0xbf, 0x4f, 0xc9, 0x16, 0x3d, 0x0b, 0x96, 0x28, 0x45, 0xef, 0x9f, 0xb0, 0xea, 0xf2, 0x06, 0x35,
+	0x59, 0x87, 0xe2, 0xa7, 0x14, 0x99, 0x4d, 0x82, 0x85, 0xb4, 0x45, 0x7d, 0xc4, 0x2e, 0xef, 0xc1,
+	0x9a, 0xcb, 0x4f, 0x3b, 0xfe, 0x10, 0x38, 0x2c, 0xe9, 0xe8, 0x83, 0xec, 0x40, 0xde, 0x46, 0xfc,
+	0xcc, 0x73, 0x2d, 0xd2, 0xa0, 0x41, 0x38, 0x4e, 0x84, 0x98, 0x68, 0x1f, 0x6a, 0xa9, 0x99, 0x1f,
+	0x8d, 0xf3, 0xd4, 0xc7, 0x13, 0xaa, 0x2a, 0x94, 0x7f, 0x95, 0x79, 0x52, 0x9e, 0xba, 0x68, 0x62,
+	0x88, 0x79, 0x4e, 0x7a, 0x36, 0xa1, 0x29, 0x45, 0xd9, 0x80, 0x39, 0xb1, 0xe0, 0x51, 0x07, 0xc3,
+	0x4b, 0x54, 0xfc, 0x41, 0x8a, 0x98, 0xbd, 0xf6, 0x7d, 0x0e, 0x66, 0x4e, 0xb8, 0x2d, 0x33, 0xc8,
+	0x0d, 0x2e, 0xc2, 0x5f, 0xa9, 0x39, 0x0e, 0xcf, 0x5b, 0xf1, 0x60, 0x0a, 0x70, 0x1c, 0x58, 0x7e,
+	0x07, 0xab, 0x23, 0xff, 0x13, 0xf6, 0xef, 0x22, 0xba, 0xed, 0x51, 0x7c, 0x30, 0xad, 0x47, 0x12,
+	0xdf, 0x83, 0xa5, 0xa1, 0xc5, 0xd8, 0x9b, 0x20, 0x89, 0x04, 0x5d, 0xfc, 0x77, 0x1a, 0x74, 0x12,
+	0xf3, 0x83, 0x04, 0xf9, 0xf1, 0x63, 0xfe, 0xdf, 0x84, 0x79, 0x0c, 0xbb, 0x15, 0x1f, 0xdd, 0xcb,
+	0x6d, 0xb0, 0x06, 0x43, 0x73, 0xb5, 0x37, 0x19, 0x5d, 0x88, 0xbe, 0xbb, 0x06, 0xe3, 0x06, 0x4e,
+	0xee, 0xc2, 0xf2, 0xad, 0x6f, 0x5b, 0x75, 0xa2, 0x5a, 0x26, 0xf8, 0xe2, 0xff, 0xd3, 0xe1, 0xe3,
+	0xc8, 0x87, 0x8d, 0xcb, 0xeb, 0x92, 0x74, 0x75, 0x5d, 0x92, 0xbe, 0x5d, 0x97, 0xa4, 0x8f, 0x37,
+	0xa5, 0xcc, 0xd5, 0x4d, 0x29, 0xf3, 0xe5, 0xa6, 0x94, 0x79, 0xad, 0xd9, 0xae, 0xef, 0x74, 0xcc,
+	0xe0, 0x3b, 0xa7, 0x05, 0x8c, 0x7f, 0x0b, 0x72, 0x2d, 0x26, 0xd7, 0xba, 0x5a, 0xff, 0x67, 0x45,
+	0xaf, 0x4d, 0xb8, 0x39, 0x2f, 0xbe, 0xd5, 0x07, 0x3f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xa1, 0x60,
+	0xf7, 0xb4, 0x6f, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -565,8 +707,9 @@ type MsgClient interface {
 	AddObserver(ctx context.Context, in *MsgAddObserver, opts ...grpc.CallOption) (*MsgAddObserverResponse, error)
 	UpdateCoreParams(ctx context.Context, in *MsgUpdateCoreParams, opts ...grpc.CallOption) (*MsgUpdateCoreParamsResponse, error)
 	AddBlameVote(ctx context.Context, in *MsgAddBlameVote, opts ...grpc.CallOption) (*MsgAddBlameVoteResponse, error)
-	UpdatePermissionFlags(ctx context.Context, in *MsgUpdatePermissionFlags, opts ...grpc.CallOption) (*MsgUpdatePermissionFlagsResponse, error)
+	UpdateCrosschainFlags(ctx context.Context, in *MsgUpdateCrosschainFlags, opts ...grpc.CallOption) (*MsgUpdateCrosschainFlagsResponse, error)
 	UpdateKeygen(ctx context.Context, in *MsgUpdateKeygen, opts ...grpc.CallOption) (*MsgUpdateKeygenResponse, error)
+	AddBlockHeader(ctx context.Context, in *MsgAddBlockHeader, opts ...grpc.CallOption) (*MsgAddBlockHeaderResponse, error)
 }
 
 type msgClient struct {
@@ -604,9 +747,9 @@ func (c *msgClient) AddBlameVote(ctx context.Context, in *MsgAddBlameVote, opts 
 	return out, nil
 }
 
-func (c *msgClient) UpdatePermissionFlags(ctx context.Context, in *MsgUpdatePermissionFlags, opts ...grpc.CallOption) (*MsgUpdatePermissionFlagsResponse, error) {
-	out := new(MsgUpdatePermissionFlagsResponse)
-	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdatePermissionFlags", in, out, opts...)
+func (c *msgClient) UpdateCrosschainFlags(ctx context.Context, in *MsgUpdateCrosschainFlags, opts ...grpc.CallOption) (*MsgUpdateCrosschainFlagsResponse, error) {
+	out := new(MsgUpdateCrosschainFlagsResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/UpdateCrosschainFlags", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -622,13 +765,23 @@ func (c *msgClient) UpdateKeygen(ctx context.Context, in *MsgUpdateKeygen, opts 
 	return out, nil
 }
 
+func (c *msgClient) AddBlockHeader(ctx context.Context, in *MsgAddBlockHeader, opts ...grpc.CallOption) (*MsgAddBlockHeaderResponse, error) {
+	out := new(MsgAddBlockHeaderResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.observer.Msg/AddBlockHeader", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	AddObserver(context.Context, *MsgAddObserver) (*MsgAddObserverResponse, error)
 	UpdateCoreParams(context.Context, *MsgUpdateCoreParams) (*MsgUpdateCoreParamsResponse, error)
 	AddBlameVote(context.Context, *MsgAddBlameVote) (*MsgAddBlameVoteResponse, error)
-	UpdatePermissionFlags(context.Context, *MsgUpdatePermissionFlags) (*MsgUpdatePermissionFlagsResponse, error)
+	UpdateCrosschainFlags(context.Context, *MsgUpdateCrosschainFlags) (*MsgUpdateCrosschainFlagsResponse, error)
 	UpdateKeygen(context.Context, *MsgUpdateKeygen) (*MsgUpdateKeygenResponse, error)
+	AddBlockHeader(context.Context, *MsgAddBlockHeader) (*MsgAddBlockHeaderResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -644,11 +797,14 @@ func (*UnimplementedMsgServer) UpdateCoreParams(ctx context.Context, req *MsgUpd
 func (*UnimplementedMsgServer) AddBlameVote(ctx context.Context, req *MsgAddBlameVote) (*MsgAddBlameVoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBlameVote not implemented")
 }
-func (*UnimplementedMsgServer) UpdatePermissionFlags(ctx context.Context, req *MsgUpdatePermissionFlags) (*MsgUpdatePermissionFlagsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdatePermissionFlags not implemented")
+func (*UnimplementedMsgServer) UpdateCrosschainFlags(ctx context.Context, req *MsgUpdateCrosschainFlags) (*MsgUpdateCrosschainFlagsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCrosschainFlags not implemented")
 }
 func (*UnimplementedMsgServer) UpdateKeygen(ctx context.Context, req *MsgUpdateKeygen) (*MsgUpdateKeygenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateKeygen not implemented")
+}
+func (*UnimplementedMsgServer) AddBlockHeader(ctx context.Context, req *MsgAddBlockHeader) (*MsgAddBlockHeaderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddBlockHeader not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -709,20 +865,20 @@ func _Msg_AddBlameVote_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_UpdatePermissionFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdatePermissionFlags)
+func _Msg_UpdateCrosschainFlags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateCrosschainFlags)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).UpdatePermissionFlags(ctx, in)
+		return srv.(MsgServer).UpdateCrosschainFlags(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/zetachain.zetacore.observer.Msg/UpdatePermissionFlags",
+		FullMethod: "/zetachain.zetacore.observer.Msg/UpdateCrosschainFlags",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdatePermissionFlags(ctx, req.(*MsgUpdatePermissionFlags))
+		return srv.(MsgServer).UpdateCrosschainFlags(ctx, req.(*MsgUpdateCrosschainFlags))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -745,6 +901,24 @@ func _Msg_UpdateKeygen_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AddBlockHeader_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAddBlockHeader)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AddBlockHeader(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.observer.Msg/AddBlockHeader",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AddBlockHeader(ctx, req.(*MsgAddBlockHeader))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.observer.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -762,16 +936,100 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_AddBlameVote_Handler,
 		},
 		{
-			MethodName: "UpdatePermissionFlags",
-			Handler:    _Msg_UpdatePermissionFlags_Handler,
+			MethodName: "UpdateCrosschainFlags",
+			Handler:    _Msg_UpdateCrosschainFlags_Handler,
 		},
 		{
 			MethodName: "UpdateKeygen",
 			Handler:    _Msg_UpdateKeygen_Handler,
 		},
+		{
+			MethodName: "AddBlockHeader",
+			Handler:    _Msg_AddBlockHeader_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "observer/tx.proto",
+}
+
+func (m *MsgAddBlockHeader) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddBlockHeader) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddBlockHeader) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Header.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x2a
+	if m.Height != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.BlockHash) > 0 {
+		i -= len(m.BlockHash)
+		copy(dAtA[i:], m.BlockHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BlockHash)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ChainId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.ChainId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgAddBlockHeaderResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgAddBlockHeaderResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgAddBlockHeaderResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgUpdateCoreParams) Marshal() (dAtA []byte, err error) {
@@ -859,6 +1117,16 @@ func (m *MsgAddObserver) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.AddNodeAccountOnly {
+		i--
+		if m.AddNodeAccountOnly {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
 	if len(m.ZetaclientGranteePubkey) > 0 {
 		i -= len(m.ZetaclientGranteePubkey)
 		copy(dAtA[i:], m.ZetaclientGranteePubkey)
@@ -976,7 +1244,7 @@ func (m *MsgAddBlameVoteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdatePermissionFlags) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateCrosschainFlags) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -986,16 +1254,28 @@ func (m *MsgUpdatePermissionFlags) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdatePermissionFlags) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateCrosschainFlags) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdatePermissionFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateCrosschainFlags) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	if m.GasPriceIncreaseFlags != nil {
+		{
+			size, err := m.GasPriceIncreaseFlags.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTx(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x2a
+	}
 	if m.IsOutboundEnabled {
 		i--
 		if m.IsOutboundEnabled {
@@ -1026,7 +1306,7 @@ func (m *MsgUpdatePermissionFlags) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgUpdatePermissionFlagsResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgUpdateCrosschainFlagsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1036,12 +1316,12 @@ func (m *MsgUpdatePermissionFlagsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgUpdatePermissionFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgUpdateCrosschainFlagsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgUpdatePermissionFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgUpdateCrosschainFlagsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1118,6 +1398,40 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgAddBlockHeader) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.ChainId != 0 {
+		n += 1 + sovTx(uint64(m.ChainId))
+	}
+	l = len(m.BlockHash)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Height != 0 {
+		n += 1 + sovTx(uint64(m.Height))
+	}
+	l = m.Header.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgAddBlockHeaderResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgUpdateCoreParams) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1162,6 +1476,9 @@ func (m *MsgAddObserver) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	if m.AddNodeAccountOnly {
+		n += 2
+	}
 	return n
 }
 
@@ -1203,7 +1520,7 @@ func (m *MsgAddBlameVoteResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgUpdatePermissionFlags) Size() (n int) {
+func (m *MsgUpdateCrosschainFlags) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1219,10 +1536,14 @@ func (m *MsgUpdatePermissionFlags) Size() (n int) {
 	if m.IsOutboundEnabled {
 		n += 2
 	}
+	if m.GasPriceIncreaseFlags != nil {
+		l = m.GasPriceIncreaseFlags.Size()
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
-func (m *MsgUpdatePermissionFlagsResponse) Size() (n int) {
+func (m *MsgUpdateCrosschainFlagsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1261,6 +1582,243 @@ func sovTx(x uint64) (n int) {
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgAddBlockHeader) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddBlockHeader: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddBlockHeader: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			m.ChainId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ChainId |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockHash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BlockHash = append(m.BlockHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.BlockHash == nil {
+				m.BlockHash = []byte{}
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Header", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Header.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgAddBlockHeaderResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgAddBlockHeaderResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgAddBlockHeaderResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgUpdateCoreParams) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1555,6 +2113,26 @@ func (m *MsgAddObserver) Unmarshal(dAtA []byte) error {
 			}
 			m.ZetaclientGranteePubkey = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AddNodeAccountOnly", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AddNodeAccountOnly = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1813,7 +2391,7 @@ func (m *MsgAddBlameVoteResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdatePermissionFlags) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateCrosschainFlags) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1836,10 +2414,10 @@ func (m *MsgUpdatePermissionFlags) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdatePermissionFlags: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateCrosschainFlags: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdatePermissionFlags: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateCrosschainFlags: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1914,6 +2492,42 @@ func (m *MsgUpdatePermissionFlags) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.IsOutboundEnabled = bool(v != 0)
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GasPriceIncreaseFlags", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.GasPriceIncreaseFlags == nil {
+				m.GasPriceIncreaseFlags = &GasPriceIncreaseFlags{}
+			}
+			if err := m.GasPriceIncreaseFlags.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1935,7 +2549,7 @@ func (m *MsgUpdatePermissionFlags) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgUpdatePermissionFlagsResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgUpdateCrosschainFlagsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1958,10 +2572,10 @@ func (m *MsgUpdatePermissionFlagsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUpdatePermissionFlagsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgUpdateCrosschainFlagsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUpdatePermissionFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgUpdateCrosschainFlagsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

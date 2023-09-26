@@ -56,16 +56,17 @@ type ZetaObserverKeeper interface {
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []zetaObserverTypes.NodeAccount)
 	SetNodeAccount(ctx sdk.Context, nodeAccount zetaObserverTypes.NodeAccount)
 	IsInboundEnabled(ctx sdk.Context) (found bool)
-	IsOutboundAllowed(ctx sdk.Context) (found bool)
+	GetCrosschainFlags(ctx sdk.Context) (val zetaObserverTypes.CrosschainFlags, found bool)
 	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
 	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
-	SetPermissionFlags(ctx sdk.Context, permissionFlags zetaObserverTypes.PermissionFlags)
+	SetCrosschainFlags(ctx sdk.Context, crosschainFlags zetaObserverTypes.CrosschainFlags)
 	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
 	AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
+	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
 }
 
 type FungibleKeeper interface {
@@ -73,11 +74,23 @@ type FungibleKeeper interface {
 	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
 	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
 	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
+	GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
-	QueryUniswapv2RouterGetAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
+	GetUniswapV2Router02Address(ctx sdk.Context) (eth.Address, error)
+	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
+	QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 eth.Address) (*big.Int, error)
+	QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 eth.Address) (*big.Int, error)
+	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
+	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	SetGasPrice(ctx sdk.Context, chainID *big.Int, gasPrice *big.Int) (uint64, error)
 	DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int) error
+	DepositZRC20(
+		ctx sdk.Context,
+		contract eth.Address,
+		to eth.Address,
+		amount *big.Int,
+	) (*evmtypes.MsgEthereumTxResponse, error)
 	ZRC20DepositAndCallContract(
 		ctx sdk.Context,
 		from []byte,
@@ -90,14 +103,32 @@ type FungibleKeeper interface {
 		coinType common.CoinType,
 		asset string,
 	) (*evmtypes.MsgEthereumTxResponse, error)
-	CallUniswapv2RouterSwapExactETHForToken(
+	CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx sdk.Context,
+		sender eth.Address,
+		to eth.Address,
+		amountIn *big.Int,
+		inZRC4,
+		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
+	) (ret []*big.Int, err error)
+	CallUniswapV2RouterSwapExactETHForToken(
 		ctx sdk.Context,
 		sender eth.Address,
 		to eth.Address,
 		amountIn *big.Int,
 		outZRC4 eth.Address,
+		noEthereumTxEvent bool,
 	) ([]*big.Int, error)
-	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int) error
+	CallZRC20Burn(ctx sdk.Context, sender eth.Address, zrc20address eth.Address, amount *big.Int, noEthereumTxEvent bool) error
+	CallZRC20Approve(
+		ctx sdk.Context,
+		owner eth.Address,
+		zrc20address eth.Address,
+		spender eth.Address,
+		amount *big.Int,
+		noEthereumTxEvent bool,
+	) error
 	DeployZRC20Contract(
 		ctx sdk.Context,
 		name, symbol string,
@@ -107,4 +138,6 @@ type FungibleKeeper interface {
 		erc20Contract string,
 		gasLimit *big.Int,
 	) (eth.Address, error)
+	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
+	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 }

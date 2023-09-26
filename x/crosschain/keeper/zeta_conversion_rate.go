@@ -30,7 +30,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "zrc20 not found")
 	}
-	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
+	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "zQueryUniswapv2RouterGetAmountsIn failed")
 	}
@@ -41,7 +41,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	}, nil
 }
 
-func (k Keeper) ProtocolFee(context context.Context, req *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
+func (k Keeper) ProtocolFee(_ context.Context, _ *types.QueryMessagePassingProtocolFeeRequest) (*types.QueryMessagePassingProtocolFeeResponse, error) {
 	return &types.QueryMessagePassingProtocolFeeResponse{
 		FeeInZeta: types.GetProtocolFee().String(),
 	}, nil

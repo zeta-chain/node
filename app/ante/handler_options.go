@@ -170,7 +170,7 @@ func (sud SetUpContextDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 }
 
 // SetGasMeter returns a new context with a gas meter set from a given context.
-func SetGasMeter(simulate bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
+func SetGasMeter(_ bool, ctx sdk.Context, gasLimit uint64) sdk.Context {
 	// In various cases such as simulation and during the genesis block, we do not
 	// meter any gas utilization.
 	//if simulate || ctx.BlockHeight() == 0 {

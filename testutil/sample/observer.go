@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -44,9 +45,10 @@ func NodeAccount() *types.NodeAccount {
 	}
 }
 
-func PermissionFlags() *types.PermissionFlags {
-	return &types.PermissionFlags{
-		IsInboundEnabled: true,
+func CrosschainFlags() *types.CrosschainFlags {
+	return &types.CrosschainFlags{
+		IsInboundEnabled:  true,
+		IsOutboundEnabled: true,
 	}
 }
 
@@ -68,4 +70,31 @@ func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 		Count:            r.Uint64(),
 		LastChangeHeight: lastChangeHeight,
 	}
+}
+
+func CoreParams(chainID int64) *types.CoreParams {
+	r := newRandFromSeed(chainID)
+
+	return &types.CoreParams{
+		ChainId:                     chainID,
+		ConfirmationCount:           r.Uint64(),
+		GasPriceTicker:              r.Uint64(),
+		InTxTicker:                  r.Uint64(),
+		OutTxTicker:                 r.Uint64(),
+		WatchUtxoTicker:             r.Uint64(),
+		ZetaTokenContractAddress:    EthAddress().String(),
+		ConnectorContractAddress:    EthAddress().String(),
+		Erc20CustodyContractAddress: EthAddress().String(),
+		OutboundTxScheduleInterval:  r.Int63(),
+		OutboundTxScheduleLookahead: r.Int63(),
+	}
+}
+
+func CoreParamsList() (cpl types.CoreParamsList) {
+	chainList := common.DefaultChainsList()
+
+	for _, chain := range chainList {
+		cpl.CoreParams = append(cpl.CoreParams, CoreParams(chain.ChainId))
+	}
+	return
 }

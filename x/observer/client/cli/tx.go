@@ -21,10 +21,9 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		//CmdSetSupportedChains(),
 		CmdAddObserver(),
 		CmdUpdateCoreParams(),
-		CmdUpdatePermissionFlags(),
+		CmdUpdateCrosschainFlags(),
 		CmdUpdateKeygen(),
 		CmdAddBlameVote(),
 		CmdEncode(),

@@ -27,12 +27,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 )
 
-func MsgVoteOnObservedInboundTxExec(clientCtx client.Context, chain, obsType fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{chain.String(), obsType.String()}
-	args = append(args, extraArgs...)
-	return clitestutil.ExecTestCLICmd(clientCtx, cli.CmdCCTXInboundVoter(), args)
-}
-
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
 	args := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
@@ -128,17 +122,21 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, cctxIndex, outTxHash, zetaminted, status string) *os.File {
+func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, nonce uint64,
+	cctxIndex, outTxHash, valueReceived, status string) *os.File {
 	cmd := cli.CmdCCTXOutboundVoter()
 	outboundVoterArgs := []string{
 		cctxIndex,
 		outTxHash,
 		"1",
-		zetaminted,
+		"0",
+		"0",
+		"0",
+		valueReceived,
 		status,
 		strconv.FormatInt(common.GoerliChain().ChainId, 10),
-		"1",
-		"Gas",
+		strconv.FormatUint(nonce, 10),
+		"Zeta",
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -169,7 +167,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		"100",
-		"Gas",
+		"Zeta",
 		"",
 	}
 	txArgs := []string{
@@ -189,7 +187,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 }
 
 func GetBallotIdentifier(message string) string {
-	msg := types.NewMsgSendVoter(
+	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
 		common.GoerliChain().ChainId,
@@ -201,25 +199,26 @@ func GetBallotIdentifier(message string) string {
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		100,
 		250_000,
-		common.CoinType_Gas,
+		common.CoinType_Zeta,
 		"",
 	)
 	return msg.Digest()
 }
 
-func GetBallotIdentifierOutBound(cctxindex, outtxHash, zetaminted string) string {
-	math.NewUintFromString(zetaminted)
-
-	msg := types.NewMsgReceiveConfirmation(
+func GetBallotIdentifierOutBound(nonce uint64, cctxindex, outtxHash, valueReceived string) string {
+	msg := types.NewMsgVoteOnObservedOutboundTx(
 		"",
 		cctxindex,
 		outtxHash,
 		1,
-		math.NewUintFromString(zetaminted),
+		0,
+		math.ZeroInt(),
+		0,
+		math.NewUintFromString(valueReceived),
 		0,
 		common.GoerliChain().ChainId,
-		1,
-		common.CoinType_Gas,
+		nonce,
+		common.CoinType_Zeta,
 	)
 	return msg.Digest()
 }

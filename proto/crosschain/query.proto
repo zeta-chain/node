@@ -34,7 +34,7 @@ service Query {
   }
 
   rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain";
+    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain/{chain}";
   }
 
   // Queries a InTxHashToCctx by index.
@@ -94,6 +94,10 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
   }
 
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
+  }
+
   // Queries a lastBlockHeight by index.
   rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight/{index}";
@@ -127,6 +131,16 @@ service Query {
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
+
+  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+  }
+}
+
+message QueryTssHistoryRequest {}
+
+message QueryTssHistoryResponse {
+  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -243,6 +257,14 @@ message QueryAllPendingNoncesResponse {
   repeated PendingNonces pending_nonces = 1;
 }
 
+message QueryPendingNoncesByChainRequest {
+  int64 chain_id = 1;
+}
+
+message QueryPendingNoncesByChainResponse {
+  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+}
+
 message QueryGetLastBlockHeightRequest {
   string index = 1;
 }
@@ -283,7 +305,7 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-  uint64 chainId = 1;
+  int64 chain_id = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 

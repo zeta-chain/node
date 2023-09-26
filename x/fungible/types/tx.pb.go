@@ -31,6 +31,31 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type UpdatePausedStatusAction int32
+
+const (
+	UpdatePausedStatusAction_PAUSE   UpdatePausedStatusAction = 0
+	UpdatePausedStatusAction_UNPAUSE UpdatePausedStatusAction = 1
+)
+
+var UpdatePausedStatusAction_name = map[int32]string{
+	0: "PAUSE",
+	1: "UNPAUSE",
+}
+
+var UpdatePausedStatusAction_value = map[string]int32{
+	"PAUSE":   0,
+	"UNPAUSE": 1,
+}
+
+func (x UpdatePausedStatusAction) String() string {
+	return proto.EnumName(UpdatePausedStatusAction_name, int32(x))
+}
+
+func (UpdatePausedStatusAction) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{0}
+}
+
 type MsgUpdateZRC20WithdrawFee struct {
 	Creator        string                                  `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	Zrc20Address   string                                  `protobuf:"bytes,2,opt,name=zrc20_address,json=zrc20Address,proto3" json:"zrc20_address,omitempty"`
@@ -309,6 +334,7 @@ func (m *MsgDeployFungibleCoinZRC20) GetGasLimit() int64 {
 }
 
 type MsgDeployFungibleCoinZRC20Response struct {
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
 }
 
 func (m *MsgDeployFungibleCoinZRC20Response) Reset()         { *m = MsgDeployFungibleCoinZRC20Response{} }
@@ -343,6 +369,13 @@ func (m *MsgDeployFungibleCoinZRC20Response) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgDeployFungibleCoinZRC20Response proto.InternalMessageInfo
+
+func (m *MsgDeployFungibleCoinZRC20Response) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
 
 type MsgRemoveForeignCoin struct {
 	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
@@ -432,7 +465,208 @@ func (m *MsgRemoveForeignCoinResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRemoveForeignCoinResponse proto.InternalMessageInfo
 
+type MsgUpdateContractBytecode struct {
+	Creator            string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	ContractAddress    string `protobuf:"bytes,2,opt,name=contract_address,json=contractAddress,proto3" json:"contract_address,omitempty"`
+	NewBytecodeAddress string `protobuf:"bytes,3,opt,name=new_bytecode_address,json=newBytecodeAddress,proto3" json:"new_bytecode_address,omitempty"`
+}
+
+func (m *MsgUpdateContractBytecode) Reset()         { *m = MsgUpdateContractBytecode{} }
+func (m *MsgUpdateContractBytecode) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateContractBytecode) ProtoMessage()    {}
+func (*MsgUpdateContractBytecode) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{8}
+}
+func (m *MsgUpdateContractBytecode) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateContractBytecode) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateContractBytecode.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateContractBytecode) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateContractBytecode.Merge(m, src)
+}
+func (m *MsgUpdateContractBytecode) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateContractBytecode) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateContractBytecode.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateContractBytecode proto.InternalMessageInfo
+
+func (m *MsgUpdateContractBytecode) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateContractBytecode) GetContractAddress() string {
+	if m != nil {
+		return m.ContractAddress
+	}
+	return ""
+}
+
+func (m *MsgUpdateContractBytecode) GetNewBytecodeAddress() string {
+	if m != nil {
+		return m.NewBytecodeAddress
+	}
+	return ""
+}
+
+type MsgUpdateContractBytecodeResponse struct {
+	NewBytecodeHash []byte `protobuf:"bytes,1,opt,name=new_bytecode_hash,json=newBytecodeHash,proto3" json:"new_bytecode_hash,omitempty"`
+}
+
+func (m *MsgUpdateContractBytecodeResponse) Reset()         { *m = MsgUpdateContractBytecodeResponse{} }
+func (m *MsgUpdateContractBytecodeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateContractBytecodeResponse) ProtoMessage()    {}
+func (*MsgUpdateContractBytecodeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{9}
+}
+func (m *MsgUpdateContractBytecodeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateContractBytecodeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateContractBytecodeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateContractBytecodeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateContractBytecodeResponse.Merge(m, src)
+}
+func (m *MsgUpdateContractBytecodeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateContractBytecodeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateContractBytecodeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateContractBytecodeResponse proto.InternalMessageInfo
+
+func (m *MsgUpdateContractBytecodeResponse) GetNewBytecodeHash() []byte {
+	if m != nil {
+		return m.NewBytecodeHash
+	}
+	return nil
+}
+
+type MsgUpdateZRC20PausedStatus struct {
+	Creator        string                   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Zrc20Addresses []string                 `protobuf:"bytes,2,rep,name=zrc20_addresses,json=zrc20Addresses,proto3" json:"zrc20_addresses,omitempty"`
+	Action         UpdatePausedStatusAction `protobuf:"varint,3,opt,name=action,proto3,enum=zetachain.zetacore.fungible.UpdatePausedStatusAction" json:"action,omitempty"`
+}
+
+func (m *MsgUpdateZRC20PausedStatus) Reset()         { *m = MsgUpdateZRC20PausedStatus{} }
+func (m *MsgUpdateZRC20PausedStatus) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateZRC20PausedStatus) ProtoMessage()    {}
+func (*MsgUpdateZRC20PausedStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{10}
+}
+func (m *MsgUpdateZRC20PausedStatus) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateZRC20PausedStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateZRC20PausedStatus.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateZRC20PausedStatus) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateZRC20PausedStatus.Merge(m, src)
+}
+func (m *MsgUpdateZRC20PausedStatus) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateZRC20PausedStatus) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateZRC20PausedStatus.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateZRC20PausedStatus proto.InternalMessageInfo
+
+func (m *MsgUpdateZRC20PausedStatus) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgUpdateZRC20PausedStatus) GetZrc20Addresses() []string {
+	if m != nil {
+		return m.Zrc20Addresses
+	}
+	return nil
+}
+
+func (m *MsgUpdateZRC20PausedStatus) GetAction() UpdatePausedStatusAction {
+	if m != nil {
+		return m.Action
+	}
+	return UpdatePausedStatusAction_PAUSE
+}
+
+type MsgUpdateZRC20PausedStatusResponse struct {
+}
+
+func (m *MsgUpdateZRC20PausedStatusResponse) Reset()         { *m = MsgUpdateZRC20PausedStatusResponse{} }
+func (m *MsgUpdateZRC20PausedStatusResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateZRC20PausedStatusResponse) ProtoMessage()    {}
+func (*MsgUpdateZRC20PausedStatusResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_197fdedece277fa0, []int{11}
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateZRC20PausedStatusResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateZRC20PausedStatusResponse.Merge(m, src)
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateZRC20PausedStatusResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateZRC20PausedStatusResponse proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterEnum("zetachain.zetacore.fungible.UpdatePausedStatusAction", UpdatePausedStatusAction_name, UpdatePausedStatusAction_value)
 	proto.RegisterType((*MsgUpdateZRC20WithdrawFee)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee")
 	proto.RegisterType((*MsgUpdateZRC20WithdrawFeeResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFeeResponse")
 	proto.RegisterType((*MsgUpdateSystemContract)(nil), "zetachain.zetacore.fungible.MsgUpdateSystemContract")
@@ -441,52 +675,69 @@ func init() {
 	proto.RegisterType((*MsgDeployFungibleCoinZRC20Response)(nil), "zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response")
 	proto.RegisterType((*MsgRemoveForeignCoin)(nil), "zetachain.zetacore.fungible.MsgRemoveForeignCoin")
 	proto.RegisterType((*MsgRemoveForeignCoinResponse)(nil), "zetachain.zetacore.fungible.MsgRemoveForeignCoinResponse")
+	proto.RegisterType((*MsgUpdateContractBytecode)(nil), "zetachain.zetacore.fungible.MsgUpdateContractBytecode")
+	proto.RegisterType((*MsgUpdateContractBytecodeResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse")
+	proto.RegisterType((*MsgUpdateZRC20PausedStatus)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatus")
+	proto.RegisterType((*MsgUpdateZRC20PausedStatusResponse)(nil), "zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatusResponse")
 }
 
 func init() { proto.RegisterFile("fungible/tx.proto", fileDescriptor_197fdedece277fa0) }
 
 var fileDescriptor_197fdedece277fa0 = []byte{
-	// 631 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcf, 0x4f, 0xd4, 0x40,
-	0x14, 0xde, 0xe1, 0xe7, 0xf2, 0x22, 0x04, 0xc6, 0x0d, 0xd4, 0x62, 0xca, 0x52, 0x4c, 0xdc, 0x0b,
-	0x2d, 0xae, 0x46, 0x63, 0xe2, 0x8f, 0xc8, 0x22, 0x09, 0x89, 0x7b, 0xa9, 0x12, 0x23, 0x97, 0xa6,
-	0xdb, 0x3e, 0xca, 0xc4, 0xed, 0xcc, 0xa6, 0x33, 0xb8, 0x2c, 0x37, 0xaf, 0x9c, 0x48, 0xfc, 0x5b,
-	0x3c, 0x7b, 0xe5, 0xc8, 0xd1, 0x78, 0x20, 0x06, 0xfe, 0x11, 0xd3, 0x6e, 0xbb, 0x20, 0xb0, 0x8b,
-	0x72, 0xea, 0x7b, 0xaf, 0xef, 0xfb, 0xe6, 0xfb, 0xe6, 0xb5, 0x0f, 0x66, 0xb6, 0x77, 0x79, 0xc8,
-	0x1a, 0x4d, 0xb4, 0xd5, 0x9e, 0xd5, 0x8a, 0x85, 0x12, 0x74, 0x7e, 0x1f, 0x95, 0xe7, 0xef, 0x78,
-	0x8c, 0x5b, 0x69, 0x24, 0x62, 0xb4, 0xf2, 0x2e, 0xfd, 0xae, 0x2f, 0xa2, 0x48, 0x70, 0xbb, 0xfb,
-	0xe8, 0x22, 0xf4, 0x52, 0x28, 0x42, 0x91, 0x86, 0x76, 0x12, 0x75, 0xab, 0xe6, 0x77, 0x02, 0xf7,
-	0xea, 0x32, 0xdc, 0x6c, 0x05, 0x9e, 0xc2, 0x2d, 0xa7, 0x56, 0x5d, 0xf9, 0xc8, 0xd4, 0x4e, 0x10,
-	0x7b, 0xed, 0x75, 0x44, 0xaa, 0xc1, 0xb8, 0x1f, 0xa3, 0xa7, 0x44, 0xac, 0x91, 0x32, 0xa9, 0x4c,
-	0x38, 0x79, 0x4a, 0x97, 0x60, 0x72, 0x3f, 0xf6, 0xab, 0x2b, 0xae, 0x17, 0x04, 0x31, 0x4a, 0xa9,
-	0x0d, 0xa5, 0xef, 0xef, 0xa4, 0xc5, 0x37, 0xdd, 0x1a, 0xfd, 0x04, 0xd3, 0x1c, 0xdb, 0x6e, 0x3b,
-	0x63, 0x74, 0xb7, 0x11, 0xb5, 0xb1, 0xa4, 0x6f, 0xd5, 0x3e, 0x3a, 0x59, 0x28, 0xfc, 0x3a, 0x59,
-	0x78, 0x18, 0x32, 0xb5, 0xb3, 0xdb, 0xb0, 0x7c, 0x11, 0xd9, 0xbe, 0x90, 0x91, 0x90, 0xd9, 0x63,
-	0x59, 0x06, 0x9f, 0x6d, 0xd5, 0x69, 0xa1, 0xb4, 0x36, 0x19, 0x57, 0xce, 0x14, 0xc7, 0xf6, 0x05,
-	0x65, 0xe6, 0x12, 0x2c, 0xf6, 0x95, 0xed, 0xa0, 0x6c, 0x09, 0x2e, 0xd1, 0x8c, 0x61, 0xae, 0xd7,
-	0xf4, 0xbe, 0x23, 0x15, 0x46, 0x35, 0xc1, 0x55, 0xec, 0xf9, 0x6a, 0x80, 0xb3, 0x97, 0x30, 0x9f,
-	0x88, 0x96, 0x69, 0xbf, 0xeb, 0x67, 0x80, 0x4b, 0x3e, 0x35, 0x8e, 0xed, 0xbf, 0x19, 0x33, 0xcf,
-	0xe6, 0x22, 0x2c, 0xf4, 0x39, 0xb3, 0x27, 0xeb, 0x60, 0x08, 0xf4, 0xba, 0x0c, 0xd7, 0xb0, 0xd5,
-	0x14, 0x9d, 0xf5, 0x6c, 0x68, 0x35, 0xc1, 0x78, 0x6a, 0x64, 0x80, 0xb4, 0x12, 0x8c, 0xbe, 0x4d,
-	0x5a, 0x32, 0x11, 0xdd, 0x84, 0x56, 0x60, 0x7a, 0x5b, 0xc4, 0xc8, 0x42, 0xee, 0xa6, 0x1f, 0x84,
-	0xcb, 0x02, 0x6d, 0xb8, 0x4c, 0x2a, 0xc3, 0xce, 0x54, 0x56, 0xaf, 0x25, 0xe5, 0x8d, 0x80, 0xea,
-	0x50, 0x0c, 0xd0, 0x67, 0x91, 0xd7, 0x94, 0xda, 0x48, 0x99, 0x54, 0x26, 0x9d, 0x5e, 0x4e, 0x29,
-	0x8c, 0x70, 0x2f, 0x42, 0x6d, 0x34, 0xa5, 0x4e, 0x63, 0x3a, 0x0b, 0x63, 0xb2, 0x13, 0x35, 0x44,
-	0xb3, 0x3b, 0x35, 0x27, 0xcb, 0xe8, 0x32, 0x4c, 0xf8, 0x82, 0x71, 0x37, 0x99, 0x8f, 0x36, 0x5e,
-	0x26, 0x95, 0xa9, 0xea, 0xb4, 0x95, 0x7d, 0x6c, 0x89, 0x8f, 0x0f, 0x9d, 0x16, 0x3a, 0x45, 0x3f,
-	0x8b, 0xe8, 0x3c, 0x4c, 0x84, 0x9e, 0x74, 0x9b, 0x2c, 0x62, 0x4a, 0x2b, 0xa6, 0xca, 0x8a, 0xa1,
-	0x27, 0xdf, 0x25, 0xb9, 0xf9, 0x00, 0xcc, 0xfe, 0x77, 0xd1, 0xbb, 0xb2, 0x35, 0x28, 0xd5, 0x65,
-	0xe8, 0x60, 0x24, 0xbe, 0xe0, 0x7a, 0x66, 0x4a, 0x30, 0x3e, 0xe0, 0xae, 0x72, 0x3f, 0x43, 0xe7,
-	0x7e, 0x4c, 0x03, 0xee, 0x5f, 0xc7, 0x92, 0x9f, 0x52, 0xfd, 0x31, 0x02, 0xc3, 0x75, 0x19, 0xd2,
-	0x6f, 0x04, 0xe6, 0xfa, 0x4d, 0xe7, 0x99, 0x35, 0xe0, 0xcf, 0xb3, 0xfa, 0x5b, 0xd1, 0x5f, 0xdf,
-	0x12, 0x98, 0xab, 0xa3, 0x5f, 0x09, 0xcc, 0x5c, 0xbd, 0x81, 0x47, 0x37, 0xd1, 0x5e, 0x81, 0xe8,
-	0xcf, 0xff, 0x1b, 0xd2, 0xd3, 0x70, 0x40, 0xa0, 0x74, 0xed, 0xff, 0xf4, 0xe4, 0x26, 0xce, 0xeb,
-	0x50, 0xfa, 0x8b, 0xdb, 0xa0, 0x7a, 0x62, 0x0e, 0x09, 0xcc, 0xf6, 0x59, 0x5c, 0x4f, 0xff, 0x8d,
-	0xf8, 0x32, 0x4e, 0x7f, 0x75, 0x3b, 0x5c, 0x2e, 0x69, 0x75, 0xe3, 0xe8, 0xd4, 0x20, 0xc7, 0xa7,
-	0x06, 0xf9, 0x7d, 0x6a, 0x90, 0xc3, 0x33, 0xa3, 0x70, 0x7c, 0x66, 0x14, 0x7e, 0x9e, 0x19, 0x85,
-	0x2d, 0xfb, 0xc2, 0xa6, 0x4b, 0x98, 0x97, 0xd3, 0x43, 0xec, 0xfc, 0x10, 0x7b, 0xcf, 0x3e, 0x5f,
-	0xf2, 0xc9, 0xda, 0x6b, 0x8c, 0xa5, 0x0b, 0xfa, 0xf1, 0x9f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x56,
-	0x98, 0x26, 0x72, 0xfd, 0x05, 0x00, 0x00,
+	// 843 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x16, 0xad, 0x58, 0xb6, 0xa6, 0x89, 0x2c, 0x6f, 0x85, 0x84, 0xa5, 0x0b, 0xd9, 0x61, 0x0a,
+	0x44, 0x0d, 0x60, 0xd2, 0x55, 0x7f, 0x82, 0x02, 0x6d, 0x0a, 0x5b, 0x89, 0xd1, 0x00, 0x55, 0x1b,
+	0xd0, 0x15, 0x8a, 0xe6, 0x42, 0xac, 0xc8, 0x35, 0x45, 0x54, 0xdc, 0x15, 0xb8, 0xab, 0x2a, 0xca,
+	0xad, 0xd7, 0x9c, 0x82, 0xf6, 0x3d, 0x7a, 0xeb, 0x3b, 0xe4, 0x98, 0x63, 0xd1, 0x43, 0x50, 0xd8,
+	0x97, 0x3e, 0x46, 0xc1, 0xe5, 0x4f, 0x28, 0x59, 0x94, 0x1c, 0x9f, 0xb8, 0xb3, 0x9a, 0xf9, 0xf6,
+	0x9b, 0x99, 0x6f, 0x56, 0x0b, 0xdb, 0xa7, 0x63, 0xea, 0xf9, 0xfd, 0x21, 0x31, 0xc5, 0x33, 0x63,
+	0x14, 0x32, 0xc1, 0xd0, 0xce, 0x73, 0x22, 0xb0, 0x33, 0xc0, 0x3e, 0x35, 0xe4, 0x8a, 0x85, 0xc4,
+	0x48, 0xbd, 0xb4, 0xf7, 0x1d, 0x16, 0x04, 0x8c, 0x9a, 0xf1, 0x27, 0x8e, 0xd0, 0x1a, 0x1e, 0xf3,
+	0x98, 0x5c, 0x9a, 0xd1, 0x2a, 0xde, 0xd5, 0xff, 0x52, 0xe0, 0x83, 0x2e, 0xf7, 0x7a, 0x23, 0x17,
+	0x0b, 0xf2, 0xd4, 0xea, 0xb4, 0x0f, 0x7e, 0xf2, 0xc5, 0xc0, 0x0d, 0xf1, 0xe4, 0x98, 0x10, 0xa4,
+	0xc2, 0x86, 0x13, 0x12, 0x2c, 0x58, 0xa8, 0x2a, 0x7b, 0x4a, 0xab, 0x6a, 0xa5, 0x26, 0xba, 0x03,
+	0x37, 0x9e, 0x87, 0x4e, 0xfb, 0xc0, 0xc6, 0xae, 0x1b, 0x12, 0xce, 0xd5, 0x35, 0xf9, 0xfb, 0x75,
+	0xb9, 0x79, 0x18, 0xef, 0xa1, 0x9f, 0xa1, 0x4e, 0xc9, 0xc4, 0x9e, 0x24, 0x88, 0xf6, 0x29, 0x21,
+	0x6a, 0x25, 0xf2, 0x3b, 0x32, 0x5f, 0xbd, 0xd9, 0x2d, 0xfd, 0xf3, 0x66, 0xf7, 0xae, 0xe7, 0x8b,
+	0xc1, 0xb8, 0x6f, 0x38, 0x2c, 0x30, 0x1d, 0xc6, 0x03, 0xc6, 0x93, 0xcf, 0x3e, 0x77, 0x7f, 0x31,
+	0xc5, 0x74, 0x44, 0xb8, 0xd1, 0xf3, 0xa9, 0xb0, 0x6a, 0x94, 0x4c, 0x72, 0xcc, 0xf4, 0x3b, 0x70,
+	0xbb, 0x90, 0xb6, 0x45, 0xf8, 0x88, 0x51, 0x4e, 0xf4, 0x10, 0x6e, 0x65, 0x4e, 0x27, 0x53, 0x2e,
+	0x48, 0xd0, 0x61, 0x54, 0x84, 0xd8, 0x11, 0x4b, 0x32, 0xfb, 0x1a, 0x76, 0x22, 0xd2, 0x5c, 0xfa,
+	0xdb, 0x4e, 0x12, 0x30, 0x97, 0xa7, 0x4a, 0xc9, 0x64, 0x16, 0x31, 0xc9, 0x59, 0xbf, 0x0d, 0xbb,
+	0x05, 0x67, 0x66, 0xb4, 0x5e, 0xac, 0x81, 0xd6, 0xe5, 0xde, 0x43, 0x32, 0x1a, 0xb2, 0xe9, 0x71,
+	0xd2, 0xb4, 0x0e, 0xf3, 0xa9, 0x4c, 0x64, 0x09, 0xb5, 0x06, 0xac, 0x3f, 0x8a, 0x5c, 0x12, 0x12,
+	0xb1, 0x81, 0x5a, 0x50, 0x3f, 0x65, 0x21, 0xf1, 0x3d, 0x6a, 0x4b, 0x41, 0xd8, 0xbe, 0xab, 0x96,
+	0xf7, 0x94, 0x56, 0xd9, 0xaa, 0x25, 0xfb, 0x9d, 0x68, 0xfb, 0xb1, 0x8b, 0x34, 0xd8, 0x74, 0x89,
+	0xe3, 0x07, 0x78, 0xc8, 0xd5, 0x6b, 0x7b, 0x4a, 0xeb, 0x86, 0x95, 0xd9, 0x08, 0xc1, 0x35, 0x8a,
+	0x03, 0xa2, 0xae, 0x4b, 0x68, 0xb9, 0x46, 0x37, 0xa1, 0xc2, 0xa7, 0x41, 0x9f, 0x0d, 0xe3, 0xae,
+	0x59, 0x89, 0x85, 0xf6, 0xa1, 0xea, 0x30, 0x9f, 0xda, 0x51, 0x7f, 0xd4, 0x8d, 0x3d, 0xa5, 0x55,
+	0x6b, 0xd7, 0x8d, 0x44, 0x6c, 0x51, 0x1e, 0x3f, 0x4e, 0x47, 0xc4, 0xda, 0x74, 0x92, 0x15, 0xda,
+	0x81, 0xaa, 0x87, 0xb9, 0x3d, 0xf4, 0x03, 0x5f, 0xa8, 0x9b, 0x92, 0xd9, 0xa6, 0x87, 0xf9, 0x77,
+	0x91, 0xad, 0x3f, 0x00, 0xbd, 0xb8, 0x16, 0x69, 0xc9, 0xa2, 0x9a, 0xa4, 0x0d, 0x48, 0x6a, 0x92,
+	0x98, 0xfa, 0x43, 0x68, 0x74, 0xb9, 0x67, 0x91, 0x80, 0xfd, 0x4a, 0x8e, 0x93, 0x74, 0x99, 0x4f,
+	0x97, 0x54, 0x31, 0xcd, 0x74, 0xed, 0x6d, 0xa6, 0x7a, 0x13, 0x3e, 0x5c, 0x84, 0x92, 0xb5, 0xec,
+	0xf7, 0xfc, 0x98, 0xa4, 0x0d, 0x3d, 0x9a, 0x0a, 0xe2, 0x30, 0x77, 0xd9, 0x98, 0x7c, 0x0c, 0xf5,
+	0x02, 0x05, 0x6d, 0x39, 0xb3, 0xc2, 0x41, 0x07, 0xd0, 0x88, 0x74, 0xd7, 0x4f, 0x40, 0x33, 0xf7,
+	0xb2, 0x74, 0x47, 0x94, 0x4c, 0xd2, 0xf3, 0x52, 0xa9, 0xfd, 0x90, 0x9b, 0x81, 0x79, 0x4e, 0x59,
+	0xe5, 0xee, 0xc1, 0xf6, 0x0c, 0xec, 0x00, 0xf3, 0x81, 0x64, 0x79, 0xdd, 0xda, 0xca, 0x61, 0x7e,
+	0x8b, 0xf9, 0x40, 0xff, 0x53, 0x91, 0xc2, 0xcc, 0x4d, 0xd5, 0x13, 0x3c, 0xe6, 0xc4, 0x3d, 0x11,
+	0x58, 0x8c, 0xf9, 0x92, 0x34, 0xef, 0xc2, 0xd6, 0xcc, 0x6d, 0x40, 0xa2, 0x2c, 0xcb, 0xad, 0xaa,
+	0x55, 0xcb, 0xdf, 0x07, 0x84, 0xa3, 0x2e, 0x54, 0xb0, 0x23, 0x7c, 0x46, 0x65, 0x5a, 0xb5, 0xf6,
+	0xe7, 0xc6, 0x92, 0x7b, 0xcc, 0x88, 0x89, 0xe4, 0x39, 0x1c, 0xca, 0x60, 0x2b, 0x01, 0xd1, 0x3f,
+	0x92, 0xe2, 0x29, 0xe0, 0x9b, 0x96, 0xe0, 0x5e, 0x1b, 0xd4, 0x22, 0x24, 0x54, 0x85, 0xf5, 0x27,
+	0x87, 0xbd, 0x93, 0x47, 0xf5, 0x12, 0x7a, 0x0f, 0x36, 0x7a, 0xdf, 0xc7, 0x86, 0xd2, 0xfe, 0xaf,
+	0x02, 0xe5, 0x2e, 0xf7, 0xd0, 0x1f, 0x0a, 0xdc, 0x2a, 0x1a, 0xd4, 0xfb, 0x4b, 0xc9, 0x17, 0xab,
+	0x5a, 0xfb, 0xe6, 0x8a, 0x81, 0x59, 0x53, 0x7f, 0x53, 0x60, 0xfb, 0xa2, 0xe4, 0x3f, 0x59, 0x05,
+	0x7b, 0x21, 0x44, 0xfb, 0xf2, 0x9d, 0x43, 0x32, 0x0e, 0x2f, 0x14, 0x68, 0x2c, 0xbc, 0x5a, 0x3f,
+	0x5b, 0x85, 0xb9, 0x28, 0x4a, 0xfb, 0xea, 0x2a, 0x51, 0x19, 0x99, 0x97, 0x0a, 0xdc, 0x2c, 0xf8,
+	0x0f, 0xfb, 0xe2, 0x72, 0xc0, 0xf3, 0x71, 0xda, 0x83, 0xab, 0xc5, 0x2d, 0xa0, 0x74, 0xe1, 0xbe,
+	0xb8, 0x24, 0xa5, 0xf9, 0xb8, 0xcb, 0x52, 0x2a, 0xbc, 0x0b, 0x22, 0x31, 0x17, 0x0d, 0xf7, 0xfd,
+	0x77, 0x48, 0x37, 0x1f, 0xb8, 0x5a, 0xcc, 0x2b, 0xc6, 0xf3, 0xe8, 0xf1, 0xab, 0xb3, 0xa6, 0xf2,
+	0xfa, 0xac, 0xa9, 0xfc, 0x7b, 0xd6, 0x54, 0x5e, 0x9e, 0x37, 0x4b, 0xaf, 0xcf, 0x9b, 0xa5, 0xbf,
+	0xcf, 0x9b, 0xa5, 0xa7, 0x66, 0xee, 0x75, 0x10, 0x41, 0xef, 0xcb, 0x53, 0xcc, 0xf4, 0x14, 0xf3,
+	0x99, 0xf9, 0xf6, 0x61, 0x14, 0x3d, 0x15, 0xfa, 0x15, 0xf9, 0xa8, 0xf9, 0xf4, 0xff, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x16, 0xf6, 0xee, 0xe7, 0x31, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -505,6 +756,8 @@ type MsgClient interface {
 	RemoveForeignCoin(ctx context.Context, in *MsgRemoveForeignCoin, opts ...grpc.CallOption) (*MsgRemoveForeignCoinResponse, error)
 	UpdateSystemContract(ctx context.Context, in *MsgUpdateSystemContract, opts ...grpc.CallOption) (*MsgUpdateSystemContractResponse, error)
 	UpdateZRC20WithdrawFee(ctx context.Context, in *MsgUpdateZRC20WithdrawFee, opts ...grpc.CallOption) (*MsgUpdateZRC20WithdrawFeeResponse, error)
+	UpdateContractBytecode(ctx context.Context, in *MsgUpdateContractBytecode, opts ...grpc.CallOption) (*MsgUpdateContractBytecodeResponse, error)
+	UpdateZRC20PausedStatus(ctx context.Context, in *MsgUpdateZRC20PausedStatus, opts ...grpc.CallOption) (*MsgUpdateZRC20PausedStatusResponse, error)
 }
 
 type msgClient struct {
@@ -551,12 +804,32 @@ func (c *msgClient) UpdateZRC20WithdrawFee(ctx context.Context, in *MsgUpdateZRC
 	return out, nil
 }
 
+func (c *msgClient) UpdateContractBytecode(ctx context.Context, in *MsgUpdateContractBytecode, opts ...grpc.CallOption) (*MsgUpdateContractBytecodeResponse, error) {
+	out := new(MsgUpdateContractBytecodeResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/UpdateContractBytecode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateZRC20PausedStatus(ctx context.Context, in *MsgUpdateZRC20PausedStatus, opts ...grpc.CallOption) (*MsgUpdateZRC20PausedStatusResponse, error) {
+	out := new(MsgUpdateZRC20PausedStatusResponse)
+	err := c.cc.Invoke(ctx, "/zetachain.zetacore.fungible.Msg/UpdateZRC20PausedStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	DeployFungibleCoinZRC20(context.Context, *MsgDeployFungibleCoinZRC20) (*MsgDeployFungibleCoinZRC20Response, error)
 	RemoveForeignCoin(context.Context, *MsgRemoveForeignCoin) (*MsgRemoveForeignCoinResponse, error)
 	UpdateSystemContract(context.Context, *MsgUpdateSystemContract) (*MsgUpdateSystemContractResponse, error)
 	UpdateZRC20WithdrawFee(context.Context, *MsgUpdateZRC20WithdrawFee) (*MsgUpdateZRC20WithdrawFeeResponse, error)
+	UpdateContractBytecode(context.Context, *MsgUpdateContractBytecode) (*MsgUpdateContractBytecodeResponse, error)
+	UpdateZRC20PausedStatus(context.Context, *MsgUpdateZRC20PausedStatus) (*MsgUpdateZRC20PausedStatusResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -574,6 +847,12 @@ func (*UnimplementedMsgServer) UpdateSystemContract(ctx context.Context, req *Ms
 }
 func (*UnimplementedMsgServer) UpdateZRC20WithdrawFee(ctx context.Context, req *MsgUpdateZRC20WithdrawFee) (*MsgUpdateZRC20WithdrawFeeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateZRC20WithdrawFee not implemented")
+}
+func (*UnimplementedMsgServer) UpdateContractBytecode(ctx context.Context, req *MsgUpdateContractBytecode) (*MsgUpdateContractBytecodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateContractBytecode not implemented")
+}
+func (*UnimplementedMsgServer) UpdateZRC20PausedStatus(ctx context.Context, req *MsgUpdateZRC20PausedStatus) (*MsgUpdateZRC20PausedStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateZRC20PausedStatus not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -652,6 +931,42 @@ func _Msg_UpdateZRC20WithdrawFee_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateContractBytecode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateContractBytecode)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateContractBytecode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Msg/UpdateContractBytecode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateContractBytecode(ctx, req.(*MsgUpdateContractBytecode))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateZRC20PausedStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateZRC20PausedStatus)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateZRC20PausedStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/zetachain.zetacore.fungible.Msg/UpdateZRC20PausedStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateZRC20PausedStatus(ctx, req.(*MsgUpdateZRC20PausedStatus))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "zetachain.zetacore.fungible.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -671,6 +986,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateZRC20WithdrawFee",
 			Handler:    _Msg_UpdateZRC20WithdrawFee_Handler,
+		},
+		{
+			MethodName: "UpdateContractBytecode",
+			Handler:    _Msg_UpdateContractBytecode_Handler,
+		},
+		{
+			MethodName: "UpdateZRC20PausedStatus",
+			Handler:    _Msg_UpdateZRC20PausedStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -898,6 +1221,13 @@ func (m *MsgDeployFungibleCoinZRC20Response) MarshalToSizedBuffer(dAtA []byte) (
 	_ = i
 	var l int
 	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -954,6 +1284,147 @@ func (m *MsgRemoveForeignCoinResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgRemoveForeignCoinResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateContractBytecode) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateContractBytecode) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateContractBytecode) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.NewBytecodeAddress) > 0 {
+		i -= len(m.NewBytecodeAddress)
+		copy(dAtA[i:], m.NewBytecodeAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NewBytecodeAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ContractAddress) > 0 {
+		i -= len(m.ContractAddress)
+		copy(dAtA[i:], m.ContractAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ContractAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateContractBytecodeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateContractBytecodeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateContractBytecodeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.NewBytecodeHash) > 0 {
+		i -= len(m.NewBytecodeHash)
+		copy(dAtA[i:], m.NewBytecodeHash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.NewBytecodeHash)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateZRC20PausedStatus) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateZRC20PausedStatus) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateZRC20PausedStatus) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Action != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Action))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Zrc20Addresses) > 0 {
+		for iNdEx := len(m.Zrc20Addresses) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Zrc20Addresses[iNdEx])
+			copy(dAtA[i:], m.Zrc20Addresses[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.Zrc20Addresses[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateZRC20PausedStatusResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateZRC20PausedStatusResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateZRC20PausedStatusResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1069,6 +1540,10 @@ func (m *MsgDeployFungibleCoinZRC20Response) Size() (n int) {
 	}
 	var l int
 	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -1090,6 +1565,71 @@ func (m *MsgRemoveForeignCoin) Size() (n int) {
 }
 
 func (m *MsgRemoveForeignCoinResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateContractBytecode) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ContractAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.NewBytecodeAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateContractBytecodeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.NewBytecodeHash)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateZRC20PausedStatus) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Zrc20Addresses) > 0 {
+		for _, s := range m.Zrc20Addresses {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.Action != 0 {
+		n += 1 + sovTx(uint64(m.Action))
+	}
+	return n
+}
+
+func (m *MsgUpdateZRC20PausedStatusResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1749,6 +2289,38 @@ func (m *MsgDeployFungibleCoinZRC20Response) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgDeployFungibleCoinZRC20Response: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1911,6 +2483,419 @@ func (m *MsgRemoveForeignCoinResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgRemoveForeignCoinResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateContractBytecode) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateContractBytecode: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateContractBytecode: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContractAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContractAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewBytecodeAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NewBytecodeAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateContractBytecodeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateContractBytecodeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateContractBytecodeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NewBytecodeHash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NewBytecodeHash = append(m.NewBytecodeHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.NewBytecodeHash == nil {
+				m.NewBytecodeHash = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateZRC20PausedStatus) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateZRC20PausedStatus: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateZRC20PausedStatus: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zrc20Addresses", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zrc20Addresses = append(m.Zrc20Addresses, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= UpdatePausedStatusAction(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateZRC20PausedStatusResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateZRC20PausedStatusResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateZRC20PausedStatusResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

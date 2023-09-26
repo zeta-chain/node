@@ -18,7 +18,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	k.SetCoreParams(ctx, types.GetCoreParams())
+	// If core params are defined set them, otherwise set default
+	if len(genState.CoreParamsList.CoreParams) > 0 {
+		k.SetCoreParams(ctx, genState.CoreParamsList)
+	} else {
+		k.SetCoreParams(ctx, types.GetCoreParams())
+	}
 
 	// Set all the nodeAccount
 	for _, elem := range genState.NodeAccountList {
@@ -34,10 +39,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	k.SetParams(ctx, params)
 
 	// Set if defined
-	if genState.PermissionFlags != nil {
-		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
+	if genState.CrosschainFlags != nil {
+		k.SetCrosschainFlags(ctx, *genState.CrosschainFlags)
 	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true, IsOutboundEnabled: true})
+		k.SetCrosschainFlags(ctx, *types.DefaultCrosschainFlags())
 	}
 
 	// Set if defined
@@ -73,6 +78,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 
+	coreParams, found := k.GetAllCoreParams(ctx)
+	if !found {
+		coreParams = types.CoreParamsList{}
+	}
+
 	// Get all node accounts
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	nodeAccounts := make([]*types.NodeAccount, len(nodeAccountList))
@@ -81,11 +91,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		nodeAccounts[i] = &elem
 	}
 
-	// Get all permissionFlags
-	pf := types.PermissionFlags{IsInboundEnabled: true}
-	permissionFlags, found := k.GetPermissionFlags(ctx)
+	// Get all crosschain flags
+	cf := types.DefaultCrosschainFlags()
+	crosschainFlags, found := k.GetCrosschainFlags(ctx)
 	if found {
-		pf = permissionFlags
+		cf = &crosschainFlags
 	}
 
 	kn := &types.Keygen{}
@@ -103,9 +113,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
+		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
-		PermissionFlags:   &pf,
+		CrosschainFlags:   cf,
 		Keygen:            kn,
 		LastObserverCount: oc,
 	}

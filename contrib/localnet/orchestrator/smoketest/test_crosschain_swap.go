@@ -9,9 +9,8 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestCrosschainSwap() {
@@ -29,22 +28,27 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	sm.zevmAuth.GasLimit = 10000000
-	tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
-	if err != nil {
-		panic(err)
+	if !localTestArgs.contractsDeployed {
+		tx, err := sm.UniswapV2Factory.CreatePair(sm.zevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
+		if err != nil {
+			panic(err)
+		}
+		receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
+		fmt.Printf("USDT-BTC pair receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	}
-	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+
 	usdtBtcPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("USDT-BTC pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status, usdtBtcPair.Hex())
+	fmt.Printf("USDT-BTC pair addr %s\n", usdtBtcPair.Hex())
 
-	tx, err = sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err := sm.USDTZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("USDT ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
 	tx, err = sm.BTCZRC20.Approve(sm.zevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
@@ -59,7 +63,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on BTC ZRC20: %d\n", bal)
+	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
 	bal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -166,7 +170,8 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 		fmt.Printf("memo length %d\n", len(memo))
 
-		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, 0.001, utxos[0:2], sm.btcRPCClient, memo)
+		amount := 0.1
+		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, amount, utxos[0:2], sm.btcRPCClient, memo)
 		fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 		if err != nil {
@@ -178,6 +183,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 		fmt.Printf("  inboudn tx hash %s\n", cctx.InboundTxParams.InboundTxObservedHash)
 		fmt.Printf("  status %s\n", cctx.CctxStatus.Status.String())
 		fmt.Printf("  status msg: %s\n", cctx.CctxStatus.StatusMessage)
+
 		if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 			panic(fmt.Sprintf("expected reverted status; got %s", cctx.CctxStatus.Status.String()))
 		}

@@ -247,9 +247,9 @@ func (b *Backend) ListAccounts() ([]common.Address, error) {
 	return addrs, nil
 }
 
-// NewAccount will create a new account and returns the address for the new account.
+// NewMnemonic will create a new account and returns the address for the new account.
 func (b *Backend) NewMnemonic(uid string,
-	language keyring.Language,
+	_ keyring.Language,
 	hdPath,
 	bip39Passphrase string,
 	algo keyring.SignatureAlgo,

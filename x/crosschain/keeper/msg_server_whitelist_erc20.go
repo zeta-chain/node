@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -34,6 +35,10 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		if assetAddr == erc20Addr && fcoin.ForeignChainId == msg.ChainId {
 			return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "ERC20 contract address (%s) already whitelisted on chain (%d)", msg.Erc20Address, msg.ChainId)
 		}
+	}
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, errorsmod.Wrapf(types.ErrCannotFindTSSKeys, "Cannot create new admin cmd of type whitelistERC20")
 	}
 
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
@@ -99,6 +104,7 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 				OutboundTxHash:                   "",
 				OutboundTxBallotIndex:            "",
 				OutboundTxObservedExternalHeight: 0,
+				TssPubkey:                        tss.TssPubkey,
 			},
 		},
 	}

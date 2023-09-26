@@ -10,6 +10,7 @@ message MsgAddObserver {
 	string creator = 1;
 	string observer_address = 2;
 	string zetaclient_grantee_pubkey = 3;
+	bool add_node_account_only = 4;
 }
 ```
 
@@ -40,18 +41,17 @@ message MsgAddBlameVote {
 }
 ```
 
-## MsgUpdatePermissionFlags
+## MsgUpdateCrosschainFlags
 
-Updates permissions. Currently, this is only used to enable/disable the
-inbound transactions.
-
+UpdateCrosschainFlags updates the crosschain related flags.
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
-message MsgUpdatePermissionFlags {
+message MsgUpdateCrosschainFlags {
 	string creator = 1;
 	bool isInboundEnabled = 3;
 	bool isOutboundEnabled = 4;
+	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
 }
 ```
 
@@ -66,6 +66,20 @@ Only the admin policy account is authorized to broadcast this message.
 message MsgUpdateKeygen {
 	string creator = 1;
 	int64 block = 2;
+}
+```
+
+## MsgAddBlockHeader
+
+AddBlockHeader handles adding a block header to the store, through majority voting of observers
+
+```proto
+message MsgAddBlockHeader {
+	string creator = 1;
+	int64 chain_id = 2;
+	bytes block_hash = 3;
+	int64 height = 4;
+	common.HeaderData header = 5;
 }
 ```
 

@@ -28,7 +28,7 @@ func DefaultParams() Params {
 			IsSupported:           true,
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
-			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000"), // 1000 ZETA
 		}
 	}
 	return NewParams(observerParams, DefaultAdminPolicy(), 100)
@@ -44,6 +44,8 @@ func DefaultAdminPolicy() []*Admin_Policy {
 			PolicyType: Policy_Type_stop_inbound_cctx,
 			Address:    GroupID1Address,
 		},
+		// NOTE: smoke test setting depends on this type being at position 2
+		// contrib/localnet/scripts/genesis.sh:93
 		{
 			PolicyType: Policy_Type_deploy_fungible_coin,
 			Address:    GroupID1Address,

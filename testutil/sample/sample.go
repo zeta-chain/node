@@ -4,10 +4,15 @@ import (
 	"errors"
 	"hash/fnv"
 	"math/rand"
+	"strconv"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
@@ -28,15 +33,44 @@ func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
 	return newRandFromSeed(int64(h.Sum64()))
 }
 
-// AccAddress returns a sample account address
+// PubKey returns a sample account PubKey
+func PubKey(r *rand.Rand) cryptotypes.PubKey {
+	seed := []byte(strconv.Itoa(r.Int()))
+	return ed25519.GenPrivKeyFromSecret(seed).PubKey()
+}
+
+// Bech32AccAddress returns a sample account address
+func Bech32AccAddress() sdk.AccAddress {
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := pk.Address()
+	return sdk.AccAddress(addr)
+}
+
+// AccAddress returns a sample account address in string
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := pk.Address()
 	return sdk.AccAddress(addr).String()
 }
 
-// PubKey returns a sample public key and address
-func PubKey() string {
+// ValAddress returns a sample validator operator address
+func ValAddress(r *rand.Rand) sdk.ValAddress {
+	return sdk.ValAddress(PubKey(r).Address())
+}
+
+// Validator returns a sample staking validator
+func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
+	seed := []byte(strconv.Itoa(r.Int()))
+	val, err := stakingtypes.NewValidator(
+		ValAddress(r),
+		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
+		stakingtypes.Description{})
+	require.NoError(t, err)
+	return val
+}
+
+// PubKeyString returns a sample public key string
+func PubKeyString() string {
 	priKey := ed25519.GenPrivKey()
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, priKey.PubKey())
 	if err != nil {
@@ -59,7 +93,7 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
-	return ethcommon.HexToAddress(AccAddress())
+	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
 // Bytes returns a sample byte array
@@ -80,4 +114,9 @@ func StringRandom(r *rand.Rand, length int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// Coins returns a sample sdk.Coins
+func Coins() sdk.Coins {
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }

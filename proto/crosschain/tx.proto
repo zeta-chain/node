@@ -16,7 +16,16 @@ service Msg {
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
+
+message MsgUpdateTssAddress {
+  string creator = 1;
+  string tss_pubkey = 2;
+}
+
+message MsgUpdateTssAddressResponse {}
 
 message MsgWhitelistERC20 {
   string creator = 1;
@@ -35,6 +44,9 @@ message MsgAddToOutTxTracker {
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
+  common.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
 }
 
 message MsgAddToOutTxTrackerResponse {}
@@ -79,10 +91,16 @@ message MsgVoteOnObservedOutboundTx {
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
-  string zeta_minted = 5 [
+  uint64 observed_outTx_gas_used = 10;
+  string observed_outTx_effective_gas_price = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 observed_outTx_effective_gas_limit = 12;
+  string value_received = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zeta_minted\""
+    (gogoproto.moretags) = "yaml:\"value_received\""
   ];
   common.ReceiveStatus status = 6;
   int64 outTx_chain = 7;

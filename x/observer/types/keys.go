@@ -39,10 +39,14 @@ const (
 	AdminPolicyParamsKey          = "AdminParams"
 	BallotMaturityBlocksParamsKey = "BallotMaturityBlocksParams"
 
-	PermissionFlagsKey        = "PermissionFlags-value-"
+	// CrosschainFlagsKey is the key for the crosschain flags
+	// NOTE: PermissionFlags is old name for CrosschainFlags we keep it as key value for backward compatibility
+	CrosschainFlagsKey = "PermissionFlags-value-"
+
 	LastBlockObserverCountKey = "ObserverCount-value-"
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
+	BlockHeaderKey            = "BlockHeader-value-"
 
 	BallotListKey = "BallotList-value-"
 )

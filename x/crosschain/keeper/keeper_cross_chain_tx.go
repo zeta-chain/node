@@ -25,7 +25,16 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 	// set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
 	in.InTxHash = send.InboundTxParams.InboundTxObservedHash
-	in.CctxIndex = append(in.CctxIndex, send.Index)
+	found := false
+	for _, cctxIndex := range in.CctxIndex {
+		if cctxIndex == send.Index {
+			found = true
+			break
+		}
+	}
+	if !found {
+		in.CctxIndex = append(in.CctxIndex, send.Index)
+	}
 	k.SetInTxHashToCctx(ctx, in)
 
 	tss, found := k.GetTSS(ctx)
@@ -175,7 +184,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 		startNonce = 0
 	}
 	for i := startNonce; i < p.NonceLow; i++ {
-		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
 		}
@@ -190,7 +199,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 
 	// now query the pending nonces that we know are pending
 	for i := p.NonceLow; i < p.NonceHigh; i++ {
-		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, int64(req.ChainId), i)
+		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, "nonceToCctx not found")
 		}
@@ -204,7 +213,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
+func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
@@ -232,6 +241,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		OutboundTxObservedExternalHeight: 0,
 		CoinType:                         msg.CoinType, // FIXME: is this correct?
 		Amount:                           sdk.NewUint(0),
+		TssPubkey:                        tssPubkey,
 	}
 	status := &types.Status{
 		Status:              s,

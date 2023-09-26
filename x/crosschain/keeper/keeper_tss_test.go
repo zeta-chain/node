@@ -13,39 +13,43 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func createTSS(keeper *Keeper, ctx sdk.Context) types.TSS {
-	tss := types.TSS{
-		TssPubkey:           "tssPubkey0",
-		TssParticipantList:  []string{"tssParticipantList0"},
-		OperatorAddressList: []string{"operatorAddressList0"},
-		KeyGenZetaHeight:    100,
-		FinalizedZetaHeight: 110,
+func createTSS(keeper *Keeper, ctx sdk.Context, n int) []types.TSS {
+	tssList := make([]types.TSS, n)
+	for i := 0; i < n; i++ {
+		tss := types.TSS{
+			TssPubkey:           "tssPubkey",
+			TssParticipantList:  []string{"tssParticipantList"},
+			OperatorAddressList: []string{"operatorAddressList"},
+			KeyGenZetaHeight:    int64(100 + i),
+			FinalizedZetaHeight: int64(110 + i),
+		}
+		keeper.SetTSS(ctx, tss)
+		keeper.SetTSSHistory(ctx, tss)
+		tssList[i] = tss
 	}
-	keeper.SetTSS(ctx, tss)
-	return tss
+	return tssList
 }
 
 func TestTSSGet(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
-	tssSaved := createTSS(keeper, ctx)
+	tssSaved := createTSS(keeper, ctx, 1)
 	tss, found := keeper.GetTSS(ctx)
 	assert.True(t, found)
-	assert.Equal(t, tssSaved, tss)
+	assert.Equal(t, tssSaved[len(tssSaved)-1], tss)
 
 }
 func TestTSSRemove(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
-	_ = createTSS(keeper, ctx)
+	_ = createTSS(keeper, ctx, 1)
 	keeper.RemoveTSS(ctx)
 	_, found := keeper.GetTSS(ctx)
 	assert.False(t, found)
-
 }
 
 func TestTSSQuerySingle(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createTSS(keeper, ctx)
+	msgs := createTSS(keeper, ctx, 1)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetTSSRequest
@@ -55,7 +59,7 @@ func TestTSSQuerySingle(t *testing.T) {
 		{
 			desc:     "First",
 			request:  &types.QueryGetTSSRequest{},
-			response: &types.QueryGetTSSResponse{TSS: &msgs},
+			response: &types.QueryGetTSSResponse{TSS: &msgs[len(msgs)-1]},
 		},
 		{
 			desc: "InvalidRequest",
@@ -69,6 +73,47 @@ func TestTSSQuerySingle(t *testing.T) {
 				require.ErrorIs(t, err, tc.err)
 			} else {
 				require.Equal(t, tc.response, response)
+			}
+		})
+	}
+}
+
+func TestTSSQueryHistory(t *testing.T) {
+	keeper, ctx := setupKeeper(t)
+	wctx := sdk.WrapSDKContext(ctx)
+	for _, tc := range []struct {
+		desc          string
+		tssCount      int
+		foundPrevious bool
+		err           error
+	}{
+		{
+			desc:          "1 Tss addresses",
+			tssCount:      1,
+			foundPrevious: false,
+			err:           nil,
+		},
+		{
+			desc:          "10 Tss addresses",
+			tssCount:      10,
+			foundPrevious: true,
+			err:           nil,
+		},
+	} {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			tssList := createTSS(keeper, ctx, tc.tssCount)
+			request := &types.QueryTssHistoryRequest{}
+			response, err := keeper.TssHistory(wctx, request)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.Equal(t, len(tssList), len(response.TssList))
+				prevTss, found := keeper.GetPreviousTSS(ctx)
+				assert.Equal(t, tc.foundPrevious, found)
+				if found {
+					assert.Equal(t, tssList[len(tssList)-2], prevTss)
+				}
 			}
 		})
 	}

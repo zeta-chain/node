@@ -44,10 +44,17 @@ message OutboundTxParams {
   uint64 outbound_tx_gas_limit = 6;
   string outbound_tx_gas_price = 7;
   // the above are commands for zetaclients
-  // the following fields are used for the outbound tx are mined
+  // the following fields are used when the outbound tx is mined
   string outbound_tx_hash = 8;
   string outbound_tx_ballot_index = 9;
   uint64 outbound_tx_observed_external_height = 10;
+  uint64 outbound_tx_gas_used = 20;
+  string outbound_tx_effective_gas_price = 21 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 outbound_tx_effective_gas_limit = 22;
+  string tss_pubkey = 11;
 }
 
 message Status {

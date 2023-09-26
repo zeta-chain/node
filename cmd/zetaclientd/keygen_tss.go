@@ -11,17 +11,19 @@ import (
 	"github.com/tendermint/crypto/sha3"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	tsscommon "gitlab.com/thorchain/tss/go-tss/common"
 	"gitlab.com/thorchain/tss/go-tss/keygen"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge)
+	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge, tssHistoricalList, metrics)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")
 		return nil, err
@@ -33,18 +35,17 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 	// Set TSS block to 0 using genesis file to disable this feature
 	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation(Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
+	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	triedKeygenAtBlock := false
 	lastBlock := int64(0)
 	for range ticker.C {
-		// Break out of loop only when TSS is generated successfully , either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
+		// Break out of loop only when TSS is generated successfully, either at the keygenBlock or if it has been generated already , Block set as zero in genesis file
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
-		// If keygen is unsuccessful , it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
+		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
 		keyGen := cfg.GetKeygen()
 		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
-			cfg.TestTssKeysign = true
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
@@ -69,7 +70,7 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				if currentBlock != keyGen.BlockNumber {
 					if currentBlock > lastBlock {
 						lastBlock = currentBlock
-						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d", keyGen.BlockNumber, currentBlock)
+						keygenLogger.Info().Msgf("Waiting For Keygen Block to arrive or new keygen block to be set. Keygen Block : %d Current Block : %d ChainID %s ", keyGen.BlockNumber, currentBlock, cfg.ChainID)
 					}
 					continue
 				}
@@ -87,8 +88,17 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 					continue
 				}
 
+				newTss := mc.TSS{
+					Server:        tss.Server,
+					Keys:          tss.Keys,
+					CurrentPubkey: tss.CurrentPubkey,
+					Signers:       tss.Signers,
+					CoreBridge:    nil,
+					Metrics:       nil,
+				}
+
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(tss.CurrentPubkey, keyGen.BlockNumber, common.ReceiveStatus_Success)
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, common.ReceiveStatus_Success)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err
@@ -97,6 +107,10 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 				err = SetTSSPubKey(tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("SetTSSPubKey error")
+				}
+				err = TestTSS(&newTss, keygenLogger)
+				if err != nil {
+					keygenLogger.Error().Err(err).Msgf("TestTSS error: %s", newTss.CurrentPubkey)
 				}
 				continue
 			}
@@ -143,6 +157,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 		keygenLogger.Error().Msgf("keygen fail: reason %s ", err.Error())
 		return err
 	}
+	// Keeping this line here for now, but this is redundant as CurrentPubkey is updated from zeta-core
 	tss.CurrentPubkey = res.PubKey
 	tss.Signers = keyGen.GranteePubkeys
 
@@ -164,7 +179,7 @@ func SetTSSPubKey(tss *mc.TSS, logger zerolog.Logger) error {
 func TestTSS(tss *mc.TSS, logger zerolog.Logger) error {
 	keygenLogger := logger.With().Str("module", "test-keygen").Logger()
 	keygenLogger.Info().Msgf("KeyGen success ! Doing a Key-sign test")
-	// KeySign can fail even if TSS keygen is successful , just logging the error here to break out of outer loop and report TSS
+	// KeySign can fail even if TSS keygen is successful, just logging the error here to break out of outer loop and report TSS
 	err := mc.TestKeysign(tss.CurrentPubkey, tss.Server)
 	if err != nil {
 		return err

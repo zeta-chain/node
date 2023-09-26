@@ -27,25 +27,26 @@ import (
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
-
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/zetacore/rpc/types"
 	"github.com/zeta-chain/zetacore/server/config"
+)
+
+const (
+	messageSizeLimit = 32 * 1024 * 1024 // 32MB
 )
 
 type WebsocketsServer interface {
@@ -138,6 +139,8 @@ func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.logger.Debug("websocket upgrade failed", "error", err.Error())
 		return
 	}
+
+	conn.SetReadLimit(messageSizeLimit)
 
 	s.readLoop(&wsConn{
 		mux:  new(sync.Mutex),
@@ -682,7 +685,7 @@ func (api *pubSubAPI) subscribePendingTransactions(wsConn *wsConn, subID rpc.ID)
 	return unsubFn, nil
 }
 
-func (api *pubSubAPI) subscribeSyncing(wsConn *wsConn, subID rpc.ID) (pubsub.UnsubscribeFunc, error) {
+func (api *pubSubAPI) subscribeSyncing(_ *wsConn, _ rpc.ID) (pubsub.UnsubscribeFunc, error) {
 	return nil, errors.New("syncing subscription is not implemented")
 }
 
