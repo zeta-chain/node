@@ -153,12 +153,12 @@ func NewEVMChainClient(
 	}
 
 	if ob.chain.IsKlaytnChain() {
-		kClient, err := Dial(evmCfg.Endpoint)
+		client, err := Dial(evmCfg.Endpoint)
 		if err != nil {
 			ob.logger.ChainLogger.Err(err).Msg("klaytn Client Dial")
 			return nil, err
 		}
-		ob.KlaytnClient = kClient
+		ob.KlaytnClient = client
 	}
 
 	// create metric counters
