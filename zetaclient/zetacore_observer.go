@@ -31,19 +31,18 @@ type CoreObserver struct {
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
-	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
 	ts        *TelemetryServer
 	stop      chan struct{}
 }
 
+// NewCoreObserver creates a new CoreObserver
 func NewCoreObserver(
 	bridge ZetaCoreBridger,
 	signerMap map[common.Chain]ChainSigner,
 	clientMap map[common.Chain]ChainClient,
 	metrics *metrics.Metrics,
-	tss *TSS,
 	logger zerolog.Logger,
 	cfg *config.Config,
 	ts *TelemetryServer,
@@ -61,7 +60,6 @@ func NewCoreObserver(
 		ZetaChainWatcher: chainLogger.With().Str("module", "ZetaChainWatcher").Logger(),
 	}
 
-	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 

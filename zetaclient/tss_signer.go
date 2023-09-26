@@ -75,6 +75,9 @@ func NewTSSKey(pk string) (*TSSKey, error) {
 	return TSSKey, nil
 }
 
+var _ TSSSigner = (*TSS)(nil)
+
+// TSS is a struct that holds the server and the keys for TSS
 type TSS struct {
 	Server        *tss.TssServer
 	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
@@ -85,7 +88,105 @@ type TSS struct {
 	Metrics       *ChainMetrics
 }
 
-var _ TSSSigner = (*TSS)(nil)
+// NewTSS creates a new TSS instance
+func NewTSS(
+	peer p2p.AddrList,
+	privkey tmcrypto.PrivKey,
+	preParams *keygen.LocalPreParams,
+	cfg *config.Config,
+	bridge *ZetaCoreBridge,
+	tssHistoricalList []types.TSS,
+	metrics *metrics.Metrics,
+) (*TSS, error) {
+	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
+	}
+	newTss := TSS{
+		Server:        server,
+		Keys:          make(map[string]*TSSKey),
+		CurrentPubkey: cfg.CurrentTssPubkey,
+		logger:        log.With().Str("module", "tss_signer").Logger(),
+		CoreBridge:    bridge,
+	}
+
+	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
+	if err != nil {
+		return nil, err
+	}
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
+	if err != nil {
+		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
+	}
+	err = newTss.RegisterMetrics(metrics)
+	if err != nil {
+		bridge.logger.Err(err).Msg("tss.RegisterMetrics")
+		return nil, err
+	}
+
+	return &newTss, nil
+}
+
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
+	bootstrapPeers := peer
+	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
+
+	tsspath := cfg.TssPath
+	if len(tsspath) == 0 {
+		log.Error().Msg("empty env TSSPATH")
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			log.Error().Err(err).Msgf("cannot get UserHomeDir")
+			return nil, err
+		}
+		tsspath = path.Join(homedir, ".Tss")
+		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
+	}
+	IP := cfg.PublicIP
+	if len(IP) == 0 {
+		log.Info().Msg("empty public IP in config")
+	}
+	tssServer, err := tss.NewTss(
+		bootstrapPeers,
+		6668,
+		privkey,
+		"MetaMetaOpenTheDoor",
+		tsspath,
+		thorcommon.TssConfig{
+			EnableMonitor:   true,
+			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
+			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    30 * time.Second,
+			PreParamTimeout: 5 * time.Minute,
+		},
+		preParams, // use pre-generated pre-params if non-nil
+		IP,        // for docker test
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("NewTSS error")
+		return nil, fmt.Errorf("NewTSS error: %w", err)
+	}
+
+	err = tssServer.Start()
+	if err != nil {
+		log.Error().Err(err).Msg("tss server start error")
+	}
+
+	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
+	if tssServer.GetLocalPeerID() == "" ||
+		tssServer.GetLocalPeerID() == "0" ||
+		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
+		tssServer.GetLocalPeerID() == peer2.ID("").String() {
+		log.Error().Msg("tss server start error")
+		return nil, fmt.Errorf("tss server start error")
+	}
+
+	return tssServer, nil
+}
 
 // FIXME: does it return pubkey in compressed form or uncompressed?
 func (tss *TSS) Pubkey() []byte {
@@ -165,7 +266,8 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 	return sigbyte, nil
 }
 
-// digest should be batch of Hashes of some data
+// SignBatch is hash of some data
+// digest should be batch of hashes of some data
 func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
@@ -284,7 +386,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 	return addr
 }
 
-// generate a bech32 p2wpkh address from pubkey
+// BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
 	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
 	if err != nil {
@@ -312,7 +414,7 @@ func (tss *TSS) PubKeyCompressedBytes() []byte {
 	return pubk.Bytes()
 }
 
-// adds a new key to the TSS keys map
+// InsertPubKey adds a new key to the TSS keys map
 func (tss *TSS) InsertPubKey(pk string) error {
 	TSSKey, err := NewTSSKey(pk)
 	if err != nil {
@@ -337,101 +439,15 @@ func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
 	return nil
 }
 
-func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
-	var keyAddr ethcommon.Address
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		log.Fatal().Err(err)
-		return keyAddr, err
-	}
-	//keyAddrBytes := pubk.EVMAddress().Bytes()
-	pubk.Bytes()
-	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
-	if err != nil {
-		log.Fatal().Err(err).Msg("decompress err")
-		return keyAddr, err
-	}
-
-	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
-
-	return keyAddr, nil
-}
-
-// FIXME: mainnet/testnet
-func GetTssAddrBTC(tssPubkey string) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
-	if err != nil {
-		log.Fatal().Err(err)
-		return "", err
-	}
-
-	return addrWPKH.EncodeAddress(), nil
-}
-
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		return nil, err
-	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
-	if err != nil {
-		return nil, err
-	}
-	return addr, nil
-}
-
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*TSS, error) {
-	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
-	}
-	newTss := TSS{
-		Server:        server,
-		Keys:          make(map[string]*TSSKey),
-		CurrentPubkey: cfg.CurrentTssPubkey,
-		logger:        log.With().Str("module", "tss_signer").Logger(),
-		CoreBridge:    bridge,
-	}
-
-	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
-	if err != nil {
-		return nil, err
-	}
-	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
-	if err != nil {
-		return nil, err
-	}
-	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
-	if err != nil {
-		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
-	}
-	err = newTss.RegisterMetrics(metrics)
-	if err != nil {
-		bridge.logger.Err(err).Msg("tss.RegisterMetrics")
-		return nil, err
-	}
-
-	return &newTss, nil
-}
-
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
-		if WasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
+		if wasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
 			if _, ok := tss.Keys[t.TssPubkey]; !ok {
 				return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
 			}
 		}
 	}
 	return nil
-}
-
-func WasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
-	for _, grantee := range granteeList {
-		if granteePubKey32 == grantee {
-			return true
-		}
-	}
-	return false
 }
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
@@ -475,61 +491,35 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	return nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
-	bootstrapPeers := peer
-	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
-
-	tsspath := cfg.TssPath
-	if len(tsspath) == 0 {
-		log.Error().Msg("empty env TSSPATH")
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			log.Error().Err(err).Msgf("cannot get UserHomeDir")
-			return nil, err
-		}
-		tsspath = path.Join(homedir, ".Tss")
-		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
-	}
-	IP := cfg.PublicIP
-	if len(IP) == 0 {
-		log.Info().Msg("empty public IP in config")
-	}
-	tssServer, err := tss.NewTss(
-		bootstrapPeers,
-		6668,
-		privkey,
-		"MetaMetaOpenTheDoor",
-		tsspath,
-		thorcommon.TssConfig{
-			EnableMonitor:   true,
-			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    30 * time.Second,
-			PreParamTimeout: 5 * time.Minute,
-		},
-		preParams, // use pre-generated pre-params if non-nil
-		IP,        // for docker test
-	)
+// FIXME: mainnet/testnet
+func GetTssAddrBTC(tssPubkey string) (string, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("NewTSS error")
-		return nil, fmt.Errorf("NewTSS error: %w", err)
+		log.Fatal().Err(err)
+		return "", err
 	}
 
-	err = tssServer.Start()
+	return addrWPKH.EncodeAddress(), nil
+}
+
+func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
+	var keyAddr ethcommon.Address
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("tss server start error")
+		log.Fatal().Err(err)
+		return keyAddr, err
+	}
+	//keyAddrBytes := pubk.EVMAddress().Bytes()
+	pubk.Bytes()
+	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
+	if err != nil {
+		log.Fatal().Err(err).Msg("decompress err")
+		return keyAddr, err
 	}
 
-	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
-	if tssServer.GetLocalPeerID() == "" ||
-		tssServer.GetLocalPeerID() == "0" ||
-		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
-		tssServer.GetLocalPeerID() == peer2.ID("").String() {
-		log.Error().Msg("tss server start error")
-		return nil, fmt.Errorf("tss server start error")
-	}
+	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
 
-	return tssServer, nil
+	return keyAddr, nil
 }
 
 func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
@@ -587,4 +577,25 @@ func combineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
+}
+
+func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
+	for _, grantee := range granteeList {
+		if granteePubKey32 == grantee {
+			return true
+		}
+	}
+	return false
+}
+
+func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
+	if err != nil {
+		return nil, err
+	}
+	return addr, nil
 }

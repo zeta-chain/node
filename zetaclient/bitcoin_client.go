@@ -42,14 +42,14 @@ type BTCLog struct {
 	WatchGasPrice zerolog.Logger
 }
 
-// Chain configuration struct
+// BitcoinChainClient represents chain configuration struct
 // Filled with above constants depending on chain
 type BitcoinChainClient struct {
 	*ChainMetrics
 
 	chain            common.Chain
-	rpcClient        *rpcclient.Client
-	zetaClient       *ZetaCoreBridge
+	rpcClient        BTCRPCClient
+	zetaClient       ZetaCoreBridger
 	Tss              TSSSigner
 	lastBlock        int64
 	lastBlockScanned int64
@@ -87,8 +87,17 @@ func (ob *BitcoinChainClient) GetCoreParams() observertypes.CoreParams {
 	return ob.params
 }
 
-// Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, btcCfg config.BTCConfig, ts *TelemetryServer) (*BitcoinChainClient, error) {
+// NewBitcoinClient returns a new client based on supplied target chain
+func NewBitcoinClient(
+	chain common.Chain,
+	bridge ZetaCoreBridger,
+	tss TSSSigner,
+	dbpath string,
+	metrics *metricsPkg.Metrics,
+	logger zerolog.Logger,
+	btcCfg config.BTCConfig,
+	ts *TelemetryServer,
+) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -326,7 +335,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	return nil
 }
 
-// Returns number of required Bitcoin confirmations depending on sent BTC amount.
+// ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(200000000)) >= 0 {
 		return 6
@@ -334,7 +343,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return 2
 }
 
-// returns isIncluded(or inMempool), isConfirmed, Error
+// IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
@@ -481,7 +490,7 @@ type BTCInTxEvnet struct {
 	TxHash      string
 }
 
-// given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
+// FilterAndParseIncomingTx given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
 // relevant tx must have the following vouts as the first two vouts:
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
@@ -722,7 +731,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }
 
-// Selects a sublist of utxos to be used as inputs.
+// SelectUTXOs selects a sublist of utxos to be used as inputs.
 //
 // Parameters:
 //   - amount: The desired minimum total value of the selected UTXOs.
@@ -786,7 +795,7 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	return results, total, nil
 }
 
-// Save successfully broadcasted transaction
+// SaveBroadcastedTx saves successfully broadcasted transaction
 func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outTxID := ob.GetTxID(nonce)
 	ob.mu.Lock()
@@ -961,7 +970,7 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 	}
 }
 
-// Vin is valid if:
+// checkTSSVin checks vin is valid if:
 //   - The first input is the nonce-mark
 //   - All inputs are from TSS address
 func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
@@ -993,7 +1002,7 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 	return nil
 }
 
-// Vout is valid if:
+// checkTSSVout vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)

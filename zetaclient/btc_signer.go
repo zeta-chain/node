@@ -17,7 +17,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -27,7 +27,7 @@ const (
 
 type BTCSigner struct {
 	tssSigner TSSSigner
-	rpcClient *rpcclient.Client
+	rpcClient BTCRPCClient
 	logger    zerolog.Logger
 	ts        *TelemetryServer
 }
@@ -279,8 +279,15 @@ func (signer *BTCSigner) TryProcessOutTx(
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height,
-		outboundTxTssNonce, &btcClient.chain)
+	tx, err := signer.SignWithdrawTx(
+		to,
+		float64(params.Amount.Uint64())/1e8,
+		gasprice,
+		btcClient,
+		height,
+		outboundTxTssNonce,
+		&btcClient.chain,
+	)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
@@ -289,7 +296,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 	// FIXME: add prometheus metrics
 	_, err = zetaBridge.GetObserverList(btcClient.chain)
 	if err != nil {
-		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, zetaObserverModuleTypes.ObservationType_OutBoundTx.String())
+		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 	}
 	if tx != nil {
 		outTxHash := tx.TxHash().String()
