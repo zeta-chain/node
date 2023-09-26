@@ -17,6 +17,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 )
 
 // ChainClient is the interface for chain clients
@@ -75,6 +76,7 @@ type ZetaCoreBridger interface {
 	) (string, error)
 	PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
 	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error)
+	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
 	AddTxHashToOutTxTracker(
 		chainID int64,
 		nonce uint64,
@@ -93,6 +95,8 @@ type ZetaCoreBridger interface {
 	GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList(chain common.Chain) ([]string, error)
+	GetKeyGen() (*observertypes.Keygen, error)
+	GetLogger() *zerolog.Logger
 	Pause()
 	Unpause()
 }

@@ -116,6 +116,10 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
+func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {
+	return &b.logger
+}
+
 func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
 	if b.zetaChainID != chainID {
 		b.zetaChainID = chainID

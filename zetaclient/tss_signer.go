@@ -84,7 +84,7 @@ type TSS struct {
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
-	CoreBridge    *ZetaCoreBridge
+	CoreBridge    ZetaCoreBridger
 	Metrics       *ChainMetrics
 }
 
@@ -94,7 +94,7 @@ func NewTSS(
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
 	cfg *config.Config,
-	bridge *ZetaCoreBridge,
+	bridge ZetaCoreBridger,
 	tssHistoricalList []types.TSS,
 	metrics *metrics.Metrics,
 ) (*TSS, error) {
@@ -120,11 +120,11 @@ func NewTSS(
 	}
 	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
 	if err != nil {
-		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
+		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
 	err = newTss.RegisterMetrics(metrics)
 	if err != nil {
-		bridge.logger.Err(err).Msg("tss.RegisterMetrics")
+		bridge.GetLogger().Err(err).Msg("tss.RegisterMetrics")
 		return nil, err
 	}
 
