@@ -2,6 +2,7 @@ syntax = "proto3";
 package zetachain.zetacore.fungible;
 
 import "common/common.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -16,4 +17,8 @@ message ForeignCoins {
   common.CoinType coin_type = 8;
   uint64 gas_limit = 9;
   bool paused = 10;
+  string liquidity_cap = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }

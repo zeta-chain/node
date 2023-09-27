@@ -50783,6 +50783,8 @@ definitions:
         format: uint64
       paused:
         type: boolean
+      liquidity_cap:
+        type: string
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
     properties:

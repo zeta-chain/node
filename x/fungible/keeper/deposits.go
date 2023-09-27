@@ -50,15 +50,17 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	ZRC20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
 
-	// check foreign coins cap
-	totalSupply, err := k.TotalSupplyZRC4(ctx, ZRC20Contract)
-	if err != nil {
-		return nil, err
-	}
-	coinCap := big.NewInt(1000) //TODOHERE: get coin cap from system contract
-	newSupply := new(big.Int).Add(totalSupply, amount)
-	if newSupply.Cmp(coinCap) > 0 {
-		return nil, types.ErrForeignCoinCapReached
+	// check foreign coins cap if it has a cap
+	if !coin.LiquidityCap.IsNil() && !coin.LiquidityCap.IsZero() {
+		liquidityCap := coin.LiquidityCap.BigInt()
+		totalSupply, err := k.TotalSupplyZRC4(ctx, ZRC20Contract)
+		if err != nil {
+			return nil, err
+		}
+		newSupply := new(big.Int).Add(totalSupply, amount)
+		if newSupply.Cmp(liquidityCap) > 0 {
+			return nil, types.ErrForeignCoinCapReached
+		}
 	}
 
 	// no message: transfer to EVM account
