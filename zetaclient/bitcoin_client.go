@@ -290,7 +290,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			amount = amount.Mul(amount, big.NewFloat(1e8))
 			amountInt, _ := amount.Int(nil)
 			message := hex.EncodeToString(inTx.MemoBytes)
-			zetaHash, err := ob.zetaClient.PostSend(
+			msg := GetInBoundVoteMessage(
 				inTx.FromAddress,
 				ob.chain.ChainId,
 				inTx.FromAddress,
@@ -302,9 +302,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				inTx.BlockNumber,
 				0,
 				common.CoinType_Gas,
-				PostSendEVMGasLimit,
 				"",
+				ob.zetaClient.keys.GetOperatorAddress().String(),
 			)
+			zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 				continue

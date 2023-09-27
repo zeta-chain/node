@@ -35,6 +35,14 @@ func (k Keeper) GetInTxTracker(ctx sdk.Context, chainID int64, txHash string) (v
 	k.cdc.MustUnmarshal(b, &val)
 	return val, true
 }
+
+func (k Keeper) RemoveInTxTrackerIfExists(ctx sdk.Context, chainID int64, txHash string) {
+	key := getInTrackerKey(chainID, txHash)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
+	if store.Has(types.KeyPrefix(key)) {
+		store.Delete(types.KeyPrefix(key))
+	}
+}
 func (k Keeper) GetAllInTxTracker(ctx sdk.Context) (list []types.InTxTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
@@ -47,9 +55,9 @@ func (k Keeper) GetAllInTxTracker(ctx sdk.Context) (list []types.InTxTracker) {
 	return list
 }
 
-func (k Keeper) GetAllInTxTrackerForChain(ctx sdk.Context, chainId int64) (list []types.InTxTracker) {
+func (k Keeper) GetAllInTxTrackerForChain(ctx sdk.Context, chainID int64) (list []types.InTxTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d-", chainId)))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%d-", chainID)))
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.InTxTracker
@@ -59,9 +67,9 @@ func (k Keeper) GetAllInTxTrackerForChain(ctx sdk.Context, chainId int64) (list 
 	return list
 }
 
-func (k Keeper) GetAllInTxTrackerForChainPaginated(ctx sdk.Context, chainId int64, pagination *query.PageRequest) (inTxTrackers []types.InTxTracker, pageRes *query.PageResponse, err error) {
+func (k Keeper) GetAllInTxTrackerForChainPaginated(ctx sdk.Context, chainID int64, pagination *query.PageRequest) (inTxTrackers []types.InTxTracker, pageRes *query.PageResponse, err error) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.InTxTrackerKeyPrefix)))
-	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", chainId)))
+	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", chainID)))
 	pageRes, err = query.Paginate(chainStore, pagination, func(key []byte, value []byte) error {
 		var inTxTracker types.InTxTracker
 		if err := k.cdc.Unmarshal(value, &inTxTracker); err != nil {
