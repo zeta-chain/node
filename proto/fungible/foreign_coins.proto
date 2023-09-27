@@ -18,7 +18,7 @@ message ForeignCoins {
   uint64 gas_limit = 9;
   bool paused = 10;
   string liquidity_cap = 11 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
 }

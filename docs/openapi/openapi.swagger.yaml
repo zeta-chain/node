@@ -50800,6 +50800,8 @@ definitions:
         format: byte
   fungibleMsgUpdateSystemContractResponse:
     type: object
+  fungibleMsgUpdateZRC20LiquidityCapResponse:
+    type: object
   fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
