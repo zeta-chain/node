@@ -81,7 +81,7 @@ func CmdListInTxTrackerByChain() *cobra.Command {
 
 func CmdListInTxTrackers() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-all-tx-trackers",
+		Use:   "list-all-in-tx-trackers",
 		Short: "shows all inTxTrackers",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
