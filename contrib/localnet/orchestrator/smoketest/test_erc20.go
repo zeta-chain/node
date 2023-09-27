@@ -50,14 +50,14 @@ func (sm *SmokeTest) TestERC20Deposit() {
 
 func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 	USDT := sm.USDTERC20
-	tx, err := USDT.Mint(sm.goerliAuth, big.NewInt(0).Add(big.NewInt(1e10), amount))
+	tx, err := USDT.Mint(sm.goerliAuth, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
 	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
 
-	tx, err = USDT.Approve(sm.goerliAuth, sm.ERC20CustodyAddr, big.NewInt(0).Add(big.NewInt(1e10), amount))
+	tx, err = USDT.Approve(sm.goerliAuth, sm.ERC20CustodyAddr, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +84,7 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 		fmt.Printf("  Amount: %d, \n", event.Amount)
 		fmt.Printf("  Message: %x, \n", event.Message)
 	}
-	fmt.Printf("gas limit d%\n", sm.zevmAuth.GasLimit)
+	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	return tx.Hash()
 }
 
