@@ -259,4 +259,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		require.True(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
+
+	// TODO: add test cases for testing logs process
+	// https://github.com/zeta-chain/node/issues/1207
 }

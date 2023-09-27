@@ -81,9 +81,8 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 		fmt.Printf("  Amount: %d, \n", event.Amount)
 		fmt.Printf("  Message: %x, \n", event.Message)
 	}
-	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
+	fmt.Printf("gas limit d%\n", sm.zevmAuth.GasLimit)
 	return tx.Hash()
-	//WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
 }
 
 func (sm *SmokeTest) TestERC20Withdraw() {
