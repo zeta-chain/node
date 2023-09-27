@@ -226,4 +226,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		)
 		require.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
 	})
+
+	// TODO: add test cases checking DepositZRC20AndCallContract
+	// https://github.com/zeta-chain/node/issues/1206
 }
