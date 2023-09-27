@@ -637,10 +637,11 @@
         ],
         "admin_policy": [
           {
-            "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+            "policy_type": "group1",
+            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
           },
           {
-            "policy_type": 1,
+            "policy_type": "group2",
             "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
           }
         ]

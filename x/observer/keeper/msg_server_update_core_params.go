@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Updates core parameters for a specific chain. Core parameters include
+// UpdateCoreParams updates core parameters for a specific chain. Core parameters include
 // confirmation count, outbound transaction schedule interval, ZETA token,
 // connector and ERC20 custody contract addresses, etc.
 //
@@ -16,7 +16,7 @@ import (
 // Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateCoreParams) (*types.MsgUpdateCoreParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_update_client_params) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrNotAuthorizedPolicy
 	}
 	if !k.GetParams(ctx).IsChainIDSupported(msg.CoreParams.ChainId) {
