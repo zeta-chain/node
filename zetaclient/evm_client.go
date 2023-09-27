@@ -857,7 +857,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 					continue
 				}
-				ob.logger.ExternalChainWatcher.Info().Msgf("successfully posted block-header: ChainID %s Hash %s , Height %s , Header %v , Ballot %s", ob.chain.ChainId, block.Hash().Hex(), block.Number().String(), common.NewEthereumHeader(headerRLP), balloutIdentifier)
+				ob.logger.ExternalChainWatcher.Info().Msgf("successfully posted block-header: ChainID %d Hash %s , Height %s , Header %v , Ballot %s", ob.chain.ChainId, block.Hash().Hex(), block.Number().String(), common.NewEthereumHeader(headerRLP), balloutIdentifier)
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
