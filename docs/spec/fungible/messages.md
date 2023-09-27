@@ -96,6 +96,8 @@ message MsgUpdateZRC20PausedStatus {
 
 ## MsgUpdateZRC20LiquidityCap
 
+UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
+
 ```proto
 message MsgUpdateZRC20LiquidityCap {
 	string creator = 1;
