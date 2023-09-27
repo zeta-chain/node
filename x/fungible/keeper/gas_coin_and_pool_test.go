@@ -36,6 +36,31 @@ func setupGasCoin(
 	return addr
 }
 
+func deployZRC20(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+	chainID int64,
+	assetName string,
+	assetAddress string,
+	symbol string,
+) (zrc20 common.Address) {
+	addr, err := k.DeployZRC20Contract(
+		ctx,
+		assetName,
+		symbol,
+		8,
+		chainID,
+		0,
+		assetAddress,
+		big.NewInt(21_000),
+	)
+	require.NoError(t, err)
+	assertContractDeployment(t, evmk, ctx, addr)
+	return addr
+}
+
 func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 	t.Run("can setup a new chain gas coin", func(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)

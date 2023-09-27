@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
@@ -9,7 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
