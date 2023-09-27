@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -47,9 +49,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
 		if err != nil {
 			isContractReverted := false
-			if evmTxResponse != nil && evmTxResponse.Failed() {
+
+			// consider the contract as reverted if foreign coin liquidity cap is reached
+			if (evmTxResponse != nil && evmTxResponse.Failed()) || errors.Is(err, fungibletypes.ErrForeignCoinCapReached) {
 				isContractReverted = true
 			}
+
 			return isContractReverted, err
 		}
 
