@@ -65,7 +65,7 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 	t.Run("Delete InTxTracker", func(t *testing.T) {
 		intxTrackers = createNInTxTracker(keeper, ctx, 10, 6)
 		for _, item := range intxTrackers {
-			keeper.DeleteInTxTracker(ctx, item.ChainId, item.TxHash)
+			keeper.RemoveInTxTrackerIfExists(ctx, item.ChainId, item.TxHash)
 		}
 		rst := keeper.GetAllInTxTrackerForChain(ctx, 6)
 		require.Equal(t, 0, len(rst))
