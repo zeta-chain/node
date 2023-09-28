@@ -19,6 +19,8 @@ env:
   - BUILDTIME={{ .Date }}
   # - CC_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
   # - CXX_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
+  - GITHUB_ORG=zeta-chain
+  - GITHUB_REPO=ci-testing-node
 
 before:
   hooks:
@@ -134,8 +136,8 @@ release:
   # Repo in which the release will be created.
   # Default is extracted from the origin remote URL or empty if its private hosted.
   github:
-    owner: zeta-chain
-    name: node
+    owner: ${GITHUB_ORG}
+    name: ${GITHUB_REPO}
 
   # IDs of the archives to use.
   # Empty means all IDs.
