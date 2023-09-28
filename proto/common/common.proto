@@ -32,7 +32,7 @@ enum CoinType {
   ERC20 = 2; // ERC20 token
   Cmd = 3; // not a real coin, rather a command
 }
-
+    R
 enum ChainName {
   option (gogoproto.goproto_enum_stringer) = true;
   empty = 0;

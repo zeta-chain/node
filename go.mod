@@ -38,7 +38,6 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/emicklei/proto v1.11.1
 	github.com/evmos/ethermint v0.22.0
-	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -87,13 +88,13 @@ func (t *DynamicTicker) Stop() {
 	t.impl.Stop()
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) (types.MsgVoteOnObservedInboundTx, error) {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-		return nil
+		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex()))
 	}
-	return GetInBoundVoteMessage(
+	return *GetInBoundVoteMessage(
 		"",
 		ob.chain.ChainId,
 		"",
@@ -107,27 +108,26 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		common.CoinType_ERC20,
 		event.Asset.String(),
 		ob.zetaClient.keys.GetOperatorAddress().String(),
-	)
+	), nil
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) (types.MsgVoteOnObservedInboundTx, error) {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
-		return nil
+		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not supported  %d", event.DestinationChainId.Int64()))
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 	cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 	if !found {
-		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-		return nil
+		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64()))
 	}
 	if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-		return nil
+		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr))
 	}
-	return GetInBoundVoteMessage(
+	return *GetInBoundVoteMessage(
 		event.ZetaTxSenderAddress.Hex(),
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
@@ -141,7 +141,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		common.CoinType_Zeta,
 		"",
 		ob.zetaClient.keys.GetOperatorAddress().String(),
-	)
+	), nil
 }
 
 func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) *types.MsgVoteOnObservedInboundTx {

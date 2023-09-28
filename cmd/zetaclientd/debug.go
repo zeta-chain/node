@@ -1,0 +1,151 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"strconv"
+	"strings"
+	"sync"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+)
+
+var debugArgs = debugArguments{}
+
+type debugArguments struct {
+	zetaCoreHome string
+	zetaNode     string
+	zetaChainId  string
+}
+
+func init() {
+	RootCmd.AddCommand(DebugCmd())
+	DebugCmd().Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", "/Users/tanmay/.zetacored", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
+	DebugCmd().Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
+	DebugCmd().Flags().StringVar(&debugArgs.zetaChainId, "chain-id", "athens_7001-1", "pre-params file path")
+}
+
+func DebugCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-ballot-from-intx [txHash] [chainID]",
+		Short: "provide txHash and chainID to get the ballot status for the txHash",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cobra.ExactArgs(2)
+			cfg, err := config.Load(debugArgs.zetaCoreHome)
+			if err != nil {
+				return err
+			}
+			chainID, err := strconv.ParseInt(args[1], 10, 64)
+			if err != nil {
+				return err
+			}
+			txHash := args[0]
+
+			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
+			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainId)
+			if err != nil {
+				return err
+			}
+			coreParams, err := bridge.GetCoreParams()
+			if err != nil {
+				return err
+			}
+			tssEthAddress, err := bridge.GetEthTssAddress()
+			if err != nil {
+				return err
+			}
+			ob := zetaclient.EVMChainClient{
+				Mu: &sync.Mutex{},
+			}
+
+			ob.WithZetaClient(bridge)
+			ob.WithLogger(chainLogger)
+			client := &ethclient.Client{}
+			coinType := common.CoinType_Cmd
+			for chain, evmConfig := range cfg.GetAllEVMConfigs() {
+				if chainID == chain {
+					client, err = ethclient.Dial(evmConfig.Endpoint)
+					if err != nil {
+						return err
+					}
+					ob.WithEvmClient(client)
+					ob.WithChain(*common.GetChainFromChainID(chainID))
+				}
+			}
+
+			hash := ethcommon.HexToHash(txHash)
+			tx, isPending, err := client.TransactionByHash(context.Background(), hash)
+			if err != nil {
+				return err
+			}
+			if isPending {
+			}
+
+			for _, chainCoreParams := range coreParams {
+				if chainCoreParams.ChainId == chainID {
+					ob.WithParams(observerTypes.CoreParams{
+						ChainId:                     chainID,
+						ConnectorContractAddress:    chainCoreParams.ConnectorContractAddress,
+						ZetaTokenContractAddress:    chainCoreParams.ZetaTokenContractAddress,
+						Erc20CustodyContractAddress: chainCoreParams.Erc20CustodyContractAddress,
+					})
+					cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainCoreParams.ZetaTokenContractAddress
+					ob.SetConfig(cfg)
+					if strings.EqualFold(tx.To().Hex(), chainCoreParams.ConnectorContractAddress) {
+						coinType = common.CoinType_Zeta
+					} else if strings.EqualFold(tx.To().Hex(), chainCoreParams.Erc20CustodyContractAddress) {
+						coinType = common.CoinType_ERC20
+					} else if strings.EqualFold(tx.To().Hex(), tssEthAddress) {
+						coinType = common.CoinType_Gas
+					}
+
+				}
+			}
+			var ballotIdentifier string
+			switch coinType {
+			case common.CoinType_Zeta:
+				ballotIdentifier, err = ob.CheckReceiptForCoinTypeZeta(txHash, false)
+				if err != nil {
+					return err
+				}
+
+			case common.CoinType_ERC20:
+				ballotIdentifier, err = ob.CheckReceiptForCoinTypeERC20(txHash, false)
+				if err != nil {
+					return err
+				}
+
+			case common.CoinType_Gas:
+				ballotIdentifier, err = ob.CheckReceiptForCoinTypeGas(txHash, false)
+				if err != nil {
+					return err
+				}
+			default:
+				fmt.Println("CoinType not detected")
+			}
+			ballot, err := bridge.GetBallot(ballotIdentifier)
+			if err != nil {
+				return err
+			}
+			fmt.Println("BallotIdentifier : ", ballotIdentifier)
+			for _, vote := range ballot.Voters {
+				fmt.Printf("%s : %s \n", vote.VoterAddress, vote.VoteType)
+			}
+			fmt.Println("BallotStatus : ", ballot.BallotStatus)
+
+			return nil
+		},
+	}
+
+	return cmd
+}
