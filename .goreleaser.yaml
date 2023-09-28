@@ -24,7 +24,7 @@ before:
   hooks:
     - go mod download
     - go mod tidy
-
+    
 builds:
 
   - id: "zetacored_testnet"
@@ -32,15 +32,14 @@ builds:
     binary: "zetacored_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - darwin
-      - linux
-      - windows
+      # - linux
+      # - windows
     goarch:
       - arm64
-      - amd64
+      # - amd64
     ignore:
       - goos: windows
         goarch: arm64
@@ -51,11 +50,11 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
       - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
       - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
-      - -X github.com/cosmos/cosmos-sdk/version.Commit="{{ .Commit }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Env.COMMIT }}
       - -X github.com/zeta-chain/zetacore/common.Name=zetacored
       - -X github.com/zeta-chain/zetacore/common.Version={{ .Version }}
-      - -X github.com/zeta-chain/zetacore/common.CommitHash="{{ .Commit }}
-      - -X github.com/zeta-chain/zetacore/common.BuildTime"{{ .Date }}
+      - -X github.com/zeta-chain/zetacore/common.CommitHash={{ .Env.COMMIT }}
+      - -X github.com/zeta-chain/zetacore/common.BuildTime=={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
   # - id: "zetaclientd_testnet"
