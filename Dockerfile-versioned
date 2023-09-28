@@ -21,8 +21,6 @@ ENV NEW_VERSION=${new_version}
 RUN git clone https://github.com/zeta-chain/node.git
 RUN cd node && git fetch
 RUN cd node && git checkout ${new_version}
-RUN cd node && git pull
-RUN cd node && go mod download
 RUN cd node && make install
 RUN cd node && make install-smoketest
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/
@@ -32,17 +30,11 @@ RUN cp $GOPATH/bin/smoketest $GOPATH/bin/new/
 # Checkout and build old binary
 RUN cd node && git checkout ${old_version}
 RUN cd node && git pull
-RUN cd node && go mod download
 RUN cd node && make install
 RUN cd node && make install-smoketest
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
 RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/old/
 RUN cp $GOPATH/bin/smoketest $GOPATH/bin/old/
-
-RUN cd node && git checkout stateful-upgrade
-RUN cd node && git pull
-RUN cd node && go mod download
-RUN cd node && make install-smoketest
 
 RUN git clone https://github.com/zeta-chain/cosmos-sdk.git
 RUN cd cosmos-sdk && git checkout zetavisor-v0.1.5
