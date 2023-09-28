@@ -5,6 +5,12 @@ pragma solidity ^0.8.7;
 contract Example {
     error Foo();
 
+    struct zContext {
+        bytes origin;
+        address sender;
+        uint256 chainID;
+    }
+
     uint256 public bar;
 
     constructor() {
@@ -27,7 +33,12 @@ contract Example {
         bar = 1;
     }
 
-    function setBar(uint256 _bar) external {
-        bar = _bar;
+    function onCrossChainCall(
+        zContext calldata context,
+        address zrc20,
+        uint256 amount,
+        bytes calldata message
+    ) external {
+        bar = amount;
     }
 }

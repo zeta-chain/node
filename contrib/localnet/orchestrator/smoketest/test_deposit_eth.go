@@ -16,6 +16,7 @@ import (
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/ethereum"
+	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
@@ -170,6 +171,114 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 
 	}()
 	sm.wg.Wait()
+}
+
+// TestEtherDepositAndCall tests deposit of ethers calling a example contract
+func (sm *SmokeTest) TestEtherDepositAndCall() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	LoudPrintf("Deposit ZRC20 into ZEVM and call a contract\n")
+
+	fmt.Println("Deploying example contract")
+	exampleAddr, _, exampleContract, err := testcontract.DeployExample(sm.zevmAuth, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Example contract deployed")
+
+	// preparing tx
+	goerliClient := sm.goerliClient
+	value := big.NewInt(1e18)
+	gasLimit := uint64(23000)
+	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	data := append(exampleAddr.Bytes(), []byte("hello sailors")...)
+	tx := ethtypes.NewTransaction(nonce, TSSAddress, value, gasLimit, gasPrice, data)
+	chainID, err := goerliClient.NetworkID(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+	signedTx, err := ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Sending a cross-chain call to example contract")
+	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("tx failed")
+	}
+	cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
+	}
+
+	// Checking example contract has been called, bar value should be set to amount
+	bar, err := exampleContract.Bar(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+	if bar.Cmp(value) != 0 {
+		panic(fmt.Sprintf("cross-chain call failed bar value %s should be equal to amount %s", bar.String(), value.String()))
+	}
+	fmt.Println("Cross-chain call succeeded")
+
+	fmt.Println("Deploying reverter contract")
+	reverterAddr, _, _, err := testcontract.DeployReverter(sm.zevmAuth, sm.zevmClient)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Example reverter deployed")
+
+	// preparing tx for reverter
+	gasPrice, err = goerliClient.SuggestGasPrice(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	nonce, err = goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	data = append(reverterAddr.Bytes(), []byte("hello sailors")...)
+	tx = ethtypes.NewTransaction(nonce, TSSAddress, value, gasLimit, gasPrice, data)
+	signedTx, err = ethtypes.SignTx(tx, ethtypes.NewEIP155Signer(chainID), deployerPrivkey)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Sending a cross-chain call to reverter contract")
+	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		panic(err)
+	}
+
+	receipt = MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("tx failed")
+	}
+	cctx = WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
+	}
+	fmt.Println("Cross-chain call to reverter reverted")
 }
 
 func (sm *SmokeTest) TestDepositAndCallRefund() {
