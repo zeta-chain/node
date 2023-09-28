@@ -215,7 +215,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			"doRevert",
 		)
 		require.Nil(t, res)
-		require.True(t, types.IsRevertError(err))
+		require.True(t, types.IsContractReverted(res, err))
 
 		// Not a revert error if another type of error
 		res, err = k.CallEVM(
@@ -230,7 +230,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			"doNotExist",
 		)
 		require.Nil(t, res)
-		require.False(t, types.IsRevertError(err))
+		require.False(t, types.IsContractReverted(res, err))
 	})
 
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {
