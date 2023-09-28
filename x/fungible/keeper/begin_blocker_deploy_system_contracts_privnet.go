@@ -114,6 +114,7 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 
 func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	msgServer := NewMsgServerImpl(k)
 
 	wzeta, err := k.GetWZetaContractAddress(ctx)
 	if err != nil {
@@ -134,20 +135,21 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	}
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 	msg := types.NewMsgUpdateSystemContract(creator, SystemContractAddress.Hex())
-	_, err = k.UpdateSystemContract(ctx, msg)
+	_, err = msgServer.UpdateSystemContract(ctx, msg)
 	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
 	return err
 }
 
 func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	msgServer := NewMsgServerImpl(k)
 
 	foreignCoins := k.GetAllForeignCoins(ctx)
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 
 	for _, foreignCoin := range foreignCoins {
 		msg := types.NewMsgUpdateZRC20WithdrawFee(creator, foreignCoin.Zrc20ContractAddress, sdk.NewUint(uint64(foreignCoin.ForeignChainId)))
-		_, err := k.UpdateZRC20WithdrawFee(ctx, msg)
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, msg)
 		if err != nil {
 			return err
 		}
