@@ -1,0 +1,14 @@
+[
+  {
+    "inputs": [],
+    "name": "Foo",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "doRevert",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

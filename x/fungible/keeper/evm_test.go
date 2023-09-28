@@ -15,6 +15,7 @@ import (
 
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/server/config"
+	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -190,6 +191,48 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 }
 
 func TestKeeper_CallEVMWithData(t *testing.T) {
+	t.Run("should return a revert error when the contract call revert", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		// Deploy example
+		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
+		abi, err := contracts.ExampleMetaData.GetAbi()
+		require.NoError(t, err)
+
+		// Call doRevert
+		res, err := k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevert",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsRevertError(err))
+
+		// Not a revert error if another type of error
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doNotExist",
+		)
+		require.Nil(t, res)
+		require.False(t, types.IsRevertError(err))
+	})
+
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {
 		k, ctx := testkeeper.FungibleKeeperAllMocks(t)
 

@@ -3,7 +3,10 @@ package types
 // DONTCOVER
 
 import (
+	"strings"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/core/vm"
 )
 
 // x/fungible module sentinel errors
@@ -32,3 +35,8 @@ var (
 	ErrPausedZRC20            = sdkerrors.Register(ModuleName, 1121, "ZRC20 is paused")
 	ErrForeignCoinNotFound    = sdkerrors.Register(ModuleName, 1122, "foreign coin not found")
 )
+
+// IsRevertError checks if an error is a evm revert error
+func IsRevertError(err error) bool {
+	return strings.Contains(err.Error(), vm.ErrExecutionReverted.Error())
+}
