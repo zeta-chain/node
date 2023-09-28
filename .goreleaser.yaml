@@ -41,7 +41,7 @@ builds:
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - linux
-      # - darwin
+      - darwin
       # - windows
     goarch:
       - arm64
@@ -50,7 +50,8 @@ builds:
       - goos: windows
         goarch: arm64
     flags: &default_testnet_flags
-      - -tags=TESTNET,pebbledb,ledger,cgo
+      - -tags=TESTNET,pebbledb,ledger,cgo,netgo
+      - -installsuffix=static
     ldflags: &default_ldflags
       - -X github.com/cosmos/cosmos-sdk/version.Name=zetacore
       - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
