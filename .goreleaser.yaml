@@ -2,6 +2,12 @@
 
 ## Test locally with `make release-dry-run`
 
+## TODO 
+# - Add SBOMs
+# - Add Docker Builds
+# - SLSA - https://github.com/goreleaser/goreleaser-example-slsa-provenance
+# - Add Code Signing
+
 env:
   - CGO_ENABLED=1
   - CC_darwin_arm64=oa64-clang
@@ -35,11 +41,11 @@ builds:
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - linux
-      - darwin
-      - windows
+      # - darwin
+      # - windows
     goarch:
       - arm64
-      - amd64
+      # - amd64
     ignore:
       - goos: windows
         goarch: arm64
@@ -57,66 +63,74 @@ builds:
       - -X github.com/zeta-chain/zetacore/common.BuildTime=={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-  - id: "zetaclientd_testnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - linux
-      # - darwin
-      # - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_testnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_testnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - linux
+  #     # - darwin
+  #     # - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_testnet_flags
+  #   ldflags: *default_ldflags
 
-  - id: "zetacored_mock_mainnet"
-    main: ./cmd/zetacored
-    binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: &default_mock_mainnet_flags
-      - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
-    ldflags: *default_ldflags
+  # - id: "zetacored_mock_mainnet"
+  #   main: ./cmd/zetacored
+  #   binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - linux
+  #     - darwin
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: &default_mock_mainnet_flags
+  #     - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
+  #   ldflags: *default_ldflags
 
-  - id: "zetaclientd_mock_mainnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - linux
-      # - darwin
-      # - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_mock_mainnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_mock_mainnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - linux
+  #     # - darwin
+  #     # - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_mock_mainnet_flags
+  #   ldflags: *default_ldflags
 
-archives:
-  - format: binary
+# archives:
+#   - id: "zetacored_testnet"
+#     format: zip
+#     builds:
+#       - "" # builds all
+
+
+#   - id: "zetaclientd_testnet"
+#     format: zip
+
 
 checksum:
   name_template: "checksums.txt"
