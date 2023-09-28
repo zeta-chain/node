@@ -69,7 +69,11 @@ jobs:
         run: |-
           echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
       - name: release publish
-        run: make release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          touch .release-env
+          make release
 
       - name: Save Binaries as Artifacts
         uses: actions/upload-artifact@v3

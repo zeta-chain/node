@@ -244,7 +244,7 @@ release:
 		--rm \
 		--privileged \
 		-e CGO_ENABLED=1 \
-		--env-file .release-env \
+		-e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
