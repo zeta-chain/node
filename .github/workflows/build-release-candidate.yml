@@ -1,4 +1,4 @@
-name: Build
+name: Release
 
 on:
   push:
@@ -44,33 +44,9 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      # - name: Test
-      #   uses: nick-fields/retry@v2
-      #   with:
-      #     timeout_minutes: 20
-      #     max_attempts: 2
-      #     retry_on: error
-      #     command: |
-      #       echo "Running Build Tests"
-      #       make clean
-      #       make test
-
-      # - name: Build zetacored and zetaclientd
-      #   env:
-      #     CGO_ENABLED: 1
-      #     GOOS: linux
-      #     GOARCH: ${{ env.CPU_ARCH }}
-      #   run: |
-      #     make release-dry-run
-
-      - name: setup release environment
+      - name: Publish Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GITHUB_TOKEN}}' > .release-env
-      - name: release publish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SECRET_GITHUB_TOKEN }}
         run: |
           touch .release-env
           make release
