@@ -1,0 +1,207 @@
+# Make sure to check the documentation at https://goreleaser.com
+
+## Test locally with `make release-dry-run`
+
+env:
+  - CGO_ENABLED=1
+  - CC_darwin_arm64=oa64-clang
+  - CXX_darwin_arm64=oa64-clang++
+  - CC_darwin_amd64=o64-clang
+  - CXX_darwin_amd64=o64-clang+
+  - CC_linux_arm64=aarch64-linux-gnu-gcc
+  - CXX_linux_arm64=aarch64-linux-gnu-g++
+  - CC_linux_amd64=x86_64-linux-gnu-gcc
+  - CXX_linux_amd64=x86_64-linux-gnu-g++
+  - CC_windows_amd64=x86_64-w64-mingw32-gcc
+  - CXX_windows_amd64=x86_64-w64-mingw32-g++   
+  - VERSION={{ .Version }}
+  - COMMIT={{ .Commit }}
+  - BUILDTIME={{ .Date }}
+  # - CC_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
+  # - CXX_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
+
+before:
+  hooks:
+    - go mod download
+    - go mod tidy
+
+builds:
+
+  - id: "zetacored_testnet"
+    main: ./cmd/zetacored
+    binary: "zetacored_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - darwin
+      # - linux
+      # - windows
+    goarch:
+      - arm64
+      # - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: &default_testnet_flags
+      - -tags=TESTNET,pebbledb,ledger,cgo
+    ldflags: &default_ldflags
+      - -X github.com/cosmos/cosmos-sdk/version.Name=zetacore
+      - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
+      - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
+      - -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION)
+      - -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+      - -X github.com/zeta-chain/zetacore/common.Name=zetacored
+      - -X github.com/zeta-chain/zetacore/common.Version=$(VERSION)
+      - -X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT)
+      - -X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+      - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
+
+  # - id: "zetaclientd_testnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - darwin
+  #     - linux
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_testnet_flags
+  #   ldflags: *default_ldflags
+
+  # - id: "zetacored_mock_mainnet"
+  #   main: ./cmd/zetacored
+  #   binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - darwin
+  #     - linux
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: &default_mock_mainnet_flags
+  #     - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
+  #   ldflags: *default_ldflags
+
+  # - id: "zetaclientd_mock_mainnet"
+    # main: ./cmd/zetaclientd
+    # binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # env:
+    #   - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+    #   - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    # goos:
+    #   - darwin
+    #   - linux
+    #   - windows
+    # goarch:
+    #   - arm64
+    #   - amd64
+    # ignore:
+    #   - goos: windows
+    #     goarch: arm64
+    # flags: *default_mock_mainnet_flags
+    # ldflags: *default_ldflags
+
+# Archives are not working correctly. Issues because all the binaries are names the same
+archives:
+  - format: binary
+
+checksum:
+  name_template: "checksums.txt"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+release:
+  # Repo in which the release will be created.
+  # Default is extracted from the origin remote URL or empty if its private hosted.
+  github:
+    owner: zeta-chain
+    name: node
+
+  # IDs of the archives to use.
+  # Empty means all IDs.
+  #
+  # Default: []
+  # ids:
+  #   - binary
+
+  # If set to true, will not auto-publish the release.
+  # Available only for GitHub and Gitea.
+  draft: true
+
+  # Whether to remove existing draft releases with the same name before creating
+  # a new one.
+  # Only effective if `draft` is set to true.
+  # Available only for GitHub.
+  #
+  # Since: v1.11
+  replace_existing_draft: true
+
+  # Useful if you want to delay the creation of the tag in the remote.
+  # You can create the tag locally, but not push it, and run GoReleaser.
+  # It'll then set the `target_commitish` portion of the GitHub release to the
+  # value of this field.
+  # Only works on GitHub.
+  #
+  # Default: ''
+  # Since: v1.11
+  # Templates: allowed
+  target_commitish: "{{ .Commit }}"
+
+  # This allows to change which tag GitHub will create.
+  # Usually you'll use this together with `target_commitish`, or if you want to
+  # publish a binary from a monorepo into a public repository somewhere, without
+  # the tag prefix.
+  #
+  # Default: '{{ .PrefixedCurrentTag }}'
+  # Since: v1.19 (pro)
+  # Templates: allowed
+  # tag: "{{ .CurrentTag }}"
+
+  # If set, will create a release discussion in the category specified.
+  #
+  # Warning: do not use categories in the 'Announcement' format.
+  #  Check https://github.com/goreleaser/goreleaser/issues/2304 for more info.
+  #
+  # Default is empty.
+  # discussion_category_name: General
+
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+  # If set to true, will mark the release as not ready for production.
+  # Default is false.
+  prerelease: auto
+
+  # If set to false, will NOT mark the release as "latest".
+  # This prevents it from being shown at the top of the release list,
+  # make_latest: true
+
+  # What to do with the release notes in case there the release already exists.
+  #
+  # Valid options are:
+  # - `keep-existing`: keep the existing notes
+  # - `append`: append the current release notes to the existing notes
+  # - `prepend`: prepend the current release notes to the existing notes
+  # - `replace`: replace existing notes
+  #
+  # Default is `keep-existing`.
+  mode: append
