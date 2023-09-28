@@ -37,29 +37,11 @@ func DefaultParams() Params {
 func DefaultAdminPolicy() []*Admin_Policy {
 	return []*Admin_Policy{
 		{
-			PolicyType: Policy_Type_out_tx_tracker,
+			PolicyType: Policy_Type_group1,
 			Address:    GroupID1Address,
 		},
 		{
-			PolicyType: Policy_Type_stop_inbound_cctx,
-			Address:    GroupID1Address,
-		},
-		// NOTE: smoke test setting depends on this type being at position 2
-		// contrib/localnet/scripts/genesis.sh:93
-		{
-			PolicyType: Policy_Type_deploy_fungible_coin,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_update_client_params,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_update_keygen_block,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_add_observer,
+			PolicyType: Policy_Type_group2,
 			Address:    GroupID1Address,
 		},
 	}

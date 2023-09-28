@@ -7,14 +7,13 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Updates the block height of the keygen and sets the status to "pending
-// keygen".
+// UpdateKeygen updates the block height of the keygen and sets the status to "pending keygen".
 //
 // Only the admin policy account is authorized to broadcast this message.
 func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_update_keygen_block) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group1) {
 		return &types.MsgUpdateKeygenResponse{}, types.ErrNotAuthorizedPolicy
 	}
 	keygen, found := k.GetKeygen(ctx)
