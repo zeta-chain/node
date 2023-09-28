@@ -19,8 +19,8 @@ env:
   - BUILDTIME={{ .Date }}
   # - CC_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
   # - CXX_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
-  - GITHUB_ORG=zeta-chain
-  - GITHUB_REPO=ci-testing-node
+  # - GITHUB_ORG=zeta-chain
+  # - GITHUB_REPO=ci-testing-node
 
 before:
   hooks:
@@ -34,6 +34,7 @@ builds:
     binary: "zetacored_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - darwin
@@ -135,9 +136,9 @@ snapshot:
 release:
   # Repo in which the release will be created.
   # Default is extracted from the origin remote URL or empty if its private hosted.
-  github:
-    owner: ${GITHUB_ORG}
-    name: ${GITHUB_REPO}
+  # github:
+  #   owner: ${GITHUB_ORG}
+  #   name: ${GITHUB_REPO}
 
   # IDs of the archives to use.
   # Empty means all IDs.
