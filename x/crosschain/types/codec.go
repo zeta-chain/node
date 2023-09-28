@@ -13,8 +13,10 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateTSSVoter{}, "crosschain/CreateTSSVoter", nil)
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "crosschain/GasPriceVoter", nil)
 	cdc.RegisterConcrete(&MsgNonceVoter{}, "crosschain/NonceVoter", nil)
-	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTxResponse{}, "crosschain/ReceiveConfirmation", nil)
-	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/SendVoter", nil)
+	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
+	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
+	cdc.RegisterConcrete(&MsgWhitelistERC20{}, "crosschain/WhitelistERC20", nil)
+	cdc.RegisterConcrete(&MsgUpdateTssAddress{}, "crosschain/UpdateTssAddress", nil)
 	cdc.RegisterConcrete(&MsgSetNodeKeys{}, "crosschain/SetNodeKeys", nil)
 }
 
@@ -27,6 +29,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgNonceVoter{},
 		&MsgVoteOnObservedOutboundTx{},
 		&MsgVoteOnObservedInboundTx{},
+		&MsgWhitelistERC20{},
+		&MsgUpdateTssAddress{},
 		&MsgSetNodeKeys{},
 	)
 
