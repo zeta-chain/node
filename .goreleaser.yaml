@@ -24,7 +24,7 @@ before:
   hooks:
     - go mod download
     - go mod tidy
-    
+
 builds:
 
   - id: "zetacored_testnet"
@@ -34,12 +34,12 @@ builds:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
+      - linux
       - darwin
-      # - linux
-      # - windows
+      - windows
     goarch:
       - arm64
-      # - amd64
+      - amd64
     ignore:
       - goos: windows
         goarch: arm64
@@ -57,63 +57,63 @@ builds:
       - -X github.com/zeta-chain/zetacore/common.BuildTime=={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-  # - id: "zetaclientd_testnet"
-  #   main: ./cmd/zetaclientd
-  #   binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  #   env:
-  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-  #   goos:
-  #     - darwin
-  #     - linux
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #     - amd64
-  #   ignore:
-  #     - goos: windows
-  #       goarch: arm64
-  #   flags: *default_testnet_flags
-  #   ldflags: *default_ldflags
+  - id: "zetaclientd_testnet"
+    main: ./cmd/zetaclientd
+    binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+      # - darwin
+      # - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: *default_testnet_flags
+    ldflags: *default_ldflags
 
-  # - id: "zetacored_mock_mainnet"
-  #   main: ./cmd/zetacored
-  #   binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  #   env:
-  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-  #   goos:
-  #     - darwin
-  #     - linux
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #     - amd64
-  #   ignore:
-  #     - goos: windows
-  #       goarch: arm64
-  #   flags: &default_mock_mainnet_flags
-  #     - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
-  #   ldflags: *default_ldflags
+  - id: "zetacored_mock_mainnet"
+    main: ./cmd/zetacored
+    binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: &default_mock_mainnet_flags
+      - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
+    ldflags: *default_ldflags
 
-  # - id: "zetaclientd_mock_mainnet"
-  #   main: ./cmd/zetaclientd
-  #   binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  #   env:
-  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-  #   goos:
-  #     - darwin
-  #     - linux
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #     - amd64
-  #   ignore:
-  #     - goos: windows
-  #       goarch: arm64
-  #   flags: *default_mock_mainnet_flags
-  #   ldflags: *default_ldflags
+  - id: "zetaclientd_mock_mainnet"
+    main: ./cmd/zetaclientd
+    binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - linux
+      # - darwin
+      # - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: *default_mock_mainnet_flags
+    ldflags: *default_ldflags
 
 archives:
   - format: binary
@@ -130,46 +130,11 @@ snapshot:
   name_template: "{{ .Tag }}-next"
 
 release:
-
-  # IDs of the archives to use.
-  # Empty means all IDs.
-  #
-  # Default: []
-  # ids:
-  #   - binary
-
   # If set to true, will not auto-publish the release.
   # Available only for GitHub and Gitea.
   draft: false
 
-  # Whether to remove existing draft releases with the same name before creating
-  # a new one.
-  # Only effective if `draft` is set to true.
-  # Available only for GitHub.
-  #
-  # Since: v1.11
-  replace_existing_draft: true
-
-  # Useful if you want to delay the creation of the tag in the remote.
-  # You can create the tag locally, but not push it, and run GoReleaser.
-  # It'll then set the `target_commitish` portion of the GitHub release to the
-  # value of this field.
-  # Only works on GitHub.
-  #
-  # Default: ''
-  # Since: v1.11
-  # Templates: allowed
   target_commitish: "{{ .Commit }}"
-
-  # This allows to change which tag GitHub will create.
-  # Usually you'll use this together with `target_commitish`, or if you want to
-  # publish a binary from a monorepo into a public repository somewhere, without
-  # the tag prefix.
-  #
-  # Default: '{{ .PrefixedCurrentTag }}'
-  # Since: v1.19 (pro)
-  # Templates: allowed
-  # tag: "{{ .CurrentTag }}"
 
   # If set, will create a release discussion in the category specified.
   #
@@ -185,10 +150,6 @@ release:
   # Default is false.
   prerelease: auto
 
-  # If set to false, will NOT mark the release as "latest".
-  # This prevents it from being shown at the top of the release list,
-  # make_latest: true
-
   # What to do with the release notes in case there the release already exists.
   #
   # Valid options are:
@@ -198,4 +159,4 @@ release:
   # - `replace`: replace existing notes
   #
   # Default is `keep-existing`.
-  mode: keep-existing
+  mode: append
