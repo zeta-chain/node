@@ -146,7 +146,7 @@ release:
 
   # If set to true, will not auto-publish the release.
   # Available only for GitHub and Gitea.
-  draft: true
+  draft: false
 
   # Whether to remove existing draft releases with the same name before creating
   # a new one.
