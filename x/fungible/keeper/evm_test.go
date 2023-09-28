@@ -202,7 +202,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		abi, err := contracts.ExampleMetaData.GetAbi()
 		require.NoError(t, err)
 
-		// Call doRevert
+		// doRevert make contract reverted
 		res, err := k.CallEVM(
 			ctx,
 			*abi,
@@ -213,6 +213,34 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			true,
 			false,
 			"doRevert",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
+
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithMessage",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
+
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithRequire",
 		)
 		require.Nil(t, res)
 		require.True(t, types.IsContractReverted(res, err))
@@ -230,6 +258,23 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			"doNotExist",
 		)
 		require.Nil(t, res)
+		require.Error(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+
+		// No revert with successfull call
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doSucceed",
+		)
+		require.NotNil(t, res)
+		require.NoError(t, err)
 		require.False(t, types.IsContractReverted(res, err))
 	})
 

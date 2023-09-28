@@ -31,8 +31,8 @@ var (
 
 // ExampleMetaData contains all meta data concerning the Example contract.
 var ExampleMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"Foo\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"doRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
-	Bin: "0x6080604052348015600f57600080fd5b50609d8061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063afc874d214602d575b600080fd5b60336035565b005b6040517fbfb4ebcf00000000000000000000000000000000000000000000000000000000815260040160405180910390fdfea2646970667358221220ae8e4b35de43dc23f1f04130fe6738d2610ffee4f6199d2d46d96eaacd9417f064736f6c63430008150033",
+	ABI: "[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"Foo\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"bar\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"doRevert\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"doRevertWithMessage\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"doRevertWithRequire\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"doSucceed\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_bar\",\"type\":\"uint256\"}],\"name\":\"setBar\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b50600080819055506102d8806100276000396000f3fe608060405234801561001057600080fd5b50600436106100625760003560e01c8063352d3fba14610067578063afc874d214610083578063d720cb451461008d578063dd8e556c14610097578063fd5ad965146100a1578063febb0f7e146100ab575b600080fd5b610081600480360381019061007c91906101ce565b6100c9565b005b61008b6100d3565b005b610095610105565b005b61009f610140565b005b6100a9610183565b005b6100b361018d565b6040516100c0919061020a565b60405180910390f35b8060008190555050565b6040517fbfb4ebcf00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b6040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161013790610282565b60405180910390fd5b6000610181576040517f08c379a000000000000000000000000000000000000000000000000000000000815260040161017890610282565b60405180910390fd5b565b6001600081905550565b60005481565b600080fd5b6000819050919050565b6101ab81610198565b81146101b657600080fd5b50565b6000813590506101c8816101a2565b92915050565b6000602082840312156101e4576101e3610193565b5b60006101f2848285016101b9565b91505092915050565b61020481610198565b82525050565b600060208201905061021f60008301846101fb565b92915050565b600082825260208201905092915050565b7f666f6f0000000000000000000000000000000000000000000000000000000000600082015250565b600061026c600383610225565b915061027782610236565b602082019050919050565b6000602082019050818103600083015261029b8161025f565b905091905056fea2646970667358221220b829d5de8f1b16b82dbf677072a361c740900d3b01c6eefba386729591f9958e64736f6c63430008150033",
 }
 
 // ExampleABI is the input ABI used to generate the binding from.
@@ -202,6 +202,37 @@ func (_Example *ExampleTransactorRaw) Transact(opts *bind.TransactOpts, method s
 	return _Example.Contract.contract.Transact(opts, method, params...)
 }
 
+// Bar is a free data retrieval call binding the contract method 0xfebb0f7e.
+//
+// Solidity: function bar() view returns(uint256)
+func (_Example *ExampleCaller) Bar(opts *bind.CallOpts) (*big.Int, error) {
+	var out []interface{}
+	err := _Example.contract.Call(opts, &out, "bar")
+
+	if err != nil {
+		return *new(*big.Int), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+
+	return out0, err
+
+}
+
+// Bar is a free data retrieval call binding the contract method 0xfebb0f7e.
+//
+// Solidity: function bar() view returns(uint256)
+func (_Example *ExampleSession) Bar() (*big.Int, error) {
+	return _Example.Contract.Bar(&_Example.CallOpts)
+}
+
+// Bar is a free data retrieval call binding the contract method 0xfebb0f7e.
+//
+// Solidity: function bar() view returns(uint256)
+func (_Example *ExampleCallerSession) Bar() (*big.Int, error) {
+	return _Example.Contract.Bar(&_Example.CallOpts)
+}
+
 // DoRevert is a paid mutator transaction binding the contract method 0xafc874d2.
 //
 // Solidity: function doRevert() returns()
@@ -221,4 +252,88 @@ func (_Example *ExampleSession) DoRevert() (*types.Transaction, error) {
 // Solidity: function doRevert() returns()
 func (_Example *ExampleTransactorSession) DoRevert() (*types.Transaction, error) {
 	return _Example.Contract.DoRevert(&_Example.TransactOpts)
+}
+
+// DoRevertWithMessage is a paid mutator transaction binding the contract method 0xd720cb45.
+//
+// Solidity: function doRevertWithMessage() returns()
+func (_Example *ExampleTransactor) DoRevertWithMessage(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Example.contract.Transact(opts, "doRevertWithMessage")
+}
+
+// DoRevertWithMessage is a paid mutator transaction binding the contract method 0xd720cb45.
+//
+// Solidity: function doRevertWithMessage() returns()
+func (_Example *ExampleSession) DoRevertWithMessage() (*types.Transaction, error) {
+	return _Example.Contract.DoRevertWithMessage(&_Example.TransactOpts)
+}
+
+// DoRevertWithMessage is a paid mutator transaction binding the contract method 0xd720cb45.
+//
+// Solidity: function doRevertWithMessage() returns()
+func (_Example *ExampleTransactorSession) DoRevertWithMessage() (*types.Transaction, error) {
+	return _Example.Contract.DoRevertWithMessage(&_Example.TransactOpts)
+}
+
+// DoRevertWithRequire is a paid mutator transaction binding the contract method 0xdd8e556c.
+//
+// Solidity: function doRevertWithRequire() returns()
+func (_Example *ExampleTransactor) DoRevertWithRequire(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Example.contract.Transact(opts, "doRevertWithRequire")
+}
+
+// DoRevertWithRequire is a paid mutator transaction binding the contract method 0xdd8e556c.
+//
+// Solidity: function doRevertWithRequire() returns()
+func (_Example *ExampleSession) DoRevertWithRequire() (*types.Transaction, error) {
+	return _Example.Contract.DoRevertWithRequire(&_Example.TransactOpts)
+}
+
+// DoRevertWithRequire is a paid mutator transaction binding the contract method 0xdd8e556c.
+//
+// Solidity: function doRevertWithRequire() returns()
+func (_Example *ExampleTransactorSession) DoRevertWithRequire() (*types.Transaction, error) {
+	return _Example.Contract.DoRevertWithRequire(&_Example.TransactOpts)
+}
+
+// DoSucceed is a paid mutator transaction binding the contract method 0xfd5ad965.
+//
+// Solidity: function doSucceed() returns()
+func (_Example *ExampleTransactor) DoSucceed(opts *bind.TransactOpts) (*types.Transaction, error) {
+	return _Example.contract.Transact(opts, "doSucceed")
+}
+
+// DoSucceed is a paid mutator transaction binding the contract method 0xfd5ad965.
+//
+// Solidity: function doSucceed() returns()
+func (_Example *ExampleSession) DoSucceed() (*types.Transaction, error) {
+	return _Example.Contract.DoSucceed(&_Example.TransactOpts)
+}
+
+// DoSucceed is a paid mutator transaction binding the contract method 0xfd5ad965.
+//
+// Solidity: function doSucceed() returns()
+func (_Example *ExampleTransactorSession) DoSucceed() (*types.Transaction, error) {
+	return _Example.Contract.DoSucceed(&_Example.TransactOpts)
+}
+
+// SetBar is a paid mutator transaction binding the contract method 0x352d3fba.
+//
+// Solidity: function setBar(uint256 _bar) returns()
+func (_Example *ExampleTransactor) SetBar(opts *bind.TransactOpts, _bar *big.Int) (*types.Transaction, error) {
+	return _Example.contract.Transact(opts, "setBar", _bar)
+}
+
+// SetBar is a paid mutator transaction binding the contract method 0x352d3fba.
+//
+// Solidity: function setBar(uint256 _bar) returns()
+func (_Example *ExampleSession) SetBar(_bar *big.Int) (*types.Transaction, error) {
+	return _Example.Contract.SetBar(&_Example.TransactOpts, _bar)
+}
+
+// SetBar is a paid mutator transaction binding the contract method 0x352d3fba.
+//
+// Solidity: function setBar(uint256 _bar) returns()
+func (_Example *ExampleTransactorSession) SetBar(_bar *big.Int) (*types.Transaction, error) {
+	return _Example.Contract.SetBar(&_Example.TransactOpts, _bar)
 }
