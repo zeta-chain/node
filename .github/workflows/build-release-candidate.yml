@@ -9,7 +9,7 @@ on:
       - ci-goreleaser
 
 concurrency: 
-  group: build-release
+  group: publish-release
   cancel-in-progress: false
 
 env:

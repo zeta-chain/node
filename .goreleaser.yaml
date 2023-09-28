@@ -19,8 +19,6 @@ env:
   - BUILDTIME={{ .Date }}
   # - CC_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
   # - CXX_windows_arm64= NOT_CREATING_WINDOWS_ARM64_BINARIES
-  # - GITHUB_ORG=zeta-chain
-  # - GITHUB_REPO=ci-testing-node
 
 before:
   hooks:
@@ -38,11 +36,11 @@ builds:
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - darwin
-      # - linux
-      # - windows
+      - linux
+      - windows
     goarch:
       - arm64
-      # - amd64
+      - amd64
     ignore:
       - goos: windows
         goarch: arm64
@@ -60,65 +58,64 @@ builds:
       - -X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-  # - id: "zetaclientd_testnet"
-  #   main: ./cmd/zetaclientd
-  #   binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  #   env:
-  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-  #   goos:
-  #     - darwin
-  #     - linux
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #     - amd64
-  #   ignore:
-  #     - goos: windows
-  #       goarch: arm64
-  #   flags: *default_testnet_flags
-  #   ldflags: *default_ldflags
+  - id: "zetaclientd_testnet"
+    main: ./cmd/zetaclientd
+    binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: *default_testnet_flags
+    ldflags: *default_ldflags
 
-  # - id: "zetacored_mock_mainnet"
-  #   main: ./cmd/zetacored
-  #   binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-  #   env:
-  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-  #   goos:
-  #     - darwin
-  #     - linux
-  #     - windows
-  #   goarch:
-  #     - arm64
-  #     - amd64
-  #   ignore:
-  #     - goos: windows
-  #       goarch: arm64
-  #   flags: &default_mock_mainnet_flags
-  #     - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
-  #   ldflags: *default_ldflags
+  - id: "zetacored_mock_mainnet"
+    main: ./cmd/zetacored
+    binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: &default_mock_mainnet_flags
+      - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
+    ldflags: *default_ldflags
 
-  # - id: "zetaclientd_mock_mainnet"
-    # main: ./cmd/zetaclientd
-    # binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    # env:
-    #   - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-    #   - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    # goos:
-    #   - darwin
-    #   - linux
-    #   - windows
-    # goarch:
-    #   - arm64
-    #   - amd64
-    # ignore:
-    #   - goos: windows
-    #     goarch: arm64
-    # flags: *default_mock_mainnet_flags
-    # ldflags: *default_ldflags
+  - id: "zetaclientd_mock_mainnet"
+    main: ./cmd/zetaclientd
+    binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    env:
+      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - arm64
+      - amd64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    flags: *default_mock_mainnet_flags
+    ldflags: *default_ldflags
 
-# Archives are not working correctly. Issues because all the binaries are names the same
 archives:
   - format: binary
 
@@ -134,11 +131,6 @@ snapshot:
   name_template: "{{ .Tag }}-next"
 
 release:
-  # Repo in which the release will be created.
-  # Default is extracted from the origin remote URL or empty if its private hosted.
-  # github:
-  #   owner: ${GITHUB_ORG}
-  #   name: ${GITHUB_REPO}
 
   # IDs of the archives to use.
   # Empty means all IDs.
@@ -149,7 +141,7 @@ release:
 
   # If set to true, will not auto-publish the release.
   # Available only for GitHub and Gitea.
-  draft: false
+  draft: true
 
   # Whether to remove existing draft releases with the same name before creating
   # a new one.
