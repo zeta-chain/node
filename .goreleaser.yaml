@@ -50,71 +50,71 @@ builds:
       - -X github.com/cosmos/cosmos-sdk/version.Name=zetacore
       - -X github.com/cosmos/cosmos-sdk/version.ServerName=zetacored
       - -X github.com/cosmos/cosmos-sdk/version.ClientName=zetaclientd
-      - -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION)
-      - -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+      - -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }}
+      - -X github.com/cosmos/cosmos-sdk/version.Commit="{{ .Commit }}
       - -X github.com/zeta-chain/zetacore/common.Name=zetacored
-      - -X github.com/zeta-chain/zetacore/common.Version=$(VERSION)
-      - -X github.com/zeta-chain/zetacore/common.CommitHash=$(COMMIT)
-      - -X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME)
+      - -X github.com/zeta-chain/zetacore/common.Version={{ .Version }}
+      - -X github.com/zeta-chain/zetacore/common.CommitHash="{{ .Commit }}
+      - -X github.com/zeta-chain/zetacore/common.BuildTime"{{ .Date }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-  - id: "zetaclientd_testnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_testnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_testnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - darwin
+  #     - linux
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_testnet_flags
+  #   ldflags: *default_ldflags
 
-  - id: "zetacored_mock_mainnet"
-    main: ./cmd/zetacored
-    binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: &default_mock_mainnet_flags
-      - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
-    ldflags: *default_ldflags
+  # - id: "zetacored_mock_mainnet"
+  #   main: ./cmd/zetacored
+  #   binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - darwin
+  #     - linux
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: &default_mock_mainnet_flags
+  #     - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
+  #   ldflags: *default_ldflags
 
-  - id: "zetaclientd_mock_mainnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_mock_mainnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_mock_mainnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - darwin
+  #     - linux
+  #     - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_mock_mainnet_flags
+  #   ldflags: *default_ldflags
 
 archives:
   - format: binary
