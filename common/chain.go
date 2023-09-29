@@ -124,6 +124,16 @@ func IsEthereumChain(chainID int64) bool {
 		chainID == 1337 // eth privnet
 }
 
+func IsBscChain(chainID int64) bool {
+	return chainID == 56 || // bsc mainnet
+		chainID == 97 // BSC testnet
+}
+
+func IsPolygonChain(chainID int64) bool {
+	return chainID == 137 || // polygon mainnet
+		chainID == 80001 // polygon mumbai
+}
+
 // IsEmpty is to determinate whether the chain is empty
 func (chain Chain) IsEmpty() bool {
 	return strings.TrimSpace(chain.String()) == ""

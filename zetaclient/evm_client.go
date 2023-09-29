@@ -847,7 +847,7 @@ func (ob *EVMChainClient) observeInTX() error {
 					continue
 				}
 
-				if ob.chain.ChainId != common.MumbaiChain().ChainId {
+				if !common.IsPolygonChain(ob.chain.ChainId) {
 					_, ballotIdentifier, err := ob.zetaClient.PostAddBlockHeader(
 						ob.chain.ChainId,
 						block.Hash().Bytes(),
