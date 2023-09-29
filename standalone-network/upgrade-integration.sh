@@ -117,4 +117,3 @@ sleep 7
 zetacored query gov proposal 1
 
 tail -f zetanode.log
-
