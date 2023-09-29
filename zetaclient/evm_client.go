@@ -847,17 +847,19 @@ func (ob *EVMChainClient) observeInTX() error {
 					continue
 				}
 
-				_, balloutIdentifier, err := ob.zetaClient.PostAddBlockHeader(
-					ob.chain.ChainId,
-					block.Hash().Bytes(),
-					block.Number().Int64(),
-					common.NewEthereumHeader(headerRLP),
-				)
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
-					continue
+				if ob.chain.ChainId != common.MumbaiChain().ChainId {
+					_, balloutIdentifier, err := ob.zetaClient.PostAddBlockHeader(
+						ob.chain.ChainId,
+						block.Hash().Bytes(),
+						block.Number().Int64(),
+						common.NewEthereumHeader(headerRLP),
+					)
+					if err != nil {
+						ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
+						continue
+					}
+					ob.logger.ExternalChainWatcher.Info().Msgf("successfully posted block-header: ChainID %d Hash %s , Height %s , Header %v , Ballot %s", ob.chain.ChainId, block.Hash().Hex(), block.Number().String(), common.NewEthereumHeader(headerRLP), balloutIdentifier)
 				}
-				ob.logger.ExternalChainWatcher.Info().Msgf("successfully posted block-header: ChainID %d Hash %s , Height %s , Header %v , Ballot %s", ob.chain.ChainId, block.Hash().Hex(), block.Number().String(), common.NewEthereumHeader(headerRLP), balloutIdentifier)
 				for _, tx := range block.Transactions() {
 					if tx.To() == nil {
 						continue
