@@ -68,8 +68,8 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           generate_release_notes: true
-          files: |
-            dist/checksums.txt
+          # files: |
+          #   dist/checksums.txt
 
       - name: Publish Release Files
         env:

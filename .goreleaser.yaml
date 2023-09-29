@@ -124,6 +124,7 @@ builds:
 
 archives:
   - format: binary
+    name_template: "{{ .Binary }}"
 #   - id: "zetacored_testnet"
 #     format: zip
 #     builds:
