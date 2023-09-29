@@ -1,11 +1,11 @@
-name: Release
+name: Publish Release
 
 on:
   push:
     tags:
       - "v*.*.*"
 
-concurrency: 
+concurrency:
   group: publish-release
   cancel-in-progress: false
 
@@ -13,7 +13,7 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  upgrade_handler_version_check:
+  pre-release-checks:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -35,10 +35,9 @@ jobs:
 
   publish-release:
     runs-on: buildjet-4vcpu-ubuntu-2004
-    # runs-on: ubuntu-latest
     timeout-minutes: 60
     needs:
-      - upgrade_handler_version_check
+      - pre-release-checks
     steps:
       - uses: actions/checkout@v3
 
@@ -68,8 +67,6 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           generate_release_notes: true
-          # files: |
-          #   dist/checksums.txt
 
       - name: Publish Release Files
         env:
@@ -78,6 +75,7 @@ jobs:
           touch .release-env
           make release
 
+      ## TODO - Will add in later after optimizing docker images
       # - name: Build, tag, and push docker images
       #   uses: ./.github/actions/build-docker-images
       #   with:
@@ -86,14 +84,14 @@ jobs:
       #     IMAGE_TAG: ${{ env.TAG_NAME }}
       #     GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
       #     GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-  
+
   build-alpine:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
     concurrency:
       group: "alpine-build-test"
     needs:
-      - upgrade_handler_version_check
+      - pre-release-checks
     steps:
       - uses: actions/checkout@v3
 
@@ -163,75 +161,73 @@ jobs:
           files: |
             zetacored-*
             zetaclientd-*
-                
+
       - name: Clean Up Alpine Workspace
         if: always()
         shell: alpine.sh --root {0}
         run: |
           set -e # fail on error
           rm -rf *
-        
+
       - name: Clean Up Workspace
         if: always()
         shell: bash
         run: rm -rf *
 
-                
-  # announce-release:
-  #   # runs-on: buildjet-2vcpu-ubuntu-2004
-  #   runs-on: ubuntu-latest
-  #   timeout-minutes: 10
-  #   needs: 
-  #     - publish-release
-  #     - build-alpine
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Get Version
-  #       run: |
-  #         VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-  #         echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
-          
-  #     - name: Determine Release Type
-  #       id: determine_release_type
-  #       run: |
-  #         if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
-  #           echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
-  #         elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
-  #           echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
-  #         else
-  #           echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
-  #         fi 
+  announce-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - publish-release
+      - build-alpine
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get Version
+        run: |
+          VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
 
-  #     - name: "SEND:DISCORD:MESSAGE"
-  #       if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
-  #       uses: gzukel/CosmosComposites/send_discord_message@main
-  #       with:
-  #         discord_token: "${{ secrets.DISCORD_TOKEN }}"
-  #         discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-  #         discord_message: |
-  #           Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
+      - name: Determine Release Type
+        id: determine_release_type
+        run: |
+          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
+            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
+          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
+            echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
+          else
+            echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
+          fi
 
-  #           Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
-  #           We will submit a governance proposal in the next few days.
-  #           More specific information including block height will be shared as part of the governance proposal.
-            
-  #           See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+      - name: "SEND:DISCORD:MESSAGE"
+        if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
+        uses: gzukel/CosmosComposites/send_discord_message@main
+        with:
+          discord_token: "${{ secrets.DISCORD_TOKEN }}"
+          discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+          discord_message: |
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
 
-  #     # - name: "SEND:DISCORD:MESSAGE"
-  #     #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
-  #     #   uses: gzukel/CosmosComposites/send_discord_message@main
-  #     #   with:
-  #     #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
-  #     #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-  #     #     discord_message: |
-  #     #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released. 
-      
-  #     #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
-  #     #       Please review the release notes for any specific upgrade instructions or considerations.
-      
-  #     #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
+            We will submit a governance proposal in the next few days.
+            More specific information including block height will be shared as part of the governance proposal.
 
-  #     - name: Clean Up Workspace
-  #       if: always()
-  #       shell: bash
-  #       run: rm -rf *
+            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+
+      # - name: "SEND:DISCORD:MESSAGE"
+      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
+      #   uses: gzukel/CosmosComposites/send_discord_message@main
+      #   with:
+      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
+      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+      #     discord_message: |
+      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released.
+
+      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
+      #       Please review the release notes for any specific upgrade instructions or considerations.
+
+      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
