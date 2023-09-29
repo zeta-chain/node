@@ -30,7 +30,7 @@ jobs:
   build-and-test:
     # runs-on: ubuntu-latest
     runs-on: buildjet-4vcpu-ubuntu-2004
-    # runs-on: ["zeta-runners"]
+    # runs-on: ["zeta-runners"] # 10 minutes
     timeout-minutes: 20
     if: (! startsWith(github.ref, 'refs/tags/')) || (! startsWith(github.ref, 'refs/heads/develop') )
     concurrency:
@@ -87,7 +87,8 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: ["zeta-runners"]
+    # runs-on: ["zeta-runners"] # 20 minutes
+    runs-on: buildjet-4vcpu-ubuntu-2004
     #runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
