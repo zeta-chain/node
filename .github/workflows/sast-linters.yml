@@ -1,8 +1,8 @@
 name: Linters and SAST
 on:
-  # push:
-  #   tags:
-  #     - "*"
+  push:
+    tags:
+      - "*"
   pull_request:
     types:
       - opened
