@@ -4,11 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'The new version to upgrade to from latest state.'
+        description: 'The new version of tag you are going to download the binary from..'
         required: true
-        default: 'v9.0.6'
-
-
+        default: 'v10.0.0-rc2'
+      upgrade_name:
+        description: 'The version that is set in setup_handlers.go'
+        required: true
+        default: 'v10.0.0'
 
 jobs:
   upgrade_path_test_state_export:
@@ -26,9 +28,10 @@ jobs:
       LOG_LEVEL: "INFO"
       CHAINID: "localnet_101-1"
       DAEMON_HOME: "/home/runner/.zetacored"
+      UPGRADE_NAME: "${{ github.event.inputs.upgrade_name }}"
       DAEMON_NAME: "zetacored"
       DENOM: "azeta"
-      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "true"
       DAEMON_RESTART_AFTER_UPGRADE: "true"
       MONIKER: "zeta"
       BLOCK_TIME_SECONDS: "6"
@@ -91,6 +94,7 @@ jobs:
           mkdir -p /home/runner/.zetacored/zetavisor
           mkdir -p /home/runner/.zetacored/zetavisor/genesis/bin
           mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin
+          mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin
 
       - name: "DOWNLOAD_STATE_EXPORT_AND_BINARIES"
         run: |
@@ -100,12 +104,26 @@ jobs:
           echo "*********DOWNLOAD UPGRADE BINARY AND PUT IN ZETAVISOR UPGRADES FOLDER*********"
           wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
           ZETACORED_CHECKSUM=$(shasum -b -a 256 /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored | cut -d ' ' -f 1)
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+
+          echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+
+          wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+          ZETACORED_CHECKSUM=$(shasum -b -a 256 /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored | cut -d ' ' -f 1)
+          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+
+          echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/
+          ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
+
           echo "ZETACORED_CHECKSUM=${ZETACORED_CHECKSUM}" >> ${GITHUB_ENV}
           UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
           echo ${UPGRADE_INFO}
-          echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
-          sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
-                    
+
+          
+          
           echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
           echo "STARTING_VERSION=${current_version}" >> ${GITHUB_ENV}

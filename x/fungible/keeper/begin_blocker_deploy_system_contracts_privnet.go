@@ -132,7 +132,7 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
 	}
-	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
+	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 	msg := types.NewMsgUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
 	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
@@ -143,7 +143,7 @@ func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	foreignCoins := k.GetAllForeignCoins(ctx)
-	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
+	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 
 	for _, foreignCoin := range foreignCoins {
 		msg := types.NewMsgUpdateZRC20WithdrawFee(creator, foreignCoin.Zrc20ContractAddress, sdk.NewUint(uint64(foreignCoin.ForeignChainId)))

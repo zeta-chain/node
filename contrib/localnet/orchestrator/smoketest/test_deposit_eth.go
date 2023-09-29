@@ -6,6 +6,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common/ethereum"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"time"
 
@@ -15,9 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -93,8 +93,8 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 				BlockHash: blockHash.Bytes(),
 			})
 			if err != nil {
-				fmt.Printf("WARN: block header not found; retrying...\n")
-				time.Sleep(2 * time.Second)
+				fmt.Printf("WARN: block header not found; retrying... error: %s \n", err.Error())
+				time.Sleep(5 * time.Second)
 			} else {
 				fmt.Printf("OK: block header found\n")
 				break

@@ -218,3 +218,12 @@ stress-test: zetanode
 
 stop-stress-test:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans
+
+stateful-upgrade:
+	@echo "--> Starting stateful smoketest"
+	$(DOCKER) build --build-arg old_version=v9.0.0-rc2 --build-arg new_version=v10.0.0 -t zetanode -f ./Dockerfile-versioned .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
+
+stop-stateful-upgrade:
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans

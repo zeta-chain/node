@@ -15,6 +15,18 @@ KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
 
+export DAEMON_HOME=$HOME/.zetacored
+export DAEMON_NAME=zetacored
+export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
+export DAEMON_RESTART_AFTER_UPGRADE=true
+export CLIENT_DAEMON_NAME=zetaclientd
+export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,operator"
+export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
+export CLIENT_SKIP_UPGRADE=true
+export CLIENT_START_PROCESS=false
+export UNSAFE_SKIP_BACKUP=true
+export UpgradeName=${NEW_VERSION}
+
 # generate node list
 START=1
 # shellcheck disable=SC2100
@@ -77,7 +89,7 @@ then
   ssh zetaclient0 mkdir -p ~/.zetacored/
   scp ~/.zetacored/os_info/os.json zetaclient0:/root/.zetacored/os.json
 
-# 2. Add the observers, authorizations, required params and accounts to the genesis.json
+# 2. Add the observers , authorizations and required params to the genesis.json
   zetacored collect-observer-info
   zetacored add-observer-list
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
@@ -88,10 +100,10 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="500000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
-  # set admin account
+  # set fungible admin account as admin for fungible token
   zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
-  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+  cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][2]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
@@ -138,5 +150,36 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
+mkdir -p $DAEMON_HOME/zetavisor/genesis/bin
+mkdir -p $DAEMON_HOME/zetavisor/upgrades/"$UpgradeName"/bin
+
+# Setup zetavisor
+# Genesis
+cp $GOPATH/bin/old/zetacored $DAEMON_HOME/zetavisor/genesis/bin
+cp $GOPATH/bin/zetaclientd $DAEMON_HOME/zetavisor/genesis/bin
+
+#Upgrades
+cp $GOPATH/bin/new/zetacored $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/
+
+#Permissions
+chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetacored
+chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetaclientd
+chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
+
+
 # 7 Start the nodes
-exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
+sleep 20
+echo
+
+if [ $HOSTNAME = "zetacore0" ]
+then
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 320 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+fi
+
+sleep 8
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+sleep 7
+/root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
+
+tail -f zetanode.log
