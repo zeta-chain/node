@@ -14,7 +14,7 @@ env:
 
 jobs:
   upgrade_handler_version_check:
-    runs-on: ["buildjet-2vcpu-ubuntu-2204"]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -34,8 +34,7 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   publish-release:
-    # runs-on: buildjet-4vcpu-ubuntu-2004
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
       - upgrade_handler_version_check
