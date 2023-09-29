@@ -18,8 +18,8 @@ jobs:
     runs-on: ["buildjet-8vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
-      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64"
-      downloaded_binary_name: "zetacored-ubuntu-22-amd64"
+      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-testnet-linux-amd64"
+      downloaded_binary_name: "zetacored-testnet-linux-amd64"
       VERSION: "${{ github.event.inputs.version }}"
       aws_region: "us-east-1"
       GAS_PRICES: "1.0azeta"
@@ -119,7 +119,7 @@ jobs:
           ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
 
           echo "ZETACORED_CHECKSUM=${ZETACORED_CHECKSUM}" >> ${GITHUB_ENV}
-          UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-ubuntu-22-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
+          UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-testnet-linux-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
           echo ${UPGRADE_INFO}
 
           
@@ -128,7 +128,7 @@ jobs:
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
           echo "STARTING_VERSION=${current_version}" >> ${GITHUB_ENV}
           echo "STARTING_VERSION=${current_version}"
-          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-ubuntu-22-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-testnet-linux-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
 

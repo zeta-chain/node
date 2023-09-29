@@ -34,7 +34,7 @@ before:
 builds:
   - id: "zetacored_testnet"
     main: ./cmd/zetacored
-    binary: "zetacored_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    binary: "zetacored_testnet-{{ .Os }}-{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
@@ -62,10 +62,10 @@ builds:
       - -X github.com/zeta-chain/zetacore/common.CommitHash={{ .Env.COMMIT }}
       - -X github.com/zeta-chain/zetacore/common.BuildTime=={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb 
-
+W
   - id: "zetaclientd_testnet"
     main: ./cmd/zetaclientd
-    binary: "zetaclientd_testnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    binary: "zetaclientd_testnet-{{ .Os }}-{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
@@ -84,7 +84,7 @@ builds:
 
   - id: "zetacored_mock_mainnet"
     main: ./cmd/zetacored
-    binary: "zetacored_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    binary: "zetacored_mock_mainnet-{{ .Os }}-{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
@@ -104,7 +104,7 @@ builds:
 
   - id: "zetaclientd_mock_mainnet"
     main: ./cmd/zetaclientd
-    binary: "zetaclientd_mock_mainnet_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    binary: "zetaclientd_mock_mainnet-{{ .Os }}-{{ .Arch }}"
     env:
       - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
