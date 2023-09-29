@@ -70,8 +70,6 @@ jobs:
           generate_release_notes: true
           files: |
             dist/checksums.txt
-          # dist/zetacored*/**
-          # dist/zetaclientd*/**
 
       - name: Publish Release Files
         env:
@@ -89,7 +87,7 @@ jobs:
       #     GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
       #     GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
   
-  build-alpine-and-test:
+  build-alpine:
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
     concurrency:
@@ -181,7 +179,9 @@ jobs:
     # runs-on: buildjet-2vcpu-ubuntu-2004
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: publish-release
+    needs: 
+      - publish-release
+      - build-alpine
     steps:
       - uses: actions/checkout@v3
       - name: Get Version
@@ -229,8 +229,7 @@ jobs:
       
       #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
 
-
-        - name: Clean Up Workspace
+      - name: Clean Up Workspace
         if: always()
         shell: bash
         run: rm -rf *
