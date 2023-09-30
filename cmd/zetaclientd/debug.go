@@ -137,6 +137,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Println("CoinType : ", coinType)
 			fmt.Println("BallotIdentifier : ", ballotIdentifier)
 			for _, vote := range ballot.Voters {
 				fmt.Printf("%s : %s \n", vote.VoterAddress, vote.VoteType)
