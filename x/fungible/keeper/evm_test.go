@@ -12,7 +12,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
@@ -83,8 +83,6 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
-
-		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		addr, err := k.DeployZRC20Contract(
@@ -187,6 +185,114 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, balance)
 		require.Equal(t, amount.Int64(), balance.Int64())
+	})
+}
+
+func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
+	t.Run("should deposit and call the contract", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			example,
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.NoError(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
+		require.NoError(t, err)
+		require.Equal(t, int64(42), balance.Int64())
+
+		// check onCrossChainCall has been called
+		exampleABI, err := contracts.ExampleMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err = k.CallEVM(
+			ctx,
+			*exampleABI,
+			types.ModuleAddressEVM,
+			example,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"bar",
+		)
+		unpacked, err := exampleABI.Unpack("bar", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		bar, ok := unpacked[0].(*big.Int)
+		require.True(t, ok)
+		require.Equal(t, big.NewInt(42), bar)
+	})
+
+	t.Run("should return a revert error when the underlying contract call revert", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		// Deploy reverter
+		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			reverter,
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.True(t, types.IsContractReverted(res, err))
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
+		require.NoError(t, err)
+		require.Zero(t, balance.Int64())
+	})
+
+	t.Run("should revert if the underlying contract doesn't exist", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			sample.EthAddress(),
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.True(t, types.IsContractReverted(res, err))
 	})
 }
 
