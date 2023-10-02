@@ -203,6 +203,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 	if optionalPubKey != "" {
 		tssPubkey = optionalPubKey
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
@@ -274,6 +275,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
 	ksRes, err := tss.Server.KeySign(keysignReq)
@@ -464,8 +466,14 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	}
 	if len(sharefiles) > 0 {
 		sort.SliceStable(sharefiles, func(i, j int) bool {
-			fi, _ := sharefiles[i].Info()
-			fj, _ := sharefiles[j].Info()
+			fi, err := sharefiles[i].Info()
+			if err != nil {
+				return false
+			}
+			fj, err := sharefiles[j].Info()
+			if err != nil {
+				return false
+			}
 			return fi.ModTime().After(fj.ModTime())
 		})
 		tss.logger.Info().Msgf("found %d localstate files", len(sharefiles))
@@ -560,9 +568,21 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	}
 	// verify the signature of msg.
 	var sigbyte [65]byte
-	_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature R")
+		return false
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature S")
+		return false
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature RecoveryID")
+		return false
+	}
 	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
 	if err != nil {
 		log.Error().Err(err).Msg("SigToPub error in verify_signature")

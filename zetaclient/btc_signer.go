@@ -104,8 +104,10 @@ func (signer *BTCSigner) SignWithdrawTx(
 	// fee checking
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
+	// #nosec G701 always in range
 	if fees.Int64() < int64(minFee*1e8) {
 		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
+		// #nosec G701 always in range
 		fees = big.NewInt(int64(minFee * 1e8))
 	}
 
@@ -196,7 +198,10 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 	fmt.Printf("BTCSigner: Broadcasting: %s\n", signedTx.TxHash().String())
 
 	var outBuff bytes.Buffer
-	_ = signedTx.Serialize(&outBuff)
+	err := signedTx.Serialize(&outBuff)
+	if err != nil {
+		return err
+	}
 	str := hex.EncodeToString(outBuff.Bytes())
 	fmt.Printf("BTCSigner: Transaction Data: %s\n", str)
 
@@ -205,7 +210,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 		return err
 	}
 	signer.logger.Info().Msgf("Broadcasting BTC tx , hash %s ", hash)
-	return err
+	return nil
 }
 
 func (signer *BTCSigner) TryProcessOutTx(
@@ -253,7 +258,11 @@ func (signer *BTCSigner) TryProcessOutTx(
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, _ := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	included, confirmed, err := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot check if send %s is processed", send.Index)
+		return
+	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX %s already processed; exit signer", outTxID)
 		return

@@ -50,6 +50,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	// check tx index is not out of bound
+	// #nosec G701 txs number in block is always less than MaxUint32
 	if uint32(len(blk.Block.Txs)) < transaction.TxIndex {
 		b.logger.Debug("tx index out of bounds", "index", transaction.TxIndex, "hash", hash.String(), "height", blk.Block.Height)
 		return nil, fmt.Errorf("transaction not included in block %v", blk.Block.Height)
@@ -79,6 +80,7 @@ func (b *Backend) TraceTransaction(hash common.Hash, config *evmtypes.TraceConfi
 	}
 
 	// add predecessor messages in current cosmos tx
+	// #nosec G701 always in range
 	for i := 0; i < int(transaction.MsgIndex); i++ {
 		ethMsg, ok := tx.GetMsgs()[i].(*evmtypes.MsgEthereumTx)
 		if !ok {

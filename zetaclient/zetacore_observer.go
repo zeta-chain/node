@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	prom "github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -136,6 +135,7 @@ func (co *CoreObserver) startSendScheduler() {
 							continue
 						}
 						signer := co.signerMap[*c]
+
 						cctxList, err := co.bridge.GetAllPendingCctx(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
@@ -181,7 +181,8 @@ func (co *CoreObserver) startSendScheduler() {
 
 							// Process Bitcoin OutTx
 							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
-								if stop := co.processBitcoinOutTx(outTxMan, idx, cctx, signer, ob, currentHeight); stop {
+								// #nosec G701 positive
+								if stop := co.processBitcoinOutTx(outTxMan, uint64(idx), cctx, signer, ob, currentHeight); stop {
 									break
 								}
 								continue
@@ -197,8 +198,10 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Info().Msgf("send outTx already included; do not schedule")
 								continue
 							}
+
+							// #nosec G701 positive
 							interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
-							lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
+							lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 
 							// determining critical outtx; if it satisfies following criteria
 							// 1. it's the first pending outtx for this chain
@@ -227,7 +230,9 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Debug().Msgf("chain %s: Sign outtx %s with value %d\n", chain, outTxID, cctx.GetCurrentOutTxParam().Amount)
 								go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, currentHeight)
 							}
-							if idx >= int(lookahead)-1 { // only look at 30 sends per chain
+
+							// #nosec G701 always in range
+							if int64(idx) >= lookahead-1 { // only look at 30 sends per chain
 								break
 							}
 						}
@@ -248,10 +253,10 @@ func (co *CoreObserver) startSendScheduler() {
 // 3. stop processing when pendingNonce/lookahead is reached
 //
 // Returns whether to stop processing
-func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx int, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
+func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx uint64, send *types.CrossChainTx, signer ChainSigner, ob ChainClient, currentHeight uint64) bool {
 	params := send.GetCurrentOutTxParam()
 	nonce := params.OutboundTxTssNonce
-	lookahead := uint64(ob.GetCoreParams().OutboundTxScheduleLookahead)
+	lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
 	outTxID := fmt.Sprintf("%s-%d-%d", send.Index, params.ReceiverChainId, nonce)
 
 	// start go routine to process outtx
@@ -270,7 +275,8 @@ func (co *CoreObserver) processBitcoinOutTx(outTxMan *OutTxProcessorManager, idx
 		return true
 	}
 	// stop if lookahead is reached. 2 bitcoin confirmations span is 20 minutes on average. We look ahead up to 100 pending cctx to target TPM of 5.
-	if idx >= int(lookahead)-1 {
+	// #nosec G701 always in range
+	if int64(idx) >= lookahead-1 {
 		return true
 	}
 	return false // otherwise, continue

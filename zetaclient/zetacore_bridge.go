@@ -141,7 +141,11 @@ func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (ui
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 	ctx := b.GetContext()
 	address := b.keys.GetAddress()
-	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	if err != nil {
+		b.logger.Error().Err(err).Msg("fail to get account number and sequence number")
+		return
+	}
 	b.accountNumber[keyType] = accN
 	b.seqNumber[keyType] = seq
 }

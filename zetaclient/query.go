@@ -45,7 +45,8 @@ func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*observ
 
 func (b *ZetaCoreBridge) GetCoreParams() ([]*observertypes.CoreParams, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
-	err := error(nil)
+	var err error
+
 	resp := &observertypes.QueryGetCoreParamsResponse{}
 	for i := 0; i <= DefaultRetryCount; i++ {
 		resp, err = client.GetCoreParams(context.Background(), &observertypes.QueryGetCoreParamsRequest{})
@@ -107,8 +108,9 @@ func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.Cro
 }
 
 func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
+	var err error
 	client := observertypes.NewQueryClient(b.grpcConn)
-	err := error(nil)
+
 	for i := 0; i <= DefaultRetryCount; i++ {
 		resp, err := client.ObserversByChain(context.Background(), &observertypes.QueryObserversByChainRequest{ObservationChain: chain.ChainName.String()})
 		if err == nil {
@@ -149,8 +151,9 @@ func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
 }
 
 func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
+	var err error
+
 	client := tmservice.NewServiceClient(b.grpcConn)
-	err := error(nil)
 	for i := 0; i <= DefaultRetryCount; i++ {
 		res, err := client.GetNodeInfo(context.Background(), &tmservice.GetNodeInfoRequest{})
 		if err == nil {
@@ -199,8 +202,9 @@ func (b *ZetaCoreBridge) GetAllNodeAccounts() ([]*observertypes.NodeAccount, err
 }
 
 func (b *ZetaCoreBridge) GetKeyGen() (*observertypes.Keygen, error) {
+	var err error
 	client := observertypes.NewQueryClient(b.grpcConn)
-	err := error(nil)
+
 	for i := 0; i <= ExtendedRetryCount; i++ {
 		resp, err := client.Keygen(context.Background(), &observertypes.QueryGetKeygenRequest{})
 		if err == nil {

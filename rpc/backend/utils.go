@@ -182,6 +182,7 @@ func (b *Backend) processBlock(
 			b.logger.Debug("failed to decode transaction in block", "height", blockHeight, "error", err.Error())
 			continue
 		}
+		// #nosec G701 always positive
 		txGasUsed := uint64(eachTendermintTxResult.GasUsed)
 		for _, msg := range tx.GetMsgs() {
 			ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
@@ -209,6 +210,7 @@ func (b *Backend) processBlock(
 	sumGasUsed := sorter[0].gasUsed
 
 	for i, p := range rewardPercentiles {
+		// #nosec G701 always positive
 		thresholdGasUsed := uint64(blockGasUsed * p / 100)
 		for sumGasUsed < thresholdGasUsed && txIndex < ethTxCount-1 {
 			txIndex++
