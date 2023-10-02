@@ -24,7 +24,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argDecimals, err := strconv.ParseInt(args[2], 10, 32)
+			argDecimals, err := strconv.ParseUint(args[2], 10, 32)
 			if err != nil {
 				return err
 			}
@@ -48,6 +48,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argERC20,
 				argForeignChain,
+				// #nosec G701 parsed in range
 				uint32(argDecimals),
 				argName,
 				argSymbol,
