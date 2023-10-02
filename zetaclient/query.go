@@ -258,6 +258,15 @@ func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
 	return resp.Eth, nil
 }
 
+func (b *ZetaCoreBridge) GetBtcTssAddress() (string, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	if err != nil {
+		return "", err
+	}
+	return resp.Btc, nil
+}
+
 func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -50,7 +51,7 @@ func DebugCmd() *cobra.Command {
 				return err
 			}
 			txHash := args[0]
-
+			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainId)
 			if err != nil {
@@ -64,81 +65,116 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			ob := zetaclient.EVMChainClient{
-				Mu: &sync.Mutex{},
+
+			chain := common.GetChainFromChainID(chainID)
+			if chain == nil {
+				return fmt.Errorf("invalid chain id")
 			}
 
-			ob.WithZetaClient(bridge)
-			ob.WithLogger(chainLogger)
-			client := &ethclient.Client{}
-			coinType := common.CoinType_Cmd
-			for chain, evmConfig := range cfg.GetAllEVMConfigs() {
-				if chainID == chain {
-					client, err = ethclient.Dial(evmConfig.Endpoint)
+			if common.IsEVMChain(chain.ChainId) {
+
+				ob := zetaclient.EVMChainClient{
+					Mu: &sync.Mutex{},
+				}
+				ob.WithZetaClient(bridge)
+				ob.WithLogger(chainLogger)
+				client := &ethclient.Client{}
+				coinType := common.CoinType_Cmd
+				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
+					if chainID == chain {
+						client, err = ethclient.Dial(evmConfig.Endpoint)
+						if err != nil {
+							return err
+						}
+						ob.WithEvmClient(client)
+						ob.WithChain(*common.GetChainFromChainID(chainID))
+					}
+				}
+
+				hash := ethcommon.HexToHash(txHash)
+				tx, isPending, err := client.TransactionByHash(context.Background(), hash)
+				if err != nil {
+					return err
+				}
+				if isPending {
+				}
+
+				for _, chainCoreParams := range coreParams {
+					if chainCoreParams.ChainId == chainID {
+						ob.WithParams(observerTypes.CoreParams{
+							ChainId:                     chainID,
+							ConnectorContractAddress:    chainCoreParams.ConnectorContractAddress,
+							ZetaTokenContractAddress:    chainCoreParams.ZetaTokenContractAddress,
+							Erc20CustodyContractAddress: chainCoreParams.Erc20CustodyContractAddress,
+						})
+						cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainCoreParams.ZetaTokenContractAddress
+						ob.SetConfig(cfg)
+						if strings.EqualFold(tx.To().Hex(), chainCoreParams.ConnectorContractAddress) {
+							coinType = common.CoinType_Zeta
+						} else if strings.EqualFold(tx.To().Hex(), chainCoreParams.Erc20CustodyContractAddress) {
+							coinType = common.CoinType_ERC20
+						} else if strings.EqualFold(tx.To().Hex(), tssEthAddress) {
+							coinType = common.CoinType_Gas
+						}
+
+					}
+				}
+
+				switch coinType {
+				case common.CoinType_Zeta:
+					ballotIdentifier, err = ob.CheckReceiptForCoinTypeZeta(txHash, false)
 					if err != nil {
 						return err
 					}
-					ob.WithEvmClient(client)
-					ob.WithChain(*common.GetChainFromChainID(chainID))
-				}
-			}
 
-			hash := ethcommon.HexToHash(txHash)
-			tx, isPending, err := client.TransactionByHash(context.Background(), hash)
-			if err != nil {
-				return err
-			}
-			if isPending {
-			}
-
-			for _, chainCoreParams := range coreParams {
-				if chainCoreParams.ChainId == chainID {
-					ob.WithParams(observerTypes.CoreParams{
-						ChainId:                     chainID,
-						ConnectorContractAddress:    chainCoreParams.ConnectorContractAddress,
-						ZetaTokenContractAddress:    chainCoreParams.ZetaTokenContractAddress,
-						Erc20CustodyContractAddress: chainCoreParams.Erc20CustodyContractAddress,
-					})
-					cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainCoreParams.ZetaTokenContractAddress
-					ob.SetConfig(cfg)
-					if strings.EqualFold(tx.To().Hex(), chainCoreParams.ConnectorContractAddress) {
-						coinType = common.CoinType_Zeta
-					} else if strings.EqualFold(tx.To().Hex(), chainCoreParams.Erc20CustodyContractAddress) {
-						coinType = common.CoinType_ERC20
-					} else if strings.EqualFold(tx.To().Hex(), tssEthAddress) {
-						coinType = common.CoinType_Gas
+				case common.CoinType_ERC20:
+					ballotIdentifier, err = ob.CheckReceiptForCoinTypeERC20(txHash, false)
+					if err != nil {
+						return err
 					}
 
+				case common.CoinType_Gas:
+					ballotIdentifier, err = ob.CheckReceiptForCoinTypeGas(txHash, false)
+					if err != nil {
+						return err
+					}
+				default:
+					fmt.Println("CoinType not detected")
 				}
-			}
-			var ballotIdentifier string
-			switch coinType {
-			case common.CoinType_Zeta:
-				ballotIdentifier, err = ob.CheckReceiptForCoinTypeZeta(txHash, false)
+				fmt.Println("CoinType : ", coinType)
+			} else if common.IsBitcoinChain(chain.ChainId) {
+				obBtc := zetaclient.BitcoinChainClient{
+					Mu: &sync.Mutex{},
+				}
+				obBtc.WithZetaClient(bridge)
+				obBtc.WithLogger(chainLogger)
+				connCfg := &rpcclient.ConnConfig{
+					Host:         cfg.BitcoinConfig.RPCHost,
+					User:         cfg.BitcoinConfig.RPCUsername,
+					Pass:         cfg.BitcoinConfig.RPCPassword,
+					HTTPPostMode: true,
+					DisableTLS:   true,
+					Params:       cfg.BitcoinConfig.RPCParams,
+				}
+
+				btcClient, err := rpcclient.New(connCfg, nil)
+				if err != nil {
+					return err
+				}
+				obBtc.WithBtcClient(btcClient)
+				ballotIdentifier, err = obBtc.CheckReceiptForBtcTxHash(txHash, false)
 				if err != nil {
 					return err
 				}
 
-			case common.CoinType_ERC20:
-				ballotIdentifier, err = ob.CheckReceiptForCoinTypeERC20(txHash, false)
-				if err != nil {
-					return err
-				}
-
-			case common.CoinType_Gas:
-				ballotIdentifier, err = ob.CheckReceiptForCoinTypeGas(txHash, false)
-				if err != nil {
-					return err
-				}
-			default:
-				fmt.Println("CoinType not detected")
 			}
+			fmt.Println("BallotIdentifier : ", ballotIdentifier)
+
 			ballot, err := bridge.GetBallot(ballotIdentifier)
 			if err != nil {
 				return err
 			}
-			fmt.Println("CoinType : ", coinType)
-			fmt.Println("BallotIdentifier : ", ballotIdentifier)
+
 			for _, vote := range ballot.Voters {
 				fmt.Printf("%s : %s \n", vote.VoterAddress, vote.VoteType)
 			}

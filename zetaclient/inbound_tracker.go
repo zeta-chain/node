@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -30,6 +31,83 @@ func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 			return
 		}
 	}
+}
+
+func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
+	ticker := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetCoreParams().InTxTicker)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C():
+			err := ob.ObserveTrackerSuggestions()
+			if err != nil {
+				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")
+			}
+			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
+		case <-ob.stop:
+			ob.logger.WatchInTx.Info().Msg("WatchInTx stopped")
+			return
+		}
+	}
+}
+
+func (ob *BitcoinChainClient) ObserveTrackerSuggestions() error {
+	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
+	if err != nil {
+		return err
+	}
+	for _, tracker := range trackers {
+		ob.logger.WatchInTx.Info().Msgf("checking tracker with hash :%s and coin-type :%s ", tracker.TxHash, tracker.CoinType)
+		ballotIdentifier, err := ob.CheckReceiptForBtcTxHash(tracker.TxHash, true)
+		if err != nil {
+			return err
+		}
+		ob.logger.WatchInTx.Info().Msgf("Vote submitted for tracker submitted via inbound Tracker |BTC Chain| Ballot Identifier : %s", ballotIdentifier)
+	}
+	return nil
+}
+
+func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
+	hash, err := chainhash.NewHashFromStr(txHash)
+	if err != nil {
+		return "", err
+	}
+	tx, err := ob.rpcClient.GetRawTransactionVerbose(hash)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println("Tx : ", tx.Txid, tx.Hash)
+	blockHash, err := chainhash.NewHashFromStr(tx.BlockHash)
+	if err != nil {
+		return "", err
+	}
+	block, err := ob.rpcClient.GetBlockVerbose(blockHash)
+	if err != nil {
+		return "", err
+	}
+	tss, err := ob.zetaClient.GetBtcTssAddress()
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(block.Height)
+	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx)
+	if err != nil {
+		return "", err
+	}
+	if event == nil {
+		return "", errors.New("no btc deposit event found")
+	}
+	msg := ob.GetInboundVoteMessageFromBtcEvent(event)
+	if !vote {
+		return msg.Digest(), nil
+	}
+	zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+	if err != nil {
+		ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
+		return "", err
+	}
+	ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
+	return "", nil
 }
 
 func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
