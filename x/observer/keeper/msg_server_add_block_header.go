@@ -44,6 +44,12 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hex.EncodeToString(msg.BlockHash))
 	}
 
+	// Check timestamp
+	err = msg.Header.ValidateTimestamp(ctx.BlockTime())
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
+	}
+
 	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
 	pHash, err := msg.Header.ParentHash()
 	if err != nil {

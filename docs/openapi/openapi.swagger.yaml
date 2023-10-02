@@ -27626,6 +27626,21 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
+        - name: proof.bitcoin_proof.tx_bytes
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.path
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.index
+          in: query
+          required: false
+          type: integer
+          format: int64
         - name: block_hash
           in: query
           required: false
@@ -50202,6 +50217,18 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  bitcoinProof:
+    type: object
+    properties:
+      tx_bytes:
+        type: string
+        format: byte
+      path:
+        type: string
+        format: byte
+      index:
+        type: integer
+        format: int64
   commonBlockHeader:
     type: object
     properties:
@@ -50272,11 +50299,17 @@ definitions:
         type: string
         format: byte
         title: binary encoded headers; RLP for ethereum
+      bitcoin_header:
+        type: string
+        format: byte
+        title: 80-byte little-endian encoded binary data
   commonProof:
     type: object
     properties:
       ethereum_proof:
         $ref: '#/definitions/ethereumProof'
+      bitcoin_proof:
+        $ref: '#/definitions/bitcoinProof'
   commonPubKeySet:
     type: object
     properties:

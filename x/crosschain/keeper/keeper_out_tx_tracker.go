@@ -3,18 +3,23 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	cosmoserrors "cosmossdk.io/errors"
 
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -192,37 +197,27 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			return nil, cosmoserrors.Wrap(observertypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
 		}
 
-		// verify and process the proof
-		val, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
+		// verify outTx merkle proof
+		txBytes, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
 		if err != nil && !common.IsErrorInvalidProof(err) {
 			return nil, err
 		}
 		if err == nil {
-			var txx ethtypes.Transaction
-			err = txx.UnmarshalBinary(val)
+			tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
 			if err != nil {
 				return nil, err
 			}
-			signer := ethtypes.NewLondonSigner(txx.ChainId())
-			sender, err := ethtypes.Sender(signer, &txx)
+			// verify outTx transaction body
+			if common.IsEVMChain(msg.ChainId) {
+				err = ValidateEVMOutTxBody(msg, txBytes, tss.Eth)
+			} else if common.IsBitcoinChain(msg.ChainId) {
+				err = ValidateBTCOutTxBody(msg, txBytes, tss.Btc)
+			} else {
+				return nil, fmt.Errorf("unsupported chain id %d", msg.ChainId)
+			}
 			if err != nil {
 				return nil, err
 			}
-			res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
-			if err != nil {
-				return nil, err
-			}
-			tssAddr := eth.HexToAddress(res.Eth)
-			if tssAddr == (eth.Address{}) {
-				return nil, fmt.Errorf("tss address not found")
-			}
-			if sender != tssAddr {
-				return nil, fmt.Errorf("sender is not tss address")
-			}
-			if txx.Nonce() != msg.Nonce {
-				return nil, fmt.Errorf("nonce mismatch")
-			}
-			proven = true
 		}
 
 		if !proven {
@@ -269,6 +264,60 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		k.SetOutTxTracker(ctx, tracker)
 	}
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
+}
+
+// ValidateEVMOutTxBody validates the sender address, nonce and chain ID.
+func ValidateEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
+	var txx ethtypes.Transaction
+	err := txx.UnmarshalBinary(txBytes)
+	if err != nil {
+		return err
+	}
+	signer := ethtypes.NewLondonSigner(txx.ChainId())
+	sender, err := ethtypes.Sender(signer, &txx)
+	if err != nil {
+		return err
+	}
+	tssAddr := eth.HexToAddress(tssEth)
+	if tssAddr == (eth.Address{}) {
+		return fmt.Errorf("tss address not found")
+	}
+	if sender != tssAddr {
+		return fmt.Errorf("sender is not tss address")
+	}
+	if txx.Nonce() != msg.Nonce {
+		return fmt.Errorf("nonce mismatch")
+	}
+	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
+		return fmt.Errorf("evm chain id mismatch")
+	}
+	return nil
+}
+
+// ValidateBTCOutTxBody validates the SetWit sender address
+func ValidateBTCOutTxBody(_ *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
+	tx, err := btcutil.NewTxFromBytes(txBytes)
+	if err != nil {
+		return err
+	}
+	// Only SegWit transaction is supported now for TSS outTx
+	for _, vin := range tx.MsgTx().TxIn {
+		if len(vin.Witness) != 2 {
+			return fmt.Errorf("not a SegWit transaction")
+		}
+		pubKey, err := btcec.ParsePubKey(vin.Witness[1], btcec.S256())
+		if err != nil {
+			errors.Wrap(err, "failed to parse public key")
+		}
+		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitconNetParams)
+		if err != nil {
+			errors.Wrap(err, "failed to create P2WPKH address")
+		}
+		if addrP2WPKH.EncodeAddress() != tssBtc {
+			return fmt.Errorf("sender is not tss address")
+		}
+	}
+	return nil
 }
 
 // RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.

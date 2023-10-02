@@ -6,10 +6,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common/ethereum"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common/ethereum"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
