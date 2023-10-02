@@ -377,12 +377,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	var amount float64
-	if res.Amount > 0 {
-		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
+	if res.Amount >= 0 {
+		ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: res.Amount >= 0")
 		amount = res.Amount
-	} else if res.Amount == 0 {
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
-		return false, false, nil
 	} else {
 		amount = -res.Amount
 	}
@@ -657,7 +654,7 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	pendingNonce := ob.pendingNonce
 	ob.mu.Unlock()
 
-	if p.NonceLow > 0 && uint64(p.NonceLow) >= pendingNonce {
+	if p.NonceLow > 0 && uint64(p.NonceLow) > pendingNonce {
 		// get the last included outTx hash
 		txid, err := ob.getOutTxidByNonce(uint64(p.NonceLow)-1, false)
 		if err != nil {
