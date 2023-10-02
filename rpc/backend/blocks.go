@@ -18,6 +18,7 @@ package backend
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"math/big"
 	"strconv"
 
@@ -174,6 +175,10 @@ func (b *Backend) TendermintBlockByNumber(blockNum rpctypes.BlockNumber) (*tmrpc
 		if err != nil {
 			return nil, err
 		}
+		if n > math.MaxInt64 {
+			return nil, fmt.Errorf("block number %d is greater than max int64", n)
+		}
+		// #nosec G701 range checked
 		height = int64(n)
 	}
 	resBlock, err := b.clientCtx.Client.Block(b.ctx, &height)
@@ -396,12 +401,15 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			rpcTx, err = rpctypes.NewRPCTransaction(
 				tx,
 				common.BytesToHash(block.Hash()),
+				// #nosec G701 non negative value
 				uint64(block.Height),
+				// #nosec G701 non negative value
 				uint64(txIndex),
 				baseFee,
 				b.chainID,
 			)
 		} else {
+			// #nosec G701 non negative value
 			rpcTx, err = rpctypes.NewRPCTransactionFromIncompleteMsg(ethMsg, common.BytesToHash(block.Hash()), uint64(block.Height), uint64(txIndex), baseFee, b.chainID, txsAdditional[txIndex])
 		}
 		if err != nil {
@@ -455,6 +463,7 @@ func (b *Backend) RPCBlockFromTendermintBlock(
 			// block gas limit has exceeded, other txs must have failed with same reason.
 			break
 		}
+		// #nosec G701 non negative value
 		gasUsed += uint64(txsResult.GetGasUsed())
 	}
 
