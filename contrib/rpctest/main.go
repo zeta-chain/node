@@ -51,10 +51,15 @@ func main() {
 	fmt.Printf("Start testing the zEVM ETH JSON-RPC for all txs...\n")
 	fmt.Printf("Test1: simple gas voter tx\n")
 
-	bn, err := strconv.Atoi(os.Args[1])
+	bn, err := strconv.ParseInt(os.Args[1], 10, 64)
 	if err != nil {
 		panic(err)
 	}
+	if bn < 0 {
+		panic("Block number must be non-negative")
+	}
+	// #nosec G701 check as positive
+	bnUint64 := uint64(bn)
 
 	if false {
 		// THIS WOULD NOT WORK: see https://github.com/zeta-chain/zeta-node/pull/445
@@ -64,7 +69,7 @@ func main() {
 			panic(err)
 		}
 
-		block, err := zevmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
+		block, err := zevmClient.BlockByNumber(context.Background(), big.NewInt(bn))
 		if err != nil {
 			panic(err)
 		}
@@ -76,7 +81,7 @@ func main() {
 		Endpoint:   "http://localhost:8545",
 		HTTPClient: &http.Client{},
 	}
-	resp := client.EthGetBlockByNumber(uint64(bn), false)
+	resp := client.EthGetBlockByNumber(bnUint64, false)
 	var jsonObject map[string]interface{}
 	if resp.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", resp.Error.Message, resp.Error.Code)
@@ -118,7 +123,7 @@ func main() {
 	// HeaderByHash works; BlockByHash does not work;
 	// main offending RPC is the transaction type; we have custom type id 56
 	// which is not recognized by the go-ethereum client.
-	blockHeader, err := zevmClient.HeaderByNumber(context.Background(), big.NewInt(int64(bn)))
+	blockHeader, err := zevmClient.HeaderByNumber(context.Background(), big.NewInt(bn))
 	if err != nil {
 		panic(err)
 	}
@@ -209,9 +214,9 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Gas price: %s\n", gas.String())
-	toBlock := uint64(bn)
+	toBlock := bnUint64
 	gasPriceIter, err := sys.FilterSetGasPrice(&bind.FilterOpts{
-		Start: uint64(bn),
+		Start: bnUint64,
 		End:   &toBlock,
 	})
 	if err != nil {
