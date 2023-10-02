@@ -46,13 +46,6 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		}
 
 		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
-		//if err != nil {
-		//	isContractReverted := false
-		//	if evmTxResponse != nil && evmTxResponse.Failed() {
-		//		isContractReverted = true
-		//	}
-		//	return isContractReverted, err
-		//}
 		if fungibletypes.IsContractReverted(evmTxResponse, err) {
 			return true, err
 		} else if err != nil {
