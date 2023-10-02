@@ -29,10 +29,17 @@ var (
 	_ = abi.ConvertType
 )
 
+// ReverterzContext is an auto generated low-level Go binding around an user-defined struct.
+type ReverterzContext struct {
+	Origin  []byte
+	Sender  common.Address
+	ChainID *big.Int
+}
+
 // ReverterMetaData contains all meta data concerning the Reverter contract.
 var ReverterMetaData = &bind.MetaData{
-	ABI: "null",
-	Bin: "0xnull",
+	ABI: "[{\"inputs\":[],\"name\":\"Foo\",\"type\":\"error\"},{\"inputs\":[{\"components\":[{\"internalType\":\"bytes\",\"name\":\"origin\",\"type\":\"bytes\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"chainID\",\"type\":\"uint256\"}],\"internalType\":\"structReverter.zContext\",\"name\":\"context\",\"type\":\"tuple\"},{\"internalType\":\"address\",\"name\":\"zrc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes\",\"name\":\"message\",\"type\":\"bytes\"}],\"name\":\"onCrossChainCall\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	Bin: "0x608060405234801561001057600080fd5b5061027f806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c8063de43156e14610030575b600080fd5b61004a600480360381019061004591906101a5565b61004c565b005b6040517fbfb4ebcf00000000000000000000000000000000000000000000000000000000815260040160405180910390fd5b600080fd5b600080fd5b600080fd5b6000606082840312156100a3576100a2610088565b5b81905092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b60006100d7826100ac565b9050919050565b6100e7816100cc565b81146100f257600080fd5b50565b600081359050610104816100de565b92915050565b6000819050919050565b61011d8161010a565b811461012857600080fd5b50565b60008135905061013a81610114565b92915050565b600080fd5b600080fd5b600080fd5b60008083601f84011261016557610164610140565b5b8235905067ffffffffffffffff81111561018257610181610145565b5b60208301915083600182028301111561019e5761019d61014a565b5b9250929050565b6000806000806000608086880312156101c1576101c061007e565b5b600086013567ffffffffffffffff8111156101df576101de610083565b5b6101eb8882890161008d565b95505060206101fc888289016100f5565b945050604061020d8882890161012b565b935050606086013567ffffffffffffffff81111561022e5761022d610083565b5b61023a8882890161014f565b9250925050929550929590935056fea2646970667358221220793398f92335fd817a4bf49381e3e4cbdfa00223720869567e31300bf71f0c9e64736f6c63430008150033",
 }
 
 // ReverterABI is the input ABI used to generate the binding from.
@@ -200,4 +207,25 @@ func (_Reverter *ReverterTransactorRaw) Transfer(opts *bind.TransactOpts) (*type
 // Transact invokes the (paid) contract method with params as input values.
 func (_Reverter *ReverterTransactorRaw) Transact(opts *bind.TransactOpts, method string, params ...interface{}) (*types.Transaction, error) {
 	return _Reverter.Contract.contract.Transact(opts, method, params...)
+}
+
+// OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
+//
+// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterTransactor) OnCrossChainCall(opts *bind.TransactOpts, context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.contract.Transact(opts, "onCrossChainCall", context, zrc20, amount, message)
+}
+
+// OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
+//
+// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterSession) OnCrossChainCall(context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.Contract.OnCrossChainCall(&_Reverter.TransactOpts, context, zrc20, amount, message)
+}
+
+// OnCrossChainCall is a paid mutator transaction binding the contract method 0xde43156e.
+//
+// Solidity: function onCrossChainCall((bytes,address,uint256) context, address zrc20, uint256 amount, bytes message) returns()
+func (_Reverter *ReverterTransactorSession) OnCrossChainCall(context ReverterzContext, zrc20 common.Address, amount *big.Int, message []byte) (*types.Transaction, error) {
+	return _Reverter.Contract.OnCrossChainCall(&_Reverter.TransactOpts, context, zrc20, amount, message)
 }

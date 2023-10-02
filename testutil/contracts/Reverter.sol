@@ -2,7 +2,7 @@
 pragma solidity ^0.8.7;
 
 // Sample contract for evm tests
-contract Example {
+contract Reverter {
     error Foo();
 
     struct zContext {
