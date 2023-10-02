@@ -20,7 +20,10 @@ type ObserverInfoReader struct {
 }
 
 func (o ObserverInfoReader) String() string {
-	s, _ := json.MarshalIndent(o, "", "\t")
+	s, err := json.MarshalIndent(o, "", "\t")
+	if err != nil {
+		return ""
+	}
 	return string(s)
 }
 

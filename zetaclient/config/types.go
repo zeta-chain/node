@@ -75,7 +75,10 @@ func NewConfig() *Config {
 func (c *Config) String() string {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
-	s, _ := json.MarshalIndent(c, "", "\t")
+	s, err := json.MarshalIndent(c, "", "\t")
+	if err != nil {
+		return ""
+	}
 	return string(s)
 }
 

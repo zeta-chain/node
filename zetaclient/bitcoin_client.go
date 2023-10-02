@@ -245,6 +245,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	}
 
 	// "confirmed" current block number
+	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
 		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
@@ -286,6 +287,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
+		// #nosec G701 always positive
 		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
 
 		for _, inTx := range inTxs {
@@ -396,6 +398,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
+		// #nosec G701 always positive
 		uint64(res.BlockIndex),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
@@ -438,6 +441,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		if err != nil {
 			return err
 		}
+		// #nosec G701 always in range
 		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
 		if err != nil {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
@@ -461,6 +465,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if err != nil {
 		return err
 	}
+	// #nosec G701 always positive
 	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
@@ -657,9 +662,12 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	pendingNonce := ob.pendingNonce
 	ob.mu.Unlock()
 
-	if p.NonceLow > 0 && uint64(p.NonceLow) >= pendingNonce {
+	// #nosec G701 always positive
+	nonceLow := uint64(p.NonceLow)
+
+	if nonceLow > 0 && nonceLow >= pendingNonce {
 		// get the last included outTx hash
-		txid, err := ob.getOutTxidByNonce(uint64(p.NonceLow)-1, false)
+		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
 		if err != nil {
 			ob.logger.ChainLogger.Error().Err(err).Msg("refreshPendingNonce: error getting last outTx txid")
 		}
@@ -667,7 +675,7 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 		// set 'NonceLow' as the new pending nonce
 		ob.mu.Lock()
 		defer ob.mu.Unlock()
-		ob.pendingNonce = uint64(p.NonceLow)
+		ob.pendingNonce = nonceLow
 		ob.logger.ChainLogger.Info().Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
 	}
 }
@@ -1042,7 +1050,8 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 			if recvAddress != params.Receiver {
 				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", recvAddress, params.Receiver)
 			}
-			if amount != int64(params.Amount.Uint64()) {
+			// #nosec G701 always positive
+			if uint64(amount) != params.Amount.Uint64() {
 				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
 			}
 		}
@@ -1137,5 +1146,6 @@ func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 
 // A very special value to mark current nonce in UTXO
 func NonceMarkAmount(nonce uint64) int64 {
+	// #nosec G701 always in range
 	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
 }

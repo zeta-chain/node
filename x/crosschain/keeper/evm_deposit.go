@@ -27,6 +27,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg 
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
 		ethTxHash = ethcommon.BytesToHash(hash)
 		cctx.GetCurrentOutTxParam().OutboundTxHash = ethTxHash.String()
+		// #nosec G701 always positive
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 

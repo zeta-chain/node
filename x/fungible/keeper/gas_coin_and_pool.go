@@ -44,6 +44,7 @@ func (k Keeper) SetupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAsse
 		return ethcommon.Address{}, err
 	}
 	amount := big.NewInt(10)
+	// #nosec G701 always in range
 	amount.Exp(amount, big.NewInt(int64(decimals-1)), nil)
 	amountAZeta := big.NewInt(1e17)
 
