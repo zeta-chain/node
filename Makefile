@@ -150,6 +150,9 @@ lint-pre:
 lint: lint-pre
 	@golangci-lint run
 
+lint-cosmos-gosec:
+	@bash ./scripts/cosmos-gosec.sh
+
 proto:
 	@echo "--> Removing old Go types "
 	@find . -name '*.pb.go' -type f -delete

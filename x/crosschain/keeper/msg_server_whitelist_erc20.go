@@ -48,7 +48,17 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 
 	tmpCtx, commit := ctx.CacheContext()
 	// add to the foreign coins. Deploy ZRC20 contract for it.
-	zrc20Addr, err := k.fungibleKeeper.DeployZRC20Contract(tmpCtx, msg.Name, msg.Symbol, uint8(msg.Decimals), chain.ChainId, common.CoinType_ERC20, msg.Erc20Address, big.NewInt(msg.GasLimit))
+	zrc20Addr, err := k.fungibleKeeper.DeployZRC20Contract(
+		tmpCtx,
+		msg.Name,
+		msg.Symbol,
+		// #nosec G701 always in range
+		uint8(msg.Decimals),
+		chain.ChainId,
+		common.CoinType_ERC20,
+		msg.Erc20Address,
+		big.NewInt(msg.GasLimit),
+	)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(types.ErrDeployContract, "failed to deploy ZRC20 contract for ERC20 contract address (%s) on chain (%d)", msg.Erc20Address, msg.ChainId)
 	}
@@ -122,7 +132,8 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		Name:                 msg.Name,
 		Symbol:               msg.Symbol,
 		CoinType:             common.CoinType_ERC20,
-		GasLimit:             uint64(msg.GasLimit),
+		// #nosec G701 always positive
+		GasLimit: uint64(msg.GasLimit),
 	}
 	k.fungibleKeeper.SetForeignCoins(ctx, foreignCoin)
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
