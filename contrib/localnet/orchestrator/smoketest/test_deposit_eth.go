@@ -12,16 +12,15 @@ import (
 	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-g
-ethtypes "github.com/ethereum/go-ethereum/core/types"
-"github.com/ethereum/go-ethereum/crypto"
-zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-"github.com/zeta-chain/zetacore/common"
-"github.com/zeta-chain/zetacore/common/ethereum"
-"github.com/zeta-chain/zetacore/x/crosschain/types"
-fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-"github.com/zeta-chain/zetacore/zetaclient"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/ethereum"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
 // this tests sending ZETA out of ZetaChain to Ethereum
