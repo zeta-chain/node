@@ -25,7 +25,10 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 		return 0, sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, false, "setGasPrice", chainid, gasPrice)
-	if err != nil || res.Failed() {
+	if err != nil {
+		return 0, sdkerrors.Wrapf(types.ErrABIGet, err.Error())
+	}
+	if res.Failed() {
 		return res.GasUsed, sdkerrors.Wrapf(types.ErrContractCall, "setGasPrice")
 	}
 
