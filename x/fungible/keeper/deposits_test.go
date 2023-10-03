@@ -29,7 +29,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, _, err := k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
@@ -40,6 +40,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
@@ -60,7 +61,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, _, err := k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
@@ -71,6 +72,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			assetAddress,
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
@@ -105,7 +107,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, _, err = k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
@@ -116,6 +118,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
