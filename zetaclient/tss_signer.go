@@ -94,7 +94,7 @@ func (tss *TSS) Pubkey() []byte {
 
 // digest should be Hashes of some data
 // Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -112,7 +112,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
-		index := fmt.Sprintf("%s-%d", digest, height)
+		index := fmt.Sprintf("%d-%d-%s-%d", chain.ChainId, nonce, digest, height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
@@ -167,7 +167,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 }
 
 // digest should be batch of Hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *common.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -184,7 +184,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msg("keysign status FAIL posting blame to core")
 		digest := combineDigests(digestBase64)
-		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
+		index := fmt.Sprintf("%d-%d-%s-%d", chain.ChainId, nonce, hex.EncodeToString(digest), height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {

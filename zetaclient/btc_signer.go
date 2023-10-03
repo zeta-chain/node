@@ -164,7 +164,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if !ok {
 		return nil, fmt.Errorf("tssSigner is not a TSS")
 	}
-	sig65Bs, err := tss.SignBatch(witnessHashes, height, chain)
+	sig65Bs, err := tss.SignBatch(witnessHashes, height, nonce, chain)
 	if err != nil {
 		return nil, fmt.Errorf("SignBatch error: %v", err)
 	}

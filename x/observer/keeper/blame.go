@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -40,6 +39,10 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []*types.Blame, found
 	return
 }
 
+func (k Keeper) GetBlameByChainAndNonce() {
+
+}
+
 // Query
 
 func (k Keeper) BlameByIdentifier(goCtx context.Context, request *types.QueryBlameByIdentifierRequest) (*types.QueryBlameByIdentifierResponse, error) {
@@ -70,4 +73,8 @@ func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAl
 	return &types.QueryAllBlameRecordsResponse{
 		BlameInfo: blameRecords,
 	}, nil
+}
+
+func (k Keeper) BlameByChainAndNonce(goCtx context.Context, request *types.QueryBlameByChainAndNonceRequest) (*types.QueryBlameByChainAndNonceResponse, error) {
+	return &types.QueryBlameByChainAndNonceResponse{}, nil
 }
