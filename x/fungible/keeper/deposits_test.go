@@ -29,14 +29,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -62,14 +60,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_ERC20,
 			assetAddress,
@@ -109,14 +105,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err = k.ZRC20DepositAndCallContract(
+		_, _, err = k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(500),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -156,14 +150,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit (500 + 501 > 1000)
 		to := sample.EthAddress()
-		_, err = k.ZRC20DepositAndCallContract(
+		_, _, err = k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(501),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -184,14 +176,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -212,14 +202,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_ERC20,
 			assetAddress,
