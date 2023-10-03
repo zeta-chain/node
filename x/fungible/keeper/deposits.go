@@ -55,8 +55,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 		}
 		res, err := k.DepositZRC20AndCallContract(ctx, context, Zrc20Contract, to, amount, data)
 		return res, true, err
-	} else {
-		res, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
-		return res, false, err
 	}
+	res, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
+	return res, false, err
 }
