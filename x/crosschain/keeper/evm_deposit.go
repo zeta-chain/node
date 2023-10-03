@@ -19,7 +19,12 @@ import (
 // HandleEVMDeposit handles a deposit from an inbound tx
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
-func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) (bool, error) {
+func (k Keeper) HandleEVMDeposit(
+	ctx sdk.Context,
+	cctx *types.CrossChainTx,
+	msg types.MsgVoteOnObservedInboundTx,
+	senderChain *common.Chain,
+) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	var ethTxHash ethcommon.Hash
 	if len(ctx.TxBytes()) > 0 {
@@ -41,7 +46,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg 
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
 		parsedAddress, data, err := parseAddressAndData(msg.Message, msg.Asset)
 		if err != nil {
-			return false, errors.Wrap(types.ErrUnableToParseContract, err.Error())
+			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 		}
 		if parsedAddress != (ethcommon.Address{}) {
 			to = parsedAddress
@@ -112,10 +117,12 @@ func parseAddressAndData(message string, asset string) (address ethcommon.Addres
 	if len(message) == 0 {
 		return ethcommon.Address{}, nil, nil
 	}
+
 	data, err = hex.DecodeString(message)
 	if err != nil {
-		return ethcommon.Address{}, nil, err
+		return ethcommon.Address{}, nil, fmt.Errorf("message should be a hex encoded string: " + err.Error())
 	}
+
 	if len(data) < 20 {
 		if len(asset) != 42 || asset[:2] != "0x" {
 			return ethcommon.Address{}, nil, fmt.Errorf("invalid message length")
