@@ -97,6 +97,7 @@ func DebugCmd() *cobra.Command {
 					return err
 				}
 				if isPending {
+					return fmt.Errorf("tx is still pending")
 				}
 
 				for _, chainCoreParams := range coreParams {
@@ -148,6 +149,7 @@ func DebugCmd() *cobra.Command {
 				}
 				obBtc.WithZetaClient(bridge)
 				obBtc.WithLogger(chainLogger)
+				obBtc.WithChain(*common.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,

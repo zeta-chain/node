@@ -99,6 +99,12 @@ func (ob *BitcoinChainClient) WithBtcClient(client *rpcclient.Client) {
 	ob.rpcClient = client
 }
 
+func (ob *BitcoinChainClient) WithChain(chain common.Chain) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.chain = chain
+}
+
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
@@ -177,6 +183,7 @@ func (ob *BitcoinChainClient) Start() {
 	go ob.observeOutTx()
 	go ob.WatchUTXOS()
 	go ob.WatchGasPrice()
+	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
 }
 
 func (ob *BitcoinChainClient) Stop() {
@@ -564,6 +571,7 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 
 	}
 	if found {
+		fmt.Println("found tx: ", tx.Txid)
 		var fromAddress string
 		if len(tx.Vin) > 0 {
 			vin := tx.Vin[0]
