@@ -23,39 +23,40 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	to eth.Address,
 	amount *big.Int,
 	senderChain *common.Chain,
-	message string,
-	contract eth.Address,
 	data []byte,
 	coinType common.CoinType,
 	asset string,
-) (*evmtypes.MsgEthereumTxResponse, error) {
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var Zrc20Contract eth.Address
 	var coin fungibletypes.ForeignCoins
 	var found bool
 	if coinType == common.CoinType_Gas {
 		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
 		if !found {
-			return nil, types.ErrGasCoinNotFound
+			return nil, false, types.ErrGasCoinNotFound
 		}
 	} else {
 		coin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChain.ChainId)
 		if !found {
-			return nil, types.ErrForeignCoinNotFound
+			return nil, false, types.ErrForeignCoinNotFound
 		}
 	}
 	Zrc20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
-	if len(message) == 0 { // no message; transfer
-		return k.DepositZRC20(ctx, Zrc20Contract, to, amount)
-	}
-	// non-empty message = [contractaddress, calldata]
-	if len(data) == 0 {
-		return k.DepositZRC20(ctx, Zrc20Contract, contract, amount)
-	}
-	context := systemcontract.ZContext{
-		Origin:  from,
-		Sender:  eth.Address{},
-		ChainID: big.NewInt(senderChain.ChainId),
-	}
-	return k.DepositZRC20AndCallContract(ctx, context, Zrc20Contract, contract, amount, data)
 
+	// check if the receiver is a contract
+	// if it is, then the hook onCrossChainCall() will be called
+	// if not, the zrc20 are simply transferred to the receiver
+	acc := k.evmKeeper.GetAccount(ctx, to)
+	if acc != nil && acc.IsContract() {
+		context := systemcontract.ZContext{
+			Origin:  from,
+			Sender:  eth.Address{},
+			ChainID: big.NewInt(senderChain.ChainId),
+		}
+		res, err := k.DepositZRC20AndCallContract(ctx, context, Zrc20Contract, to, amount, data)
+		return res, true, err
+	} else {
+		res, err := k.DepositZRC20(ctx, Zrc20Contract, to, amount)
+		return res, false, err
+	}
 }

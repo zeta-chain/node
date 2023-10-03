@@ -36,16 +36,29 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		contract, data, err := parseContractAndData(msg.Message, msg.Asset)
+		parsedAddress, data, err := parseAddressAndData(msg.Message, msg.Asset)
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseContract, err.Error())
 		}
+		if parsedAddress != (ethcommon.Address{}) {
+			to = parsedAddress
+		}
+
 		from, err := senderChain.DecodeAddress(msg.Sender)
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}
 
-		evmTxResponse, err := k.fungibleKeeper.ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		evmTxResponse, contractCall, err := k.fungibleKeeper.ZRC20DepositAndCallContract(
+			ctx,
+			from,
+			to,
+			msg.Amount.BigInt(),
+			senderChain,
+			data,
+			msg.CoinType,
+			msg.Asset,
+		)
 		if err != nil {
 			isContractReverted := false
 			if evmTxResponse != nil && evmTxResponse.Failed() {
@@ -56,7 +69,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 
 		// non-empty msg.Message means this is a contract call; therefore the logs should be processed.
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
-		if !evmTxResponse.Failed() && len(msg.Message) > 0 {
+		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
 			txOrigin := msg.TxOrigin
@@ -64,7 +77,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 				txOrigin = msg.Sender
 			}
 
-			err = k.ProcessLogs(ctx, logs, contract, txOrigin)
+			err = k.ProcessLogs(ctx, logs, to, txOrigin)
 			if err != nil {
 				// ProcessLogs should not error; error indicates exception, should abort
 				return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
@@ -73,7 +86,7 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 				sdk.NewEvent(sdk.EventTypeMessage,
 					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
 					sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
-					sdk.NewAttribute("contract", contract.String()),
+					sdk.NewAttribute("contract", to.String()),
 					sdk.NewAttribute("data", hex.EncodeToString(data)),
 					sdk.NewAttribute("cctxIndex", cctx.Index),
 				),
@@ -83,26 +96,26 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 	return false, nil
 }
 
+// parseAddressAndData parses the message string into an address and data
 // message is hex encoded byte array
 // [ contractAddress calldata ]
 // [ 20B, variable]
-func parseContractAndData(message string, asset string) (contractAddress ethcommon.Address, data []byte, err error) {
+func parseAddressAndData(message string, asset string) (address ethcommon.Address, data []byte, err error) {
 	if len(message) == 0 {
-		return contractAddress, nil, nil
+		return ethcommon.Address{}, nil, nil
 	}
 	data, err = hex.DecodeString(message)
 	if err != nil {
-		return contractAddress, nil, err
+		return ethcommon.Address{}, nil, err
 	}
 	if len(data) < 20 {
 		if len(asset) != 42 || asset[:2] != "0x" {
-			err = fmt.Errorf("invalid message length")
-			return contractAddress, nil, err
+			return ethcommon.Address{}, nil, fmt.Errorf("invalid message length")
 		}
-		contractAddress = ethcommon.HexToAddress(asset)
+		address = ethcommon.HexToAddress(asset)
 	} else {
-		contractAddress = ethcommon.BytesToAddress(data[:20])
+		address = ethcommon.BytesToAddress(data[:20])
 		data = data[20:]
 	}
-	return contractAddress, data, nil
+	return address, data, nil
 }
