@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -14,6 +12,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 // HandleEVMDeposit handles a deposit from an inbound tx
@@ -44,7 +43,7 @@ func (k Keeper) HandleEVMDeposit(
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		parsedAddress, data, err := parseAddressAndData(msg.Message, msg.Asset)
+		parsedAddress, data, err := parseAddressAndData(msg.Message)
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 		}
@@ -113,24 +112,21 @@ func (k Keeper) HandleEVMDeposit(
 // message is hex encoded byte array
 // [ contractAddress calldata ]
 // [ 20B, variable]
-func parseAddressAndData(message string, asset string) (address ethcommon.Address, data []byte, err error) {
+func parseAddressAndData(message string) (ethcommon.Address, []byte, error) {
 	if len(message) == 0 {
 		return ethcommon.Address{}, nil, nil
 	}
 
-	data, err = hex.DecodeString(message)
+	data, err := hex.DecodeString(message)
 	if err != nil {
 		return ethcommon.Address{}, nil, fmt.Errorf("message should be a hex encoded string: " + err.Error())
 	}
 
 	if len(data) < 20 {
-		if len(asset) != 42 || asset[:2] != "0x" {
-			return ethcommon.Address{}, nil, fmt.Errorf("invalid message length")
-		}
-		address = ethcommon.HexToAddress(asset)
-	} else {
-		address = ethcommon.BytesToAddress(data[:20])
-		data = data[20:]
+		return ethcommon.Address{}, data, nil
 	}
+
+	address := ethcommon.BytesToAddress(data[:20])
+	data = data[20:]
 	return address, data, nil
 }

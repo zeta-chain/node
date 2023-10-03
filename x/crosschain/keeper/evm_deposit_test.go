@@ -318,6 +318,49 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
+	t.Run("should deposit into receiver with specified data if no address parsed with data", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChain(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		data, err := hex.DecodeString("DEADBEEF")
+		require.NoError(t, err)
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			data,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
+
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: receiver.String(),
+				Amount:   math.NewUintFromBigInt(amount),
+				CoinType: common.CoinType_ERC20,
+				Message:  "DEADBEEF",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.NoError(t, err)
+		require.False(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
 	// TODO: add test cases for testing logs process
 	// https://github.com/zeta-chain/node/issues/1207
 }
