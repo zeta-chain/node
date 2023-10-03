@@ -77,6 +77,7 @@ func (b *Backend) GetProof(address common.Address, storageKeys []string, blockNr
 			return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
 		}
 
+		// #nosec G701 range checked
 		height = int64(bn)
 	}
 
@@ -194,8 +195,13 @@ func (b *Backend) GetTransactionCount(address common.Address, blockNum rpctypes.
 	if err != nil {
 		return &n, err
 	}
+	if bn > math.MaxInt64 {
+		return nil, fmt.Errorf("not able to query block number greater than MaxInt64")
+	}
 	height := blockNum.Int64()
+	// #nosec G701 range checked
 	currentHeight := int64(bn)
+
 	if height > currentHeight {
 		return &n, errorsmod.Wrapf(
 			sdkerrors.ErrInvalidHeight,

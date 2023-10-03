@@ -8,10 +8,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"sync"
 	"time"
+
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/ethereum/go-ethereum"
 

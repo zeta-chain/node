@@ -89,7 +89,10 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 }
 
 func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {
-	selfdelAddr, _ := sdk.AccAddressFromBech32(accAddress)
+	selfdelAddr, err := sdk.AccAddressFromBech32(accAddress)
+	if err != nil {
+		return err
+	}
 	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {
 		return err

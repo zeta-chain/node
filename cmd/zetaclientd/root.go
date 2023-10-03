@@ -15,6 +15,8 @@ type rootArguments struct {
 	zetaCoreHome string
 }
 
-func setHomeDir() {
-	rootArgs.zetaCoreHome, _ = RootCmd.Flags().GetString(tmcli.HomeFlag)
+func setHomeDir() error {
+	var err error
+	rootArgs.zetaCoreHome, err = RootCmd.Flags().GetString(tmcli.HomeFlag)
+	return err
 }

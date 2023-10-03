@@ -46,8 +46,14 @@ func CollectObserverInfoCmd() *cobra.Command {
 				}
 				observerInfoList = append(observerInfoList, observerInfo)
 			}
-			file, _ := json.MarshalIndent(observerInfoList, "", " ")
-			_ = os.WriteFile("observer_info.json", file, 0600)
+			file, err := json.MarshalIndent(observerInfoList, "", " ")
+			if err != nil {
+				return err
+			}
+			err = os.WriteFile("observer_info.json", file, 0600)
+			if err != nil {
+				return err
+			}
 			return nil
 		},
 	}
