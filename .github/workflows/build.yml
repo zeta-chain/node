@@ -78,7 +78,7 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: ["zeta-runners"] # 20 minutes
+    runs-on: ["zeta-runners"] # 25 minutes
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3

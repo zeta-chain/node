@@ -5,12 +5,14 @@ import (
 	"reflect"
 	"unsafe"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
 	coinType  = reflect.TypeOf(sdk.Coin{})
 	coinsType = reflect.TypeOf(sdk.Coins{})
+	uintType  = reflect.TypeOf(math.Uint{})
 )
 
 // Fill analyze all struct fields and slices with
@@ -45,6 +47,10 @@ func Fill(x interface{}) interface{} {
 				case coinsType:
 					coins := reflect.New(coinsType).Interface()
 					s := reflect.ValueOf(coins).Elem()
+					f.Set(s)
+				case uintType:
+					mathUint := reflect.New(uintType).Interface()
+					s := reflect.ValueOf(mathUint).Elem()
 					f.Set(s)
 				default:
 					//#nosec G103

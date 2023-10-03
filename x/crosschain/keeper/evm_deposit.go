@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
@@ -14,9 +16,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
+// HandleEVMDeposit handles a deposit from an inbound tx
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
-func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) (bool, error) {
+func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedInboundTx, senderChain *common.Chain) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	var ethTxHash ethcommon.Hash
 	if len(ctx.TxBytes()) > 0 {
@@ -61,9 +64,12 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		)
 		if err != nil {
 			isContractReverted := false
-			if evmTxResponse != nil && evmTxResponse.Failed() {
+
+			// consider the contract as reverted if foreign coin liquidity cap is reached
+			if (evmTxResponse != nil && evmTxResponse.Failed()) || errors.Is(err, fungibletypes.ErrForeignCoinCapReached) {
 				isContractReverted = true
 			}
+
 			return isContractReverted, err
 		}
 
@@ -71,26 +77,28 @@ func (k msgServer) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx, m
 		// a withdrawal event in the logs could generate cctxs for outbound transactions.
 		if !evmTxResponse.Failed() && contractCall {
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
-			ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-			txOrigin := msg.TxOrigin
-			if txOrigin == "" {
-				txOrigin = msg.Sender
-			}
+			if len(logs) > 0 {
+				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
+				txOrigin := msg.TxOrigin
+				if txOrigin == "" {
+					txOrigin = msg.Sender
+				}
 
-			err = k.ProcessLogs(ctx, logs, to, txOrigin)
-			if err != nil {
-				// ProcessLogs should not error; error indicates exception, should abort
-				return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				err = k.ProcessLogs(ctx, logs, to, txOrigin)
+				if err != nil {
+					// ProcessLogs should not error; error indicates exception, should abort
+					return false, errors.Wrap(types.ErrCannotProcessWithdrawal, err.Error())
+				}
+				ctx.EventManager().EmitEvent(
+					sdk.NewEvent(sdk.EventTypeMessage,
+						sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+						sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
+						sdk.NewAttribute("contract", to.String()),
+						sdk.NewAttribute("data", hex.EncodeToString(data)),
+						sdk.NewAttribute("cctxIndex", cctx.Index),
+					),
+				)
 			}
-			ctx.EventManager().EmitEvent(
-				sdk.NewEvent(sdk.EventTypeMessage,
-					sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
-					sdk.NewAttribute("action", "DepositZRC20AndCallContract"),
-					sdk.NewAttribute("contract", to.String()),
-					sdk.NewAttribute("data", hex.EncodeToString(data)),
-					sdk.NewAttribute("cctxIndex", cctx.Index),
-				),
-			)
 		}
 	}
 	return false, nil
