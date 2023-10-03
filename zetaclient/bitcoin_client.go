@@ -384,7 +384,12 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		amount = -res.Amount
 	}
 
-	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
+	sats, err := getSatoshis(amount)
+	if err != nil {
+		ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: getSatoshis error: %s", err)
+		return false, false, nil
+	}
+	amountInSat := big.NewInt(sats)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
