@@ -17,6 +17,7 @@ package eth
 
 import (
 	"context"
+
 	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
 	"github.com/ethereum/go-ethereum/common"
