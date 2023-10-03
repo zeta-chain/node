@@ -17,6 +17,7 @@ package eth
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/signer/core/apitypes"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -117,10 +118,9 @@ type EthereumAPI interface {
 	// eth_submitWork (on Ethereum.org)
 	// eth_submitHashrate (on Ethereum.org)
 
-	// Disabled APIs for security reasons
-	//SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error)
-	//Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
-	//SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
+	SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error)
+	Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
+	SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
 }
 
 var _ EthereumAPI = (*PublicAPI)(nil)
@@ -507,24 +507,20 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 	return result, nil
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///                           Disabled 										///
-///////////////////////////////////////////////////////////////////////////////
+// SendTransaction sends an Ethereum transaction.
+func (e *PublicAPI) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
+	e.logger.Debug("eth_sendTransaction", "args", args.String())
+	return e.backend.SendTransaction(args)
+}
 
-//// SendTransaction sends an Ethereum transaction.
-//func (e *PublicAPI) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
-//	e.logger.Debug("eth_sendTransaction", "args", args.String())
-//	return e.backend.SendTransaction(args)
-//}
-//
-//// Sign signs the provided data using the private key of address via Geth's signature standard.
-//func (e *PublicAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
-//	e.logger.Debug("eth_sign", "address", address.Hex(), "data", common.Bytes2Hex(data))
-//	return e.backend.Sign(address, data)
-//}
-//
-//// SignTypedData signs EIP-712 conformant typed data
-//func (e *PublicAPI) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
-//	e.logger.Debug("eth_signTypedData", "address", address.Hex(), "data", typedData)
-//	return e.backend.SignTypedData(address, typedData)
-//}
+// Sign signs the provided data using the private key of address via Geth's signature standard.
+func (e *PublicAPI) Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
+	e.logger.Debug("eth_sign", "address", address.Hex(), "data", common.Bytes2Hex(data))
+	return e.backend.Sign(address, data)
+}
+
+// SignTypedData signs EIP-712 conformant typed data
+func (e *PublicAPI) SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error) {
+	e.logger.Debug("eth_signTypedData", "address", address.Hex(), "data", typedData)
+	return e.backend.SignTypedData(address, typedData)
+}
