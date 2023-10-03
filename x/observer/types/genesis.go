@@ -15,14 +15,13 @@ func DefaultGenesis() *GenesisState {
 		Ballots:           nil,
 		Observers:         nil,
 		NodeAccountList:   []*NodeAccount{},
-		PermissionFlags:   &PermissionFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
+		CrosschainFlags:   &CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
 		Keygen:            nil,
 		LastObserverCount: nil,
 	}
 }
 
-// Validate performs basic genesis state validation returning an error upon any
-// failure.
+// Validate performs basic genesis state validation returning an error upon any failure.
 func (gs GenesisState) Validate() error {
 	if gs.Params != nil {
 		err := gs.Params.Validate()
@@ -40,11 +39,7 @@ func (gs GenesisState) Validate() error {
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
-	if err := VerifyObserverMapper(gs.Observers); err != nil {
-		return err
-	}
-
-	return nil
+	return VerifyObserverMapper(gs.Observers)
 }
 
 func GetGenesisStateFromAppState(marshaler codec.JSONCodec, appState map[string]json.RawMessage) GenesisState {

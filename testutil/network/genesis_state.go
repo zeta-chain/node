@@ -81,7 +81,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		BlockNumber:    5,
 	}
 	assert.NoError(t, observerGenesis.Validate())
-	observerGenesis.PermissionFlags = &observerTypes.PermissionFlags{
+	observerGenesis.CrosschainFlags = &observerTypes.CrosschainFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
 	}
@@ -104,12 +104,12 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	//params.BallotMaturityBlocks = 3
 	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
-	permissionFlags := &observerTypes.PermissionFlags{
+	crosschainFlags := &observerTypes.CrosschainFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
 	}
-	nullify.Fill(&permissionFlags)
-	state.PermissionFlags = permissionFlags
+	nullify.Fill(&crosschainFlags)
+	state.CrosschainFlags = crosschainFlags
 
 	assert.NoError(t, state.Validate())
 

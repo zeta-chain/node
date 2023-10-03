@@ -21,7 +21,7 @@ func MigrateStore(
 
 	// Using New Types from observer module as the structure is the same
 	var nodeAccounts []observerTypes.NodeAccount
-	var permissionFlags observerTypes.PermissionFlags
+	var crosschainFlags observerTypes.CrosschainFlags
 	var keygen observerTypes.Keygen
 	writePermissionFlags := false
 	writeKeygen := false
@@ -46,7 +46,7 @@ func MigrateStore(
 	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(LegacyPermissionFlagsKey))
 	b = store.Get([]byte{0})
 	if b != nil {
-		cdc.MustUnmarshal(b, &permissionFlags)
+		cdc.MustUnmarshal(b, &crosschainFlags)
 		writePermissionFlags = true
 	}
 
@@ -60,7 +60,7 @@ func MigrateStore(
 		observerKeeper.SetKeygen(ctx, keygen)
 	}
 	if writePermissionFlags {
-		observerKeeper.SetPermissionFlags(ctx, permissionFlags)
+		observerKeeper.SetCrosschainFlags(ctx, crosschainFlags)
 	}
 
 	allObservers := observerKeeper.GetAllObserverMappers(ctx)
@@ -69,6 +69,7 @@ func MigrateStore(
 		totalObserverCountCurrentBlock += len(observer.ObserverList)
 	}
 	observerKeeper.SetLastObserverCount(ctx, &observerTypes.LastObserverCount{
+		// #nosec G701 always positive
 		Count:            uint64(totalObserverCountCurrentBlock),
 		LastChangeHeight: ctx.BlockHeight(),
 	})

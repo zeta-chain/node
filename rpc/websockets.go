@@ -27,25 +27,26 @@ import (
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
-
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/eth/filters"
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/rpc"
-
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/libs/log"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	tmtypes "github.com/tendermint/tendermint/types"
-
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/rpc/ethereum/pubsub"
 	rpcfilters "github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth/filters"
 	"github.com/zeta-chain/zetacore/rpc/types"
 	"github.com/zeta-chain/zetacore/server/config"
+)
+
+const (
+	messageSizeLimit = 32 * 1024 * 1024 // 32MB
 )
 
 type WebsocketsServer interface {
@@ -91,7 +92,10 @@ type websocketsServer struct {
 
 func NewWebsocketsServer(clientCtx client.Context, logger log.Logger, tmWSClient *rpcclient.WSClient, cfg *config.Config) WebsocketsServer {
 	logger = logger.With("api", "websocket-server")
-	_, port, _ := net.SplitHostPort(cfg.JSONRPC.Address)
+	_, port, err := net.SplitHostPort(cfg.JSONRPC.Address)
+	if err != nil {
+		logger.Error("failed to parse rpc address", "error", err.Error())
+	}
 
 	return &websocketsServer{
 		rpcAddr:  "localhost:" + port, // FIXME: this shouldn't be hardcoded to localhost
@@ -139,6 +143,8 @@ func (s *websocketsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	conn.SetReadLimit(messageSizeLimit)
+
 	s.readLoop(&wsConn{
 		mux:  new(sync.Mutex),
 		conn: conn,
@@ -155,7 +161,10 @@ func (s *websocketsServer) sendErrResponse(wsConn *wsConn, msg string) {
 		ID: nil,
 	}
 
-	_ = wsConn.WriteJSON(res)
+	err := wsConn.WriteJSON(res)
+	if err != nil {
+		s.logger.Debug("error writing error response", "error", err.Error())
+	}
 }
 
 type wsConn struct {
@@ -196,7 +205,10 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 	for {
 		_, mb, err := wsConn.ReadMessage()
 		if err != nil {
-			_ = wsConn.Close()
+			err = wsConn.Close()
+			if err != nil {
+				s.logger.Debug("error closing websocket connection", "error", err.Error())
+			}
 			s.logger.Error("read message error, breaking read loop", "error", err.Error())
 			return
 		}
@@ -427,7 +439,10 @@ func (api *pubSubAPI) subscribeNewHeads(wsConn *wsConn, subID rpc.ID) (pubsub.Un
 
 					try(func() {
 						if err != websocket.ErrCloseSent {
-							_ = wsConn.Close()
+							err = wsConn.Close()
+							if err != nil {
+								api.logger.Debug("error closing websocket peer", "error", err.Error())
+							}
 						}
 					}, api.logger, "closing websocket peer sub")
 				}
@@ -606,8 +621,11 @@ func (api *pubSubAPI) subscribeLogs(wsConn *wsConn, subID rpc.ID, extra interfac
 					err = wsConn.WriteJSON(res)
 					if err != nil {
 						try(func() {
-							if err != websocket.ErrCloseSent {
-								_ = wsConn.Close()
+							if !errors.Is(err, websocket.ErrCloseSent) {
+								err = wsConn.Close()
+								if err != nil {
+									api.logger.Debug("error closing websocket peer", "error", err.Error())
+								}
 							}
 						}, api.logger, "closing websocket peer sub")
 					}
@@ -664,8 +682,11 @@ func (api *pubSubAPI) subscribePendingTransactions(wsConn *wsConn, subID rpc.ID)
 						api.logger.Debug("error writing header, will drop peer", "error", err.Error())
 
 						try(func() {
-							if err != websocket.ErrCloseSent {
-								_ = wsConn.Close()
+							if !errors.Is(err, websocket.ErrCloseSent) {
+								err = wsConn.Close()
+								if err != nil {
+									api.logger.Debug("error closing websocket peer", "error", err.Error())
+								}
 							}
 						}, api.logger, "closing websocket peer sub")
 					}
@@ -682,7 +703,7 @@ func (api *pubSubAPI) subscribePendingTransactions(wsConn *wsConn, subID rpc.ID)
 	return unsubFn, nil
 }
 
-func (api *pubSubAPI) subscribeSyncing(wsConn *wsConn, subID rpc.ID) (pubsub.UnsubscribeFunc, error) {
+func (api *pubSubAPI) subscribeSyncing(_ *wsConn, _ rpc.ID) (pubsub.UnsubscribeFunc, error) {
 	return nil, errors.New("syncing subscription is not implemented")
 }
 

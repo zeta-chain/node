@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) ListPoolAddresses(ctx context.Context, req *types.QueryListPoolAddressesRequest) (*types.QueryListPoolAddressesResponse, error) {
+func (k Keeper) ListPoolAddresses(_ context.Context, req *types.QueryListPoolAddressesRequest) (*types.QueryListPoolAddressesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

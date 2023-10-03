@@ -27,7 +27,8 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				ObservedOutTxBlockHeight:       42,
 				ObservedOutTxGasUsed:           42,
 				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ZetaMinted:                     math.NewUint(42),
+				ObservedOutTxEffectiveGasLimit: 42,
+				ValueReceived:                  math.NewUint(42),
 				Status:                         common.ReceiveStatus_Created,
 				OutTxChain:                     42,
 				OutTxTssNonce:                  42,
@@ -42,7 +43,7 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				ObservedOutTxHash:        sample.String(),
 				ObservedOutTxBlockHeight: 42,
 				ObservedOutTxGasUsed:     42,
-				ZetaMinted:               math.NewUint(42),
+				ValueReceived:            math.NewUint(42),
 				Status:                   common.ReceiveStatus_Created,
 				OutTxChain:               42,
 				OutTxTssNonce:            42,
@@ -58,7 +59,8 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				ObservedOutTxBlockHeight:       42,
 				ObservedOutTxGasUsed:           42,
 				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ZetaMinted:                     math.NewUint(42),
+				ObservedOutTxEffectiveGasLimit: 42,
+				ValueReceived:                  math.NewUint(42),
 				Status:                         common.ReceiveStatus_Created,
 				OutTxChain:                     42,
 				OutTxTssNonce:                  42,
@@ -75,7 +77,8 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				ObservedOutTxBlockHeight:       42,
 				ObservedOutTxGasUsed:           42,
 				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ZetaMinted:                     math.NewUint(42),
+				ObservedOutTxEffectiveGasLimit: 42,
+				ValueReceived:                  math.NewUint(42),
 				Status:                         common.ReceiveStatus_Created,
 				OutTxChain:                     -1,
 				OutTxTssNonce:                  42,
@@ -106,7 +109,8 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 		ObservedOutTxBlockHeight:       42,
 		ObservedOutTxGasUsed:           42,
 		ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-		ZetaMinted:                     math.NewUint(42),
+		ObservedOutTxEffectiveGasLimit: 42,
+		ValueReceived:                  math.NewUint(42),
 		Status:                         common.ReceiveStatus_Created,
 		OutTxChain:                     42,
 		OutTxTssNonce:                  42,
@@ -157,9 +161,15 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas price should change hash")
 
+	// observed outbound tx effective gas limit used
+	msg2 = msg
+	msg2.ObservedOutTxEffectiveGasLimit = 43
+	hash2 = msg2.Digest()
+	require.NotEqual(t, hash, hash2, "observed outbound tx effective gas limit should change hash")
+
 	// zeta minted used
 	msg2 = msg
-	msg2.ZetaMinted = math.NewUint(43)
+	msg2.ValueReceived = math.NewUint(43)
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "zeta minted should change hash")
 

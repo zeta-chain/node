@@ -47,17 +47,13 @@ func (k Keeper) FundGasStabilityPool(
 	}
 
 	// call deposit ZRC20 method
-	if err := k.CallZRC20Deposit(
+	return k.CallZRC20Deposit(
 		ctx,
 		types.ModuleAddressEVM,
 		gasZRC20,
 		types.GasStabilityPoolAddressEVM(),
 		amount,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 // WithdrawFromGasStabilityPool burns the ZRC20 from the gas stability pool
@@ -74,16 +70,12 @@ func (k Keeper) WithdrawFromGasStabilityPool(
 		return err
 	}
 
-	// call withdraw ZRC20 method
-	if err := k.CallZRC20Burn(
+	// call burn ZRC20 method
+	return k.CallZRC20Burn(
 		ctx,
 		types.GasStabilityPoolAddressEVM(),
 		gasZRC20,
 		amount,
 		false,
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }

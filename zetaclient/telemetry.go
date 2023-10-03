@@ -215,7 +215,10 @@ func (t *TelemetryServer) statusHandler(w http.ResponseWriter, _ *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	s, _ := json.MarshalIndent(t.status, "", "\t")
+	s, err := json.MarshalIndent(t.status, "", "\t")
+	if err != nil {
+		t.logger.Error().Err(err).Msg("Failed to marshal status")
+	}
 	fmt.Fprintf(w, "%s", s)
 }
 

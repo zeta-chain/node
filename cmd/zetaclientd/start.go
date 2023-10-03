@@ -39,8 +39,13 @@ func init() {
 }
 
 func start(_ *cobra.Command, _ []string) error {
-	setHomeDir()
+	err := setHomeDir()
+	if err != nil {
+		return err
+	}
+
 	SetupConfigForTest()
+
 	//Load Config file given path
 	cfg, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
@@ -81,6 +86,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
 		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
+		zetaBridge.UpdateChainID(cfg.ChainID)
 	}
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
@@ -135,6 +141,14 @@ func start(_ *cobra.Command, _ []string) error {
 			startLogger.Error().Err(err).Msg("telemetryServer error")
 		}
 	}()
+
+	metrics, err := metrics2.NewMetrics()
+	if err != nil {
+		log.Error().Err(err).Msg("NewMetrics")
+		return err
+	}
+	metrics.Start()
+
 	var tssHistoricalList []types.TSS
 	tssHistoricalList, err = zetaBridge.GetTssHistory()
 	if err != nil {
@@ -142,7 +156,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics)
 	if err != nil {
 		return err
 	}
@@ -204,22 +218,12 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	metrics, err := metrics2.NewMetrics()
+	userDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Error().Err(err).Msg("NewMetrics")
+		log.Error().Err(err).Msg("os.UserHomeDir")
 		return err
 	}
-	metrics.Start()
-
-	userDir, _ := os.UserHomeDir()
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
-
-	// Register zetaclient.TSS prometheus metrics
-	err = tss.RegisterMetrics(metrics)
-	if err != nil {
-		startLogger.Err(err).Msg("tss.RegisterMetrics")
-		return err
-	}
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
 	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
@@ -242,8 +246,8 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("stop signal received: %s", sig)
 
 	// stop zetacore observer
-	for _, chain := range cfg.GetEnabledChains() {
-		(chainClientMap)[chain].Stop()
+	for _, client := range chainClientMap {
+		client.Stop()
 	}
 	zetaBridge.Stop()
 

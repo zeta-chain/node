@@ -14,7 +14,7 @@ import (
 
 // FIXME: use more specific error types & codes
 
-// Casts a vote on an inbound transaction observed on a connected chain. If this
+// VoteOnObservedInboundTx casts a vote on an inbound transaction observed on a connected chain. If this
 // is the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 // created.
@@ -57,6 +57,7 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	observationType := observerTypes.ObservationType_InBoundTx
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
@@ -104,12 +105,14 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
-	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
-	if !found {
-		return nil, types.ErrNotFoundCoreParams
-	}
-	if receiverChain.IsExternalChain() && coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
-		return nil, types.ErrUnableToSendCoinType
+	if receiverChain.IsExternalChain() {
+		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+		if !found {
+			return nil, types.ErrNotFoundCoreParams
+		}
+		if coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
+			return nil, types.ErrUnableToSendCoinType
+		}
 	}
 
 	// ******************************************************************************
@@ -120,6 +123,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, tssPub, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
+		// #nosec G701 always positive
 		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
 		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
@@ -129,6 +133,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if receiverChain.IsZetaChain() {
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
+
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
@@ -139,27 +144,60 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-			medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
-			if !isFound {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "cannot find gas price")
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-			}
 			// create new OutboundTxParams for the revert
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-				Receiver:           cctx.InboundTxParams.Sender,
-				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-				Amount:             cctx.InboundTxParams.Amount,
-				CoinType:           cctx.InboundTxParams.CoinType,
-				OutboundTxGasLimit: 0, // for fungible refund, use default gasLimit
-				OutboundTxGasPrice: medianGasPrice.MulUint64(2).String(),
+				Receiver:        cctx.InboundTxParams.Sender,
+				ReceiverChainId: cctx.InboundTxParams.SenderChainId,
+				Amount:          cctx.InboundTxParams.Amount,
+				CoinType:        cctx.InboundTxParams.CoinType,
+				// use same gas limit as outbound
+				//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
+				OutboundTxGasLimit: msg.GasLimit,
 			})
-			if err = k.UpdateNonce(ctx, chain.ChainId, &cctx); err != nil {
+
+			// we create a new cached context, and we don't commit the previous one with EVM deposit
+			tmpCtx, commit := ctx.CacheContext()
+			err = func() error {
+				err := k.PayGasAndUpdateCctx(
+					tmpCtx,
+					chain.ChainId,
+					&cctx,
+					cctx.InboundTxParams.Amount,
+					false,
+				)
+				if err != nil {
+					return err
+				}
+				err = k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
+				if err != nil {
+					return err
+				}
+				return nil
+			}()
+			if err != nil {
+				// do not commit anything here as the CCTX should be aborted
+
+				// gas payment for erc20 type might fail because no liquidity pool is defined to swap the zrc20 token into the gas token
+				// in this gas we should refund the sender on ZetaChain
+				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
+
+					if err := k.RefundAmountOnZetaChain(ctx, cctx, cctx.InboundTxParams.Amount); err != nil {
+						// log the error
+						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
+							"error", err,
+							"sender", cctx.InboundTxParams.Sender,
+							"amount", cctx.InboundTxParams.Amount.String(),
+						)
+					}
+				}
+
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
-			// do not commit() here;
+			commit()
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+
 		} else { // successful HandleEVMDeposit;
 			commit()
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
@@ -168,7 +206,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	} else { // Cross Chain SWAP
 		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {
-			err := k.PayGasInZetaAndUpdateCctx(tmpCtx, receiverChain.ChainId, &cctx, false)
+			err := k.PayGasAndUpdateCctx(
+				tmpCtx,
+				receiverChain.ChainId,
+				&cctx,
+				cctx.InboundTxParams.Amount,
+				false,
+			)
 			if err != nil {
 				return err
 			}

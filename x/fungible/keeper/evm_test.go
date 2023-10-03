@@ -78,7 +78,7 @@ func deploySystemContracts(
 
 func TestKeeper_DeployZRC20Contract(t *testing.T) {
 	t.Run("can deploy the zrc20 contract", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
@@ -137,7 +137,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 
 func TestKeeper_DeploySystemContract(t *testing.T) {
 	t.Run("can deploy the system contracts", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// deploy the system contracts
@@ -165,7 +165,7 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 	})
 
 	t.Run("can deposit into wzeta", func(t *testing.T) {
-		k, ctx, sdkk := testkeeper.FungibleKeeper(t)
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)

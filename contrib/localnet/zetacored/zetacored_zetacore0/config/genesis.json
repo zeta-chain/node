@@ -86,6 +86,16 @@
             "sequence": "0"
           },
           "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+        },
+        {
+          "@type": "/ethermint.types.v1.EthAccount",
+          "base_account": {
+            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk",
+            "pub_key": null,
+            "account_number": "0",
+            "sequence": "0"
+          },
+          "code_hash": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
         }
       ]
     },
@@ -139,12 +149,21 @@
               "amount": "100000000000000000000000000"
             }
           ]
+        },
+        {
+          "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk",
+          "coins": [
+            {
+              "denom": "azeta",
+              "amount": "100000000000000000000000000"
+            }
+          ]
         }
       ],
       "supply": [
         {
           "denom": "azeta",
-          "amount": "400010000000000000000000000"
+          "amount": "500010000000000000000000000"
         }
       ],
       "denom_metadata": []
@@ -462,6 +481,7 @@
       }
     },
     "observer": {
+      "core_params_list": [],
       "observers": [
         {
           "observer_chain": {
@@ -617,11 +637,12 @@
         ],
         "admin_policy": [
           {
-            "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+            "policy_type": "group1",
+            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
           },
           {
-            "policy_type": 1,
-            "address": "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+            "policy_type": "group2",
+            "address": "zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"
           }
         ]
       }

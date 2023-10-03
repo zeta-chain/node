@@ -88,7 +88,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 		return nil, zetaObserverTypes.ErrSupportedChains
 	}
 
-	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
+	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group1)
 	isAdmin := msg.Creator == adminPolicyAccount
 
 	isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)

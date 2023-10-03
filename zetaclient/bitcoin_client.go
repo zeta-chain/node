@@ -56,10 +56,10 @@ type BitcoinChainClient struct {
 	BlockTime        uint64 // block time in seconds
 
 	Mu                *sync.Mutex // lock for all the maps, utxos and core params
-	pendingCctx       map[string]*types.CrossChainTx
+	pendingNonce      uint64
 	includedTxHashes  map[string]uint64                       // key: tx hash
 	includedTxResults map[string]btcjson.GetTransactionResult // key: chain-tss-nonce
-	broadcastedTx     map[string]chainhash.Hash
+	broadcastedTx     map[string]string                       // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
 	params            observertypes.CoreParams
 
@@ -71,7 +71,6 @@ type BitcoinChainClient struct {
 
 const (
 	minConfirmations = 0
-	chunkSize        = 1000
 	maxHeightDiff    = 10000
 	dustOffset       = 2000
 )
@@ -137,10 +136,9 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
-	ob.pendingCctx = make(map[string]*types.CrossChainTx)
 	ob.includedTxHashes = make(map[string]uint64)
 	ob.includedTxResults = make(map[string]btcjson.GetTransactionResult)
-	ob.broadcastedTx = make(map[string]chainhash.Hash)
+	ob.broadcastedTx = make(map[string]string)
 	ob.params = btcCfg.CoreParams
 
 	// initialize the Client
@@ -235,6 +233,12 @@ func (ob *BitcoinChainClient) GetLastBlockHeightScanned() int64 {
 	return height
 }
 
+func (ob *BitcoinChainClient) GetPendingNonce() uint64 {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	return ob.pendingNonce
+}
+
 // GetBaseGasPrice ...
 // TODO: implement
 // https://github.com/zeta-chain/node/issues/868
@@ -271,17 +275,18 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	}
 
 	// "confirmed" current block number
+	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
 	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
 		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
 	}
 	ob.SetLastBlockHeight(confirmedBlockNum)
 
-	permissions, err := ob.zetaClient.GetPermissionFlags()
+	flags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
 	}
-	if !permissions.IsInboundEnabled {
+	if !flags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
@@ -312,6 +317,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
+		// #nosec G701 always positive
 		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
 
 		for _, inTx := range inTxs {
@@ -342,7 +348,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return 2
 }
 
-// returns isIncluded, isConfirmed, Error
+// returns isIncluded(or inMempool), isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
@@ -363,16 +369,25 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 			return false, false, nil
 		}
 
-		// Try including this outTx
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checking pending outTx %s", txnHash.String())
-		err = ob.checkNSaveIncludedTx(txnHash.String(), params)
+		// Try including this outTx broadcasted by myself
+		inMempool, err := ob.checkNSaveIncludedTx(txnHash, params)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
 			return false, false, nil
 		}
+		if inMempool { // to avoid unnecessary Tss keysign
+			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
+			return true, false, nil
+		}
+
+		// Get tx result again in case it is just included
 		ob.Mu.Lock()
-		res = ob.includedTxResults[outTxID] // refresh tx result
+		res, included = ob.includedTxResults[outTxID]
 		ob.Mu.Unlock()
+		if !included {
+			return false, false, nil
+		}
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checkNSaveIncludedTx succeeded for outTx %s", outTxID)
 	}
 
 	var amount float64
@@ -395,9 +410,11 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
+		// #nosec G701 always positive
 		uint64(res.BlockIndex),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
+		0,   // gas limit not used with Bitcoin
 		amountInSat,
 		common.ReceiveStatus_Success,
 		ob.chain,
@@ -436,6 +453,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		if err != nil {
 			return err
 		}
+		// #nosec G701 always in range
 		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
 		if err != nil {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
@@ -459,6 +477,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if err != nil {
 		return err
 	}
+	// #nosec G701 always positive
 	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
@@ -608,7 +627,7 @@ func (ob *BitcoinChainClient) WatchUTXOS() {
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.fetchUTXOS()
+			err := ob.FetchUTXOS()
 			if err != nil {
 				ob.logger.WatchUTXOS.Error().Err(err).Msg("error fetching btc utxos")
 			}
@@ -620,12 +639,16 @@ func (ob *BitcoinChainClient) WatchUTXOS() {
 	}
 }
 
-func (ob *BitcoinChainClient) fetchUTXOS() error {
+func (ob *BitcoinChainClient) FetchUTXOS() error {
 	defer func() {
 		if err := recover(); err != nil {
 			ob.logger.WatchUTXOS.Error().Msgf("BTC fetchUTXOS: caught panic error: %v", err)
 		}
 	}()
+
+	// This is useful when a zetaclient's pending nonce lagged behind for whatever reason.
+	ob.refreshPendingNonce()
+
 	// get the current block height.
 	bh, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -640,24 +663,13 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
 	addresses := []btcutil.Address{address}
-	var utxos []btcjson.ListUnspentResult
 
-	// populate utxos array
-	for i := minConfirmations; i < maxConfirmations; i += chunkSize {
-		unspents, err := ob.rpcClient.ListUnspentMinMaxAddresses(i, i+chunkSize, addresses)
-		if err != nil {
-			return err
-		}
-		utxos = append(utxos, unspents...)
-		//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos", len(unspents))
-		//for idx, utxo := range unspents {
-		//	fmt.Printf("utxo %d\n", idx)
-		//	fmt.Printf("  txid: %s\n", utxo.TxID)
-		//	fmt.Printf("  address: %s\n", utxo.Address)
-		//	fmt.Printf("  amount: %f\n", utxo.Amount)
-		//	fmt.Printf("  confirmations: %d\n", utxo.Confirmations)
-		//}
+	// fetching all TSS utxos takes 160ms
+	utxos, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, addresses)
+	if err != nil {
+		return err
 	}
+	//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos in confirmation range [0, %d]", len(unspents), maxConfirmations)
 
 	// rigid sort to make utxo list deterministic
 	sort.SliceStable(utxos, func(i, j int) bool {
@@ -677,23 +689,71 @@ func (ob *BitcoinChainClient) fetchUTXOS() error {
 	return nil
 }
 
-// Set `test` flag to true in unit test to bypass query to zetacore
-func (ob *BitcoinChainClient) findTxIDByNonce(nonce uint64, test bool) (string, error) {
+// refreshPendingNonce tries increasing the artificial pending nonce of outTx (if lagged behind).
+// There could be many (unpredictable) reasons for a pending nonce lagging behind, for example:
+// 1. The zetaclient gets restarted.
+// 2. The tracker is missing in zetacore.
+func (ob *BitcoinChainClient) refreshPendingNonce() {
+	// get pending nonces from zetacore
+	p, err := ob.zetaClient.GetPendingNoncesByChain(ob.chain.ChainId)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("refreshPendingNonce: error getting pending nonces")
+	}
+
+	// increase pending nonce if lagged behind
+	ob.Mu.Lock()
+	pendingNonce := ob.pendingNonce
+	ob.Mu.Unlock()
+
+	// #nosec G701 always positive
+	nonceLow := uint64(p.NonceLow)
+
+	if nonceLow > 0 && nonceLow >= pendingNonce {
+		// get the last included outTx hash
+		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
+		if err != nil {
+			ob.logger.ChainLogger.Error().Err(err).Msg("refreshPendingNonce: error getting last outTx txid")
+		}
+
+		// set 'NonceLow' as the new pending nonce
+		ob.Mu.Lock()
+		defer ob.Mu.Unlock()
+		ob.pendingNonce = nonceLow
+		ob.logger.ChainLogger.Info().Msgf("refreshPendingNonce: increase pending nonce to %d with txid %s", ob.pendingNonce, txid)
+	}
+}
+
+func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
 	ob.Mu.Lock()
 	res, included := ob.includedTxResults[ob.GetTxID(nonce)]
 	ob.Mu.Unlock()
 
+	// There are 2 types of txids an observer can trust
+	// 1. The ones had been verified and saved by observer self.
+	// 2. The ones had been finalized in zetacore based on majority vote.
 	if included {
 		return res.TxID, nil
 	}
 	if !test { // if not unit test, get cctx from zetacore
 		send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 		if err != nil {
-			return "", errors.Wrapf(err, "findTxIDByNonce: error getting cctx for nonce %d", nonce)
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting cctx for nonce %d", nonce)
 		}
-		return send.GetCurrentOutTxParam().OutboundTxHash, nil
+		txid := send.GetCurrentOutTxParam().OutboundTxHash
+		if txid == "" {
+			return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
+		}
+		// make sure it's a real Bitcoin txid
+		_, getTxResult, err := ob.GetTxResultByHash(txid)
+		if err != nil {
+			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting outTx result for nonce %d hash %s", nonce, txid)
+		}
+		if getTxResult.Confirmations <= 0 { // just a double check
+			return "", fmt.Errorf("getOutTxidByNonce: outTx txid %s for nonce %d is not included", txid, nonce)
+		}
+		return txid, nil
 	}
-	return "", fmt.Errorf("findTxIDByNonce: error getting cctx for nonce %d", nonce)
+	return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
 }
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
@@ -705,7 +765,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
 		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid {
-			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %v", utxo.TxID, utxo.Amount)
+			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
 			return i, nil
 		}
 	}
@@ -729,7 +789,7 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 		defer ob.Mu.Unlock()
 	} else {
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
-		preTxid, err := ob.findTxIDByNonce(nonce-1, test)
+		preTxid, err := ob.getOutTxidByNonce(nonce-1, test)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -777,14 +837,14 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 }
 
 // Save successfully broadcasted transaction
-func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash chainhash.Hash, nonce uint64) {
+func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outTxID := ob.GetTxID(nonce)
 	ob.Mu.Lock()
 	ob.broadcastedTx[outTxID] = txHash
 	ob.Mu.Unlock()
 
-	broadcastEntry := clienttypes.ToTransactionHashSQLType(txHash, outTxID)
-	if err := ob.db.Create(&broadcastEntry).Error; err != nil {
+	broadcastEntry := clienttypes.ToOutTxHashSQLType(txHash, outTxID)
+	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
 	}
 }
@@ -831,7 +891,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				}
 				// verify outTx hashes
 				for _, txHash := range tracker.HashList {
-					err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
+					_, err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
 					if err != nil {
 						ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: checkNSaveIncludedTx failed")
 					}
@@ -845,29 +905,36 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
-// The func either includes a new outTx or update an existing outTx result.
-func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) error {
+// checkNSaveIncludedTx either includes a new outTx or update an existing outTx result.
+// Returns inMempool, error
+func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) (bool, error) {
 	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
 	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
 	if err != nil {
-		return errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
+		return false, errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
 	}
 	if getTxResult.Confirmations >= 0 { // check included tx only
 		err = ob.checkTssOutTxResult(hash, getTxResult, params, params.OutboundTxTssNonce)
 		if err != nil {
-			return errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
+			return false, errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
 		}
 
 		ob.Mu.Lock()
 		defer ob.Mu.Unlock()
 		nonce, foundHash := ob.includedTxHashes[txHash]
 		res, foundRes := ob.includedTxResults[outTxID]
-		if !foundHash && !foundRes { // enforce rigid 1-to-1 mapping: outTxID(nonce) <===> txHash
+
+		// include new outTx and enforce rigid 1-to-1 mapping: outTxID(nonce) <===> txHash
+		if !foundHash && !foundRes {
 			ob.includedTxHashes[txHash] = params.OutboundTxTssNonce
 			ob.includedTxResults[outTxID] = *getTxResult
+			if params.OutboundTxTssNonce >= ob.pendingNonce { // try increasing pending nonce on every newly included outTx
+				ob.pendingNonce = params.OutboundTxTssNonce
+			}
 			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s", txHash, outTxID)
 		}
-		if foundHash && foundRes { // update tx result
+		// update saved tx result as confirmations may increase
+		if foundHash && foundRes {
 			ob.includedTxResults[outTxID] = *getTxResult
 			if getTxResult.Confirmations > res.Confirmations {
 				ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: bitcoin outTx %s got confirmations %d", txHash, getTxResult.Confirmations)
@@ -879,8 +946,9 @@ func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.O
 		if foundHash && !foundRes {
 			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: unreachable code path! outTx %s outTxID %s, prior nonce %d, current nonce %d", txHash, outTxID, nonce, params.OutboundTxTssNonce)
 		}
+		return false, nil
 	}
-	return nil
+	return true, nil // in mempool
 }
 
 // Basic TSS outTX checks:
@@ -962,14 +1030,14 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 		}
 		// 1st vin: nonce-mark MUST come from prior TSS outTx
 		if nonce > 0 && i == 0 {
-			_, err := ob.findTxIDByNonce(nonce-1, false)
+			preTxid, err := ob.getOutTxidByNonce(nonce-1, false)
 			if err != nil {
 				return fmt.Errorf("checkTSSVin: error findTxIDByNonce %d", nonce-1)
 			}
-			// TODO: enable this check after bootstrap
-			// if vin.Txid != preTxid || vin.Vout != 0 {
-			// 	return fmt.Errorf("checkTSSVin: invalid nonce-mark txid %s vout %d, expected txid %s vout 0", vin.Txid, vin.Vout, preTxid)
-			// }
+			// nonce-mark MUST the 1st output that comes from prior TSS outTx
+			if vin.Txid != preTxid || vin.Vout != 0 {
+				return fmt.Errorf("checkTSSVin: invalid nonce-mark txid %s vout %d, expected txid %s vout 0", vin.Txid, vin.Vout, preTxid)
+			}
 		}
 	}
 	return nil
@@ -1024,7 +1092,8 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 			if recvAddress != params.Receiver {
 				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", recvAddress, params.Receiver)
 			}
-			if amount != int64(params.Amount.Uint64()) {
+			// #nosec G701 always positive
+			if uint64(amount) != params.Amount.Uint64() {
 				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
 			}
 		}
@@ -1039,7 +1108,7 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 }
 
 func (ob *BitcoinChainClient) BuildBroadcastedTxMap() error {
-	var broadcastedTransactions []clienttypes.TransactionHashSQLType
+	var broadcastedTransactions []clienttypes.OutTxHashSQLType
 	if err := ob.db.Find(&broadcastedTransactions).Error; err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("error iterating over db")
 		return err
@@ -1094,7 +1163,7 @@ func (ob *BitcoinChainClient) loadDB(dbpath string) error {
 	ob.db = db
 
 	err = db.AutoMigrate(&clienttypes.TransactionResultSQLType{},
-		&clienttypes.TransactionHashSQLType{},
+		&clienttypes.OutTxHashSQLType{},
 		&clienttypes.LastBlockSQLType{})
 	if err != nil {
 		return err
@@ -1119,5 +1188,6 @@ func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 
 // A very special value to mark current nonce in UTXO
 func NonceMarkAmount(nonce uint64) int64 {
+	// #nosec G701 always in range
 	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
 }

@@ -11,19 +11,20 @@ import (
 	"sync"
 	"time"
 
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/ethereum/go-ethereum"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-// wait until cctx is mined; returns the cctxIndex (the last one)
+// WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
 	var cctxIndexes []string
 	for {
@@ -82,7 +83,7 @@ func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce 
 	return nil
 }
 
-// wait until a broadcasted tx to be mined and return its receipt
+// MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
 // timeout and panic after 30s.
 func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *ethtypes.Receipt {
 	start := time.Now()
@@ -104,7 +105,7 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 	}
 }
 
-// scriptPK is a hex string for P2WPKH script
+// ScriptPKToAddress is a hex string for P2WPKH script
 func ScriptPKToAddress(scriptPKHex string) string {
 	pkh, err := hex.DecodeString(scriptPKHex[4:])
 	if err == nil {
@@ -114,4 +115,18 @@ func ScriptPKToAddress(scriptPKHex string) string {
 		}
 	}
 	return ""
+}
+
+func WaitForBlockHeight(height int64) {
+	// initialize rpc and check status
+	rpc, err := rpchttp.New("http://zetacore0:26657", "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	status := &coretypes.ResultStatus{}
+	for status.SyncInfo.LatestBlockHeight < height {
+		status, _ = rpc.Status(context.Background())
+		time.Sleep(time.Second * 5)
+		fmt.Printf("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+	}
 }

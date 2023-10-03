@@ -115,7 +115,10 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 	if err != nil {
 		panic(err)
 	}
-	addr, _ := info.GetAddress()
+	addr, err := info.GetAddress()
+	if err != nil {
+		return nil
+	}
 	return addr
 }
 

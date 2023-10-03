@@ -61,11 +61,11 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 
 func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundSuccess{
-		MsgTypeUrl: sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:  cctx.Index,
-		ZetaMinted: msg.ZetaMinted.String(),
-		OldStatus:  oldStatus,
-		NewStatus:  newStatus,
+		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
+		CctxIndex:     cctx.Index,
+		ValueReceived: msg.ValueReceived.String(),
+		OldStatus:     oldStatus,
+		NewStatus:     newStatus,
 	})
 	if err != nil {
 		ctx.Logger().Error("Error emitting MsgVoteOnObservedOutboundTx :", err)
@@ -75,11 +75,11 @@ func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 
 func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundFailure{
-		MsgTypeUrl: sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:  cctx.Index,
-		ZetaMinted: msg.ZetaMinted.String(),
-		OldStatus:  oldStatus,
-		NewStatus:  newStatus,
+		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
+		CctxIndex:     cctx.Index,
+		ValueReceived: msg.ValueReceived.String(),
+		OldStatus:     oldStatus,
+		NewStatus:     newStatus,
 	})
 	if err != nil {
 		ctx.Logger().Error("Error emitting MsgVoteOnObservedOutboundTx :", err)

@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,7 +39,14 @@ func PubKey(r *rand.Rand) cryptotypes.PubKey {
 	return ed25519.GenPrivKeyFromSecret(seed).PubKey()
 }
 
-// AccAddress returns a sample account address
+// Bech32AccAddress returns a sample account address
+func Bech32AccAddress() sdk.AccAddress {
+	pk := ed25519.GenPrivKey().PubKey()
+	addr := pk.Address()
+	return sdk.AccAddress(addr)
+}
+
+// AccAddress returns a sample account address in string
 func AccAddress() string {
 	pk := ed25519.GenPrivKey().PubKey()
 	addr := pk.Address()
@@ -84,7 +93,7 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
-	return ethcommon.HexToAddress(AccAddress())
+	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
 // Bytes returns a sample byte array
@@ -105,4 +114,9 @@ func StringRandom(r *rand.Rand, length int) string {
 		result[i] = chars[r.Intn(len(chars))]
 	}
 	return string(result)
+}
+
+// Coins returns a sample sdk.Coins
+func Coins() sdk.Coins {
+	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }

@@ -28,7 +28,7 @@ func DefaultParams() Params {
 			IsSupported:           true,
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
-			MinObserverDelegation: sdk.MustNewDecFromStr("10000000000"),
+			MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000"), // 1000 ZETA
 		}
 	}
 	return NewParams(observerParams, DefaultAdminPolicy(), 100)
@@ -37,27 +37,11 @@ func DefaultParams() Params {
 func DefaultAdminPolicy() []*Admin_Policy {
 	return []*Admin_Policy{
 		{
-			PolicyType: Policy_Type_out_tx_tracker,
+			PolicyType: Policy_Type_group1,
 			Address:    GroupID1Address,
 		},
 		{
-			PolicyType: Policy_Type_stop_inbound_cctx,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_deploy_fungible_coin,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_update_client_params,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_update_keygen_block,
-			Address:    GroupID1Address,
-		},
-		{
-			PolicyType: Policy_Type_add_observer,
+			PolicyType: Policy_Type_group2,
 			Address:    GroupID1Address,
 		},
 	}
@@ -79,7 +63,10 @@ func (p Params) Validate() error {
 
 // String implements the Stringer interface.
 func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
+	out, err := yaml.Marshal(p)
+	if err != nil {
+		return ""
+	}
 	return string(out)
 }
 

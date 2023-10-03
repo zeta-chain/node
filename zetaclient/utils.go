@@ -2,9 +2,9 @@ package zetaclient
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -15,6 +15,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
@@ -30,7 +31,7 @@ const (
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
 	// as an integer type.  This may happen if f is NaN or +-Infinity.
-	// BTC max amount is 21 mil and its at least 10^(-8) or one satoshi.
+	// BTC max amount is 21 mil and its at least 0 (Note: bitcoin allows creating 0-value outputs)
 	switch {
 	case math.IsNaN(btc):
 		fallthrough
@@ -40,16 +41,18 @@ func getSatoshis(btc float64) (int64, error) {
 		return 0, errors.New("invalid bitcoin amount")
 	case btc > 21000000.0:
 		return 0, errors.New("exceeded max bitcoin amount")
-	case btc < 0.00000001:
-		return 0, errors.New("cannot be less than 1 satoshi")
+	case btc < 0.0:
+		return 0, errors.New("cannot be less than zero")
 	}
 	return round(btc * satoshiPerBitcoin), nil
 }
 
 func round(f float64) int64 {
 	if f < 0 {
+		// #nosec G701 always in range
 		return int64(f - 0.5)
 	}
+	// #nosec G701 always in range
 	return int64(f + 0.5)
 }
 
@@ -78,9 +81,10 @@ func (t *DynamicTicker) C() <-chan time.Time {
 func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
 	if newInterval > 0 && t.interval != newInterval {
 		t.impl.Stop()
+		oldInterval := t.interval
 		t.interval = newInterval
 		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
-		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, t.interval, newInterval)
+		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, oldInterval, newInterval)
 	}
 }
 
@@ -94,8 +98,21 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
 		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex()))
 	}
+	// get the sender of the event's transaction
+	tx, _, err := ob.evmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
+		return types.MsgVoteOnObservedInboundTx{}, errors.Wrap(err, fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
+	}
+	signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+	sender, err := signer.Sender(tx)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
+		return types.MsgVoteOnObservedInboundTx{}, errors.Wrap(err, fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
+
+	}
 	return *GetInBoundVoteMessage(
-		"",
+		sender.Hex(),
 		ob.chain.ChainId,
 		"",
 		clienttypes.BytesToEthHex(event.Recipient),
@@ -119,13 +136,15 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not supported  %d", event.DestinationChainId.Int64()))
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-	cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-	if !found {
-		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64()))
-	}
-	if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-		ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr))
+	if *destChain != common.ZetaChain() {
+		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
+		if !found {
+			return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64()))
+		}
+		if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+			return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr))
+		}
 	}
 	return *GetInBoundVoteMessage(
 		event.ZetaTxSenderAddress.Hex(),

@@ -107,6 +107,7 @@ func (bn *BlockNumber) UnmarshalJSON(data []byte) error {
 	if blckNum > math.MaxInt64 {
 		return fmt.Errorf("block number larger than int64")
 	}
+	// #nosec G701 range checked
 	*bn = BlockNumber(blckNum)
 
 	return nil

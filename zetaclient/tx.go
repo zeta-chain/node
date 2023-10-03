@@ -20,12 +20,14 @@ const (
 	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 1_000_000 // likely emit a lot of logs, so costly
+	PostSendEVMGasLimit             = 1_500_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_000_000
 	PostReceiveConfirmationGasLimit = 200_000
 	PostBlameDataGasLimit           = 200_000
 	DefaultGasLimit                 = 200_000
+	PostProveOutboundTxGasLimit     = 400_000
 	DefaultRetryCount               = 5
+	ExtendedRetryCount              = 15
 	DefaultRetryInterval            = 5
 )
 
@@ -58,9 +60,9 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string, proof *common.Proof, blockHash string, txIndex int64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash)
+	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
@@ -88,6 +90,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	outBlockHeight uint64,
 	outTxGasUsed uint64,
 	outTxEffectiveGasPrice *big.Int,
+	outTxEffectiveGasLimit uint64,
 	amount *big.Int,
 	status common.ReceiveStatus,
 	chain common.Chain,
@@ -107,6 +110,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 		outBlockHeight,
 		outTxGasUsed,
 		math.NewIntFromBigInt(outTxEffectiveGasPrice),
+		outTxEffectiveGasLimit,
 		math.NewUintFromBigInt(amount),
 		status,
 		chain.ChainId,
@@ -136,7 +140,8 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	err := error(nil)
+
+	var err error
 	zetaTxHash := ""
 	for i := 0; i <= DefaultRetryCount; i++ {
 		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
@@ -146,6 +151,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 		b.logger.Debug().Err(err).Msgf("SetTSS broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
+
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
@@ -187,4 +193,21 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
+}
+
+func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error) {
+	signerAddress := b.keys.GetOperatorAddress().String()
+	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, txhash, height, header)
+	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
+
+	var gasLimit uint64 = DefaultGasLimit
+	for i := 0; i < DefaultRetryCount; i++ {
+		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+		if err == nil {
+			return zetaTxHash, nil
+		}
+		b.logger.Error().Err(err).Msgf("PostAddBlockHeader broadcast fail | Retry count : %d", i+1)
+		time.Sleep(DefaultRetryInterval * time.Second)
+	}
+	return "", fmt.Errorf("post add block header failed after %d retries", DefaultRetryCount)
 }
