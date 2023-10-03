@@ -95,11 +95,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, nil)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -142,11 +140,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, errDeposit)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, errDeposit)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -189,11 +185,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, errDeposit)
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -235,11 +229,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, fungibletypes.ErrForeignCoinCapReached)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrForeignCoinCapReached)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
