@@ -356,15 +356,15 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		// Get original cctx parameters
 		params, err := ob.GetPendingCctxParams(nonce)
 		if err != nil {
-			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-			return false, false, nil
+			ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
+			return false, false, err
 		}
 
 		// Try including this outTx broadcasted by myself
 		inMempool, err := ob.checkNSaveIncludedTx(txnHash, params)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
-			return false, false, nil
+			return false, false, err
 		}
 		if inMempool { // to avoid unnecessary Tss keysign
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
@@ -391,8 +391,8 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 
 	sats, err := getSatoshis(amount)
 	if err != nil {
-		ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: getSatoshis error: %s", err)
-		return false, false, nil
+		ob.logger.ObserveOutTx.Error().Msgf("IsSendOutTxProcessed: getSatoshis error: %s", err)
+		return false, false, err
 	}
 	amountInSat := big.NewInt(sats)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {

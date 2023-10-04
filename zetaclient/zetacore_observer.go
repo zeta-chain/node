@@ -174,7 +174,9 @@ func (co *CoreObserver) startSendScheduler() {
 							// Process Bitcoin OutTx
 							if common.IsBitcoinChain(c.ChainId) {
 								if outTxMan.IsOutTxActive(outTxID) {
-									break // there is no need to process cctx with future nonces
+									// bitcoun outTx is processed sequencially by nonce
+									// if the current outTx is being processed, there is no need to process outTx with future nonces
+									break
 								}
 								// #nosec G701 positive
 								if stop := co.processBitcoinOutTx(outTxMan, uint64(idx), cctx, signer, ob, currentHeight); stop {
