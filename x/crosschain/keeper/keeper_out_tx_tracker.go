@@ -15,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -307,11 +306,11 @@ func ValidateBTCOutTxBody(_ *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc 
 		}
 		pubKey, err := btcec.ParsePubKey(vin.Witness[1], btcec.S256())
 		if err != nil {
-			errors.Wrap(err, "failed to parse public key")
+			return fmt.Errorf("failed to parse public key")
 		}
 		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitconNetParams)
 		if err != nil {
-			errors.Wrap(err, "failed to create P2WPKH address")
+			return fmt.Errorf("failed to create P2WPKH address")
 		}
 		if addrP2WPKH.EncodeAddress() != tssBtc {
 			return fmt.Errorf("sender is not tss address")

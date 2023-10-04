@@ -139,7 +139,8 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-	err := error(nil)
+
+	var err error
 	zetaTxHash := ""
 	for i := 0; i <= DefaultRetryCount; i++ {
 		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
@@ -149,6 +150,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 		b.logger.Debug().Err(err).Msgf("SetTSS broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
+
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 

@@ -19,7 +19,10 @@ func Save(config *Config, path string) error {
 	file := filepath.Join(path, folder, filename)
 	file = filepath.Clean(file)
 
-	jsonFile, _ := json.MarshalIndent(config, "", "    ")
+	jsonFile, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		return err
+	}
 	err = os.WriteFile(file, jsonFile, 0600)
 	if err != nil {
 		return err
@@ -55,7 +58,10 @@ func GetPath(inputPath string) string {
 	path := strings.Split(inputPath, "/")
 	if len(path) > 0 {
 		if path[0] == "~" {
-			home, _ := os.UserHomeDir()
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return ""
+			}
 			path[0] = home
 		}
 	}

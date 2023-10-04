@@ -69,6 +69,7 @@ func MigrateStore(
 		totalObserverCountCurrentBlock += len(observer.ObserverList)
 	}
 	observerKeeper.SetLastObserverCount(ctx, &observerTypes.LastObserverCount{
+		// #nosec G701 always positive
 		Count:            uint64(totalObserverCountCurrentBlock),
 		LastChangeHeight: ctx.BlockHeight(),
 	})

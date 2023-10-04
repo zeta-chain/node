@@ -50816,6 +50816,8 @@ definitions:
         format: uint64
       paused:
         type: boolean
+      liquidity_cap:
+        type: string
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
     properties:
@@ -50830,6 +50832,8 @@ definitions:
         type: string
         format: byte
   fungibleMsgUpdateSystemContractResponse:
+    type: object
+  fungibleMsgUpdateZRC20LiquidityCapResponse:
     type: object
   fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
