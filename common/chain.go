@@ -112,6 +112,14 @@ func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }
 
+func (chain Chain) IsProvable() bool {
+	return chain.ChainId == 1 ||
+		chain.ChainId == 5 ||
+		chain.ChainId == 1337 ||
+		chain.ChainId == 97 ||
+		chain.ChainId == 56
+}
+
 func IsBitcoinChain(chainID int64) bool {
 	return chainID == 18444 || // regtest
 		chainID == 18332 || //testnet

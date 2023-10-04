@@ -25,6 +25,9 @@ message MsgAddToInTxTracker {
 	int64 chain_id = 2;
 	string tx_hash = 3;
 	common.CoinType coin_type = 4;
+	common.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
 }
 ```
 
