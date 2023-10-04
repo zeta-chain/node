@@ -96,7 +96,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex()))
+		return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
 	}
 	// get the sender of the event's transaction
 	tx, _, err := ob.evmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
@@ -133,17 +133,17 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
-		return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not supported  %d", event.DestinationChainId.Int64()))
+		return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not supported  %d", event.DestinationChainId.Int64())
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 	if *destChain != common.ZetaChain() {
 		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 		if !found {
-			return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64()))
+			return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
 		}
 		if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-			return types.MsgVoteOnObservedInboundTx{}, errors.New(fmt.Sprintf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr))
+			return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 		}
 	}
 	return *GetInBoundVoteMessage(

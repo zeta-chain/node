@@ -572,16 +572,16 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
 				if int(memoSize) != (len(script)-4)/2 {
-					return nil, errors.New(fmt.Sprintf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2))
+					return nil, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
 				}
 				memoBytes, err := hex.DecodeString(script[4:])
 				if err != nil {
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
-					return nil, errors.New(fmt.Sprintf("error hex decoding memo: %s", err))
+					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
 				if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
-					return nil, errors.New(fmt.Sprintf("donation tx: %s; value %f", tx.Txid, value))
+					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
 				memo = memoBytes
 				found = true

@@ -26,14 +26,14 @@ var debugArgs = debugArguments{}
 type debugArguments struct {
 	zetaCoreHome string
 	zetaNode     string
-	zetaChainId  string
+	zetaChainID  string
 }
 
 func init() {
 	RootCmd.AddCommand(DebugCmd())
 	DebugCmd().Flags().StringVar(&debugArgs.zetaCoreHome, "core-home", "/Users/tanmay/.zetacored", "peer address, e.g. /dns/tss1/tcp/6668/ipfs/16Uiu2HAmACG5DtqmQsHtXg4G2sLS65ttv84e7MrL4kapkjfmhxAp")
 	DebugCmd().Flags().StringVar(&debugArgs.zetaNode, "node", "46.4.15.110", "public ip address")
-	DebugCmd().Flags().StringVar(&debugArgs.zetaChainId, "chain-id", "athens_7001-1", "pre-params file path")
+	DebugCmd().Flags().StringVar(&debugArgs.zetaChainID, "chain-id", "athens_7001-1", "pre-params file path")
 }
 
 func DebugCmd() *cobra.Command {
@@ -53,7 +53,7 @@ func DebugCmd() *cobra.Command {
 			txHash := args[0]
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
-			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainId)
+			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainID)
 			if err != nil {
 				return err
 			}
@@ -90,11 +90,10 @@ func DebugCmd() *cobra.Command {
 						ob.WithChain(*common.GetChainFromChainID(chainID))
 					}
 				}
-
 				hash := ethcommon.HexToHash(txHash)
 				tx, isPending, err := client.TransactionByHash(context.Background(), hash)
 				if err != nil {
-					return err
+					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
 				if isPending {
 					return fmt.Errorf("tx is still pending")
