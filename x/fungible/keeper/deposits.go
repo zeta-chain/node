@@ -73,6 +73,12 @@ func (k Keeper) ZRC20DepositAndCallContract(
 		res, err := k.DepositZRC20AndCallContract(ctx, context, ZRC20Contract, to, amount, data)
 		return res, true, err
 	}
+
+	// if the account is a EOC, no contract call can be made with the data
+	if len(data) > 0 {
+		return nil, false, types.ErrCallNonContract
+	}
+
 	res, err := k.DepositZRC20(ctx, ZRC20Contract, to, amount)
 	return res, false, err
 }

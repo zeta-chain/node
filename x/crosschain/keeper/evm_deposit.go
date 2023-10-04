@@ -69,8 +69,10 @@ func (k Keeper) HandleEVMDeposit(
 		if err != nil {
 			isContractReverted := false
 
-			// consider the contract as reverted if foreign coin liquidity cap is reached
-			if (evmTxResponse != nil && evmTxResponse.Failed()) || errors.Is(err, fungibletypes.ErrForeignCoinCapReached) {
+			// consider the contract as reverted if foreign coin liquidity cap is reached or calling a non-contract address
+			if (evmTxResponse != nil && evmTxResponse.Failed()) ||
+				errors.Is(err, fungibletypes.ErrForeignCoinCapReached) ||
+				errors.Is(err, fungibletypes.ErrCallNonContract) {
 				isContractReverted = true
 			}
 

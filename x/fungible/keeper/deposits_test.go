@@ -80,6 +80,33 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		require.Equal(t, big.NewInt(42), balance)
 	})
 
+	t.Run("should fail if trying to call a contract with data to a EOC", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := common.DefaultChainsList()
+		chain := chainList[0]
+		assetAddress := sample.EthAddress().String()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", assetAddress, "foobar")
+
+		// deposit
+		to := sample.EthAddress()
+		_, _, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			to,
+			big.NewInt(42),
+			chain,
+			[]byte("DEADBEEF"),
+			common.CoinType_ERC20,
+			assetAddress,
+		)
+		require.ErrorIs(t, err, types.ErrCallNonContract)
+	})
+
 	t.Run("can deposit coin for transfers with liquidity cap not reached", func(t *testing.T) {
 		// setup gas coin
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
