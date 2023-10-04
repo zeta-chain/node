@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	cosmoserrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -109,7 +108,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 
 	// Sender needs to be either the admin policy account or an observer
 	if !(isAdmin || isObserver || isProven) {
-		return nil, sdkerrors.Wrap(observerTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		return nil, errorsmod.Wrap(observerTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 
 	k.Keeper.SetInTxTracker(ctx, types.InTxTracker{
@@ -134,7 +133,7 @@ func (k Keeper) VerifyInTxTrackerProof(ctx sdk.Context, proof *common.Proof, has
 	blockHash := eth.HexToHash(hash)
 	res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
 	if !found {
-		return false, cosmoserrors.Wrap(observerTypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", blockHash))
+		return false, errorsmod.Wrap(observerTypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", blockHash))
 	}
 
 	// verify and process the proof
