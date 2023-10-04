@@ -172,7 +172,10 @@ func (co *CoreObserver) startSendScheduler() {
 							outTxID := fmt.Sprintf("%s-%d-%d", cctx.Index, params.ReceiverChainId, nonce) // would outTxID a better ID?
 
 							// Process Bitcoin OutTx
-							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
+							if common.IsBitcoinChain(c.ChainId) {
+								if outTxMan.IsOutTxActive(outTxID) {
+									break // there is no need to process cctx with future nonces
+								}
 								// #nosec G701 positive
 								if stop := co.processBitcoinOutTx(outTxMan, uint64(idx), cctx, signer, ob, currentHeight); stop {
 									break

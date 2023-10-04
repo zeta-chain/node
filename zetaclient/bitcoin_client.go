@@ -292,9 +292,12 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 		for _, inTx := range inTxs {
 			ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
-			amount := big.NewFloat(inTx.Value)
-			amount = amount.Mul(amount, big.NewFloat(1e8))
-			amountInt, _ := amount.Int(nil)
+			sats, err := getSatoshis(inTx.Value)
+			if err != nil {
+				ob.logger.WatchInTx.Error().Err(err).Msgf("getSatoshis error: %s", err)
+				continue
+			}
+			amountInt := big.NewInt(sats)
 			message := hex.EncodeToString(inTx.MemoBytes)
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
@@ -379,17 +382,19 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	var amount float64
-	if res.Amount > 0 {
-		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
+	if res.Amount >= 0 {
+		ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: res.Amount >= 0")
 		amount = res.Amount
-	} else if res.Amount == 0 {
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
-		return false, false, nil
 	} else {
 		amount = -res.Amount
 	}
 
-	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
+	sats, err := getSatoshis(amount)
+	if err != nil {
+		ob.logger.ObserveOutTx.Warn().Msgf("IsSendOutTxProcessed: getSatoshis error: %s", err)
+		return false, false, nil
+	}
+	amountInSat := big.NewInt(sats)
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
@@ -665,7 +670,7 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	// #nosec G701 always positive
 	nonceLow := uint64(p.NonceLow)
 
-	if nonceLow > 0 && nonceLow >= pendingNonce {
+	if nonceLow > 0 && nonceLow > pendingNonce {
 		// get the last included outTx hash
 		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
 		if err != nil {
