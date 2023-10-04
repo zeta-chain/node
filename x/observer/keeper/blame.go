@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -39,8 +40,19 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []*types.Blame, found
 	return
 }
 
-func (k Keeper) GetBlameByChainAndNonce() {
-
+func (k Keeper) GetBlameByChainAndNonce(ctx sdk.Context, chainID uint32, nonce uint64) (BlameRecords []*types.Blame, found bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
+	blamePrefix := fmt.Sprintf("%d-%d", chainID, nonce)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(blamePrefix))
+	defer iterator.Close()
+	found = false
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Blame
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		BlameRecords = append(BlameRecords, &val)
+		found = true
+	}
+	return
 }
 
 // Query
@@ -76,5 +88,15 @@ func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAl
 }
 
 func (k Keeper) BlameByChainAndNonce(goCtx context.Context, request *types.QueryBlameByChainAndNonceRequest) (*types.QueryBlameByChainAndNonceResponse, error) {
-	return &types.QueryBlameByChainAndNonceResponse{}, nil
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	blameRecords, found := k.GetBlameByChainAndNonce(ctx, request.ChainId, request.Nonce)
+	if !found {
+		return nil, status.Error(codes.NotFound, "blame info not found")
+	}
+	return &types.QueryBlameByChainAndNonceResponse{
+		BlameInfo: blameRecords,
+	}, nil
 }
