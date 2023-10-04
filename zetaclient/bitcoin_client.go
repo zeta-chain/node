@@ -667,10 +667,9 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	pendingNonce := ob.pendingNonce
 	ob.mu.Unlock()
 
-	// #nosec G701 always positive
+	// #nosec G701 always non-negative
 	nonceLow := uint64(p.NonceLow)
-
-	if nonceLow > 0 && nonceLow > pendingNonce {
+	if nonceLow > pendingNonce {
 		// get the last included outTx hash
 		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
 		if err != nil {
