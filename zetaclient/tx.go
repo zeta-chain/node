@@ -8,12 +8,12 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gitlab.com/thorchain/tss/go-tss/blame"
 
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"gitlab.com/thorchain/tss/go-tss/blame"
 )
 
 const (
@@ -60,7 +60,14 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 	return "", fmt.Errorf("post gasprice failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string, proof *common.Proof, blockHash string, txIndex int64) (string, error) {
+func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
+	chainID int64,
+	nonce uint64,
+	txHash string,
+	proof *common.Proof,
+	blockHash string,
+	txIndex int64,
+) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
@@ -76,9 +83,37 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
+func (b *ZetaCoreBridge) PostSend(
+	sender string,
+	senderChain int64,
+	txOrigin string,
+	receiver string,
+	receiverChain int64,
+	amount math.Uint,
+	message string,
+	inTxHash string,
+	inBlockHeight uint64,
+	gasLimit uint64,
+	coinType common.CoinType,
+	zetaGasLimit uint64,
+	asset string,
+) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+	msg := types.NewMsgVoteOnObservedInboundTx(
+		signerAddress,
+		sender,
+		senderChain,
+		txOrigin,
+		receiver,
+		receiverChain,
+		amount,
+		message,
+		inTxHash,
+		inBlockHeight,
+		gasLimit,
+		coinType,
+		asset,
+	)
 
 	if err := msg.ValidateBasic(); err != nil {
 		return "", fmt.Errorf("VoteOnObservedInboundTx invalid msg | %s", err.Error())
@@ -113,7 +148,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 ) (string, error) {
 	lastReport, found := b.lastOutTxReportTime[outTxHash]
 	if found && time.Since(lastReport) < 10*time.Minute {
-		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
+		return "", fmt.Errorf(
+			"PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s",
+			outTxHash,
+			lastReport,
+		)
 	}
 
 	signerAddress := b.keys.GetOperatorAddress().String()
