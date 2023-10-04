@@ -45,7 +45,7 @@ func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestion
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
 		case <-ob.stop:
-			ob.logger.WatchInTx.Info().Msg("WatchInTx stopped")
+			ob.logger.WatchInTx.Info().Msg("ExternalChainWatcher for BTC inboundTrackerSuggestions stopped")
 			return
 		}
 	}
@@ -62,7 +62,7 @@ func (ob *BitcoinChainClient) ObserveTrackerSuggestions() error {
 		if err != nil {
 			return err
 		}
-		ob.logger.WatchInTx.Info().Msgf("Vote submitted for tracker submitted via inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Gas.String())
+		ob.logger.WatchInTx.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Gas.String())
 	}
 	return nil
 }
@@ -106,7 +106,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 		return "", err
 	}
 	ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
-	return "", nil
+	return msg.Digest(), nil
 }
 
 func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
@@ -122,19 +122,19 @@ func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
 			if err != nil {
 				return err
 			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for tracker submitted via inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Zeta.String())
+			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Zeta.String())
 		case common.CoinType_ERC20:
 			ballotIdentifier, err := ob.CheckReceiptForCoinTypeERC20(tracker.TxHash, true)
 			if err != nil {
 				return err
 			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for tracker submitted via inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_ERC20.String())
+			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_ERC20.String())
 		case common.CoinType_Gas:
 			ballotIdentifier, err := ob.CheckReceiptForCoinTypeGas(tracker.TxHash, true)
 			if err != nil {
 				return err
 			}
-			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for tracker submitted via inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Gas.String())
+			ob.logger.ExternalChainWatcher.Info().Msgf("Vote submitted for inbound Tracker,Chain : %s,Ballot Identifier : %s, coin-type %s", ob.chain.ChainName, ballotIdentifier, common.CoinType_Gas.String())
 		}
 	}
 	return nil
