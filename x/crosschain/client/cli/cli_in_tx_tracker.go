@@ -15,7 +15,7 @@ import (
 func CmdAddToInTxTracker() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-to-in-tx-tracker [chain-id] [tx-hash] [coin-type]",
-		Short: "Add a out-tx-tracker",
+		Short: "Add a out-tx-tracker \n Use 0:Zeta,1:Gas,2:ERC20",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argChain, err := strconv.ParseInt(args[0], 10, 64)
@@ -23,7 +23,7 @@ func CmdAddToInTxTracker() *cobra.Command {
 				return err
 			}
 			argTxHash := args[1]
-			argsCoinType := common.CoinType(common.CoinType_value[args[2]])
+			argsCoinType := common.GetCoinType(args[2])
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
