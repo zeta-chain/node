@@ -41,6 +41,11 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("GasPriceVote invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	for i := 0; i < DefaultRetryCount; i++ {
@@ -58,6 +63,11 @@ func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, suppl
 func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, txHash string, proof *common.Proof, blockHash string, txIndex int64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("AddTxHashToOutTxTracker invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
@@ -69,6 +79,11 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("VoteOnObservedInboundTx invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	for i := 0; i < DefaultRetryCount; i++ {
@@ -116,6 +131,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 		nonce,
 		coinType,
 	)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("VoteOnObservedOutboundTx invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.
@@ -138,6 +158,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("CreateTSSVoter invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	var err error
@@ -180,6 +205,11 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
 	}
 	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("PostBlameData invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	var gasLimit uint64 = PostBlameDataGasLimit
 
@@ -197,6 +227,11 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, txhash, height, header)
+
+	if err := msg.ValidateBasic(); err != nil {
+		return "", fmt.Errorf("AddBlockHeader invalid msg | %s", err.Error())
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	var gasLimit uint64 = DefaultGasLimit
