@@ -23,7 +23,13 @@ func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
 	// initialize the nonces and pending nonces of all enabled chains
 	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
 	for _, chain := range supportedChains {
-		chainNonce := types.ChainNonces{Index: chain.ChainName.String(), ChainId: chain.ChainId, Nonce: 0, FinalizedHeight: uint64(ctx.BlockHeight())}
+		chainNonce := types.ChainNonces{
+			Index:   chain.ChainName.String(),
+			ChainId: chain.ChainId,
+			Nonce:   0,
+			// #nosec G701 always positive
+			FinalizedHeight: uint64(ctx.BlockHeight()),
+		}
 		k.SetChainNonces(ctx, chainNonce)
 
 		p := types.PendingNonces{

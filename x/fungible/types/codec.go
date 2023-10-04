@@ -24,6 +24,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateZRC20WithdrawFee{},
 		&MsgUpdateContractBytecode{},
 		&MsgUpdateZRC20PausedStatus{},
+		&MsgUpdateZRC20LiquidityCap{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
