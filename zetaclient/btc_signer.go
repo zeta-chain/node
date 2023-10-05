@@ -23,6 +23,8 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
+	minFee             = 5_000 // 0.00005 BTC
+	estimateSizeKB     = 2     // 2K is a conservative estimate for a 20-input, 3-output tx
 )
 
 type BTCSigner struct {
@@ -59,9 +61,9 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
-func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
-	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
-	minFee := 0.00005
+func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, sizeLimit uint64,
+	btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
+	estimateFee := float64(gasPrice.Uint64()) * estimateSizeKB / 1e8
 	nonceMark := NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -93,14 +95,27 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		return nil, err
 	}
 
+	// size checking
+	txSize := uint64(tx.SerializeSize())
+	// if txSize > sizeLimit {
+	// 	fmt.Printf("tx size %d is greater than sizeLimit %d; use sizeLimit", txSize, sizeLimit)
+	// 	txSize = sizeLimit
+	// }
+
 	// fee checking
-	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
+	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
 	// #nosec G701 always in range
 	if fees.Int64() < int64(minFee*1e8) {
 		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
 		// #nosec G701 always in range
 		fees = big.NewInt(int64(minFee * 1e8))
+	}
+	// #nosec G701 always in range
+	if fees.Int64() > int64(estimateFee*1e8) {
+		fmt.Printf("fees %d is greater than estimateFee %f; use estimateFee", fees, estimateFee*1e8)
+		// #nosec G701 always in range
+		fees = big.NewInt(int64(estimateFee * 1e8))
 	}
 
 	// calculate remaining btc to TSS self
@@ -253,8 +268,9 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
+	sizelimit := params.OutboundTxGasLimit
 	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
-	if !ok {
+	if !ok || gasprice.Cmp(big.NewInt(0)) < 0 {
 		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
 		return
 	}
@@ -273,7 +289,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
-	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, btcClient, height,
+	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, sizelimit, btcClient, height,
 		outboundTxTssNonce, &btcClient.chain)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
