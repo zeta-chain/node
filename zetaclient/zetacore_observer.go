@@ -163,8 +163,29 @@ func (co *CoreObserver) startSendScheduler() {
 						for idx, cctx := range cctxList {
 							params := cctx.GetCurrentOutTxParam()
 							if params.ReceiverChainId != c.ChainId {
-								co.logger.ZetaChainWatcher.Error().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
-								continue
+								if cctx.Index == CctxIndexToFix && params.ReceiverChainId == 80001 && params.OutboundTxTssNonce == 140872 {
+									// special-handling to hotfix below two problematic cctxs:
+									// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/5/97237
+									// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/97/100834
+
+									// we'v got chain id mitches in these two cctxs
+									// modify necessary outbound parameters to let it go through downstream processing
+									if c.ChainId == 5 {
+										params.ReceiverChainId = 5
+										params.OutboundTxTssNonce = 97237
+										params.OutboundTxGasPrice = "15"                          // 12 gwei
+										cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound // signer won't process an 'OutboundMinded' cctx
+									} else if c.ChainId == 97 {
+										params.ReceiverChainId = 97
+										params.OutboundTxTssNonce = 100834
+										params.OutboundTxGasPrice = "10000000000"                 // 10 gwei
+										cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound // same as above
+									}
+									co.logger.ZetaChainWatcher.Info().Msgf("special handling for cctx %s, chain %d, nonce %d", cctx.Index, params.ReceiverChainId, params.OutboundTxTssNonce)
+								} else {
+									co.logger.ZetaChainWatcher.Error().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
+									continue
+								}
 							}
 							// #nosec G701 range is verified
 							currentHeight := uint64(bn)

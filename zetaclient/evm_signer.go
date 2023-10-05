@@ -362,18 +362,31 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	var tx *ethtypes.Transaction
 
 	if send.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
-		to := ethcommon.HexToAddress(send.GetCurrentOutTxParam().Receiver)
-		if to == (ethcommon.Address{}) {
-			logger.Error().Msgf("invalid receiver %s", send.GetCurrentOutTxParam().Receiver)
-			return
-		}
+		// special-handling to hotfix below two problematic cctxs:
+		// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/5/97237
+		// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/97/100834
+		// cancel below two cctxs by sending a cancel tx
+		params := send.GetCurrentOutTxParam()
+		if send.Index == CctxIndexToFix {
+			if (params.ReceiverChainId == 5 && params.OutboundTxTssNonce == 97237) ||
+				(params.ReceiverChainId == 97 && params.OutboundTxTssNonce == 100834) {
+				logger.Error().Err(err).Msgf("special handling, cancelling cctx %s, chain %d, nonce %d", send.Index, params.ReceiverChainId, params.OutboundTxTssNonce)
+				tx, err = signer.SignCancelTx(params.OutboundTxTssNonce, gasprice, height)
+			}
+		} else { // normal command
+			to := ethcommon.HexToAddress(send.GetCurrentOutTxParam().Receiver)
+			if to == (ethcommon.Address{}) {
+				logger.Error().Msgf("invalid receiver %s", send.GetCurrentOutTxParam().Receiver)
+				return
+			}
 
-		msg := strings.Split(send.RelayedMessage, ":")
-		if len(msg) != 2 {
-			logger.Error().Msgf("invalid message %s", msg)
-			return
+			msg := strings.Split(send.RelayedMessage, ":")
+			if len(msg) != 2 {
+				logger.Error().Msgf("invalid message %s", msg)
+				return
+			}
+			tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasLimit, gasprice, height)
 		}
-		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasLimit, gasprice, height)
 	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)

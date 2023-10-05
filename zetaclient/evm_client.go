@@ -63,6 +63,11 @@ type EVMLog struct {
 
 const (
 	DonationMessage = "I am rich!"
+	// special-handling to hotfix below two problematic cctxs:
+	// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/5/97237
+	// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/97/100834
+	// http://46.4.15.110:1317/zeta-chain/crosschain/cctx/0xa5fb2174696cd28925bfeeda1a1c2dcea51669e278b0614fe9b22554fc097947
+	CctxIndexToFix = "0xa5fb2174696cd28925bfeeda1a1c2dcea51669e278b0614fe9b22554fc097947"
 )
 
 // Chain configuration struct
@@ -237,6 +242,10 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
 	if cointype == common.CoinType_Cmd {
+		// print log for problematic cctxs
+		if sendHash == CctxIndexToFix {
+			logger.Info().Msgf("special handling, post confirmation for nonce %d", nonce)
+		}
 		recvStatus := common.ReceiveStatus_Failed
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
@@ -255,9 +264,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			common.CoinType_Cmd,
 		)
 		if err != nil {
-			logger.Error().Err(err).Msg("error posting confirmation to meta core")
+			logger.Error().Err(err).Msgf("error posting confirmation for cctx %s nonce %d", sendHash, nonce)
 		}
-		logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+		logger.Info().Msgf("posted confirmation for cctx %s nonce %d, Zeta tx hash: %s\n", sendHash, nonce, zetaHash)
 		return true, true, nil
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
