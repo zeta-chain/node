@@ -10,8 +10,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	tmbytes "github.com/tendermint/tendermint/libs/bytes"
-	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -28,7 +26,7 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
 	}
 
-	// check if it's already whitelisted
+	// check if the erc20 is already whitelisted
 	foreignCoins := k.fungibleKeeper.GetAllForeignCoins(ctx)
 	for _, fcoin := range foreignCoins {
 		assetAddr := ethcommon.HexToAddress(fcoin.Asset)
@@ -46,7 +44,9 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		return nil, sdkerrors.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
 	}
 
+	// use a temporary context for the zrc20 deployment
 	tmpCtx, commit := ctx.CacheContext()
+
 	// add to the foreign coins. Deploy ZRC20 contract for it.
 	zrc20Addr, err := k.fungibleKeeper.DeployZRC20Contract(
 		tmpCtx,
@@ -77,12 +77,15 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 	}
 	medianGasPrice = medianGasPrice.MulUint64(2) // overpays gas price by 2x
 
-	hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
+	// calculate the cctx index
+	// we use the deployed zrc20 contract address to generate a unique index
+	// since other parts of the system may use the zrc20 for the index, we add a message specific suffix
+	hash := crypto.Keccak256Hash(zrc20Addr.Bytes(), []byte("WhitelistERC20"))
+	index := hash.Hex()
 
-	index := crypto.Keccak256Hash(hash.Bytes())
 	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
-		Index:          index.String(),
+		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
 		CctxStatus: &types.Status{
