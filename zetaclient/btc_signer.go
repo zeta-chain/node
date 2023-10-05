@@ -97,10 +97,10 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	// size checking
 	txSize := uint64(tx.SerializeSize())
-	// if txSize > sizeLimit {
-	// 	fmt.Printf("tx size %d is greater than sizeLimit %d; use sizeLimit", txSize, sizeLimit)
-	// 	txSize = sizeLimit
-	// }
+	if txSize > sizeLimit {
+		fmt.Printf("tx size %d is greater than sizeLimit %d; use sizeLimit", txSize, sizeLimit)
+		txSize = sizeLimit
+	}
 
 	// fee checking
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
@@ -110,12 +110,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
 		// #nosec G701 always in range
 		fees = big.NewInt(int64(minFee * 1e8))
-	}
-	// #nosec G701 always in range
-	if fees.Int64() > int64(estimateFee*1e8) {
-		fmt.Printf("fees %d is greater than estimateFee %f; use estimateFee", fees, estimateFee*1e8)
-		// #nosec G701 always in range
-		fees = big.NewInt(int64(estimateFee * 1e8))
 	}
 
 	// calculate remaining btc to TSS self
