@@ -37,7 +37,7 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 		assetAddr := ethcommon.HexToAddress(fCoin.Asset)
 		if assetAddr == erc20Addr && fCoin.ForeignChainId == msg.ChainId {
 			return nil, errorsmod.Wrapf(
-				types.ErrInvalidAddress,
+				fungibletypes.ErrForeignCoinAlreadyExist,
 				"ERC20 contract address (%s) already whitelisted on chain (%d)",
 				msg.Erc20Address,
 				msg.ChainId,
