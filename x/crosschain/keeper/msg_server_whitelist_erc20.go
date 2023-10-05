@@ -165,5 +165,8 @@ func (k Keeper) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC
 
 	commit()
 
-	return &types.MsgWhitelistERC20Response{}, nil
+	return &types.MsgWhitelistERC20Response{
+		Zrc20Address: zrc20Addr.Hex(),
+		CctxIndex:    index,
+	}, nil
 }
