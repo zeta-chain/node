@@ -113,23 +113,25 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		digest := hex.EncodeToString(digest)
 		index := fmt.Sprintf("%s-%d", digest, height)
 
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
-		if err != nil {
-			log.Error().Err(err).Msg("error sending blame data to core")
-			return [65]byte{}, err
-		}
-
-		// Increment Blame counter
-		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+		if IsBlameEnabled() {
+			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 			if err != nil {
-				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
-				continue
+				log.Error().Err(err).Msg("error sending blame data to core")
+				return [65]byte{}, err
 			}
-			counter.Inc()
-		}
 
-		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+			// Increment Blame counter
+			for _, node := range ksRes.Blame.BlameNodes {
+				counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+				if err != nil {
+					log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+					continue
+				}
+				counter.Inc()
+			}
+
+			log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+		}
 	}
 	signature := ksRes.Signatures
 
@@ -184,23 +186,25 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 		digest := combineDigests(digestBase64)
 		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
-		if err != nil {
-			log.Error().Err(err).Msg("error sending blame data to core")
-			return [][65]byte{}, err
-		}
-
-		// Increment Blame counter
-		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+		if IsBlameEnabled() {
+			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 			if err != nil {
-				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
-				continue
+				log.Error().Err(err).Msg("error sending blame data to core")
+				return [][65]byte{}, err
 			}
-			counter.Inc()
-		}
 
-		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+			// Increment Blame counter
+			for _, node := range ksRes.Blame.BlameNodes {
+				counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
+				if err != nil {
+					log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
+					continue
+				}
+				counter.Inc()
+			}
+
+			log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
+		}
 	}
 
 	signatures := ksRes.Signatures

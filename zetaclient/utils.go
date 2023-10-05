@@ -3,6 +3,8 @@ package zetaclient
 import (
 	"errors"
 	"math"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/btcsuite/btcd/txscript"
@@ -10,8 +12,24 @@ import (
 )
 
 const (
-	satoshiPerBitcoin = 1e8
+	satoshiPerBitcoin    = 1e8
+	EnvEnableBlame       = "OS_ENABLE_BLAME"
+	EnvEnableBlockHeader = "OS_ENABLE_BLOCK_HEADER"
 )
+
+func IsBlameEnabled() bool {
+	return IsBooleamEnvEnabled(EnvEnableBlame)
+}
+
+func IsBlockHeaderEnabled() bool {
+	return IsBooleamEnvEnabled(EnvEnableBlockHeader)
+}
+
+func IsBooleamEnvEnabled(key string) bool {
+	value := os.Getenv(key)
+	value = strings.ToLower(value)
+	return value == "true"
+}
 
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
