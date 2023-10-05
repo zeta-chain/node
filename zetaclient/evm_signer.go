@@ -24,6 +24,10 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const (
+	Gwei = 1_000_000_000
+)
+
 type EVMSigner struct {
 	client                      *ethclient.Client
 	chain                       *common.Chain
@@ -329,7 +333,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 				logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
 				return
 			}
-			gasprice = roundUpToNearestGwei(suggested)
+			gasprice = roundGasPriceUp(suggested, Gwei) // round up to nearest gwei
 		} else {
 			logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
 			return
@@ -563,14 +567,4 @@ func (signer *EVMSigner) SignWhitelistTx(action string, _ ethcommon.Address, ass
 	}
 
 	return tx, nil
-}
-
-func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
-	oneGwei := big.NewInt(1_000_000_000) // 1 Gwei
-	mod := new(big.Int)
-	mod.Mod(gasPrice, oneGwei)
-	if mod.Cmp(big.NewInt(0)) == 0 { // gasprice is already a multiple of 1 Gwei
-		return gasPrice
-	}
-	return new(big.Int).Add(gasPrice, new(big.Int).Sub(oneGwei, mod))
 }

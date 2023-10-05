@@ -23,6 +23,9 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
+	minFee             = 5_000   // 0.00005 BTC
+	maxFee             = 100_000 // 0.001 BTC
+	oneKSatoshis       = 1_000   // 0.00001 BTC
 )
 
 type BTCSigner struct {
@@ -61,7 +64,6 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
 	estimateFee := 0.0001 // 10,000 sats, should be good for testnet
-	minFee := 0.00005
 	nonceMark := NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -97,10 +99,14 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	fees := new(big.Int).Mul(big.NewInt(int64(tx.SerializeSize())), gasPrice)
 	fees.Div(fees, big.NewInt(1000)) //FIXME: feeRate KB is 1000B or 1024B?
 	// #nosec G701 always in range
-	if fees.Int64() < int64(minFee*1e8) {
-		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
+	if fees.Int64() < minFee {
+		fmt.Printf("fees %d is less than minFee %d; use minFee", fees, minFee)
 		// #nosec G701 always in range
-		fees = big.NewInt(int64(minFee * 1e8))
+		fees = big.NewInt(minFee)
+	} else if fees.Int64() > maxFee {
+		fmt.Printf("fees %d is greater than maxFee %d; use maxFee", fees, maxFee)
+		// #nosec G701 always in range
+		fees = big.NewInt(maxFee)
 	}
 
 	// calculate remaining btc to TSS self
@@ -253,11 +259,13 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
-	if !ok {
-		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
+	// Estimate the fee rate
+	estimated, err := btcClient.EstimateGasPrice()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot estimate fee")
 		return
 	}
+	gasprice := roundGasPriceUp(estimated, oneKSatoshis) // round up to nearst K satoshis
 
 	// FIXME: config chain params
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
@@ -279,7 +287,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
-	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
+	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce, gasprice)
 	// FIXME: add prometheus metrics
 	_, err = zetaBridge.GetObserverList(btcClient.chain)
 	if err != nil {

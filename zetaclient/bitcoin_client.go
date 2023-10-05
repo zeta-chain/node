@@ -435,6 +435,21 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 	}
 }
 
+// EstimateSmartFee returns the fees per kilobyte (BTC/kb)
+func (ob *BitcoinChainClient) EstimateGasPrice() (*big.Int, error) {
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	if err != nil {
+		return nil, err
+	}
+	if feeResult.Errors != nil {
+		return nil, fmt.Errorf("error estimating smart fee: %s", feeResult.Errors)
+	}
+	if feeResult.FeeRate == nil {
+		return nil, fmt.Errorf("fee rate is nil")
+	}
+	return new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8)), nil
+}
+
 func (ob *BitcoinChainClient) PostGasPrice() error {
 	if ob.chain.ChainId == 18444 { //bitcoin regtest
 		bn, err := ob.rpcClient.GetBlockCount()
@@ -451,29 +466,22 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 		return nil
 	}
-	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	gasPrice, err := ob.EstimateGasPrice()
 	if err != nil {
 		return err
 	}
-	if feeResult.Errors != nil || feeResult.FeeRate == nil {
-		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
-	}
-	gasPrice := big.NewFloat(0)
-	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 	// #nosec G701 always positive
-	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPrice.Uint64(), "100", uint64(bn))
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
 	}
 	_ = zetaHash
 	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
-	_ = feeResult
 	return nil
 }
 

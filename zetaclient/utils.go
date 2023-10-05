@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"errors"
 	"math"
+	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcd/txscript"
@@ -39,6 +40,17 @@ func round(f float64) int64 {
 	}
 	// #nosec G701 always in range
 	return int64(f + 0.5)
+}
+
+// roundGasPriceUp rounds up the gasPrice to the nearest multiple of base
+func roundGasPriceUp(gasPrice *big.Int, base int64) *big.Int {
+	oneUnit := big.NewInt(base) // e.g. 1 Gwei
+	mod := new(big.Int)
+	mod.Mod(gasPrice, oneUnit)
+	if mod.Cmp(big.NewInt(0)) == 0 { // gasPrice is already a multiple of base
+		return gasPrice
+	}
+	return new(big.Int).Add(gasPrice, new(big.Int).Sub(oneUnit, mod))
 }
 
 func payToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
