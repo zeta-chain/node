@@ -50831,8 +50831,6 @@ definitions:
   fungibleQueryGetGasStabilityPoolBalanceResponse:
     type: object
     properties:
-      contract_address:
-        type: string
       balance:
         type: string
   fungibleQueryGetSystemContractResponse:
