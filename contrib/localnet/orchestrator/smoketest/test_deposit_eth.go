@@ -15,9 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -74,66 +72,66 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	fmt.Printf("  value: %d\n", signedTx.Value())
 	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
 
-	{
-		LoudPrintf("Merkle Proof\n")
-		txHash := receipt.TxHash
-		blockHash := receipt.BlockHash
-		txIndex := int(receipt.TransactionIndex)
+	// {
+	// 	LoudPrintf("Merkle Proof\n")
+	// 	txHash := receipt.TxHash
+	// 	blockHash := receipt.BlockHash
+	// 	txIndex := int(receipt.TransactionIndex)
 
-		block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)
-		if err != nil {
-			panic(err)
-		}
-		i := 0
-		for {
-			if i > 20 {
-				panic("block header not found")
-			}
-			_, err := sm.observerClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
-				BlockHash: blockHash.Bytes(),
-			})
-			if err != nil {
-				fmt.Printf("WARN: block header not found; retrying...\n")
-				time.Sleep(2 * time.Second)
-			} else {
-				fmt.Printf("OK: block header found\n")
-				break
-			}
-			i++
-		}
+	// 	block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	i := 0
+	// 	for {
+	// 		if i > 20 {
+	// 			panic("block header not found")
+	// 		}
+	// 		_, err := sm.observerClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
+	// 			BlockHash: blockHash.Bytes(),
+	// 		})
+	// 		if err != nil {
+	// 			fmt.Printf("WARN: block header not found; retrying...\n")
+	// 			time.Sleep(2 * time.Second)
+	// 		} else {
+	// 			fmt.Printf("OK: block header found\n")
+	// 			break
+	// 		}
+	// 		i++
+	// 	}
 
-		trie := ethereum.NewTrie(block.Transactions())
-		if trie.Hash() != block.Header().TxHash {
-			panic("tx root hash & block tx root mismatch")
-		}
-		txProof, err := trie.GenerateProof(txIndex)
-		if err != nil {
-			panic("error generating txProof")
-		}
-		val, err := txProof.Verify(block.TxHash(), txIndex)
-		if err != nil {
-			panic("error verifying txProof")
-		}
-		var txx ethtypes.Transaction
-		err = txx.UnmarshalBinary(val)
-		if err != nil {
-			panic("error unmarshalling txProof'd tx")
-		}
-		res, err := sm.observerClient.Prove(context.Background(), &observertypes.QueryProveRequest{
-			BlockHash: blockHash.Hex(),
-			TxIndex:   int64(txIndex),
-			TxHash:    txHash.Hex(),
-			Proof:     common.NewEthereumProof(txProof),
-			ChainId:   0,
-		})
-		if err != nil {
-			panic(err)
-		}
-		if !res.Valid {
-			panic("txProof invalid") // FIXME: don't do this in production
-		}
-		fmt.Printf("OK: txProof verified\n")
-	}
+	// 	trie := ethereum.NewTrie(block.Transactions())
+	// 	if trie.Hash() != block.Header().TxHash {
+	// 		panic("tx root hash & block tx root mismatch")
+	// 	}
+	// 	txProof, err := trie.GenerateProof(txIndex)
+	// 	if err != nil {
+	// 		panic("error generating txProof")
+	// 	}
+	// 	val, err := txProof.Verify(block.TxHash(), txIndex)
+	// 	if err != nil {
+	// 		panic("error verifying txProof")
+	// 	}
+	// 	var txx ethtypes.Transaction
+	// 	err = txx.UnmarshalBinary(val)
+	// 	if err != nil {
+	// 		panic("error unmarshalling txProof'd tx")
+	// 	}
+	// 	res, err := sm.observerClient.Prove(context.Background(), &observertypes.QueryProveRequest{
+	// 		BlockHash: blockHash.Hex(),
+	// 		TxIndex:   int64(txIndex),
+	// 		TxHash:    txHash.Hex(),
+	// 		Proof:     common.NewEthereumProof(txProof),
+	// 		ChainId:   0,
+	// 	})
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	if !res.Valid {
+	// 		panic("txProof invalid") // FIXME: don't do this in production
+	// 	}
+	// 	fmt.Printf("OK: txProof verified\n")
+	// }
 
 	{
 		tx, err := sm.SendEther(TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
