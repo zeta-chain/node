@@ -19,6 +19,8 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 }
 
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
+// returns [txResponse, isContractCall, error]
+// isContractCall is true if the receiver is a contract and a contract call was made
 func (k Keeper) ZRC20DepositAndCallContract(
 	ctx sdk.Context,
 	from []byte,
