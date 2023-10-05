@@ -50450,7 +50450,7 @@ definitions:
   crosschainMsgWhitelistERC20Response:
     type: object
     properties:
-      zrc2_address:
+      zrc20_address:
         type: string
       cctx_index:
         type: string
