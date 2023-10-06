@@ -73,6 +73,7 @@ const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
 	dustOffset       = 2000
+	bytesPerKB       = 1000
 )
 
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
@@ -460,7 +461,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
 	feeRate := new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8))
-	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(1000))
+	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(bytesPerKB))
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
