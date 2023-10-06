@@ -13,7 +13,7 @@ var (
 	ErrCannotFindReceiverNonce = errorsmod.Register(ModuleName, 1110, "cannot find receiver chain nonce")
 
 	ErrGasCoinNotFound         = errorsmod.Register(ModuleName, 1113, "gas coin not found for SenderChain")
-	ErrUnableToParseContract   = errorsmod.Register(ModuleName, 1115, "cannot parse contract and data")
+	ErrUnableToParseAddress    = errorsmod.Register(ModuleName, 1115, "cannot parse address and data")
 	ErrCannotProcessWithdrawal = errorsmod.Register(ModuleName, 1116, "cannot process withdrawal event")
 	ErrForeignCoinNotFound     = errorsmod.Register(ModuleName, 1118, "gas coin not found for SenderChain")
 	ErrNotEnoughPermissions    = errorsmod.Register(ModuleName, 1119, "not enough permissions for current actions")
