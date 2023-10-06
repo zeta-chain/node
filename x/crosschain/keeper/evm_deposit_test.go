@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"errors"
 	"math/big"
 	"testing"
@@ -95,11 +96,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, nil)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -142,11 +141,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, errDeposit)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, errDeposit)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -189,11 +186,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, errDeposit)
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -235,11 +230,9 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			mock.Anything,
-			mock.Anything,
 			common.CoinType_ERC20,
 			mock.Anything,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, fungibletypes.ErrForeignCoinCapReached)
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrForeignCoinCapReached)
 
 		// call HandleEVMDeposit
 		reverted, err := k.HandleEVMDeposit(
@@ -257,6 +250,156 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		)
 		require.ErrorIs(t, err, fungibletypes.ErrForeignCoinCapReached)
 		require.True(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
+	t.Run("should return error with reverted if deposit ERC20 fails with calling a non-contract address", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChain(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrCallNonContract)
+
+		// call HandleEVMDeposit
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: receiver.String(),
+				Amount:   math.NewUintFromBigInt(amount),
+				CoinType: common.CoinType_ERC20,
+				Message:  "",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.ErrorIs(t, err, fungibletypes.ErrCallNonContract)
+		require.True(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
+	t.Run("should fail if can't parse address and data", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+		senderChain := getValidEthChain(t)
+
+		_, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: sample.EthAddress().String(),
+				Amount:   math.NewUint(42),
+				CoinType: common.CoinType_Gas,
+				Message:  "not_hex",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.ErrorIs(t, err, types.ErrUnableToParseAddress)
+	})
+
+	t.Run("should deposit into address if address is parsed", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChain(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		data, err := hex.DecodeString("DEADBEEF")
+		require.NoError(t, err)
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			data,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
+
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: sample.EthAddress().String(),
+				Amount:   math.NewUintFromBigInt(amount),
+				CoinType: common.CoinType_ERC20,
+				Message:  receiver.Hex()[2:] + "DEADBEEF",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.NoError(t, err)
+		require.False(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
+	t.Run("should deposit into receiver with specified data if no address parsed with data", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChain(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		data, err := hex.DecodeString("DEADBEEF")
+		require.NoError(t, err)
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			data,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
+
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: receiver.String(),
+				Amount:   math.NewUintFromBigInt(amount),
+				CoinType: common.CoinType_ERC20,
+				Message:  "DEADBEEF",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.NoError(t, err)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
