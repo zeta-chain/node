@@ -52,13 +52,12 @@ func (k Keeper) GasStabilityPoolBalanceAll(
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var balances []types.QueryAllGasStabilityPoolBalanceResponse_Balance
-
 	// iterate supported chains
 	chains := k.observerKeeper.GetParams(ctx).GetSupportedChains()
+	balances := make([]types.QueryAllGasStabilityPoolBalanceResponse_Balance, 0, len(chains))
 	for _, chain := range chains {
 		if chain == nil {
-			continue
+			return nil, status.Error(codes.Internal, "invalid chain")
 		}
 		chainID := chain.ChainId
 
