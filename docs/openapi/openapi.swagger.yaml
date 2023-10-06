@@ -27848,7 +27848,7 @@ paths:
         - Query
   /zeta-chain/zetacore/fungible/system_contract:
     get:
-      summary: Queries a ZetaDepositAndCallContract by index.
+      summary: Queries SystemContract
       operationId: Query_SystemContract
       responses:
         "200":
