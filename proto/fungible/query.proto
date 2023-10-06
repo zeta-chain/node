@@ -40,6 +40,11 @@ service Query {
   rpc GasStabilityPoolBalance(QueryGetGasStabilityPoolBalance) returns (QueryGetGasStabilityPoolBalanceResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}";
   }
+
+  // Queries all gas stability pool balances.
+  rpc GasStabilityPoolBalanceAll(QueryAllGasStabilityPoolBalance) returns (QueryAllGasStabilityPoolBalanceResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_balance";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -87,4 +92,14 @@ message QueryGetGasStabilityPoolBalance {
 
 message QueryGetGasStabilityPoolBalanceResponse {
   string balance = 2;
+}
+
+message QueryAllGasStabilityPoolBalance {}
+
+message QueryAllGasStabilityPoolBalanceResponse {
+  message Balance {
+    int64 chain_id = 1;
+    string balance = 2;
+  }
+  repeated Balance balances = 1 [(gogoproto.nullable) = false];
 }
