@@ -891,9 +891,9 @@ func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.O
 			ob.includedTxHashes[txHash] = params.OutboundTxTssNonce
 			ob.includedTxResults[outTxID] = *getTxResult
 			if params.OutboundTxTssNonce >= ob.pendingNonce { // try increasing pending nonce on every newly included outTx
-				ob.pendingNonce = params.OutboundTxTssNonce
+				ob.pendingNonce = params.OutboundTxTssNonce + 1
 			}
-			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s", txHash, outTxID)
+			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s pending nonce %d", txHash, outTxID, ob.pendingNonce)
 		}
 		// update saved tx result as confirmations may increase
 		if foundHash && foundRes {
