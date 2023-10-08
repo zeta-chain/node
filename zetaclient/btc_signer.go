@@ -105,17 +105,17 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	if txSize > sizeLimit { // ZRC20 'withdraw' charged less fee from end user
 		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
 	}
-	if sizeLimit < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
+	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
 		signer.logger.Warn().Msgf("sizeLimit %d is less than outTxBytesMin %d; use outTxBytesMin", sizeLimit, outTxBytesMin)
-		sizeLimit = outTxBytesMin
+		txSize = outTxBytesMin
 	}
-	if sizeLimit > outTxBytesCap { // in case of accident
+	if txSize > outTxBytesCap { // in case of accident
 		signer.logger.Warn().Msgf("sizeLimit %d is greater than outTxBytesCap %d; use outTxBytesCap", sizeLimit, outTxBytesCap)
-		sizeLimit = outTxBytesCap
+		txSize = outTxBytesCap
 	}
 
 	// fee calculation
-	fees := new(big.Int).Mul(big.NewInt(int64(sizeLimit)), gasPrice)
+	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
 	fees.Div(fees, big.NewInt(bytesPerKB))
 	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s", nonce, gasPrice.String(), txSize, fees.String())
 
