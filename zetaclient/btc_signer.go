@@ -23,8 +23,13 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	minFee             = 5_000 // 0.00005 BTC
-	estimateSizeKB     = 2     // 2K is a conservative estimate for a 20-input, 3-output tx
+	outTxBytesMin      = 400    // 500B is a conservative estimate for a 2-input, 3-output SegWit tx
+	outTxBytesMax      = 4_000  // 4KB is a conservative estimate for a 21-input, 3-output SegWit tx
+	outTxBytesCap      = 10_000 // in case of accident
+
+	// for ZRC20 configuration
+	bytesPerInput = 150                             // each input is about 150 bytes
+	ZRC20GasLimit = outTxBytesMin + bytesPerInput*8 // 1600B a suggested ZRC20 GAS_LIMIT for a 10-input, 3-output SegWit tx
 )
 
 type BTCSigner struct {
@@ -63,7 +68,7 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, sizeLimit uint64,
 	btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
-	estimateFee := float64(gasPrice.Uint64()) * estimateSizeKB / 1e8
+	estimateFee := float64(gasPrice.Uint64()) * outTxBytesMax / 1e8
 	nonceMark := NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -97,20 +102,22 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 
 	// size checking
 	txSize := uint64(tx.SerializeSize())
-	if txSize > sizeLimit {
-		fmt.Printf("tx size %d is greater than sizeLimit %d; use sizeLimit", txSize, sizeLimit)
-		txSize = sizeLimit
+	if txSize > sizeLimit { // ZRC20 'withdraw' charged less fee from end user
+		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
+	}
+	if sizeLimit < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
+		signer.logger.Warn().Msgf("sizeLimit %d is less than outTxBytesMin %d; use outTxBytesMin", sizeLimit, outTxBytesMin)
+		sizeLimit = outTxBytesMin
+	}
+	if sizeLimit > outTxBytesCap { // in case of accident
+		signer.logger.Warn().Msgf("sizeLimit %d is greater than outTxBytesCap %d; use outTxBytesCap", sizeLimit, outTxBytesCap)
+		sizeLimit = outTxBytesCap
 	}
 
-	// fee checking
-	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
+	// fee calculation
+	fees := new(big.Int).Mul(big.NewInt(int64(sizeLimit)), gasPrice)
 	fees.Div(fees, big.NewInt(bytesPerKB))
-	// #nosec G701 always in range
-	if fees.Int64() < int64(minFee*1e8) {
-		fmt.Printf("fees %d is less than minFee %f; use minFee", fees, minFee*1e8)
-		// #nosec G701 always in range
-		fees = big.NewInt(int64(minFee * 1e8))
-	}
+	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s", nonce, gasPrice.String(), txSize, fees.String())
 
 	// calculate remaining btc to TSS self
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
