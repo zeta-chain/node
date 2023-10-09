@@ -456,7 +456,8 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
 	gasPrice := big.NewFloat(0)
-	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
+	// feerate from RPC is BTC/KB, convert it to satoshi/byte
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e5)).Uint64()
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
@@ -467,8 +468,6 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return err
 	}
 	_ = zetaHash
-	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
-	_ = feeResult
 	return nil
 }
 
