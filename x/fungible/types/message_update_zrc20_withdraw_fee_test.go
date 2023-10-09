@@ -38,8 +38,10 @@ func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 		{
 			name: "both withdraw fee and gas limit nil",
 			msg: types.MsgUpdateZRC20WithdrawFee{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: sample.EthAddress().String(),
+				Creator:        sample.AccAddress(),
+				Zrc20Address:   sample.EthAddress().String(),
+				NewGasLimit:    math.Uint{},
+				NewWithdrawFee: math.Uint{},
 			},
 			err: sdkerrors.ErrInvalidRequest,
 		},
