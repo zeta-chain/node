@@ -21,7 +21,7 @@ service Query {
 
   // Queries a list of GetEmmisonsFactors items.
   rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emissions_factors";
   }
 
   // Queries a list of ShowAvailableEmissions items.

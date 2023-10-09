@@ -368,7 +368,7 @@ var (
 
 	pattern_Query_ListPoolAddresses_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "list_addresses"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEmmisonsFactors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "get_emmisons_factors"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEmmisonsFactors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "get_emissions_factors"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_ShowAvailableEmissions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "emissions", "show_available_emissions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )

@@ -27651,7 +27651,7 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/zetacore/emissions/get_emmisons_factors:
+  /zeta-chain/zetacore/emissions/get_emissions_factors:
     get:
       summary: Queries a list of GetEmmisonsFactors items.
       operationId: Query_GetEmmisonsFactors
