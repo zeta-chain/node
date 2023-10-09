@@ -50,8 +50,8 @@ func (msg *MsgUpdateZRC20WithdrawFee) ValidateBasic() error {
 	if !ethcommon.IsHexAddress(msg.Zrc20Address) {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.Zrc20Address)
 	}
-	if msg.NewWithdrawFee.IsNil() {
-		return cosmoserror.Wrapf(sdkerrors.ErrInvalidRequest, "invalid withdraw fee (%s)", msg.NewWithdrawFee)
+	if msg.NewWithdrawFee.IsNil() && msg.NewGasLimit.IsNil() {
+		return cosmoserror.Wrapf(sdkerrors.ErrInvalidRequest, "nothing to update")
 	}
 
 	return nil
