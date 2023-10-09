@@ -212,7 +212,8 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,
-	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
@@ -224,8 +225,22 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
-		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
+	return k.CallEVM(
+		ctx,
+		*sysConABI,
+		types.ModuleAddressEVM,
+		systemAddress,
+		BigIntZero,
+		ZEVMGasLimitDepositAndCall,
+		true,
+		false,
+		"depositAndCall",
+		context,
+		zrc20Addr,
+		amount,
+		targetContract,
+		message,
+	)
 }
 
 // QueryWithdrawGasFee returns the gas fee for a withdrawal transaction associated with a given zrc20
