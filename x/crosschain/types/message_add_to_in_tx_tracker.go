@@ -46,8 +46,17 @@ func (msg *MsgAddToInTxTracker) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if common.GetChainFromChainID(msg.ChainId) == nil {
+	chain := common.GetChainFromChainID(msg.ChainId)
+	if chain == nil {
 		return errorsmod.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
+	if msg.Proof != nil && !chain.IsProvable() {
+		return errorsmod.Wrapf(ErrCannotVerifyProof, "chain id %d does not support proof-based trackers", msg.ChainId)
+	}
+	_, err = common.GetCoinType(msg.CoinType.String())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

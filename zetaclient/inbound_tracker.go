@@ -13,8 +13,9 @@ import (
 	"golang.org/x/net/context"
 )
 
+// ExternalChainWatcherForNewInboundTrackerSuggestions At each tick, gets a list of Inbound tracker suggestions from zeta-core and tries to check if the in-tx was confirmed.
+// If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
 func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	// At each tick, query the Connector contract
 	ticker := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
 	defer ticker.Stop()
 	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher for inboundTrackerSuggestions started")
@@ -88,7 +89,6 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(block.Height)
 	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx)
 	if err != nil {
 		return "", err

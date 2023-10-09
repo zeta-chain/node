@@ -112,6 +112,7 @@ func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }
 
+// IsProvable List of chains which support block header-based verification on zetchain
 func (chain Chain) IsProvable() bool {
 	return chain.ChainId == 1 ||
 		chain.ChainId == 5 ||

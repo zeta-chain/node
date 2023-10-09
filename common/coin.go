@@ -2,10 +2,10 @@ package common
 
 import "strconv"
 
-func GetCoinType(coin string) CoinType {
-	coinInt, err := strconv.ParseInt(coin, 10, 64)
+func GetCoinType(coin string) (CoinType, error) {
+	coinInt, err := strconv.ParseInt(coin, 10, 32)
 	if err != nil {
-		panic(err)
+		return CoinType_Cmd, err
 	}
-	return CoinType(coinInt)
+	return CoinType(coinInt), nil
 }
