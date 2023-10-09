@@ -348,6 +348,15 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		if !broadcasted {
 			return false, false, nil
 		}
+		// If the broadcasted outTx is nonce 0, just wait for inclusion and don't schedule more keysign
+		// Schedule more than one keysign for nonce 0 can lead to duplicate payments.
+		// One purpose of nonce mark UTXO is to avoid duplicate payment based on the fact that Bitcoin
+		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
+		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
+		if nonce == 0 {
+			return true, false, nil
+		}
+
 		// Get original cctx parameters
 		params, err := ob.GetPendingCctxParams(nonce)
 		if err != nil {
