@@ -53,10 +53,9 @@ func (msg *MsgAddToInTxTracker) ValidateBasic() error {
 	if msg.Proof != nil && !chain.IsProvable() {
 		return errorsmod.Wrapf(ErrCannotVerifyProof, "chain id %d does not support proof-based trackers", msg.ChainId)
 	}
-	_, err = common.GetCoinType(msg.CoinType.String())
-	if err != nil {
-		return err
+	_, ok := common.CoinType_value[msg.CoinType.String()]
+	if !ok {
+		return errorsmod.Wrapf(ErrCannotVerifyProof, "coin-type not supported")
 	}
-
 	return nil
 }
