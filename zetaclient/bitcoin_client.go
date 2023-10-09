@@ -457,7 +457,9 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	}
 	gasPrice := big.NewFloat(0)
 	// feerate from RPC is BTC/KB, convert it to satoshi/byte
-	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e5)).Uint64()
+	// FIXME: in zetacore the gaslimit(vsize in BTC) is 100 which is too low for a typical outbound tx
+	// until we fix the gaslimit in BTC, we need to multiply the feerate by 20 to make sure the tx is confirmed
+	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(20*1e5)).Uint64()
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
