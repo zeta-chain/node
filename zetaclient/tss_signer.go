@@ -5,11 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
@@ -113,7 +114,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
-		index := observerTypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
+		index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
@@ -185,7 +186,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msg("keysign status FAIL posting blame to core")
 		digest := combineDigests(digestBase64)
-		index := observerTypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
+		index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
