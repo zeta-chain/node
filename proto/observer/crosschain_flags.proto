@@ -25,3 +25,9 @@ message CrosschainFlags {
   GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
   BlockHeaderVerificationFlags blockHeaderVerificationFlags = 4;
 }
+
+message LegacyCrosschainFlags {
+  bool isInboundEnabled = 1;
+  bool isOutboundEnabled = 2;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
+}
