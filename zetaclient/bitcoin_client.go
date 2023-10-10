@@ -344,15 +344,24 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	res, included := ob.includedTxResults[outTxID]
 	ob.mu.Unlock()
 
+	// Get original cctx parameters
+	params, err := ob.GetPendingCctxParams(nonce)
+	if err != nil {
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
+		return false, false, err
+	}
+
 	if !included {
 		if !broadcasted {
 			return false, false, nil
 		}
-		// Get original cctx parameters
-		params, err := ob.GetPendingCctxParams(nonce)
-		if err != nil {
-			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-			return false, false, nil
+		// If the broadcasted outTx is nonce 0, just wait for inclusion and don't schedule more keysign
+		// Schedule more than one keysign for nonce 0 can lead to duplicate payments.
+		// One purpose of nonce mark UTXO is to avoid duplicate payment based on the fact that Bitcoin
+		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
+		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
+		if nonce == 0 {
+			return true, false, nil
 		}
 
 		// Try including this outTx broadcasted by myself
@@ -376,23 +385,13 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checkNSaveIncludedTx succeeded for outTx %s", outTxID)
 	}
 
-	var amount float64
-	if res.Amount > 0 {
-		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
-		amount = res.Amount
-	} else if res.Amount == 0 {
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
-		return false, false, nil
-	} else {
-		amount = -res.Amount
-	}
-
-	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
+	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutTx()
+	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
 
-	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %f\n", res.TxID, res.Amount)
+	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
