@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -40,7 +41,7 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []*types.Blame, found
 	return
 }
 
-func (k Keeper) GetBlameByChainAndNonce(ctx sdk.Context, chainID uint32, nonce uint64) (BlameRecords []*types.Blame, found bool) {
+func (k Keeper) GetBlameByChainAndNonce(ctx sdk.Context, chainID int64, nonce int64) (BlameRecords []*types.Blame, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
 	blamePrefix := fmt.Sprintf("%d-%d", chainID, nonce)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(blamePrefix))

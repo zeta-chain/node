@@ -1,11 +1,12 @@
 package cli
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"strconv"
 )
 
 func CmdBlameByIdentifier() *cobra.Command {
@@ -87,16 +88,16 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			chain, err := strconv.ParseUint(chainId, 10, 32)
+			chain, err := strconv.ParseInt(chainId, 10, 64)
 			if err != nil {
 				return err
 			}
-			nonceInt, err := strconv.ParseUint(nonce, 10, 64)
+			nonceInt, err := strconv.ParseInt(nonce, 10, 64)
 			if err != nil {
 				return err
 			}
 			params := &types.QueryBlameByChainAndNonceRequest{
-				ChainId: uint32(chain),
+				ChainId: chain,
 				Nonce:   nonceInt,
 			}
 
