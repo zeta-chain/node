@@ -50449,6 +50449,11 @@ definitions:
     type: object
   crosschainMsgWhitelistERC20Response:
     type: object
+    properties:
+      zrc20_address:
+        type: string
+      cctx_index:
+        type: string
   crosschainOutTxTracker:
     type: object
     properties:
