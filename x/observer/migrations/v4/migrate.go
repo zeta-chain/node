@@ -8,11 +8,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-type ObserverKeeper interface {
-	GetCrosschainFlags(ctx sdk.Context) (val types.CrosschainFlags, found bool)
-	SetCrosschainFlags(ctx sdk.Context, crosschainFlags types.CrosschainFlags)
-}
-
 func MigrateStore(ctx sdk.Context, observerStoreKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
 	newCrossChainFlags := types.DefaultCrosschainFlags()
 	var val types.LegacyCrosschainFlags
@@ -26,7 +21,10 @@ func MigrateStore(ctx sdk.Context, observerStoreKey storetypes.StoreKey, cdc cod
 		newCrossChainFlags.IsOutboundEnabled = val.IsOutboundEnabled
 		newCrossChainFlags.IsInboundEnabled = val.IsInboundEnabled
 	}
-	b = cdc.MustMarshal(newCrossChainFlags)
+	b, err := cdc.Marshal(newCrossChainFlags)
+	if err != nil {
+		return err
+	}
 	store.Set([]byte{0}, b)
 	return nil
 }
