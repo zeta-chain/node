@@ -117,7 +117,7 @@ type EthereumAPI interface {
 	// eth_submitWork (on Ethereum.org)
 	// eth_submitHashrate (on Ethereum.org)
 
-	// Disabled APIs for security reasons
+	// Disabled
 	//SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error)
 	//Sign(address common.Address, data hexutil.Bytes) (hexutil.Bytes, error)
 	//SignTypedData(address common.Address, typedData apitypes.TypedData) (hexutil.Bytes, error)
@@ -507,9 +507,7 @@ func (e *PublicAPI) GetPendingTransactions() ([]*rpctypes.RPCTransaction, error)
 	return result, nil
 }
 
-///////////////////////////////////////////////////////////////////////////////
-///                           Disabled 										///
-///////////////////////////////////////////////////////////////////////////////
+// Disabled
 
 //// SendTransaction sends an Ethereum transaction.
 //func (e *PublicAPI) SendTransaction(args evmtypes.TransactionArgs) (common.Hash, error) {
