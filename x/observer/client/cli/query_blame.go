@@ -87,17 +87,17 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			chain, err := strconv.Atoi(chainId)
+			chain, err := strconv.ParseUint(chainId, 10, 32)
 			if err != nil {
 				return err
 			}
-			nonceInt, err := strconv.Atoi(nonce)
+			nonceInt, err := strconv.ParseUint(nonce, 10, 64)
 			if err != nil {
 				return err
 			}
 			params := &types.QueryBlameByChainAndNonceRequest{
 				ChainId: uint32(chain),
-				Nonce:   uint64(nonceInt),
+				Nonce:   nonceInt,
 			}
 
 			res, err := queryClient.BlameByChainAndNonce(cmd.Context(), params)
