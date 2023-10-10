@@ -201,7 +201,67 @@ func (k Keeper) DepositZRC20(
 	if err != nil {
 		return nil, err
 	}
-	return k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, contract, BigIntZero, nil, true, false, "deposit", to, amount)
+	return k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		contract,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"deposit",
+		to,
+		amount,
+	)
+}
+
+// UpdateZRC20ProtocolFlatFee updates the protocol flat fee for a given ZRC20 contract
+func (k Keeper) UpdateZRC20ProtocolFlatFee(
+	ctx sdk.Context,
+	zrc20Addr common.Address,
+	newFee *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	return k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		zrc20Addr,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"updateProtocolFlatFee",
+		newFee,
+	)
+}
+
+// UpdateZRC20GasLimit updates the gas limit for a given ZRC20 contract
+func (k Keeper) UpdateZRC20GasLimit(
+	ctx sdk.Context,
+	zrc20Addr common.Address,
+	newGasLimit *big.Int,
+) (*evmtypes.MsgEthereumTxResponse, error) {
+	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	return k.CallEVM(
+		ctx,
+		*zrc20ABI,
+		types.ModuleAddressEVM,
+		zrc20Addr,
+		BigIntZero,
+		nil,
+		true,
+		false,
+		"updateGasLimit",
+		newGasLimit,
+	)
 }
 
 // DepositZRC20AndCallContract deposits into ZRC4 and call contract function in a single tx
