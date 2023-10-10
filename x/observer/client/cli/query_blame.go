@@ -78,7 +78,7 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 		Short: "Query AllBlameRecords",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			chainId := args[0]
+			chainID := args[0]
 			nonce := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -88,7 +88,7 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			chain, err := strconv.ParseInt(chainId, 10, 64)
+			chain, err := strconv.ParseInt(chainID, 10, 64)
 			if err != nil {
 				return err
 			}
