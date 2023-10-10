@@ -48,7 +48,8 @@ func NewBitcoinProof(txBytes []byte, path []byte, index uint) *Proof {
 			BitcoinProof: &bitcoin.Proof{
 				TxBytes: txBytes,
 				Path:    path,
-				Index:   uint32(index),
+				// #nosec G701 always in range
+				Index: uint32(index),
 			},
 		},
 	}

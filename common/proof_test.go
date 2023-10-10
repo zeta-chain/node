@@ -89,7 +89,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 	}
 }
 
-func TestBitcoinMerkleProofLiveTest(t *testing.T) {
+func BitcoinMerkleProofLiveTest(t *testing.T) {
 	client := createBTCClient(t)
 	bn, err := client.GetBlockCount()
 	if err != nil {

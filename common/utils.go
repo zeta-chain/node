@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/hex"
 	"fmt"
+	math "math"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -14,6 +15,10 @@ const (
 
 // A very special value to mark current nonce in UTXO
 func NonceMarkAmount(nonce uint64) int64 {
+	if nonce > math.MaxInt64-DustUTXOOffset {
+		panic("nonce mark is too large")
+	}
+	// #nosec G701 always in range
 	return int64(nonce) + DustUTXOOffset // +2000 to avoid being a dust rejection
 }
 
