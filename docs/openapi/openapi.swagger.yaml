@@ -27654,12 +27654,12 @@ paths:
   /zeta-chain/zetacore/emissions/get_emissions_factors:
     get:
       summary: Queries a list of GetEmmisonsFactors items.
-      operationId: Query_GetEmmisonsFactors
+      operationId: Query_GetEmissionsFactors
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/emissionsQueryGetEmmisonsFactorsResponse'
+            $ref: '#/definitions/emissionsQueryGetEmissionsFactorsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50721,7 +50721,7 @@ definitions:
         type: string
       proved:
         type: boolean
-  emissionsQueryGetEmmisonsFactorsResponse:
+  emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
       reservesFactor:
