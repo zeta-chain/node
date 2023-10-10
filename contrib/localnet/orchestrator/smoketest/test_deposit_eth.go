@@ -9,16 +9,17 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/zeta-chain/zetacore/common/ethereum"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
+	"cosmossdk.io/math"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -283,6 +284,109 @@ func (sm *SmokeTest) TestDepositAndCallRefund() {
 		fmt.Printf("  value: %s\n", tx.Value().String())
 		fmt.Printf("  block num: %d\n", receipt.BlockNumber)
 	}()
+}
+
+// TestDepositEtherLiquidityCap tests depositing Ethers in a context where a liquidity cap is set
+func (sm *SmokeTest) TestDepositEtherLiquidityCap() {
+	startTime := time.Now()
+	defer func() {
+		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+	}()
+	LoudPrintf("Deposit Ethers into ZEVM with a liquidity cap\n")
+
+	supply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+	if err != nil {
+		panic(err)
+	}
+
+	// Set a liquidity cap slightly above the current supply
+	fmt.Println("Setting a liquidity cap")
+	liquidityCap := math.NewUintFromBigInt(supply).Add(math.NewUint(1e16))
+	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
+		FungibleAdminAddress,
+		sm.ETHZRC20Addr.Hex(),
+		liquidityCap,
+	)
+	res, err := sm.zetaTxServer.BroadcastTx(FungibleAdminName, msg)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("set liquidity cap tx hash: %s\n", res.TxHash)
+
+	fmt.Println("Depositing more than liquidity cap should make cctx reverted")
+	signedTx, err := sm.SendEther(TSSAddress, big.NewInt(1e17), nil)
+	if err != nil {
+		panic(err)
+	}
+	receipt := MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("deposit eth tx failed")
+	}
+	cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
+	}
+	fmt.Println("CCTX has been reverted")
+
+	fmt.Println("Depositing less than liquidity cap should still succeed")
+	initialBal, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	signedTx, err = sm.SendEther(TSSAddress, big.NewInt(1e15), nil)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("deposit eth tx failed")
+	}
+	WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	expectedBalance := big.NewInt(0).Add(initialBal, big.NewInt(1e15))
+
+	bal, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	if bal.Cmp(expectedBalance) != 0 {
+		panic(fmt.Sprintf("expected balance to be %s; got %s", expectedBalance.String(), bal.String()))
+	}
+	fmt.Println("Deposit succeeded")
+
+	fmt.Println("Removing the liquidity cap")
+	msg = fungibletypes.NewMsgUpdateZRC20LiquidityCap(
+		FungibleAdminAddress,
+		sm.ETHZRC20Addr.Hex(),
+		math.ZeroUint(),
+	)
+	res, err = sm.zetaTxServer.BroadcastTx(FungibleAdminName, msg)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("remove liquidity cap tx hash: %s\n", res.TxHash)
+	initialBal, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	signedTx, err = sm.SendEther(TSSAddress, big.NewInt(1e17), nil)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("deposit eth tx failed")
+	}
+	WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	expectedBalance = big.NewInt(0).Add(initialBal, big.NewInt(1e17))
+
+	bal, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	if bal.Cmp(expectedBalance) != 0 {
+		panic(fmt.Sprintf("expected balance to be %s; got %s", expectedBalance.String(), bal.String()))
+	}
+	fmt.Println("New deposit succeeded")
 }
 
 func (sm *SmokeTest) SendEther(to ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {

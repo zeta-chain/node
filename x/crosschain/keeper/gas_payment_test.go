@@ -22,14 +22,19 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// get a valid chain id independently of the build flag
+// get a valid eth chain id independently of the build flag
 func getValidEthChainID(t *testing.T) int64 {
+	return getValidEthChain(t).ChainId
+}
+
+// get a valid eth chain independently of the build flag
+func getValidEthChain(t *testing.T) *zetacommon.Chain {
 	list := zetacommon.DefaultChainsList()
 	require.True(t, len(list) > 1)
 	require.NotNil(t, list[1])
 	require.False(t, zetacommon.IsBitcoinChain(list[1].ChainId))
 
-	return list[1].ChainId
+	return list[1]
 }
 
 // assert that a contract has been deployed by checking stored code is non-empty.
