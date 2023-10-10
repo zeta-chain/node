@@ -27605,7 +27605,7 @@ paths:
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
         - name: tx_hash
           in: query
           required: false
