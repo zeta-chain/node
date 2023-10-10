@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
@@ -28,6 +29,7 @@ const numBlocksToTest = 100
 type Block struct {
 	TssAddress   string `json:"tssAddress"`
 	Height       int    `json:"height"`
+	Nonce        uint64 `json:"nonce"`
 	OutTxid      string `json:"outTxid"`
 	HeaderBase64 string `json:"headerBase64"`
 	BlockBase64  string `json:"blockBase64"`
@@ -83,7 +85,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		}
 
 		// Validate block
-		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress)
+		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
 	}
 }
 
@@ -117,13 +119,13 @@ func TestBitcoinMerkleProofLiveTest(t *testing.T) {
 		}
 
 		// Validate block
-		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "")
+		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "", 0)
 
 		fmt.Printf("Verification succeeded for block: %d hash: %s root: %s target: %064x transactions: %d\n", height, blockHash, header.MerkleRoot, target, len(blockVerbose.Tx))
 	}
 }
 
-func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string) {
+func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
 	// Deserialization should work for each transaction in the block
 	txns := []*btcutil.Tx{}
 	txBodies := [][]byte{}
@@ -139,7 +141,15 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
-			keeper.ValidateBTCOutTxBody(nil, txBytes, tssAddress)
+			msg := &crosschaintypes.MsgAddToOutTxTracker{
+				ChainId: common.BtcChainID(),
+				Nonce:   nonce,
+				TxHash:  outTxid,
+			}
+			err = keeper.ValidateBTCOutTxBody(msg, txBytes, tssAddress)
+			if err != nil {
+				t.Error(err)
+			}
 		}
 		txns = append(txns, tx)
 		txBodies = append(txBodies, txBytes)

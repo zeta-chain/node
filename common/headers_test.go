@@ -84,10 +84,9 @@ func BitcoinHeaderValidationLiveTest(t *testing.T) {
 
 func createBTCClient(t *testing.T) *rpcclient.Client {
 	connCfg := &rpcclient.ConnConfig{
-		//Host: "127.0.0.1:18332",
-		Host:         "bitcoin-rpc.athens.zetachain.com",
-		User:         "zetabtc",
-		Pass:         "iMIrPpmsFaBEpIrW",
+		Host:         "127.0.0.1:18332",
+		User:         "user",
+		Pass:         "pass",
 		HTTPPostMode: true,
 		DisableTLS:   true,
 		Params:       "testnet3",
