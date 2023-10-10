@@ -19,18 +19,18 @@ func (k Keeper) DepositCoinZeta(ctx sdk.Context, to eth.Address, amount *big.Int
 }
 
 // ZRC20DepositAndCallContract deposits ZRC20 to the EVM account and calls the contract
+// returns [txResponse, isContractCall, error]
+// isContractCall is true if the receiver is a contract and a contract call was made
 func (k Keeper) ZRC20DepositAndCallContract(
 	ctx sdk.Context,
 	from []byte,
 	to eth.Address,
 	amount *big.Int,
 	senderChain *common.Chain,
-	message string,
-	contract eth.Address,
 	data []byte,
 	coinType common.CoinType,
 	asset string,
-) (*evmtypes.MsgEthereumTxResponse, error) {
+) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var ZRC20Contract eth.Address
 	var coin types.ForeignCoins
 	var found bool
@@ -39,15 +39,14 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	if coinType == common.CoinType_Gas {
 		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
 		if !found {
-			return nil, crosschaintypes.ErrGasCoinNotFound
+			return nil, false, crosschaintypes.ErrGasCoinNotFound
 		}
 	} else {
 		coin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChain.ChainId)
 		if !found {
-			return nil, crosschaintypes.ErrForeignCoinNotFound
+			return nil, false, crosschaintypes.ErrForeignCoinNotFound
 		}
 	}
-
 	ZRC20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
 
 	// check foreign coins cap if it has a cap
@@ -55,30 +54,33 @@ func (k Keeper) ZRC20DepositAndCallContract(
 		liquidityCap := coin.LiquidityCap.BigInt()
 		totalSupply, err := k.TotalSupplyZRC4(ctx, ZRC20Contract)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		newSupply := new(big.Int).Add(totalSupply, amount)
 		if newSupply.Cmp(liquidityCap) > 0 {
-			return nil, types.ErrForeignCoinCapReached
+			return nil, false, types.ErrForeignCoinCapReached
 		}
 	}
 
-	// no message: transfer to EVM account
-	if len(message) == 0 {
-		return k.DepositZRC20(ctx, ZRC20Contract, to, amount)
+	// check if the receiver is a contract
+	// if it is, then the hook onCrossChainCall() will be called
+	// if not, the zrc20 are simply transferred to the receiver
+	acc := k.evmKeeper.GetAccount(ctx, to)
+	if acc != nil && acc.IsContract() {
+		context := systemcontract.ZContext{
+			Origin:  from,
+			Sender:  eth.Address{},
+			ChainID: big.NewInt(senderChain.ChainId),
+		}
+		res, err := k.DepositZRC20AndCallContract(ctx, context, ZRC20Contract, to, amount, data)
+		return res, true, err
 	}
 
-	// non-empty message with empty data: deposit to contract
-	if len(data) == 0 {
-		return k.DepositZRC20(ctx, ZRC20Contract, contract, amount)
+	// if the account is a EOC, no contract call can be made with the data
+	if len(data) > 0 {
+		return nil, false, types.ErrCallNonContract
 	}
 
-	// non-empty message with non-empty data: contract call
-	context := systemcontract.ZContext{
-		Origin:  from,
-		Sender:  eth.Address{},
-		ChainID: big.NewInt(senderChain.ChainId),
-	}
-	return k.DepositZRC20AndCallContract(ctx, context, ZRC20Contract, contract, amount, data)
-
+	res, err := k.DepositZRC20(ctx, ZRC20Contract, to, amount)
+	return res, false, err
 }

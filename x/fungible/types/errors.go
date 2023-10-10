@@ -32,4 +32,5 @@ var (
 	ErrPausedZRC20            = sdkerrors.Register(ModuleName, 1121, "ZRC20 is paused")
 	ErrForeignCoinNotFound    = sdkerrors.Register(ModuleName, 1122, "foreign coin not found")
 	ErrForeignCoinCapReached  = sdkerrors.Register(ModuleName, 1123, "foreign coin cap reached")
+	ErrCallNonContract        = sdkerrors.Register(ModuleName, 1124, "can't call a non-contract address")
 )
