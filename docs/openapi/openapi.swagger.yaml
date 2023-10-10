@@ -27295,6 +27295,32 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_BlameByChainAndNonce
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryBlameByChainAndNonceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: nonce
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/blame_by_identifier/{blame_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -51119,6 +51145,14 @@ definitions:
         $ref: '#/definitions/observerObservationType'
       ballot_status:
         $ref: '#/definitions/observerBallotStatus'
+  observerQueryBlameByChainAndNonceResponse:
+    type: object
+    properties:
+      blame_info:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerBlame'
   observerQueryBlameByIdentifierResponse:
     type: object
     properties:
