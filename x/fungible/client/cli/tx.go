@@ -5,8 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
-
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -23,6 +21,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(
 		CmdDeployFungibleCoinZRC4(),
 		CmdRemoveForeignCoin(),
+		CmdUpdateZRC20LiquidityCap(),
 	)
 
 	return cmd

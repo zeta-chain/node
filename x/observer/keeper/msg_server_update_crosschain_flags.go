@@ -12,8 +12,13 @@ import (
 func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUpdateCrosschainFlags) (*types.MsgUpdateCrosschainFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	requiredGroup := types.Policy_Type_group1
+	if msg.IsInboundEnabled || msg.IsOutboundEnabled || msg.GasPriceIncreaseFlags != nil {
+		requiredGroup = types.Policy_Type_group2
+	}
+
 	// check permission
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_stop_inbound_cctx) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(requiredGroup) {
 		return &types.MsgUpdateCrosschainFlagsResponse{}, types.ErrNotAuthorizedPolicy
 	}
 

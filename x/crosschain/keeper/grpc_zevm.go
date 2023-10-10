@@ -42,10 +42,12 @@ func (k Keeper) ZEVMGetBlock(c context.Context, req *types.QueryZEVMGetBlockByNu
 	if height >= math.MaxInt64 {
 		return nil, status.Error(codes.OutOfRange, "invalid height , the height is too large")
 	}
+	// #nosec G701 range checked
 	blockResults, err := GetTendermintBlockResultsByNumber(ctx, int64(req.Height))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	// #nosec G701 range checked
 	block, err := GetTendermintBlockByNumber(ctx, int64(req.Height))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

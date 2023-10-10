@@ -32,7 +32,7 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgCreateTSSVoter
 
-Vote on creating a TSS key and recording the information about it (public
+CreateTSSVoter votes on creating a TSS key and recording the information about it (public
 key, participant and operator addresses, finalized and keygen heights).
 
 If the vote passes, the information about the TSS key is recorded on chain
@@ -206,6 +206,9 @@ message MsgVoteOnObservedInboundTx {
 ```
 
 ## MsgWhitelistERC20
+
+WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+and emit a crosschain tx to whitelist the ERC20 on the external chain
 
 ```proto
 message MsgWhitelistERC20 {

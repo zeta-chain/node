@@ -110,8 +110,9 @@ func (k Keeper) DeployZRC20Contract(
 		symbol,                    // symbol
 		decimals,                  // decimals
 		big.NewInt(chain.ChainId), // chainID
-		uint8(coinType),           // coinType: 0: Zeta 1: gas 2 ERC20
-		gasLimit,                  //gas limit for transfer; 21k for gas asset; around 70k for ERC20
+		// #nosec G701 always in range
+		uint8(coinType), // coinType: 0: Zeta 1: gas 2 ERC20
+		gasLimit,        //gas limit for transfer; 21k for gas asset; around 70k for ERC20
 		common.HexToAddress(system.SystemContract),
 	)
 	if err != nil {
@@ -211,7 +212,8 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 	zrc20Addr common.Address,
 	targetContract common.Address,
 	amount *big.Int,
-	message []byte) (*evmtypes.MsgEthereumTxResponse, error) {
+	message []byte,
+) (*evmtypes.MsgEthereumTxResponse, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return nil, cosmoserrors.Wrapf(types.ErrContractNotFound, "GetSystemContract address not found")
@@ -223,8 +225,22 @@ func (k Keeper) DepositZRC20AndCallContract(ctx sdk.Context,
 		return nil, err
 	}
 
-	return k.CallEVM(ctx, *sysConABI, types.ModuleAddressEVM, systemAddress, BigIntZero, ZEVMGasLimitDepositAndCall, true, false,
-		"depositAndCall", context, zrc20Addr, amount, targetContract, message)
+	return k.CallEVM(
+		ctx,
+		*sysConABI,
+		types.ModuleAddressEVM,
+		systemAddress,
+		BigIntZero,
+		ZEVMGasLimitDepositAndCall,
+		true,
+		false,
+		"depositAndCall",
+		context,
+		zrc20Addr,
+		amount,
+		targetContract,
+		message,
+	)
 }
 
 // QueryWithdrawGasFee returns the gas fee for a withdrawal transaction associated with a given zrc20
@@ -572,7 +588,10 @@ func (k Keeper) CallEVMWithData(
 
 	// Emit events and log for the transaction if it is committed
 	if commit {
-		msgBytes, _ := json.Marshal(msg)
+		msgBytes, err := json.Marshal(msg)
+		if err != nil {
+			return nil, cosmoserrors.Wrap(err, "failed to encode msg")
+		}
 		ethTxHash := common.BytesToHash(crypto.Keccak256(msgBytes)) // NOTE(pwu): this is a fake txhash
 		attrs := []sdk.Attribute{}
 		if len(ctx.TxBytes()) > 0 {

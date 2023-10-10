@@ -84,7 +84,7 @@ func CmdNonceVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argsNonce, err := strconv.Atoi(args[1])
+			argsNonce, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -93,7 +93,7 @@ func CmdNonceVoter() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgNonceVoter(clientCtx.GetFromAddress().String(), argsChain, uint64(argsNonce))
+			msg := types.NewMsgNonceVoter(clientCtx.GetFromAddress().String(), argsChain, argsNonce)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

@@ -162,6 +162,7 @@ func ParseTxResult(result *abci.ResponseDeliverTx, tx sdk.Tx) (*ParsedTxs, error
 
 	// some old versions miss some events, fill it with tx result
 	if len(p.Txs) == 1 {
+		// #nosec G701 always positive
 		p.Txs[0].GasUsed = uint64(result.GasUsed)
 	}
 
@@ -191,8 +192,9 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 	}
 	if parsedTx.Type == 88 {
 		return &ethermint.TxResult{
-				Height:            txResult.Height,
-				TxIndex:           txResult.Index,
+				Height:  txResult.Height,
+				TxIndex: txResult.Index,
+				// #nosec G701 always in range
 				MsgIndex:          uint32(parsedTx.MsgIndex),
 				EthTxIndex:        parsedTx.EthTxIndex,
 				Failed:            parsedTx.Failed,
@@ -208,8 +210,9 @@ func ParseTxIndexerResult(txResult *tmrpctypes.ResultTx, tx sdk.Tx, getter func(
 			}, nil
 	}
 	return &ethermint.TxResult{
-		Height:            txResult.Height,
-		TxIndex:           txResult.Index,
+		Height:  txResult.Height,
+		TxIndex: txResult.Index,
+		// #nosec G701 always in range
 		MsgIndex:          uint32(parsedTx.MsgIndex),
 		EthTxIndex:        parsedTx.EthTxIndex,
 		Failed:            parsedTx.Failed,
@@ -231,8 +234,10 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 	parsedTx := txs.Txs[0]
 	if parsedTx.Type == 88 {
 		return &ethermint.TxResult{
-				Height:            height,
-				TxIndex:           uint32(txIndex),
+				Height: height,
+				// #nosec G701 always in range
+				TxIndex: uint32(txIndex),
+				// #nosec G701 always in range
 				MsgIndex:          uint32(parsedTx.MsgIndex),
 				EthTxIndex:        parsedTx.EthTxIndex,
 				Failed:            parsedTx.Failed,
@@ -249,8 +254,10 @@ func ParseTxBlockResult(txResult *abci.ResponseDeliverTx, tx sdk.Tx, txIndex int
 			}, nil
 	}
 	return &ethermint.TxResult{
-		Height:            height,
-		TxIndex:           uint32(txIndex),
+		Height: height,
+		// #nosec G701 always in range
+		TxIndex: uint32(txIndex),
+		// #nosec G701 always in range
 		MsgIndex:          uint32(parsedTx.MsgIndex),
 		EthTxIndex:        parsedTx.EthTxIndex,
 		Failed:            parsedTx.Failed,
@@ -336,6 +343,7 @@ func fillTxAttribute(tx *ParsedTx, key []byte, value []byte) error {
 		if err != nil {
 			return err
 		}
+		// #nosec G701 always in range
 		tx.EthTxIndex = int32(txIndex)
 	case evmtypes.AttributeKeyTxGasUsed:
 		gasUsed, err := strconv.ParseUint(string(value), 10, 64)
