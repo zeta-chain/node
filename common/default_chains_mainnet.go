@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package common
 
@@ -20,7 +20,7 @@ func BscMainnetChain() Chain {
 func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_mainnet,
-		ChainId:   70000,
+		ChainId:   7000,
 	}
 }
 
@@ -44,6 +44,19 @@ func DefaultChainsList() []*Chain {
 		BscMainnetChain(),
 		EthChain(),
 		ZetaChain(),
+	}
+	var c []*Chain
+	for i := 0; i < len(chains); i++ {
+		c = append(c, &chains[i])
+	}
+	return c
+}
+
+func ExternalChainList() []*Chain {
+	chains := []Chain{
+		BtcMainnetChain(),
+		BscMainnetChain(),
+		EthChain(),
 	}
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {

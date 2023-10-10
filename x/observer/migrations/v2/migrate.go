@@ -17,8 +17,8 @@ func MigrateStore(
 	observerStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
-	store := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.PermissionFlagsKey))
-	b := cdc.MustMarshal(&types.PermissionFlags{
+	store := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.CrosschainFlagsKey))
+	b := cdc.MustMarshal(&types.CrosschainFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
 	})

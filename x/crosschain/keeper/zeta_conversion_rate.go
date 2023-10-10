@@ -30,14 +30,15 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "zrc20 not found")
 	}
-	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapv2RouterGetAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
+	outTxGasFeeInZeta, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, outTxGasFee.BigInt(), zrc20)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "zQueryUniswapv2RouterGetAmountsIn failed")
 	}
 	return &types.QueryConvertGasToZetaResponse{
 		OutboundGasInZeta: outTxGasFeeInZeta.String(),
 		ProtocolFeeInZeta: types.GetProtocolFee().String(),
-		ZetaBlockHeight:   uint64(ctx.BlockHeight()),
+		// #nosec G701 always positive
+		ZetaBlockHeight: uint64(ctx.BlockHeight()),
 	}, nil
 }
 

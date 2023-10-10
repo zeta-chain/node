@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package types
 
@@ -15,7 +15,7 @@ func GetCoreParams() CoreParamsList {
 		CoreParams: []*CoreParams{
 			{
 				ChainId:                     common.EthChain().ChainId,
-				ConfirmationCount:           6,
+				ConfirmationCount:           14,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
@@ -28,7 +28,7 @@ func GetCoreParams() CoreParamsList {
 			},
 			{
 				ChainId:                     common.BscMainnetChain().ChainId,
-				ConfirmationCount:           6,
+				ConfirmationCount:           14,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
@@ -38,17 +38,6 @@ func GetCoreParams() CoreParamsList {
 				GasPriceTicker:              30,
 				OutboundTxScheduleInterval:  30,
 				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.ZetaChain().ChainId,
-				ConfirmationCount:           3,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
-				InTxTicker:                  2,
-				OutTxTicker:                 3,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              5,
 			},
 			{
 				ChainId:                     common.BtcMainnetChain().ChainId,
@@ -65,7 +54,7 @@ func GetCoreParams() CoreParamsList {
 			},
 		},
 	}
-	chainList := common.DefaultChainsList()
+	chainList := common.ExternalChainList()
 	requiredParams := len(chainList)
 	availableParams := 0
 	for _, chain := range chainList {

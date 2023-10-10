@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/simapp/params"
+
 	"github.com/zeta-chain/zetacore/common"
 
 	"sync"
@@ -32,6 +34,7 @@ import (
 	//"strconv"
 	//"strings"
 
+	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -46,6 +49,7 @@ type ZetaCoreBridge struct {
 	grpcConn      *grpc.ClientConn
 	httpClient    *retryablehttp.Client
 	cfg           config.ClientConfiguration
+	encodingCfg   params.EncodingConfig
 	keys          *Keys
 	broadcastLock *sync.RWMutex
 	zetaChainID   string
@@ -92,6 +96,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		accountNumber:       accountsMap,
 		seqNumber:           seqMap,
 		cfg:                 cfg,
+		encodingCfg:         app.MakeEncodingConfig(),
 		keys:                k,
 		broadcastLock:       &sync.RWMutex{},
 		lastOutTxReportTime: map[string]time.Time{},
@@ -111,6 +116,12 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	return cdc
 }
 
+func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
+	if b.zetaChainID != chainID {
+		b.zetaChainID = chainID
+	}
+}
+
 func (b *ZetaCoreBridge) Stop() {
 	b.logger.Info().Msgf("ZetaBridge is stopping")
 	close(b.stop) // this notifies all configupdater to stop
@@ -126,7 +137,11 @@ func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (ui
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
 	ctx := b.GetContext()
 	address := b.keys.GetAddress()
-	accN, seq, _ := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
+	if err != nil {
+		b.logger.Error().Err(err).Msg("fail to get account number and sequence number")
+		return
+	}
 	b.accountNumber[keyType] = accN
 	b.seqNumber[keyType] = seq
 }
@@ -141,7 +156,7 @@ func (b *ZetaCoreBridge) WaitForCoreToCreateBlocks() {
 		}
 		retryCount++
 		b.logger.Debug().Msgf("Failed to get latest Block , Retry : %d/%d", retryCount, DefaultRetryCount)
-		if retryCount > DefaultRetryCount {
+		if retryCount > ExtendedRetryCount {
 			panic(fmt.Sprintf("ZetaCore is not ready , Waited for %d seconds", DefaultRetryCount*DefaultRetryInterval))
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
@@ -171,22 +186,30 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		return err
 	}
-	newChains := make([]common.Chain, len(coreParams))
+
 	newEVMParams := make(map[int64]*observertypes.CoreParams)
 	var newBTCParams *observertypes.CoreParams
 
 	// check and update core params for each chain
-	for i, params := range coreParams {
+	for _, params := range coreParams {
 		err := config.ValidateCoreParams(params)
 		if err != nil {
-			b.logger.Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
+			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
 		}
-		newChains[i] = *common.GetChainFromChainID(params.ChainId)
 		if common.IsBitcoinChain(params.ChainId) {
 			newBTCParams = params
 		} else {
 			newEVMParams[params.ChainId] = params
 		}
+	}
+
+	chains, err := b.GetSupportedChains()
+	if err != nil {
+		return err
+	}
+	newChains := make([]common.Chain, len(chains))
+	for i, chain := range chains {
+		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
@@ -194,10 +217,9 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	}
 	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
-	cfg.Keygen = *keyGen
 	tss, err := b.GetCurrentTss()
 	if err != nil {
-		b.logger.Error().Err(err).Msg("Unable to fetch TSS from zetacore")
+		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetacore")
 	} else {
 		cfg.CurrentTssPubkey = tss.GetTssPubkey()
 	}

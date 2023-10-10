@@ -81,9 +81,6 @@ func (k Keeper) PostTxProcessing(
 // from registered ZRC20 contract, new CCTX will be created to trigger and track outbound
 // transaction.
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
-	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return types.ErrNotEnoughPermissions
-	}
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
 		return fmt.Errorf("cannot find system contract")
@@ -113,6 +110,9 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 // ProcessZRC20WithdrawalEvent creates a new CCTX to process the withdrawal event
 // error indicates system error and non-recoverable; should abort
 func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20Withdrawal, emittingContract ethcommon.Address, txOrigin string) error {
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return types.ErrNotEnoughPermissions
+	}
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
 	tss, found := k.GetTSS(ctx)
 	if !found {
@@ -164,6 +164,9 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 }
 
 func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaConnectorZEVMZetaSent, emittingContract ethcommon.Address, txOrigin string) error {
+	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return types.ErrNotEnoughPermissions
+	}
 	ctx.Logger().Info(fmt.Sprintf(
 		"Zeta withdrawal to %s amount %d to chain with chainId %d",
 		hex.EncodeToString(event.DestinationAddress),
@@ -221,8 +224,13 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Create the CCTX
 	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
 
-	// Pay gas in Zeta and update the amount for the cctx
-	if err := k.PayGasInZetaAndUpdateCctx(ctx, receiverChain.ChainId, &cctx, true); err != nil {
+	if err := k.PayGasAndUpdateCctx(
+		ctx,
+		receiverChain.ChainId,
+		&cctx,
+		amount,
+		true,
+	); err != nil {
 		return fmt.Errorf("ProcessWithdrawalEvent: pay gas failed: %s", err.Error())
 	}
 

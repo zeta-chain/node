@@ -16,7 +16,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Casts a vote on an outbound transaction observed on a connected chain (after
+// VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
 // it has been broadcasted to and finalized on a connected chain). If this is
 // the first vote, a new ballot is created. When a threshold of votes is
 // reached, the ballot is finalized. When a ballot is finalized, the outbound
@@ -73,15 +73,18 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
-	if !ok {
-		return nil, err
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 
 	// Check if CCTX exists
 	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
+	}
+
+	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
 	}
 
 	ballotIndex := msg.Digest()
@@ -159,13 +162,21 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 				case types.CctxStatus_PendingOutbound:
 					// create new OutboundTxParams for the revert
 					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-						Receiver:           cctx.InboundTxParams.Sender,
-						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-						Amount:             cctx.InboundTxParams.Amount,
-						CoinType:           cctx.InboundTxParams.CoinType,
-						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit, // NOTE(pwu): revert gas limit = initial outbound gas limit set by user;
+						Receiver:        cctx.InboundTxParams.Sender,
+						ReceiverChainId: cctx.InboundTxParams.SenderChainId,
+						Amount:          cctx.InboundTxParams.Amount,
+						CoinType:        cctx.InboundTxParams.CoinType,
+						// NOTE(pwu): revert gas limit = initial outbound gas limit set by user
+						//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
+						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit,
 					})
-					err := k.PayGasInZetaAndUpdateCctx(tmpCtx, cctx.InboundTxParams.SenderChainId, &cctx, false)
+					err := k.PayGasAndUpdateCctx(
+						tmpCtx,
+						cctx.InboundTxParams.SenderChainId,
+						&cctx,
+						cctx.OutboundTxParams[0].Amount,
+						false,
+					)
 					if err != nil {
 						return err
 					}
@@ -187,6 +198,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		// do not commit tmpCtx
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		ctx.Logger().Error(err.Error())
+		// #nosec G701 always in range
 		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
@@ -195,6 +207,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	commit()
 	// Set the ballot index to the finalized ballot
 	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
+	// #nosec G701 always in range
 	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)

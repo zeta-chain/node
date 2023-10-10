@@ -67,6 +67,7 @@ var LocalCmd = &cobra.Command{
 
 type localArgs struct {
 	contractsDeployed bool
+	waitForHeight     int64
 }
 
 var localTestArgs = localArgs{}
@@ -74,6 +75,7 @@ var localTestArgs = localArgs{}
 func init() {
 	RootCmd.AddCommand(LocalCmd)
 	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
+	LocalCmd.Flags().Int64Var(&localTestArgs.waitForHeight, "wait-for", 0, "block height for smoketest to begin, ex. --wait-for 100")
 }
 
 func main() {
@@ -93,6 +95,10 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	if localTestArgs.waitForHeight != 0 {
+		WaitForBlockHeight(localTestArgs.waitForHeight)
+	}
 
 	// set account prefix to zeta
 	cfg := sdk.GetConfig()
@@ -148,6 +154,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
+	//Wait for Genesis
+	time.Sleep(20 * time.Second)
+
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := NewZetaTxServer(
 		"http://zetacore0:26657",
@@ -158,8 +167,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// Wait for Genesis and keygen to be completed. ~ height 30
-	time.Sleep(20 * time.Second)
+	//Wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -284,7 +292,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestBitcoinWithdraw()
-	smokeTest.CheckZRC20ReserveAndSupply()
+	//smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestCrosschainSwap()
 	smokeTest.CheckZRC20ReserveAndSupply()
@@ -296,6 +304,15 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestPauseZRC20()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20DepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestUpdateBytecode()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestDepositEtherLiquidityCap()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here

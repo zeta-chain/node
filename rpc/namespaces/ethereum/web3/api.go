@@ -19,10 +19,9 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/zeta-chain/zetacore/common"
-
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 // PublicAPI is the web3_ prefixed set of APIs in the Web3 JSON-RPC spec.

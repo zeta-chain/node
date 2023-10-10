@@ -92,7 +92,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
 		},
 	}
 
@@ -105,6 +105,18 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
 	return servercfg.AppConfig(zetacoredconfig.BaseDenom)
+}
+
+// initTmConfig overrides the default Tendermint config
+func initTmConfig() *tmcfg.Config {
+	cfg := tmcfg.DefaultConfig()
+
+	// use mempool version 1 to enable tx priority
+	if cfg.Mempool != nil {
+		cfg.Mempool.Version = tmcfg.MempoolV1
+	}
+
+	return cfg
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {

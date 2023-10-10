@@ -13,7 +13,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/zeta-chain/zetacore/app"
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
@@ -81,7 +80,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 			if len(matches) != 3 {
 				return "", err
 			}
-			expectedSeq, err := strconv.Atoi(matches[1])
+			expectedSeq, err := strconv.ParseUint(matches[1], 10, 64)
 			if err != nil {
 				b.logger.Warn().Msgf("cannot parse expected seq %s", matches[1])
 				return "", err
@@ -91,7 +90,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 				b.logger.Warn().Msgf("cannot parse got seq %s", matches[2])
 				return "", err
 			}
-			b.seqNumber[authzSigner.KeyType] = uint64(expectedSeq)
+			b.seqNumber[authzSigner.KeyType] = expectedSeq
 			b.logger.Warn().Msgf("Reset seq number to %d (from err msg) from %d", b.seqNumber[authzSigner.KeyType], gotSeq)
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
@@ -110,8 +109,11 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 // GetContext return a valid context with all relevant values set
 func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx := client.Context{}
-	addr, _ := b.keys.GetSignerInfo().GetAddress()
-	// TODO : Handle error
+	addr, err := b.keys.GetSignerInfo().GetAddress()
+	if err != nil {
+		// TODO : Handle error
+		b.logger.Error().Err(err).Msg("fail to get address from key")
+	}
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
@@ -119,11 +121,10 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithFromAddress(addr)
 	ctx = ctx.WithBroadcastMode("sync")
 
-	encodingConfig := app.MakeEncodingConfig()
-	ctx = ctx.WithCodec(encodingConfig.Codec)
-	ctx = ctx.WithInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	ctx = ctx.WithTxConfig(encodingConfig.TxConfig)
-	ctx = ctx.WithLegacyAmino(encodingConfig.Amino)
+	ctx = ctx.WithCodec(b.encodingCfg.Codec)
+	ctx = ctx.WithInterfaceRegistry(b.encodingCfg.InterfaceRegistry)
+	ctx = ctx.WithTxConfig(b.encodingCfg.TxConfig)
+	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
 	remote := b.cfg.ChainRPC

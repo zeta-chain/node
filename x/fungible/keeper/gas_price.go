@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// sets gas price on the system contract in zEVM; return the gasUsed and error code
+// SetGasPrice sets gas price on the system contract in zEVM; return the gasUsed and error code
 func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int) (uint64, error) {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
@@ -66,9 +66,9 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Ad
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "SetGasZetaPool", chainid, pool)
+	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasZetaPool", chainid, pool)
 	if err != nil || res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "SetGasZetaPool")
+		return sdkerrors.Wrapf(types.ErrContractCall, "setGasZetaPool")
 	}
 
 	return nil

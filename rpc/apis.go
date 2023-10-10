@@ -20,10 +20,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server"
-
 	"github.com/ethereum/go-ethereum/rpc"
-
 	ethermint "github.com/evmos/ethermint/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 	"github.com/zeta-chain/zetacore/rpc/backend"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/debug"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/eth"
@@ -33,8 +32,6 @@ import (
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/personal"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/txpool"
 	"github.com/zeta-chain/zetacore/rpc/namespaces/ethereum/web3"
-
-	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
 
 // RPC namespaces and API version
@@ -47,8 +44,8 @@ const (
 
 	Web3Namespace     = "web3"
 	EthNamespace      = "eth"
-	PersonalNamespace = "personal"
 	NetNamespace      = "net"
+	PersonalNamespace = "personal"
 	TxPoolNamespace   = "txpool"
 	DebugNamespace    = "debug"
 	MinerNamespace    = "miner"
@@ -112,6 +109,7 @@ func init() {
 				},
 			}
 		},
+		// NOTE: Public field of API is deprecated and defined only for compatibility.
 		PersonalNamespace: func(ctx *server.Context,
 			clientCtx client.Context,
 			_ *rpcclient.WSClient,

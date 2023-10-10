@@ -16,7 +16,7 @@ const (
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
 	// as an integer type.  This may happen if f is NaN or +-Infinity.
-	// BTC max amount is 21 mil and its at least 10^(-8) or one satoshi.
+	// BTC max amount is 21 mil and its at least 0 (Note: bitcoin allows creating 0-value outputs)
 	switch {
 	case math.IsNaN(btc):
 		fallthrough
@@ -26,16 +26,18 @@ func getSatoshis(btc float64) (int64, error) {
 		return 0, errors.New("invalid bitcoin amount")
 	case btc > 21000000.0:
 		return 0, errors.New("exceeded max bitcoin amount")
-	case btc < 0.00000001:
-		return 0, errors.New("cannot be less than 1 satoshi")
+	case btc < 0.0:
+		return 0, errors.New("cannot be less than zero")
 	}
 	return round(btc * satoshiPerBitcoin), nil
 }
 
 func round(f float64) int64 {
 	if f < 0 {
+		// #nosec G701 always in range
 		return int64(f - 0.5)
 	}
+	// #nosec G701 always in range
 	return int64(f + 0.5)
 }
 
@@ -64,9 +66,10 @@ func (t *DynamicTicker) C() <-chan time.Time {
 func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
 	if newInterval > 0 && t.interval != newInterval {
 		t.impl.Stop()
+		oldInterval := t.interval
 		t.interval = newInterval
 		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
-		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, t.interval, newInterval)
+		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, oldInterval, newInterval)
 	}
 }
 

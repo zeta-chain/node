@@ -1,5 +1,5 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package config
 
@@ -54,10 +54,6 @@ func New() Config {
 var BitcoinConfig = &BTCConfig{}
 
 var evmChainConfigs = map[int64]*EVMConfig{
-
-	common.ZetaChain().ChainId: {
-		Chain: common.ZetaChain(),
-	},
 	common.EthChain().ChainId: {
 		Chain: common.EthChain(),
 	},

@@ -11,16 +11,17 @@ import (
 	"sync"
 	"time"
 
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/ethereum/go-ethereum"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
-
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -114,4 +115,18 @@ func ScriptPKToAddress(scriptPKHex string) string {
 		}
 	}
 	return ""
+}
+
+func WaitForBlockHeight(height int64) {
+	// initialize rpc and check status
+	rpc, err := rpchttp.New("http://zetacore0:26657", "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	status := &coretypes.ResultStatus{}
+	for status.SyncInfo.LatestBlockHeight < height {
+		status, _ = rpc.Status(context.Background())
+		time.Sleep(time.Second * 5)
+		fmt.Printf("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+	}
 }

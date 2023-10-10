@@ -73,7 +73,4 @@ var evmChainsConfig = map[int64]*EVMConfig{
 		Chain:    common.MumbaiChain(),
 		Endpoint: "",
 	},
-	common.ZetaChain().ChainId: {
-		Chain: common.ZetaChain(),
-	},
 }

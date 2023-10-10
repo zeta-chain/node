@@ -18,6 +18,7 @@ service Msg {
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
+  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
 
 message MsgMigrateTssFunds {
@@ -36,6 +37,7 @@ message MsgUpdateTssAddress {
 }
 
 message MsgUpdateTssAddressResponse {}
+
 message MsgWhitelistERC20 {
   string creator = 1;
   string erc20_address = 2;
@@ -46,13 +48,19 @@ message MsgWhitelistERC20 {
   int64 gas_limit = 7;
 }
 
-message MsgWhitelistERC20Response {}
+message MsgWhitelistERC20Response {
+  string zrc20_address = 1;
+  string cctx_index = 2;
+}
 
 message MsgAddToOutTxTracker {
   string creator = 1;
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
+  common.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
 }
 
 message MsgAddToOutTxTrackerResponse {}

@@ -4,6 +4,15 @@ import os
 genesis = open(os.environ["NEW_GENESIS"], "r").read()
 genesis_json_object = json.loads(genesis)
 
+#cut this out for now because it fails to start when done in  python with the exact same keys being replaced with same value. Will fix later.
+# genesis_json_object["staking"]["params"]["bond_denom"] = "azeta"
+# genesis_json_object["crisis"]["constant_fee"]["denom"] = "azeta"
+# genesis_json_object["gov"]["deposit_params"]["min_deposit"][0]["denom"] = "azeta"
+# genesis_json_object["mint"]["params"]["mint_denom"] = "azeta"
+# genesis_json_object["evm"]["params"]["evm_denom"] = "azeta"
+# genesis_json_object["block"]["max_gas"] = "10000000"
+# genesis_json_object["gov"]["voting_params"]["voting_period"] = '60s'
+
 exported_genesis = open(os.environ["OLD_GENESIS"], "r").read()
 exported_genesis_json_object = json.loads(exported_genesis)
 

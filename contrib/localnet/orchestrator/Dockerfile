@@ -2,7 +2,7 @@ FROM zetanode:latest as zeta
 FROM ethereum/client-go:v1.10.26 as geth
 FROM golang:1.20-alpine as orchestrator
 
-RUN apk --no-cache add jq curl bash make git build-base
+RUN apk --no-cache add jq curl bash make git build-base openssh
 
 COPY --from=zeta /usr/local/bin/zetacored /usr/local/bin/
 COPY --from=zeta /usr/local/bin/zetaclientd /usr/local/bin/
@@ -12,7 +12,9 @@ COPY --from=zeta /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
 COPY --from=zeta /root/.ssh/localtest.pem /root/.ssh/localtest.pem
 
 COPY contrib/localnet/orchestrator/start.sh /work/
-RUN chmod +x /work/start.sh
+COPY contrib/localnet/orchestrator/start-upgrade.sh /work/
+COPY contrib/localnet/orchestrator/restart-zetaclientd.sh /work/
+RUN chmod +x /work/*.sh
 
 ENV GOPATH /go
 ENV GOOS=linux

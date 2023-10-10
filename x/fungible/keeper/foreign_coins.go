@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -80,10 +81,28 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 	return
 }
 
+// GetGasCoinForForeignCoin returns the gas coin for a given chain
 func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (types.ForeignCoins, bool) {
 	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
 	for _, coin := range foreignCoinList {
 		if coin.CoinType == common.CoinType_Gas {
+			return coin, true
+		}
+	}
+	return types.ForeignCoins{}, false
+}
+
+// GetForeignCoinFromAsset returns the foreign coin for a given asset for a given chain
+func (k Keeper) GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (types.ForeignCoins, bool) {
+	if !ethcommon.IsHexAddress(asset) {
+		return types.ForeignCoins{}, false
+	}
+	assetAddr := ethcommon.HexToAddress(asset)
+
+	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
+	for _, coin := range foreignCoinList {
+		coinAssetAddr := ethcommon.HexToAddress(coin.Asset)
+		if coinAssetAddr == assetAddr && coin.ForeignChainId == chainID {
 			return coin, true
 		}
 	}

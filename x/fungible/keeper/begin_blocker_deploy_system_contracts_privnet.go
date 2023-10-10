@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -81,15 +83,17 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
+	ETHZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	ctx.Logger().Info("Deployed ETH ZRC20 at " + ETHZRC20Addr.String())
 
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
+	BTCZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
+	ctx.Logger().Info("Deployed BTC ZRC20 at " + BTCZRC20Addr.String())
 
 	//FIXME: clean up and config the above based on localnet/testnet/mainnet
 
@@ -130,9 +134,10 @@ func (k Keeper) TestUpdateSystemContractAddress(goCtx context.Context) error {
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to DeploySystemContract")
 	}
-	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
-	msg := types.NewMessageUpdateSystemContract(creator, SystemContractAddress.Hex())
+	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
+	msg := types.NewMsgUpdateSystemContract(creator, SystemContractAddress.Hex())
 	_, err = k.UpdateSystemContract(ctx, msg)
+	k.Logger(ctx).Info("System contract updated", "new address", SystemContractAddress.String())
 	return err
 }
 
@@ -140,10 +145,15 @@ func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	foreignCoins := k.GetAllForeignCoins(ctx)
-	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_deploy_fungible_coin)
+	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 
 	for _, foreignCoin := range foreignCoins {
-		msg := types.NewMsgUpdateZRC20WithdrawFee(creator, foreignCoin.Zrc20ContractAddress, sdk.NewUint(uint64(foreignCoin.ForeignChainId)))
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
+			creator,
+			foreignCoin.Zrc20ContractAddress,
+			sdk.NewUint(uint64(foreignCoin.ForeignChainId)),
+			math.Uint{},
+		)
 		_, err := k.UpdateZRC20WithdrawFee(ctx, msg)
 		if err != nil {
 			return err

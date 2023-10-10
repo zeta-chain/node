@@ -2,10 +2,8 @@
 
 ## MsgAddToOutTxTracker
 
-Adds a new record to the outbound transaction tracker.
-
-Only the admin policy account and the observer validators are authorized to
-broadcast this message.
+AddToOutTxTracker adds a new record to the outbound transaction tracker.
+only the admin policy account and the observer validators are authorized to broadcast this message.
 
 ```proto
 message MsgAddToOutTxTracker {
@@ -13,14 +11,16 @@ message MsgAddToOutTxTracker {
 	int64 chain_id = 2;
 	uint64 nonce = 3;
 	string tx_hash = 4;
+	common.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
 }
 ```
 
 ## MsgRemoveFromOutTxTracker
 
-Removes a record from the outbound transaction tracker by chain ID and nonce.
-
-Only the admin policy account is authorized to broadcast this message.
+RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
+only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgRemoveFromOutTxTracker {
@@ -32,7 +32,7 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgCreateTSSVoter
 
-Vote on creating a TSS key and recording the information about it (public
+CreateTSSVoter votes on creating a TSS key and recording the information about it (public
 key, participant and operator addresses, finalized and keygen heights).
 
 If the vote passes, the information about the TSS key is recorded on chain
@@ -84,7 +84,7 @@ message MsgNonceVoter {
 
 ## MsgVoteOnObservedOutboundTx
 
-Casts a vote on an outbound transaction observed on a connected chain (after
+VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
 it has been broadcasted to and finalized on a connected chain). If this is
 the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, the outbound
@@ -145,7 +145,7 @@ message MsgVoteOnObservedOutboundTx {
 
 ## MsgVoteOnObservedInboundTx
 
-Casts a vote on an inbound transaction observed on a connected chain. If this
+VoteOnObservedInboundTx casts a vote on an inbound transaction observed on a connected chain. If this
 is the first vote, a new ballot is created. When a threshold of votes is
 reached, the ballot is finalized. When a ballot is finalized, a new CCTX is
 created.
@@ -206,6 +206,9 @@ message MsgVoteOnObservedInboundTx {
 ```
 
 ## MsgWhitelistERC20
+
+WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+and emit a crosschain tx to whitelist the ERC20 on the external chain
 
 ```proto
 message MsgWhitelistERC20 {
