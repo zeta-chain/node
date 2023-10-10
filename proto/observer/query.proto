@@ -81,7 +81,7 @@ service Query {
   }
 
   // Queries a list of VoterByIdentifier items.
-  rpc BlameByChainAndNonce(QueryBlameByChainAndNonceRequest) returns (QueryBlameByChainAndNonceResponse) {
+  rpc BlamesByChainAndNonce(QueryBlameByChainAndNonceRequest) returns (QueryBlameByChainAndNonceResponse) {
     option (google.api.http).get = "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
   }
 

@@ -41,7 +41,7 @@ func (k Keeper) GetAllBlame(ctx sdk.Context) (BlameRecords []*types.Blame, found
 	return
 }
 
-func (k Keeper) GetBlameByChainAndNonce(ctx sdk.Context, chainID int64, nonce int64) (BlameRecords []*types.Blame, found bool) {
+func (k Keeper) GetBlamesByChainAndNonce(ctx sdk.Context, chainID int64, nonce int64) (BlameRecords []*types.Blame, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlameKey))
 	blamePrefix := fmt.Sprintf("%d-%d", chainID, nonce)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(blamePrefix))
@@ -88,12 +88,12 @@ func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAl
 	}, nil
 }
 
-func (k Keeper) BlameByChainAndNonce(goCtx context.Context, request *types.QueryBlameByChainAndNonceRequest) (*types.QueryBlameByChainAndNonceResponse, error) {
+func (k Keeper) BlamesByChainAndNonce(goCtx context.Context, request *types.QueryBlameByChainAndNonceRequest) (*types.QueryBlameByChainAndNonceResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	blameRecords, found := k.GetBlameByChainAndNonce(ctx, request.ChainId, request.Nonce)
+	blameRecords, found := k.GetBlamesByChainAndNonce(ctx, request.ChainId, request.Nonce)
 	if !found {
 		return nil, status.Error(codes.NotFound, "blame info not found")
 	}

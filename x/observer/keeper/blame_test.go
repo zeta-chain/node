@@ -42,7 +42,7 @@ func TestKeeper_BlameByChainAndNonce(t *testing.T) {
 		Nodes:         nil,
 	})
 
-	blameRecords, found := keeper.GetBlameByChainAndNonce(ctx, chainId, nonce)
+	blameRecords, found := keeper.GetBlamesByChainAndNonce(ctx, chainId, nonce)
 	assert.True(t, found)
 	require.Equal(t, 1, len(blameRecords))
 	require.Equal(t, index, blameRecords[0].Index)

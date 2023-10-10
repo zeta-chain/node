@@ -101,7 +101,7 @@ func CmdGetBlameByChainAndNonce() *cobra.Command {
 				Nonce:   nonceInt,
 			}
 
-			res, err := queryClient.BlameByChainAndNonce(cmd.Context(), params)
+			res, err := queryClient.BlamesByChainAndNonce(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
