@@ -232,7 +232,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -330,7 +330,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -384,7 +384,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -497,7 +497,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "foo")
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -551,7 +551,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -605,7 +605,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
