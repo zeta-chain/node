@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,9 +94,15 @@ func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (types.
 
 // GetForeignCoinFromAsset returns the foreign coin for a given asset for a given chain
 func (k Keeper) GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (types.ForeignCoins, bool) {
+	if !ethcommon.IsHexAddress(asset) {
+		return types.ForeignCoins{}, false
+	}
+	assetAddr := ethcommon.HexToAddress(asset)
+
 	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
 	for _, coin := range foreignCoinList {
-		if coin.Asset == asset && coin.ForeignChainId == chainID {
+		coinAssetAddr := ethcommon.HexToAddress(coin.Asset)
+		if coinAssetAddr == assetAddr && coin.ForeignChainId == chainID {
 			return coin, true
 		}
 	}
