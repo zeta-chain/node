@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"testing"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
@@ -13,8 +14,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/zeta-chain/zetacore/common"
-
-	"testing"
 )
 
 const numHeadersToTest = 100
