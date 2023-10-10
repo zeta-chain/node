@@ -16,7 +16,7 @@ import (
 
 // Prove simply checks two things:
 // 1. the block header is available
-// 2. the proof is good
+// 2. the proof is valid
 func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.QueryProveResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
+	"testing"
 	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
@@ -12,22 +13,19 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
-
-	"testing"
 )
 
 const numHeadersToTest = 100
 
 func TestTrueBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks()
+	blocks := LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		header := unmarshalHeader(headerBytes)
 
 		// Validate
@@ -36,14 +34,12 @@ func TestTrueBitcoinHeader(t *testing.T) {
 }
 
 func TestFakeBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks()
+	blocks := LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		header := unmarshalHeader(headerBytes)
 
 		// Validate
@@ -54,22 +50,16 @@ func TestFakeBitcoinHeader(t *testing.T) {
 func BitcoinHeaderValidationLiveTest(t *testing.T) {
 	client := createBTCClient(t)
 	bn, err := client.GetBlockCount()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	fmt.Printf("Verifying block headers in block range [%d, %d]\n", bn-numHeadersToTest+1, bn)
 
 	for height := bn - numHeadersToTest + 1; height <= bn; height++ {
 		blockHash, err := client.GetBlockHash(height)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		// Get the block header
 		header, err := client.GetBlockHeader(blockHash)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		headerBytes := marshalHeader(header)
 
 		// Validate true header
@@ -92,9 +82,7 @@ func createBTCClient(t *testing.T) *rpcclient.Client {
 		Params:       "testnet3",
 	}
 	client, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	return client
 }
 
@@ -136,15 +124,11 @@ func validateTrueBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerByt
 
 	// Ture Bitcoin header should pass validation
 	err := common.ValidateBitcoinHeader(headerBytes, blockHash[:], 18332)
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 
 	// True Bitcoin header should pass timestamp validation
 	err = common.NewBitcoinHeader(headerBytes).ValidateTimestamp(time.Now())
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 }
 
 func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {

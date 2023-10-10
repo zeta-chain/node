@@ -39,19 +39,15 @@ type Blocks struct {
 	Blocks []Block `json:"blocks"`
 }
 
-func LoadTestBlocks() Blocks {
-	file, err := os.Open("./bitcoin/test_blocks.json")
-	if err != nil {
-		log.Fatal(err)
-	}
+func LoadTestBlocks(t *testing.T) Blocks {
+	file, err := os.Open("./test_data/test_blocks.json")
+	require.NoError(t, err)
 	defer file.Close()
 
 	// Decode the JSON into the data struct
 	var blocks Blocks
 	err = json.NewDecoder(file).Decode(&blocks)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return blocks
 }
@@ -63,26 +59,20 @@ func Test_IsErrorInvalidProof(t *testing.T) {
 }
 
 func TestBitcoinMerkleProof(t *testing.T) {
-	blocks := LoadTestBlocks()
+	blocks := LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		header := unmarshalHeader(headerBytes)
 
 		// Deserialize the block bytes from base64
 		blockBytes, err := base64.StdEncoding.DecodeString(b.BlockBase64)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		blockVerbose := &btcjson.GetBlockVerboseTxResult{}
 		err = json.Unmarshal(blockBytes, blockVerbose)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
@@ -92,31 +82,23 @@ func TestBitcoinMerkleProof(t *testing.T) {
 func BitcoinMerkleProofLiveTest(t *testing.T) {
 	client := createBTCClient(t)
 	bn, err := client.GetBlockCount()
-	if err != nil {
-		t.Error(err)
-	}
+	require.NoError(t, err)
 	fmt.Printf("Verifying transactions in block range [%d, %d]\n", bn-numBlocksToTest+1, bn)
 
 	// Verify all transactions in the past 'numBlocksToTest' blocks
 	for height := bn - numBlocksToTest + 1; height <= bn; height++ {
 		blockHash, err := client.GetBlockHash(height)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		// Get the block header
 		header, err := client.GetBlockHeader(blockHash)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 		headerBytes := marshalHeader(header)
 		target := blockchain.CompactToBig(header.Bits)
 
 		// Get the block with verbose transactions
 		blockVerbose, err := client.GetBlockVerboseTx(blockHash)
-		if err != nil {
-			t.Error(err)
-		}
+		require.NoError(t, err)
 
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "", 0)
@@ -147,9 +129,7 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 				TxHash:  outTxid,
 			}
 			err = keeper.ValidateBTCOutTxBody(msg, txBytes, tssAddress)
-			if err != nil {
-				t.Error(err)
-			}
+			require.NoError(t, err)
 		}
 		txns = append(txns, tx)
 		txBodies = append(txBodies, txBytes)
