@@ -78,6 +78,7 @@ message MsgUpdateZRC20WithdrawFee {
 	string creator = 1;
 	string zrc20_address = 2;
 	string new_withdraw_fee = 6;
+	string new_gas_limit = 7;
 }
 ```
 
