@@ -41,6 +41,10 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 				RetryInterval:           time.Minute * 42,
 				GasPriceIncreasePercent: 42,
 			},
+			BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+				IsEthTypeChainEnabled: false,
+				IsBtcTypeChainEnabled: false,
+			},
 		})
 		require.NoError(t, err)
 
@@ -63,6 +67,10 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 				EpochLength:             43,
 				RetryInterval:           time.Minute * 43,
 				GasPriceIncreasePercent: 43,
+			},
+			BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+				IsEthTypeChainEnabled: false,
+				IsBtcTypeChainEnabled: false,
 			},
 		})
 		require.NoError(t, err)

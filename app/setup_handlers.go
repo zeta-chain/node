@@ -5,9 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v10.0.0"
+const releaseVersion = "v10.1.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -16,7 +17,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		vm[observerTypes.ModuleName] = vm[observerTypes.ModuleName] - 1
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 

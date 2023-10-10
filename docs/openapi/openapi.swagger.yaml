@@ -50999,6 +50999,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
+  observerBlockHeaderVerificationFlags:
+    type: object
+    properties:
+      isEthTypeChainEnabled:
+        type: boolean
+      isBtcTypeChainEnabled:
+        type: boolean
   observerCoreParams:
     type: object
     properties:
@@ -51049,6 +51056,8 @@ definitions:
         type: boolean
       gasPriceIncreaseFlags:
         $ref: '#/definitions/observerGasPriceIncreaseFlags'
+      blockHeaderVerificationFlags:
+        $ref: '#/definitions/observerBlockHeaderVerificationFlags'
   observerGasPriceIncreaseFlags:
     type: object
     properties:
