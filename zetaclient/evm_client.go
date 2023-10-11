@@ -498,11 +498,13 @@ func (ob *EVMChainClient) observeOutTx() {
 			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
+				fmt.Println("nonceInt:lowestOutTxNonceToObserve", nonceInt, lowestOutTxNonceToObserve[ob.chain.ChainId])
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
 					continue
 				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
+					ob.logger.ObserveOutTx.Info().Msgf("Iterating tracker list:nonce %d txhash %s", nonceInt, txHash.TxHash)
 					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
