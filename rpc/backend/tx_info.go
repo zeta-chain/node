@@ -74,6 +74,7 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 		msgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
+				// #nosec G701 always in range
 				res.EthTxIndex = int32(i)
 				break
 			}
@@ -96,7 +97,9 @@ func (b *Backend) GetTransactionByHash(txHash common.Hash) (*rpctypes.RPCTransac
 	return rpctypes.NewTransactionFromMsg(
 		msg,
 		common.BytesToHash(block.BlockID.Hash.Bytes()),
+		// #nosec G701 always positive
 		uint64(res.Height),
+		// #nosec G701 always positive
 		uint64(res.EthTxIndex),
 		baseFee,
 		b.chainID,
@@ -189,6 +192,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		return nil, nil
 	}
 	for _, txResult := range blockRes.TxsResults[0:res.TxIndex] {
+		// #nosec G701 always positive
 		cumulativeGasUsed += uint64(txResult.GasUsed)
 	}
 	cumulativeGasUsed += res.CumulativeGasUsed
@@ -218,6 +222,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	}
 
 	// parse tx logs from events
+	// #nosec G701 always in range
 	logs, err := TxLogsFromEvents(blockRes.TxsResults[res.TxIndex].Events, int(res.MsgIndex))
 	if err != nil {
 		b.logger.Debug("failed to parse logs", "hash", hexTx, "error", err.Error())
@@ -228,6 +233,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 		msgs, _ := b.EthMsgsFromTendermintBlock(resBlock, blockRes)
 		for i := range msgs {
 			if msgs[i].Hash == hexTx {
+				// #nosec G701 always in range
 				res.EthTxIndex = int32(i)
 				break
 			}
@@ -245,6 +251,7 @@ func (b *Backend) GetTransactionReceipt(hash common.Hash) (map[string]interface{
 	var txType uint8
 
 	if txData == nil {
+		// #nosec G701 always in range
 		txType = uint8(additional.Type)
 		*to = additional.Recipient
 	} else {
@@ -361,6 +368,7 @@ func (b *Backend) GetTxByEthHash(hash common.Hash) (*ethermint.TxResult, *rpctyp
 // GetTxByTxIndex uses `/tx_query` to find transaction by tx index of valid ethereum txs
 func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult, *rpctypes.TxResultAdditionalFields, error) {
 	if b.indexer != nil {
+		// #nosec G701 always in range
 		txRes, err := b.indexer.GetByBlockAndIndex(height, int32(index))
 		if err == nil {
 			return txRes, nil, nil
@@ -373,6 +381,7 @@ func (b *Backend) GetTxByTxIndex(height int64, index uint) (*ethermint.TxResult,
 		evmtypes.AttributeKeyTxIndex, index,
 	)
 	txResult, txAdditional, err := b.queryTendermintTxIndexer(query, func(txs *rpctypes.ParsedTxs) *rpctypes.ParsedTx {
+		// #nosec G701 always in range
 		return txs.GetTxByTxIndex(int(index))
 	})
 	if err != nil {
@@ -416,6 +425,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 
 	var msg *evmtypes.MsgEthereumTx
 	// find in tx indexer
+	// #nosec G701 always in range
 	res, additional, err := b.GetTxByTxIndex(block.Block.Height, uint(idx))
 	if err == nil {
 		tx, err := b.clientCtx.TxConfig.TxDecoder()(block.Block.Txs[res.TxIndex])
@@ -438,6 +448,7 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 			}
 		}
 	} else {
+		// #nosec G701 always in range
 		i := int(idx)
 		ethMsgs, _ := b.EthMsgsFromTendermintBlock(block, blockRes)
 		if i >= len(ethMsgs) {
@@ -457,7 +468,9 @@ func (b *Backend) GetTransactionByBlockAndIndex(block *tmrpctypes.ResultBlock, i
 	return rpctypes.NewTransactionFromMsg(
 		msg,
 		common.BytesToHash(block.Block.Hash()),
+		// #nosec G701 always positive
 		uint64(block.Block.Height),
+		// #nosec G701 always positive
 		uint64(idx),
 		baseFee,
 		b.chainID,

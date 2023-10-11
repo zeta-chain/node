@@ -32,17 +32,17 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 }
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error) {
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool {
 	observerMapper, found := k.GetObserverMapper(ctx, chain)
 	if !found {
-		return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("observer list not present for chain %s", chain.String()))
+		return false
 	}
 	for _, obs := range observerMapper.ObserverList {
 		if obs == address {
-			return true, nil
+			return true
 		}
 	}
-	return false, errors.Wrap(types.ErrNotAuthorized, fmt.Sprintf("address: %s", address))
+	return false
 }
 
 func (k Keeper) FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType types.ObservationType) (ballot types.Ballot, isNew bool, err error) {
@@ -89,7 +89,10 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 }
 
 func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {
-	selfdelAddr, _ := sdk.AccAddressFromBech32(accAddress)
+	selfdelAddr, err := sdk.AccAddressFromBech32(accAddress)
+	if err != nil {
+		return err
+	}
 	valAddress, err := types.GetOperatorAddressFromAccAddress(accAddress)
 	if err != nil {
 		return err

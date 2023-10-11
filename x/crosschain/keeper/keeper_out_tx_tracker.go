@@ -170,14 +170,11 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
-		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_out_tx_tracker)
+		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 		isAdmin := msg.Creator == adminPolicyAccount
 
-		isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
-		if err != nil {
-			ctx.Logger().Error("Error while checking if the account is an observer", err)
-			return nil, cosmoserrors.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("error  IsAuthorized %s", msg.Creator))
-		}
+		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+
 		// Sender needs to be either the admin policy account or an observer
 		if !(isAdmin || isObserver) {
 			return nil, cosmoserrors.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
@@ -275,7 +272,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 // only the admin policy account is authorized to broadcast this message.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_out_tx_tracker) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1) {
 		return &types.MsgRemoveFromOutTxTrackerResponse{}, observertypes.ErrNotAuthorizedPolicy
 	}
 

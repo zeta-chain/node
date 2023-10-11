@@ -16,7 +16,7 @@ proposal_json = {
             "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
             "authority": os.environ["GOV_ADDRESS"],
             "plan": {
-                "name": os.environ['VERSION'],
+                "name": os.environ['UPGRADE_NAME'],
                 "time": "0001-01-01T00:00:00Z",
                 "height": str(UPGRADE_HEIGHT).split('.')[0],
                 "info": os.environ["UPGRADE_INFO"],
@@ -44,13 +44,13 @@ write_gov_json.close()
 # -y
 # """
 
-GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os.environ['VERSION']}" \
+GOV_PROPOSAL = f"""zetacored tx gov submit-legacy-proposal software-upgrade "{os.environ['UPGRADE_NAME']}" \
     --from "{os.environ['MONIKER']}" \
     --deposit {os.environ["DEPOSIT"]} \
     --upgrade-height "{str(UPGRADE_HEIGHT).split('.')[0]}" \
     --upgrade-info '{os.environ["UPGRADE_INFO"]}' \
     --title "{os.environ['VERSION']}" \
-    --description "Zeta Release {os.environ['VERSION']}" \
+    --description "Zeta Release {os.environ['UPGRADE_NAME']}" \
     --chain-id "{os.environ['CHAINID']}" \
     --node "{os.environ['NODE']}" \
     --keyring-backend test \

@@ -34,6 +34,8 @@ message EventZRC20WithdrawFeeUpdated {
   string old_withdraw_fee = 5;
   string new_withdraw_fee = 6;
   string signer = 7;
+  string old_gas_limit = 8;
+  string new_gas_limit = 9;
 }
 
 message EventZRC20PausedStatusUpdated {
