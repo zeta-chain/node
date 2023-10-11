@@ -77,6 +77,37 @@ func CmdShowSend() *cobra.Command {
 	return cmd
 }
 
+func CmdPendingCctx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-pending-cctx [chain-id]",
+		Short: "shows pending CCTX",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			params := &types.QueryAllCctxPendingRequest{
+				ChainId: chainID,
+			}
+
+			res, err := queryClient.CctxAllPending(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // Transaction CLI /////////////////////////
 //zetacored tx zetacore cctx-voter 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 0x96B05C238b99768F349135de0653b687f9c13fEE ETH 1000000000000000000 0 message hash 100 --from=zeta --keyring-backend=test --yes --chain-id=localnet_101-1
 
