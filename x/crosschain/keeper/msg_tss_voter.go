@@ -145,9 +145,9 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
 	}
-	if pendingNonces.NonceLow != pendingNonces.NonceHigh {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
-	}
+	//if pendingNonces.NonceLow != pendingNonces.NonceHigh {
+	//	return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
+	//}
 	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount)
 	if err != nil {
 		return nil, err
