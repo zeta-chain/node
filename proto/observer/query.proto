@@ -80,6 +80,11 @@ service Query {
     option (google.api.http).get = "/zeta-chain/observer/get_all_blame_records";
   }
 
+  // Queries a list of VoterByIdentifier items.
+  rpc BlamesByChainAndNonce(QueryBlameByChainAndNonceRequest) returns (QueryBlameByChainAndNonceResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}";
+  }
+
   rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_all_block_headers";
   }
@@ -208,6 +213,15 @@ message QueryBlameByIdentifierResponse {
 message QueryAllBlameRecordsRequest {}
 
 message QueryAllBlameRecordsResponse {
+  repeated Blame blame_info = 1;
+}
+
+message QueryBlameByChainAndNonceRequest {
+  int64 chain_id = 1;
+  int64 nonce = 2;
+}
+
+message QueryBlameByChainAndNonceResponse {
   repeated Blame blame_info = 1;
 }
 
