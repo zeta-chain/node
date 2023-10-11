@@ -77,6 +77,7 @@ const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
 	btcBlocksPerDay  = 144
+	bytesPerKB       = 1000
 )
 
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
@@ -483,14 +484,18 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if feeResult.Errors != nil || feeResult.FeeRate == nil {
 		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
-	gasPrice := big.NewFloat(0)
-	gasPriceU64, _ := gasPrice.Mul(big.NewFloat(*feeResult.FeeRate), big.NewFloat(1e8)).Uint64()
+	if *feeResult.FeeRate > math2.MaxInt64 {
+		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
+	}
+	// #nosec G701 always in range
+	feeRate := new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8))
+	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(bytesPerKB))
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
 	}
 	// #nosec G701 always positive
-	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, gasPriceU64, "100", uint64(bn))
+	zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, feeRatePerByte.Uint64(), "100", uint64(bn))
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 		return err
