@@ -48,9 +48,11 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}
+	index := fmt.Sprintf("%s-%s-%d-%s", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String())
+
 	cctx := types.CrossChainTx{
 		Creator:        "",
-		Index:          "",
+		Index:          index,
 		ZetaFees:       sdkmath.Uint{},
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
 		CctxStatus: &types.Status{
