@@ -133,9 +133,10 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
+						fmt.Println("zetcoreobserver : cctxList: ", cctxList)
 						ob, err := co.getUpdatedChainOb(c.ChainId)
 						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
+							//co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
 							continue
 						}
 						chain, err := common.GetChainNameFromChainID(c.ChainId)
