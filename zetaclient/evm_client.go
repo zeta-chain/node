@@ -462,7 +462,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 // The lowest nonce we observe outTx for each chain
 var lowestOutTxNonceToObserve = map[int64]uint64{
-	5:     70000,  // Goerli
+	5:     0,      // Goerli
 	97:    95000,  // BSC testnet
 	80001: 120000, // Mumbai
 }
