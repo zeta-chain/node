@@ -300,7 +300,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
 		return
 	}
-
+	fmt.Println("Trying to process out tx")
 	// Early return if the cctx is already processed
 	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
 	if err != nil {
