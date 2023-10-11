@@ -682,6 +682,11 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 
 // Set `test` flag to true in unit test to bypass query to zetacore
 func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
+	// special case for nonce 0 to recover from duplicate payment incident
+	if nonce == 0 {
+		return "26aa6b32b7f16cc6671ac1419e91bac5fb78b5d24536df0da0120a3f75bf9116", nil
+	}
+
 	ob.mu.Lock()
 	res, included := ob.includedTxResults[ob.GetTxID(nonce)]
 	ob.mu.Unlock()
