@@ -229,6 +229,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
 	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetTxID(nonce)]
 	ob.mu.Unlock()
+	fmt.Println("IsSendOutTxProcessed ::::", sendHash, nonce, cointype, found1, found2)
 	found := found1 && found2
 	if !found {
 		return false, false, nil
@@ -241,6 +242,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
 		}
+		fmt.Println("Posting Confirmations to ZetaCore")
 		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
 			receipt.TxHash.Hex(),
@@ -519,6 +521,8 @@ func (ob *EVMChainClient) observeOutTx() {
 						}
 
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
+						fmt.Println("receipt, transaction, err", receipt.BlockNumber.String(), transaction.To().Hex())
+						fmt.Println("ob.GetTxID(nonceInt)", ob.GetTxID(nonceInt))
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
