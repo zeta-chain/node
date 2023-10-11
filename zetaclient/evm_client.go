@@ -521,12 +521,9 @@ func (ob *EVMChainClient) observeOutTx() {
 						}
 
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
-						fmt.Println("receipt, transaction, err", receipt.BlockNumber.String(), transaction.To().Hex(), err)
-						fmt.Println("ob.GetTxID(nonceInt)", ob.GetTxID(nonceInt))
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
 							ob.mu.Lock()
-							fmt.Println("Adding TX receipt to map")
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.mu.Unlock()
