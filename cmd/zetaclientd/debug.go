@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -101,7 +101,7 @@ func DebugCmd() *cobra.Command {
 
 				for _, chainCoreParams := range coreParams {
 					if chainCoreParams.ChainId == chainID {
-						ob.WithParams(observerTypes.CoreParams{
+						ob.WithParams(observertypes.CoreParams{
 							ChainId:                     chainID,
 							ConnectorContractAddress:    chainCoreParams.ConnectorContractAddress,
 							ZetaTokenContractAddress:    chainCoreParams.ZetaTokenContractAddress,

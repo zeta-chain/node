@@ -16,12 +16,15 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, hash string, t
 	if !found {
 		return txx, fmt.Errorf("crosschain flags not found")
 	}
+	if crosschainFlags.BlockHeaderVerificationFlags == nil {
+		return txx, fmt.Errorf("block header verification flags not found")
+	}
 	if common.IsBitcoinChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
 		return txx, fmt.Errorf("cannot verify proof for bitcoin chain %d", chainID)
 	}
 
 	if common.IsEVMChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
-		return txx, fmt.Errorf("cannot verify proof for bitcoin chain %d ", chainID)
+		return txx, fmt.Errorf("cannot verify proof for evm chain %d ", chainID)
 	}
 
 	senderChain := common.GetChainFromChainID(chainID)
