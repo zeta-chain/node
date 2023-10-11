@@ -300,7 +300,6 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Err(err).Msg("ParseChain fail; skip")
 		return
 	}
-	fmt.Println("Trying to process out tx")
 	// Early return if the cctx is already processed
 	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
 	if err != nil {
@@ -310,12 +309,14 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Info().Msgf("CCTX already processed; exit signer")
 		return
 	}
-
-	//message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
-	//if err != nil {
-	//	logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
-	//}
 	message, err := base64.StdEncoding.DecodeString("")
+	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
+		message, err = base64.StdEncoding.DecodeString(send.RelayedMessage)
+		if err != nil {
+			logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
+		}
+	}
+
 	if err != nil {
 		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
 	}

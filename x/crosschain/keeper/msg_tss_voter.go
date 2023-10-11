@@ -137,17 +137,17 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds while inbound is enabled")
 	}
-	//tss, found := k.GetTSS(ctx)
-	//if !found {
-	//	return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
-	//}
-	//pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
-	//if !found {
-	//	return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
-	//}
-	//if pendingNonces.NonceLow != pendingNonces.NonceHigh {
-	//	return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
-	//}
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
+	}
+	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
+	if !found {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
+	}
+	if pendingNonces.NonceLow != pendingNonces.NonceHigh {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
+	}
 	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount)
 	if err != nil {
 		return nil, err

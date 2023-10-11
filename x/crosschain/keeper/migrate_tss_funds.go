@@ -49,7 +49,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}
-	indexString := fmt.Sprintf("%s-%s-%d-%s", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String())
+	indexString := fmt.Sprintf("%s-%s-%d-%s-%d", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String(), ctx.BlockHeight())
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
 	cctx := types.CrossChainTx{

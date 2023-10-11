@@ -133,10 +133,9 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
-						fmt.Println("zetcoreobserver : cctxList: ", cctxList)
 						ob, err := co.getUpdatedChainOb(c.ChainId)
 						if err != nil {
-							//co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)
 							continue
 						}
 						chain, err := common.GetChainNameFromChainID(c.ChainId)
@@ -171,7 +170,6 @@ func (co *CoreObserver) startSendScheduler() {
 							currentHeight := uint64(bn)
 							nonce := params.OutboundTxTssNonce
 							outTxID := fmt.Sprintf("%s-%d-%d", cctx.Index, params.ReceiverChainId, nonce) // would outTxID a better ID?
-							fmt.Println("zetcoreobserver : outTxID: ", outTxID)
 							// Process Bitcoin OutTx
 							if common.IsBitcoinChain(c.ChainId) && !outTxMan.IsOutTxActive(outTxID) {
 								// #nosec G701 positive

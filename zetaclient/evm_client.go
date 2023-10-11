@@ -229,7 +229,6 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
 	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetTxID(nonce)]
 	ob.mu.Unlock()
-	fmt.Println("IsSendOutTxProcessed ::::", sendHash, nonce, cointype, found1, found2)
 	found := found1 && found2
 	if !found {
 		return false, false, nil
@@ -242,7 +241,6 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
 		}
-		fmt.Println("Posting Confirmations to ZetaCore")
 		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
 			receipt.TxHash.Hex(),
@@ -464,7 +462,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 // The lowest nonce we observe outTx for each chain
 var lowestOutTxNonceToObserve = map[int64]uint64{
-	5:     0,      // Goerli
+	5:     70000,  // Goerli
 	97:    95000,  // BSC testnet
 	80001: 120000, // Mumbai
 }
@@ -500,13 +498,11 @@ func (ob *EVMChainClient) observeOutTx() {
 			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
-				fmt.Println("nonceInt:lowestOutTxNonceToObserve", nonceInt, lowestOutTxNonceToObserve[ob.chain.ChainId])
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
 					continue
 				}
 			TXHASHLOOP:
 				for _, txHash := range tracker.HashList {
-					ob.logger.ObserveOutTx.Info().Msgf("Iterating tracker list:nonce %d txhash %s", nonceInt, txHash.TxHash)
 					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
