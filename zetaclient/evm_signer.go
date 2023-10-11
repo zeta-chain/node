@@ -311,9 +311,12 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
-	if err != nil {
-		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
+	message, err := base64.StdEncoding.DecodeString("")
+	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
+		message, err = base64.StdEncoding.DecodeString(send.RelayedMessage)
+		if err != nil {
+			logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
+		}
 	}
 
 	gasLimit := send.GetCurrentOutTxParam().OutboundTxGasLimit

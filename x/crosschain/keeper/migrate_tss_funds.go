@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -48,7 +49,10 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}
-	index := fmt.Sprintf("%s-%s-%d-%s", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String())
+	indexString := fmt.Sprintf("%s-%s-%d-%s-%d", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String(), ctx.BlockHeight())
+
+	hash := crypto.Keccak256Hash([]byte(indexString))
+	index := hash.Hex()
 
 	cctx := types.CrossChainTx{
 		Creator:        "",
