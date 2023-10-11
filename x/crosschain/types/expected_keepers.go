@@ -63,7 +63,7 @@ type ZetaObserverKeeper interface {
 	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
 	AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
-	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) (bool, error)
+	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
@@ -97,12 +97,10 @@ type FungibleKeeper interface {
 		to eth.Address,
 		amount *big.Int,
 		senderChain *common.Chain,
-		message string,
-		contract eth.Address,
 		data []byte,
 		coinType common.CoinType,
 		asset string,
-	) (*evmtypes.MsgEthereumTxResponse, error)
+	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx sdk.Context,
 		sender eth.Address,

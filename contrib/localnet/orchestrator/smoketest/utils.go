@@ -11,6 +11,9 @@ import (
 	"sync"
 	"time"
 
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
 	"github.com/ethereum/go-ethereum"
 
 	"github.com/btcsuite/btcd/chaincfg"
@@ -112,4 +115,18 @@ func ScriptPKToAddress(scriptPKHex string) string {
 		}
 	}
 	return ""
+}
+
+func WaitForBlockHeight(height int64) {
+	// initialize rpc and check status
+	rpc, err := rpchttp.New("http://zetacore0:26657", "/websocket")
+	if err != nil {
+		panic(err)
+	}
+	status := &coretypes.ResultStatus{}
+	for status.SyncInfo.LatestBlockHeight < height {
+		status, _ = rpc.Status(context.Background())
+		time.Sleep(time.Second * 5)
+		fmt.Printf("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+	}
 }

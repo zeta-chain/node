@@ -11,15 +11,20 @@ service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
   rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
-  rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
   rpc UpdateContractBytecode(MsgUpdateContractBytecode) returns (MsgUpdateContractBytecodeResponse);
+  rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
   rpc UpdateZRC20PausedStatus(MsgUpdateZRC20PausedStatus) returns (MsgUpdateZRC20PausedStatusResponse);
+  rpc UpdateZRC20LiquidityCap(MsgUpdateZRC20LiquidityCap) returns (MsgUpdateZRC20LiquidityCapResponse);
 }
 
 message MsgUpdateZRC20WithdrawFee {
   string creator = 1;
   string zrc20_address = 2; // zrc20 address
   string new_withdraw_fee = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+  string new_gas_limit = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
@@ -78,3 +83,14 @@ message MsgUpdateZRC20PausedStatus {
 }
 
 message MsgUpdateZRC20PausedStatusResponse {}
+
+message MsgUpdateZRC20LiquidityCap {
+  string creator = 1;
+  string zrc20_address = 2;
+  string liquidity_cap = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateZRC20LiquidityCapResponse {}

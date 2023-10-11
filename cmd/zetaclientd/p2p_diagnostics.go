@@ -124,7 +124,11 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 
 	var wg sync.WaitGroup
 	for _, peerAddr := range peers {
-		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+		peerinfo, err := peer.AddrInfoFromP2pAddr(peerAddr)
+		if err != nil {
+			startLogger.Error().Err(err).Msgf("fail to parse peer address %s", peerAddr)
+			continue
+		}
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

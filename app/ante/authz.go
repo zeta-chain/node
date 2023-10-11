@@ -11,7 +11,7 @@ import (
 )
 
 // maxNestedMsgs defines a cap for the number of nested messages on a MsgExec message
-const maxNestedMsgs = 7
+const maxNestedMsgs = 15
 
 // AuthzLimiterDecorator blocks certain msg types from being granted or executed
 // within the authorization module.

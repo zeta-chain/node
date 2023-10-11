@@ -16,7 +16,7 @@ import (
 
 // MESSAGES
 
-// Vote on creating a TSS key and recording the information about it (public
+// CreateTSSVoter votes on creating a TSS key and recording the information about it (public
 // key, participant and operator addresses, finalized and keygen heights).
 //
 // If the vote passes, the information about the TSS key is recorded on chain
@@ -64,7 +64,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		}
 		k.zetaObserverKeeper.AddBallotToList(ctx, ballot)
 	}
-	err := error(nil)
+	var err error
 	if msg.Status == common.ReceiveStatus_Success {
 		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
 		if err != nil {
@@ -117,7 +117,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateTssAddress) (*types.MsgUpdateTssAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO : Add a new policy type for updating the TSS address
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_update_keygen_block) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group2) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 	tss, ok := k.CheckIfTssPubkeyHasBeenGenerated(ctx, msg.TssPubkey)

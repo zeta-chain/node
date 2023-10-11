@@ -67,6 +67,7 @@ var LocalCmd = &cobra.Command{
 
 type localArgs struct {
 	contractsDeployed bool
+	waitForHeight     int64
 }
 
 var localTestArgs = localArgs{}
@@ -74,6 +75,7 @@ var localTestArgs = localArgs{}
 func init() {
 	RootCmd.AddCommand(LocalCmd)
 	LocalCmd.Flags().BoolVar(&localTestArgs.contractsDeployed, "deployed", false, "set to to true if running smoketest again with existing state")
+	LocalCmd.Flags().Int64Var(&localTestArgs.waitForHeight, "wait-for", 0, "block height for smoketest to begin, ex. --wait-for 100")
 }
 
 func main() {
@@ -93,6 +95,10 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
 		os.Exit(1)
 	}()
+
+	if localTestArgs.waitForHeight != 0 {
+		WaitForBlockHeight(localTestArgs.waitForHeight)
+	}
 
 	// set account prefix to zeta
 	cfg := sdk.GetConfig()
@@ -304,6 +310,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestUpdateBytecode()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestDepositEtherLiquidityCap()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here
