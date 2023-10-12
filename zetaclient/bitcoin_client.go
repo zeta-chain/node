@@ -293,9 +293,12 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 		for _, inTx := range inTxs {
 			ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
-			amount := big.NewFloat(inTx.Value)
-			amount = amount.Mul(amount, big.NewFloat(1e8))
-			amountInt, _ := amount.Int(nil)
+			sats, err := getSatoshis(inTx.Value)
+			if err != nil {
+				ob.logger.WatchInTx.Error().Err(err).Msgf("getSatoshis error: %s", err)
+				continue
+			}
+			amountInt := big.NewInt(sats)
 			message := hex.EncodeToString(inTx.MemoBytes)
 			zetaHash, err := ob.zetaClient.PostSend(
 				inTx.FromAddress,
@@ -347,22 +350,31 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	res, included := ob.includedTxResults[outTxID]
 	ob.mu.Unlock()
 
+	// Get original cctx parameters
+	params, err := ob.GetPendingCctxParams(nonce)
+	if err != nil {
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
+		return false, false, err
+	}
+
 	if !included {
 		if !broadcasted {
 			return false, false, nil
 		}
-		// Get original cctx parameters
-		params, err := ob.GetPendingCctxParams(nonce)
-		if err != nil {
-			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-			return false, false, nil
+		// If the broadcasted outTx is nonce 0, just wait for inclusion and don't schedule more keysign
+		// Schedule more than one keysign for nonce 0 can lead to duplicate payments.
+		// One purpose of nonce mark UTXO is to avoid duplicate payment based on the fact that Bitcoin
+		// prevents double spending of same UTXO. However, for nonce 0, we don't have a prior nonce (e.g., -1)
+		// for the signer to check against when making the payment. Signer treats nonce 0 as a special case in downstream code.
+		if nonce == 0 {
+			return true, false, nil
 		}
 
 		// Try including this outTx broadcasted by myself
 		inMempool, err := ob.checkNSaveIncludedTx(txnHash, params)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
-			return false, false, nil
+			return false, false, err
 		}
 		if inMempool { // to avoid unnecessary Tss keysign
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
@@ -379,27 +391,16 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checkNSaveIncludedTx succeeded for outTx %s", outTxID)
 	}
 
-	var amount float64
-	if res.Amount > 0 {
-		ob.logger.ObserveOutTx.Warn().Msg("IsSendOutTxProcessed: res.Amount > 0")
-		amount = res.Amount
-	} else if res.Amount == 0 {
-		ob.logger.ObserveOutTx.Error().Msg("IsSendOutTxProcessed: res.Amount == 0")
-		return false, false, nil
-	} else {
-		amount = -res.Amount
-	}
-
-	amountInSat, _ := big.NewFloat(amount * 1e8).Int(nil)
+	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutTx()
+	amountInSat := params.Amount.BigInt()
 	if res.Confirmations < ob.ConfirmationsThreshold(amountInSat) {
 		return true, false, nil
 	}
 
-	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %f\n", res.TxID, res.Amount)
+	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
-		// #nosec G701 always positive
 		uint64(res.BlockIndex),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
@@ -663,10 +664,9 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 	pendingNonce := ob.pendingNonce
 	ob.mu.Unlock()
 
-	// #nosec G701 always positive
+	// #nosec G701 always non-negative
 	nonceLow := uint64(p.NonceLow)
-
-	if nonceLow > 0 && nonceLow >= pendingNonce {
+	if nonceLow > pendingNonce {
 		// get the last included outTx hash
 		txid, err := ob.getOutTxidByNonce(nonceLow-1, false)
 		if err != nil {
@@ -888,9 +888,9 @@ func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.O
 			ob.includedTxHashes[txHash] = params.OutboundTxTssNonce
 			ob.includedTxResults[outTxID] = *getTxResult
 			if params.OutboundTxTssNonce >= ob.pendingNonce { // try increasing pending nonce on every newly included outTx
-				ob.pendingNonce = params.OutboundTxTssNonce
+				ob.pendingNonce = params.OutboundTxTssNonce + 1
 			}
-			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s", txHash, outTxID)
+			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s pending nonce %d", txHash, outTxID, ob.pendingNonce)
 		}
 		// update saved tx result as confirmations may increase
 		if foundHash && foundRes {
