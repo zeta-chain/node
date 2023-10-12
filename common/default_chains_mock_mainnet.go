@@ -31,6 +31,10 @@ func BtcMainnetChain() Chain {
 	}
 }
 
+func BtcChainID() int64 {
+	return BtcMainnetChain().ChainId
+}
+
 func PolygonChain() Chain {
 	return Chain{
 		ChainName: ChainName_polygon_mainnet,
