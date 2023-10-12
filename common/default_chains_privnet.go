@@ -24,6 +24,10 @@ func BtcRegtestChain() Chain {
 	}
 }
 
+func BtcChainID() int64 {
+	return BtcRegtestChain().ChainId
+}
+
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcRegtestChain(),

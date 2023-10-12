@@ -5,6 +5,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -23,6 +24,8 @@ import (
 	"github.com/rs/zerolog/log"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/bitcoin"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
@@ -118,11 +121,11 @@ func (sm *SmokeTest) DepositBTC() {
 	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
 	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
 	fmt.Printf("Now sending two txs to TSS address...\n")
-	_, err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
+	txHash_1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
 	}
-	_, err = SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	txHash_2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
 	if err != nil {
 		panic(err)
 	}
@@ -165,6 +168,87 @@ func (sm *SmokeTest) DepositBTC() {
 			break
 		}
 	}
+
+	// prove the two transactions of the deposit
+	LoudPrintf("Bitcoin Merkle Proof\n")
+
+	sm.ProveBTCTransaction(txHash_1)
+	sm.ProveBTCTransaction(txHash_2)
+}
+
+func (sm *SmokeTest) ProveBTCTransaction(txHash *chainhash.Hash) {
+	// get tx result
+	btc := sm.btcRPCClient
+	txResult, err := btc.GetTransaction(txHash)
+	if err != nil {
+		panic("should get outTx result")
+	}
+	if txResult.Confirmations <= 0 {
+		panic("outTx should have already confirmed")
+	}
+	txBytes, err := hex.DecodeString(txResult.Hex)
+	if err != nil {
+		panic(err)
+	}
+
+	// get the block with verbose transactions
+	blockHash, err := chainhash.NewHashFromStr(txResult.BlockHash)
+	if err != nil {
+		panic(err)
+	}
+	blockVerbose, err := btc.GetBlockVerboseTx(blockHash)
+	if err != nil {
+		panic("should get block verbose tx")
+	}
+
+	// get the block header
+	header, err := btc.GetBlockHeader(blockHash)
+	if err != nil {
+		panic("should get block header")
+	}
+
+	// collect all the txs in the block
+	txns := []*btcutil.Tx{}
+	for _, res := range blockVerbose.Tx {
+		txBytes, err := hex.DecodeString(res.Hex)
+		if err != nil {
+			panic(err)
+		}
+		tx, err := btcutil.NewTxFromBytes(txBytes)
+		if err != nil {
+			panic(err)
+		}
+		txns = append(txns, tx)
+	}
+
+	// build merkle proof
+	mk := bitcoin.NewMerkle(txns)
+	path, index, err := mk.BuildMerkleProof(int(txResult.BlockIndex))
+	if err != nil {
+		panic("should build merkle proof")
+	}
+
+	// verify merkle proof statically
+	pass := bitcoin.Prove(*txHash, header.MerkleRoot, path, index)
+	if !pass {
+		panic("should verify merkle proof")
+	}
+
+	// verify merkle proof through RPC
+	res, err := sm.observerClient.Prove(context.Background(), &observertypes.QueryProveRequest{
+		ChainId:   common.BtcRegtestChain().ChainId,
+		TxHash:    txHash.String(),
+		BlockHash: blockHash.String(),
+		Proof:     common.NewBitcoinProof(txBytes, path, index),
+		TxIndex:   0, // bitcoin doesn't use txIndex
+	})
+	if err != nil {
+		panic(err)
+	}
+	if !res.Valid {
+		panic("txProof should be valid")
+	}
+	fmt.Printf("OK: txProof verified for inTx: %s\n", txHash.String())
 }
 
 func (sm *SmokeTest) DepositBTCRefund() {
