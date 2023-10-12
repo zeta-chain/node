@@ -1,6 +1,7 @@
 package emissions
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -75,7 +76,11 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		fmt.Println("RegisterQueryHandlerClient err: %w", err)
+	}
 }
 
 // GetTxCmd returns the emissions module's root tx command.
