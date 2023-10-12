@@ -151,13 +151,9 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 		return "", err
 	}
 
-	logValues := make([]ethtypes.Log, len(receipt.Logs))
-	for i, log := range receipt.Logs {
-		logValues[i] = *log
-	}
 	var msg types.MsgVoteOnObservedInboundTx
-	for _, log := range logValues {
-		event, err := connector.ParseZetaSent(log)
+	for _, log := range receipt.Logs {
+		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
 			msg, err = ob.GetInboundVoteMsgForZetaSentEvent(event)
 			if err == nil {
