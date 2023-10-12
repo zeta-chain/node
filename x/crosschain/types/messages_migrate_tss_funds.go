@@ -23,7 +23,7 @@ func (msg *MsgMigrateTssFunds) Route() string {
 }
 
 func (msg *MsgMigrateTssFunds) Type() string {
-	return "MigrateTssAddress"
+	return "MigrateTssFunds"
 }
 
 func (msg *MsgMigrateTssFunds) GetSigners() []sdk.AccAddress {
@@ -46,6 +46,9 @@ func (msg *MsgMigrateTssFunds) ValidateBasic() error {
 	}
 	if common.GetChainFromChainID(msg.ChainId) == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
+	}
+	if msg.Amount.IsZero() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "amount cannot be zero")
 	}
 	return nil
 }

@@ -14,11 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint) error {
-	currentTss, found := k.GetTSS(ctx)
-	if !found {
-		return types.ErrCannotFindTSSKeys
-	}
+func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss types.TSS) error {
 	tssList := k.GetAllTSS(ctx)
 	if len(tssList) < 2 {
 		return errorsmod.Wrap(types.ErrCannotMigrateTss, "only one TSS found")
@@ -27,6 +23,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	sort.SliceStable(tssList, func(i, j int) bool {
 		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
 	})
+	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
 	ethAddressOld, err := getTssAddrEVM(currentTss.TssPubkey)
 	if err != nil {

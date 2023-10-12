@@ -240,7 +240,7 @@ func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.A
 	if cmd == common.CmdMigrateTssFunds {
 		tx := ethtypes.NewTransaction(outboundParams.OutboundTxTssNonce, to, outboundParams.Amount.BigInt(), 21000, gasPrice, nil)
 		hashBytes := signer.ethSigner.Hash(tx).Bytes()
-		sig, err := signer.tssSigner.Sign(hashBytes, height, signer.chain, "")
+		sig, err := signer.tssSigner.Sign(hashBytes, height, outboundParams.OutboundTxTssNonce, signer.chain, "")
 		if err != nil {
 			return nil, err
 		}
