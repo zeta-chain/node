@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 
 	cosmoserrors "cosmossdk.io/errors"
 
@@ -17,9 +16,8 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	// check authorization for this chain
 	chain := common.GetChainFromChainID(msg.ChainId)
-	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
-	if !ok {
-		return nil, cosmoserrors.Wrap(types.ErrNotAuthorizedPolicy, err.Error())
+	if ok := k.IsAuthorized(ctx, msg.Creator, chain); !ok {
+		return nil, types.ErrNotAuthorizedPolicy
 	}
 
 	// add vote to ballot
@@ -41,7 +39,17 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	 */
 	_, found := k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hex.EncodeToString(msg.BlockHash))
+		hashString, err := common.HashToString(msg.ChainId, msg.BlockHash)
+		if err != nil {
+			return nil, cosmoserrors.Wrap(err, "block hash conversion failed")
+		}
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hashString)
+	}
+
+	// Check timestamp
+	err = msg.Header.ValidateTimestamp(ctx.BlockTime())
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
 	}
 
 	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
