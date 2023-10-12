@@ -56,6 +56,7 @@ func NewBitcoinProof(txBytes []byte, path []byte, index uint) *Proof {
 }
 
 // Verify verifies the proof against the header
+// Returns the verified tx in bytes if the verification is successful
 func (p Proof) Verify(headerData HeaderData, txIndex int) ([]byte, error) {
 	switch proof := p.Proof.(type) {
 	case *Proof_EthereumProof:

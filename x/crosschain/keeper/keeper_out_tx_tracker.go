@@ -297,7 +297,7 @@ func ValidateEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEt
 	return nil
 }
 
-// ValidateBTCOutTxBody validates the SetWit sender address, nonce and chain ID.
+// ValidateBTCOutTxBody validates the SegWit sender address, nonce and chain ID.
 // Note: 'msg' may contain fabricated information
 func ValidateBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
 	tx, err := btcutil.NewTxFromBytes(txBytes)
