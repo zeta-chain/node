@@ -12,21 +12,21 @@ option go_package = "github.com/zeta-chain/zetacore/x/emissions/types";
 service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/params";
+    option (google.api.http).get = "/zeta-chain/emissions/params";
   }
   // Queries a list of ListBalances items.
   rpc ListPoolAddresses(QueryListPoolAddressesRequest) returns (QueryListPoolAddressesResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/list_addresses";
+    option (google.api.http).get = "/zeta-chain/emissions/list_addresses";
   }
 
   // Queries a list of GetEmmisonsFactors items.
   rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+    option (google.api.http).get = "/zeta-chain/emissions/get_emmisons_factors";
   }
 
   // Queries a list of ShowAvailableEmissions items.
   rpc ShowAvailableEmissions(QueryShowAvailableEmissionsRequest) returns (QueryShowAvailableEmissionsResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/show_available_emissions/{address}";
+    option (google.api.http).get = "/zeta-chain/emissions/show_available_emissions/{address}";
   }
 
   // this line is used by starport scaffolding # 2

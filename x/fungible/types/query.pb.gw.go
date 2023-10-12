@@ -540,17 +540,17 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "fungible", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ForeignCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "fungible", "foreign_coins", "index"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ForeignCoins_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "fungible", "foreign_coins", "index"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ForeignCoinsAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "foreign_coins"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ForeignCoinsAll_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "fungible", "foreign_coins"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_SystemContract_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "system_contract"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_SystemContract_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "fungible", "system_contract"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GasStabilityPoolAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "fungible", "gas_stability_pool_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GasStabilityPoolAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "fungible", "gas_stability_pool_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GasStabilityPoolBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "fungible", "gas_stability_pool_balance", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GasStabilityPoolBalance_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "fungible", "gas_stability_pool_balance", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

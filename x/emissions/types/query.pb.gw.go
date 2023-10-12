@@ -364,13 +364,13 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "emissions", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ListPoolAddresses_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "list_addresses"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ListPoolAddresses_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "emissions", "list_addresses"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEmmisonsFactors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"zeta-chain", "zetacore", "emissions", "get_emmisons_factors"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEmmisonsFactors_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "emissions", "get_emmisons_factors"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ShowAvailableEmissions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"zeta-chain", "zetacore", "emissions", "show_available_emissions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ShowAvailableEmissions_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "emissions", "show_available_emissions", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
