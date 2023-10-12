@@ -132,9 +132,7 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-		if outTxTracker.ChainId == req.Chain {
-			outTxTrackers = append(outTxTrackers, outTxTracker)
-		}
+		outTxTrackers = append(outTxTrackers, outTxTracker)
 		return nil
 	})
 
