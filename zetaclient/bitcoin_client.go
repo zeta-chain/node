@@ -425,6 +425,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
+		// #nosec G701 always positive
 		uint64(res.BlockIndex),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
