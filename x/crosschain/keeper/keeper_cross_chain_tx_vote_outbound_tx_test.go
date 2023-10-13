@@ -27,7 +27,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 		isError                               bool
 	}{
 		{
-			name:												"no call if gasLimit is equal to gasUsed",
+			name:                        "no call if gasLimit is equal to gasUsed",
 			effectiveGasLimit:           42,
 			gasUsed:                     42,
 			effectiveGasPrice:           math.NewInt(42),
