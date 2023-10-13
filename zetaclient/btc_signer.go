@@ -67,8 +67,13 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner TSSSigner, logger zerolog.Logg
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, amount float64, gasPrice *big.Int, sizeLimit uint64,
-	btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain) (*wire.MsgTx, error) {
+	btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain, cointype common.CoinType) (*wire.MsgTx, error) {
+
 	estimateFee := float64(gasPrice.Uint64()) * outTxBytesMax / 1e8
+	if cointype == common.CoinType_Cmd {
+		estimateFee = float64(gasPrice.Uint64()) * outTxBytesMin / 1e8
+	}
+
 	nonceMark := NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
@@ -235,7 +240,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		Logger()
 
 	params := send.GetCurrentOutTxParam()
-	if params.CoinType != common.CoinType_Gas {
+	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
@@ -291,7 +296,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, sizelimit, btcClient, height,
-		outboundTxTssNonce, &btcClient.chain)
+		outboundTxTssNonce, &btcClient.chain, params.CoinType)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return

@@ -975,7 +975,7 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 //   - All inputs are from TSS address
 func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	// vins: [nonce-mark, UTXO1, UTXO2, ...]
-	if len(vins) <= 1 {
+	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
 	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
