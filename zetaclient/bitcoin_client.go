@@ -72,8 +72,8 @@ type BitcoinChainClient struct {
 const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
-	dustOffset       = 2000
-	bytesPerKB       = 1000
+
+	bytesPerKB = 1000
 )
 
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
@@ -1148,5 +1148,5 @@ func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 // A very special value to mark current nonce in UTXO
 func NonceMarkAmount(nonce uint64) int64 {
 	// #nosec G701 always in range
-	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
+	return int64(nonce) + config.DustOffset // +2000 to avoid being a dust rejection
 }
