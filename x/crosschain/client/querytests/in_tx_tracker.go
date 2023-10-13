@@ -49,6 +49,7 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 	s.Run("ByOffset", func() {
 		step := 2
 		for i := 0; i < len(objs); i += step {
+			// #nosec G701 always positive
 			args := request(nil, uint64(i), uint64(step), false, 5)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
 			s.Require().NoError(err)
@@ -64,6 +65,7 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 		step := 2
 		var next []byte
 		for i := 0; i < len(objs); i += step {
+			// #nosec G701 always positive
 			args := request(next, 0, uint64(step), false, 5)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListInTxTrackerByChain(), args)
 			s.Require().NoError(err)
@@ -84,7 +86,7 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 		var resp types.QueryAllInTxTrackerByChainResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
-		s.Require().Equal(len(objs), int(resp.Pagination.Total))
+		s.Require().Equal(uint64(len(objs)), resp.Pagination.Total)
 		s.Require().ElementsMatch(nullify.Fill(objs),
 			nullify.Fill(resp.InTxTracker),
 		)
@@ -96,6 +98,6 @@ func (s *CliTestSuite) TestListInTxTrackersByChain() {
 		var resp types.QueryAllInTxTrackerByChainResponse
 		s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		s.Require().NoError(err)
-		s.Require().Equal(0, int(resp.Pagination.Total))
+		s.Require().Equal(uint64(0), resp.Pagination.Total)
 	})
 }
