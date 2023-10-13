@@ -655,7 +655,7 @@ type QueryClient interface {
 	ForeignCoins(ctx context.Context, in *QueryGetForeignCoinsRequest, opts ...grpc.CallOption) (*QueryGetForeignCoinsResponse, error)
 	// Queries a list of ForeignCoins items.
 	ForeignCoinsAll(ctx context.Context, in *QueryAllForeignCoinsRequest, opts ...grpc.CallOption) (*QueryAllForeignCoinsResponse, error)
-	// Queries a ZetaDepositAndCallContract by index.
+	// Queries SystemContract
 	SystemContract(ctx context.Context, in *QueryGetSystemContractRequest, opts ...grpc.CallOption) (*QueryGetSystemContractResponse, error)
 	// Queries the address of a gas stability pool on a given chain.
 	GasStabilityPoolAddress(ctx context.Context, in *QueryGetGasStabilityPoolAddress, opts ...grpc.CallOption) (*QueryGetGasStabilityPoolAddressResponse, error)
@@ -733,7 +733,7 @@ type QueryServer interface {
 	ForeignCoins(context.Context, *QueryGetForeignCoinsRequest) (*QueryGetForeignCoinsResponse, error)
 	// Queries a list of ForeignCoins items.
 	ForeignCoinsAll(context.Context, *QueryAllForeignCoinsRequest) (*QueryAllForeignCoinsResponse, error)
-	// Queries a ZetaDepositAndCallContract by index.
+	// Queries SystemContract
 	SystemContract(context.Context, *QueryGetSystemContractRequest) (*QueryGetSystemContractResponse, error)
 	// Queries the address of a gas stability pool on a given chain.
 	GasStabilityPoolAddress(context.Context, *QueryGetGasStabilityPoolAddress) (*QueryGetGasStabilityPoolAddressResponse, error)
