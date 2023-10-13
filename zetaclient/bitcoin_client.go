@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/pkg/errors"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -23,6 +24,7 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -67,12 +69,14 @@ type BitcoinChainClient struct {
 	stop   chan struct{}
 	logger BTCLog
 	ts     *TelemetryServer
+
+	BlockCache *lru.Cache
 }
 
 const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
-	dustOffset       = 2000
+	btcBlocksPerDay  = 144
 	bytesPerKB       = 1000
 )
 
@@ -131,6 +135,12 @@ func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner,
 	err = client.Ping()
 	if err != nil {
 		return nil, fmt.Errorf("error ping the bitcoin server: %s", err)
+	}
+
+	ob.BlockCache, err = lru.New(btcBlocksPerDay)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create bitcoin block cache")
+		return nil, err
 	}
 
 	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
@@ -266,30 +276,44 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// query incoming gas asset
 	if confirmedBlockNum > lastBN {
 		bn := lastBN + 1
-		ob.logger.WatchInTx.Info().Msgf("filtering block %d, current block %d, last block %d", bn, cnt, lastBN)
-		hash, err := ob.rpcClient.GetBlockHash(bn)
+		res, err := ob.GetBlockByNumberCached(bn)
 		if err != nil {
+			ob.logger.WatchInTx.Error().Err(err).Msgf("error getting bitcoin block %d", bn)
 			return err
 		}
+		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs, current block %d, last block %d", bn, len(res.Block.Tx), cnt, lastBN)
 
-		block, err := ob.rpcClient.GetBlockVerboseTx(hash)
-		if err != nil {
-			return err
-		}
-		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs", bn, len(block.Tx))
-		if len(block.Tx) > 1 {
-			for idx, tx := range block.Tx {
-				ob.logger.WatchInTx.Info().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
+		// print some debug information
+		if len(res.Block.Tx) > 1 {
+			for idx, tx := range res.Block.Tx {
+				ob.logger.WatchInTx.Debug().Msgf("BTC InTX |  %d: %s\n", idx, tx.Txid)
 				for vidx, vout := range tx.Vout {
 					ob.logger.WatchInTx.Debug().Msgf("vout %d \n value: %v\n scriptPubKey: %v\n", vidx, vout.Value, vout.ScriptPubKey.Hex)
 				}
-				//ob.rpcClient.GetTransaction(tx.Txid)
 			}
+		}
+
+		// add block header to zetacore
+		var headerBuf bytes.Buffer
+		err = res.Header.Serialize(&headerBuf)
+		if err != nil { // should never happen
+			ob.logger.WatchInTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
+			return err
+		}
+		blockHash := res.Header.BlockHash()
+		_, err = ob.zetaClient.PostAddBlockHeader(
+			ob.chain.ChainId,
+			blockHash[:],
+			res.Block.Height,
+			common.NewBitcoinHeader(headerBuf.Bytes()),
+		)
+		if err != nil { // error shouldn't block the process
+			ob.logger.WatchInTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
 		// #nosec G701 always positive
-		inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), tssAddress, &ob.logger.WatchInTx)
+		inTxs := FilterAndParseIncomingTx(res.Block.Tx, uint64(res.Block.Height), tssAddress, &ob.logger.WatchInTx)
 
 		for _, inTx := range inTxs {
 			ob.logger.WatchInTx.Debug().Msgf("Processing inTx: %s", inTx.TxHash)
@@ -401,6 +425,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
+		// #nosec G701 always positive
 		uint64(res.BlockIndex),
 		0,   // gas used not used with Bitcoin
 		nil, // gas price not used with Bitcoin
@@ -461,6 +486,10 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if feeResult.Errors != nil || feeResult.FeeRate == nil {
 		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
+	if *feeResult.FeeRate > math2.MaxInt64 {
+		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
+	}
+	// #nosec G701 always in range
 	feeRate := new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8))
 	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(bytesPerKB))
 	bn, err := ob.rpcClient.GetBlockCount()
@@ -717,7 +746,7 @@ func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string
 
 func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	amount := NonceMarkAmount(nonce)
+	amount := common.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := getSatoshis(utxo.Amount)
 		if err != nil {
@@ -1042,8 +1071,8 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 			if recvAddress != tssAddress {
 				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
 			}
-			if amount != NonceMarkAmount(nonce) {
-				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, NonceMarkAmount(nonce))
+			if amount != common.NonceMarkAmount(nonce) {
+				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
 			}
 		}
 		// 2nd vout: payment to recipient
@@ -1145,8 +1174,35 @@ func (ob *BitcoinChainClient) GetTxID(nonce uint64) string {
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
-// A very special value to mark current nonce in UTXO
-func NonceMarkAmount(nonce uint64) int64 {
-	// #nosec G701 always in range
-	return int64(nonce) + dustOffset // +2000 to avoid being a dust rejection
+type BTCBlockNHeader struct {
+	Header *wire.BlockHeader
+	Block  *btcjson.GetBlockVerboseTxResult
+}
+
+func (ob *BitcoinChainClient) GetBlockByNumberCached(blockNumber int64) (*BTCBlockNHeader, error) {
+	if result, ok := ob.BlockCache.Get(blockNumber); ok {
+		return result.(*BTCBlockNHeader), nil
+	}
+	// Get the block hash
+	hash, err := ob.rpcClient.GetBlockHash(blockNumber)
+	if err != nil {
+		return nil, err
+	}
+	// Get the block header
+	header, err := ob.rpcClient.GetBlockHeader(hash)
+	if err != nil {
+		return nil, err
+	}
+	// Get the block with verbose transactions
+	block, err := ob.rpcClient.GetBlockVerboseTx(hash)
+	if err != nil {
+		return nil, err
+	}
+	blockNheader := &BTCBlockNHeader{
+		Header: header,
+		Block:  block,
+	}
+	ob.BlockCache.Add(blockNumber, blockNheader)
+	ob.BlockCache.Add(hash, blockNheader)
+	return blockNheader, nil
 }

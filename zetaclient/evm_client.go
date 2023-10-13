@@ -849,13 +849,11 @@ func (ob *EVMChainClient) observeInTX() error {
 		// query incoming gas asset
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
-				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 				block, err := ob.GetBlockByNumberCached(bn)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				_ = ob.BlockCache.Add(block.Hash(), block)
 				headerRLP, err := rlp.EncodeToBytes(block.Header())
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
@@ -1219,5 +1217,6 @@ func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber int64) (*ethtypes.B
 		return nil, err
 	}
 	ob.BlockCache.Add(blockNumber, block)
+	ob.BlockCache.Add(block.Hash(), block)
 	return block, nil
 }

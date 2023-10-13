@@ -26,7 +26,7 @@ service Query {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/foreign_coins";
   }
 
-  // Queries a ZetaDepositAndCallContract by index.
+  // Queries SystemContract
   rpc SystemContract(QueryGetSystemContractRequest) returns (QueryGetSystemContractResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/system_contract";
   }

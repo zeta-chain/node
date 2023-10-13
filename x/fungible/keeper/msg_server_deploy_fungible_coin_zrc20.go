@@ -45,7 +45,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	}
 	if msg.CoinType == zetacommon.CoinType_Gas {
 		// #nosec G701 always in range
-		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals))
+		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals), big.NewInt(msg.GasLimit))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
