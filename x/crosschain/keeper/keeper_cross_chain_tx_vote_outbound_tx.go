@@ -226,7 +226,7 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
 
-	if (gasLimit == gasUsed) {
+	if gasLimit == gasUsed {
 		return nil
 	}
 
