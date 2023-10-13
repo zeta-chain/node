@@ -3,7 +3,7 @@
 ## MsgAddToOutTxTracker
 
 AddToOutTxTracker adds a new record to the outbound transaction tracker.
-only the admin policy account and the observer validators are authorized to broadcast this message.
+only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 
 ```proto
 message MsgAddToOutTxTracker {
@@ -18,6 +18,8 @@ message MsgAddToOutTxTracker {
 ```
 
 ## MsgAddToInTxTracker
+
+TODO https://github.com/zeta-chain/node/issues/1269
 
 ```proto
 message MsgAddToInTxTracker {
@@ -220,6 +222,9 @@ message MsgVoteOnObservedInboundTx {
 ```
 
 ## MsgWhitelistERC20
+
+WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+and emit a crosschain tx to whitelist the ERC20 on the external chain
 
 ```proto
 message MsgWhitelistERC20 {

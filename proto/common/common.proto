@@ -1,6 +1,7 @@
 syntax = "proto3";
 package common;
 
+import "common/bitcoin/bitcoin.proto";
 import "common/ethereum/ethereum.proto";
 //option (gogoproto.goproto_stringer_all) = false;
 //option (gogoproto.stringer_all)         = false;
@@ -75,11 +76,13 @@ message BlockHeader {
 message HeaderData {
   oneof data {
     bytes ethereum_header = 1; // binary encoded headers; RLP for ethereum
+    bytes bitcoin_header = 2; // 80-byte little-endian encoded binary data
   }
 }
 
 message Proof {
   oneof proof {
     ethereum.Proof ethereum_proof = 1;
+    bitcoin.Proof bitcoin_proof = 2;
   }
 }

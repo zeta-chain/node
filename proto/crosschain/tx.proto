@@ -49,7 +49,10 @@ message MsgWhitelistERC20 {
   int64 gas_limit = 7;
 }
 
-message MsgWhitelistERC20Response {}
+message MsgWhitelistERC20Response {
+  string zrc20_address = 1;
+  string cctx_index = 2;
+}
 
 message MsgAddToOutTxTracker {
   string creator = 1;

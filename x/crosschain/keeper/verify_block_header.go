@@ -4,53 +4,50 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eth "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, hash string, txIndex int64, chainID int64) (ethtypes.Transaction, error) {
-	var txx ethtypes.Transaction
+func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
+	// header-based merkle proof verification must be enabled
 	crosschainFlags, found := k.zetaObserverKeeper.GetCrosschainFlags(ctx)
 	if !found {
-		return txx, fmt.Errorf("crosschain flags not found")
+		return nil, fmt.Errorf("crosschain flags not found")
 	}
 	if crosschainFlags.BlockHeaderVerificationFlags == nil {
-		return txx, fmt.Errorf("block header verification flags not found")
+		return nil, fmt.Errorf("block header verification flags not found")
 	}
 	if common.IsBitcoinChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
-		return txx, fmt.Errorf("cannot verify proof for bitcoin chain %d", chainID)
+		return nil, fmt.Errorf("proof verification not enabled for bitcoin chain")
 	}
-
 	if common.IsEVMChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
-		return txx, fmt.Errorf("cannot verify proof for evm chain %d ", chainID)
+		return nil, fmt.Errorf("proof verification not enabled for evm chain")
 	}
 
+	// chain must support header-based merkle proof verification
 	senderChain := common.GetChainFromChainID(chainID)
 	if senderChain == nil {
-		return txx, types.ErrUnsupportedChain
+		return nil, types.ErrUnsupportedChain
+	}
+	if !senderChain.SupportMerkleProof() {
+		return nil, fmt.Errorf("chain %d does not support block header-based verification", chainID)
 	}
 
-	if !senderChain.IsProvable() {
-		return txx, fmt.Errorf("chain %d does not support block header verification", chainID)
-	}
-
-	blockHash := eth.HexToHash(hash)
-
-	res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
-	if !found {
-		return txx, fmt.Errorf("block header not found %s", blockHash)
-	}
-
-	// verify and process the proof
-	val, err := proof.Verify(res.Header, int(txIndex))
-	if err != nil && !common.IsErrorInvalidProof(err) {
-		return txx, err
-	}
-	err = txx.UnmarshalBinary(val)
+	// get block header from the store
+	hashBytes, err := common.StringToHash(chainID, blockHash)
 	if err != nil {
-		return txx, err
+		return nil, fmt.Errorf("block hash %s conversion failed %s", blockHash, err)
 	}
-	return txx, nil
+	res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, hashBytes)
+	if !found {
+		return nil, fmt.Errorf("block header not found %s", blockHash)
+	}
+
+	// verify merkle proof
+	txBytes, err := proof.Verify(res.Header, int(txIndex))
+	if err != nil {
+		return nil, err
+	}
+
+	return txBytes, err
 }
