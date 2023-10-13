@@ -21,10 +21,23 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	tss, found := k.GetTSS(ctx)
+	var tss types.TSS
+	found := false
+	tssList := k.GetAllTSS(ctx)
+	if req.TssPubKey == "" {
+		tss, found = k.GetTSS(ctx)
+		if !found {
+			return nil, status.Error(codes.NotFound, "current tss not set")
+		}
+	}
 	if !found {
-		return nil, status.Error(codes.NotFound, "not found")
+		for _, t := range tssList {
+			if t.TssPubkey == req.TssPubKey {
+				tss = t
+				found = true
+				break
+			}
+		}
 	}
 	ethAddress, err := getTssAddrEVM(tss.TssPubkey)
 	if err != nil {
