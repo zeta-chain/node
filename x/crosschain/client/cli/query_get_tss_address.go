@@ -18,7 +18,11 @@ func CmdGetTssAddress() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			tssPubKey := args[0]
+			tssPubKey := ""
+			if len(args) == 1 {
+				tssPubKey = args[0]
+			}
+
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryGetTssAddressRequest{
