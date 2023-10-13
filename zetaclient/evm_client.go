@@ -300,7 +300,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if err != nil {
 			logger.Error().Err(err).Msg("error posting confirmation to meta core")
 		}
-		logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
@@ -321,7 +321,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msg("error posting confirmation to meta core")
 			}
-			logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
@@ -341,7 +341,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
@@ -387,7 +387,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Error().Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -423,7 +423,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -450,7 +450,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_ERC20 {
@@ -489,7 +489,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Error().Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -834,13 +834,11 @@ func (ob *EVMChainClient) observeInTX() error {
 		// query incoming gas asset
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
-				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 				block, err := ob.GetBlockByNumberCached(bn)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				_ = ob.BlockCache.Add(block.Hash(), block)
 				headerRLP, err := rlp.EncodeToBytes(block.Header())
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
@@ -1184,5 +1182,6 @@ func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber int64) (*ethtypes.B
 		return nil, err
 	}
 	ob.BlockCache.Add(blockNumber, block)
+	ob.BlockCache.Add(block.Hash(), block)
 	return block, nil
 }

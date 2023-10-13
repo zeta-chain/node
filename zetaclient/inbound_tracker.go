@@ -89,6 +89,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 	if err != nil {
 		return "", err
 	}
+	// #nosec G701 always positive
 	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx)
 	if err != nil {
 		return "", err

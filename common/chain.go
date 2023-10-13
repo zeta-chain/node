@@ -112,13 +112,9 @@ func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }
 
-// IsProvable List of chains which support block header-based verification on zetchain
-func (chain Chain) IsProvable() bool {
-	return chain.ChainId == 1 ||
-		chain.ChainId == 5 ||
-		chain.ChainId == 1337 ||
-		chain.ChainId == 97 ||
-		chain.ChainId == 56
+// SupportMerkleProof returns true if the chain supports block header-based verification
+func (chain Chain) SupportMerkleProof() bool {
+	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
 }
 
 func IsBitcoinChain(chainID int64) bool {
