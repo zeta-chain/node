@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -81,13 +83,13 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 		return err
 	}
 
-	ETHZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18)
+	ETHZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.GoerliChain().ChainId, "ETH", "gETH", 18, nil)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
 	ctx.Logger().Info("Deployed ETH ZRC20 at " + ETHZRC20Addr.String())
 
-	BTCZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8)
+	BTCZRC20Addr, err := k.SetupChainGasCoinAndPool(ctx, common.BtcRegtestChain().ChainId, "BTC", "tBTC", 8, nil)
 	if err != nil {
 		return sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 	}
@@ -146,7 +148,12 @@ func (k Keeper) TestUpdateZRC20WithdrawFee(goCtx context.Context) error {
 	creator := k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 
 	for _, foreignCoin := range foreignCoins {
-		msg := types.NewMsgUpdateZRC20WithdrawFee(creator, foreignCoin.Zrc20ContractAddress, sdk.NewUint(uint64(foreignCoin.ForeignChainId)))
+		msg := types.NewMsgUpdateZRC20WithdrawFee(
+			creator,
+			foreignCoin.Zrc20ContractAddress,
+			sdk.NewUint(uint64(foreignCoin.ForeignChainId)),
+			math.Uint{},
+		)
 		_, err := k.UpdateZRC20WithdrawFee(ctx, msg)
 		if err != nil {
 			return err

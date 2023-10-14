@@ -102,12 +102,6 @@ func IsEVMChain(chainID int64) bool {
 		chainID == 137 // polygon mainnet
 }
 
-func IsEthereum(chainID int64) bool {
-	return chainID == 5 || // Goerli
-		chainID == 1337 || // eth privnet
-		chainID == 1 // eth mainnet
-}
-
 func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }

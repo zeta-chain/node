@@ -20,8 +20,8 @@ service Query {
   }
 
   // Queries a list of GetEmmisonsFactors items.
-  rpc GetEmmisonsFactors(QueryGetEmmisonsFactorsRequest) returns (QueryGetEmmisonsFactorsResponse) {
-    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emmisons_factors";
+  rpc GetEmissionsFactors(QueryGetEmissionsFactorsRequest) returns (QueryGetEmissionsFactorsResponse) {
+    option (google.api.http).get = "/zeta-chain/zetacore/emissions/get_emissions_factors";
   }
 
   // Queries a list of ShowAvailableEmissions items.
@@ -49,9 +49,9 @@ message QueryListPoolAddressesResponse {
   string emission_module_address = 3;
 }
 
-message QueryGetEmmisonsFactorsRequest {}
+message QueryGetEmissionsFactorsRequest {}
 
-message QueryGetEmmisonsFactorsResponse {
+message QueryGetEmissionsFactorsResponse {
   string reservesFactor = 1;
   string bondFactor = 2;
   string durationFactor = 3;

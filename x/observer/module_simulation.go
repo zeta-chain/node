@@ -11,6 +11,7 @@ import (
 
 /* #nosec */
 const (
+	// #nosec G101 not a hardcoded credential
 	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
 	defaultWeightMsgUpdateClientParams int = 100
 )
