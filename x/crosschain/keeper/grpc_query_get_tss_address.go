@@ -21,29 +21,27 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	var tss types.TSS
-	found := false
-	tssList := k.GetAllTSS(ctx)
+	var tssPubKey string
 	if req.TssPubKey == "" {
-		tss, found = k.GetTSS(ctx)
+		tss, found := k.GetTSS(ctx)
 		if !found {
 			return nil, status.Error(codes.NotFound, "current tss not set")
 		}
-	}
-	if !found {
+		tssPubKey = tss.TssPubkey
+	} else {
+		tssList := k.GetAllTSS(ctx)
 		for _, t := range tssList {
 			if t.TssPubkey == req.TssPubKey {
-				tss = t
-				found = true
+				tssPubKey = t.TssPubkey
 				break
 			}
 		}
 	}
-	ethAddress, err := getTssAddrEVM(tss.TssPubkey)
+	ethAddress, err := getTssAddrEVM(tssPubKey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	btcAddress, err := getTssAddrBTC(tss.TssPubkey)
+	btcAddress, err := getTssAddrBTC(tssPubKey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

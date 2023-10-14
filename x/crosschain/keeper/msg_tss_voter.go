@@ -131,7 +131,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 
 func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateTssFunds) (*types.MsgMigrateTssFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group1) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group2) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
@@ -150,7 +150,7 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	}
 	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, err.Error())
 	}
 	return &types.MsgMigrateTssFundsResponse{}, nil
 }

@@ -311,7 +311,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	message, err := base64.StdEncoding.DecodeString("")
+	var message []byte
 	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
 		message, err = base64.StdEncoding.DecodeString(send.RelayedMessage)
 		if err != nil {
