@@ -335,6 +335,9 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			"zetaAmountIn", amounts[0],
 			"zrc20AmountOut", amounts[1],
 		)
+
+		// FIXME: investigate small mismatches between amounts[1] and outTxGasFee
+		// https://github.com/zeta-chain/node/issues/1303
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")
