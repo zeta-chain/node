@@ -205,7 +205,9 @@ message QueryAllInTxHashToCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetTssAddressRequest {}
+message QueryGetTssAddressRequest {
+  string tss_pub_key = 1;
+}
 
 message QueryGetTssAddressResponse {
   string eth = 1;
