@@ -1,18 +1,47 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateTssFunds) (*types.MsgMigrateTssFundsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group2) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
+	}
+	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds while inbound is enabled")
+	}
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
+	}
+	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
+	if !found {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
+	}
+	if pendingNonces.NonceLow != pendingNonces.NonceHigh {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
+	}
+	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, err.Error())
+	}
+	return &types.MsgMigrateTssFundsResponse{}, nil
+}
 
 func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss types.TSS) error {
 	tssList := k.GetAllTSS(ctx)

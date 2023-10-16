@@ -7,6 +7,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/x/emissions/client/cli"
+	keeper3 "github.com/zeta-chain/zetacore/x/emissions/keeper"
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -15,9 +18,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/zeta-chain/zetacore/x/emissions/client/cli"
-	"github.com/zeta-chain/zetacore/x/emissions/keeper"
-	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 var (
@@ -96,13 +96,13 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
+	keeper        keeper3.Keeper
 	accountKeeper types.AccountKeeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
-	keeper keeper.Keeper,
+	keeper keeper3.Keeper,
 	accountKeeper types.AccountKeeper,
 ) AppModule {
 	return AppModule{
@@ -133,7 +133,7 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+	types.RegisterMsgServer(cfg.MsgServer(), keeper3.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 

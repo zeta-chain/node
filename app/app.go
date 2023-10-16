@@ -9,6 +9,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
+	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
+	emissionsModuleKeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
+	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -96,10 +99,6 @@ import (
 	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
 	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
-	emissionsModuleKeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 
 	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -420,7 +419,7 @@ func New(
 	)
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register governance hooks
+			// register governance hooks
 		),
 	)
 
