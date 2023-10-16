@@ -464,13 +464,13 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	if ob.chain.ChainId == 18444 { //bitcoin regtest
+	if ob.chain.ChainId == 18444 { //bitcoin regtest; hardcode here since this RPC is not available on regtest
 		bn, err := ob.rpcClient.GetBlockCount()
 		if err != nil {
 			return err
 		}
 		// #nosec G701 always in range
-		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1, "100", uint64(bn))
 		if err != nil {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 			return err
@@ -504,8 +504,6 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return err
 	}
 	_ = zetaHash
-	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
-	_ = feeResult
 	return nil
 }
 

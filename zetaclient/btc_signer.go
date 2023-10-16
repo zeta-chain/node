@@ -120,7 +120,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// fee calculation
 	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
-	fees.Div(fees, big.NewInt(bytesPerKB))
 	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s", nonce, gasPrice.String(), txSize, fees.String())
 
 	// calculate remaining btc to TSS self
