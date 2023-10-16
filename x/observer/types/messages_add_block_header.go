@@ -52,15 +52,15 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if common.IsEthereum(msg.ChainId) {
-		if len(msg.BlockHash) > 32 {
-			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid msg.txhash; too long (%d)", len(msg.BlockHash))
+	if common.IsEthereumChain(msg.ChainId) || common.IsBitcoinChain(msg.ChainId) {
+		if len(msg.BlockHash) != 32 {
+			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block hash length (%d)", len(msg.BlockHash))
 		}
 	} else {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid chain id (%d)", msg.ChainId)
 	}
 
-	if err := msg.Header.Validate(msg.BlockHash, msg.Height); err != nil {
+	if err := msg.Header.Validate(msg.BlockHash, msg.ChainId, msg.Height); err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block header (%s)", err)
 	}
 

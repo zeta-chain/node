@@ -12,10 +12,10 @@ var (
 	ErrNotEnoughZetaBurnt      = errorsmod.Register(ModuleName, 1109, "not enough zeta burnt")
 	ErrCannotFindReceiverNonce = errorsmod.Register(ModuleName, 1110, "cannot find receiver chain nonce")
 
-	ErrGasCoinNotFound         = errorsmod.Register(ModuleName, 1113, "gas coin not found for SenderChain")
-	ErrUnableToParseContract   = errorsmod.Register(ModuleName, 1115, "cannot parse contract and data")
+	ErrGasCoinNotFound         = errorsmod.Register(ModuleName, 1113, "gas coin not found for sender chain")
+	ErrUnableToParseAddress    = errorsmod.Register(ModuleName, 1115, "cannot parse address and data")
 	ErrCannotProcessWithdrawal = errorsmod.Register(ModuleName, 1116, "cannot process withdrawal event")
-	ErrForeignCoinNotFound     = errorsmod.Register(ModuleName, 1118, "gas coin not found for SenderChain")
+	ErrForeignCoinNotFound     = errorsmod.Register(ModuleName, 1118, "foreign coin not found for sender chain")
 	ErrNotEnoughPermissions    = errorsmod.Register(ModuleName, 1119, "not enough permissions for current actions")
 
 	ErrCannotFindPendingNonces = errorsmod.Register(ModuleName, 1121, "cannot find pending nonces")

@@ -30,6 +30,7 @@ func setupGasCoin(
 		assetName,
 		symbol,
 		8,
+		nil,
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)

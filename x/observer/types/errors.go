@@ -29,4 +29,5 @@ var (
 	ErrUnrecognizedBlockHeader = errorsmod.Register(ModuleName, 1118, "unrecognized block header")
 	ErrBlockAlreadyExist       = errorsmod.Register(ModuleName, 1119, "block already exists")
 	ErrNoParentHash            = errorsmod.Register(ModuleName, 1120, "no parent hash")
+	ErrInvalidTimestamp        = errorsmod.Register(ModuleName, 1121, "invalid timestamp")
 )
