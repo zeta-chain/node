@@ -3,3 +3,4 @@ package.json
 yarn.lock
 .github/
 .gitignore
+dist/**
