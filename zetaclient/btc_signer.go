@@ -74,7 +74,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 		estimateFee = float64(gasPrice.Uint64()) * outTxBytesMin / 1e8
 	}
 
-	nonceMark := NonceMarkAmount(nonce)
+	nonceMark := common.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
 	err := btcClient.FetchUTXOS()
@@ -106,6 +106,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	}
 
 	// size checking
+	// #nosec G701 check as positive
 	txSize := uint64(tx.SerializeSize())
 	if txSize > sizeLimit { // ZRC20 'withdraw' charged less fee from end user
 		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
@@ -120,6 +121,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	}
 
 	// fee calculation
+	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
 	fees.Div(fees, big.NewInt(bytesPerKB))
 	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s", nonce, gasPrice.String(), txSize, fees.String())

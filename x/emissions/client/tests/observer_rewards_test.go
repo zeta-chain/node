@@ -38,7 +38,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Collect parameter values and build assertion map for the randomised ballot set created
-	emissionFactors := emissionstypes.QueryGetEmmisonsFactorsResponse{}
+	emissionFactors := emissionstypes.QueryGetEmissionsFactorsResponse{}
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionFactors))
@@ -53,7 +53,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 	_, err = s.network.WaitForHeight(s.ballots[0].BallotCreationHeight + observerParams.Params.BallotMaturityBlocks)
 	s.Require().NoError(err)
 	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
-	resFactorsNewBlocks := emissionstypes.QueryGetEmmisonsFactorsResponse{}
+	resFactorsNewBlocks := emissionstypes.QueryGetEmissionsFactorsResponse{}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
 	// Duration factor is calculated in the same block,so we need to query based from the committed state at which the distribution is done

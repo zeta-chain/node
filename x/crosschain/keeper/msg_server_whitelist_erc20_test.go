@@ -57,6 +57,11 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		require.True(t, found)
 		require.EqualValues(t, fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
 
+		// check gas limit is set
+		gasLimit, err := zk.FungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(zrc20))
+		require.NoError(t, err)
+		require.Equal(t, uint64(100000), gasLimit.Uint64())
+
 		// Ensure that whitelist a new erc20 create a cctx with a different index
 		res, err = k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
