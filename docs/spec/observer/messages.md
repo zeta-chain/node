@@ -27,7 +27,7 @@ Only the admin policy account is authorized to broadcast this message.
 ```proto
 message MsgUpdateCoreParams {
 	string creator = 1;
-	CoreParams coreParams = 2;
+	common.CoreParams coreParams = 2;
 }
 ```
 

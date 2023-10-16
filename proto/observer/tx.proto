@@ -32,7 +32,7 @@ message MsgAddBlockHeaderResponse {}
 
 message MsgUpdateCoreParams {
   string creator = 1;
-  CoreParams coreParams = 2;
+  common.CoreParams coreParams = 2;
 }
 
 message MsgUpdateCoreParamsResponse {}

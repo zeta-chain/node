@@ -15,7 +15,7 @@ const TypeMsgUpdateClientParams = "update_client_params"
 
 var _ sdk.Msg = &MsgUpdateCoreParams{}
 
-func NewMsgUpdateCoreParams(creator string, coreParams *CoreParams) *MsgUpdateCoreParams {
+func NewMsgUpdateCoreParams(creator string, coreParams *common.CoreParams) *MsgUpdateCoreParams {
 	return &MsgUpdateCoreParams{
 		Creator:    creator,
 		CoreParams: coreParams,
@@ -52,7 +52,7 @@ func (msg *MsgUpdateCoreParams) ValidateBasic() error {
 }
 
 // ValidateCoreParams performs some basic checks on core params
-func ValidateCoreParams(params *CoreParams) error {
+func ValidateCoreParams(params *common.CoreParams) error {
 	if params == nil {
 		return fmt.Errorf("core params cannot be nil")
 	}

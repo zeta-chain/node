@@ -10,9 +10,9 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func GetCoreParams() CoreParamsList {
-	params := CoreParamsList{
-		CoreParams: []*CoreParams{
+func GetCoreParams() common.CoreParamsList {
+	params := common.CoreParamsList{
+		CoreParams: []*common.CoreParams{
 			{
 				ChainId:                     common.EthChain().ChainId,
 				ConfirmationCount:           14,

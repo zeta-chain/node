@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -23,14 +24,14 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) SetCoreParams(ctx sdk.Context, coreParams types.CoreParamsList) {
+func (k Keeper) SetCoreParams(ctx sdk.Context, coreParams common.CoreParamsList) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&coreParams)
 	key := types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams))
 	store.Set(key, b)
 }
 
-func (k Keeper) GetAllCoreParams(ctx sdk.Context) (val types.CoreParamsList, found bool) {
+func (k Keeper) GetAllCoreParams(ctx sdk.Context) (val common.CoreParamsList, found bool) {
 	found = false
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams)))
@@ -42,15 +43,15 @@ func (k Keeper) GetAllCoreParams(ctx sdk.Context) (val types.CoreParamsList, fou
 	return
 }
 
-func (k Keeper) GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (*types.CoreParams, bool) {
+func (k Keeper) GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (*common.CoreParams, bool) {
 	allCoreParams, found := k.GetAllCoreParams(ctx)
 	if !found {
-		return &types.CoreParams{}, false
+		return &common.CoreParams{}, false
 	}
 	for _, coreParams := range allCoreParams.CoreParams {
 		if coreParams.ChainId == chainID {
 			return coreParams, true
 		}
 	}
-	return &types.CoreParams{}, false
+	return &common.CoreParams{}, false
 }

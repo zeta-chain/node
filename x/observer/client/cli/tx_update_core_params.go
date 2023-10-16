@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -25,7 +26,7 @@ func CmdUpdateCoreParams() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var clientParams types.CoreParams
+			var clientParams common.CoreParams
 			file, err := filepath.Abs(argCoreParams)
 			if err != nil {
 				return err

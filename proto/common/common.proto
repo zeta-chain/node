@@ -86,3 +86,20 @@ message Proof {
     bitcoin.Proof bitcoin_proof = 2;
   }
 }
+
+message CoreParamsList {
+  repeated CoreParams core_params = 1;
+}
+message CoreParams {
+  uint64 confirmation_count = 1;
+  uint64 gas_price_ticker = 2;
+  uint64 in_tx_ticker = 3;
+  uint64 out_tx_ticker = 4;
+  uint64 watch_utxo_ticker = 5;
+  string zeta_token_contract_address = 8;
+  string connector_contract_address = 9;
+  string erc20_custody_contract_address = 10;
+  int64 chain_id = 11;
+  int64 outbound_tx_schedule_interval = 12;
+  int64 outbound_tx_schedule_lookahead = 13;
+}

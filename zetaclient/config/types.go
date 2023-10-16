@@ -22,13 +22,13 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	observertypes.CoreParams
+	common.CoreParams
 	Chain    common.Chain
 	Endpoint string
 }
 
 type BTCConfig struct {
-	observertypes.CoreParams
+	CoreParams common.CoreParams
 
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
@@ -130,15 +130,15 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 	if c.BitcoinConfig == nil { // bitcoin is not enabled
 		return common.Chain{}, BTCConfig{}, false
 	}
-	chain := common.GetChainFromChainID(c.BitcoinConfig.ChainId)
+	chain := common.GetChainFromChainID(c.BitcoinConfig.CoreParams.ChainId)
 	if chain == nil {
-		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.ChainId))
+		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.CoreParams.ChainId))
 	}
 	return *chain, *c.BitcoinConfig, true
 }
 
 // This is the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool, logger zerolog.Logger) {
+func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*common.CoreParams, btcCoreParams *common.CoreParams, init bool, logger zerolog.Logger) {
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
@@ -215,7 +215,7 @@ func (c *Config) Clone() *Config {
 }
 
 // ValidateCoreParams performs some basic checks on core params
-func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
+func ValidateCoreParams(coreParams *common.CoreParams) error {
 	if coreParams == nil {
 		return fmt.Errorf("invalid core params: nil")
 	}
