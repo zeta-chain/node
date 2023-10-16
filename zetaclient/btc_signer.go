@@ -70,9 +70,6 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	btcClient *BitcoinChainClient, height uint64, nonce uint64, chain *common.Chain, cointype common.CoinType) (*wire.MsgTx, error) {
 
 	estimateFee := float64(gasPrice.Uint64()) * outTxBytesMax / 1e8
-	if cointype == common.CoinType_Cmd {
-		estimateFee = float64(gasPrice.Uint64()) * outTxBytesMin / 1e8
-	}
 
 	nonceMark := common.NonceMarkAmount(nonce)
 
