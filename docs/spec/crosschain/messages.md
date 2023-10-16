@@ -231,3 +231,13 @@ message MsgUpdateTssAddress {
 }
 ```
 
+## MsgMigrateTssFunds
+
+```proto
+message MsgMigrateTssFunds {
+	string creator = 1;
+	int64 chain_id = 2;
+	string amount = 3;
+}
+```
+
