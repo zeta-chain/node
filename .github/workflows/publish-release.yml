@@ -3,8 +3,8 @@ name: Publish Release
 on:
   push:
     tags:
-      - "v*.*.*"
-
+      - "v*.*.*"  
+      
 concurrency:
   group: publish-release
   cancel-in-progress: false
