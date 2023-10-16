@@ -4,4 +4,3 @@ yarn.lock
 .github/
 .gitignore
 dist/**
-```

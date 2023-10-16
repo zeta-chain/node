@@ -138,7 +138,7 @@ W
       - goos: windows
         goarch: arm64
     flags: &default_mainnet_flags
-      - -tags=MAINNET,pebbledb,ledger,cgo
+      - -tags=pebbledb,ledger,cgo
     ldflags: *default_ldflags
 
   - id: "zetaclientd_mainnet"
