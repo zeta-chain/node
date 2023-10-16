@@ -29,7 +29,6 @@ RUN cp $GOPATH/bin/smoketest $GOPATH/bin/new/
 
 # Checkout and build old binary
 RUN cd node && git checkout ${old_version}
-RUN cd node && git pull
 RUN cd node && make install
 RUN cd node && make install-smoketest
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
