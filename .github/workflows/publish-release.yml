@@ -4,9 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"  
-    branches:
-      - ci-mainnet-builds
-
+      
 concurrency:
   group: publish-release
   cancel-in-progress: false
