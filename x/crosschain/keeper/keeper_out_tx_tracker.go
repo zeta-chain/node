@@ -3,10 +3,13 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strings"
 
 	cosmoserrors "cosmossdk.io/errors"
 
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -15,6 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -120,17 +124,15 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	var outTxTrackers []types.OutTxTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", req.Chain)))
 
-	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(chainStore, req.Pagination, func(key []byte, value []byte) error {
 		var outTxTracker types.OutTxTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-		if outTxTracker.ChainId == req.Chain {
-			outTxTrackers = append(outTxTrackers, outTxTracker)
-		}
+		outTxTrackers = append(outTxTrackers, outTxTracker)
 		return nil
 	})
 
@@ -183,43 +185,36 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 	proven := false
 	if msg.Proof != nil {
-		blockHash := eth.HexToHash(msg.BlockHash)
-		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash.Bytes())
+		blockHash, err := common.StringToHash(msg.ChainId, msg.BlockHash)
+		if err != nil {
+			return nil, cosmoserrors.Wrap(err, "block hash conversion failed")
+		}
+		res, found := k.zetaObserverKeeper.GetBlockHeader(ctx, blockHash)
 		if !found {
 			return nil, cosmoserrors.Wrap(observertypes.ErrBlockHeaderNotFound, fmt.Sprintf("block header not found %s", msg.BlockHash))
 		}
 
-		// verify and process the proof
-		val, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
+		// verify outTx merkle proof
+		txBytes, err := msg.Proof.Verify(res.Header, int(msg.TxIndex))
 		if err != nil && !common.IsErrorInvalidProof(err) {
 			return nil, err
 		}
 		if err == nil {
-			var txx ethtypes.Transaction
-			err = txx.UnmarshalBinary(val)
+			tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
 			if err != nil {
 				return nil, err
 			}
-			signer := ethtypes.NewLondonSigner(txx.ChainId())
-			sender, err := ethtypes.Sender(signer, &txx)
+			// verify outTx transaction body
+			if common.IsEVMChain(msg.ChainId) {
+				err = ValidateEVMOutTxBody(msg, txBytes, tss.Eth)
+			} else if common.IsBitcoinChain(msg.ChainId) {
+				err = ValidateBTCOutTxBody(msg, txBytes, tss.Btc)
+			} else {
+				return nil, fmt.Errorf("unsupported chain id %d", msg.ChainId)
+			}
 			if err != nil {
 				return nil, err
 			}
-			res, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
-			if err != nil {
-				return nil, err
-			}
-			tssAddr := eth.HexToAddress(res.Eth)
-			if tssAddr == (eth.Address{}) {
-				return nil, fmt.Errorf("tss address not found")
-			}
-			if sender != tssAddr {
-				return nil, fmt.Errorf("sender is not tss address")
-			}
-			if txx.Nonce() != msg.Nonce {
-				return nil, fmt.Errorf("nonce mismatch")
-			}
-			proven = true
 		}
 
 		if !proven {
@@ -266,6 +261,76 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		k.SetOutTxTracker(ctx, tracker)
 	}
 	return &types.MsgAddToOutTxTrackerResponse{}, nil
+}
+
+// ValidateEVMOutTxBody validates the sender address, nonce and chain ID.
+// Note: 'msg' may contain fabricated information
+func ValidateEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEth string) error {
+	var txx ethtypes.Transaction
+	err := txx.UnmarshalBinary(txBytes)
+	if err != nil {
+		return err
+	}
+	signer := ethtypes.NewLondonSigner(txx.ChainId())
+	sender, err := ethtypes.Sender(signer, &txx)
+	if err != nil {
+		return err
+	}
+	tssAddr := eth.HexToAddress(tssEth)
+	if tssAddr == (eth.Address{}) {
+		return fmt.Errorf("tss address not found")
+	}
+	if sender != tssAddr {
+		return fmt.Errorf("sender %s is not tss address", sender)
+	}
+	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
+		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
+	}
+	if txx.Nonce() != msg.Nonce {
+		return fmt.Errorf("want nonce %d, got %d", txx.Nonce(), msg.Nonce)
+	}
+	if txx.Hash().Hex() != msg.TxHash {
+		return fmt.Errorf("want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
+	}
+	return nil
+}
+
+// ValidateBTCOutTxBody validates the SegWit sender address, nonce and chain ID.
+// Note: 'msg' may contain fabricated information
+func ValidateBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
+	tx, err := btcutil.NewTxFromBytes(txBytes)
+	if err != nil {
+		return err
+	}
+	for _, vin := range tx.MsgTx().TxIn {
+		if len(vin.Witness) != 2 { // outTx is SegWit transaction for now
+			return fmt.Errorf("not a SegWit transaction")
+		}
+		pubKey, err := btcec.ParsePubKey(vin.Witness[1], btcec.S256())
+		if err != nil {
+			return fmt.Errorf("failed to parse public key")
+		}
+		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitconNetParams)
+		if err != nil {
+			return fmt.Errorf("failed to create P2WPKH address")
+		}
+		if addrP2WPKH.EncodeAddress() != tssBtc {
+			return fmt.Errorf("sender %s is not tss address", addrP2WPKH.EncodeAddress())
+		}
+	}
+	if common.BtcChainID() != msg.ChainId {
+		return fmt.Errorf("want btc chain id %d, got %d", common.BtcChainID(), msg.ChainId)
+	}
+	if len(tx.MsgTx().TxOut) < 1 {
+		return fmt.Errorf("outTx should have at least one output")
+	}
+	if tx.MsgTx().TxOut[0].Value != common.NonceMarkAmount(msg.Nonce) {
+		return fmt.Errorf("want nonce mark %d, got %d", tx.MsgTx().TxOut[0].Value, common.NonceMarkAmount(msg.Nonce))
+	}
+	if tx.MsgTx().TxHash().String() != msg.TxHash {
+		return fmt.Errorf("want tx hash %s, got %s", tx.MsgTx().TxHash(), msg.TxHash)
+	}
+	return nil
 }
 
 // RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
