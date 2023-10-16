@@ -419,7 +419,7 @@ func New(
 	)
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register governance hooks
+		// register governance hooks
 		),
 	)
 
