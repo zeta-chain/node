@@ -39,7 +39,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -89,7 +88,7 @@ type EVMChainClient struct {
 	fileLogger                *zerolog.Logger // for critical info
 	logger                    EVMLog
 	cfg                       *config.Config
-	params                    observertypes.CoreParams
+	params                    common.CoreParams
 	ts                        *TelemetryServer
 
 	BlockCache *lru.Cache
@@ -176,13 +175,13 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	return &ob, nil
 }
 
-func (ob *EVMChainClient) SetCoreParams(params observertypes.CoreParams) {
+func (ob *EVMChainClient) SetCoreParams(params common.CoreParams) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 	ob.params = params
 }
 
-func (ob *EVMChainClient) GetCoreParams() observertypes.CoreParams {
+func (ob *EVMChainClient) GetCoreParams() common.CoreParams {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 	return ob.params

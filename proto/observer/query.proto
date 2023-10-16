@@ -158,13 +158,13 @@ message QueryGetCoreParamsForChainRequest {
 }
 
 message QueryGetCoreParamsForChainResponse {
-  CoreParams core_params = 1;
+  common.CoreParams core_params = 1;
 }
 
 message QueryGetCoreParamsRequest {}
 
 message QueryGetCoreParamsResponse {
-  CoreParamsList core_params = 1;
+  common.CoreParamsList core_params = 1;
 }
 
 message QueryGetNodeAccountRequest {

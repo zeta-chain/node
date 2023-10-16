@@ -34,16 +34,16 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (zetaObserverTypes.CrosschainFlags
 	return resp.CrosschainFlags, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*zetaObserverTypes.CoreParams, error) {
+func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*common.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	resp, err := client.GetCoreParamsForChain(context.Background(), &zetaObserverTypes.QueryGetCoreParamsForChainRequest{ChainId: externalChainID})
 	if err != nil {
-		return &zetaObserverTypes.CoreParams{}, err
+		return &common.CoreParams{}, err
 	}
 	return resp.CoreParams, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParams() ([]*zetaObserverTypes.CoreParams, error) {
+func (b *ZetaCoreBridge) GetCoreParams() ([]*common.CoreParams, error) {
 	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
 	var err error
 	resp := &zetaObserverTypes.QueryGetCoreParamsResponse{}

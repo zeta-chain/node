@@ -22,13 +22,13 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	observertypes.CoreParams
+	common.CoreParams
 	Chain    common.Chain
 	Endpoint string
 }
 
 type BTCConfig struct {
-	observertypes.CoreParams
+	common.CoreParams
 
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
@@ -138,7 +138,7 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 }
 
 // This is the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool, logger zerolog.Logger) {
+func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*common.CoreParams, btcCoreParams *common.CoreParams, init bool, logger zerolog.Logger) {
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
@@ -215,7 +215,7 @@ func (c *Config) Clone() *Config {
 }
 
 // ValidateCoreParams performs some basic checks on core params
-func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
+func ValidateCoreParams(coreParams *common.CoreParams) error {
 	if coreParams == nil {
 		return fmt.Errorf("invalid core params: nil")
 	}

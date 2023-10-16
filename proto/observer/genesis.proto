@@ -1,6 +1,7 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
+import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/ballot.proto";
 import "observer/crosschain_flags.proto";
@@ -19,5 +20,5 @@ message GenesisState {
   Params params = 5;
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
-  CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
+  common.CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
 }

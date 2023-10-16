@@ -50341,6 +50341,47 @@ definitions:
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
        - Cmd: not a real coin, rather a command
+  commonCoreParams:
+    type: object
+    properties:
+      confirmation_count:
+        type: string
+        format: uint64
+      gas_price_ticker:
+        type: string
+        format: uint64
+      in_tx_ticker:
+        type: string
+        format: uint64
+      out_tx_ticker:
+        type: string
+        format: uint64
+      watch_utxo_ticker:
+        type: string
+        format: uint64
+      zeta_token_contract_address:
+        type: string
+      connector_contract_address:
+        type: string
+      erc20_custody_contract_address:
+        type: string
+      chain_id:
+        type: string
+        format: int64
+      outbound_tx_schedule_interval:
+        type: string
+        format: int64
+      outbound_tx_schedule_lookahead:
+        type: string
+        format: int64
+  commonCoreParamsList:
+    type: object
+    properties:
+      core_params:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/commonCoreParams'
   commonHeaderData:
     type: object
     properties:
@@ -50985,47 +51026,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerCoreParams:
-    type: object
-    properties:
-      confirmation_count:
-        type: string
-        format: uint64
-      gas_price_ticker:
-        type: string
-        format: uint64
-      in_tx_ticker:
-        type: string
-        format: uint64
-      out_tx_ticker:
-        type: string
-        format: uint64
-      watch_utxo_ticker:
-        type: string
-        format: uint64
-      zeta_token_contract_address:
-        type: string
-      connector_contract_address:
-        type: string
-      erc20_custody_contract_address:
-        type: string
-      chain_id:
-        type: string
-        format: int64
-      outbound_tx_schedule_interval:
-        type: string
-        format: int64
-      outbound_tx_schedule_lookahead:
-        type: string
-        format: int64
-  observerCoreParamsList:
-    type: object
-    properties:
-      core_params:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerCoreParams'
   observerCrosschainFlags:
     type: object
     properties:
@@ -51229,12 +51229,12 @@ definitions:
     type: object
     properties:
       core_params:
-        $ref: '#/definitions/observerCoreParams'
+        $ref: '#/definitions/commonCoreParams'
   observerQueryGetCoreParamsResponse:
     type: object
     properties:
       core_params:
-        $ref: '#/definitions/observerCoreParamsList'
+        $ref: '#/definitions/commonCoreParamsList'
   observerQueryGetCrosschainFlagsResponse:
     type: object
     properties:

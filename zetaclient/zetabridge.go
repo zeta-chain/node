@@ -36,7 +36,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/app"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -187,8 +186,8 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		return err
 	}
 
-	newEVMParams := make(map[int64]*observertypes.CoreParams)
-	var newBTCParams *observertypes.CoreParams
+	newEVMParams := make(map[int64]*common.CoreParams)
+	var newBTCParams *common.CoreParams
 
 	// check and update core params for each chain
 	for _, params := range coreParams {

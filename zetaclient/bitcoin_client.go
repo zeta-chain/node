@@ -28,7 +28,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -63,7 +62,7 @@ type BitcoinChainClient struct {
 	includedTxResults map[string]btcjson.GetTransactionResult // key: chain-tss-nonce
 	broadcastedTx     map[string]string                       // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
-	params            observertypes.CoreParams
+	params            common.CoreParams
 
 	db     *gorm.DB
 	stop   chan struct{}
@@ -80,13 +79,13 @@ const (
 	bytesPerKB       = 1000
 )
 
-func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
+func (ob *BitcoinChainClient) SetCoreParams(params common.CoreParams) {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 	ob.params = params
 }
 
-func (ob *BitcoinChainClient) GetCoreParams() observertypes.CoreParams {
+func (ob *BitcoinChainClient) GetCoreParams() common.CoreParams {
 	ob.mu.Lock()
 	defer ob.mu.Unlock()
 	return ob.params

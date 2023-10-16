@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -26,7 +27,7 @@ func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateC
 	if !found {
 		return &types.MsgUpdateCoreParamsResponse{}, types.ErrCoreParamsNotSet
 	}
-	newCoreParams := make([]*types.CoreParams, len(coreParams.CoreParams))
+	newCoreParams := make([]*common.CoreParams, len(coreParams.CoreParams))
 	for i, cp := range coreParams.CoreParams {
 		if cp.ChainId == msg.CoreParams.ChainId {
 			newCoreParams[i] = msg.CoreParams
@@ -34,6 +35,6 @@ func (k msgServer) UpdateCoreParams(goCtx context.Context, msg *types.MsgUpdateC
 		}
 		newCoreParams[i] = cp
 	}
-	k.SetCoreParams(ctx, types.CoreParamsList{CoreParams: newCoreParams})
+	k.SetCoreParams(ctx, common.CoreParamsList{CoreParams: newCoreParams})
 	return &types.MsgUpdateCoreParamsResponse{}, nil
 }

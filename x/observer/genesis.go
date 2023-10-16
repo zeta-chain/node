@@ -2,6 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -80,7 +81,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	coreParams, found := k.GetAllCoreParams(ctx)
 	if !found {
-		coreParams = types.CoreParamsList{}
+		coreParams = common.CoreParamsList{}
 	}
 
 	// Get all node accounts
