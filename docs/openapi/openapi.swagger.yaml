@@ -26841,6 +26841,11 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: tss_pub_key
+          in: query
+          required: false
+          type: string
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
@@ -50559,6 +50564,8 @@ definitions:
   crosschainMsgCreateTSSVoterResponse:
     type: object
   crosschainMsgGasPriceVoterResponse:
+    type: object
+  crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgNonceVoterResponse:
     type: object
