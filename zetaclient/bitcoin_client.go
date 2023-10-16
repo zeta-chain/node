@@ -76,8 +76,9 @@ type BitcoinChainClient struct {
 const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
-	btcBlocksPerDay  = 144
+	dustOffset       = 2000
 	bytesPerKB       = 1000
+	btcBlocksPerDay  = 144
 )
 
 func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
@@ -1004,7 +1005,7 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 //   - All inputs are from TSS address
 func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	// vins: [nonce-mark, UTXO1, UTXO2, ...]
-	if len(vins) <= 1 {
+	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
 	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())
@@ -1205,4 +1206,10 @@ func (ob *BitcoinChainClient) GetBlockByNumberCached(blockNumber int64) (*BTCBlo
 	ob.BlockCache.Add(blockNumber, blockNheader)
 	ob.BlockCache.Add(hash, blockNheader)
 	return blockNheader, nil
+}
+
+// A very special value to mark current nonce in UTXO
+func NonceMarkAmount(nonce uint64) int64 {
+	// #nosec G701 always in range
+	return int64(nonce) + config.DustOffset // +2000 to avoid being a dust rejection
 }

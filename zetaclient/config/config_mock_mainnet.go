@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	DustOffset              = 2000
 	BtcConfirmationCount    = 1
 	DevEthConfirmationCount = 2
 )
