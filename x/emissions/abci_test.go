@@ -21,7 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/testutil/simapp"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
-	types2 "github.com/zeta-chain/zetacore/x/emissions/types"
+	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 func getaZetaFromString(amount string) sdk.Coins {
@@ -29,7 +29,7 @@ func getaZetaFromString(amount string) sdk.Coins {
 	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionPoolInt))
 }
 
-func SetupApp(t *testing.T, params types2.Params, emissionPoolCoins sdk.Coins) (*zetaapp.App, sdk.Context, *tmtypes.ValidatorSet, *authtypes.BaseAccount) {
+func SetupApp(t *testing.T, params emissionsModuleTypes.Params, emissionPoolCoins sdk.Coins) (*zetaapp.App, sdk.Context, *tmtypes.ValidatorSet, *authtypes.BaseAccount) {
 	pk1 := ed25519.GenPrivKey().PubKey()
 	acc1 := authtypes.NewBaseAccountWithAddress(sdk.AccAddress(pk1.Address()))
 	// genDelActs and genDelBalances need to have the same addresses
@@ -78,7 +78,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 	tests := []struct {
 		name                 string
 		startingEmissionPool string
-		params               types2.Params
+		params               emissionsModuleTypes.Params
 		testMaxHeight        int64
 		inputFilename        string
 		checkValues          []EmissionTestData
@@ -86,7 +86,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 	}{
 		{
 			name:                 "default values",
-			params:               types2.DefaultParams(),
+			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "1000000000000000000000000",
 			testMaxHeight:        300,
 			inputFilename:        "simulations.json",
@@ -94,7 +94,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		},
 		{
 			name:                 "higher starting pool",
-			params:               types2.DefaultParams(),
+			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "100000000000000000000000000000000",
 			testMaxHeight:        300,
 			inputFilename:        "simulations.json",
@@ -102,7 +102,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		},
 		{
 			name:                 "lower starting pool",
-			params:               types2.DefaultParams(),
+			params:               emissionsModuleTypes.DefaultParams(),
 			startingEmissionPool: "100000000000000000",
 			testMaxHeight:        300,
 			inputFilename:        "simulations.json",
@@ -110,7 +110,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		},
 		{
 			name: "different distribution percentages",
-			params: types2.Params{
+			params: emissionsModuleTypes.Params{
 				MaxBondFactor:               "1.25",
 				MinBondFactor:               "0.75",
 				AvgBlockTime:                "6.00",
@@ -127,7 +127,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		},
 		{
 			name: "higher block time",
-			params: types2.Params{
+			params: emissionsModuleTypes.Params{
 				MaxBondFactor:               "1.25",
 				MinBondFactor:               "0.75",
 				AvgBlockTime:                "20.00",
@@ -144,7 +144,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 		},
 		{
 			name: "different duration constant",
-			params: types2.Params{
+			params: emissionsModuleTypes.Params{
 				MaxBondFactor:               "1.25",
 				MinBondFactor:               "0.75",
 				AvgBlockTime:                "6.00",
@@ -164,7 +164,7 @@ func TestAppModule_GetBlockRewardComponents(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			app, ctx, _, minter := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
-			err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, minter.GetAddress(), types2.ModuleName, getaZetaFromString(tt.startingEmissionPool))
+			err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, minter.GetAddress(), emissionsModuleTypes.ModuleName, getaZetaFromString(tt.startingEmissionPool))
 			assert.NoError(t, err)
 			GenerateTestDataMaths(app, ctx, tt.testMaxHeight, tt.inputFilename)
 			defer func(t *testing.T, fp string) {
@@ -223,7 +223,7 @@ func GetInputData(fp string) ([]EmissionTestData, error) {
 
 func GenerateTestDataMaths(app *zetaapp.App, ctx sdk.Context, testMaxHeight int64, fileName string) {
 	var generatedTestData []EmissionTestData
-	reserverCoins := app.BankKeeper.GetBalance(ctx, types2.EmissionsModuleAddress, config.BaseDenom)
+	reserverCoins := app.BankKeeper.GetBalance(ctx, emissionsModuleTypes.EmissionsModuleAddress, config.BaseDenom)
 	startHeight := ctx.BlockHeight()
 	for i := startHeight; i < testMaxHeight; i++ {
 		reservesFactor := sdk.NewDecFromInt(reserverCoins.Amount)
