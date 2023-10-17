@@ -77,16 +77,16 @@ func (k Keeper) BlockOneDeploySystemContracts(goCtx context.Context) error {
 	if err != nil {
 		return err
 	}
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.EthChain().ChainId, "ETH", "ETH", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.EthChain().ChainId, "ETH", "ETH", 18, nil)
 	if err != nil {
 		return errorsmod.Wrapf(err, fmt.Sprintf("failed to setupChainGasCoinAndPool for %s", common.EthChain().ChainName))
 	}
 
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.BscMainnetChain().ChainId, "BNB", "BNB", 18)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BscMainnetChain().ChainId, "BNB", "BNB", 18, nil)
 	if err != nil {
 		return errorsmod.Wrapf(err, fmt.Sprintf("failed to setupChainGasCoinAndPool for %s", common.BscMainnetChain().ChainName))
 	}
-	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcMainnetChain().ChainId, "BTC", "BTC", 8)
+	_, err = k.SetupChainGasCoinAndPool(ctx, common.BtcMainnetChain().ChainId, "BTC", "BTC", 8, nil)
 	if err != nil {
 		return errorsmod.Wrapf(err, fmt.Sprintf("failed to setupChainGasCoinAndPool for %s", common.BtcMainnetChain().ChainName))
 	}
