@@ -497,6 +497,26 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 					return true, false, nil
 				}
 			}
+		} else { //
+			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				transaction.Gas(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_ERC20,
+			)
+			if err != nil {
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+			}
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+			return true, true, nil
 		}
 	}
 
