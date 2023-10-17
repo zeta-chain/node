@@ -52,9 +52,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	if genState.Tss != nil {
-		if genState.Tss != nil {
-			k.SetTSS(ctx, *genState.Tss)
-		}
+		k.SetTSS(ctx, *genState.Tss)
 		for _, chain := range common.DefaultChainsList() {
 			k.SetPendingNonces(ctx, types.PendingNonces{
 				NonceLow:  0,
