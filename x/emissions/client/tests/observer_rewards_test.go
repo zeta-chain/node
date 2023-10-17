@@ -9,19 +9,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	emmisonscli "github.com/zeta-chain/zetacore/x/emissions/client/cli"
-	emmisonstypes "github.com/zeta-chain/zetacore/x/emissions/types"
-	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	emissionscli "github.com/zeta-chain/zetacore/x/emissions/client/cli"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (s *CliTestSuite) TestObserverRewards() {
 	emissionPool := "800000000000000000000azeta"
 	val := s.network.Validators[0]
 
-	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdListPoolAddresses(), []string{"--output", "json"})
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdListPoolAddresses(), []string{"--output", "json"})
 	s.Require().NoError(err)
-	resPools := emmisonstypes.QueryListPoolAddressesResponse{}
+	resPools := emissionstypes.QueryListPoolAddressesResponse{}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resPools))
 	txArgs := []string{
@@ -38,22 +38,22 @@ func (s *CliTestSuite) TestObserverRewards() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// Collect parameter values and build assertion map for the randomised ballot set created
-	emissionFactors := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
+	emissionFactors := emissionstypes.QueryGetEmissionsFactorsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionFactors))
-	emissionParams := emmisonstypes.QueryParamsResponse{}
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdQueryParams(), []string{"--output", "json"})
+	emissionParams := emissionstypes.QueryParamsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &emissionParams))
-	observerParams := observerTypes.QueryParamsResponse{}
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, observerCli.CmdQueryParams(), []string{"--output", "json"})
+	observerParams := observertypes.QueryParamsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, observercli.CmdQueryParams(), []string{"--output", "json"})
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &observerParams))
 	_, err = s.network.WaitForHeight(s.ballots[0].BallotCreationHeight + observerParams.Params.BallotMaturityBlocks)
 	s.Require().NoError(err)
-	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
-	resFactorsNewBlocks := emmisonstypes.QueryGetEmmisonsFactorsResponse{}
+	out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdGetEmmisonsFactors(), []string{"--output", "json"})
+	resFactorsNewBlocks := emissionstypes.QueryGetEmissionsFactorsResponse{}
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resFactorsNewBlocks))
 	// Duration factor is calculated in the same block,so we need to query based from the committed state at which the distribution is done
@@ -62,9 +62,9 @@ func (s *CliTestSuite) TestObserverRewards() {
 	asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
 
 	// Assert withdrawable rewards for each validator
-	resAvailable := emmisonstypes.QueryShowAvailableEmissionsResponse{}
+	resAvailable := emissionstypes.QueryShowAvailableEmissionsResponse{}
 	for i := 0; i < len(s.network.Validators); i++ {
-		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emmisonscli.CmdShowAvailableEmissions(), []string{s.network.Validators[i].Address.String(), "--output", "json"})
+		out, err = clitestutil.ExecTestCLICmd(val.ClientCtx, emissionscli.CmdShowAvailableEmissions(), []string{s.network.Validators[i].Address.String(), "--output", "json"})
 		s.Require().NoError(err)
 		s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &resAvailable))
 		s.Require().Equal(sdk.NewCoin(config.BaseDenom, asertValues[s.network.Validators[i].Address.String()]).String(), resAvailable.Amount, "Validator %s has incorrect withdrawable rewards", s.network.Validators[i].Address.String())
@@ -72,7 +72,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 
 }
 
-func CalculateObserverRewards(ballots []*observerTypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
+func CalculateObserverRewards(ballots []*observertypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
 	calculatedDistributer := map[string]sdkmath.Int{}
 	blockRewards := sdk.MustNewDecFromStr(reservesFactor).Mul(sdk.MustNewDecFromStr(bondFactor)).Mul(sdk.MustNewDecFromStr(durationFactor))
 	observerRewards := sdk.MustNewDecFromStr(observerEmissionPercentage).Mul(blockRewards).TruncateInt()

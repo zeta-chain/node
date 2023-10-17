@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/ethereum/go-ethereum/common"
@@ -47,6 +48,13 @@ import (
 
 const (
 	messageSizeLimit = 32 * 1024 * 1024 // 32MB
+
+)
+
+var (
+	readTimeout  = 15 * time.Second // Time to read the request
+	writeTimeout = 15 * time.Second // Time to write the response
+	idleTimeout  = 60 * time.Second // Max time for connections using TCP Keep-Alive
 )
 
 type WebsocketsServer interface {
@@ -111,13 +119,21 @@ func (s *websocketsServer) Start() {
 	ws := mux.NewRouter()
 	ws.Handle("/", s)
 
+	// configuring the HTTP server
+	server := &http.Server{
+		Addr:         s.wsAddr,
+		Handler:      ws,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  idleTimeout,
+	}
+
 	go func() {
 		var err error
-		/* #nosec G114 -- http functions have no support for timeouts */
 		if s.certFile == "" || s.keyFile == "" {
-			err = http.ListenAndServe(s.wsAddr, ws)
+			err = server.ListenAndServe()
 		} else {
-			err = http.ListenAndServeTLS(s.wsAddr, s.certFile, s.keyFile, ws)
+			err = server.ListenAndServeTLS(s.certFile, s.keyFile)
 		}
 
 		if err != nil {

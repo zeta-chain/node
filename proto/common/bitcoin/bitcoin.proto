@@ -1,0 +1,10 @@
+syntax = "proto3";
+package bitcoin;
+
+option go_package = "github.com/zeta-chain/zetacore/common/bitcoin";
+
+message Proof {
+  bytes tx_bytes = 1;
+  bytes path = 2;
+  uint32 index = 3;
+}

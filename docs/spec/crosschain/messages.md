@@ -207,6 +207,9 @@ message MsgVoteOnObservedInboundTx {
 
 ## MsgWhitelistERC20
 
+WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
+and emit a crosschain tx to whitelist the ERC20 on the external chain
+
 ```proto
 message MsgWhitelistERC20 {
 	string creator = 1;
@@ -225,6 +228,16 @@ message MsgWhitelistERC20 {
 message MsgUpdateTssAddress {
 	string creator = 1;
 	string tss_pubkey = 2;
+}
+```
+
+## MsgMigrateTssFunds
+
+```proto
+message MsgMigrateTssFunds {
+	string creator = 1;
+	int64 chain_id = 2;
+	string amount = 3;
 }
 ```
 

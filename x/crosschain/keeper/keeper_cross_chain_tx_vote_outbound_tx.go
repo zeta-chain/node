@@ -73,9 +73,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain)
-	if !ok {
-		return nil, err
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 
 	// Check if CCTX exists
@@ -227,9 +226,13 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
 
+	if gasLimit == gasUsed {
+		return nil
+	}
+
 	// We skip gas stability pool funding if one of the params is zero
 	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
-		if gasLimit >= gasUsed {
+		if gasLimit > gasUsed {
 			remainingGas := gasLimit - gasUsed
 			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
 

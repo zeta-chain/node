@@ -31,22 +31,27 @@ const (
 	DefaultRetryInterval            = 5
 )
 
-func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner) {
+func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner, error) {
 	msgURL := sdk.MsgTypeURL(msg)
+
+	// verify message validity
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, AuthZSigner{}, fmt.Errorf("%s invalid msg | %s", msgURL, err.Error())
+	}
+
 	authzSigner := GetSigner(msgURL)
 	authzMessage := authz.NewMsgExec(authzSigner.GranteeAddress, []sdk.Msg{msg})
-	return &authzMessage, authzSigner
+	return &authzMessage, authzSigner, nil
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("GasPriceVote invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
-
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(PostGasPriceGasLimit, authzMsg, authzSigner)
@@ -71,11 +76,11 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("AddTxHashToOutTxTracker invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
 
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	zetaTxHash, err := b.Broadcast(AddTxHashToOutTxTrackerGasLimit, authzMsg, authzSigner)
 	if err != nil {
 		return "", err
@@ -115,11 +120,10 @@ func (b *ZetaCoreBridge) PostSend(
 		asset,
 	)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("VoteOnObservedInboundTx invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
-
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
@@ -171,11 +175,11 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 		coinType,
 	)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("VoteOnObservedOutboundTx invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
 
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.
 	var gasLimit uint64 = PostReceiveConfirmationGasLimit
@@ -198,13 +202,11 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("CreateTSSVoter invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
 
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-
-	var err error
 	zetaTxHash := ""
 	for i := 0; i <= DefaultRetryCount; i++ {
 		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
@@ -245,11 +247,11 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	}
 	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("PostBlameData invalid msg | %s", err.Error())
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
 
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	var gasLimit uint64 = PostBlameDataGasLimit
 
 	for i := 0; i < DefaultRetryCount; i++ {
@@ -263,15 +265,15 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error) {
+func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, height int64, header common.HeaderData) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, txhash, height, header)
 
-	if err := msg.ValidateBasic(); err != nil {
-		return "", fmt.Errorf("AddBlockHeader invalid msg | %s", err.Error())
+	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, blockHash, height, header)
+
+	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	if err != nil {
+		return "", err
 	}
-
-	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 
 	var gasLimit uint64 = DefaultGasLimit
 	for i := 0; i < DefaultRetryCount; i++ {

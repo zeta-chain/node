@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -29,19 +30,18 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
@@ -62,23 +62,49 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_ERC20,
 			assetAddress,
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
 		require.Equal(t, big.NewInt(42), balance)
+	})
+
+	t.Run("should fail if trying to call a contract with data to a EOC", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := common.DefaultChainsList()
+		chain := chainList[0]
+		assetAddress := sample.EthAddress().String()
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", assetAddress, "foobar")
+
+		// deposit
+		to := sample.EthAddress()
+		_, _, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			to,
+			big.NewInt(42),
+			chain,
+			[]byte("DEADBEEF"),
+			common.CoinType_ERC20,
+			assetAddress,
+		)
+		require.ErrorIs(t, err, types.ErrCallNonContract)
 	})
 
 	t.Run("can deposit coin for transfers with liquidity cap not reached", func(t *testing.T) {
@@ -109,19 +135,18 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err = k.ZRC20DepositAndCallContract(
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(500),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
+		require.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
 		require.NoError(t, err)
@@ -156,14 +181,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit (500 + 501 > 1000)
 		to := sample.EthAddress()
-		_, err = k.ZRC20DepositAndCallContract(
+		_, _, err = k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(501),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -184,14 +207,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
@@ -212,14 +233,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// deposit
 		to := sample.EthAddress()
-		_, err := k.ZRC20DepositAndCallContract(
+		_, _, err := k.ZRC20DepositAndCallContract(
 			ctx,
 			sample.EthAddress().Bytes(),
 			to,
 			big.NewInt(42),
 			chain,
-			"",
-			sample.EthAddress(),
 			[]byte{},
 			common.CoinType_ERC20,
 			assetAddress,
@@ -227,6 +246,76 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		require.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
 	})
 
-	// TODO: add test cases checking DepositZRC20AndCallContract
-	// https://github.com/zeta-chain/node/issues/1206
+	t.Run("should return contract call if receiver is a contract", func(t *testing.T) {
+		// setup gas coin
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := common.DefaultChainsList()
+		chain := chainList[0]
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+
+		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+
+		// deposit
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			example,
+			big.NewInt(42),
+			chain,
+			[]byte{},
+			common.CoinType_Gas,
+			sample.EthAddress().String(),
+		)
+		require.NoError(t, err)
+		require.True(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
+		require.NoError(t, err)
+		require.Equal(t, big.NewInt(42), balance)
+
+		// check onCrossChainCall() hook was called
+		assertExampleBarValue(t, ctx, k, example, 42)
+	})
+
+	t.Run("should fail if call contract fails", func(t *testing.T) {
+		// setup gas coin
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := common.DefaultChainsList()
+		chain := chainList[0]
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+
+		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
+
+		// deposit
+		_, contractCall, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			reverter,
+			big.NewInt(42),
+			chain,
+			[]byte{},
+			common.CoinType_Gas,
+			sample.EthAddress().String(),
+		)
+		require.Error(t, err)
+		require.True(t, contractCall)
+
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
+		require.NoError(t, err)
+		require.EqualValues(t, int64(0), balance.Int64())
+	})
 }
