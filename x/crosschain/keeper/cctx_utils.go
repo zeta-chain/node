@@ -86,3 +86,22 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 
 	return nil
 }
+
+// GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
+// It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
+func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
+	if cctx.InboundTxParams == nil {
+		return 0, nil
+	} else if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
+
+		// get the gas limit of the gas token
+
+		//k.fungibleKeeper.QueryGasLimit(ctx, )
+		
+		return 0, nil
+	} else if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
+
+		// get the gas limit of the associated asset
+	}
+	return 0, nil
+}
