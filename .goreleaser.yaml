@@ -63,24 +63,24 @@ builds:
       - -X github.com/zeta-chain/zetacore/common.BuildTime=={{ .Env.BUILDTIME }}
       - -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb 
 
-  - id: "zetaclientd_testnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_testnet-{{ .Os }}-{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - linux
-      # - darwin
-      # - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_testnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_testnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_testnet-{{ .Os }}-{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - linux
+  #     # - darwin
+  #     # - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_testnet_flags
+  #   ldflags: *default_ldflags
 
   - id: "zetacored_mock_mainnet"
     main: ./cmd/zetacored
@@ -102,24 +102,24 @@ builds:
       - -tags=MOCK_MAINNET,pebbledb,ledger,cgo
     ldflags: *default_ldflags
 
-  - id: "zetaclientd_mock_mainnet"
-    main: ./cmd/zetaclientd
-    binary: "zetaclientd_mock_mainnet-{{ .Os }}-{{ .Arch }}"
-    env:
-      - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
-      - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
-    goos:
-      - linux
-      # - darwin
-      # - windows
-    goarch:
-      - arm64
-      - amd64
-    ignore:
-      - goos: windows
-        goarch: arm64
-    flags: *default_mock_mainnet_flags
-    ldflags: *default_ldflags
+  # - id: "zetaclientd_mock_mainnet"
+  #   main: ./cmd/zetaclientd
+  #   binary: "zetaclientd_mock_mainnet-{{ .Os }}-{{ .Arch }}"
+  #   env:
+  #     - 'CC={{ index .Env (print "CC_" .Os "_" .Arch) }}'
+  #     - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
+  #   goos:
+  #     - linux
+  #     # - darwin
+  #     # - windows
+  #   goarch:
+  #     - arm64
+  #     - amd64
+  #   ignore:
+  #     - goos: windows
+  #       goarch: arm64
+  #   flags: *default_mock_mainnet_flags
+  #   ldflags: *default_ldflags
 
   - id: "zetacored_mainnet"
     main: ./cmd/zetacored
@@ -129,7 +129,7 @@ builds:
       - 'CXX={{ index .Env (print "CXX_" .Os "_" .Arch) }}'
     goos:
       - linux
-      - darwin
+      # - darwin
       - windows
     goarch:
       - arm64

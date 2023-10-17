@@ -62,18 +62,18 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          generate_release_notes: true
-
       - name: Publish Release Files
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
         run: |
           touch .release-env
           make release
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          generate_release_notes: true
 
       ## TODO - Will add in later after optimizing docker images
       # - name: Build, tag, and push docker images
