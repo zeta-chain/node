@@ -128,7 +128,7 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 				Nonce:   nonce,
 				TxHash:  outTxid,
 			}
-			err = keeper.ValidateBTCOutTxBody(msg, txBytes, tssAddress)
+			err = keeper.VerifyBTCOutTxBody(msg, txBytes, tssAddress)
 			require.NoError(t, err)
 		}
 		txns = append(txns, tx)
