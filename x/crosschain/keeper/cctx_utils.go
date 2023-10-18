@@ -92,16 +92,34 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
 	if cctx.InboundTxParams == nil {
 		return 0, nil
-	} else if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
+	}
+
+	if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
 
 		// get the gas limit of the gas token
+		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundTxParams.SenderChainId)
+		if !found {
+			return 0, types.ErrForeignCoinNotFound
+		}
+		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
+		if err != nil {
+			return 0, err
+		}
+		return gasLimit.Uint64(), nil
 
-		//k.fungibleKeeper.QueryGasLimit(ctx, )
-		
-		return 0, nil
 	} else if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
 
 		// get the gas limit of the associated asset
+		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
+		if !found {
+			return 0, types.ErrForeignCoinNotFound
+		}
+		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
+		if err != nil {
+			return 0, err
+		}
+		return gasLimit.Uint64(), nil
 	}
+
 	return 0, nil
 }
