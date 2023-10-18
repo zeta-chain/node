@@ -143,15 +143,23 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 
+			gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
+			if err != nil {
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "can't get revert tx gas limit"+err.Error())
+				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			}
+			if gasLimit == 0 {
+				// use same gas limit of outbound as a fallback -- should not happen
+				gasLimit = msg.GasLimit
+			}
+
 			// create new OutboundTxParams for the revert
 			revertTxParams := &types.OutboundTxParams{
-				Receiver:        cctx.InboundTxParams.Sender,
-				ReceiverChainId: cctx.InboundTxParams.SenderChainId,
-				Amount:          cctx.InboundTxParams.Amount,
-				CoinType:        cctx.InboundTxParams.CoinType,
-				// use same gas limit as outbound
-				//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
-				OutboundTxGasLimit: msg.GasLimit,
+				Receiver:           cctx.InboundTxParams.Sender,
+				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+				Amount:             cctx.InboundTxParams.Amount,
+				CoinType:           cctx.InboundTxParams.CoinType,
+				OutboundTxGasLimit: gasLimit,
 			}
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
 
