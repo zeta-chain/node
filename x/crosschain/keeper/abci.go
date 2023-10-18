@@ -56,7 +56,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 }
 
 // CheckAndUpdateCctxGasPrice checks if the retry interval is reached and updates the gas price if so
-// The function returns the gas price increase and the additional fees paid
+// The function returns the gas price increase and the additional fees paid from the gas stability pool
 func (k Keeper) CheckAndUpdateCctxGasPrice(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
