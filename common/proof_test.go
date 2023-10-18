@@ -5,12 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"bytes"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
@@ -65,7 +63,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
 		require.NoError(t, err)
-		header := unmarshalHeader(headerBytes)
+		header := unmarshalHeader(t, headerBytes)
 
 		// Deserialize the block bytes from base64
 		blockBytes, err := base64.StdEncoding.DecodeString(b.BlockBase64)
@@ -93,7 +91,7 @@ func BitcoinMerkleProofLiveTest(t *testing.T) {
 		// Get the block header
 		header, err := client.GetBlockHeader(blockHash)
 		require.NoError(t, err)
-		headerBytes := marshalHeader(header)
+		headerBytes := marshalHeader(t, header)
 		target := blockchain.CompactToBig(header.Bits)
 
 		// Get the block with verbose transactions
@@ -113,13 +111,9 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 	txBodies := [][]byte{}
 	for _, res := range blockVerbose.Tx {
 		txBytes, err := hex.DecodeString(res.Hex)
-		if err != nil {
-			log.Fatalf("error decoding transaction hex: %v", err)
-		}
+		require.NoError(t, err)
 		tx, err := btcutil.NewTxFromBytes(txBytes)
-		if err != nil {
-			log.Fatalf("error deserializing transaction: %v", err)
-		}
+		require.NoError(t, err)
 
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
@@ -139,26 +133,19 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 	mk := bitcoin.NewMerkle(txns)
 	for i := range txns {
 		path, index, err := mk.BuildMerkleProof(i)
-		if err != nil {
-			log.Fatalf("Error building merkle proof: %v", err)
-		}
+		require.NoError(t, err)
 
 		// True proof should verify
 		proof := common.NewBitcoinProof(txBodies[i], path, index)
 		txBytes, err := proof.Verify(common.NewBitcoinHeader(headerBytes), 0)
-		if err != nil {
-			log.Fatal("Merkle proof verification failed")
-		}
-		if !bytes.Equal(txBytes, txBodies[i]) {
-			log.Fatalf("Transaction body mismatch")
-		}
+		require.NoError(t, err)
+		require.Equal(t, txBytes, txBodies[i])
 
 		// Fake proof should not verify
 		fakeIndex := index ^ 0xffffffff // flip all bits
 		fakeProof := common.NewBitcoinProof(txBodies[i], path, fakeIndex)
 		txBytes, err = fakeProof.Verify(common.NewBitcoinHeader(headerBytes), 0)
-		if err == nil || txBytes != nil {
-			log.Fatalf("Merkle proof should not verify")
-		}
+		require.Error(t, err)
+		require.Nil(t, txBytes)
 	}
 }
