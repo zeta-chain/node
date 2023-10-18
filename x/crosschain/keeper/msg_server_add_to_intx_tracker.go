@@ -6,8 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	eth "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -31,9 +29,11 @@ func (k Keeper) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxT
 		if err != nil {
 			return nil, types.ErrCannotVerifyProof.Wrapf(err.Error())
 		}
-		err = k.VerifyInTxBody(ctx, msg, txBytes)
-		if err != nil {
-			return nil, types.ErrCannotVerifyProof.Wrapf(err.Error())
+
+		if common.IsEVMChain(msg.ChainId) {
+			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+		} else {
+			return nil, types.ErrCannotVerifyProof.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
 		}
 		isProven = true
 	}
@@ -51,54 +51,4 @@ func (k Keeper) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxT
 	return &types.MsgAddToInTxTrackerResponse{}, nil
 }
 
-// https://github.com/zeta-chain/node/issues/1254
-func (k Keeper) VerifyInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracker, txBytes []byte) error {
-	// get core params and tss address
-	coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
-	if !found {
-		return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
-	}
-	err := error(nil)
-	// verify message against transaction body
-	if common.IsEVMChain(msg.ChainId) {
-		err = k.VerifyEVMInTxBody(ctx, coreParams, msg, txBytes)
-	} else {
-		return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
-	}
-	return err
-}
-
-func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, coreParams *observertypes.CoreParams, msg *types.MsgAddToInTxTracker, txBytes []byte) error {
-	var txx ethtypes.Transaction
-	err := txx.UnmarshalBinary(txBytes)
-	if err != nil {
-		return err
-	}
-	switch msg.CoinType {
-	case common.CoinType_Zeta:
-		if txx.To().Hex() != coreParams.ConnectorContractAddress {
-			return fmt.Errorf("receiver is not connector contract for coin type %s", msg.CoinType)
-		}
-		return nil
-	case common.CoinType_ERC20:
-		if txx.To().Hex() != coreParams.Erc20CustodyContractAddress {
-			return fmt.Errorf("receiver is not erc20Custory contract for coin type %s", msg.CoinType)
-		}
-		return nil
-	case common.CoinType_Gas:
-		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
-		if err != nil {
-			return err
-		}
-		tssAddr := eth.HexToAddress(tss.Eth)
-		if tssAddr == (eth.Address{}) {
-			return fmt.Errorf("tss address not found")
-		}
-		if txx.To().Hex() != tssAddr.Hex() {
-			return fmt.Errorf("receiver is not tssAddress contract for coin type %s", msg.CoinType)
-		}
-		return nil
-	default:
-		return fmt.Errorf("coin type %s not supported", msg.CoinType)
-	}
-}
+// https://github.com/zeta-chain/node/issues/125

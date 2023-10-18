@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	eth "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -49,4 +51,47 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, chainID int64,
 		return nil, err
 	}
 	return txBytes, err
+}
+
+func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracker, txBytes []byte) error {
+	var txx ethtypes.Transaction
+	err := txx.UnmarshalBinary(txBytes)
+	if err != nil {
+		return err
+	}
+	switch msg.CoinType {
+	case common.CoinType_Zeta:
+		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+		if !found {
+			return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
+		}
+		if txx.To().Hex() != coreParams.ConnectorContractAddress {
+			return fmt.Errorf("receiver is not connector contract for coin type %s", msg.CoinType)
+		}
+		return nil
+	case common.CoinType_ERC20:
+		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+		if !found {
+			return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
+		}
+		if txx.To().Hex() != coreParams.Erc20CustodyContractAddress {
+			return fmt.Errorf("receiver is not erc20Custory contract for coin type %s", msg.CoinType)
+		}
+		return nil
+	case common.CoinType_Gas:
+		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+		if err != nil {
+			return err
+		}
+		tssAddr := eth.HexToAddress(tss.Eth)
+		if tssAddr == (eth.Address{}) {
+			return fmt.Errorf("tss address not found")
+		}
+		if txx.To().Hex() != tssAddr.Hex() {
+			return fmt.Errorf("receiver is not tssAddress contract for coin type %s", msg.CoinType)
+		}
+		return nil
+	default:
+		return fmt.Errorf("coin type %s not supported", msg.CoinType)
+	}
 }
