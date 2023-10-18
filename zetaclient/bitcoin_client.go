@@ -397,6 +397,13 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		return false, false, err
 	}
 
+	// Get original cctx parameters
+	params, err = ob.GetPendingCctxParams(nonce)
+	if err != nil {
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
+		return false, false, err
+	}
+
 	if !included {
 		if !broadcasted {
 			return false, false, nil
@@ -479,13 +486,13 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 }
 
 func (ob *BitcoinChainClient) PostGasPrice() error {
-	if ob.chain.ChainId == 18444 { //bitcoin regtest
+	if ob.chain.ChainId == 18444 { //bitcoin regtest; hardcode here since this RPC is not available on regtest
 		bn, err := ob.rpcClient.GetBlockCount()
 		if err != nil {
 			return err
 		}
 		// #nosec G701 always in range
-		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1000, "100", uint64(bn))
+		zetaHash, err := ob.zetaClient.PostGasPrice(ob.chain, 1, "100", uint64(bn))
 		if err != nil {
 			ob.logger.WatchGasPrice.Err(err).Msg("PostGasPrice:")
 			return err
@@ -519,8 +526,6 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return err
 	}
 	_ = zetaHash
-	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
-	_ = feeResult
 	return nil
 }
 
@@ -1050,7 +1055,7 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 //   - All inputs are from TSS address
 func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	// vins: [nonce-mark, UTXO1, UTXO2, ...]
-	if len(vins) <= 1 {
+	if nonce > 0 && len(vins) <= 1 {
 		return fmt.Errorf("checkTSSVin: len(vins) <= 1")
 	}
 	pubKeyTss := hex.EncodeToString(ob.Tss.PubKeyCompressedBytes())

@@ -114,17 +114,15 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	var outTxTrackers []types.OutTxTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", req.Chain)))
 
-	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(chainStore, req.Pagination, func(key []byte, value []byte) error {
 		var outTxTracker types.OutTxTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-		if outTxTracker.ChainId == req.Chain {
-			outTxTrackers = append(outTxTrackers, outTxTracker)
-		}
+		outTxTrackers = append(outTxTrackers, outTxTracker)
 		return nil
 	})
 

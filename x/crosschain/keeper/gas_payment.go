@@ -223,10 +223,12 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	)
 	gasObtained := amounts[2]
 
+	// FIXME: investigate small mismatches between gasObtained and outTxGasFee
+	// https://github.com/zeta-chain/node/issues/1303
 	// check if the final gas received after swap matches the gas fee defined
 	// if not there might be issues with the pool liquidity and it is safer from an accounting perspective to return an error
-	if gasObtained.Cmp(outTxGasFee.BigInt()) != 0 {
-		return cosmoserrors.Wrapf(types.ErrInvalidGasAmount, "gas obtained for burn (%s) not equal to gas fee(%s)", gasObtained, outTxGasFee)
+	if gasObtained.Cmp(outTxGasFee.BigInt()) == -1 {
+		return cosmoserrors.Wrapf(types.ErrInvalidGasAmount, "gas obtained for burn (%s) is lower than gas fee(%s)", gasObtained, outTxGasFee)
 	}
 
 	// burn the gas ZRC20
@@ -333,6 +335,9 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 			"zetaAmountIn", amounts[0],
 			"zrc20AmountOut", amounts[1],
 		)
+
+		// FIXME: investigate small mismatches between amounts[1] and outTxGasFee
+		// https://github.com/zeta-chain/node/issues/1303
 		err = k.fungibleKeeper.CallZRC20Burn(ctx, types.ModuleAddressEVM, gasZRC20, amounts[1], noEthereumTxEvent)
 		if err != nil {
 			return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to CallZRC20Burn")

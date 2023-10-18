@@ -26841,6 +26841,11 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: tss_pub_key
+          in: query
+          required: false
+          type: string
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
@@ -27922,6 +27927,21 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/fungibleQueryGetGasStabilityPoolAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/zetacore/fungible/gas_stability_pool_balance:
+    get:
+      summary: Queries all gas stability pool balances.
+      operationId: Query_GasStabilityPoolBalanceAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/fungibleQueryAllGasStabilityPoolBalanceResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50320,6 +50340,14 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  QueryAllGasStabilityPoolBalanceResponseBalance:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      balance:
+        type: string
   bitcoinProof:
     type: object
     properties:
@@ -50584,6 +50612,8 @@ definitions:
   crosschainMsgCreateTSSVoterResponse:
     type: object
   crosschainMsgGasPriceVoterResponse:
+    type: object
+  crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgNonceVoterResponse:
     type: object
@@ -50987,6 +51017,14 @@ definitions:
           $ref: '#/definitions/fungibleForeignCoins'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
+  fungibleQueryAllGasStabilityPoolBalanceResponse:
+    type: object
+    properties:
+      balances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/QueryAllGasStabilityPoolBalanceResponseBalance'
   fungibleQueryGetForeignCoinsResponse:
     type: object
     properties:
@@ -51002,8 +51040,6 @@ definitions:
   fungibleQueryGetGasStabilityPoolBalanceResponse:
     type: object
     properties:
-      contract_address:
-        type: string
       balance:
         type: string
   fungibleQueryGetSystemContractResponse:
