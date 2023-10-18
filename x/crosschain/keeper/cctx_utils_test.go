@@ -138,3 +138,24 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 		require.ErrorContains(t, err, "zrc not found")
 	})
 }
+
+func TestGetRevertGasLimit(t *testing.T) {
+	t.Run("should return 0 if no inbound tx params", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{})
+		require.NoError(t, err)
+		require.Equal(t, uint64(0), gasLimit)
+	})
+
+	t.Run("should return 0 if coin type is not gas or erc20", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: common.CoinType_Zeta,
+			}})
+		require.NoError(t, err)
+		require.Equal(t, uint64(0), gasLimit)
+	})
+}
