@@ -1,16 +1,17 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -95,7 +96,6 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 	}
 
 	if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
-
 		// get the gas limit of the gas token
 		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundTxParams.SenderChainId)
 		if !found {
@@ -103,12 +103,10 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 		}
 		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
 		return gasLimit.Uint64(), nil
-
 	} else if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
-
 		// get the gas limit of the associated asset
 		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
 		if !found {
@@ -116,7 +114,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 		}
 		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
 		if err != nil {
-			return 0, err
+			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
 		return gasLimit.Uint64(), nil
 	}
