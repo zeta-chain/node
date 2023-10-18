@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -103,9 +102,9 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 
 // IncreaseCctxGasPrice increases the gas price associated with a CCTX and updates it in the store
 func (k Keeper) IncreaseCctxGasPrice(ctx sdk.Context, cctx types.CrossChainTx, gasPriceIncrease math.Uint) error {
-	currentGasPrice, err := strconv.ParseUint(cctx.GetCurrentOutTxParam().OutboundTxGasPrice, 10, 64)
+	currentGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
 	if err != nil {
-		return fmt.Errorf("unable to parse cctx gas price %s: %s", cctx.GetCurrentOutTxParam().OutboundTxGasPrice, err.Error())
+		return err
 	}
 
 	// increase gas price and set last update timestamp
