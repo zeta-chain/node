@@ -14,7 +14,7 @@ import (
 )
 
 // TODO https://github.com/zeta-chain/node/issues/1269
-func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
+func (k Keeper) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
 	if chain == nil {
@@ -43,7 +43,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 		return nil, errorsmod.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 
-	k.Keeper.SetInTxTracker(ctx, types.InTxTracker{
+	k.SetInTxTracker(ctx, types.InTxTracker{
 		ChainId:  msg.ChainId,
 		TxHash:   msg.TxHash,
 		CoinType: msg.CoinType,
@@ -58,31 +58,22 @@ func (k Keeper) VerifyInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracker, 
 	if !found {
 		return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
 	}
-	tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
-	if err != nil {
-		return err
-	}
-
+	err := error(nil)
 	// verify message against transaction body
 	if common.IsEVMChain(msg.ChainId) {
-		err = VerifyEVMInTxBody(coreParams, msg, txBytes, tss.Eth)
+		err = k.VerifyEVMInTxBody(ctx, coreParams, msg, txBytes)
 	} else {
 		return fmt.Errorf("cannot verify inTx body for chain %d", msg.ChainId)
 	}
 	return err
 }
 
-func VerifyEVMInTxBody(coreParams *observertypes.CoreParams, msg *types.MsgAddToInTxTracker, txBytes []byte, tssEth string) error {
+func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, coreParams *observertypes.CoreParams, msg *types.MsgAddToInTxTracker, txBytes []byte) error {
 	var txx ethtypes.Transaction
 	err := txx.UnmarshalBinary(txBytes)
 	if err != nil {
 		return err
 	}
-	tssAddr := eth.HexToAddress(tssEth)
-	if tssAddr == (eth.Address{}) {
-		return fmt.Errorf("tss address not found")
-	}
-
 	switch msg.CoinType {
 	case common.CoinType_Zeta:
 		if txx.To().Hex() != coreParams.ConnectorContractAddress {
@@ -95,6 +86,14 @@ func VerifyEVMInTxBody(coreParams *observertypes.CoreParams, msg *types.MsgAddTo
 		}
 		return nil
 	case common.CoinType_Gas:
+		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+		if err != nil {
+			return err
+		}
+		tssAddr := eth.HexToAddress(tss.Eth)
+		if tssAddr == (eth.Address{}) {
+			return fmt.Errorf("tss address not found")
+		}
 		if txx.To().Hex() != tssAddr.Hex() {
 			return fmt.Errorf("receiver is not tssAddress contract for coin type %s", msg.CoinType)
 		}

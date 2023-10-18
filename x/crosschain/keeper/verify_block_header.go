@@ -48,6 +48,5 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, chainID int64,
 	if err != nil {
 		return nil, err
 	}
-
 	return txBytes, err
 }
