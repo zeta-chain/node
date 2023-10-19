@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -26,7 +25,7 @@ func TestTrueBitcoinHeader(t *testing.T) {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
 		require.NoError(t, err)
-		header := unmarshalHeader(headerBytes)
+		header := unmarshalHeader(t, headerBytes)
 
 		// Validate
 		validateTrueBitcoinHeader(t, header, headerBytes)
@@ -40,7 +39,7 @@ func TestFakeBitcoinHeader(t *testing.T) {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
 		require.NoError(t, err)
-		header := unmarshalHeader(headerBytes)
+		header := unmarshalHeader(t, headerBytes)
 
 		// Validate
 		validateFakeBitcoinHeader(t, header, headerBytes)
@@ -60,7 +59,7 @@ func BitcoinHeaderValidationLiveTest(t *testing.T) {
 		// Get the block header
 		header, err := client.GetBlockHeader(blockHash)
 		require.NoError(t, err)
-		headerBytes := marshalHeader(header)
+		headerBytes := marshalHeader(t, header)
 
 		// Validate true header
 		validateTrueBitcoinHeader(t, header, headerBytes)
@@ -101,21 +100,17 @@ func copyHeader(header *wire.BlockHeader) *wire.BlockHeader {
 	return copyHeader
 }
 
-func marshalHeader(header *wire.BlockHeader) []byte {
+func marshalHeader(t *testing.T, header *wire.BlockHeader) []byte {
 	var headerBuf bytes.Buffer
 	err := header.Serialize(&headerBuf)
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	return headerBuf.Bytes()
 }
 
-func unmarshalHeader(headerBytes []byte) *wire.BlockHeader {
+func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {
 	var header wire.BlockHeader
 	err := header.Deserialize(bytes.NewReader(headerBytes))
-	if err != nil {
-		log.Fatal(err)
-	}
+	require.NoError(t, err)
 	return &header
 }
 
@@ -136,52 +131,40 @@ func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerByt
 
 	// Incorrect header length should fail validation
 	err := common.ValidateBitcoinHeader(headerBytes[:79], blockHash[:], 18332)
-	if err == nil {
-		t.Error("Incorrect header length should fail validation")
-	}
+	require.Error(t, err)
 
 	// Incorrect version should fail validation
 	fakeHeader := copyHeader(header)
 	fakeHeader.Version = 0
-	fakeBytes := marshalHeader(fakeHeader)
+	fakeBytes := marshalHeader(t, fakeHeader)
 	fakeHash := fakeHeader.BlockHash()
 	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
-	if err == nil {
-		t.Error("Incorrect version should fail validation")
-	}
+	require.Error(t, err)
 
 	// Incorrect timestamp should fail validation
 	// Case1: timestamp is before genesis block
 	fakeHeader = copyHeader(header)
 	fakeHeader.Timestamp = chaincfg.TestNet3Params.GenesisBlock.Header.Timestamp.Add(-time.Second)
-	fakeBytes = marshalHeader(fakeHeader)
+	fakeBytes = marshalHeader(t, fakeHeader)
 	fakeHash = fakeHeader.BlockHash()
 	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
-	if err == nil {
-		t.Error("Timestamp before genesis should fail validation")
-	}
+	require.Error(t, err)
 	// Case2: timestamp is after 2 hours in the future
 	fakeHeader = copyHeader(header)
 	fakeHeader.Timestamp = header.Timestamp.Add(time.Second * (blockchain.MaxTimeOffsetSeconds + 1))
-	fakeBytes = marshalHeader(fakeHeader)
+	fakeBytes = marshalHeader(t, fakeHeader)
 	err = common.NewBitcoinHeader(fakeBytes).ValidateTimestamp(header.Timestamp)
-	if err == nil {
-		t.Error("Timestamp in future should fail validation")
-	}
+	require.Error(t, err)
 
 	// Incorrect block hash should fail validation
 	fakeHeader = copyHeader(header)
 	header.Nonce = 0
-	fakeBytes = marshalHeader(header)
+	fakeBytes = marshalHeader(t, header)
 	err = common.ValidateBitcoinHeader(fakeBytes, blockHash[:], 18332)
-	if err == nil {
-		t.Error("Incorrect block hash should fail validation")
-	}
+	require.Error(t, err)
 
 	// PoW not satisfied should fail validation
 	fakeHash = fakeHeader.BlockHash()
 	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
-	if err == nil {
-		t.Error("PoW not satisfied should fail validation")
-	}
+	require.Error(t, err)
 }

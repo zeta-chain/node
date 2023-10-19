@@ -20,7 +20,7 @@ import (
 
 // AddToOutTxTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
-func (k Keeper) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
+func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
 	if chain == nil {

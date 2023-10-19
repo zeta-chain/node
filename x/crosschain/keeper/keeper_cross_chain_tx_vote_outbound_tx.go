@@ -226,9 +226,13 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
 
+	if gasLimit == gasUsed {
+		return nil
+	}
+
 	// We skip gas stability pool funding if one of the params is zero
 	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
-		if gasLimit >= gasUsed {
+		if gasLimit > gasUsed {
 			remainingGas := gasLimit - gasUsed
 			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
 

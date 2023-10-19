@@ -18,8 +18,19 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
   //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
+
+message MsgMigrateTssFunds {
+  string creator = 1;
+  int64 chain_id = 2;
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+message MsgMigrateTssFundsResponse {}
 
 message MsgAddToInTxTracker {
   string creator = 1;
