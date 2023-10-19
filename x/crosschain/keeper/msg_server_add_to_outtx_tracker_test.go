@@ -24,7 +24,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		SetupTss(k, ctx)
-		_, err = k.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    tx.Hash().Hex(),
@@ -45,7 +46,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		SetupTss(k, ctx)
-		_, err = k.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   97,
 			TxHash:    tx.Hash().Hex(),
@@ -66,7 +68,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		SetupTss(k, ctx)
-		_, err = k.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx.Hash().Hex(),
@@ -87,7 +90,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		SetupTss(k, ctx)
-		_, err = k.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    "wrong_hash",
@@ -107,7 +111,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		SetupTss(k, ctx)
-		_, err = k.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx.Hash().Hex(),

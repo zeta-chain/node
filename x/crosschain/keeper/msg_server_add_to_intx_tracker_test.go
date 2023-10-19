@@ -13,6 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/common/ethereum"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -24,7 +25,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx.Hash().Hex(),
@@ -44,7 +46,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    "fake_hash",
@@ -64,7 +67,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   97,
 			TxHash:    tx.Hash().Hex(),
@@ -84,8 +88,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-
-		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx.Hash().Hex(),
@@ -102,7 +106,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
 		chainID := int64(5)
-		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx_hash,
@@ -121,7 +126,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := int64(5)
-		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    tx_hash,
@@ -140,7 +146,8 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := int64(5)
-		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    "Malicious TX HASH",
