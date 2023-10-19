@@ -124,6 +124,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		EmitEventInboundFinalized(ctx, &cctx)
 		// #nosec G701 always positive
 		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
 	// FinalizeInbound updates CCTX Prices and Nonce
