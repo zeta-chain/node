@@ -129,13 +129,20 @@ func (b *ZetaCoreBridge) Stop() {
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (uint64, uint64, error) {
-	ctx := b.GetContext()
+	ctx, err := b.GetContext()
+	if err != nil {
+		return 0, 0, err
+	}
 	address := b.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
-	ctx := b.GetContext()
+	ctx, err := b.GetContext()
+	if err != nil {
+		b.logger.Error().Err(err).Msg("fail to get context")
+		return
+	}
 	address := b.keys.GetAddress()
 	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	if err != nil {
