@@ -114,5 +114,5 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 
-	return gasPriceIncrease, additionalFees, err
+	return gasPriceIncrease, additionalFees, nil
 }
