@@ -117,7 +117,12 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 		b.logger.Error().Err(err).Msg("fail to get address from key")
 		return ctx, err
 	}
+
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
+	if b.keys.password != "" {
+		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", b.keys.password)))
+	}
+
 	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)
