@@ -44,6 +44,8 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListTssHistory(),
 		CmdListPendingNonces(),
 		CmdPendingCctx(),
+		CmdListInTxTrackerByChain(),
+		CmdListInTxTrackers(),
 	)
 
 	return cmd

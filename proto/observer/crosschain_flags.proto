@@ -14,8 +14,19 @@ message GasPriceIncreaseFlags {
   ];
   uint32 gasPriceIncreasePercent = 3;
 }
+message BlockHeaderVerificationFlags {
+  bool isEthTypeChainEnabled = 1;
+  bool isBtcTypeChainEnabled = 2;
+}
 
 message CrosschainFlags {
+  bool isInboundEnabled = 1;
+  bool isOutboundEnabled = 2;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
+  BlockHeaderVerificationFlags blockHeaderVerificationFlags = 4;
+}
+
+message LegacyCrosschainFlags {
   bool isInboundEnabled = 1;
   bool isOutboundEnabled = 2;
   GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;

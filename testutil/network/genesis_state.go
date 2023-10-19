@@ -166,6 +166,16 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	}
 
 	for i := 0; i < n; i++ {
+		inTxTracker := types.InTxTracker{
+			ChainId:  5,
+			TxHash:   fmt.Sprintf("txHash-%d", i),
+			CoinType: common.CoinType_Gas,
+		}
+		nullify.Fill(&inTxTracker)
+		state.InTxTrackerList = append(state.InTxTrackerList, inTxTracker)
+	}
+
+	for i := 0; i < n; i++ {
 		inTxHashToCctx := types.InTxHashToCctx{
 			InTxHash: strconv.Itoa(i),
 		}
