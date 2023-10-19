@@ -213,7 +213,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 	// Create BitcoinChainClient
 	client := &BitcoinChainClient{
 		Tss:               tss,
-		mu:                &sync.Mutex{},
+		Mu:                &sync.Mutex{},
 		includedTxResults: make(map[string]btcjson.GetTransactionResult),
 	}
 

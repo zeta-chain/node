@@ -30,8 +30,8 @@ var (
 	ErrNotEnoughGas      = errorsmod.Register(ModuleName, 1131, "not enough gas")
 	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1132, "not enough funds")
 
-	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1133, "Proof verification fail")
-	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1134, "Cannot find cctx")
+	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1133, "proof verification fail")
+	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1134, "cannot find cctx")
 	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1135, "Status not pending")
 
 	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1136, "cannot find gas params")
@@ -39,4 +39,7 @@ var (
 	ErrNoLiquidityPool     = errorsmod.Register(ModuleName, 1138, "no liquidity pool")
 	ErrInvalidCoinType     = errorsmod.Register(ModuleName, 1139, "invalid coin type")
 	ErrCannotMigrateTss    = errorsmod.Register(ModuleName, 1140, "Cannot migrate TSS funds")
+
+	ErrCannotVerifyProof      = errorsmod.Register(ModuleName, 1141, "cannot verify proof")
+	ErrTxBodyVerificationFail = errorsmod.Register(ModuleName, 1142, "transaction body verification fail")
 )

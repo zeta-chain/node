@@ -31,6 +31,11 @@ const (
 	DefaultRetryInterval            = 5
 )
 
+func GetInBoundVoteMessage(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, asset string, signerAddress string) *types.MsgVoteOnObservedInboundTx {
+	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+	return msg
+}
+
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner) {
 	msgURL := sdk.MsgTypeURL(msg)
 	authzSigner := GetSigner(msgURL)
@@ -66,11 +71,8 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(chainID int64, nonce uint64, tx
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, zetaGasLimit uint64, asset string) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, error) {
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
-
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
 		if err == nil {
@@ -79,7 +81,6 @@ func (b *ZetaCoreBridge) PostSend(sender string, senderChain int64, txOrigin str
 		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-
 	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
