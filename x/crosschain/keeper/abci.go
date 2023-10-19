@@ -91,12 +91,14 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	}
 	newGasPrice := math.NewUint(currentGasPrice).Add(gasPriceIncrease)
 
-	// check limit
-	if flags.GasPriceIncreaseMax > 0 {
-		limit := medianGasPrice.MulUint64(uint64(flags.GasPriceIncreaseMax)).QuoUint64(100)
-		if newGasPrice.GT(limit) {
-			return math.ZeroUint(), math.ZeroUint(), nil
-		}
+	// check limit -- use default limit if not set
+	gasPriceIncreaseMax := flags.GasPriceIncreaseMax
+	if gasPriceIncreaseMax == 0 {
+		gasPriceIncreaseMax = observertypes.DefaultGasPriceIncreaseFlags.GasPriceIncreaseMax
+	}
+	limit := medianGasPrice.MulUint64(uint64(gasPriceIncreaseMax)).QuoUint64(100)
+	if newGasPrice.GT(limit) {
+		return math.ZeroUint(), math.ZeroUint(), nil
 	}
 
 	// withdraw additional fees from the gas stability pool
@@ -110,7 +112,7 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	}
 
 	// set new gas price and last update timestamp
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = math.NewUint(currentGasPrice).Add(gasPriceIncrease).String()
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = newGasPrice.String()
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 

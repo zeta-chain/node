@@ -15,7 +15,7 @@ message GasPriceIncreaseFlags {
   uint32 gasPriceIncreasePercent = 3;
 
   // Maximum gas price increase in percent of the median gas price
-  // No limit if 0
+  // Default is used if 0
   uint32 gasPriceIncreaseMax = 4;
 }
 message BlockHeaderVerificationFlags {

@@ -33,7 +33,7 @@ type GasPriceIncreaseFlags struct {
 	RetryInterval           time.Duration `protobuf:"bytes,2,opt,name=retryInterval,proto3,stdduration" json:"retryInterval"`
 	GasPriceIncreasePercent uint32        `protobuf:"varint,3,opt,name=gasPriceIncreasePercent,proto3" json:"gasPriceIncreasePercent,omitempty"`
 	// Maximum gas price increase in percent of the median gas price
-	// No limit if 0
+	// Default is used if 0
 	GasPriceIncreaseMax uint32 `protobuf:"varint,4,opt,name=gasPriceIncreaseMax,proto3" json:"gasPriceIncreaseMax,omitempty"`
 }
 

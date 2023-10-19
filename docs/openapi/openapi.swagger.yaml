@@ -51174,7 +51174,7 @@ definitions:
         format: int64
         title: |-
           Maximum gas price increase in percent of the median gas price
-          No limit if 0
+          Default is used if 0
   observerKeygen:
     type: object
     properties:
