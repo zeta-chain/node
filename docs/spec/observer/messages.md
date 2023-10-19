@@ -52,6 +52,7 @@ message MsgUpdateCrosschainFlags {
 	bool isInboundEnabled = 3;
 	bool isOutboundEnabled = 4;
 	GasPriceIncreaseFlags gasPriceIncreaseFlags = 5;
+	BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
 }
 ```
 
