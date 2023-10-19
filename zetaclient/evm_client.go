@@ -497,7 +497,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 					return true, false, nil
 				}
 			}
-		} else { //
+		} else {
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
 			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
