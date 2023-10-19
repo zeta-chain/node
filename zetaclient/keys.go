@@ -86,13 +86,10 @@ func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
 	if len(zetaCoreHome) == 0 {
 		return nil, fmt.Errorf("zetaCoreHome is empty")
 	}
-	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
-	// Change to BackendFile with password!
-
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, cdc)
+	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendFile, cliDir, reader, cdc)
 }
 
 // GetSignerInfo return signer info
