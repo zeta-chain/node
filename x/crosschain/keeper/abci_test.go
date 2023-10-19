@@ -81,6 +81,33 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			expectedAdditionalFees:                 math.NewUint(100000), // gasLimit * increase
 		},
 		{
+			name: "skip if max limit reached",
+			cctx: types.CrossChainTx{
+				Index: "b0",
+				CctxStatus: &types.Status{
+					LastUpdateTimestamp: sampleTimestamp.Unix(),
+				},
+				OutboundTxParams: []*types.OutboundTxParams{
+					{
+						ReceiverChainId:    42,
+						OutboundTxGasLimit: 1000,
+						OutboundTxGasPrice: "100",
+					},
+				},
+			},
+			flags: observertypes.GasPriceIncreaseFlags{
+				EpochLength:             100,
+				RetryInterval:           time.Minute * 10,
+				GasPriceIncreasePercent: 200, // Increase gas price to 100+50*2 = 200
+				GasPriceIncreaseMax:     300, // Max gas price is 50*3 = 150
+			},
+			blockTimestamp:                         retryIntervalReached,
+			medianGasPrice:                         50,
+			expectWithdrawFromGasStabilityPoolCall: false,
+			expectedGasPriceIncrease:               math.NewUint(0),
+			expectedAdditionalFees:                 math.NewUint(0),
+		},
+		{
 			name: "skip if gas price is not set",
 			cctx: types.CrossChainTx{
 				Index: "b1",
