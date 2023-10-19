@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -21,6 +20,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 	tt := []struct {
 		name                                   string
 		cctx                                   types.CrossChainTx
+		flags                                  observertypes.GasPriceIncreaseFlags
 		blockTimestamp                         time.Time
 		medianGasPrice                         uint64
 		withdrawFromGasStabilityPoolReturn     error
@@ -44,12 +44,41 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         50,
 			withdrawFromGasStabilityPoolReturn:     nil,
 			expectWithdrawFromGasStabilityPoolCall: true,
 			expectedGasPriceIncrease:               math.NewUint(50),    // 100% medianGasPrice
 			expectedAdditionalFees:                 math.NewUint(50000), // gasLimit * increase
+		},
+		{
+			name: "can update gas price at max limit",
+			cctx: types.CrossChainTx{
+				Index: "a2",
+				CctxStatus: &types.Status{
+					LastUpdateTimestamp: sampleTimestamp.Unix(),
+				},
+				OutboundTxParams: []*types.OutboundTxParams{
+					{
+						ReceiverChainId:    42,
+						OutboundTxGasLimit: 1000,
+						OutboundTxGasPrice: "100",
+					},
+				},
+			},
+			flags: observertypes.GasPriceIncreaseFlags{
+				EpochLength:             100,
+				RetryInterval:           time.Minute * 10,
+				GasPriceIncreasePercent: 200, // Increase gas price to 100+50*2 = 200
+				GasPriceIncreaseMax:     400, // Max gas price is 50*4 = 200
+			},
+			blockTimestamp:                         retryIntervalReached,
+			medianGasPrice:                         50,
+			withdrawFromGasStabilityPoolReturn:     nil,
+			expectWithdrawFromGasStabilityPoolCall: true,
+			expectedGasPriceIncrease:               math.NewUint(100),    // 200% medianGasPrice
+			expectedAdditionalFees:                 math.NewUint(100000), // gasLimit * increase
 		},
 		{
 			name: "skip if gas price is not set",
@@ -66,6 +95,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         100,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -87,6 +117,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         100,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -108,6 +139,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalNotReached,
 			medianGasPrice:                         100,
 			expectWithdrawFromGasStabilityPoolCall: false,
@@ -129,6 +161,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			expectWithdrawFromGasStabilityPoolCall: false,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         0,
@@ -149,6 +182,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 					},
 				},
 			},
+			flags:                                  observertypes.DefaultGasPriceIncreaseFlags,
 			blockTimestamp:                         retryIntervalReached,
 			medianGasPrice:                         50,
 			expectWithdrawFromGasStabilityPoolCall: true,
@@ -164,6 +198,10 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			k, ctx := testkeeper.CrosschainKeeperAllMocks(t)
 			fungibleMock := testkeeper.GetCrosschainFungibleMock(t, k)
 			chainID := tc.cctx.GetCurrentOutTxParam().ReceiverChainId
+			previousGasPrice, err := tc.cctx.GetCurrentOutTxParam().GetGasPrice()
+			if err != nil {
+				previousGasPrice = 0
+			}
 
 			// set median gas price if not zero
 			if tc.medianGasPrice != 0 {
@@ -189,7 +227,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			}
 
 			// check and update gas price
-			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx, observertypes.DefaultGasPriceIncreaseFlags)
+			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx, tc.flags)
 
 			if tc.isError {
 				require.Error(t, err)
@@ -200,38 +238,16 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			// check values
 			require.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
 			require.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
+
+			// check cctx
+			if !tc.expectedGasPriceIncrease.IsZero() {
+				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
+				require.True(t, found)
+				newGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
+				require.NoError(t, err)
+				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
+				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
+			}
 		})
 	}
-}
-
-func TestKeeper_IncreaseCctxGasPrice(t *testing.T) {
-	k, ctx, _, _ := testkeeper.CrosschainKeeper(t)
-
-	t.Run("can increase gas", func(t *testing.T) {
-		// sample cctx
-		cctx := *sample.CrossChainTx(t, "foo")
-		previousGasPrice, ok := math.NewIntFromString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
-		require.True(t, ok)
-
-		// increase gas price
-		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewUint(42))
-		require.NoError(t, err)
-
-		// can retrieve cctx
-		cctx, found := k.GetCrossChainTx(ctx, "foo")
-		require.True(t, found)
-
-		// gas price increased
-		currentGasPrice, ok := math.NewIntFromString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
-		require.True(t, ok)
-		require.True(t, currentGasPrice.Equal(previousGasPrice.Add(math.NewInt(42))))
-	})
-
-	t.Run("fail if invalid cctx", func(t *testing.T) {
-		cctx := *sample.CrossChainTx(t, "foo")
-		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalid"
-		err := k.IncreaseCctxGasPrice(ctx, cctx, math.NewUint(42))
-		require.Error(t, err)
-	})
-
 }
