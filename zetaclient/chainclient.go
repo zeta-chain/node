@@ -22,4 +22,5 @@ type ChainClient interface {
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
 	GetTxID(nonce uint64) string
+	ExternalChainWatcherForNewInboundTrackerSuggestions()
 }

@@ -106,6 +106,11 @@ func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
 }
 
+// SupportMerkleProof returns true if the chain supports block header-based verification
+func (chain Chain) SupportMerkleProof() bool {
+	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
+}
+
 func IsBitcoinChain(chainID int64) bool {
 	return chainID == 18444 || // regtest
 		chainID == 18332 || //testnet
