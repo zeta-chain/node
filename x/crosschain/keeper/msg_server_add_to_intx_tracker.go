@@ -32,6 +32,9 @@ func (k Keeper) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxT
 
 		if common.IsEVMChain(msg.ChainId) {
 			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
+			if err != nil {
+				return nil, types.ErrCannotVerifyProof.Wrapf(err.Error())
+			}
 		} else {
 			return nil, types.ErrCannotVerifyProof.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
 		}

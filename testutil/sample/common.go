@@ -2,7 +2,6 @@ package sample
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -31,7 +30,7 @@ func PubKeySet() *common.PubKeySet {
 	return &pubKeySet
 }
 
-func Proof() (tx_index int64, block *ethtypes.Block, header ethtypes.Header, headerRLP []byte, proof *common.Proof, err error) {
+func Proof() (tx_index int64, block *ethtypes.Block, header ethtypes.Header, headerRLP []byte, proof *common.Proof, tx *ethtypes.Transaction, err error) {
 	tx_index = int64(9)
 	RPC_URL := "https://rpc.ankr.com/eth_goerli"
 	client, err := ethclient.Dial(RPC_URL)
@@ -40,7 +39,6 @@ func Proof() (tx_index int64, block *ethtypes.Block, header ethtypes.Header, hea
 	}
 	bn := int64(9889649)
 	block, err = client.BlockByNumber(context.Background(), big.NewInt(bn))
-	fmt.Println(block)
 	headerRLP, _ = rlp.EncodeToBytes(block.Header())
 	err = rlp.DecodeBytes(headerRLP, &header)
 	if err != nil {
@@ -55,5 +53,6 @@ func Proof() (tx_index int64, block *ethtypes.Block, header ethtypes.Header, hea
 		return
 	}
 	proof = common.NewEthereumProof(p)
+	tx = block.Transactions()[tx_index]
 	return
 }

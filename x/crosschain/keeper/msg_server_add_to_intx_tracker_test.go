@@ -1,3 +1,6 @@
+//go:build TESTNET
+// +build TESTNET
+
 package keeper_test
 
 import (
@@ -17,56 +20,88 @@ import (
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	t.Run("Add proof based tracker with correct proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
-		txHash := "string"
 		chainID := int64(5)
-		txIndex, block, header, headerRLP, proof, err := sample.Proof()
+		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
-			TxHash:    txHash,
+			TxHash:    tx.Hash().Hex(),
 			CoinType:  common.CoinType_Zeta,
 			Proof:     proof,
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
 		require.NoError(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.True(t, found)
+	})
+
+	t.Run("Fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := int64(5)
+		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
+		require.NoError(t, err)
+		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   sample.AccAddress(),
+			ChainId:   chainID,
+			TxHash:    "fake_hash",
+			CoinType:  common.CoinType_Zeta,
+			Proof:     proof,
+			BlockHash: block.Hash().Hex(),
+			TxIndex:   txIndex,
+		})
+		require.Error(t, err)
+		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
+		require.False(t, found)
+	})
+
+	t.Run("Fail to add proof based tracker with wrong chain id", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := int64(5)
+		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
+		require.NoError(t, err)
+		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   sample.AccAddress(),
+			ChainId:   97,
+			TxHash:    tx.Hash().Hex(),
+			CoinType:  common.CoinType_Zeta,
+			Proof:     proof,
+			BlockHash: block.Hash().Hex(),
+			TxIndex:   txIndex,
+		})
+		require.Error(t, err)
+		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
+		require.False(t, found)
 	})
 
 	t.Run("Fail to add proof based tracker with wrong proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
-		txHash := "string"
-		chainID := int64(1)
-		txIndex, block, header, headerRLP, _, err := sample.Proof()
+		chainID := int64(5)
+		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
 		require.NoError(t, err)
 		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 
 		_, err = k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
-			TxHash:    txHash,
+			TxHash:    tx.Hash().Hex(),
 			CoinType:  common.CoinType_Zeta,
 			Proof:     common.NewEthereumProof(ethereum.NewProof()),
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
 		require.Error(t, err)
-		_, found := k.GetInTxTracker(ctx, chainID, txHash)
+		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
 	t.Run("normal user submit without proof", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
-		chainID := int64(1)
+		chainID := int64(5)
 		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
@@ -80,12 +115,12 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
 		require.False(t, found)
 	})
-	t.Run("admin add  tx tracker with admin", func(t *testing.T) {
+	t.Run("admin add  tx tracker", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
-		chainID := int64(1)
+		chainID := int64(5)
 		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
@@ -104,7 +139,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
-		chainID := int64(1)
+		chainID := int64(5)
 		_, err := k.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
 			ChainId:   chainID,
@@ -123,6 +158,17 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 }
 
 func SetupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
+	params := zk.ObserverKeeper.GetParams(ctx)
+	params.ObserverParams = append(params.ObserverParams, &observerTypes.ObserverParams{
+		Chain: &common.Chain{
+			ChainId:   chainID,
+			ChainName: common.ChainName_goerli_testnet,
+		},
+		BallotThreshold:       sdk.OneDec(),
+		MinObserverDelegation: sdk.OneDec(),
+		IsSupported:           true,
+	})
+	zk.ObserverKeeper.SetParams(ctx, params)
 	zk.ObserverKeeper.SetBlockHeader(ctx, common.BlockHeader{
 		Height:     block.Number().Int64(),
 		Hash:       block.Hash().Bytes(),

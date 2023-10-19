@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
@@ -58,6 +59,12 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 	err := txx.UnmarshalBinary(txBytes)
 	if err != nil {
 		return err
+	}
+	if txx.Hash().Hex() != msg.TxHash {
+		return fmt.Errorf("want tx hash %s, got %s", txx.Hash().Hex(), msg.TxHash)
+	}
+	if txx.ChainId().Cmp(big.NewInt(msg.ChainId)) != 0 {
+		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
 	}
 	switch msg.CoinType {
 	case common.CoinType_Zeta:
