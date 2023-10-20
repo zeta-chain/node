@@ -23,7 +23,7 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	consolidationRank  = 20     // the rank below (or equal to) which we consolidate UTXOs
+	consolidationRank  = 10     // the rank below (or equal to) which we consolidate UTXOs
 	outTxBytesMin      = 400    // 500B is an estimated size for a 2-input, 3-output SegWit tx
 	outTxBytesMax      = 3250   // 3250B is an estimated size for a 21-input, 3-output SegWit tx
 	outTxBytesCap      = 10_000 // in case of accident
