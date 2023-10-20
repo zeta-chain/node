@@ -817,11 +817,15 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 //   - amount: The desired minimum total value of the selected UTXOs.
 //   - utxos2Spend: The maximum number of UTXOs to spend.
 //   - nonce: The nonce of the outbound transaction.
-//   - csldtRank: The rank below which UTXOs will be consolidated.
+//   - consolidateRank: The rank below which UTXOs will be consolidated.
 //   - test: true for unit test only.
 //
-// Returns: a sublist (includes previous nonce-mark) of UTXOs or an error if the qulifying sublist cannot be found.
-func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxos2Spend uint16, nonce uint64, csldtRank uint16, test bool) ([]btcjson.ListUnspentResult, float64, uint16, float64, error) {
+// Returns:
+//   - a sublist (includes previous nonce-mark) of UTXOs or an error if the qualifying sublist cannot be found.
+//   - the total value of the selected UTXOs.
+//   - the number of consolidated UTXOs.
+//   - the total value of the consolidated UTXOs.
+func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxosToSpend uint16, nonce uint64, consolidateRank uint16, test bool) ([]btcjson.ListUnspentResult, float64, uint16, float64, error) {
 	idx := -1
 	if nonce == 0 {
 		// for nonce = 0; make exception; no need to include nonce-mark utxo
@@ -845,10 +849,10 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxos2Spend uint16, no
 	total := 0.0
 	left, right := 0, 0
 	for total < amount && right < len(ob.utxos) {
-		if utxos2Spend > 0 { // expand sublist
+		if utxosToSpend > 0 { // expand sublist
 			total += ob.utxos[right].Amount
 			right++
-			utxos2Spend--
+			utxosToSpend--
 		} else { // pop the smallest utxo and append the current one
 			total -= ob.utxos[left].Amount
 			total += ob.utxos[right].Amount
@@ -875,13 +879,13 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxos2Spend uint16, no
 	}
 
 	// consolidate biggest possible UTXOs to maximize consolidated value
-	// consolidation happens only when there are more than 20 UTXOs
+	// consolidation happens only when there are more than (or equal to) consolidateRank (10) UTXOs
 	utxoRank, consolidatedUtxo, consolidatedValue := uint16(0), uint16(0), 0.0
-	for i := len(ob.utxos) - 1; i >= 0 && utxos2Spend > 0; i-- { // iterate over UTXOs big-to-small
+	for i := len(ob.utxos) - 1; i >= 0 && utxosToSpend > 0; i-- { // iterate over UTXOs big-to-small
 		if i != idx && (i < left || i >= right) { // exclude nonce-mark and already selected UTXOs
 			utxoRank++
-			if utxoRank >= csldtRank { // consolication starts from the 20-ranked UTXO based on value
-				utxos2Spend--
+			if utxoRank >= consolidateRank { // consolication starts from the 10-ranked UTXO based on value
+				utxosToSpend--
 				consolidatedUtxo++
 				total += ob.utxos[i].Amount
 				consolidatedValue += ob.utxos[i].Amount
