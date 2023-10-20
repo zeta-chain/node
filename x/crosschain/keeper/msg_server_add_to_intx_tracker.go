@@ -54,4 +54,3 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 	return &types.MsgAddToInTxTrackerResponse{}, nil
 }
 
-// https://github.com/zeta-chain/node/issues/125
