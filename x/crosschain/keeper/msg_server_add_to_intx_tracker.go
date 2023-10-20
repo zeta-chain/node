@@ -27,16 +27,16 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 	if !(isAdmin || isObserver) && msg.Proof != nil {
 		txBytes, err := k.VerifyProof(ctx, msg.Proof, msg.ChainId, msg.BlockHash, msg.TxIndex)
 		if err != nil {
-			return nil, types.ErrCannotVerifyProof.Wrapf(err.Error())
+			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
 		}
 
 		if common.IsEVMChain(msg.ChainId) {
 			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
 			if err != nil {
-				return nil, types.ErrCannotVerifyProof.Wrapf(err.Error())
+				return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 			}
 		} else {
-			return nil, types.ErrCannotVerifyProof.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
+			return nil, types.ErrTxBodyVerificationFail.Wrapf(fmt.Sprintf("cannot verify inTx body for chain %d", msg.ChainId))
 		}
 		isProven = true
 	}

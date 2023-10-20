@@ -19,12 +19,12 @@ import (
 )
 
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
-	t.Run("Add proof based tracker with correct proof", func(t *testing.T) {
+	t.Run("add proof based tracker with correct proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := int64(5)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
-		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -40,12 +40,12 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		require.True(t, found)
 	})
 
-	t.Run("Fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
+	t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := int64(5)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
-		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -56,17 +56,17 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		require.Error(t, err)
+		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
 
-	t.Run("Fail to add proof based tracker with wrong chain id", func(t *testing.T) {
+	t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := int64(5)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
-		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -77,17 +77,17 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		require.Error(t, err)
+		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
 
-	t.Run("Fail to add proof based tracker with wrong proof", func(t *testing.T) {
+	t.Run("fail to add proof based tracker with wrong proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := int64(5)
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
 		require.NoError(t, err)
-		SetupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
+		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -98,7 +98,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		require.Error(t, err)
+		require.ErrorIs(t, types.ErrProofVerificationFail, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
@@ -116,7 +116,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		require.Error(t, err)
+		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
 		require.False(t, found)
 	})
@@ -164,7 +164,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	})
 }
 
-func SetupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
+func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
 	params := zk.ObserverKeeper.GetParams(ctx)
 	params.ObserverParams = append(params.ObserverParams, &observerTypes.ObserverParams{
 		Chain: &common.Chain{
