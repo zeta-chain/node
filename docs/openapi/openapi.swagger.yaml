@@ -51169,6 +51169,12 @@ definitions:
       gasPriceIncreasePercent:
         type: integer
         format: int64
+      gasPriceIncreaseMax:
+        type: integer
+        format: int64
+        title: |-
+          Maximum gas price increase in percent of the median gas price
+          Default is used if 0
   observerKeygen:
     type: object
     properties:
