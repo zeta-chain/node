@@ -21,10 +21,10 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"gitlab.com/thorchain/tss/go-tss/p2p"
 
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/tss-lib-thor/ecdsa/keygen"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 
