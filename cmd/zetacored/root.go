@@ -129,7 +129,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddObserverAccountsCmd(),
-		AddTssToGenesisCmd(),
+		GetPubKeyCmd(),
 		CollectObserverInfoCmd(),
 		AddrConversionCmd(),
 		tmcli.NewCompletionCmd(rootCmd, true),

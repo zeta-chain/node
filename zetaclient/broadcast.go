@@ -120,7 +120,7 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	if b.keys.password != "" {
-		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", b.keys.password)))
+		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%s\n", b.keys.password)))
 	}
 
 	ctx = ctx.WithChainID(b.zetaChainID)
