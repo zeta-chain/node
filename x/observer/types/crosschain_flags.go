@@ -18,15 +18,17 @@ var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	GasPriceIncreaseMax: 500,
 }
 
+var DefaultBlockHeaderVerificationFlags = BlockHeaderVerificationFlags{
+	IsEthTypeChainEnabled: true,
+	IsBtcTypeChainEnabled: true,
+}
+
 // DefaultCrosschainFlags returns the default crosschain flags used when not defined
 func DefaultCrosschainFlags() *CrosschainFlags {
 	return &CrosschainFlags{
-		IsInboundEnabled:      true,
-		IsOutboundEnabled:     true,
-		GasPriceIncreaseFlags: &DefaultGasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: &BlockHeaderVerificationFlags{
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-		},
+		IsInboundEnabled:             true,
+		IsOutboundEnabled:            true,
+		GasPriceIncreaseFlags:        &DefaultGasPriceIncreaseFlags,
+		BlockHeaderVerificationFlags: &DefaultBlockHeaderVerificationFlags,
 	}
 }
