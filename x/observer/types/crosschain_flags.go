@@ -25,8 +25,8 @@ func DefaultCrosschainFlags() *CrosschainFlags {
 		IsOutboundEnabled:     true,
 		GasPriceIncreaseFlags: &DefaultGasPriceIncreaseFlags,
 		BlockHeaderVerificationFlags: &BlockHeaderVerificationFlags{
-			IsEthTypeChainEnabled: false,
-			IsBtcTypeChainEnabled: false,
+			IsEthTypeChainEnabled: true,
+			IsBtcTypeChainEnabled: true,
 		},
 	}
 }

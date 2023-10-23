@@ -29,10 +29,10 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, fmt.Errorf("block header verification flags not found")
 	}
 	if common.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
-		return nil, fmt.Errorf("proof verification not enabled for bitcoin chain")
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
 	}
 	if common.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
-		return nil, fmt.Errorf("proof verification not enabled for evm chain")
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
 	// add vote to ballot
