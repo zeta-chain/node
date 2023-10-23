@@ -25,6 +25,6 @@ func TestMigrateStore(t *testing.T) {
 	assert.NoError(t, err)
 	flags, found := k.GetCrosschainFlags(ctx)
 	assert.True(t, found)
-	assert.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
-	assert.False(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
+	assert.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
+	assert.True(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
 }
