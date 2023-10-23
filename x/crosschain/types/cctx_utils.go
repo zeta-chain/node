@@ -1,8 +1,11 @@
 package types
 
 import (
+	"fmt"
+	"strconv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // GetCurrentOutTxParam returns the current outbound tx params.
@@ -41,7 +44,17 @@ func GetAllAuthzZetaclientTxTypes() []string {
 		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
 		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
-		sdk.MsgTypeURL(&types.MsgAddBlameVote{}),
-		sdk.MsgTypeURL(&types.MsgAddBlockHeader{}),
+		sdk.MsgTypeURL(&observertypes.MsgAddBlameVote{}),
+		sdk.MsgTypeURL(&observertypes.MsgAddBlockHeader{}),
 	}
+}
+
+// GetGasPrice returns the gas price of the outbound tx
+func (m OutboundTxParams) GetGasPrice() (uint64, error) {
+	gasPrice, err := strconv.ParseUint(m.OutboundTxGasPrice, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("unable to parse cctx gas price %s: %s", m.OutboundTxGasPrice, err.Error())
+	}
+
+	return gasPrice, nil
 }

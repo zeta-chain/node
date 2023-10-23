@@ -320,8 +320,8 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	gasLimit := send.GetCurrentOutTxParam().OutboundTxGasLimit
-	if gasLimit < 50_000 {
-		gasLimit = 50_000
+	if gasLimit < 100_000 {
+		gasLimit = 100_000
 		logger.Warn().Msgf("gasLimit %d is too low; set to %d", send.GetCurrentOutTxParam().OutboundTxGasLimit, gasLimit)
 	}
 	if gasLimit > 1_000_000 {
