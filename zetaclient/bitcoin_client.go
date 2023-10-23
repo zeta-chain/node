@@ -815,12 +815,17 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 //
 // Parameters:
 //   - amount: The desired minimum total value of the selected UTXOs.
-//   - utxoCap: The maximum number of UTXOs to be selected.
+//   - utxos2Spend: The maximum number of UTXOs to spend.
 //   - nonce: The nonce of the outbound transaction.
+//   - consolidateRank: The rank below which UTXOs will be consolidated.
 //   - test: true for unit test only.
 //
-// Returns: a sublist (includes previous nonce-mark) of UTXOs or an error if the qulifying sublist cannot be found.
-func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce uint64, test bool) ([]btcjson.ListUnspentResult, float64, error) {
+// Returns:
+//   - a sublist (includes previous nonce-mark) of UTXOs or an error if the qualifying sublist cannot be found.
+//   - the total value of the selected UTXOs.
+//   - the number of consolidated UTXOs.
+//   - the total value of the consolidated UTXOs.
+func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxosToSpend uint16, nonce uint64, consolidateRank uint16, test bool) ([]btcjson.ListUnspentResult, float64, uint16, float64, error) {
 	idx := -1
 	if nonce == 0 {
 		// for nonce = 0; make exception; no need to include nonce-mark utxo
@@ -830,24 +835,24 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 		// for nonce > 0; we proceed only when we see the nonce-mark utxo
 		preTxid, err := ob.getOutTxidByNonce(nonce-1, test)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, 0, 0, err
 		}
 		ob.Mu.Lock()
 		defer ob.Mu.Unlock()
 		idx, err = ob.findNonceMarkUTXO(nonce-1, preTxid)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, 0, 0, err
 		}
 	}
 
-	// select utxos
+	// select smallest possible UTXOs to make payment
 	total := 0.0
 	left, right := 0, 0
 	for total < amount && right < len(ob.utxos) {
-		if utxoCap > 0 { // expand sublist
+		if utxosToSpend > 0 { // expand sublist
 			total += ob.utxos[right].Amount
 			right++
-			utxoCap--
+			utxosToSpend--
 		} else { // pop the smallest utxo and append the current one
 			total -= ob.utxos[left].Amount
 			total += ob.utxos[right].Amount
@@ -858,8 +863,8 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 	results := make([]btcjson.ListUnspentResult, right-left)
 	copy(results, ob.utxos[left:right])
 
-	// Note: always put nonce-mark as 1st input
-	if idx >= 0 {
+	// include nonce-mark as the 1st input
+	if idx >= 0 { // for nonce > 0
 		if idx < left || idx >= right {
 			total += ob.utxos[idx].Amount
 			results = append([]btcjson.ListUnspentResult{ob.utxos[idx]}, results...)
@@ -870,9 +875,26 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxoCap uint8, nonce u
 		}
 	}
 	if total < amount {
-		return nil, 0, fmt.Errorf("SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v", total, amount)
+		return nil, 0, 0, 0, fmt.Errorf("SelectUTXOs: not enough btc in reserve - available : %v , tx amount : %v", total, amount)
 	}
-	return results, total, nil
+
+	// consolidate biggest possible UTXOs to maximize consolidated value
+	// consolidation happens only when there are more than (or equal to) consolidateRank (10) UTXOs
+	utxoRank, consolidatedUtxo, consolidatedValue := uint16(0), uint16(0), 0.0
+	for i := len(ob.utxos) - 1; i >= 0 && utxosToSpend > 0; i-- { // iterate over UTXOs big-to-small
+		if i != idx && (i < left || i >= right) { // exclude nonce-mark and already selected UTXOs
+			utxoRank++
+			if utxoRank >= consolidateRank { // consolication starts from the 10-ranked UTXO based on value
+				utxosToSpend--
+				consolidatedUtxo++
+				total += ob.utxos[i].Amount
+				consolidatedValue += ob.utxos[i].Amount
+				results = append(results, ob.utxos[i])
+			}
+		}
+	}
+
+	return results, total, consolidatedUtxo, consolidatedValue, nil
 }
 
 // Save successfully broadcasted transaction
