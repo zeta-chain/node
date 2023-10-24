@@ -4,16 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-
-	"cosmossdk.io/math"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/wire"
-	"github.com/pkg/errors"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
-
-	math2 "math"
+	"math"
 	"math/big"
 	"os"
 	"sort"
@@ -21,10 +12,14 @@ import (
 	"sync"
 	"sync/atomic"
 
+	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -32,6 +27,9 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var _ ChainClient = &BitcoinChainClient{}
@@ -44,14 +42,14 @@ type BTCLog struct {
 	WatchGasPrice zerolog.Logger
 }
 
-// Chain configuration struct
+// BitcoinChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BitcoinChainClient struct {
 	*ChainMetrics
 
 	chain            common.Chain
-	rpcClient        *rpcclient.Client
-	zetaClient       *ZetaCoreBridge
+	rpcClient        BTCRPCClient
+	zetaClient       ZetaCoreBridger
 	Tss              TSSSigner
 	lastBlock        int64
 	lastBlockScanned int64
@@ -121,8 +119,17 @@ func (ob *BitcoinChainClient) GetCoreParams() observertypes.CoreParams {
 	return ob.params
 }
 
-// Return configuration based on supplied target chain
-func NewBitcoinClient(chain common.Chain, bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, btcCfg config.BTCConfig, ts *TelemetryServer) (*BitcoinChainClient, error) {
+// NewBitcoinClient returns a new configuration based on supplied target chain
+func NewBitcoinClient(
+	chain common.Chain,
+	bridge ZetaCoreBridger,
+	tss TSSSigner,
+	dbpath string,
+	metrics *metricsPkg.Metrics,
+	logger zerolog.Logger,
+	btcCfg config.BTCConfig,
+	ts *TelemetryServer,
+) (*BitcoinChainClient, error) {
 	ob := BitcoinChainClient{
 		ChainMetrics: NewChainMetrics(chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -205,7 +212,7 @@ func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
@@ -216,7 +223,7 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	return height
@@ -226,7 +233,7 @@ func (ob *BitcoinChainClient) SetLastBlockHeightScanned(block int64) {
 	if block < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, block)
@@ -238,7 +245,7 @@ func (ob *BitcoinChainClient) GetLastBlockHeightScanned() int64 {
 	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	return height
@@ -281,14 +288,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
-	if cnt < 0 || cnt >= math2.MaxInt64 {
+	if cnt < 0 || cnt >= math.MaxInt64 {
 		return fmt.Errorf("block count is out of range: %d", cnt)
 	}
 
 	// "confirmed" current block number
 	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
-	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxInt64 {
+	if confirmedBlockNum < 0 || confirmedBlockNum > math.MaxInt64 {
 		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
 	}
 	ob.SetLastBlockHeight(confirmedBlockNum)
@@ -365,7 +372,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	return nil
 }
 
-// Returns number of required Bitcoin confirmations depending on sent BTC amount.
+// ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	if amount.Cmp(big.NewInt(200000000)) >= 0 {
 		return 6
@@ -373,7 +380,7 @@ func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 	return 2
 }
 
-// returns isIncluded(or inMempool), isConfirmed, Error
+// IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
 func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
@@ -509,7 +516,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if feeResult.Errors != nil || feeResult.FeeRate == nil {
 		return fmt.Errorf("error getting gas price: %s", feeResult.Errors)
 	}
-	if *feeResult.FeeRate > math2.MaxInt64 {
+	if *feeResult.FeeRate > math.MaxInt64 {
 		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 	}
 	// #nosec G701 always in range
@@ -538,7 +545,7 @@ type BTCInTxEvnet struct {
 	TxHash      string
 }
 
-// given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
+// FilterAndParseIncomingTx given txs list returned by the "getblock 2" RPC command, return the txs that are relevant to us
 // relevant tx must have the following vouts as the first two vouts:
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
@@ -572,14 +579,14 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 		inTx.FromAddress,
 		inTx.FromAddress,
 		common.ZetaChain().ChainId,
-		math.NewUintFromBigInt(amountInt),
+		cosmosmath.NewUintFromBigInt(amountInt),
 		message,
 		inTx.TxHash,
 		inTx.BlockNumber,
 		0,
 		common.CoinType_Gas,
 		"",
-		ob.zetaClient.keys.GetOperatorAddress().String(),
+		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 	)
 }
 
@@ -811,7 +818,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 	return -1, fmt.Errorf("findNonceMarkUTXO: cannot find nonce-mark utxo with nonce %d", nonce)
 }
 
-// Selects a sublist of utxos to be used as inputs.
+// SelectUTXOs selects a sublist of utxos to be used as inputs.
 //
 // Parameters:
 //   - amount: The desired minimum total value of the selected UTXOs.
@@ -897,7 +904,7 @@ func (ob *BitcoinChainClient) SelectUTXOs(amount float64, utxosToSpend uint16, n
 	return results, total, consolidatedUtxo, consolidatedValue, nil
 }
 
-// Save successfully broadcasted transaction
+// SaveBroadcastedTx saves successfully broadcasted transaction
 func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 	outTxID := ob.GetTxID(nonce)
 	ob.Mu.Lock()
@@ -1072,7 +1079,7 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 	}
 }
 
-// Vin is valid if:
+// checkTSSVin checks vin is valid if:
 //   - The first input is the nonce-mark
 //   - All inputs are from TSS address
 func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
@@ -1104,7 +1111,7 @@ func (ob *BitcoinChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) erro
 	return nil
 }
 
-// Vout is valid if:
+// checkTSSVout vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)

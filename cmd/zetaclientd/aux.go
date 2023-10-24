@@ -33,7 +33,12 @@ func CreateZetaBridge(cfg *config.Config) (*zetaclient.ZetaCoreBridge, error) {
 	return bridge, nil
 }
 
-func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *config.Config, ts *zetaclient.TelemetryServer) (map[common.Chain]zetaclient.ChainSigner, error) {
+func CreateSignerMap(
+	tss zetaclient.TSSSigner,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *zetaclient.TelemetryServer,
+) (map[common.Chain]zetaclient.ChainSigner, error) {
 	signerMap := make(map[common.Chain]zetaclient.ChainSigner)
 	// EVM signers
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {
@@ -63,7 +68,15 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics, logger zerolog.Logger, cfg *config.Config, ts *zetaclient.TelemetryServer) (map[common.Chain]zetaclient.ChainClient, error) {
+func CreateChainClientMap(
+	bridge *zetaclient.ZetaCoreBridge,
+	tss zetaclient.TSSSigner,
+	dbpath string,
+	metrics *metrics.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *zetaclient.TelemetryServer,
+) (map[common.Chain]zetaclient.ChainClient, error) {
 	clientMap := make(map[common.Chain]zetaclient.ChainClient)
 	// EVM clients
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {
