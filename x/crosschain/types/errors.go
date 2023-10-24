@@ -12,10 +12,10 @@ var (
 	ErrNotEnoughZetaBurnt      = errorsmod.Register(ModuleName, 1109, "not enough zeta burnt")
 	ErrCannotFindReceiverNonce = errorsmod.Register(ModuleName, 1110, "cannot find receiver chain nonce")
 
-	ErrGasCoinNotFound         = errorsmod.Register(ModuleName, 1113, "gas coin not found for SenderChain")
-	ErrUnableToParseContract   = errorsmod.Register(ModuleName, 1115, "cannot parse contract and data")
+	ErrGasCoinNotFound         = errorsmod.Register(ModuleName, 1113, "gas coin not found for sender chain")
+	ErrUnableToParseAddress    = errorsmod.Register(ModuleName, 1115, "cannot parse address and data")
 	ErrCannotProcessWithdrawal = errorsmod.Register(ModuleName, 1116, "cannot process withdrawal event")
-	ErrForeignCoinNotFound     = errorsmod.Register(ModuleName, 1118, "gas coin not found for SenderChain")
+	ErrForeignCoinNotFound     = errorsmod.Register(ModuleName, 1118, "foreign coin not found for sender chain")
 	ErrNotEnoughPermissions    = errorsmod.Register(ModuleName, 1119, "not enough permissions for current actions")
 
 	ErrCannotFindPendingNonces = errorsmod.Register(ModuleName, 1121, "cannot find pending nonces")
@@ -30,12 +30,16 @@ var (
 	ErrNotEnoughGas      = errorsmod.Register(ModuleName, 1131, "not enough gas")
 	ErrNotEnoughFunds    = errorsmod.Register(ModuleName, 1132, "not enough funds")
 
-	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1133, "Proof verification fail")
-	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1134, "Cannot find cctx")
+	ErrProofVerificationFail = errorsmod.Register(ModuleName, 1133, "proof verification fail")
+	ErrCannotFindCctx        = errorsmod.Register(ModuleName, 1134, "cannot find cctx")
 	ErrStatusNotPending      = errorsmod.Register(ModuleName, 1135, "Status not pending")
 
 	ErrCannotFindGasParams = errorsmod.Register(ModuleName, 1136, "cannot find gas params")
 	ErrInvalidGasAmount    = errorsmod.Register(ModuleName, 1137, "invalid gas amount")
 	ErrNoLiquidityPool     = errorsmod.Register(ModuleName, 1138, "no liquidity pool")
 	ErrInvalidCoinType     = errorsmod.Register(ModuleName, 1139, "invalid coin type")
+	ErrCannotMigrateTss    = errorsmod.Register(ModuleName, 1140, "Cannot migrate TSS funds")
+
+	ErrCannotVerifyProof      = errorsmod.Register(ModuleName, 1141, "cannot verify proof")
+	ErrTxBodyVerificationFail = errorsmod.Register(ModuleName, 1142, "transaction body verification fail")
 )

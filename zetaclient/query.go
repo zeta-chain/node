@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sort"
-
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -216,6 +215,24 @@ func (b *ZetaCoreBridge) GetKeyGen() (*observertypes.Keygen, error) {
 
 }
 
+func (b *ZetaCoreBridge) GetBallot(ballotIdentifier string) (*zetaObserverTypes.QueryBallotByIdentifierResponse, error) {
+	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
+	resp, err := client.BallotByIdentifier(context.Background(), &zetaObserverTypes.QueryBallotByIdentifierRequest{BallotIdentifier: ballotIdentifier})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTxTracker, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.InTxTrackerAllByChain(context.Background(), &types.QueryAllInTxTrackerByChainRequest{ChainId: chainID})
+	if err != nil {
+		return nil, err
+	}
+	return resp.InTxTracker, nil
+}
+
 func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
@@ -223,6 +240,24 @@ func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
 		return nil, err
 	}
 	return resp.TSS, nil
+}
+
+func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	if err != nil {
+		return "", err
+	}
+	return resp.Eth, nil
+}
+
+func (b *ZetaCoreBridge) GetBtcTssAddress() (string, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	if err != nil {
+		return "", err
+	}
+	return resp.Btc, nil
 }
 
 func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
@@ -310,7 +345,7 @@ func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesRespons
 	return resp, nil
 }
 
-func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *common.Proof, chainID uint64) (bool, error) {
+func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *common.Proof, chainID int64) (bool, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.Prove(context.Background(), &observertypes.QueryProveRequest{
 		BlockHash: blockHash,

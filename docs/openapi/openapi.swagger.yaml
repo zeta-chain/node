@@ -26841,6 +26841,11 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: tss_pub_key
+          in: query
+          required: false
+          type: string
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
@@ -26940,6 +26945,83 @@ paths:
           in: path
           required: true
           type: string
+      tags:
+        - Query
+  /zeta-chain/crosschain/inTxTrackerByChain/{chain_id}:
+    get:
+      operationId: Query_InTxTrackerAllByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryAllInTxTrackerByChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/crosschain/inTxTrackers:
+    get:
+      operationId: Query_InTxTrackerAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryAllInTxTrackersResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/crosschain/lastBlockHeight:
@@ -27295,6 +27377,32 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/observer/blame_by_chain_and_nonce/{chain_id}/{nonce}:
+    get:
+      summary: Queries a list of VoterByIdentifier items.
+      operationId: Query_BlamesByChainAndNonce
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryBlameByChainAndNonceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: nonce
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/blame_by_identifier/{blame_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -27605,7 +27713,7 @@ paths:
           in: query
           required: false
           type: string
-          format: uint64
+          format: int64
         - name: tx_hash
           in: query
           required: false
@@ -27626,6 +27734,21 @@ paths:
             type: string
             format: byte
           collectionFormat: multi
+        - name: proof.bitcoin_proof.tx_bytes
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.path
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.index
+          in: query
+          required: false
+          type: integer
+          format: int64
         - name: block_hash
           in: query
           required: false
@@ -27651,15 +27774,15 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/zetacore/emissions/get_emmisons_factors:
+  /zeta-chain/zetacore/emissions/get_emissions_factors:
     get:
       summary: Queries a list of GetEmmisonsFactors items.
-      operationId: Query_GetEmmisonsFactors
+      operationId: Query_GetEmissionsFactors
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/emissionsQueryGetEmmisonsFactorsResponse'
+            $ref: '#/definitions/emissionsQueryGetEmissionsFactorsResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27810,6 +27933,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/zetacore/fungible/gas_stability_pool_balance:
+    get:
+      summary: Queries all gas stability pool balances.
+      operationId: Query_GasStabilityPoolBalanceAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/fungibleQueryAllGasStabilityPoolBalanceResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/zetacore/fungible/gas_stability_pool_balance/{chain_id}:
     get:
       summary: Queries the balance of a gas stability pool on a given chain.
@@ -27848,7 +27986,7 @@ paths:
         - Query
   /zeta-chain/zetacore/fungible/system_contract:
     get:
-      summary: Queries a ZetaDepositAndCallContract by index.
+      summary: Queries SystemContract
       operationId: Query_SystemContract
       responses:
         "200":
@@ -50202,6 +50340,26 @@ definitions:
        - VOTE_OPTION_ABSTAIN: VOTE_OPTION_ABSTAIN defines an abstain vote option.
        - VOTE_OPTION_NO: VOTE_OPTION_NO defines a no vote option.
        - VOTE_OPTION_NO_WITH_VETO: VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+  QueryAllGasStabilityPoolBalanceResponseBalance:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      balance:
+        type: string
+  bitcoinProof:
+    type: object
+    properties:
+      tx_bytes:
+        type: string
+        format: byte
+      path:
+        type: string
+        format: byte
+      index:
+        type: integer
+        format: int64
   commonBlockHeader:
     type: object
     properties:
@@ -50272,11 +50430,17 @@ definitions:
         type: string
         format: byte
         title: binary encoded headers; RLP for ethereum
+      bitcoin_header:
+        type: string
+        format: byte
+        title: 80-byte little-endian encoded binary data
   commonProof:
     type: object
     properties:
       ethereum_proof:
         $ref: '#/definitions/ethereumProof'
+      bitcoin_proof:
+        $ref: '#/definitions/bitcoinProof'
   commonPubKeySet:
     type: object
     properties:
@@ -50387,6 +50551,16 @@ definitions:
         type: array
         items:
           type: string
+  crosschainInTxTracker:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      tx_hash:
+        type: string
+      coin_type:
+        $ref: '#/definitions/commonCoinType'
   crosschainInboundTxParams:
     type: object
     properties:
@@ -50431,11 +50605,15 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  crosschainMsgAddToInTxTrackerResponse:
+    type: object
   crosschainMsgAddToOutTxTrackerResponse:
     type: object
   crosschainMsgCreateTSSVoterResponse:
     type: object
   crosschainMsgGasPriceVoterResponse:
+    type: object
+  crosschainMsgMigrateTssFundsResponse:
     type: object
   crosschainMsgNonceVoterResponse:
     type: object
@@ -50449,6 +50627,11 @@ definitions:
     type: object
   crosschainMsgWhitelistERC20Response:
     type: object
+    properties:
+      zrc20_address:
+        type: string
+      cctx_index:
+        type: string
   crosschainOutTxTracker:
     type: object
     properties:
@@ -50571,6 +50754,24 @@ definitions:
           $ref: '#/definitions/crosschainInTxHashToCctx'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
+  crosschainQueryAllInTxTrackerByChainResponse:
+    type: object
+    properties:
+      inTxTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainInTxTracker'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  crosschainQueryAllInTxTrackersResponse:
+    type: object
+    properties:
+      inTxTracker:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainInTxTracker'
   crosschainQueryAllLastBlockHeightResponse:
     type: object
     properties:
@@ -50721,7 +50922,7 @@ definitions:
         type: string
       proved:
         type: boolean
-  emissionsQueryGetEmmisonsFactorsResponse:
+  emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:
       reservesFactor:
@@ -50783,6 +50984,8 @@ definitions:
         format: uint64
       paused:
         type: boolean
+      liquidity_cap:
+        type: string
   fungibleMsgDeployFungibleCoinZRC20Response:
     type: object
     properties:
@@ -50798,6 +51001,8 @@ definitions:
         format: byte
   fungibleMsgUpdateSystemContractResponse:
     type: object
+  fungibleMsgUpdateZRC20LiquidityCapResponse:
+    type: object
   fungibleMsgUpdateZRC20PausedStatusResponse:
     type: object
   fungibleMsgUpdateZRC20WithdrawFeeResponse:
@@ -50812,6 +51017,14 @@ definitions:
           $ref: '#/definitions/fungibleForeignCoins'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
+  fungibleQueryAllGasStabilityPoolBalanceResponse:
+    type: object
+    properties:
+      balances:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/QueryAllGasStabilityPoolBalanceResponseBalance'
   fungibleQueryGetForeignCoinsResponse:
     type: object
     properties:
@@ -50827,8 +51040,6 @@ definitions:
   fungibleQueryGetGasStabilityPoolBalanceResponse:
     type: object
     properties:
-      contract_address:
-        type: string
       balance:
         type: string
   fungibleQueryGetSystemContractResponse:
@@ -50888,6 +51099,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
+  observerBlockHeaderVerificationFlags:
+    type: object
+    properties:
+      isEthTypeChainEnabled:
+        type: boolean
+      isBtcTypeChainEnabled:
+        type: boolean
   observerCoreParams:
     type: object
     properties:
@@ -50938,6 +51156,8 @@ definitions:
         type: boolean
       gasPriceIncreaseFlags:
         $ref: '#/definitions/observerGasPriceIncreaseFlags'
+      blockHeaderVerificationFlags:
+        $ref: '#/definitions/observerBlockHeaderVerificationFlags'
   observerGasPriceIncreaseFlags:
     type: object
     properties:
@@ -50949,6 +51169,12 @@ definitions:
       gasPriceIncreasePercent:
         type: integer
         format: int64
+      gasPriceIncreaseMax:
+        type: integer
+        format: int64
+        title: |-
+          Maximum gas price increase in percent of the median gas price
+          Default is used if 0
   observerKeygen:
     type: object
     properties:
@@ -51110,6 +51336,14 @@ definitions:
         $ref: '#/definitions/observerObservationType'
       ballot_status:
         $ref: '#/definitions/observerBallotStatus'
+  observerQueryBlameByChainAndNonceResponse:
+    type: object
+    properties:
+      blame_info:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerBlame'
   observerQueryBlameByIdentifierResponse:
     type: object
     properties:

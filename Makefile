@@ -1,7 +1,5 @@
 .PHONY: build
 
-
-PACKAGES=$(shell go list ./... | grep -v '/simulation')
 VERSION := $(shell git describe --tags)
 COMMIT := $(shell [ -z "${COMMIT_ID}" ] && git log -1 --format='%H' || echo ${COMMIT_ID} )
 BUILDTIME := $(shell date -u +"%Y%m%d.%H%M%S" )
@@ -224,9 +222,44 @@ stop-stress-test:
 
 stateful-upgrade:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v9.0.0-rc2 --build-arg new_version=v10.0.0 -t zetanode -f ./Dockerfile-versioned .
+	$(DOCKER) build --build-arg old_version=mock-mainnet-01-5-ga66d0b77 --build-arg new_version=v10.0.0-30 -t zetanode -f ./Dockerfile-versioned .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
 stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
+
+
+###############################################################################
+###                                GoReleaser  		                        ###
+###############################################################################
+PACKAGE_NAME          := github.com/zeta-chain/node
+GOLANG_CROSS_VERSION  ?= v1.20
+GOPATH ?= '$(HOME)/go'
+release-dry-run:
+	docker run \
+		--rm \
+		--privileged \
+		-e CGO_ENABLED=1 \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-v ${GOPATH}/pkg:/go/pkg \
+		-w /go/src/$(PACKAGE_NAME) \
+		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
+		--clean --skip-validate --skip-publish --snapshot
+
+release:
+	@if [ ! -f ".release-env" ]; then \
+		echo "\033[91m.release-env is required for release\033[0m";\
+		exit 1;\
+	fi
+	docker run \
+		--rm \
+		--privileged \
+		-e CGO_ENABLED=1 \
+		-e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-v `pwd`:/go/src/$(PACKAGE_NAME) \
+		-w /go/src/$(PACKAGE_NAME) \
+		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
+		release --clean --skip-validate

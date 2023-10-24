@@ -29,6 +29,8 @@ func GetTxCmd() *cobra.Command {
 		CmdCCTXInboundVoter(),
 		CmdRemoveFromWatchList(),
 		CmdUpdateTss(),
+		CmdMigrateTssFunds(),
+		CmdAddToInTxTracker(),
 	)
 
 	return cmd

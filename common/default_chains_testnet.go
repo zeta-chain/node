@@ -31,6 +31,14 @@ func BtcTestNetChain() Chain {
 	}
 }
 
+func BtcChainID() int64 {
+	return BtcTestNetChain().ChainId
+}
+
+func BtcDustOffset() int64 {
+	return 2000
+}
+
 func MumbaiChain() Chain {
 	return Chain{
 		ChainName: ChainName_mumbai_testnet,

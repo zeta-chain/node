@@ -30,6 +30,32 @@ func setupGasCoin(
 		assetName,
 		symbol,
 		8,
+		nil,
+	)
+	require.NoError(t, err)
+	assertContractDeployment(t, evmk, ctx, addr)
+	return addr
+}
+
+func deployZRC20(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk *evmkeeper.Keeper,
+	chainID int64,
+	assetName string,
+	assetAddress string,
+	symbol string,
+) (zrc20 common.Address) {
+	addr, err := k.DeployZRC20Contract(
+		ctx,
+		assetName,
+		symbol,
+		8,
+		chainID,
+		0,
+		assetAddress,
+		big.NewInt(21_000),
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)

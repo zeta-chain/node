@@ -1,16 +1,17 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 
+	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -24,24 +25,24 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
-		return sdkerrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+		return cosmoserrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
 	tss, found := k.GetTSS(ctx)
 	if !found {
-		return sdkerrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
+		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
 	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
 	if !found {
-		return sdkerrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
+		return cosmoserrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
 	}
 
 	// #nosec G701 always in range
 	if p.NonceHigh != int64(nonce.Nonce) {
-		return sdkerrors.Wrap(types.ErrNonceMismatch, fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce))
+		return cosmoserrors.Wrap(types.ErrNonceMismatch, fmt.Sprintf("chain_id %d, high nonce %d, current nonce %d", receiveChainID, p.NonceHigh, nonce.Nonce))
 	}
 
 	nonce.Nonce++
@@ -85,4 +86,38 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 	}
 
 	return nil
+}
+
+// GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
+// It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
+func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
+	if cctx.InboundTxParams == nil {
+		return 0, nil
+	}
+
+	if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
+		// get the gas limit of the gas token
+		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundTxParams.SenderChainId)
+		if !found {
+			return 0, types.ErrForeignCoinNotFound
+		}
+		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
+		if err != nil {
+			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
+		}
+		return gasLimit.Uint64(), nil
+	} else if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
+		// get the gas limit of the associated asset
+		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
+		if !found {
+			return 0, types.ErrForeignCoinNotFound
+		}
+		gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(fc.Zrc20ContractAddress))
+		if err != nil {
+			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
+		}
+		return gasLimit.Uint64(), nil
+	}
+
+	return 0, nil
 }

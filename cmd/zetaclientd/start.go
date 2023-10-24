@@ -139,6 +139,7 @@ func start(_ *cobra.Command, _ []string) error {
 		err := telemetryServer.Start()
 		if err != nil {
 			startLogger.Error().Err(err).Msg("telemetryServer error")
+			panic("telemetryServer error")
 		}
 	}()
 

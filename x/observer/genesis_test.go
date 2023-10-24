@@ -31,7 +31,7 @@ func TestGenesis(t *testing.T) {
 			sample.NodeAccount(),
 			sample.NodeAccount(),
 		},
-		CrosschainFlags:   sample.CrosschainFlags(),
+		CrosschainFlags:   types.DefaultCrosschainFlags(),
 		Keygen:            sample.Keygen(t),
 		LastObserverCount: sample.LastObserverCount(1000),
 		CoreParamsList:    sample.CoreParamsList(),
