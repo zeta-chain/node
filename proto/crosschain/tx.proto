@@ -9,6 +9,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 // Msg defines the Msg service.
 service Msg {
   rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
+  rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
@@ -17,8 +18,30 @@ service Msg {
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
   //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
+
+message MsgMigrateTssFunds {
+  string creator = 1;
+  int64 chain_id = 2;
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+message MsgMigrateTssFundsResponse {}
+
+message MsgAddToInTxTracker {
+  string creator = 1;
+  int64 chain_id = 2;
+  string tx_hash = 3;
+  common.CoinType coin_type = 4;
+  common.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
+}
+message MsgAddToInTxTrackerResponse {}
 
 message MsgUpdateTssAddress {
   string creator = 1;

@@ -217,7 +217,7 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.Address, nonce uint64, gasLimit uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.Address, outboundParams *types.OutboundTxParams, gasLimit uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	if cmd == common.CmdWhitelistERC20 {
 		erc20 := ethcommon.HexToAddress(params)
 		if erc20 == (ethcommon.Address{}) {
@@ -231,11 +231,31 @@ func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.A
 		if err != nil {
 			return nil, err
 		}
-		tx, _, _, err := signer.Sign(data, to, gasLimit, gasPrice, nonce, height)
+		tx, _, _, err := signer.Sign(data, to, gasLimit, gasPrice, outboundParams.OutboundTxTssNonce, height)
 		if err != nil {
 			return nil, fmt.Errorf("sign error: %w", err)
 		}
 		return tx, nil
+	}
+	if cmd == common.CmdMigrateTssFunds {
+		tx := ethtypes.NewTransaction(outboundParams.OutboundTxTssNonce, to, outboundParams.Amount.BigInt(), 21000, gasPrice, nil)
+		hashBytes := signer.ethSigner.Hash(tx).Bytes()
+		sig, err := signer.tssSigner.Sign(hashBytes, height, outboundParams.OutboundTxTssNonce, signer.chain, "")
+		if err != nil {
+			return nil, err
+		}
+		pubk, err := crypto.SigToPub(hashBytes, sig[:])
+		if err != nil {
+			signer.logger.Error().Err(err).Msgf("SigToPub error")
+		}
+		addr := crypto.PubkeyToAddress(*pubk)
+		signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+		signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
+		if err != nil {
+			return nil, err
+		}
+
+		return signedTX, nil
 	}
 
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
@@ -291,14 +311,17 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	message, err := base64.StdEncoding.DecodeString(send.RelayedMessage)
-	if err != nil {
-		logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
+	var message []byte
+	if send.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
+		message, err = base64.StdEncoding.DecodeString(send.RelayedMessage)
+		if err != nil {
+			logger.Err(err).Msgf("decode CCTX.Message %s error", send.RelayedMessage)
+		}
 	}
 
 	gasLimit := send.GetCurrentOutTxParam().OutboundTxGasLimit
-	if gasLimit < 50_000 {
-		gasLimit = 50_000
+	if gasLimit < 100_000 {
+		gasLimit = 100_000
 		logger.Warn().Msgf("gasLimit %d is too low; set to %d", send.GetCurrentOutTxParam().OutboundTxGasLimit, gasLimit)
 	}
 	if gasLimit > 1_000_000 {
@@ -373,7 +396,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 			logger.Error().Msgf("invalid message %s", msg)
 			return
 		}
-		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasLimit, gasprice, height)
+		tx, err = signer.SignCommandTx(msg[0], msg[1], to, send.GetCurrentOutTxParam(), gasLimit, gasprice, height)
 	} else if send.InboundTxParams.SenderChainId == common.ZetaChain().ChainId && send.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled {
 		if send.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)

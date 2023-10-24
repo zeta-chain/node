@@ -23,8 +23,9 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	outTxBytesMin      = 400    // 500B is a conservative estimate for a 2-input, 3-output SegWit tx
-	outTxBytesMax      = 4_000  // 4KB is a conservative estimate for a 21-input, 3-output SegWit tx
+	consolidationRank  = 10     // the rank below (or equal to) which we consolidate UTXOs
+	outTxBytesMin      = 400    // 500B is an estimated size for a 2-input, 3-output SegWit tx
+	outTxBytesMax      = 3250   // 3250B is an estimated size for a 21-input, 3-output SegWit tx
 	outTxBytesCap      = 10_000 // in case of accident
 
 	// for ZRC20 configuration
@@ -78,7 +79,7 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	}
 
 	// select N UTXOs to cover the total expense
-	prevOuts, total, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, false)
+	prevOuts, total, consolidatedUtxo, consolidatedValue, err := btcClient.SelectUTXOs(amount+estimateFee+float64(nonceMark)*1e-8, maxNoOfInputsPerTx, nonce, consolidationRank, false)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +119,8 @@ func (signer *BTCSigner) SignWithdrawTx(to *btcutil.AddressWitnessPubKeyHash, am
 	// fee calculation
 	// #nosec G701 always in range (checked above)
 	fees := new(big.Int).Mul(big.NewInt(int64(txSize)), gasPrice)
-	fees.Div(fees, big.NewInt(bytesPerKB))
-	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s", nonce, gasPrice.String(), txSize, fees.String())
+	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
+		nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
 
 	// calculate remaining btc to TSS self
 	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
@@ -237,7 +238,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		Logger()
 
 	params := send.GetCurrentOutTxParam()
-	if params.CoinType != common.CoinType_Gas {
+	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}

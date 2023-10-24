@@ -3,7 +3,7 @@
 ## MsgAddToOutTxTracker
 
 AddToOutTxTracker adds a new record to the outbound transaction tracker.
-only the admin policy account and the observer validators are authorized to broadcast this message.
+only the admin policy account and the observer validators are authorized to broadcast this message without proof.
 
 ```proto
 message MsgAddToOutTxTracker {
@@ -11,6 +11,22 @@ message MsgAddToOutTxTracker {
 	int64 chain_id = 2;
 	uint64 nonce = 3;
 	string tx_hash = 4;
+	common.Proof proof = 5;
+	string block_hash = 6;
+	int64 tx_index = 7;
+}
+```
+
+## MsgAddToInTxTracker
+
+TODO https://github.com/zeta-chain/node/issues/1269
+
+```proto
+message MsgAddToInTxTracker {
+	string creator = 1;
+	int64 chain_id = 2;
+	string tx_hash = 3;
+	common.CoinType coin_type = 4;
 	common.Proof proof = 5;
 	string block_hash = 6;
 	int64 tx_index = 7;
@@ -228,6 +244,16 @@ message MsgWhitelistERC20 {
 message MsgUpdateTssAddress {
 	string creator = 1;
 	string tss_pubkey = 2;
+}
+```
+
+## MsgMigrateTssFunds
+
+```proto
+message MsgMigrateTssFunds {
+	string creator = 1;
+	int64 chain_id = 2;
+	string amount = 3;
 }
 ```
 
