@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	math2 "math"
+	"math"
 	"math/big"
 	"os"
 	"sort"
@@ -13,30 +13,26 @@ import (
 	"sync/atomic"
 	"time"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
-
-	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	"github.com/ethereum/go-ethereum"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type TxHashEnvelope struct {
@@ -61,14 +57,14 @@ const (
 	DonationMessage = "I am rich!"
 )
 
-// Chain configuration struct
+// EVMChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	evmClient                 *ethclient.Client
-	KlaytnClient              *KlaytnClient
-	zetaClient                *ZetaCoreBridge
+	evmClient                 EVMRPCClient
+	KlaytnClient              KlaytnRPCClient
+	zetaClient                ZetaCoreBridger
 	Tss                       TSSSigner
 	lastBlockScanned          int64
 	lastBlock                 int64
@@ -93,8 +89,17 @@ type EVMChainClient struct {
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
-// Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, evmCfg config.EVMConfig, ts *TelemetryServer) (*EVMChainClient, error) {
+// NewEVMChainClient returns a new configuration based on supplied target chain
+func NewEVMChainClient(
+	bridge ZetaCoreBridger,
+	tss TSSSigner,
+	dbpath string,
+	metrics *metricsPkg.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	evmCfg config.EVMConfig,
+	ts *TelemetryServer,
+) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -140,12 +145,12 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	}
 
 	if ob.chain.IsKlaytnChain() {
-		kclient, err := Dial(evmCfg.Endpoint)
+		client, err := Dial(evmCfg.Endpoint)
 		if err != nil {
 			ob.logger.ChainLogger.Err(err).Msg("klaytn Client Dial")
 			return nil, err
 		}
-		ob.KlaytnClient = kclient
+		ob.KlaytnClient = client
 	}
 
 	// create metric counters
@@ -228,7 +233,7 @@ func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNo
 	return FetchConnectorContract(addr, ob.evmClient)
 }
 
-func FetchConnectorContract(addr ethcommon.Address, client *ethclient.Client) (*zetaconnector.ZetaConnectorNonEth, error) {
+func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
 	return zetaconnector.NewZetaConnectorNonEth(addr, client)
 }
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
@@ -236,7 +241,7 @@ func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody,
 	return FetchERC20CustodyContract(addr, ob.evmClient)
 }
 
-func FetchERC20CustodyContract(addr ethcommon.Address, client *ethclient.Client) (*erc20custody.ERC20Custody, error) {
+func FetchERC20CustodyContract(addr ethcommon.Address, client EVMRPCClient) (*erc20custody.ERC20Custody, error) {
 	return erc20custody.NewERC20Custody(addr, client)
 }
 
@@ -349,7 +354,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			logs := receipt.Logs
 			for _, vLog := range logs {
 				confHeight := vLog.BlockNumber + params.ConfirmationCount
-				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+				if confHeight < 0 || confHeight >= math.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				// TODO rewrite this to return early if not confirmed
@@ -463,7 +468,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			for _, vLog := range logs {
 				event, err := ERC20Custody.ParseWithdrawn(*vLog)
 				confHeight := vLog.BlockNumber + params.ConfirmationCount
-				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+				if confHeight < 0 || confHeight >= math.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				if err == nil {
@@ -631,7 +636,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
-	if confHeight < 0 || confHeight >= math2.MaxInt64 {
+	if confHeight < 0 || confHeight >= math.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
 
@@ -648,7 +653,7 @@ func (ob *EVMChainClient) SetLastBlockHeightScanned(block int64) {
 	if block < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, block)
@@ -661,7 +666,7 @@ func (ob *EVMChainClient) GetLastBlockHeightScanned() int64 {
 	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	return height
@@ -672,7 +677,7 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
@@ -684,7 +689,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	return height
@@ -735,7 +740,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
-	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
+	if confirmedBlockNum < 0 || confirmedBlockNum > math.MaxUint64 {
 		sampledLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
 		return nil
 	}
@@ -752,10 +757,10 @@ func (ob *EVMChainClient) observeInTX() error {
 		// #nosec G701 checked in range
 		toBlock = int64(confirmedBlockNum)
 	}
-	if startBlock < 0 || startBlock >= math2.MaxInt64 {
+	if startBlock < 0 || startBlock >= math.MaxInt64 {
 		return fmt.Errorf("startBlock is negative or too large")
 	}
-	if toBlock < 0 || toBlock >= math2.MaxInt64 {
+	if toBlock < 0 || toBlock >= math.MaxInt64 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
 	ob.logger.ExternalChainWatcher.Info().Msgf("Checking for all inTX : startBlock %d, toBlock %d", startBlock, toBlock)
