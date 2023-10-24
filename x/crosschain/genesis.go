@@ -18,6 +18,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetOutTxTracker(ctx, elem)
 	}
 
+	// Set all the inTxTracker
+	for _, elem := range genState.InTxTrackerList {
+		k.SetInTxTracker(ctx, elem)
+	}
+
 	// Set all the inTxHashToCctx
 	for _, elem := range genState.InTxHashToCctxList {
 		k.SetInTxHashToCctx(ctx, elem)
@@ -74,6 +79,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Params = k.GetParams(ctx)
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
+	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)
 
 	// Get tss
 	tss, found := k.GetTSS(ctx)
