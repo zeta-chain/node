@@ -2,42 +2,23 @@ package zetaclient
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-
-	"github.com/zeta-chain/zetacore/common"
-
-	"sync"
-
-	"github.com/hashicorp/go-retryablehttp"
-	"google.golang.org/grpc"
-
-	//"fmt"
-	"github.com/zeta-chain/zetacore/common/cosmos"
-	//"github.com/armon/go-metrics"
-	//"github.com/cosmos/cosmos-sdk/Client"
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	//"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	//"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	//"golang.org/x/tools/go/cfg"
-	//"io/ioutil"
-	//"net/http"
-	//"net/url"
-	//"strconv"
-	//"strings"
-
 	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"google.golang.org/grpc"
 )
 
 var _ ZetaCoreBridger = &ZetaCoreBridge{}

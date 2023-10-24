@@ -5,53 +5,33 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	peer2 "github.com/libp2p/go-libp2p/core/peer"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
-
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
-	"github.com/btcsuite/btcutil"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
-
-	"os"
 	"time"
 
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	gopeer "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
-
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
+	"gitlab.com/thorchain/tss/go-tss/keysign"
+	"gitlab.com/thorchain/tss/go-tss/p2p"
+	"gitlab.com/thorchain/tss/go-tss/tss"
 )
-
-//var testPubKeys = []string{
-//	"zetapub1addwnpepqtdklw8tf3anjz7nn5fly3uvq2e67w2apn560s4smmrt9e3x52nt2m5cmyy",
-//	"zetapub1addwnpepqtspqyy6gk22u37ztra4hq3hdakc0w0k60sfy849mlml2vrpfr0wvszlzhs",
-//	"zetapub1addwnpepq2ryyje5zr09lq7gqptjwnxqsy2vcdngvwd6z7yt5yjcnyj8c8cn5la9ezs",
-//	"zetapub1addwnpepqfjcw5l4ay5t00c32mmlky7qrppepxzdlkcwfs2fd5u73qrwna0vzksjyd8",
-//}
-//
-//var testPrivKeys = []string{
-//	"MjQ1MDc2MmM4MjU5YjRhZjhhNmFjMmI0ZDBkNzBkOGE1ZTBmNDQ5NGI4NzM4OTYyM2E3MmI0OWMzNmE1ODZhNw==",
-//	"YmNiMzA2ODU1NWNjMzk3NDE1OWMwMTM3MDU0NTNjN2YwMzYzZmVhZDE5NmU3NzRhOTMwOWIxN2QyZTQ0MzdkNg==",
-//	"ZThiMDAxOTk2MDc4ODk3YWE0YThlMjdkMWY0NjA1MTAwZDgyNDkyYzdhNmMwZWQ3MDBhMWIyMjNmNGMzYjVhYg==",
-//	"ZTc2ZjI5OTIwOGVlMDk2N2M3Yzc1MjYyODQ0OGUyMjE3NGJiOGRmNGQyZmVmODg0NzQwNmUzYTk1YmQyODlmNA==",
-//}
 
 type TSSKey struct {
 	PubkeyInBytes  []byte // FIXME: compressed pubkey?
@@ -182,7 +162,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 	if tssServer.GetLocalPeerID() == "" ||
 		tssServer.GetLocalPeerID() == "0" ||
 		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
-		tssServer.GetLocalPeerID() == peer2.ID("").String() {
+		tssServer.GetLocalPeerID() == gopeer.ID("").String() {
 		log.Error().Msg("tss server start error")
 		return nil, fmt.Errorf("tss server start error")
 	}
