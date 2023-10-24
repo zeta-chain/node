@@ -174,7 +174,7 @@ echo
 
 if [ $HOSTNAME = "zetacore0" ]
 then
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 320 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 400 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
 fi
 
 sleep 8

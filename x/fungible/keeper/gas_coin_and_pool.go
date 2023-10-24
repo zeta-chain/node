@@ -18,16 +18,28 @@ import (
 // SetupChainGasCoinAndPool setup gas ZRC20, and ZETA/gas pool for a chain
 // add 0.1gas/0.1wzeta to the pool
 // FIXME: add cointype and use proper gas limit based on cointype/chain
-func (k Keeper) SetupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAssetName string, symbol string, decimals uint8) (ethcommon.Address, error) {
+func (k Keeper) SetupChainGasCoinAndPool(
+	ctx sdk.Context,
+	chainID int64,
+	gasAssetName string,
+	symbol string,
+	decimals uint8,
+	gasLimit *big.Int,
+) (ethcommon.Address, error) {
 	chain := common.GetChainFromChainID(chainID)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
 	name := fmt.Sprintf("%s-%s", gasAssetName, chain.ChainName)
 
-	transferGasLimit := big.NewInt(21_000)
-	if common.IsBitcoinChain(chain.ChainId) {
-		transferGasLimit = big.NewInt(100) // 100B for a typical tx
+	transferGasLimit := gasLimit
+
+	// default values
+	if transferGasLimit == nil {
+		transferGasLimit = big.NewInt(21_000)
+		if common.IsBitcoinChain(chain.ChainId) {
+			transferGasLimit = big.NewInt(100) // 100B for a typical tx
+		}
 	}
 
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, common.CoinType_Gas, "", transferGasLimit)
@@ -95,7 +107,7 @@ func (k Keeper) SetupChainGasCoinAndPool(ctx sdk.Context, chainID int64, gasAsse
 	//	address to,
 	//	uint deadline
 	//) external payable returns (uint amountToken, uint amountETH, uint liquidity);
-	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amount, big.NewInt(5_000_000), true, false,
+	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amountAZeta, big.NewInt(5_000_000), true, false,
 		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, amountAZeta)
 	if err != nil {
 		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amountAZeta.String())

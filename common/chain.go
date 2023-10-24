@@ -102,14 +102,21 @@ func IsEVMChain(chainID int64) bool {
 		chainID == 137 // polygon mainnet
 }
 
-func IsEthereum(chainID int64) bool {
+func IsHeaderSupportedEvmChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
+		chainID == 97 || // BSC testnet
 		chainID == 1337 || // eth privnet
-		chainID == 1 // eth mainnet
+		chainID == 1 || // eth mainnet
+		chainID == 56 // bsc mainnet
 }
 
 func (chain Chain) IsKlaytnChain() bool {
 	return chain.ChainId == 1001
+}
+
+// SupportMerkleProof returns true if the chain supports block header-based verification
+func (chain Chain) SupportMerkleProof() bool {
+	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
 }
 
 func IsBitcoinChain(chainID int64) bool {

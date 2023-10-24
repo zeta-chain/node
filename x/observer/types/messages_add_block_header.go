@@ -52,7 +52,7 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if common.IsEthereum(msg.ChainId) || common.IsBitcoinChain(msg.ChainId) {
+	if common.IsHeaderSupportedEvmChain(msg.ChainId) || common.IsBitcoinChain(msg.ChainId) {
 		if len(msg.BlockHash) != 32 {
 			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block hash length (%d)", len(msg.BlockHash))
 		}

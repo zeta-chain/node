@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -160,17 +161,27 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			} else {
 				switch oldStatus {
 				case types.CctxStatus_PendingOutbound:
+
+					gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
+					if err != nil {
+						return errors.New("can't get revert tx gas limit" + err.Error())
+					}
+					if gasLimit == 0 {
+						// use same gas limit of outbound as a fallback -- should not happen
+						gasLimit = cctx.OutboundTxParams[0].OutboundTxGasLimit
+					}
+
 					// create new OutboundTxParams for the revert
-					cctx.OutboundTxParams = append(cctx.OutboundTxParams, &types.OutboundTxParams{
-						Receiver:        cctx.InboundTxParams.Sender,
-						ReceiverChainId: cctx.InboundTxParams.SenderChainId,
-						Amount:          cctx.InboundTxParams.Amount,
-						CoinType:        cctx.InboundTxParams.CoinType,
-						// NOTE(pwu): revert gas limit = initial outbound gas limit set by user
-						//TODO: determine a specific revert gas limit https://github.com/zeta-chain/node/issues/1065
-						OutboundTxGasLimit: cctx.OutboundTxParams[0].OutboundTxGasLimit,
-					})
-					err := k.PayGasAndUpdateCctx(
+					revertTxParams := &types.OutboundTxParams{
+						Receiver:           cctx.InboundTxParams.Sender,
+						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+						Amount:             cctx.InboundTxParams.Amount,
+						CoinType:           cctx.InboundTxParams.CoinType,
+						OutboundTxGasLimit: gasLimit,
+					}
+					cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
+
+					err = k.PayGasAndUpdateCctx(
 						tmpCtx,
 						cctx.InboundTxParams.SenderChainId,
 						&cctx,
@@ -226,9 +237,13 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 	gasLimit := outboundTxParams.OutboundTxEffectiveGasLimit
 	gasPrice := math.NewUintFromBigInt(outboundTxParams.OutboundTxEffectiveGasPrice.BigInt())
 
+	if gasLimit == gasUsed {
+		return nil
+	}
+
 	// We skip gas stability pool funding if one of the params is zero
 	if gasLimit > 0 && gasUsed > 0 && !gasPrice.IsZero() {
-		if gasLimit >= gasUsed {
+		if gasLimit > gasUsed {
 			remainingGas := gasLimit - gasUsed
 			remainingFees := math.NewUint(remainingGas).Mul(gasPrice).BigInt()
 

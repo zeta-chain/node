@@ -155,13 +155,12 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
-	// replace the default hd-path for the key add command
+	// replace the default hd-path for the key add command with Ethereum HD Path
 	if err := SetEthereumHDPath(rootCmd); err != nil {
 		fmt.Printf("warning: unable to set default HD path: %v\n", err)
 	}
 
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
-
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
