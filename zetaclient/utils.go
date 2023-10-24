@@ -124,7 +124,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		1_500_000,
 		common.CoinType_ERC20,
 		event.Asset.String(),
-		ob.zetaClient.keys.GetOperatorAddress().String(),
+		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 	), nil
 }
 
@@ -159,7 +159,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		event.DestinationGasLimit.Uint64(),
 		common.CoinType_Zeta,
 		"",
-		ob.zetaClient.keys.GetOperatorAddress().String(),
+		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 	), nil
 }
 
@@ -184,6 +184,6 @@ func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Ha
 		90_000,
 		common.CoinType_Gas,
 		"",
-		ob.zetaClient.keys.GetOperatorAddress().String(),
+		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 	)
 }

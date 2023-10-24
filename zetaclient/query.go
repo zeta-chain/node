@@ -215,9 +215,11 @@ func (b *ZetaCoreBridge) GetKeyGen() (*observertypes.Keygen, error) {
 
 }
 
-func (b *ZetaCoreBridge) GetBallot(ballotIdentifier string) (*zetaObserverTypes.QueryBallotByIdentifierResponse, error) {
-	client := zetaObserverTypes.NewQueryClient(b.grpcConn)
-	resp, err := client.BallotByIdentifier(context.Background(), &zetaObserverTypes.QueryBallotByIdentifierRequest{BallotIdentifier: ballotIdentifier})
+func (b *ZetaCoreBridge) GetBallot(ballotIdentifier string) (*observertypes.QueryBallotByIdentifierResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.BallotByIdentifier(context.Background(), &observertypes.QueryBallotByIdentifierRequest{
+		BallotIdentifier: ballotIdentifier,
+	})
 	if err != nil {
 		return nil, err
 	}

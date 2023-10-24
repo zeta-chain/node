@@ -237,7 +237,7 @@ func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNo
 	return FetchConnectorContract(addr, ob.evmClient)
 }
 
-func FetchConnectorContract(addr ethcommon.Address, client *ethclient.Client) (*zetaconnector.ZetaConnectorNonEth, error) {
+func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
 	return zetaconnector.NewZetaConnectorNonEth(addr, client)
 }
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
@@ -245,7 +245,7 @@ func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody,
 	return FetchERC20CustodyContract(addr, ob.evmClient)
 }
 
-func FetchERC20CustodyContract(addr ethcommon.Address, client *ethclient.Client) (*erc20custody.ERC20Custody, error) {
+func FetchERC20CustodyContract(addr ethcommon.Address, client EVMRPCClient) (*erc20custody.ERC20Custody, error) {
 	return erc20custody.NewERC20Custody(addr, client)
 }
 

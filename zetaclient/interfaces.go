@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 
-	"cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
@@ -30,6 +29,7 @@ type ChainClient interface {
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
 	GetTxID(nonce uint64) string
+	ExternalChainWatcherForNewInboundTrackerSuggestions()
 }
 
 // ChainSigner is the interface to sign transactions for a chain
@@ -46,21 +46,7 @@ type ChainSigner interface {
 
 // ZetaCoreBridger is the interface to interact with ZetaCore
 type ZetaCoreBridger interface {
-	PostSend(
-		sender string,
-		senderChain int64,
-		txOrigin string,
-		receiver string,
-		receiverChain int64,
-		amount math.Uint,
-		message string,
-		inTxHash string,
-		inBlockHeight uint64,
-		gasLimit uint64,
-		coinType common.CoinType,
-		zetaGasLimit uint64,
-		asset string,
-	) (string, error)
+	PostSend(zetaGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, error)
 	PostReceiveConfirmation(
 		sendHash string,
 		outTxHash string,
@@ -96,6 +82,8 @@ type ZetaCoreBridger interface {
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList(chain common.Chain) ([]string, error)
 	GetKeyGen() (*observertypes.Keygen, error)
+	GetBtcTssAddress() (string, error)
+	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
 	GetLogger() *zerolog.Logger
 	Pause()
 	Unpause()
@@ -112,6 +100,7 @@ type BTCRPCClient interface {
 	GetBlockHash(blockHeight int64) (*chainhash.Hash, error)
 	GetBlockVerbose(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseResult, error)
 	GetBlockVerboseTx(blockHash *chainhash.Hash) (*btcjson.GetBlockVerboseTxResult, error)
+	GetBlockHeader(blockHash *chainhash.Hash) (*wire.BlockHeader, error)
 }
 
 // EVMRPCClient is the interface for EVM RPC client
