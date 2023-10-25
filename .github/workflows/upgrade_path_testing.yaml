@@ -11,6 +11,10 @@ on:
         description: 'The version that is set in setup_handlers.go'
         required: true
         default: 'v10.1.0'
+      current_version:
+        description: 'The version that the network is currently on.'
+        required: true
+        default: 'v10.0.0'
 
 jobs:
   upgrade_path_test_state_export:
@@ -119,16 +123,15 @@ jobs:
           ls -lah /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin/zetacored
 
           echo "ZETACORED_CHECKSUM=${ZETACORED_CHECKSUM}" >> ${GITHUB_ENV}
-          UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-testnet-linux-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
+          UPGRADE_INFO='{"binaries": {"zetacored-linux/amd64": "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64?checksum=sha256:'${ZETACORED_CHECKSUM}'"}}'
           echo ${UPGRADE_INFO}
-
-          
           
           echo "*********DOWNLOAD CURRENT BINARY AND PUT IN ZETAVISOR GENESIS & CURRENT FOLDER*********"
           current_version=$(curl https://rpc-archive.athens.zetachain.com:26657/abci_info -s | jq .result.response.version -r | tr -d '\n')
+          current_version=v10.0.0
           echo "STARTING_VERSION=${current_version}" >> ${GITHUB_ENV}
           echo "STARTING_VERSION=${current_version}"
-          wget -q https://github.com/zeta-chain/node/releases/download/${current_version}/zetacored-testnet-linux-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+          wget -q https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.current_version }}/zetacored_testnet-linux-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
 
