@@ -133,7 +133,7 @@ jobs:
           echo "STARTING_VERSION=${current_version}"
           if [ "${{ github.event.inputs.current_version }}" == "v10.0.0" ]; then
             echo "download 10.0.0 binary"
-            wget -q https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.current_version }}/zetacored-testnet-linux-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
+            wget -q https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.current_version }}/zetacored-ubuntu-22-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           else
            echo "download non 10.0.0 version"
             wget -q https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.current_version }}/zetacored_testnet-linux-amd64 -O /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
