@@ -73,6 +73,10 @@ func NewCoreObserver(
 	return &co
 }
 
+func (co *CoreObserver) Config() *config.Config {
+	return co.cfg
+}
+
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 	cnt, found := metrics.Counters[name]
 	if !found {
@@ -129,12 +133,12 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 
-					supportedChains := GetSupportedChains()
+					supportedChains := co.Config().ChainsEnabled
 					for _, c := range supportedChains {
-						if c == nil || c.ChainId == common.ZetaChain().ChainId {
+						if c.ChainId == common.ZetaChain().ChainId {
 							continue
 						}
-						signer := co.signerMap[*c]
+						signer := co.signerMap[c]
 
 						cctxList, err := co.bridge.GetAllPendingCctx(c.ChainId)
 						if err != nil {
@@ -151,7 +155,7 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("GetTargetChain fail, Chain ID: %s", c.ChainName)
 							continue
 						}
-						res, err := co.bridge.GetAllOutTxTrackerByChain(*c, Ascending)
+						res, err := co.bridge.GetAllOutTxTrackerByChain(c, Ascending)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Warn().Err(err).Msgf("failed to GetAllOutTxTrackerByChain for chain %s", c.ChainName.String())
 							continue
