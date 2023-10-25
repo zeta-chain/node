@@ -234,6 +234,8 @@ jobs:
               git_env_file.write("UPGRADE_TYPE=NONCON")
           elif major_version == first_major_version and minor_version == first_minor_version and sub_version != first_sub_version:
               git_env_file.write("UPGRADE_TYPE=NONCON")
+          elif "${{ github.event.inputs.version }}" == "v10.1.0":
+              git_env_file.write("UPGRADE_TYPE=GOV")
           else:
               git_env_file.write("UPGRADE_TYPE=GOV")
           git_env_file.close()
