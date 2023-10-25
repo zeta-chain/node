@@ -208,7 +208,7 @@ jobs:
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
-          cat $DAEMON_HOME/config/genesis.json | grep out_tx_tracker
+          cat $DAEMON_HOME/config/genesis.json | grep -A 10 -B 10 out_tx_tracker
           
           echo "Zetavisor Version"
           zetavisor version || echo "zetavisor not found"
