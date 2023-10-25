@@ -208,6 +208,10 @@ jobs:
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
+          echo "Zetavisor Version"
+          zetavisor version || echo "zetavisor not found"
+          zetacored version || echo "zetcored not found"
+          
           echo "Start Network"
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           
