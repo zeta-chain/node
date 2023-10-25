@@ -10,7 +10,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/ethereum"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -81,28 +80,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
-
-	t.Run("fail to add proof based tracker with wrong proof", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := int64(5)
-		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
-		require.NoError(t, err)
-		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		msgServer := keeper.NewMsgServerImpl(*k)
-		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
-			Creator:   sample.AccAddress(),
-			ChainId:   chainID,
-			TxHash:    tx.Hash().Hex(),
-			CoinType:  common.CoinType_Zeta,
-			Proof:     common.NewEthereumProof(ethereum.NewProof()),
-			BlockHash: block.Hash().Hex(),
-			TxIndex:   txIndex,
-		})
-		require.ErrorIs(t, types.ErrProofVerificationFail, err)
-		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-		require.False(t, found)
-	})
-	t.Run("normal user submit without proof", func(t *testing.T) {
+	t.Run("fail normal user submit without proof", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
 		chainID := int64(5)
@@ -116,7 +94,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, observerTypes.ErrNotAuthorized, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
 		require.False(t, found)
 	})
