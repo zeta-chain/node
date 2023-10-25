@@ -6,11 +6,11 @@ on:
       version:
         description: 'The new version of tag you are going to download the binary from..'
         required: true
-        default: 'v10.0.0-rc2'
+        default: 'v10.1.0'
       upgrade_name:
         description: 'The version that is set in setup_handlers.go'
         required: true
-        default: 'v10.0.0'
+        default: 'v10.1.0'
 
 jobs:
   upgrade_path_test_state_export:
@@ -18,7 +18,7 @@ jobs:
     runs-on: ["buildjet-8vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://zetachain-external-files.s3.amazonaws.com/state-export/athens3/latest.json"
-      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored-testnet-linux-amd64"
+      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
       downloaded_binary_name: "zetacored-testnet-linux-amd64"
       VERSION: "${{ github.event.inputs.version }}"
       aws_region: "us-east-1"
