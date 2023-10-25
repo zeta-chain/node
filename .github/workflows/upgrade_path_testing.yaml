@@ -89,17 +89,16 @@ jobs:
         working-directory: "zetavisor/cosmovisor"
         run: |
           echo "*********INSTALL ZETAVISOR*********"
+          go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
+          zetavisor version || echo "zetavisor failed to install."
+          
           echo "*********SETUP ZETAVISOR DIRECTORIES*********"
           rm -rf /home/runner/.zetacored
           mkdir -p /home/runner/.zetacored/zetavisor
           mkdir -p /home/runner/.zetacored/zetavisor/genesis/bin
           mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin
           mkdir -p /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.upgrade_name }}/bin
-
-          go get github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
-          go install github.com/zeta-chain/cosmos-sdk/cosmovisor/cmd/zetavisor
-          zetavisor version || echo "zetavisor failed to install."
-          
 
       - name: "DOWNLOAD_STATE_EXPORT_AND_BINARIES"
         run: |
