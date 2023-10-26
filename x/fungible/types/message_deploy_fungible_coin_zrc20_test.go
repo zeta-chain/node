@@ -34,9 +34,9 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 			name: "invalid decimals",
 			msg: types.MsgDeployFungibleCoinZRC20{
 				Creator:  sample.AccAddress(),
-				Decimals: 256,
+				Decimals: 78,
 			},
-			err: sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 256"),
+			err: sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
 		},
 		{
 			name: "valid message",
