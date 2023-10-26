@@ -50,7 +50,11 @@ func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if msg.GasLimit < 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit")
+	}
+
+	if msg.Decimals > 77 {
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78")
 	}
 	return nil
 }
