@@ -50,3 +50,18 @@ func TestCrossChainTx_OriginalDestinationChainID(t *testing.T) {
 	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParams(r), sample.OutboundTxParams(r)}
 	require.Equal(t, cctx.OutboundTxParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
 }
+
+func TestOutboundTxParams_GetGasPrice(t *testing.T) {
+	// #nosec G404 - random seed is not used for security purposes
+	r := rand.New(rand.NewSource(42))
+	outTxParams := sample.OutboundTxParams(r)
+
+	outTxParams.OutboundTxGasPrice = "42"
+	gasPrice, err := outTxParams.GetGasPrice()
+	require.NoError(t, err)
+	require.EqualValues(t, uint64(42), gasPrice)
+
+	outTxParams.OutboundTxGasPrice = "invalid"
+	_, err = outTxParams.GetGasPrice()
+	require.Error(t, err)
+}

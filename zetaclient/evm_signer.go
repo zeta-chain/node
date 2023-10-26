@@ -25,7 +25,7 @@ import (
 )
 
 type EVMSigner struct {
-	client                      *ethclient.Client
+	client                      EVMRPCClient
 	chain                       *common.Chain
 	chainID                     *big.Int
 	tssSigner                   TSSSigner
@@ -40,7 +40,17 @@ type EVMSigner struct {
 
 var _ ChainSigner = &EVMSigner{}
 
-func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiString string, erc20CustodyABIString string, metaContract ethcommon.Address, erc20CustodyContract ethcommon.Address, logger zerolog.Logger, ts *TelemetryServer) (*EVMSigner, error) {
+func NewEVMSigner(
+	chain common.Chain,
+	endpoint string,
+	tssSigner TSSSigner,
+	abiString string,
+	erc20CustodyABIString string,
+	metaContract ethcommon.Address,
+	erc20CustodyContract ethcommon.Address,
+	logger zerolog.Logger,
+	ts *TelemetryServer,
+) (*EVMSigner, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -77,9 +87,16 @@ func NewEVMSigner(chain common.Chain, endpoint string, tssSigner TSSSigner, abiS
 	}, nil
 }
 
-// given data, and metadata (gas, nonce, etc)
+// Sign given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
-func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64, gasPrice *big.Int, nonce uint64, height uint64) (*ethtypes.Transaction, []byte, []byte, error) {
+func (signer *EVMSigner) Sign(
+	data []byte,
+	to ethcommon.Address,
+	gasLimit uint64,
+	gasPrice *big.Int,
+	nonce uint64,
+	height uint64,
+) (*ethtypes.Transaction, []byte, []byte, error) {
 	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
@@ -102,13 +119,14 @@ func (signer *EVMSigner) Sign(data []byte, to ethcommon.Address, gasLimit uint64
 	return signedTX, sig[:], hashBytes[:], nil
 }
 
-// takes in signed tx, broadcast to external chain node
+// Broadcast takes in signed tx, broadcast to external chain node
 func (signer *EVMSigner) Broadcast(tx *ethtypes.Transaction) error {
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	return signer.client.SendTransaction(ctxt, tx)
 }
 
+// SignOutboundTx
 // function onReceive(
 //
 //	bytes calldata originSenderAddress,
@@ -149,6 +167,7 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
 	return tx, nil
 }
 
+// SignRevertTx
 // function onRevert(
 // address originSenderAddress,
 // uint256 originChainId,
@@ -158,7 +177,19 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *EVMSigner) SignRevertTx(sender ethcommon.Address, srcChainID *big.Int, to []byte, toChainID *big.Int, amount *big.Int, gasLimit uint64, message []byte, sendHash [32]byte, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignRevertTx(
+	sender ethcommon.Address,
+	srcChainID *big.Int,
+	to []byte,
+	toChainID *big.Int,
+	amount *big.Int,
+	gasLimit uint64,
+	message []byte,
+	sendHash [32]byte,
+	nonce uint64,
+	gasPrice *big.Int,
+	height uint64,
+) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -196,7 +227,13 @@ func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height ui
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignWithdrawTx(
+	to ethcommon.Address,
+	amount *big.Int,
+	nonce uint64,
+	gasPrice *big.Int,
+	height uint64,
+) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, to, amount, 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, height, nonce, signer.chain, "")
@@ -217,7 +254,15 @@ func (signer *EVMSigner) SignWithdrawTx(to ethcommon.Address, amount *big.Int, n
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.Address, outboundParams *types.OutboundTxParams, gasLimit uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignCommandTx(
+	cmd string,
+	params string,
+	to ethcommon.Address,
+	outboundParams *types.OutboundTxParams,
+	gasLimit uint64,
+	gasPrice *big.Int,
+	height uint64,
+) (*ethtypes.Transaction, error) {
 	if cmd == common.CmdWhitelistERC20 {
 		erc20 := ethcommon.HexToAddress(params)
 		if erc20 == (ethcommon.Address{}) {
@@ -261,7 +306,14 @@ func (signer *EVMSigner) SignCommandTx(cmd string, params string, to ethcommon.A
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
 }
 
-func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *OutTxProcessorManager, outTxID string, evmClient ChainClient, zetaBridge *ZetaCoreBridge, height uint64) {
+func (signer *EVMSigner) TryProcessOutTx(
+	send *types.CrossChainTx,
+	outTxMan *OutTxProcessorManager,
+	outTxID string,
+	evmClient ChainClient,
+	zetaBridge ZetaCoreBridger,
+	height uint64,
+) {
 	logger := signer.logger.With().
 		Str("outTxID", outTxID).
 		Str("SendHash", send.Index).
@@ -272,7 +324,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 	}()
-	myid := zetaBridge.keys.GetOperatorAddress()
+	myID := zetaBridge.GetKeys().GetOperatorAddress()
 
 	var to ethcommon.Address
 	var err error
@@ -320,8 +372,8 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 
 	gasLimit := send.GetCurrentOutTxParam().OutboundTxGasLimit
-	if gasLimit < 50_000 {
-		gasLimit = 50_000
+	if gasLimit < 100_000 {
+		gasLimit = 100_000
 		logger.Warn().Msgf("gasLimit %d is too low; set to %d", send.GetCurrentOutTxParam().OutboundTxGasLimit, gasLimit)
 	}
 	if gasLimit > 1_000_000 {
@@ -504,7 +556,7 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	}
 	if tx != nil {
 		outTxHash := tx.Hash().Hex()
-		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.GetCurrentOutTxParam().OutboundTxTssNonce, outTxHash, myid)
+		logger.Info().Msgf("on chain %s nonce %d, outTxHash %s signer %s", signer.chain, send.GetCurrentOutTxParam().OutboundTxTssNonce, outTxHash, myID)
 		//if len(signers) == 0 || myid == signers[send.OutboundTxParams.Broadcaster] || myid == signers[int(send.OutboundTxParams.Broadcaster+1)%len(signers)] {
 		backOff := 1000 * time.Millisecond
 		// retry loop: 1s, 2s, 4s, 8s, 16s in case of RPC error
@@ -539,16 +591,23 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		}
 
 	}
-	//}
-
 }
 
+// SignERC20WithdrawTx
 // function withdraw(
 // address recipient,
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset ethcommon.Address, amount *big.Int, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignERC20WithdrawTx(
+	recipient ethcommon.Address,
+	asset ethcommon.Address,
+	amount *big.Int,
+	gasLimit uint64,
+	nonce uint64,
+	gasPrice *big.Int,
+	height uint64,
+) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", recipient, asset, amount)
@@ -564,13 +623,22 @@ func (signer *EVMSigner) SignERC20WithdrawTx(recipient ethcommon.Address, asset 
 	return tx, nil
 }
 
+// SignWhitelistTx
 // function whitelist(
 // address asset,
 // ) external onlyTssAddress
 // function unwhitelist(
 // address asset,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignWhitelistTx(action string, _ ethcommon.Address, asset ethcommon.Address, gasLimit uint64, nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *EVMSigner) SignWhitelistTx(
+	action string,
+	_ ethcommon.Address,
+	asset ethcommon.Address,
+	gasLimit uint64,
+	nonce uint64,
+	gasPrice *big.Int,
+	height uint64,
+) (*ethtypes.Transaction, error) {
 	var data []byte
 
 	var err error

@@ -24,19 +24,28 @@ type ZetaCoreLog struct {
 	ZetaChainWatcher zerolog.Logger
 }
 
+// CoreObserver wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
-	bridge    *ZetaCoreBridge
+	bridge    ZetaCoreBridger
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
 	metrics   *metrics.Metrics
-	tss       *TSS
 	logger    ZetaCoreLog
 	cfg       *config.Config
 	ts        *TelemetryServer
 	stop      chan struct{}
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+// NewCoreObserver creates a new CoreObserver
+func NewCoreObserver(
+	bridge ZetaCoreBridger,
+	signerMap map[common.Chain]ChainSigner,
+	clientMap map[common.Chain]ChainClient,
+	metrics *metrics.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *TelemetryServer,
+) *CoreObserver {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
@@ -50,7 +59,6 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		ZetaChainWatcher: chainLogger.With().Str("module", "ZetaChainWatcher").Logger(),
 	}
 
-	co.tss = tss
 	co.bridge = bridge
 	co.signerMap = signerMap
 
@@ -74,13 +82,13 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 }
 
 func (co *CoreObserver) MonitorCore() {
-	myid := co.bridge.keys.GetAddress()
+	myid := co.bridge.GetKeys().GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startSendScheduler()
 
 	go func() {
 		// bridge queries UpgradePlan from zetacore and send to its pause channel if upgrade height is reached
-		<-co.bridge.pause
+		co.bridge.Pause()
 		// now stop everything
 		close(co.stop) // this stops the startSendScheduler() loop
 		for _, c := range co.clientMap {
@@ -314,7 +322,7 @@ func (co *CoreObserver) getTargetChainOb(chainID int64) (ChainClient, error) {
 	return chainOb, nil
 }
 
-// returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")

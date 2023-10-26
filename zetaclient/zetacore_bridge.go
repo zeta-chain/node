@@ -2,62 +2,43 @@ package zetaclient
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/simapp/params"
-
-	"github.com/zeta-chain/zetacore/common"
-
-	"sync"
-
-	"github.com/hashicorp/go-retryablehttp"
-	"google.golang.org/grpc"
-
-	//"fmt"
-	"github.com/zeta-chain/zetacore/common/cosmos"
-	//"github.com/armon/go-metrics"
-	//"github.com/cosmos/cosmos-sdk/Client"
 	"github.com/cosmos/cosmos-sdk/codec"
-
-	//"github.com/cosmos/cosmos-sdk/std"
+	"github.com/cosmos/cosmos-sdk/simapp/params"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	//"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	//"golang.org/x/tools/go/cfg"
-	//"io/ioutil"
-	//"net/http"
-	//"net/url"
-	//"strconv"
-	//"strings"
-
 	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"google.golang.org/grpc"
 )
+
+var _ ZetaCoreBridger = &ZetaCoreBridge{}
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger        zerolog.Logger
-	blockHeight   int64
-	accountNumber map[common.KeyType]uint64
-	seqNumber     map[common.KeyType]uint64
-	grpcConn      *grpc.ClientConn
-	httpClient    *retryablehttp.Client
-	cfg           config.ClientConfiguration
-	encodingCfg   params.EncodingConfig
-	keys          *Keys
-	broadcastLock *sync.RWMutex
-	zetaChainID   string
-	//ChainNonces         map[string]uint64 // FIXME: Remove this?
+	logger              zerolog.Logger
+	blockHeight         int64
+	accountNumber       map[common.KeyType]uint64
+	seqNumber           map[common.KeyType]uint64
+	grpcConn            *grpc.ClientConn
+	httpClient          *retryablehttp.Client
+	cfg                 config.ClientConfiguration
+	encodingCfg         params.EncodingConfig
+	keys                *Keys
+	broadcastLock       *sync.RWMutex
+	zetaChainID         string
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
-
-	pause chan struct{}
+	pause               chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -79,7 +60,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		grpc.WithInsecure(),
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("grpc dial fail")
+		logger.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
 	accountsMap := make(map[common.KeyType]uint64)
@@ -114,6 +95,10 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	cosmos.RegisterCodec(cdc)
 	crosschaintypes.RegisterCodec(cdc)
 	return cdc
+}
+
+func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {
+	return &b.logger
 }
 
 func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
@@ -231,4 +216,12 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		cfg.CurrentTssPubkey = tss.GetTssPubkey()
 	}
 	return nil
+}
+
+func (b *ZetaCoreBridge) Pause() {
+	<-b.pause
+}
+
+func (b *ZetaCoreBridge) Unpause() {
+	b.pause <- struct{}{}
 }

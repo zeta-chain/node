@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -57,7 +56,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 }
 
 // CheckAndUpdateCctxGasPrice checks if the retry interval is reached and updates the gas price if so
-// The function returns the gas price increase and the additional fees paid
+// The function returns the gas price increase and the additional fees paid from the gas stability pool
 func (k Keeper) CheckAndUpdateCctxGasPrice(
 	ctx sdk.Context,
 	cctx types.CrossChainTx,
@@ -85,6 +84,23 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	}
 	gasPriceIncrease := medianGasPrice.MulUint64(uint64(flags.GasPriceIncreasePercent)).QuoUint64(100)
 
+	// compute new gas price
+	currentGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
+	if err != nil {
+		return math.ZeroUint(), math.ZeroUint(), err
+	}
+	newGasPrice := math.NewUint(currentGasPrice).Add(gasPriceIncrease)
+
+	// check limit -- use default limit if not set
+	gasPriceIncreaseMax := flags.GasPriceIncreaseMax
+	if gasPriceIncreaseMax == 0 {
+		gasPriceIncreaseMax = observertypes.DefaultGasPriceIncreaseFlags.GasPriceIncreaseMax
+	}
+	limit := medianGasPrice.MulUint64(uint64(gasPriceIncreaseMax)).QuoUint64(100)
+	if newGasPrice.GT(limit) {
+		return math.ZeroUint(), math.ZeroUint(), nil
+	}
+
 	// withdraw additional fees from the gas stability pool
 	gasLimit := math.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 	additionalFees := gasLimit.Mul(gasPriceIncrease)
@@ -95,23 +111,10 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 		)
 	}
 
-	// Increase the cctx value
-	err := k.IncreaseCctxGasPrice(ctx, cctx, gasPriceIncrease)
-
-	return gasPriceIncrease, additionalFees, err
-}
-
-// IncreaseCctxGasPrice increases the gas price associated with a CCTX and updates it in the store
-func (k Keeper) IncreaseCctxGasPrice(ctx sdk.Context, cctx types.CrossChainTx, gasPriceIncrease math.Uint) error {
-	currentGasPrice, err := strconv.ParseUint(cctx.GetCurrentOutTxParam().OutboundTxGasPrice, 10, 64)
-	if err != nil {
-		return fmt.Errorf("unable to parse cctx gas price %s: %s", cctx.GetCurrentOutTxParam().OutboundTxGasPrice, err.Error())
-	}
-
-	// increase gas price and set last update timestamp
-	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = math.NewUint(currentGasPrice).Add(gasPriceIncrease).String()
+	// set new gas price and last update timestamp
+	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = newGasPrice.String()
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 	k.SetCrossChainTx(ctx, cctx)
 
-	return nil
+	return gasPriceIncrease, additionalFees, nil
 }
