@@ -139,6 +139,7 @@ func start(_ *cobra.Command, _ []string) error {
 		err := telemetryServer.Start()
 		if err != nil {
 			startLogger.Error().Err(err).Msg("telemetryServer error")
+			panic("telemetryServer error")
 		}
 	}()
 
@@ -236,7 +237,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")

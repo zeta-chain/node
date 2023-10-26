@@ -50,3 +50,11 @@ const (
 
 	BallotListKey = "BallotList-value-"
 )
+
+func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {
+	return fmt.Sprintf("%d-%d-%s-%d", chainID, nonce, digest, height)
+}
+
+func GetBlamePrefix(chainID int64, nonce int64) string {
+	return fmt.Sprintf("%d-%d", chainID, nonce)
+}

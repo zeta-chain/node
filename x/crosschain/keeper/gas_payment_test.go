@@ -99,6 +99,7 @@ func setupGasCoin(
 		assetName,
 		symbol,
 		8,
+		nil,
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -216,7 +217,7 @@ var (
 	// gasLimit = big.NewInt(21_000) - value used in SetupChainGasCoinAndPool for gas limit initialization
 	withdrawFee uint64 = 1000
 	gasPrice    uint64 = 2
-	inputAmount uint64 = 100000
+	inputAmount uint64 = 1e16
 )
 
 func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
@@ -233,7 +234,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -258,10 +259,10 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		}
 
 		// total fees must be 21000*2+1000=43000
-		// if the input amount of the cctx is 100000, the output amount must be 100000-43000=57000
+		// if the input amount of the cctx is 1e16, the output amount must be 1e16-43000=9999999999957000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
 		require.NoError(t, err)
-		require.Equal(t, uint64(57000), cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutTxParam().Amount.Uint64())
 		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
@@ -332,7 +333,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -387,7 +388,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -501,7 +502,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "foo")
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -556,7 +557,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -611,7 +612,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		)
 		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
