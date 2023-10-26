@@ -13,7 +13,7 @@ import (
 
 // UpdateZRC20PausedStatus updates the paused status of a ZRC20
 // The list of ZRC20s are either paused or unpaused
-func (k Keeper) UpdateZRC20PausedStatus(
+func (k msgServer) UpdateZRC20PausedStatus(
 	goCtx context.Context,
 	msg *types.MsgUpdateZRC20PausedStatus,
 ) (*types.MsgUpdateZRC20PausedStatusResponse, error) {

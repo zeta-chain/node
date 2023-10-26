@@ -13,6 +13,7 @@ import (
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -33,6 +34,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
+		msgServer := keeper.NewMsgServerImpl(*k)
 
 		// set admin policy
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -92,7 +94,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NoError(t, err)
 
 		// update the bytecode
-		res, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		res, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20,
 			newCodeAddress,
@@ -133,7 +135,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			big.NewInt(90_000),
 		)
 		require.NoError(t, err)
-		_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20,
 			newCodeAddress,
@@ -154,6 +156,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
+		msgServer := keeper.NewMsgServerImpl(*k)
 
 		// deploy a connector
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -166,7 +169,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, newConnector)
 
 		// can update the bytecode of the new connector with the old connector contract
-		_, err = k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			newConnector,
 			oldConnector,
@@ -176,8 +179,9 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 	t.Run("should fail if unauthorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			sample.AccAddress(),
 			sample.EthAddress(),
 			sample.EthAddress(),
@@ -187,10 +191,12 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 	t.Run("should fail invalid contract address", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
+
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
-		_, err := k.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
+		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
 			Creator:            admin,
 			ContractAddress:    "invalid",
 			NewBytecodeAddress: sample.EthAddress().Hex(),
@@ -202,6 +208,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
+		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -213,7 +220,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			contractAddr,
 		).Return(nil)
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			contractAddr,
 			sample.EthAddress(),
@@ -225,6 +232,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 	t.Run("should fail neither a zrc20 nor wzeta connector", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
@@ -232,7 +240,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// can't update the bytecode of the wzeta contract
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			wzeta,
 			sample.EthAddress(),
@@ -242,6 +250,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 	t.Run("should fail if system contract not found", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
@@ -252,7 +261,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k.RemoveSystemContract(ctx)
 
 		// can't update the bytecode of the wzeta contract
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			connector,
 			sample.EthAddress(),
@@ -264,6 +273,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
+		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -280,7 +290,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			mock.Anything,
 		).Return(&statedb.Account{})
 
-		_, err := k.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
+		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
 			Creator:            admin,
 			ContractAddress:    contract.Hex(),
 			NewBytecodeAddress: "invalid",
@@ -295,6 +305,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
+		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -318,7 +329,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			newBytecodeAddr,
 		).Return(nil)
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			contractAddr,
 			newBytecodeAddr,
@@ -332,6 +343,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseEVMMock: true,
 		})
+		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -362,7 +374,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			mock.Anything,
 		).Return(errors.New("can't set account"))
 
-		_, err := k.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			contractAddr,
 			newBytecodeAddr,
