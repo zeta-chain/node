@@ -18,7 +18,11 @@ func SetupHandlers(app *App) {
 			vm[m] = mb.ConsensusVersion()
 		}
 		vm[observertypes.ModuleName] = vm[observertypes.ModuleName] - 1
+		info, _ := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress("valAddr"))
+		info.Tombstoned = false
+		app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress("valAddr"), info)
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
+
 	})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
