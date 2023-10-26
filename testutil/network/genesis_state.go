@@ -105,9 +105,12 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 	crosschainFlags := &observerTypes.CrosschainFlags{
-		IsInboundEnabled:  true,
-		IsOutboundEnabled: true,
+		IsInboundEnabled:             true,
+		IsOutboundEnabled:            true,
+		GasPriceIncreaseFlags:        &observerTypes.DefaultGasPriceIncreaseFlags,
+		BlockHeaderVerificationFlags: &observerTypes.DefaultBlockHeaderVerificationFlags,
 	}
+
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags
 
@@ -163,6 +166,16 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 		}
 		nullify.Fill(&outTxTracker)
 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
+	}
+
+	for i := 0; i < n; i++ {
+		inTxTracker := types.InTxTracker{
+			ChainId:  5,
+			TxHash:   fmt.Sprintf("txHash-%d", i),
+			CoinType: common.CoinType_Gas,
+		}
+		nullify.Fill(&inTxTracker)
+		state.InTxTrackerList = append(state.InTxTrackerList, inTxTracker)
 	}
 
 	for i := 0; i < n; i++ {

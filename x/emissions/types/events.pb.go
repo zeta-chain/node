@@ -51,8 +51,8 @@ func (EmissionType) EnumDescriptor() ([]byte, []int) {
 }
 
 type ObserverEmission struct {
-	EmissionType    EmissionType `protobuf:"varint,1,opt,name=emission_type,json=emissionType,proto3,enum=zetachain.zetacore.emissions.EmissionType" json:"emission_type,omitempty"`
-	ObserverAddress string       `protobuf:"bytes,2,opt,name=observer_address,json=observerAddress,proto3" json:"observer_address,omitempty"`
+	EmissionType    EmissionType                           `protobuf:"varint,1,opt,name=emission_type,json=emissionType,proto3,enum=zetachain.zetacore.emissions.EmissionType" json:"emission_type,omitempty"`
+	ObserverAddress string                                 `protobuf:"bytes,2,opt,name=observer_address,json=observerAddress,proto3" json:"observer_address,omitempty"`
 	Amount          github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
 }
 
