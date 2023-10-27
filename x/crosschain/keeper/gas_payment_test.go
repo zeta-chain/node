@@ -22,14 +22,19 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// get a valid chain id independently of the build flag
+// get a valid eth chain id independently of the build flag
 func getValidEthChainID(t *testing.T) int64 {
+	return getValidEthChain(t).ChainId
+}
+
+// get a valid eth chain independently of the build flag
+func getValidEthChain(t *testing.T) *zetacommon.Chain {
 	list := zetacommon.DefaultChainsList()
 	require.True(t, len(list) > 1)
 	require.NotNil(t, list[1])
 	require.False(t, zetacommon.IsBitcoinChain(list[1].ChainId))
 
-	return list[1].ChainId
+	return list[1]
 }
 
 // assert that a contract has been deployed by checking stored code is non-empty.
@@ -94,6 +99,7 @@ func setupGasCoin(
 		assetName,
 		symbol,
 		8,
+		nil,
 	)
 	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
@@ -211,7 +217,7 @@ var (
 	// gasLimit = big.NewInt(21_000) - value used in SetupChainGasCoinAndPool for gas limit initialization
 	withdrawFee uint64 = 1000
 	gasPrice    uint64 = 2
-	inputAmount uint64 = 100000
+	inputAmount uint64 = 1e16
 )
 
 func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
@@ -220,14 +226,15 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -252,10 +259,10 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		}
 
 		// total fees must be 21000*2+1000=43000
-		// if the input amount of the cctx is 100000, the output amount must be 100000-43000=57000
+		// if the input amount of the cctx is 1e16, the output amount must be 1e16-43000=9999999999957000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
 		require.NoError(t, err)
-		require.Equal(t, uint64(57000), cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutTxParam().Amount.Uint64())
 		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
 		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
@@ -318,14 +325,15 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin and set fee params
 		chainID := getValidEthChainID(t)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -361,6 +369,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -377,9 +386,9 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			assetAddress,
 			"bar",
 		)
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -484,15 +493,16 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
 		assetAddress := sample.EthAddress().String()
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "foo")
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -528,6 +538,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -544,9 +555,9 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			assetAddress,
 			"bar",
 		)
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
@@ -582,6 +593,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
+		fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
 
 		// deploy gas coin, erc20 and set fee params
 		chainID := getValidEthChainID(t)
@@ -598,9 +610,9 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			assetAddress,
 			"bar",
 		)
-		_, err := zk.FungibleKeeper.UpdateZRC20WithdrawFee(
+		_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
 			sdk.UnwrapSDKContext(ctx),
-			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee)),
+			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
 		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{

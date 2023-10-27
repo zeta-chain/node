@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -108,12 +107,11 @@ func (k msgServer) NonceVoter(goCtx context.Context, msg *types.MsgNonceVoter) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
 	if chain == nil {
-		return nil, zetaObserverTypes.ErrSupportedChains
+		return nil, observertypes.ErrSupportedChains
 	}
 
-	ok, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
-	if !ok {
-		return nil, err
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain); !ok {
+		return nil, observertypes.ErrNotAuthorizedPolicy
 	}
 	chainNonce, isFound := k.GetChainNonces(ctx, chain.ChainName.String())
 

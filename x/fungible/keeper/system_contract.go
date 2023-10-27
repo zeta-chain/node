@@ -60,7 +60,10 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
+	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+	if err != nil {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get system contract abi")
+	}
 
 	res, err := k.CallEVM(
 		ctx,
@@ -93,7 +96,10 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
+	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+	if err != nil {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get system contract abi")
+	}
 
 	res, err := k.CallEVM(
 		ctx,
@@ -126,7 +132,10 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrStateVariableNotFound, "failed to get system contract variable")
 	}
 	systemAddress := ethcommon.HexToAddress(system.SystemContract)
-	sysABI, _ := systemcontract.SystemContractMetaData.GetAbi()
+	sysABI, err := systemcontract.SystemContractMetaData.GetAbi()
+	if err != nil {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get system contract abi")
+	}
 
 	res, err := k.CallEVM(
 		ctx,

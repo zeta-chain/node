@@ -24,7 +24,7 @@ type Keys struct {
 	signerName      string
 	password        string // TODO this is a bad way , need to fix it
 	kb              ckeys.Keyring
-	operatorAddress sdk.AccAddress
+	OperatorAddress sdk.AccAddress
 }
 
 // NewKeysWithKeybase create a new instance of Keys
@@ -33,7 +33,7 @@ func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, grantee
 		signerName:      granteeName,
 		password:        password,
 		kb:              kb,
-		operatorAddress: granterAddress,
+		OperatorAddress: granterAddress,
 	}
 }
 
@@ -106,7 +106,7 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 }
 
 func (k *Keys) GetOperatorAddress() sdk.AccAddress {
-	return k.operatorAddress
+	return k.OperatorAddress
 }
 
 func (k *Keys) GetAddress() sdk.AccAddress {
@@ -115,7 +115,10 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 	if err != nil {
 		panic(err)
 	}
-	addr, _ := info.GetAddress()
+	addr, err := info.GetAddress()
+	if err != nil {
+		return nil
+	}
 	return addr
 }
 

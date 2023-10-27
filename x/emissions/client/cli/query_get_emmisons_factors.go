@@ -21,9 +21,9 @@ func CmdGetEmmisonsFactors() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetEmmisonsFactorsRequest{}
+			params := &types.QueryGetEmissionsFactorsRequest{}
 
-			res, err := queryClient.GetEmmisonsFactors(cmd.Context(), params)
+			res, err := queryClient.GetEmissionsFactors(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

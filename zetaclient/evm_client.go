@@ -3,44 +3,36 @@ package zetaclient
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
-	"encoding/hex"
 	"fmt"
-	math2 "math"
+	"math"
 	"math/big"
 	"os"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-
-	erc20custody "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	"github.com/ethereum/go-ethereum"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type TxHashEnvelope struct {
@@ -65,20 +57,20 @@ const (
 	DonationMessage = "I am rich!"
 )
 
-// Chain configuration struct
+// EVMChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type EVMChainClient struct {
 	*ChainMetrics
 	chain                     common.Chain
-	EvmClient                 *ethclient.Client
-	KlaytnClient              *KlaytnClient
-	zetaClient                *ZetaCoreBridge
+	evmClient                 EVMRPCClient
+	KlaytnClient              KlaytnRPCClient
+	zetaClient                ZetaCoreBridger
 	Tss                       TSSSigner
 	lastBlockScanned          int64
 	lastBlock                 int64
 	BlockTimeExternalChain    uint64 // block time in seconds
 	txWatchList               map[ethcommon.Hash]string
-	mu                        *sync.Mutex
+	Mu                        *sync.Mutex
 	db                        *gorm.DB
 	outTXConfirmedReceipts    map[string]*ethtypes.Receipt
 	outTXConfirmedTransaction map[string]*ethtypes.Transaction
@@ -97,8 +89,17 @@ type EVMChainClient struct {
 
 var _ ChainClient = (*EVMChainClient)(nil)
 
-// Return configuration based on supplied target chain
-func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, metrics *metricsPkg.Metrics, logger zerolog.Logger, cfg *config.Config, evmCfg config.EVMConfig, ts *TelemetryServer) (*EVMChainClient, error) {
+// NewEVMChainClient returns a new configuration based on supplied target chain
+func NewEVMChainClient(
+	bridge ZetaCoreBridger,
+	tss TSSSigner,
+	dbpath string,
+	metrics *metricsPkg.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	evmCfg config.EVMConfig,
+	ts *TelemetryServer,
+) (*EVMChainClient, error) {
 	ob := EVMChainClient{
 		ChainMetrics: NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
@@ -114,7 +115,7 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	ob.params = evmCfg.CoreParams
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
-	ob.mu = &sync.Mutex{}
+	ob.Mu = &sync.Mutex{}
 	ob.zetaClient = bridge
 	ob.txWatchList = make(map[ethcommon.Hash]string)
 	ob.Tss = tss
@@ -135,7 +136,7 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 		ob.logger.ChainLogger.Error().Err(err).Msg("eth Client Dial")
 		return nil, err
 	}
-	ob.EvmClient = client
+	ob.evmClient = client
 
 	ob.BlockCache, err = lru.New(1000)
 	if err != nil {
@@ -144,12 +145,12 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 	}
 
 	if ob.chain.IsKlaytnChain() {
-		kclient, err := Dial(evmCfg.Endpoint)
+		client, err := Dial(evmCfg.Endpoint)
 		if err != nil {
 			ob.logger.ChainLogger.Err(err).Msg("klaytn Client Dial")
 			return nil, err
 		}
-		ob.KlaytnClient = kclient
+		ob.KlaytnClient = client
 	}
 
 	// create metric counters
@@ -175,30 +176,77 @@ func NewEVMChainClient(bridge *ZetaCoreBridge, tss TSSSigner, dbpath string, met
 
 	return &ob, nil
 }
+func (ob *EVMChainClient) WithChain(chain common.Chain) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.chain = chain
+}
+func (ob *EVMChainClient) WithLogger(logger zerolog.Logger) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.logger = EVMLog{
+		ChainLogger:          logger,
+		ExternalChainWatcher: logger.With().Str("module", "ExternalChainWatcher").Logger(),
+		WatchGasPrice:        logger.With().Str("module", "WatchGasPrice").Logger(),
+		ObserveOutTx:         logger.With().Str("module", "ObserveOutTx").Logger(),
+	}
+}
+
+func (ob *EVMChainClient) WithEvmClient(client *ethclient.Client) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.evmClient = client
+}
+
+func (ob *EVMChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.zetaClient = bridge
+}
+
+func (ob *EVMChainClient) WithParams(params observertypes.CoreParams) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.params = params
+}
+
+func (ob *EVMChainClient) SetConfig(cfg *config.Config) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.cfg = cfg
+}
 
 func (ob *EVMChainClient) SetCoreParams(params observertypes.CoreParams) {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
 func (ob *EVMChainClient) GetCoreParams() observertypes.CoreParams {
-	ob.mu.Lock()
-	defer ob.mu.Unlock()
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
 	return ob.params
 }
 
 func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetCoreParams().ConnectorContractAddress)
-	return zetaconnector.NewZetaConnectorNonEth(addr, ob.EvmClient)
+	return FetchConnectorContract(addr, ob.evmClient)
 }
 
+func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
+	return zetaconnector.NewZetaConnectorNonEth(addr, client)
+}
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetCoreParams().Erc20CustodyContractAddress)
-	return erc20custody.NewERC20Custody(addr, ob.EvmClient)
+	return FetchERC20CustodyContract(addr, ob.evmClient)
+}
+
+func FetchERC20CustodyContract(addr ethcommon.Address, client EVMRPCClient) (*erc20custody.ERC20Custody, error) {
+	return erc20custody.NewERC20Custody(addr, client)
 }
 
 func (ob *EVMChainClient) Start() {
+	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
@@ -224,11 +272,11 @@ func (ob *EVMChainClient) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
-	ob.mu.Lock()
+	ob.Mu.Lock()
 	params := ob.params
 	receipt, found1 := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
 	transaction, found2 := ob.outTXConfirmedTransaction[ob.GetTxID(nonce)]
-	ob.mu.Unlock()
+	ob.Mu.Unlock()
 	found := found1 && found2
 	if !found {
 		return false, false, nil
@@ -257,7 +305,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if err != nil {
 			logger.Error().Err(err).Msg("error posting confirmation to meta core")
 		}
-		logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
@@ -278,7 +326,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msg("error posting confirmation to meta core")
 			}
-			logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
@@ -298,7 +346,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
@@ -306,7 +354,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			logs := receipt.Logs
 			for _, vLog := range logs {
 				confHeight := vLog.BlockNumber + params.ConfirmationCount
-				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+				if confHeight < 0 || confHeight >= math.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				// TODO rewrite this to return early if not confirmed
@@ -317,6 +365,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				receivedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
+					// #nosec G701 checked in range
 					if int64(confHeight) < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
@@ -343,15 +392,17 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Error().Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
+					// #nosec G701 always in range
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 				revertedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
+					// #nosec G701 checked in range
 					if int64(confHeight) < ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
@@ -377,9 +428,10 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s", metaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
 						return true, true, nil
 					}
+					// #nosec G701 always in range
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
@@ -403,7 +455,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s", zetaTxHash)
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_ERC20 {
@@ -416,11 +468,12 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			for _, vLog := range logs {
 				event, err := ERC20Custody.ParseWithdrawn(*vLog)
 				confHeight := vLog.BlockNumber + params.ConfirmationCount
-				if confHeight < 0 || confHeight >= math2.MaxInt64 {
+				if confHeight < 0 || confHeight >= math.MaxInt64 {
 					return false, false, fmt.Errorf("confHeight is out of range")
 				}
 				if err == nil {
 					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
+					// #nosec G701 checked in range
 					if int64(confHeight) < ob.GetLastBlockHeight() {
 
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
@@ -441,13 +494,34 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							logger.Error().Err(err).Msg("error posting confirmation to meta core")
 							continue
 						}
-						logger.Info().Msgf("Zeta tx hash: %s\n", zetaHash)
+						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
+					// #nosec G701 always in range
 					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
+		} else {
+			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
+			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+				sendHash,
+				receipt.TxHash.Hex(),
+				receipt.BlockNumber.Uint64(),
+				receipt.GasUsed,
+				transaction.GasPrice(),
+				transaction.Gas(),
+				big.NewInt(0),
+				common.ReceiveStatus_Failed,
+				ob.chain,
+				nonce,
+				common.CoinType_ERC20,
+			)
+			if err != nil {
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+			}
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+			return true, true, nil
 		}
 	}
 
@@ -503,9 +577,9 @@ func (ob *EVMChainClient) observeOutTx() {
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
-						ob.mu.Lock()
+						ob.Mu.Lock()
 						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
-						ob.mu.Unlock()
+						ob.Mu.Unlock()
 						if found {
 							continue
 						}
@@ -513,10 +587,10 @@ func (ob *EVMChainClient) observeOutTx() {
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
-							ob.mu.Lock()
+							ob.Mu.Lock()
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
-							ob.mu.Unlock()
+							ob.Mu.Unlock()
 
 							break TXHASHLOOP
 						}
@@ -547,14 +621,14 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
+	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
 			logger.Warn().Err(err).Msg("TransactionReceipt/TransactionByHash error")
 		}
 		return nil, nil, err
 	}
-	transaction, _, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	transaction, _, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -562,10 +636,11 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
-	if confHeight < 0 || confHeight >= math2.MaxInt64 {
+	if confHeight < 0 || confHeight >= math.MaxInt64 {
 		return nil, nil, fmt.Errorf("confHeight is out of range")
 	}
 
+	// #nosec G701 checked in range
 	if int64(confHeight) > ob.GetLastBlockHeight() {
 		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
@@ -578,7 +653,7 @@ func (ob *EVMChainClient) SetLastBlockHeightScanned(block int64) {
 	if block < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, block)
@@ -591,7 +666,7 @@ func (ob *EVMChainClient) GetLastBlockHeightScanned() int64 {
 	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlockScanned is too large")
 	}
 	return height
@@ -602,7 +677,7 @@ func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
 	if block < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math2.MaxInt64 {
+	if block >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	atomic.StoreInt64(&ob.lastBlock, block)
@@ -614,7 +689,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if height >= math2.MaxInt64 {
+	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
 	return height
@@ -641,12 +716,13 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 func (ob *EVMChainClient) observeInTX() error {
-	header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
+	header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		return err
 	}
 	// "confirmed" current block number
 	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
+	// #nosec G701 always in range
 	ob.SetLastBlockHeight(int64(confirmedBlockNum))
 
 	crosschainFlags, err := ob.zetaClient.GetCrosschainFlags()
@@ -664,10 +740,11 @@ func (ob *EVMChainClient) observeInTX() error {
 
 	// skip if no new block is produced.
 	sampledLogger := ob.logger.ExternalChainWatcher.Sample(&zerolog.BasicSampler{N: 10})
-	if confirmedBlockNum < 0 || confirmedBlockNum > math2.MaxUint64 {
+	if confirmedBlockNum < 0 || confirmedBlockNum > math.MaxUint64 {
 		sampledLogger.Error().Msg("Skipping observer , confirmedBlockNum is negative or too large ")
 		return nil
 	}
+	// #nosec G701 checked in range
 	if confirmedBlockNum <= uint64(ob.GetLastBlockHeightScanned()) {
 		sampledLogger.Debug().Msg("Skipping observer , No new block is produced ")
 		return nil
@@ -675,18 +752,21 @@ func (ob *EVMChainClient) observeInTX() error {
 	lastBlock := ob.GetLastBlockHeightScanned()
 	startBlock := lastBlock + 1
 	toBlock := lastBlock + config.MaxBlocksPerPeriod // read at most 10 blocks in one go
+	// #nosec G701 always positive
 	if uint64(toBlock) >= confirmedBlockNum {
+		// #nosec G701 checked in range
 		toBlock = int64(confirmedBlockNum)
 	}
-	if startBlock < 0 || startBlock >= math2.MaxInt64 {
+	if startBlock < 0 || startBlock >= math.MaxInt64 {
 		return fmt.Errorf("startBlock is negative or too large")
 	}
-	if toBlock < 0 || toBlock >= math2.MaxInt64 {
+	if toBlock < 0 || toBlock >= math.MaxInt64 {
 		return fmt.Errorf("toBlock is negative or too large")
 	}
 	ob.logger.ExternalChainWatcher.Info().Msgf("Checking for all inTX : startBlock %d, toBlock %d", startBlock, toBlock)
 	//task 1:  Query evm chain for zeta sent logs
 	func() {
+		// #nosec G701 always positive
 		tb := uint64(toBlock)
 		connector, err := ob.GetConnectorContract()
 		if err != nil {
@@ -700,6 +780,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			cnt.Inc()
 		}
 		logs, err := connector.FilterZetaSent(&bind.FilterOpts{
+			// #nosec G701 always positive
 			Start:   uint64(startBlock),
 			End:     &tb,
 			Context: context.TODO(),
@@ -710,43 +791,16 @@ func (ob *EVMChainClient) observeInTX() error {
 		}
 		// Pull out arguments from logs
 		for logs.Next() {
-			event := logs.Event
-			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-			destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
-			if destChain == nil {
-				ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
+			msg, err := ob.GetInboundVoteMsgForZetaSentEvent(logs.Event)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error getting inbound vote msg")
 				continue
 			}
-			destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-			if destChain.IsExternalChain() {
-				cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
-				if !found {
-					ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
-					continue
-				}
-				if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
-					ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-					continue
-				}
-			}
-			zetaHash, err := ob.zetaClient.PostSend(
-				event.ZetaTxSenderAddress.Hex(),
-				ob.chain.ChainId,
-				event.SourceTxOriginAddress.Hex(),
-				clienttypes.BytesToEthHex(event.DestinationAddress),
-				destChain.ChainId,
-				math.NewUintFromBigInt(event.ZetaValueAndGas),
-				base64.StdEncoding.EncodeToString(event.Message),
-				event.Raw.TxHash.Hex(),
-				event.Raw.BlockNumber,
-				event.DestinationGasLimit.Uint64(),
-				common.CoinType_Zeta,
-				PostSendNonEVMGasLimit,
-				"",
-			)
+
+			zetaHash, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-				continue
+				return
 			}
 			ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
@@ -754,6 +808,7 @@ func (ob *EVMChainClient) observeInTX() error {
 
 	// task 2: Query evm chain for deposited logs
 	func() {
+		// #nosec G701 always positive
 		toB := uint64(toBlock)
 		erc20custody, err := ob.GetERC20CustodyContract()
 		if err != nil {
@@ -761,6 +816,7 @@ func (ob *EVMChainClient) observeInTX() error {
 			return
 		}
 		depositedLogs, err := erc20custody.FilterDeposited(&bind.FilterOpts{
+			// #nosec G701 always positive
 			Start:   uint64(startBlock),
 			End:     &toB,
 			Context: context.TODO(),
@@ -779,45 +835,14 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		// Pull out arguments from logs
 		for depositedLogs.Next() {
-			event := depositedLogs.Event
-			ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-			// TODO :add logger to POSTSEND
-			if bytes.Compare(event.Message, []byte(DonationMessage)) == 0 {
-				ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-				continue
-			}
-
-			// get the sender of the event's transaction
-			tx, _, err := ob.EvmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
+			msg, err := ob.GetInboundVoteMsgForDepositedEvent(depositedLogs.Event)
 			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
 				continue
 			}
-			signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-			sender, err := signer.Sender(tx)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
-				continue
-			}
-
-			zetaHash, err := ob.zetaClient.PostSend(
-				sender.Hex(),
-				ob.chain.ChainId,
-				"",
-				clienttypes.BytesToEthHex(event.Recipient),
-				common.ZetaChain().ChainId,
-				math.NewUintFromBigInt(event.Amount),
-				hex.EncodeToString(event.Message),
-				event.Raw.TxHash.Hex(),
-				event.Raw.BlockNumber,
-				1_500_000,
-				common.CoinType_ERC20,
-				PostSendEVMGasLimit,
-				event.Asset.String(),
-			)
+			zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
-				continue
+				return
 			}
 			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Custody Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
@@ -834,13 +859,11 @@ func (ob *EVMChainClient) observeInTX() error {
 		// query incoming gas asset
 		if !ob.chain.IsKlaytnChain() {
 			for bn := startBlock; bn <= toBlock; bn++ {
-				//block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(int64(bn)))
 				block, err := ob.GetBlockByNumberCached(bn)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
 					continue
 				}
-				_ = ob.BlockCache.Add(block.Hash(), block)
 				headerRLP, err := rlp.EncodeToBytes(block.Header())
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
@@ -868,17 +891,17 @@ func (ob *EVMChainClient) observeInTX() error {
 					}
 
 					if *tx.To() == tssAddress {
-						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash())
+						receipt, err := ob.evmClient.TransactionReceipt(context.Background(), tx.Hash())
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
 							continue
 						}
 						if receipt.Status != 1 { // 1: successful, 0: failed
-							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
+							ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash())
 							continue
 						}
 
-						from, err := ob.EvmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
+						from, err := ob.evmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionSender error; trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address")
 							signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
@@ -888,8 +911,11 @@ func (ob *EVMChainClient) observeInTX() error {
 								continue
 							}
 						}
-
-						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+						msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
+						if msg == nil {
+							continue
+						}
+						zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 							continue
@@ -911,7 +937,7 @@ func (ob *EVMChainClient) observeInTX() error {
 						continue
 					}
 					if *tx.To == tssAddress {
-						receipt, err := ob.EvmClient.TransactionReceipt(context.Background(), tx.Hash)
+						receipt, err := ob.evmClient.TransactionReceipt(context.Background(), tx.Hash)
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Err(err).Msg("TransactionReceipt error")
 							continue
@@ -923,8 +949,11 @@ func (ob *EVMChainClient) observeInTX() error {
 
 						from := *tx.From
 						value := tx.Value.ToInt()
-
-						zetaHash, err := ob.ReportTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
+						msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash, value, receipt, from, tx.Input)
+						if msg == nil {
+							continue
+						}
+						zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 						if err != nil {
 							ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 							continue
@@ -943,38 +972,16 @@ func (ob *EVMChainClient) observeInTX() error {
 	return nil
 }
 
-func (ob *EVMChainClient) ReportTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) (string, error) {
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx value: %s", value.String())
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx from: %s", from.Hex())
-	message := ""
-	if len(data) != 0 {
-		message = hex.EncodeToString(data)
-	}
-	zetaHash, err := ob.zetaClient.PostSend(
-		from.Hex(),
-		ob.chain.ChainId,
-		from.Hex(),
-		from.Hex(),
-		common.ZetaChain().ChainId,
-		math.NewUintFromBigInt(value),
-		message,
-		txhash.Hex(),
-		receipt.BlockNumber.Uint64(),
-		90_000,
-		common.CoinType_Gas,
-		PostSendEVMGasLimit,
-		"",
-	)
-	return zetaHash, err
-}
-
 func (ob *EVMChainClient) WatchGasPrice() {
 
 	err := ob.PostGasPrice()
 	if err != nil {
-		height, _ := ob.zetaClient.GetBlockHeight()
-		ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+		height, err := ob.zetaClient.GetBlockHeight()
+		if err != nil {
+			ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
+		} else {
+			ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+		}
 	}
 	ticker := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
 	defer ticker.Stop()
@@ -983,8 +990,12 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		case <-ticker.C():
 			err := ob.PostGasPrice()
 			if err != nil {
-				height, _ := ob.zetaClient.GetBlockHeight()
-				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+				height, err := ob.zetaClient.GetBlockHeight()
+				if err != nil {
+					ob.logger.WatchGasPrice.Error().Err(err).Msg("GetBlockHeight error")
+				} else {
+					ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
+				}
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
@@ -996,12 +1007,12 @@ func (ob *EVMChainClient) WatchGasPrice() {
 
 func (ob *EVMChainClient) PostGasPrice() error {
 	// GAS PRICE
-	gasPrice, err := ob.EvmClient.SuggestGasPrice(context.TODO())
+	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("Err SuggestGasPrice:")
 		return err
 	}
-	blockNum, err := ob.EvmClient.BlockNumber(context.TODO())
+	blockNum, err := ob.evmClient.BlockNumber(context.TODO())
 	if err != nil {
 		ob.logger.WatchGasPrice.Err(err).Msg("Err Fetching Most recent Block : ")
 		return err
@@ -1029,6 +1040,7 @@ func (ob *EVMChainClient) getLastHeight() (int64, error) {
 	if err != nil {
 		return 0, errors.Wrap(err, "getLastHeight")
 	}
+	// #nosec G701 always in range
 	return int64(lastheight.LastSendHeight), nil
 }
 
@@ -1039,7 +1051,7 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 	if scanFromBlock != "" {
 		logger.Info().Msgf("envvar %s is set; scan from  block %s", envvar, scanFromBlock)
 		if scanFromBlock == clienttypes.EnvVarLatest {
-			header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
+			header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 			if err != nil {
 				return err
 			}
@@ -1062,7 +1074,7 @@ func (ob *EVMChainClient) BuildBlockIndex() error {
 			ob.SetLastBlockHeightScanned(lastheight)
 			// if ZetaCore does not have last heard block height, then use current
 			if ob.GetLastBlockHeightScanned() == 0 {
-				header, err := ob.EvmClient.HeaderByNumber(context.Background(), nil)
+				header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
 				if err != nil {
 					return err
 				}
@@ -1160,6 +1172,7 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv := tracker.Nonce
+		// #nosec G701 always in range
 		intNonce := int64(conv)
 		if minNonce == -1 {
 			minNonce = intNonce
@@ -1189,10 +1202,11 @@ func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber int64) (*ethtypes.B
 	if block, ok := ob.BlockCache.Get(blockNumber); ok {
 		return block.(*ethtypes.Block), nil
 	}
-	block, err := ob.EvmClient.BlockByNumber(context.Background(), big.NewInt(blockNumber))
+	block, err := ob.evmClient.BlockByNumber(context.Background(), big.NewInt(blockNumber))
 	if err != nil {
 		return nil, err
 	}
 	ob.BlockCache.Add(blockNumber, block)
+	ob.BlockCache.Add(block.Hash(), block)
 	return block, nil
 }

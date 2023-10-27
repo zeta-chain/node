@@ -39,8 +39,13 @@ func init() {
 }
 
 func start(_ *cobra.Command, _ []string) error {
-	setHomeDir()
+	err := setHomeDir()
+	if err != nil {
+		return err
+	}
+
 	SetupConfigForTest()
+
 	//Load Config file given path
 	cfg, err := config.Load(rootArgs.zetaCoreHome)
 	if err != nil {
@@ -134,6 +139,7 @@ func start(_ *cobra.Command, _ []string) error {
 		err := telemetryServer.Start()
 		if err != nil {
 			startLogger.Error().Err(err).Msg("telemetryServer error")
+			panic("telemetryServer error")
 		}
 	}()
 
@@ -213,7 +219,11 @@ func start(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userDir, _ := os.UserHomeDir()
+	userDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Error().Err(err).Msg("os.UserHomeDir")
+		return err
+	}
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
@@ -227,7 +237,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")

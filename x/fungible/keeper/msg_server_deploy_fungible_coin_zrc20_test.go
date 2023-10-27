@@ -46,6 +46,11 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.Equal(t, foreignCoin.CoinType, common.CoinType_Gas)
 		require.Contains(t, foreignCoin.Name, "foo")
 
+		// check gas limit
+		gasLimit, err := k.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
+		require.NoError(t, err)
+		require.Equal(t, uint64(1000000), gasLimit.Uint64())
+
 		gas, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 		require.NoError(t, err)
 		require.Equal(t, gasAddress, gas.Hex())
@@ -59,7 +64,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			"bar",
 			"bar",
 			common.CoinType_ERC20,
-			1000000,
+			2000000,
 		))
 		require.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.Address))
@@ -68,6 +73,11 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, foreignCoin.CoinType, common.CoinType_ERC20)
 		require.Contains(t, foreignCoin.Name, "bar")
+
+		// check gas limit
+		gasLimit, err = k.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
+		require.NoError(t, err)
+		require.Equal(t, uint64(2000000), gasLimit.Uint64())
 
 		// gas should remain the same
 		gas, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -112,7 +122,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
-			256,
+			78,
 			"foo",
 			"foo",
 			common.CoinType_Gas,

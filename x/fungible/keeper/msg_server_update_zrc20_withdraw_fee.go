@@ -8,12 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
+func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
@@ -36,28 +35,24 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 	if err != nil {
 		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query protocol flat fee (%s)", err.Error())
 	}
-
-	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
+	oldGasLimit, err := k.QueryGasLimit(ctx, zrc20Addr)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrABIGet, "failed to get zrc20 abi")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query gas limit (%s)", err.Error())
 	}
 
-	// call the contract method to update the fee
+	// call the contract methods
 	tmpCtx, commit := ctx.CacheContext()
-	_, err = k.CallEVM(
-		tmpCtx,
-		*zrc20ABI,
-		types.ModuleAddressEVM,
-		zrc20Addr,
-		BigIntZero,
-		nil,
-		true,
-		false,
-		"updateProtocolFlatFee",
-		msg.NewWithdrawFee.BigInt(),
-	)
-	if err != nil {
-		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateProtocolFlatFee method (%s)", err.Error())
+	if !msg.NewWithdrawFee.IsNil() {
+		_, err = k.UpdateZRC20ProtocolFlatFee(tmpCtx, zrc20Addr, msg.NewWithdrawFee.BigInt())
+		if err != nil {
+			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateProtocolFlatFee method (%s)", err.Error())
+		}
+	}
+	if !msg.NewGasLimit.IsNil() {
+		_, err = k.UpdateZRC20GasLimit(tmpCtx, zrc20Addr, msg.NewGasLimit.BigInt())
+		if err != nil {
+			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateGasLimit method (%s)", err.Error())
+		}
 	}
 
 	err = ctx.EventManager().EmitTypedEvent(
@@ -67,8 +62,10 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 			CoinType:       coin.CoinType,
 			Zrc20Address:   zrc20Addr.Hex(),
 			OldWithdrawFee: oldWithdrawFee.String(),
-			NewWithdrawFee: msg.NewWithdrawFee.BigInt().String(),
+			NewWithdrawFee: msg.NewWithdrawFee.String(),
 			Signer:         msg.Creator,
+			OldGasLimit:    oldGasLimit.String(),
+			NewGasLimit:    msg.NewGasLimit.String(),
 		},
 	)
 	if err != nil {

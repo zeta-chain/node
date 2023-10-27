@@ -292,7 +292,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestBitcoinWithdraw()
-	//smokeTest.CheckZRC20ReserveAndSupply()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestCrosschainSwap()
 	smokeTest.CheckZRC20ReserveAndSupply()
@@ -310,6 +310,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestUpdateBytecode()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestDepositEtherLiquidityCap()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	// add your dev test here

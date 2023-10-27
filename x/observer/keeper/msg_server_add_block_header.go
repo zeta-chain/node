@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
+	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
 
@@ -17,9 +17,22 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	// check authorization for this chain
 	chain := common.GetChainFromChainID(msg.ChainId)
-	ok, err := k.IsAuthorized(ctx, msg.Creator, chain)
-	if !ok {
-		return nil, cosmoserrors.Wrap(types.ErrNotAuthorizedPolicy, err.Error())
+	if ok := k.IsAuthorized(ctx, msg.Creator, chain); !ok {
+		return nil, types.ErrNotAuthorizedPolicy
+	}
+
+	crosschainFlags, found := k.GetCrosschainFlags(ctx)
+	if !found {
+		return nil, fmt.Errorf("crosschain flags not found")
+	}
+	if crosschainFlags.BlockHeaderVerificationFlags == nil {
+		return nil, fmt.Errorf("block header verification flags not found")
+	}
+	if common.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
+	}
+	if common.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
 	// add vote to ballot
@@ -39,9 +52,19 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	/**
 	 * Vote finalized, add block header to store
 	 */
-	_, found := k.GetBlockHeader(ctx, msg.BlockHash)
+	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hex.EncodeToString(msg.BlockHash))
+		hashString, err := common.HashToString(msg.ChainId, msg.BlockHash)
+		if err != nil {
+			return nil, cosmoserrors.Wrap(err, "block hash conversion failed")
+		}
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hashString)
+	}
+
+	// Check timestamp
+	err = msg.Header.ValidateTimestamp(ctx.BlockTime())
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
 	}
 
 	// NOTE: error is checked in BasicValidation in msg; check again for extra caution

@@ -5,51 +5,33 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
-
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	peer2 "github.com/libp2p/go-libp2p/core/peer"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
-
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
-	"github.com/btcsuite/btcutil"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
-
-	"os"
 	"time"
 
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	gopeer "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
-
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	"github.com/zeta-chain/zetacore/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
+	"gitlab.com/thorchain/tss/go-tss/keysign"
+	"gitlab.com/thorchain/tss/go-tss/p2p"
+	"gitlab.com/thorchain/tss/go-tss/tss"
 )
-
-//var testPubKeys = []string{
-//	"zetapub1addwnpepqtdklw8tf3anjz7nn5fly3uvq2e67w2apn560s4smmrt9e3x52nt2m5cmyy",
-//	"zetapub1addwnpepqtspqyy6gk22u37ztra4hq3hdakc0w0k60sfy849mlml2vrpfr0wvszlzhs",
-//	"zetapub1addwnpepq2ryyje5zr09lq7gqptjwnxqsy2vcdngvwd6z7yt5yjcnyj8c8cn5la9ezs",
-//	"zetapub1addwnpepqfjcw5l4ay5t00c32mmlky7qrppepxzdlkcwfs2fd5u73qrwna0vzksjyd8",
-//}
-//
-//var testPrivKeys = []string{
-//	"MjQ1MDc2MmM4MjU5YjRhZjhhNmFjMmI0ZDBkNzBkOGE1ZTBmNDQ5NGI4NzM4OTYyM2E3MmI0OWMzNmE1ODZhNw==",
-//	"YmNiMzA2ODU1NWNjMzk3NDE1OWMwMTM3MDU0NTNjN2YwMzYzZmVhZDE5NmU3NzRhOTMwOWIxN2QyZTQ0MzdkNg==",
-//	"ZThiMDAxOTk2MDc4ODk3YWE0YThlMjdkMWY0NjA1MTAwZDgyNDkyYzdhNmMwZWQ3MDBhMWIyMjNmNGMzYjVhYg==",
-//	"ZTc2ZjI5OTIwOGVlMDk2N2M3Yzc1MjYyODQ0OGUyMjE3NGJiOGRmNGQyZmVmODg0NzQwNmUzYTk1YmQyODlmNA==",
-//}
 
 type TSSKey struct {
 	PubkeyInBytes  []byte // FIXME: compressed pubkey?
@@ -75,17 +57,118 @@ func NewTSSKey(pk string) (*TSSKey, error) {
 	return TSSKey, nil
 }
 
+var _ TSSSigner = (*TSS)(nil)
+
+// TSS is a struct that holds the server and the keys for TSS
 type TSS struct {
 	Server        *tss.TssServer
 	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
-	CoreBridge    *ZetaCoreBridge
+	CoreBridge    ZetaCoreBridger
 	Metrics       *ChainMetrics
 }
 
-var _ TSSSigner = (*TSS)(nil)
+// NewTSS creates a new TSS instance
+func NewTSS(
+	peer p2p.AddrList,
+	privkey tmcrypto.PrivKey,
+	preParams *keygen.LocalPreParams,
+	cfg *config.Config,
+	bridge ZetaCoreBridger,
+	tssHistoricalList []types.TSS,
+	metrics *metrics.Metrics,
+) (*TSS, error) {
+	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
+	if err != nil {
+		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
+	}
+	newTss := TSS{
+		Server:        server,
+		Keys:          make(map[string]*TSSKey),
+		CurrentPubkey: cfg.CurrentTssPubkey,
+		logger:        log.With().Str("module", "tss_signer").Logger(),
+		CoreBridge:    bridge,
+	}
+
+	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
+	if err != nil {
+		return nil, err
+	}
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	if err != nil {
+		return nil, err
+	}
+	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
+	if err != nil {
+		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
+	}
+	err = newTss.RegisterMetrics(metrics)
+	if err != nil {
+		bridge.GetLogger().Err(err).Msg("tss.RegisterMetrics")
+		return nil, err
+	}
+
+	return &newTss, nil
+}
+
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
+	bootstrapPeers := peer
+	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
+
+	tsspath := cfg.TssPath
+	if len(tsspath) == 0 {
+		log.Error().Msg("empty env TSSPATH")
+		homedir, err := os.UserHomeDir()
+		if err != nil {
+			log.Error().Err(err).Msgf("cannot get UserHomeDir")
+			return nil, err
+		}
+		tsspath = path.Join(homedir, ".Tss")
+		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
+	}
+	IP := cfg.PublicIP
+	if len(IP) == 0 {
+		log.Info().Msg("empty public IP in config")
+	}
+	tssServer, err := tss.NewTss(
+		bootstrapPeers,
+		6668,
+		privkey,
+		"MetaMetaOpenTheDoor",
+		tsspath,
+		thorcommon.TssConfig{
+			EnableMonitor:   true,
+			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
+			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
+			PartyTimeout:    30 * time.Second,
+			PreParamTimeout: 5 * time.Minute,
+		},
+		preParams, // use pre-generated pre-params if non-nil
+		IP,        // for docker test
+	)
+	if err != nil {
+		log.Error().Err(err).Msg("NewTSS error")
+		return nil, fmt.Errorf("NewTSS error: %w", err)
+	}
+
+	err = tssServer.Start()
+	if err != nil {
+		log.Error().Err(err).Msg("tss server start error")
+	}
+
+	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
+	if tssServer.GetLocalPeerID() == "" ||
+		tssServer.GetLocalPeerID() == "0" ||
+		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
+		tssServer.GetLocalPeerID() == gopeer.ID("").String() {
+		log.Error().Msg("tss server start error")
+		return nil, fmt.Errorf("tss server start error")
+	}
+
+	return tssServer, nil
+}
 
 // FIXME: does it return pubkey in compressed form or uncompressed?
 func (tss *TSS) Pubkey() []byte {
@@ -94,7 +177,7 @@ func (tss *TSS) Pubkey() []byte {
 
 // digest should be Hashes of some data
 // Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -102,6 +185,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 	if optionalPubKey != "" {
 		tssPubkey = optionalPubKey
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	if err != nil {
@@ -111,7 +195,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
 		digest := hex.EncodeToString(digest)
-		index := fmt.Sprintf("%s-%d", digest, height)
+		index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
@@ -165,13 +249,15 @@ func (tss *TSS) Sign(digest []byte, height uint64, chain *common.Chain, optional
 	return sigbyte, nil
 }
 
-// digest should be batch of Hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) ([][65]byte, error) {
+// SignBatch is hash of some data
+// digest should be batch of hashes of some data
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *common.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
 		digestBase64[i] = base64.StdEncoding.EncodeToString(digest)
 	}
+	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
 	ksRes, err := tss.Server.KeySign(keysignReq)
@@ -182,7 +268,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, chain *common.Chain) 
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msg("keysign status FAIL posting blame to core")
 		digest := combineDigests(digestBase64)
-		index := fmt.Sprintf("%s-%d", hex.EncodeToString(digest), height)
+		index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
 
 		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
 		if err != nil {
@@ -284,7 +370,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 	return addr
 }
 
-// generate a bech32 p2wpkh address from pubkey
+// BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
 	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
 	if err != nil {
@@ -312,7 +398,7 @@ func (tss *TSS) PubKeyCompressedBytes() []byte {
 	return pubk.Bytes()
 }
 
-// adds a new key to the TSS keys map
+// InsertPubKey adds a new key to the TSS keys map
 func (tss *TSS) InsertPubKey(pk string) error {
 	TSSKey, err := NewTSSKey(pk)
 	if err != nil {
@@ -322,101 +408,30 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
-	var keyAddr ethcommon.Address
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
+	tss.Metrics = NewChainMetrics("tss", metrics)
+	keygenRes, err := tss.CoreBridge.GetKeyGen()
 	if err != nil {
-		log.Fatal().Err(err)
-		return keyAddr, err
+		return err
 	}
-	//keyAddrBytes := pubk.EVMAddress().Bytes()
-	pubk.Bytes()
-	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
-	if err != nil {
-		log.Fatal().Err(err).Msg("decompress err")
-		return keyAddr, err
+	for _, key := range keygenRes.GranteePubkeys {
+		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
+		if err != nil {
+			return err
+		}
 	}
-
-	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
-
-	return keyAddr, nil
-}
-
-// FIXME: mainnet/testnet
-func GetTssAddrBTC(tssPubkey string) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
-	if err != nil {
-		log.Fatal().Err(err)
-		return "", err
-	}
-
-	return addrWPKH.EncodeAddress(), nil
-}
-
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
-	if err != nil {
-		return nil, err
-	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
-	if err != nil {
-		return nil, err
-	}
-	return addr, nil
-}
-
-func NewTSS(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, bridge *ZetaCoreBridge, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*TSS, error) {
-	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
-	if err != nil {
-		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
-	}
-	newTss := TSS{
-		Server:        server,
-		Keys:          make(map[string]*TSSKey),
-		CurrentPubkey: cfg.CurrentTssPubkey,
-		logger:        log.With().Str("module", "tss_signer").Logger(),
-		CoreBridge:    bridge,
-	}
-
-	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
-	if err != nil {
-		return nil, err
-	}
-	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
-	if err != nil {
-		return nil, err
-	}
-	err = newTss.VerifyKeysharesForPubkeys(tssHistoricalList, pubkeyInBech32)
-	if err != nil {
-		bridge.logger.Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
-	}
-	err = newTss.RegisterMetrics(metrics)
-	if err != nil {
-		bridge.logger.Err(err).Msg("tss.RegisterMetrics")
-		return nil, err
-	}
-
-	return &newTss, nil
+	return nil
 }
 
 func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
-		if WasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
+		if wasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
 			if _, ok := tss.Keys[t.TssPubkey]; !ok {
 				return fmt.Errorf("pubkey %s not found in keyshare", t.TssPubkey)
 			}
 		}
 	}
 	return nil
-}
-
-func WasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
-	for _, grantee := range granteeList {
-		if granteePubKey32 == grantee {
-			return true
-		}
-	}
-	return false
 }
 func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	files, err := os.ReadDir(tssPath)
@@ -433,8 +448,14 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	}
 	if len(sharefiles) > 0 {
 		sort.SliceStable(sharefiles, func(i, j int) bool {
-			fi, _ := sharefiles[i].Info()
-			fj, _ := sharefiles[j].Info()
+			fi, err := sharefiles[i].Info()
+			if err != nil {
+				return false
+			}
+			fj, err := sharefiles[j].Info()
+			if err != nil {
+				return false
+			}
 			return fi.ModTime().After(fj.ModTime())
 		})
 		tss.logger.Info().Msgf("found %d localstate files", len(sharefiles))
@@ -460,61 +481,35 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	return nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
-	bootstrapPeers := peer
-	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
-
-	tsspath := cfg.TssPath
-	if len(tsspath) == 0 {
-		log.Error().Msg("empty env TSSPATH")
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			log.Error().Err(err).Msgf("cannot get UserHomeDir")
-			return nil, err
-		}
-		tsspath = path.Join(homedir, ".Tss")
-		log.Info().Msgf("create temporary TSSPATH: %s", tsspath)
-	}
-	IP := cfg.PublicIP
-	if len(IP) == 0 {
-		log.Info().Msg("empty public IP in config")
-	}
-	tssServer, err := tss.NewTss(
-		bootstrapPeers,
-		6668,
-		privkey,
-		"MetaMetaOpenTheDoor",
-		tsspath,
-		thorcommon.TssConfig{
-			EnableMonitor:   true,
-			KeyGenTimeout:   300 * time.Second, // must be shorter than constants.JailTimeKeygen
-			KeySignTimeout:  30 * time.Second,  // must be shorter than constants.JailTimeKeysign
-			PartyTimeout:    30 * time.Second,
-			PreParamTimeout: 5 * time.Minute,
-		},
-		preParams, // use pre-generated pre-params if non-nil
-		IP,        // for docker test
-	)
+// FIXME: mainnet/testnet
+func GetTssAddrBTC(tssPubkey string) (string, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("NewTSS error")
-		return nil, fmt.Errorf("NewTSS error: %w", err)
+		log.Fatal().Err(err)
+		return "", err
 	}
 
-	err = tssServer.Start()
+	return addrWPKH.EncodeAddress(), nil
+}
+
+func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
+	var keyAddr ethcommon.Address
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
-		log.Error().Err(err).Msg("tss server start error")
+		log.Fatal().Err(err)
+		return keyAddr, err
+	}
+	//keyAddrBytes := pubk.EVMAddress().Bytes()
+	pubk.Bytes()
+	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
+	if err != nil {
+		log.Fatal().Err(err).Msg("decompress err")
+		return keyAddr, err
 	}
 
-	log.Info().Msgf("LocalID: %v", tssServer.GetLocalPeerID())
-	if tssServer.GetLocalPeerID() == "" ||
-		tssServer.GetLocalPeerID() == "0" ||
-		tssServer.GetLocalPeerID() == "000000000000000000000000000000" ||
-		tssServer.GetLocalPeerID() == peer2.ID("").String() {
-		log.Error().Msg("tss server start error")
-		return nil, fmt.Errorf("tss server start error")
-	}
+	keyAddr = crypto.PubkeyToAddress(*decompresspubkey)
 
-	return tssServer, nil
+	return keyAddr, nil
 }
 
 func TestKeysign(tssPubkey string, tssServer *tss.TssServer) error {
@@ -555,9 +550,21 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	}
 	// verify the signature of msg.
 	var sigbyte [65]byte
-	_, _ = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
-	_, _ = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
-	_, _ = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	_, err = base64.StdEncoding.Decode(sigbyte[:32], []byte(signature[0].R))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature R")
+		return false
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[32:64], []byte(signature[0].S))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature S")
+		return false
+	}
+	_, err = base64.StdEncoding.Decode(sigbyte[64:65], []byte(signature[0].RecoveryID))
+	if err != nil {
+		log.Error().Err(err).Msg("decoding signature RecoveryID")
+		return false
+	}
 	sigPublicKey, err := crypto.SigToPub(H, sigbyte[:])
 	if err != nil {
 		log.Error().Err(err).Msg("SigToPub error in verify_signature")
@@ -574,17 +581,23 @@ func combineDigests(digestList []string) []byte {
 	return digestBytes.CloneBytes()
 }
 
-func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
-	tss.Metrics = NewChainMetrics("tss", metrics)
-	keygenRes, err := tss.CoreBridge.GetKeyGen()
-	if err != nil {
-		return err
-	}
-	for _, key := range keygenRes.GranteePubkeys {
-		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
-		if err != nil {
-			return err
+func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
+	for _, grantee := range granteeList {
+		if granteePubKey32 == grantee {
+			return true
 		}
 	}
-	return nil
+	return false
+}
+
+func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
+	if err != nil {
+		return nil, err
+	}
+	return addr, nil
 }

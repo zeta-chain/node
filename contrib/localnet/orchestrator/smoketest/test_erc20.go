@@ -69,6 +69,9 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 		panic(err)
 	}
 	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
+	if receipt.Status == 0 {
+		panic("deposit failed")
+	}
 	fmt.Printf("Deposit receipt tx hash: %s, status %d\n", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.ERC20Custody.ParseDeposited(*log)
@@ -83,7 +86,6 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 	}
 	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	return tx.Hash()
-	//WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
 }
 
 func (sm *SmokeTest) TestERC20Withdraw() {

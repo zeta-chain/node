@@ -56,16 +56,6 @@ message MsgUpdateSystemContract {
 }
 ```
 
-## MsgUpdateZRC20WithdrawFee
-
-```proto
-message MsgUpdateZRC20WithdrawFee {
-	string creator = 1;
-	string zrc20_address = 2;
-	string new_withdraw_fee = 6;
-}
-```
-
 ## MsgUpdateContractBytecode
 
 UpdateContractBytecode updates the bytecode of a contract from the bytecode of an existing contract
@@ -81,6 +71,17 @@ message MsgUpdateContractBytecode {
 }
 ```
 
+## MsgUpdateZRC20WithdrawFee
+
+```proto
+message MsgUpdateZRC20WithdrawFee {
+	string creator = 1;
+	string zrc20_address = 2;
+	string new_withdraw_fee = 6;
+	string new_gas_limit = 7;
+}
+```
+
 ## MsgUpdateZRC20PausedStatus
 
 UpdateZRC20PausedStatus updates the paused status of a ZRC20
@@ -91,6 +92,18 @@ message MsgUpdateZRC20PausedStatus {
 	string creator = 1;
 	string zrc20_addresses = 2;
 	UpdatePausedStatusAction action = 3;
+}
+```
+
+## MsgUpdateZRC20LiquidityCap
+
+UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
+
+```proto
+message MsgUpdateZRC20LiquidityCap {
+	string creator = 1;
+	string zrc20_address = 2;
+	string liquidity_cap = 3;
 }
 ```
 
