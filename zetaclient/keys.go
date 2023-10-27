@@ -57,6 +57,8 @@ func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
 	buf := bytes.NewBufferString(password)
 	// the library used by keyring is using ReadLine , which expect a new line
 	buf.WriteByte('\n')
+	buf.WriteString(password)
+	buf.WriteByte('\n')
 	kb, err := getKeybase(chainHomeFolder, buf)
 	if err != nil {
 		return nil, "", fmt.Errorf("fail to get keybase,err:%w", err)
@@ -69,7 +71,7 @@ func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
 	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
 	rc, err := kb.Key(granteeName)
 	if err != nil {
-		return nil, "", fmt.Errorf("key not present with name (%s): %w", granteeName, err)
+		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)
 	}
 	pubkeyBech32, err := common.GetPubkeyBech32FromRecord(rc)
 	if err != nil {
