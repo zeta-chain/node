@@ -1,10 +1,11 @@
-//go:build !PRIVNET && !TESTNET
-// +build !PRIVNET,!TESTNET
+//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
+// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
 
 package config
 
 import (
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/zeta-chain/zetacore/common"
 )
 
 const (
@@ -21,9 +22,6 @@ const (
 // Constants
 // #nosec G101
 const (
-	DevEthBlockTime = 2
-
-	// to catch up:
 	MaxBlocksPerPeriod = 100
 )
 
@@ -42,13 +40,24 @@ func GetERC20CustodyABI() string {
 }
 
 var (
-	BitconNetParams = &chaincfg.RegressionNetParams
+	BitconNetParams = &chaincfg.MainNetParams
 )
 
 func New() Config {
 	return Config{
-		EVMChainConfigs: nil,
-		BitcoinConfig:   nil,
-		ChainsEnabled:   nil,
+		EVMChainConfigs: evmChainConfigs,
+		BitcoinConfig:   BitcoinConfig,
+		ChainsEnabled:   []common.Chain{},
 	}
+}
+
+var BitcoinConfig = &BTCConfig{}
+
+var evmChainConfigs = map[int64]*EVMConfig{
+	common.EthChain().ChainId: {
+		Chain: common.EthChain(),
+	},
+	common.BscMainnetChain().ChainId: {
+		Chain: common.BscMainnetChain(),
+	},
 }

@@ -9,6 +9,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 // Msg defines the Msg service.
 service Msg {
   rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
+  rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
@@ -16,7 +17,38 @@ service Msg {
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
+  rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
+  rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
+  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
+
+message MsgMigrateTssFunds {
+  string creator = 1;
+  int64 chain_id = 2;
+  string amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+message MsgMigrateTssFundsResponse {}
+
+message MsgAddToInTxTracker {
+  string creator = 1;
+  int64 chain_id = 2;
+  string tx_hash = 3;
+  common.CoinType coin_type = 4;
+  common.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
+}
+message MsgAddToInTxTrackerResponse {}
+
+message MsgUpdateTssAddress {
+  string creator = 1;
+  string tss_pubkey = 2;
+}
+
+message MsgUpdateTssAddressResponse {}
 
 message MsgWhitelistERC20 {
   string creator = 1;
@@ -28,13 +60,19 @@ message MsgWhitelistERC20 {
   int64 gas_limit = 7;
 }
 
-message MsgWhitelistERC20Response {}
+message MsgWhitelistERC20Response {
+  string zrc20_address = 1;
+  string cctx_index = 2;
+}
 
 message MsgAddToOutTxTracker {
   string creator = 1;
   int64 chain_id = 2;
   uint64 nonce = 3;
   string tx_hash = 4;
+  common.Proof proof = 5;
+  string block_hash = 6;
+  int64 tx_index = 7;
 }
 
 message MsgAddToOutTxTrackerResponse {}
@@ -79,10 +117,16 @@ message MsgVoteOnObservedOutboundTx {
   string cctx_hash = 2;
   string observed_outTx_hash = 3;
   uint64 observed_outTx_blockHeight = 4;
-  string zeta_minted = 5 [
+  uint64 observed_outTx_gas_used = 10;
+  string observed_outTx_effective_gas_price = 11 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 observed_outTx_effective_gas_limit = 12;
+  string value_received = 5 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false,
-    (gogoproto.moretags) = "yaml:\"zeta_minted\""
+    (gogoproto.moretags) = "yaml:\"value_received\""
   ];
   common.ReceiveStatus status = 6;
   int64 outTx_chain = 7;

@@ -6,6 +6,7 @@ import "crosschain/chain_nonces.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
@@ -34,12 +35,24 @@ service Query {
   }
 
   rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain";
+    option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain/{chain}";
+  }
+
+  rpc InTxTrackerAllByChain(QueryAllInTxTrackerByChainRequest) returns (QueryAllInTxTrackerByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackerByChain/{chain_id}";
+  }
+  rpc InTxTrackerAll(QueryAllInTxTrackersRequest) returns (QueryAllInTxTrackersResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackers";
   }
 
   // Queries a InTxHashToCctx by index.
   rpc InTxHashToCctx(QueryGetInTxHashToCctxRequest) returns (QueryGetInTxHashToCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx/{inTxHash}";
+  }
+
+  // Queries a InTxHashToCctx data by index.
+  rpc InTxHashToCctxData(QueryInTxHashToCctxDataRequest) returns (QueryInTxHashToCctxDataResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}";
   }
 
   // Queries a list of InTxHashToCctx items.
@@ -89,6 +102,10 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
   }
 
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
+  }
+
   // Queries a lastBlockHeight by index.
   rpc LastBlockHeight(QueryGetLastBlockHeightRequest) returns (QueryGetLastBlockHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastBlockHeight/{index}";
@@ -122,6 +139,16 @@ service Query {
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
+
+  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+  }
+}
+
+message QueryTssHistoryRequest {}
+
+message QueryTssHistoryResponse {
+  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -161,12 +188,36 @@ message QueryAllOutTxTrackerByChainResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+message QueryAllInTxTrackerByChainRequest {
+  int64 chain_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllInTxTrackerByChainResponse {
+  repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllInTxTrackersRequest {}
+
+message QueryAllInTxTrackersResponse {
+  repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
+}
+
 message QueryGetInTxHashToCctxRequest {
   string inTxHash = 1;
 }
 
 message QueryGetInTxHashToCctxResponse {
   InTxHashToCctx inTxHashToCctx = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryInTxHashToCctxDataRequest {
+  string inTxHash = 1;
+}
+
+message QueryInTxHashToCctxDataResponse {
+  repeated CrossChainTx CrossChainTxs = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllInTxHashToCctxRequest {
@@ -178,7 +229,9 @@ message QueryAllInTxHashToCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetTssAddressRequest {}
+message QueryGetTssAddressRequest {
+  string tss_pub_key = 1;
+}
 
 message QueryGetTssAddressResponse {
   string eth = 1;
@@ -230,6 +283,14 @@ message QueryAllPendingNoncesResponse {
   repeated PendingNonces pending_nonces = 1;
 }
 
+message QueryPendingNoncesByChainRequest {
+  int64 chain_id = 1;
+}
+
+message QueryPendingNoncesByChainResponse {
+  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+}
+
 message QueryGetLastBlockHeightRequest {
   string index = 1;
 }
@@ -270,7 +331,7 @@ message QueryAllCctxResponse {
 }
 
 message QueryAllCctxPendingRequest {
-  uint64 chainId = 1;
+  int64 chain_id = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 

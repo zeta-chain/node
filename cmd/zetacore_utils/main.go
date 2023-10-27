@@ -34,14 +34,23 @@ type TokenDistribution struct {
 }
 
 func main() {
-	file, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "address-list.json"))
+	file, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "address-list.json"))
+	if err != nil {
+		panic(err)
+	}
 	addresses, err := readLines(file)
 	if err != nil {
 		panic(err)
 	}
 	addresses = removeDuplicates(addresses)
-	fileS, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
-	fileF, _ := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
+	fileS, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "successful_address.json"))
+	if err != nil {
+		panic(err)
+	}
+	fileF, err := filepath.Abs(filepath.Join("cmd", "zetacore_utils", "failed_address.json"))
+	if err != nil {
+		panic(err)
+	}
 
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
@@ -111,11 +120,22 @@ func main() {
 			failedDistributions = append(failedDistributions, distribution)
 		}
 	}
-	successFile, _ := json.MarshalIndent(successfullDistributions, "", " ")
-	_ = os.WriteFile(fileS, successFile, 0600)
-	failedFile, _ := json.MarshalIndent(failedDistributions, "", " ")
-	_ = os.WriteFile(fileF, failedFile, 0600)
-
+	successFile, err := json.MarshalIndent(successfullDistributions, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(fileS, successFile, 0600)
+	if err != nil {
+		panic(err)
+	}
+	failedFile, err := json.MarshalIndent(failedDistributions, "", " ")
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(fileF, failedFile, 0600)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func readLines(path string) ([]string, error) {

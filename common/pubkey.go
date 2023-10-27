@@ -2,14 +2,18 @@ package common
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	eth "github.com/ethereum/go-ethereum/crypto"
 	"github.com/tendermint/tendermint/crypto"
@@ -31,6 +35,18 @@ var EmptyPubKey PubKey
 
 // NewPubKey create a new instance of PubKey
 // key is bech32 encoded string
+
+func GetAddressFromPubkeyString(pubkey string) (sdk.AccAddress, error) {
+	cryptopub, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, pubkey)
+	if err != nil {
+		return nil, err
+	}
+	addr, err := sdk.AccAddressFromHexUnsafe(cryptopub.Address().String())
+	if err != nil {
+		return nil, err
+	}
+	return addr, nil
+}
 func NewPubKey(key string) (PubKey, error) {
 	if len(key) == 0 {
 		return EmptyPubKey, nil
@@ -195,36 +211,15 @@ func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
 	}
 }
 
-//
-//// IsEmpty will determinate whether PubKeySet is an empty
-//func (pks PubKeySet) IsEmpty() bool {
-//	return pks.Secp256k1.IsEmpty() || pks.Ed25519.IsEmpty()
-//}
-//
-//// Equals check whether two PubKeySet are the same
-//func (pks PubKeySet) Equals(pks1 PubKeySet) bool {
-//	return pks.Ed25519.Equals(pks1.Ed25519) && pks.Secp256k1.Equals(pks1.Secp256k1)
-//}
-//
-//func (pks PubKeySet) Contains(pk PubKey) bool {
-//	return pks.Ed25519.Equals(pk) || pks.Secp256k1.Equals(pk)
-//}
-//
-//// String implement fmt.Stinger
-//func (pks PubKeySet) String() string {
-//	return fmt.Sprintf(`
-//	secp256k1: %s
-//	ed25519: %s
-//`, pks.Secp256k1.String(), pks.Ed25519.String())
-//}
-//
-//// GetAddress
-//func (pks PubKeySet) GetAddress(chain Chain) (Address, error) {
-//	switch chain.GetSigningAlgo() {
-//	case SigningAlgoSecp256k1:
-//		return pks.Secp256k1.GetAddress(chain)
-//	case SigningAlgoEd25519:
-//		return pks.Ed25519.GetAddress(chain)
-//	}
-//	return NoAddress, fmt.Errorf("unknow signing algorithm")
-//}
+func GetPubkeyBech32FromRecord(record *keyring.Record) (string, error) {
+	pk, ok := record.PubKey.GetCachedValue().(cryptotypes.PubKey)
+	if !ok {
+		return "", errors.New("unable to cast any to cryptotypes.PubKey")
+	}
+
+	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pk)
+	if err != nil {
+		return "", err
+	}
+	return s, nil
+}

@@ -24,6 +24,7 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		ctx.Logger().Error("TotalObserverCount is negative at height", ctx.BlockHeight())
 		return
 	}
+	// #nosec G701 always in range
 	if totalObserverCountCurrentBlock == int(lastBlockObserverCount.Count) {
 		return
 	}
@@ -31,7 +32,8 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 	for _, observer := range allObservers {
 		ctx.Logger().Error("Observes for | ", observer.ObserverChain.ChainName, ":", observer.ObserverList)
 	}
-	k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: false})
+	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
+	// #nosec G701 always positive
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
 }

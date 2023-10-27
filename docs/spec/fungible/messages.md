@@ -2,7 +2,7 @@
 
 ## MsgDeployFungibleCoinZRC20
 
-Deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
+DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.
 
 If this is a gas coin, the following happens:
 
@@ -36,7 +36,7 @@ message MsgDeployFungibleCoinZRC20 {
 
 ## MsgRemoveForeignCoin
 
-Removes a coin from the list of foreign coins in the module's state.
+RemoveForeignCoin removes a coin from the list of foreign coins in the module's state.
 
 Only the admin policy account is authorized to broadcast this message.
 
@@ -56,6 +56,21 @@ message MsgUpdateSystemContract {
 }
 ```
 
+## MsgUpdateContractBytecode
+
+UpdateContractBytecode updates the bytecode of a contract from the bytecode of an existing contract
+Only a ZRC20 contract or the WZeta connector contract can be updated
+IMPORTANT: the new contract bytecode must have the same storage layout as the old contract bytecode
+the new contract can add new variable but cannot remove any existing variable
+
+```proto
+message MsgUpdateContractBytecode {
+	string creator = 1;
+	string contract_address = 2;
+	string new_bytecode_address = 3;
+}
+```
+
 ## MsgUpdateZRC20WithdrawFee
 
 ```proto
@@ -63,6 +78,32 @@ message MsgUpdateZRC20WithdrawFee {
 	string creator = 1;
 	string zrc20_address = 2;
 	string new_withdraw_fee = 6;
+	string new_gas_limit = 7;
+}
+```
+
+## MsgUpdateZRC20PausedStatus
+
+UpdateZRC20PausedStatus updates the paused status of a ZRC20
+The list of ZRC20s are either paused or unpaused
+
+```proto
+message MsgUpdateZRC20PausedStatus {
+	string creator = 1;
+	string zrc20_addresses = 2;
+	UpdatePausedStatusAction action = 3;
+}
+```
+
+## MsgUpdateZRC20LiquidityCap
+
+UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
+
+```proto
+message MsgUpdateZRC20LiquidityCap {
+	string creator = 1;
+	string zrc20_address = 2;
+	string liquidity_cap = 3;
 }
 ```
 

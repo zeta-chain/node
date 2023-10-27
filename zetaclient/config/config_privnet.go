@@ -59,7 +59,4 @@ var evmChainConfigs = map[int64]*EVMConfig{
 		Chain:    common.GoerliChain(),
 		Endpoint: "http://eth:8545",
 	},
-	common.ZetaChain().ChainId: {
-		Chain: common.ZetaChain(),
-	},
 }

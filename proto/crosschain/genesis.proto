@@ -5,6 +5,7 @@ import "crosschain/chain_nonces.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
@@ -24,4 +25,6 @@ message GenesisState {
 
   repeated LastBlockHeight lastBlockHeightList = 8;
   repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
+  repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
+  repeated InTxTracker in_tx_tracker_list = 11 [(gogoproto.nullable) = false];
 }

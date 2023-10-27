@@ -14,9 +14,9 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
+func (k msgServer) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	newSystemContractAddr := ethcommon.HexToAddress(msg.NewSystemContractAddress)
@@ -41,16 +41,16 @@ func (k Keeper) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdate
 			k.Logger(ctx).Error("invalid zrc20 contract address", "address", fcoin.Zrc20ContractAddress)
 			continue
 		}
-		_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, "updateSystemContractAddress", newSystemContractAddr)
+		_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, false, "updateSystemContractAddress", newSystemContractAddr)
 		if err != nil {
 			return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract method updateSystemContractAddress (%s)", err.Error())
 		}
 		if fcoin.CoinType == common.CoinType_Gas {
-			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, "setGasCoinZRC20", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
+			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, false, "setGasCoinZRC20", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
 			if err != nil {
 				return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call system contract method setGasCoinZRC20 (%s)", err.Error())
 			}
-			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, "setGasZetaPool", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
+			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, false, "setGasZetaPool", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
 			if err != nil {
 				return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call system contract method setGasZetaPool (%s)", err.Error())
 			}

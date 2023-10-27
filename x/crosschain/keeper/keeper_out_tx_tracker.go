@@ -3,14 +3,12 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -116,17 +114,15 @@ func (k Keeper) OutTxTrackerAllByChain(c context.Context, req *types.QueryAllOut
 	var outTxTrackers []types.OutTxTracker
 	ctx := sdk.UnwrapSDKContext(c)
 
-	store := ctx.KVStore(k.storeKey)
-	outTxTrackerStore := prefix.NewStore(store, types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.OutTxTrackerKeyPrefix))
+	chainStore := prefix.NewStore(store, types.KeyPrefix(fmt.Sprintf("%d-", req.Chain)))
 
-	pageRes, err := query.Paginate(outTxTrackerStore, req.Pagination, func(key []byte, value []byte) error {
+	pageRes, err := query.Paginate(chainStore, req.Pagination, func(key []byte, value []byte) error {
 		var outTxTracker types.OutTxTracker
 		if err := k.cdc.Unmarshal(value, &outTxTracker); err != nil {
 			return err
 		}
-		if outTxTracker.ChainId == req.Chain {
-			outTxTrackers = append(outTxTrackers, outTxTracker)
-		}
+		outTxTrackers = append(outTxTrackers, outTxTracker)
 		return nil
 	})
 
@@ -156,65 +152,12 @@ func (k Keeper) OutTxTracker(c context.Context, req *types.QueryGetOutTxTrackerR
 
 // Messages
 
-// Adds a new record to the outbound transaction tracker.
-//
-// Only the admin policy account and the observer validators are authorized to
-// broadcast this message.
-func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
-	if chain == nil {
-		return nil, zetaObserverTypes.ErrSupportedChains
-	}
-
-	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker)
-	isAdmin := msg.Creator == adminPolicyAccount
-
-	isObserver, err := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
-	if err != nil {
-		ctx.Logger().Error("Error while checking if the account is an observer", err)
-	}
-	// Sender needs to be either the admin policy account or an observer
-	if !(isAdmin || isObserver) {
-		return nil, sdkerrors.Wrap(zetaObserverTypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
-	}
-
-	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
-	hash := types.TxHashList{
-		TxHash:   msg.TxHash,
-		TxSigner: msg.Creator,
-	}
-	if !found {
-		k.SetOutTxTracker(ctx, types.OutTxTracker{
-			Index:    "",
-			ChainId:  chain.ChainId,
-			Nonce:    msg.Nonce,
-			HashList: []*types.TxHashList{&hash},
-		})
-		return &types.MsgAddToOutTxTrackerResponse{}, nil
-	}
-
-	var isDup = false
-	for _, hash := range tracker.HashList {
-		if strings.EqualFold(hash.TxHash, msg.TxHash) {
-			isDup = true
-			break
-		}
-	}
-	if !isDup {
-		tracker.HashList = append(tracker.HashList, &hash)
-		k.SetOutTxTracker(ctx, tracker)
-	}
-	return &types.MsgAddToOutTxTrackerResponse{}, nil
-}
-
-// Removes a record from the outbound transaction tracker by chain ID and nonce.
-//
-// Only the admin policy account is authorized to broadcast this message.
+// RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
+// only the admin policy account is authorized to broadcast this message.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_out_tx_tracker) {
-		return &types.MsgRemoveFromOutTxTrackerResponse{}, zetaObserverTypes.ErrNotAuthorizedPolicy
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1) {
+		return &types.MsgRemoveFromOutTxTrackerResponse{}, observertypes.ErrNotAuthorizedPolicy
 	}
 
 	k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)

@@ -58,14 +58,14 @@ func CmdShowOutTxTracker() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			argNonce, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			params := &types.QueryGetOutTxTrackerRequest{
 				ChainID: argChain,
-				Nonce:   uint64(argNonce),
+				Nonce:   argNonce,
 			}
 
 			res, err := queryClient.OutTxTracker(context.Background(), params)
@@ -94,7 +94,7 @@ func CmdAddToWatchList() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			argNonce, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -108,8 +108,11 @@ func CmdAddToWatchList() *cobra.Command {
 			msg := types.NewMsgAddToOutTxTracker(
 				clientCtx.GetFromAddress().String(),
 				argChain,
-				uint64(argNonce),
+				argNonce,
 				argTxHash,
+				nil, // TODO: add option to provide a proof from CLI arguments https://github.com/zeta-chain/node/issues/1134
+				"",
+				-1,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -133,7 +136,7 @@ func CmdRemoveFromWatchList() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argNonce, err := strconv.ParseInt(args[1], 10, 64)
+			argNonce, err := strconv.ParseUint(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -146,7 +149,7 @@ func CmdRemoveFromWatchList() *cobra.Command {
 			msg := types.NewMsgRemoveFromOutTxTracker(
 				clientCtx.GetFromAddress().String(),
 				argChain,
-				uint64(argNonce),
+				argNonce,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

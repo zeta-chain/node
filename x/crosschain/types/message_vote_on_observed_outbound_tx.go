@@ -10,17 +10,33 @@ import (
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
 
-func NewMsgReceiveConfirmation(creator string, sendHash string, outTxHash string, outBlockHeight uint64, mMint math.Uint, status common.ReceiveStatus, chain int64, nonce uint64, coinType common.CoinType) *MsgVoteOnObservedOutboundTx {
+func NewMsgVoteOnObservedOutboundTx(
+	creator,
+	sendHash,
+	outTxHash string,
+	outBlockHeight,
+	outTxGasUsed uint64,
+	outTxEffectiveGasPrice math.Int,
+	outTxEffectiveGasLimit uint64,
+	valueReceived math.Uint,
+	status common.ReceiveStatus,
+	chain int64,
+	nonce uint64,
+	coinType common.CoinType,
+) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
-		Creator:                  creator,
-		CctxHash:                 sendHash,
-		ObservedOutTxHash:        outTxHash,
-		ObservedOutTxBlockHeight: outBlockHeight,
-		ZetaMinted:               mMint,
-		Status:                   status,
-		OutTxChain:               chain,
-		OutTxTssNonce:            nonce,
-		CoinType:                 coinType,
+		Creator:                        creator,
+		CctxHash:                       sendHash,
+		ObservedOutTxHash:              outTxHash,
+		ObservedOutTxBlockHeight:       outBlockHeight,
+		ObservedOutTxGasUsed:           outTxGasUsed,
+		ObservedOutTxEffectiveGasPrice: outTxEffectiveGasPrice,
+		ObservedOutTxEffectiveGasLimit: outTxEffectiveGasLimit,
+		ValueReceived:                  valueReceived,
+		Status:                         status,
+		OutTxChain:                     chain,
+		OutTxTssNonce:                  nonce,
+		CoinType:                       coinType,
 	}
 }
 
@@ -53,14 +69,17 @@ func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 	if msg.OutTxChain < 0 {
 		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
 	}
+
 	return nil
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) Digest() string {
 	m := *msg
 	m.Creator = ""
+
 	// Set status to ReceiveStatus_Created to make sure both successful and failed votes are added to the same ballot
 	m.Status = common.ReceiveStatus_Created
+
 	// Outbound and reverted txs have different digest as ObservedOutTxHash is different so they are stored in different ballots
 	hash := crypto.Keccak256Hash([]byte(m.String()))
 	return hash.Hex()

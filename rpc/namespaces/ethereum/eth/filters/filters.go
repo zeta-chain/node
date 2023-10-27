@@ -21,17 +21,15 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/rpc/backend"
-	"github.com/zeta-chain/zetacore/rpc/types"
-
-	"github.com/pkg/errors"
-	"github.com/tendermint/tendermint/libs/log"
-	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
-
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth/filters"
+	"github.com/pkg/errors"
+	"github.com/tendermint/tendermint/libs/log"
+	tmrpctypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/zeta-chain/zetacore/rpc/backend"
+	"github.com/zeta-chain/zetacore/rpc/types"
 )
 
 // BloomIV represents the bit indexes and value inside the bloom filter that belong
@@ -107,7 +105,7 @@ const (
 
 // Logs searches the blockchain for matching log entries, returning all from the
 // first block that contains matches, updating the start of the filter accordingly.
-func (f *Filter) Logs(ctx context.Context, logLimit int, blockLimit int64) ([]*ethtypes.Log, error) {
+func (f *Filter) Logs(_ context.Context, logLimit int, blockLimit int64) ([]*ethtypes.Log, error) {
 	logs := []*ethtypes.Log{}
 	var err error
 

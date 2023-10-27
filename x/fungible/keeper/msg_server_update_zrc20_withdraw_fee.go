@@ -2,67 +2,58 @@ package keeper
 
 import (
 	"context"
-	"math/big"
+
+	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
+func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_deploy_fungible_coin) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+
+	// check signer permission
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
+		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "deploy can only be executed by the correct policy account")
 	}
+
+	// check the zrc20 exists
 	zrc20Addr := ethcommon.HexToAddress(msg.Zrc20Address)
 	if zrc20Addr == (ethcommon.Address{}) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", msg.Zrc20Address)
+		return nil, cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", msg.Zrc20Address)
 	}
-
-	// update contracts
-	zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
-	if err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrABIGet, "failed to get zrc20 abi")
-	}
-
-	foreignCoins := k.GetAllForeignCoins(ctx)
-	found := false
-	var coin types.ForeignCoins
-	for _, fcoin := range foreignCoins {
-		coinZRC20Addr := ethcommon.HexToAddress(fcoin.Zrc20ContractAddress)
-		if coinZRC20Addr == (ethcommon.Address{}) {
-			k.Logger(ctx).Error("invalid zrc20 contract address", "address", fcoin.Zrc20ContractAddress)
-			continue
-		}
-		if coinZRC20Addr == zrc20Addr {
-			coin = fcoin
-			found = true
-			break
-		}
-	}
-
+	coin, found := k.GetForeignCoins(ctx, msg.Zrc20Address)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidAddress, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
+		return nil, cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "no foreign coin match requested zrc20 address (%s)", msg.Zrc20Address)
 	}
 
-	res, err := k.CallEVM(ctx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, false, "PROTOCOL_FLAT_FEE")
+	// get the previous fee
+	oldWithdrawFee, err := k.QueryProtocolFlatFee(ctx, zrc20Addr)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract PROTOCOL_FLAT_FEE method (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query protocol flat fee (%s)", err.Error())
 	}
-	unpacked, err := zrc20ABI.Unpack("PROTOCOL_FLAT_FEE", res.Ret)
-	if err != nil || len(unpacked) == 0 {
-		return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to unpack zrc20 contract PROTOCOL_FLAT_FEE method (%s)", err.Error())
-	}
-	oldWithdrawFee, ok := unpacked[0].(*big.Int)
-	if !ok {
-		return nil, sdkerrors.Wrapf(types.ErrContractCall, "failed to interpret the returned unpacked zrc20 contract PROTOCOL_FLAT_FEE method; ret %x", res.Ret)
+	oldGasLimit, err := k.QueryGasLimit(ctx, zrc20Addr)
+	if err != nil {
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to query gas limit (%s)", err.Error())
 	}
 
+	// call the contract methods
 	tmpCtx, commit := ctx.CacheContext()
-	_, err = k.CallEVM(tmpCtx, *zrc20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, "updateProtocolFlatFee", msg.NewWithdrawFee.BigInt())
+	if !msg.NewWithdrawFee.IsNil() {
+		_, err = k.UpdateZRC20ProtocolFlatFee(tmpCtx, zrc20Addr, msg.NewWithdrawFee.BigInt())
+		if err != nil {
+			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateProtocolFlatFee method (%s)", err.Error())
+		}
+	}
+	if !msg.NewGasLimit.IsNil() {
+		_, err = k.UpdateZRC20GasLimit(tmpCtx, zrc20Addr, msg.NewGasLimit.BigInt())
+		if err != nil {
+			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract updateGasLimit method (%s)", err.Error())
+		}
+	}
 
 	err = ctx.EventManager().EmitTypedEvent(
 		&types.EventZRC20WithdrawFeeUpdated{
@@ -71,14 +62,17 @@ func (k Keeper) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpda
 			CoinType:       coin.CoinType,
 			Zrc20Address:   zrc20Addr.Hex(),
 			OldWithdrawFee: oldWithdrawFee.String(),
-			NewWithdrawFee: msg.NewWithdrawFee.BigInt().String(),
+			NewWithdrawFee: msg.NewWithdrawFee.String(),
 			Signer:         msg.Creator,
+			OldGasLimit:    oldGasLimit.String(),
+			NewGasLimit:    msg.NewGasLimit.String(),
 		},
 	)
 	if err != nil {
 		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
-		return nil, sdkerrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
+		return nil, cosmoserrors.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
 	}
 	commit()
+
 	return &types.MsgUpdateZRC20WithdrawFeeResponse{}, nil
 }

@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -48,6 +49,37 @@ func CmdListSend() *cobra.Command {
 	return cmd
 }
 
+func CmdPendingCctx() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-pending-cctx [chain-id]",
+		Short: "shows pending CCTX",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
+			params := &types.QueryAllCctxPendingRequest{
+				ChainId: chainID,
+			}
+
+			res, err := queryClient.CctxAllPending(context.Background(), params)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 func CmdShowSend() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-cctx [index]",
@@ -85,33 +117,56 @@ func CmdCCTXInboundVoter() *cobra.Command {
 		Short: "Broadcast message sendVoter",
 		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsSender := (args[0])
-			argsSenderChain, err := strconv.Atoi(args[1])
+			argsSender := args[0]
+			argsSenderChain, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
-			argsTxOrigin := (args[2])
-			argsReceiver := (args[3])
-			argsReceiverChain, err := strconv.Atoi(args[4])
+			argsTxOrigin := args[2]
+			argsReceiver := args[3]
+			argsReceiverChain, err := strconv.ParseInt(args[4], 10, 64)
 			if err != nil {
 				return err
 			}
 
 			amount := math.NewUintFromString(args[5])
-			argsMessage := (args[6])
-			argsInTxHash := (args[7])
-			argsInBlockHeight, err := strconv.ParseInt(args[8], 10, 64)
-			argsCoinType := common.CoinType(common.CoinType_value[args[9]])
-			argsAsset := args[10]
+
+			argsMessage := args[6]
+			argsInTxHash := args[7]
+
+			argsInBlockHeight, err := strconv.ParseUint(args[8], 10, 64)
 			if err != nil {
 				return err
 			}
+
+			coinType, ok := common.CoinType_value[args[9]]
+			if !ok {
+				return fmt.Errorf("wrong coin type %s", args[9])
+			}
+			argsCoinType := common.CoinType(coinType)
+
+			argsAsset := args[10]
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgSendVoter(clientCtx.GetFromAddress().String(), (argsSender), int64((argsSenderChain)), (argsTxOrigin), (argsReceiver), int64((argsReceiverChain)), amount, (argsMessage), (argsInTxHash), uint64(argsInBlockHeight), 250_000, argsCoinType, argsAsset)
+			msg := types.NewMsgVoteOnObservedInboundTx(
+				clientCtx.GetFromAddress().String(),
+				argsSender,
+				argsSenderChain,
+				argsTxOrigin,
+				argsReceiver,
+				argsReceiverChain,
+				amount,
+				argsMessage,
+				argsInTxHash,
+				argsInBlockHeight,
+				250_000,
+				argsCoinType,
+				argsAsset,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
@@ -126,40 +181,79 @@ func CmdCCTXInboundVoter() *cobra.Command {
 
 func CmdCCTXOutboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [ZetaMinted] [Status] [chain] [outTXNonce] [coinType]",
+		Use:   "outbound-voter [sendHash] [outTxHash] [outBlockHeight] [outGasUsed] [outEffectiveGasPrice] [outEffectiveGasLimit] [valueReceived] [Status] [chain] [outTXNonce] [coinType]",
 		Short: "Broadcast message receiveConfirmation",
-		Args:  cobra.ExactArgs(8),
+		Args:  cobra.ExactArgs(11),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			argsSendHash := (args[0])
-			argsOutTxHash := (args[1])
-			argsOutBlockHeight, err := strconv.ParseInt(args[2], 10, 64)
+			argsSendHash := args[0]
+			argsOutTxHash := args[1]
+
+			argsOutBlockHeight, err := strconv.ParseUint(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
-			argsMMint := (args[3])
+
+			argsOutGasUsed, err := strconv.ParseUint(args[3], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			argsOutEffectiveGasPrice, ok := math.NewIntFromString(args[4])
+			if !ok {
+				return errors.New("invalid effective gas price, enter 0 if unused")
+			}
+
+			argsOutEffectiveGasLimit, err := strconv.ParseUint(args[5], 10, 64)
+			if err != nil {
+				return err
+			}
+
+			argsMMint := args[6]
+
 			var status common.ReceiveStatus
-			if args[4] == "0" {
+			if args[7] == "0" {
 				status = common.ReceiveStatus_Success
-			} else if args[4] == "1" {
+			} else if args[7] == "1" {
 				status = common.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
 			}
-			chain, err := strconv.Atoi(args[5])
+
+			chain, err := strconv.ParseInt(args[8], 10, 64)
 			if err != nil {
 				return err
 			}
-			outTxNonce, err := strconv.ParseInt(args[6], 10, 64)
+
+			outTxNonce, err := strconv.ParseUint(args[9], 10, 64)
 			if err != nil {
 				return err
 			}
-			argsCoinType := common.CoinType(common.CoinType_value[args[7]])
+
+			coinType, ok := common.CoinType_value[args[10]]
+			if !ok {
+				return fmt.Errorf("wrong coin type %s", args[10])
+			}
+			argsCoinType := common.CoinType(coinType)
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgReceiveConfirmation(clientCtx.GetFromAddress().String(), argsSendHash, argsOutTxHash, uint64(argsOutBlockHeight), math.NewUintFromString(argsMMint), status, int64(chain), uint64(outTxNonce), argsCoinType)
+			msg := types.NewMsgVoteOnObservedOutboundTx(
+				clientCtx.GetFromAddress().String(),
+				argsSendHash,
+				argsOutTxHash,
+				argsOutBlockHeight,
+				argsOutGasUsed,
+				argsOutEffectiveGasPrice,
+				argsOutEffectiveGasLimit,
+				math.NewUintFromString(argsMMint),
+				status,
+				chain,
+				outTxNonce,
+				argsCoinType,
+			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

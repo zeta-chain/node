@@ -19,7 +19,10 @@ func Save(config *Config, path string) error {
 	file := filepath.Join(path, folder, filename)
 	file = filepath.Clean(file)
 
-	jsonFile, _ := json.MarshalIndent(config, "", "    ")
+	jsonFile, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		return err
+	}
 	err = os.WriteFile(file, jsonFile, 0600)
 	if err != nil {
 		return err
@@ -34,7 +37,7 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	file = filepath.Clean(file)
-	cfg := &Config{}
+	cfg := NewConfig()
 	input, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
@@ -45,6 +48,9 @@ func Load(path string) (*Config, error) {
 	}
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
+	cfg.CurrentTssPubkey = ""
+	cfg.ZetaCoreHome = path
+	cfg.SignerPass = "password"
 	return cfg, nil
 }
 
@@ -52,7 +58,10 @@ func GetPath(inputPath string) string {
 	path := strings.Split(inputPath, "/")
 	if len(path) > 0 {
 		if path[0] == "~" {
-			home, _ := os.UserHomeDir()
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return ""
+			}
 			path[0] = home
 		}
 	}

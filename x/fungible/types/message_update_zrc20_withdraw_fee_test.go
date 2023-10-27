@@ -1,52 +1,91 @@
-package types
+package types_test
 
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	math "cosmossdk.io/math"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 func TestMsgUpdateZRC20WithdrawFee_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgUpdateZRC20WithdrawFee
+		msg  types.MsgUpdateZRC20WithdrawFee
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        "invalid_address",
 				Zrc20Address:   sample.EthAddress().String(),
-				NewWithdrawFee: sdk.NewUint(1),
+				NewWithdrawFee: math.NewUint(1),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid new system contract address",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        sample.AccAddress(),
 				Zrc20Address:   "invalid_address",
-				NewWithdrawFee: sdk.NewUint(1),
+				NewWithdrawFee: math.NewUint(1),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid new withdraw fee",
-			msg: MsgUpdateZRC20WithdrawFee{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: sample.EthAddress().String(),
+			name: "both withdraw fee and gas limit nil",
+			msg: types.MsgUpdateZRC20WithdrawFee{
+				Creator:        sample.AccAddress(),
+				Zrc20Address:   sample.EthAddress().String(),
+				NewGasLimit:    math.Uint{},
+				NewWithdrawFee: math.Uint{},
 			},
 			err: sdkerrors.ErrInvalidRequest,
 		},
 		{
 			name: "valid message",
-			msg: MsgUpdateZRC20WithdrawFee{
+			msg: types.MsgUpdateZRC20WithdrawFee{
 				Creator:        sample.AccAddress(),
 				Zrc20Address:   sample.EthAddress().String(),
-				NewWithdrawFee: sdk.NewUint(1),
+				NewWithdrawFee: math.NewUint(42),
+				NewGasLimit:    math.NewUint(42),
+			},
+		},
+		{
+			name: "withdraw fee can be zero",
+			msg: types.MsgUpdateZRC20WithdrawFee{
+				Creator:        sample.AccAddress(),
+				Zrc20Address:   sample.EthAddress().String(),
+				NewWithdrawFee: math.ZeroUint(),
+				NewGasLimit:    math.NewUint(42),
+			},
+		},
+		{
+			name: "withdraw fee can be nil",
+			msg: types.MsgUpdateZRC20WithdrawFee{
+				Creator:      sample.AccAddress(),
+				Zrc20Address: sample.EthAddress().String(),
+				NewGasLimit:  math.NewUint(42),
+			},
+		},
+		{
+			name: "gas limit can be zero",
+			msg: types.MsgUpdateZRC20WithdrawFee{
+				Creator:        sample.AccAddress(),
+				Zrc20Address:   sample.EthAddress().String(),
+				NewGasLimit:    math.ZeroUint(),
+				NewWithdrawFee: math.NewUint(42),
+			},
+		},
+		{
+			name: "gas limit can be nil",
+			msg: types.MsgUpdateZRC20WithdrawFee{
+				Creator:        sample.AccAddress(),
+				Zrc20Address:   sample.EthAddress().String(),
+				NewWithdrawFee: math.NewUint(42),
 			},
 		},
 	}

@@ -10,11 +10,11 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdUpdatePermissionFlags() *cobra.Command {
+func CmdUpdateCrosschainFlags() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-permission-flags [is-inbound-enabled]",
-		Short: "Update PermissionFlags",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-crosschain-flags [is-inbound-enabled] [is-outbound-enabled]",
+		Short: "Update crosschain flags",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -25,7 +25,11 @@ func CmdUpdatePermissionFlags() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			msg := types.NewMsgUpdatePermissionFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled)
+			arsIsOutboundEnabled, err := strconv.ParseBool(args[1])
+			if err != nil {
+				return err
+			}
+			msg := types.NewMsgUpdateCrosschainFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled, arsIsOutboundEnabled)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

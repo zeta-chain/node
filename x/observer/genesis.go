@@ -10,37 +10,63 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	genesisObservers := genState.Observers
-	types.VerifyObserverMapper(genesisObservers)
 	observerCount := uint64(0)
 	for _, mapper := range genesisObservers {
-		k.SetObserverMapper(ctx, mapper)
-		observerCount += uint64(len(mapper.ObserverList))
+		if mapper != nil {
+			k.SetObserverMapper(ctx, mapper)
+			observerCount += uint64(len(mapper.ObserverList))
+		}
 	}
-	k.SetCoreParams(ctx, types.GetCoreParams())
+
+	// If core params are defined set them, otherwise set default
+	if len(genState.CoreParamsList.CoreParams) > 0 {
+		k.SetCoreParams(ctx, genState.CoreParamsList)
+	} else {
+		k.SetCoreParams(ctx, types.GetCoreParams())
+	}
+
 	// Set all the nodeAccount
 	for _, elem := range genState.NodeAccountList {
-		k.SetNodeAccount(ctx, *elem)
+		if elem != nil {
+			k.SetNodeAccount(ctx, *elem)
+		}
 	}
+
 	params := types.DefaultParams()
 	if genState.Params != nil {
 		params = *genState.Params
 	}
 	k.SetParams(ctx, params)
+
 	// Set if defined
-	if genState.PermissionFlags != nil {
-		k.SetPermissionFlags(ctx, *genState.PermissionFlags)
+
+	crosschainFlags := types.DefaultCrosschainFlags()
+	if genState.CrosschainFlags != nil {
+		crosschainFlags.IsOutboundEnabled = genState.CrosschainFlags.IsOutboundEnabled
+		crosschainFlags.IsInboundEnabled = genState.CrosschainFlags.IsInboundEnabled
+		if genState.CrosschainFlags.BlockHeaderVerificationFlags != nil {
+			crosschainFlags.BlockHeaderVerificationFlags = genState.CrosschainFlags.BlockHeaderVerificationFlags
+		}
+		if genState.CrosschainFlags.GasPriceIncreaseFlags != nil {
+			crosschainFlags.GasPriceIncreaseFlags = genState.CrosschainFlags.GasPriceIncreaseFlags
+		}
+		k.SetCrosschainFlags(ctx, *crosschainFlags)
 	} else {
-		k.SetPermissionFlags(ctx, types.PermissionFlags{IsInboundEnabled: true})
+		k.SetCrosschainFlags(ctx, *types.DefaultCrosschainFlags())
 	}
+
 	// Set if defined
 	if genState.Keygen != nil {
 		k.SetKeygen(ctx, *genState.Keygen)
 	}
+
 	ballotListForHeight := make(map[int64][]string)
 	if len(genState.Ballots) > 0 {
 		for _, ballot := range genState.Ballots {
-			k.SetBallot(ctx, ballot)
-			ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+			if ballot != nil {
+				k.SetBallot(ctx, ballot)
+				ballotListForHeight[ballot.BallotCreationHeight] = append(ballotListForHeight[ballot.BallotCreationHeight], ballot.BallotIdentifier)
+			}
 		}
 	}
 
@@ -50,6 +76,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			BallotsIndexList: ballotList,
 		})
 	}
+
 	if genState.LastObserverCount != nil {
 		k.SetLastObserverCount(ctx, genState.LastObserverCount)
 	} else {
@@ -60,23 +87,33 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 // ExportGenesis returns the observer module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
-	// Get all nodeAccount
+
+	coreParams, found := k.GetAllCoreParams(ctx)
+	if !found {
+		coreParams = types.CoreParamsList{}
+	}
+
+	// Get all node accounts
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	nodeAccounts := make([]*types.NodeAccount, len(nodeAccountList))
 	for i, elem := range nodeAccountList {
-		nodeAccounts[i] = &elem // #nosec G601 // false positive
+		elem := elem
+		nodeAccounts[i] = &elem
 	}
-	// Get all permissionFlags
-	pf := types.PermissionFlags{IsInboundEnabled: true}
-	permissionFlags, found := k.GetPermissionFlags(ctx)
+
+	// Get all crosschain flags
+	cf := types.DefaultCrosschainFlags()
+	crosschainFlags, found := k.GetCrosschainFlags(ctx)
 	if found {
-		pf = permissionFlags
+		cf = &crosschainFlags
 	}
+
 	kn := &types.Keygen{}
 	keygen, found := k.GetKeygen(ctx)
 	if found {
 		kn = &keygen
 	}
+
 	oc := &types.LastObserverCount{}
 	observerCount, found := k.GetLastObserverCount(ctx)
 	if found {
@@ -86,9 +123,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
+		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
-		PermissionFlags:   &pf,
+		CrosschainFlags:   cf,
 		Keygen:            kn,
 		LastObserverCount: oc,
 	}

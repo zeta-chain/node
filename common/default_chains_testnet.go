@@ -31,6 +31,14 @@ func BtcTestNetChain() Chain {
 	}
 }
 
+func BtcChainID() int64 {
+	return BtcTestNetChain().ChainId
+}
+
+func BtcDustOffset() int64 {
+	return 2000
+}
+
 func MumbaiChain() Chain {
 	return Chain{
 		ChainName: ChainName_mumbai_testnet,
@@ -45,6 +53,20 @@ func DefaultChainsList() []*Chain {
 		BscTestnetChain(),
 		GoerliChain(),
 		ZetaChain(),
+	}
+	var c []*Chain
+	for i := 0; i < len(chains); i++ {
+		c = append(c, &chains[i])
+	}
+	return c
+}
+
+func ExternalChainList() []*Chain {
+	chains := []Chain{
+		BtcTestNetChain(),
+		MumbaiChain(),
+		BscTestnetChain(),
+		GoerliChain(),
 	}
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {

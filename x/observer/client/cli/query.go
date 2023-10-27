@@ -14,7 +14,7 @@ import (
 )
 
 // GetQueryCmd returns the cli query commands for this module
-func GetQueryCmd(queryRoute string) *cobra.Command {
+func GetQueryCmd(_ string) *cobra.Command {
 	// Group observer queries under a subcommand
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -34,11 +34,12 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		CmdGetCoreParams(),
 		CmdListNodeAccount(),
 		CmdShowNodeAccount(),
-		CmdShowPermissionFlags(),
+		CmdShowCrosschainFlags(),
 		CmdShowKeygen(),
 		CmdShowObserverCount(),
 		CmdBlameByIdentifier(),
 		CmdGetAllBlameRecords(),
+		CmdGetBlameByChainAndNonce(),
 	)
 
 	return cmd

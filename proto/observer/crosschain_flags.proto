@@ -1,0 +1,37 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message GasPriceIncreaseFlags {
+  int64 epochLength = 1;
+  google.protobuf.Duration retryInterval = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true
+  ];
+  uint32 gasPriceIncreasePercent = 3;
+
+  // Maximum gas price increase in percent of the median gas price
+  // Default is used if 0
+  uint32 gasPriceIncreaseMax = 4;
+}
+message BlockHeaderVerificationFlags {
+  bool isEthTypeChainEnabled = 1;
+  bool isBtcTypeChainEnabled = 2;
+}
+
+message CrosschainFlags {
+  bool isInboundEnabled = 1;
+  bool isOutboundEnabled = 2;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
+  BlockHeaderVerificationFlags blockHeaderVerificationFlags = 4;
+}
+
+message LegacyCrosschainFlags {
+  bool isInboundEnabled = 1;
+  bool isOutboundEnabled = 2;
+  GasPriceIncreaseFlags gasPriceIncreaseFlags = 3;
+}

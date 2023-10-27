@@ -1,10 +1,8 @@
 package main
 
 import (
-	etherminttypes "github.com/evmos/ethermint/types"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -51,14 +49,17 @@ func init() {
 	InitCmd.Flags().BoolVar(&initArgs.logSampler, "log-sampler", false, "set to to true to turn on log sampling")
 	InitCmd.Flags().BoolVar(&initArgs.p2pDiagnostic, "p2p-diagnostic", false, "enable p2p diagnostic")
 	InitCmd.Flags().Uint64Var(&initArgs.p2pDiagnosticTicker, "p2p-diagnostic-ticker", 30, "p2p diagnostic ticker (default: 0 means no ticker)")
-	InitCmd.Flags().Uint64Var(&initArgs.configUpdateTicker, "config-update-ticker", 6, "config update ticker (default: 0 means no ticker)")
+	InitCmd.Flags().Uint64Var(&initArgs.configUpdateTicker, "config-update-ticker", 5, "config update ticker (default: 0 means no ticker)")
 	InitCmd.Flags().StringVar(&initArgs.TssPath, "tss-path", "~/.tss", "path to tss location")
 	InitCmd.Flags().BoolVar(&initArgs.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
-	setHomeDir()
+	err := setHomeDir()
+	if err != nil {
+		return err
+	}
 
 	//Create new config struct
 	configData := config.New()
@@ -79,23 +80,14 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ZetaCoreURL = initArgs.zetacoreURL
 	configData.AuthzHotkey = initArgs.authzHotkey
 	configData.AuthzGranter = initArgs.authzGranter
-	configData.LogLevel = zerolog.Level(initArgs.level)
+	configData.LogLevel = initArgs.level
 	configData.LogFormat = initArgs.logFormat
 	configData.LogSampler = initArgs.logSampler
 	configData.P2PDiagnostic = initArgs.p2pDiagnostic
 	configData.TssPath = initArgs.TssPath
 	configData.P2PDiagnosticTicker = initArgs.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = initArgs.configUpdateTicker
-	initChainID(&configData)
 
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
-}
-
-func initChainID(configData *config.Config) {
-	ZEVMChainID, err := etherminttypes.ParseChainID(configData.ChainID)
-	if err != nil {
-		panic(err)
-	}
-	configData.EVMChainConfigs[common.ZetaChain().ChainId].Chain.ChainId = ZEVMChainID.Int64()
 }

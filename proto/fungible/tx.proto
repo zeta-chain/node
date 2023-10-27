@@ -11,13 +11,20 @@ service Msg {
   rpc DeployFungibleCoinZRC20(MsgDeployFungibleCoinZRC20) returns (MsgDeployFungibleCoinZRC20Response);
   rpc RemoveForeignCoin(MsgRemoveForeignCoin) returns (MsgRemoveForeignCoinResponse);
   rpc UpdateSystemContract(MsgUpdateSystemContract) returns (MsgUpdateSystemContractResponse);
+  rpc UpdateContractBytecode(MsgUpdateContractBytecode) returns (MsgUpdateContractBytecodeResponse);
   rpc UpdateZRC20WithdrawFee(MsgUpdateZRC20WithdrawFee) returns (MsgUpdateZRC20WithdrawFeeResponse);
+  rpc UpdateZRC20PausedStatus(MsgUpdateZRC20PausedStatus) returns (MsgUpdateZRC20PausedStatusResponse);
+  rpc UpdateZRC20LiquidityCap(MsgUpdateZRC20LiquidityCap) returns (MsgUpdateZRC20LiquidityCapResponse);
 }
 
 message MsgUpdateZRC20WithdrawFee {
   string creator = 1;
   string zrc20_address = 2; // zrc20 address
   string new_withdraw_fee = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+  string new_gas_limit = 7 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
   ];
@@ -43,7 +50,9 @@ message MsgDeployFungibleCoinZRC20 {
   int64 gas_limit = 8;
 }
 
-message MsgDeployFungibleCoinZRC20Response {}
+message MsgDeployFungibleCoinZRC20Response {
+  string address = 1;
+}
 
 message MsgRemoveForeignCoin {
   string creator = 1;
@@ -51,3 +60,37 @@ message MsgRemoveForeignCoin {
 }
 
 message MsgRemoveForeignCoinResponse {}
+
+message MsgUpdateContractBytecode {
+  string creator = 1;
+  string contract_address = 2;
+  string new_bytecode_address = 3;
+}
+
+message MsgUpdateContractBytecodeResponse {
+  bytes new_bytecode_hash = 1;
+}
+
+enum UpdatePausedStatusAction {
+  PAUSE = 0;
+  UNPAUSE = 1;
+}
+
+message MsgUpdateZRC20PausedStatus {
+  string creator = 1;
+  repeated string zrc20_addresses = 2;
+  UpdatePausedStatusAction action = 3;
+}
+
+message MsgUpdateZRC20PausedStatusResponse {}
+
+message MsgUpdateZRC20LiquidityCap {
+  string creator = 1;
+  string zrc20_address = 2;
+  string liquidity_cap = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message MsgUpdateZRC20LiquidityCapResponse {}

@@ -1,0 +1,9 @@
+breaking:proto:
+  - "proto/**/*.proto"
+
+breaking:cli:
+  - "x/*/client/cli/*.go"
+  - "cmd/**/*.go"
+
+ci:
+  - ".github/**"

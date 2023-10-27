@@ -5,19 +5,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v8.0.0"
+const releaseVersion = "v10.1.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.Logger().Info("Running upgrade handler for " + releaseVersion)
-
-		// Updated version map to thelatest consensus versions from each module
+		// Updated version map to the latest consensus versions from each module
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-
+		vm[observertypes.ModuleName] = vm[observertypes.ModuleName] - 1
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 

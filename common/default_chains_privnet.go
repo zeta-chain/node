@@ -24,11 +24,31 @@ func BtcRegtestChain() Chain {
 	}
 }
 
+func BtcChainID() int64 {
+	return BtcRegtestChain().ChainId
+}
+
+func BtcDustOffset() int64 {
+	return 2000
+}
+
 func DefaultChainsList() []*Chain {
 	chains := []Chain{
 		BtcRegtestChain(),
 		GoerliChain(),
 		ZetaChain(),
+	}
+	var c []*Chain
+	for i := 0; i < len(chains); i++ {
+		c = append(c, &chains[i])
+	}
+	return c
+}
+
+func ExternalChainList() []*Chain {
+	chains := []Chain{
+		BtcRegtestChain(),
+		GoerliChain(),
 	}
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {

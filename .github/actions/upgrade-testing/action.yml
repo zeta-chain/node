@@ -46,8 +46,12 @@ runs:
         CLIENT_SKIP_UPGRADE: "true"
         CLIENT_START_PROCESS: "false"
         BINARY_NAME_SUFFIX: "ubuntu-22-amd64"
-        UPGRADES_SLEEP_TIME: 220
+        UPGRADES_SLEEP_TIME: 300
         DEBUG_UPGRADES: "false"
+        #BINARY_DOWNLOAD_LIST: '{"binary_download_list":[["v8.3.3", "zetacored-testnet-linux-amd64"],["v9.0.0", "zetacored-ubuntu-22-amd64"]]}'
+        #TAG_LIST: '{"tag_list":["v8.3.3","v9.0.0"]}'
+        STARTING_VERSION: "v8.3.3"
+        #END_VERSION: "v9.0.0"
       run: |
         
         current_directory=$(pwd)
@@ -56,7 +60,7 @@ runs:
         echo "***********Change Permission of Zetacored*********************"
         chmod a+x zetacored*
         chmod -R 777 zetacored*
-        mv zetacored-ubuntu-22-amd64 zetacored
+        mv zetacored-testnet-linux-amd64 zetacored
         export PATH=$(pwd):$PATH
         
         echo "***********Change Directories into the Upgrade Testing Directory.*********************"

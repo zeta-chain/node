@@ -18,7 +18,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string) {
+func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, observerList []string, setupChainNonces bool) {
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
@@ -30,15 +30,28 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 			NodeStatus: observerTypes.NodeStatus_Active,
 		}
 	}
+	if setupChainNonces {
+		chainNonceList := make([]*types.ChainNonces, len(common.DefaultChainsList()))
+		for i, chain := range common.DefaultChainsList() {
+			chainNonceList[i] = &types.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   0,
+			}
+		}
+		crossChainGenesis.ChainNoncesList = chainNonceList
+	}
 
 	crossChainGenesis.Params.Enabled = true
+	assert.NoError(t, crossChainGenesis.Validate())
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
 	assert.NoError(t, err)
 
-	// Cross-chain genesis state
+	// EVM genesis state
 	var evmGenesisState evmtypes.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
 	evmGenesisState.Params.EvmDenom = cmdcfg.BaseDenom
+	assert.NoError(t, evmGenesisState.Validate())
 	evmGenesisBz, err := codec.MarshalJSON(&evmGenesisState)
 	assert.NoError(t, err)
 
@@ -67,6 +80,11 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		GranteePubkeys: observerList,
 		BlockNumber:    5,
 	}
+	assert.NoError(t, observerGenesis.Validate())
+	observerGenesis.CrosschainFlags = &observerTypes.CrosschainFlags{
+		IsInboundEnabled:  true,
+		IsOutboundEnabled: true,
+	}
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)
 	assert.NoError(t, err)
 
@@ -86,9 +104,17 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	//params.BallotMaturityBlocks = 3
 	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
-	permissionFlags := &observerTypes.PermissionFlags{}
-	nullify.Fill(&permissionFlags)
-	state.PermissionFlags = permissionFlags
+	crosschainFlags := &observerTypes.CrosschainFlags{
+		IsInboundEnabled:             true,
+		IsOutboundEnabled:            true,
+		GasPriceIncreaseFlags:        &observerTypes.DefaultGasPriceIncreaseFlags,
+		BlockHeaderVerificationFlags: &observerTypes.DefaultBlockHeaderVerificationFlags,
+	}
+
+	nullify.Fill(&crosschainFlags)
+	state.CrosschainFlags = crosschainFlags
+
+	assert.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
@@ -122,14 +148,16 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-
-	state.Tss = &types.TSS{
+	tss := types.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},
 		OperatorAddressList: []string{"operatorAddressList"},
 		FinalizedZetaHeight: 1,
 		KeyGenZetaHeight:    1,
 	}
+	state.Tss = &tss
+
+	state.TssHistory = []types.TSS{tss}
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
 			Index:   fmt.Sprintf("%d-%d", i, i),
@@ -141,12 +169,24 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	}
 
 	for i := 0; i < n; i++ {
+		inTxTracker := types.InTxTracker{
+			ChainId:  5,
+			TxHash:   fmt.Sprintf("txHash-%d", i),
+			CoinType: common.CoinType_Gas,
+		}
+		nullify.Fill(&inTxTracker)
+		state.InTxTrackerList = append(state.InTxTrackerList, inTxTracker)
+	}
+
+	for i := 0; i < n; i++ {
 		inTxHashToCctx := types.InTxHashToCctx{
 			InTxHash: strconv.Itoa(i),
 		}
 		nullify.Fill(&inTxHashToCctx)
 		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
 	}
+
+	assert.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
