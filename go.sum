@@ -2963,8 +2963,8 @@ github.com/yusufpapurcu/wmi v1.2.2/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQ
 github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
-github.com/zeta-chain/go-tss v0.0.0-20231027211852-f02405acb31a h1:ca7/KOlKl8MmkE3n8H7K5IFvx9COe8pPUvAgavyGJJ0=
-github.com/zeta-chain/go-tss v0.0.0-20231027211852-f02405acb31a/go.mod h1:pXgFOVodqkNxbjLe6N0Lx8FFjNTDST3C9H8J1/8LNXk=
+github.com/zeta-chain/go-tss v0.1.0 h1:3sqSQGOW42j516xihIXDx+YjAYMWbCryEt14cufHb+g=
+github.com/zeta-chain/go-tss v0.1.0/go.mod h1:pXgFOVodqkNxbjLe6N0Lx8FFjNTDST3C9H8J1/8LNXk=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b h1:aZRt5BtXdoDdyrUKwcv3B7mS30m/B854cjKjmnXBE5A=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b/go.mod h1:v79f+eY6PMpmLv188FAubst4XV2Mm8mUmx1OgmdFG3c=
 github.com/zeta-chain/tss-lib v0.1.7 h1:NkIaK7qIeb2B8z85PW0wnAaEP87ZUvgA/V3el7Kf5Tk=
