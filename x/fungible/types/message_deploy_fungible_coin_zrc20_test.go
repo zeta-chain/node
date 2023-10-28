@@ -31,6 +31,14 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 			err: sdkerrors.ErrInvalidGasLimit,
 		},
 		{
+			name: "invalid decimals",
+			msg: types.MsgDeployFungibleCoinZRC20{
+				Creator:  sample.AccAddress(),
+				Decimals: 78,
+			},
+			err: sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
+		},
+		{
 			name: "valid message",
 			msg: types.MsgDeployFungibleCoinZRC20{
 				Creator: sample.AccAddress(),
