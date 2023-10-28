@@ -40,9 +40,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
+	github.com/zeta-chain/go-tss v0.0.0-20231027211852-f02405acb31a
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
-	github.com/zeta-chain/tss-lib-thor v0.1.7-0.20231017181005-017342394351
-	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
+	github.com/zeta-chain/tss-lib v0.1.7
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -327,7 +327,6 @@ replace (
 	// use cometbft
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
-	gitlab.com/thorchain/tss/go-tss => github.com/brewmaster012/go-tss v0.0.0-20231017183223-bfe1ec7aee73
 )
 
 replace github.com/cometbft/cometbft-db => github.com/notional-labs/cometbft-db v0.0.0-20230321185329-6dc7c0ca6345

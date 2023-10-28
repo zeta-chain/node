@@ -16,25 +16,25 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	peer2 "github.com/libp2p/go-libp2p/core/peer"
+	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
 
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/tss-lib-thor/ecdsa/keygen"
+	thorcommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
 
 	"os"
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/tss"
+	"github.com/zeta-chain/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/tss"
 
 	tmcrypto "github.com/tendermint/tendermint/crypto"
 )
