@@ -79,14 +79,19 @@ export declare class Ballot extends Message<Ballot> {
   observationType: ObservationType;
 
   /**
-   * @generated from field: string BallotThreshold = 6;
+   * @generated from field: string ballot_threshold = 6;
    */
-  BallotThreshold: string;
+  ballotThreshold: string;
 
   /**
    * @generated from field: zetachain.zetacore.observer.BallotStatus ballot_status = 7;
    */
   ballotStatus: BallotStatus;
+
+  /**
+   * @generated from field: int64 ballot_creation_height = 8;
+   */
+  ballotCreationHeight: bigint;
 
   constructor(data?: PartialMessage<Ballot>);
 
@@ -101,5 +106,34 @@ export declare class Ballot extends Message<Ballot> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Ballot;
 
   static equals(a: Ballot | PlainMessage<Ballot> | undefined, b: Ballot | PlainMessage<Ballot> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.BallotListForHeight
+ */
+export declare class BallotListForHeight extends Message<BallotListForHeight> {
+  /**
+   * @generated from field: int64 height = 1;
+   */
+  height: bigint;
+
+  /**
+   * @generated from field: repeated string ballots_index_list = 2;
+   */
+  ballotsIndexList: string[];
+
+  constructor(data?: PartialMessage<BallotListForHeight>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.BallotListForHeight";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): BallotListForHeight;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): BallotListForHeight;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): BallotListForHeight;
+
+  static equals(a: BallotListForHeight | PlainMessage<BallotListForHeight> | undefined, b: BallotListForHeight | PlainMessage<BallotListForHeight> | undefined): boolean;
 }
 

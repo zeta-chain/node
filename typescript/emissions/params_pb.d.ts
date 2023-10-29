@@ -52,6 +52,11 @@ export declare class Params extends Message<Params> {
    */
   durationFactorConstant: string;
 
+  /**
+   * @generated from field: string observer_slash_amount = 9;
+   */
+  observerSlashAmount: string;
+
   constructor(data?: PartialMessage<Params>);
 
   static readonly runtime: typeof proto3;

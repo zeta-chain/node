@@ -8,6 +8,21 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType } from "../common/common_pb.js";
 
 /**
+ * @generated from enum zetachain.zetacore.fungible.UpdatePausedStatusAction
+ */
+export declare enum UpdatePausedStatusAction {
+  /**
+   * @generated from enum value: PAUSE = 0;
+   */
+  PAUSE = 0,
+
+  /**
+   * @generated from enum value: UNPAUSE = 1;
+   */
+  UNPAUSE = 1,
+}
+
+/**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee
  */
 export declare class MsgUpdateZRC20WithdrawFee extends Message<MsgUpdateZRC20WithdrawFee> {
@@ -27,6 +42,11 @@ export declare class MsgUpdateZRC20WithdrawFee extends Message<MsgUpdateZRC20Wit
    * @generated from field: string new_withdraw_fee = 6;
    */
   newWithdrawFee: string;
+
+  /**
+   * @generated from field: string new_gas_limit = 7;
+   */
+  newGasLimit: string;
 
   constructor(data?: PartialMessage<MsgUpdateZRC20WithdrawFee>);
 
@@ -125,9 +145,9 @@ export declare class MsgDeployFungibleCoinZRC20 extends Message<MsgDeployFungibl
   ERC20: string;
 
   /**
-   * @generated from field: string foreignChain = 3;
+   * @generated from field: int64 foreign_chain_id = 3;
    */
-  foreignChain: string;
+  foreignChainId: bigint;
 
   /**
    * @generated from field: uint32 decimals = 4;
@@ -145,12 +165,12 @@ export declare class MsgDeployFungibleCoinZRC20 extends Message<MsgDeployFungibl
   symbol: string;
 
   /**
-   * @generated from field: common.CoinType coinType = 7;
+   * @generated from field: common.CoinType coin_type = 7;
    */
   coinType: CoinType;
 
   /**
-   * @generated from field: int64 gasLimit = 8;
+   * @generated from field: int64 gas_limit = 8;
    */
   gasLimit: bigint;
 
@@ -173,6 +193,11 @@ export declare class MsgDeployFungibleCoinZRC20 extends Message<MsgDeployFungibl
  * @generated from message zetachain.zetacore.fungible.MsgDeployFungibleCoinZRC20Response
  */
 export declare class MsgDeployFungibleCoinZRC20Response extends Message<MsgDeployFungibleCoinZRC20Response> {
+  /**
+   * @generated from field: string address = 1;
+   */
+  address: string;
+
   constructor(data?: PartialMessage<MsgDeployFungibleCoinZRC20Response>);
 
   static readonly runtime: typeof proto3;
@@ -234,5 +259,169 @@ export declare class MsgRemoveForeignCoinResponse extends Message<MsgRemoveForei
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveForeignCoinResponse;
 
   static equals(a: MsgRemoveForeignCoinResponse | PlainMessage<MsgRemoveForeignCoinResponse> | undefined, b: MsgRemoveForeignCoinResponse | PlainMessage<MsgRemoveForeignCoinResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecode
+ */
+export declare class MsgUpdateContractBytecode extends Message<MsgUpdateContractBytecode> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string contract_address = 2;
+   */
+  contractAddress: string;
+
+  /**
+   * @generated from field: string new_bytecode_address = 3;
+   */
+  newBytecodeAddress: string;
+
+  constructor(data?: PartialMessage<MsgUpdateContractBytecode>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateContractBytecode";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateContractBytecode;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateContractBytecode;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateContractBytecode;
+
+  static equals(a: MsgUpdateContractBytecode | PlainMessage<MsgUpdateContractBytecode> | undefined, b: MsgUpdateContractBytecode | PlainMessage<MsgUpdateContractBytecode> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse
+ */
+export declare class MsgUpdateContractBytecodeResponse extends Message<MsgUpdateContractBytecodeResponse> {
+  /**
+   * @generated from field: bytes new_bytecode_hash = 1;
+   */
+  newBytecodeHash: Uint8Array;
+
+  constructor(data?: PartialMessage<MsgUpdateContractBytecodeResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateContractBytecodeResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateContractBytecodeResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateContractBytecodeResponse;
+
+  static equals(a: MsgUpdateContractBytecodeResponse | PlainMessage<MsgUpdateContractBytecodeResponse> | undefined, b: MsgUpdateContractBytecodeResponse | PlainMessage<MsgUpdateContractBytecodeResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatus
+ */
+export declare class MsgUpdateZRC20PausedStatus extends Message<MsgUpdateZRC20PausedStatus> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: repeated string zrc20_addresses = 2;
+   */
+  zrc20Addresses: string[];
+
+  /**
+   * @generated from field: zetachain.zetacore.fungible.UpdatePausedStatusAction action = 3;
+   */
+  action: UpdatePausedStatusAction;
+
+  constructor(data?: PartialMessage<MsgUpdateZRC20PausedStatus>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatus";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20PausedStatus;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20PausedStatus;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20PausedStatus;
+
+  static equals(a: MsgUpdateZRC20PausedStatus | PlainMessage<MsgUpdateZRC20PausedStatus> | undefined, b: MsgUpdateZRC20PausedStatus | PlainMessage<MsgUpdateZRC20PausedStatus> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatusResponse
+ */
+export declare class MsgUpdateZRC20PausedStatusResponse extends Message<MsgUpdateZRC20PausedStatusResponse> {
+  constructor(data?: PartialMessage<MsgUpdateZRC20PausedStatusResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20PausedStatusResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20PausedStatusResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20PausedStatusResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20PausedStatusResponse;
+
+  static equals(a: MsgUpdateZRC20PausedStatusResponse | PlainMessage<MsgUpdateZRC20PausedStatusResponse> | undefined, b: MsgUpdateZRC20PausedStatusResponse | PlainMessage<MsgUpdateZRC20PausedStatusResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap
+ */
+export declare class MsgUpdateZRC20LiquidityCap extends Message<MsgUpdateZRC20LiquidityCap> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string zrc20_address = 2;
+   */
+  zrc20Address: string;
+
+  /**
+   * @generated from field: string liquidity_cap = 3;
+   */
+  liquidityCap: string;
+
+  constructor(data?: PartialMessage<MsgUpdateZRC20LiquidityCap>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCap";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20LiquidityCap;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20LiquidityCap;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20LiquidityCap;
+
+  static equals(a: MsgUpdateZRC20LiquidityCap | PlainMessage<MsgUpdateZRC20LiquidityCap> | undefined, b: MsgUpdateZRC20LiquidityCap | PlainMessage<MsgUpdateZRC20LiquidityCap> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCapResponse
+ */
+export declare class MsgUpdateZRC20LiquidityCapResponse extends Message<MsgUpdateZRC20LiquidityCapResponse> {
+  constructor(data?: PartialMessage<MsgUpdateZRC20LiquidityCapResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgUpdateZRC20LiquidityCapResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateZRC20LiquidityCapResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateZRC20LiquidityCapResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateZRC20LiquidityCapResponse;
+
+  static equals(a: MsgUpdateZRC20LiquidityCapResponse | PlainMessage<MsgUpdateZRC20LiquidityCapResponse> | undefined, b: MsgUpdateZRC20LiquidityCapResponse | PlainMessage<MsgUpdateZRC20LiquidityCapResponse> | undefined): boolean;
 }
 

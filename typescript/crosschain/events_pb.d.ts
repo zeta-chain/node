@@ -228,9 +228,9 @@ export declare class EventOutboundFailure extends Message<EventOutboundFailure> 
   newStatus: string;
 
   /**
-   * @generated from field: string zeta_minted = 5;
+   * @generated from field: string value_received = 5;
    */
-  zetaMinted: string;
+  valueReceived: string;
 
   constructor(data?: PartialMessage<EventOutboundFailure>);
 
@@ -272,9 +272,9 @@ export declare class EventOutboundSuccess extends Message<EventOutboundSuccess> 
   newStatus: string;
 
   /**
-   * @generated from field: string zeta_minted = 5;
+   * @generated from field: string value_received = 5;
    */
-  zetaMinted: string;
+  valueReceived: string;
 
   constructor(data?: PartialMessage<EventOutboundSuccess>);
 

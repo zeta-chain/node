@@ -16,9 +16,9 @@ export declare class InTxHashToCctx extends Message<InTxHashToCctx> {
   inTxHash: string;
 
   /**
-   * @generated from field: string cctx_index = 2;
+   * @generated from field: repeated string cctx_index = 2;
    */
-  cctxIndex: string;
+  cctxIndex: string[];
 
   constructor(data?: PartialMessage<InTxHashToCctx>);
 

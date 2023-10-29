@@ -6,10 +6,10 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Ballot } from "./ballot_pb.js";
-import type { ObserverMapper } from "./observer_pb.js";
+import type { LastObserverCount, ObserverMapper } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
-import type { PermissionFlags } from "./permission_flags_pb.js";
-import type { Params } from "./params_pb.js";
+import type { CrosschainFlags } from "./crosschain_flags_pb.js";
+import type { CoreParamsList, Params } from "./params_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 
 /**
@@ -32,9 +32,9 @@ export declare class GenesisState extends Message<GenesisState> {
   nodeAccountList: NodeAccount[];
 
   /**
-   * @generated from field: zetachain.zetacore.observer.PermissionFlags permissionFlags = 4;
+   * @generated from field: zetachain.zetacore.observer.CrosschainFlags crosschain_flags = 4;
    */
-  permissionFlags?: PermissionFlags;
+  crosschainFlags?: CrosschainFlags;
 
   /**
    * @generated from field: zetachain.zetacore.observer.Params params = 5;
@@ -45,6 +45,16 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: zetachain.zetacore.observer.Keygen keygen = 6;
    */
   keygen?: Keygen;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.LastObserverCount last_observer_count = 7;
+   */
+  lastObserverCount?: LastObserverCount;
+
+  /**
+   * @generated from field: zetachain.zetacore.observer.CoreParamsList core_params_list = 8;
+   */
+  coreParamsList?: CoreParamsList;
 
   constructor(data?: PartialMessage<GenesisState>);
 

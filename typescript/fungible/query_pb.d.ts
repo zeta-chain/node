@@ -203,3 +203,171 @@ export declare class QueryGetSystemContractResponse extends Message<QueryGetSyst
   static equals(a: QueryGetSystemContractResponse | PlainMessage<QueryGetSystemContractResponse> | undefined, b: QueryGetSystemContractResponse | PlainMessage<QueryGetSystemContractResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddress
+ */
+export declare class QueryGetGasStabilityPoolAddress extends Message<QueryGetGasStabilityPoolAddress> {
+  constructor(data?: PartialMessage<QueryGetGasStabilityPoolAddress>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddress";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetGasStabilityPoolAddress;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolAddress;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolAddress;
+
+  static equals(a: QueryGetGasStabilityPoolAddress | PlainMessage<QueryGetGasStabilityPoolAddress> | undefined, b: QueryGetGasStabilityPoolAddress | PlainMessage<QueryGetGasStabilityPoolAddress> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddressResponse
+ */
+export declare class QueryGetGasStabilityPoolAddressResponse extends Message<QueryGetGasStabilityPoolAddressResponse> {
+  /**
+   * @generated from field: string cosmos_address = 1;
+   */
+  cosmosAddress: string;
+
+  /**
+   * @generated from field: string evm_address = 2;
+   */
+  evmAddress: string;
+
+  constructor(data?: PartialMessage<QueryGetGasStabilityPoolAddressResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetGasStabilityPoolAddressResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetGasStabilityPoolAddressResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolAddressResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolAddressResponse;
+
+  static equals(a: QueryGetGasStabilityPoolAddressResponse | PlainMessage<QueryGetGasStabilityPoolAddressResponse> | undefined, b: QueryGetGasStabilityPoolAddressResponse | PlainMessage<QueryGetGasStabilityPoolAddressResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalance
+ */
+export declare class QueryGetGasStabilityPoolBalance extends Message<QueryGetGasStabilityPoolBalance> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<QueryGetGasStabilityPoolBalance>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalance";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetGasStabilityPoolBalance;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolBalance;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolBalance;
+
+  static equals(a: QueryGetGasStabilityPoolBalance | PlainMessage<QueryGetGasStabilityPoolBalance> | undefined, b: QueryGetGasStabilityPoolBalance | PlainMessage<QueryGetGasStabilityPoolBalance> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalanceResponse
+ */
+export declare class QueryGetGasStabilityPoolBalanceResponse extends Message<QueryGetGasStabilityPoolBalanceResponse> {
+  /**
+   * @generated from field: string balance = 2;
+   */
+  balance: string;
+
+  constructor(data?: PartialMessage<QueryGetGasStabilityPoolBalanceResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryGetGasStabilityPoolBalanceResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetGasStabilityPoolBalanceResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolBalanceResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetGasStabilityPoolBalanceResponse;
+
+  static equals(a: QueryGetGasStabilityPoolBalanceResponse | PlainMessage<QueryGetGasStabilityPoolBalanceResponse> | undefined, b: QueryGetGasStabilityPoolBalanceResponse | PlainMessage<QueryGetGasStabilityPoolBalanceResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalance
+ */
+export declare class QueryAllGasStabilityPoolBalance extends Message<QueryAllGasStabilityPoolBalance> {
+  constructor(data?: PartialMessage<QueryAllGasStabilityPoolBalance>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalance";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllGasStabilityPoolBalance;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalance;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalance;
+
+  static equals(a: QueryAllGasStabilityPoolBalance | PlainMessage<QueryAllGasStabilityPoolBalance> | undefined, b: QueryAllGasStabilityPoolBalance | PlainMessage<QueryAllGasStabilityPoolBalance> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse
+ */
+export declare class QueryAllGasStabilityPoolBalanceResponse extends Message<QueryAllGasStabilityPoolBalanceResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse.Balance balances = 1;
+   */
+  balances: QueryAllGasStabilityPoolBalanceResponse_Balance[];
+
+  constructor(data?: PartialMessage<QueryAllGasStabilityPoolBalanceResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllGasStabilityPoolBalanceResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalanceResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalanceResponse;
+
+  static equals(a: QueryAllGasStabilityPoolBalanceResponse | PlainMessage<QueryAllGasStabilityPoolBalanceResponse> | undefined, b: QueryAllGasStabilityPoolBalanceResponse | PlainMessage<QueryAllGasStabilityPoolBalanceResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse.Balance
+ */
+export declare class QueryAllGasStabilityPoolBalanceResponse_Balance extends Message<QueryAllGasStabilityPoolBalanceResponse_Balance> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string balance = 2;
+   */
+  balance: string;
+
+  constructor(data?: PartialMessage<QueryAllGasStabilityPoolBalanceResponse_Balance>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryAllGasStabilityPoolBalanceResponse.Balance";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllGasStabilityPoolBalanceResponse_Balance;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalanceResponse_Balance;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllGasStabilityPoolBalanceResponse_Balance;
+
+  static equals(a: QueryAllGasStabilityPoolBalanceResponse_Balance | PlainMessage<QueryAllGasStabilityPoolBalanceResponse_Balance> | undefined, b: QueryAllGasStabilityPoolBalanceResponse_Balance | PlainMessage<QueryAllGasStabilityPoolBalanceResponse_Balance> | undefined): boolean;
+}
+

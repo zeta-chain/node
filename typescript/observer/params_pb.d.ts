@@ -12,31 +12,14 @@ import type { Chain } from "../common/common_pb.js";
  */
 export declare enum Policy_Type {
   /**
-   * some observer sees inbound tx
-   *
-   * @generated from enum value: stop_inbound_cctx = 0;
+   * @generated from enum value: group1 = 0;
    */
-  stop_inbound_cctx = 0,
+  group1 = 0,
 
   /**
-   * @generated from enum value: deploy_fungible_coin = 1;
+   * @generated from enum value: group2 = 1;
    */
-  deploy_fungible_coin = 1,
-
-  /**
-   * @generated from enum value: update_client_params = 2;
-   */
-  update_client_params = 2,
-
-  /**
-   * @generated from enum value: update_keygen_block = 3;
-   */
-  update_keygen_block = 3,
-
-  /**
-   * @generated from enum value: out_tx_tracker = 4;
-   */
-  out_tx_tracker = 4,
+  group2 = 1,
 }
 
 /**
@@ -220,6 +203,11 @@ export declare class Params extends Message<Params> {
    * @generated from field: repeated zetachain.zetacore.observer.Admin_Policy admin_policy = 2;
    */
   adminPolicy: Admin_Policy[];
+
+  /**
+   * @generated from field: int64 ballot_maturity_blocks = 3;
+   */
+  ballotMaturityBlocks: bigint;
 
   constructor(data?: PartialMessage<Params>);
 

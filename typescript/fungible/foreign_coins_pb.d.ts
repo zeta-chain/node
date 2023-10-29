@@ -55,6 +55,16 @@ export declare class ForeignCoins extends Message<ForeignCoins> {
    */
   gasLimit: bigint;
 
+  /**
+   * @generated from field: bool paused = 10;
+   */
+  paused: boolean;
+
+  /**
+   * @generated from field: string liquidity_cap = 11;
+   */
+  liquidityCap: string;
+
   constructor(data?: PartialMessage<ForeignCoins>);
 
   static readonly runtime: typeof proto3;

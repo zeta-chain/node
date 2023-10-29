@@ -7,6 +7,84 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 
 /**
+ * @generated from enum zetachain.zetacore.emissions.EmissionType
+ */
+export declare enum EmissionType {
+  /**
+   * @generated from enum value: Slash = 0;
+   */
+  Slash = 0,
+
+  /**
+   * @generated from enum value: Rewards = 1;
+   */
+  Rewards = 1,
+}
+
+/**
+ * @generated from message zetachain.zetacore.emissions.ObserverEmission
+ */
+export declare class ObserverEmission extends Message<ObserverEmission> {
+  /**
+   * @generated from field: zetachain.zetacore.emissions.EmissionType emission_type = 1;
+   */
+  emissionType: EmissionType;
+
+  /**
+   * @generated from field: string observer_address = 2;
+   */
+  observerAddress: string;
+
+  /**
+   * @generated from field: string amount = 3;
+   */
+  amount: string;
+
+  constructor(data?: PartialMessage<ObserverEmission>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.ObserverEmission";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverEmission;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverEmission;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverEmission;
+
+  static equals(a: ObserverEmission | PlainMessage<ObserverEmission> | undefined, b: ObserverEmission | PlainMessage<ObserverEmission> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.emissions.EventObserverEmissions
+ */
+export declare class EventObserverEmissions extends Message<EventObserverEmissions> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.emissions.ObserverEmission emissions = 2;
+   */
+  emissions: ObserverEmission[];
+
+  constructor(data?: PartialMessage<EventObserverEmissions>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.EventObserverEmissions";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventObserverEmissions;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventObserverEmissions;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventObserverEmissions;
+
+  static equals(a: EventObserverEmissions | PlainMessage<EventObserverEmissions> | undefined, b: EventObserverEmissions | PlainMessage<EventObserverEmissions> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.emissions.EventBlockEmissions
  */
 export declare class EventBlockEmissions extends Message<EventBlockEmissions> {

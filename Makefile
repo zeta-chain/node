@@ -183,7 +183,7 @@ mocks:
 	@echo "--> Generating mocks"
 	@bash ./scripts/mocks-generate.sh
 
-generate: proto openapi specs
+generate: proto openapi specs typescript
 .PHONY: generate
 
 ###############################################################################

@@ -170,7 +170,7 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
 
   /**
    * the above are commands for zetaclients
-   * the following fields are used for the outbound tx are mined
+   * the following fields are used when the outbound tx is mined
    *
    * @generated from field: string outbound_tx_hash = 8;
    */
@@ -185,6 +185,26 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
    * @generated from field: uint64 outbound_tx_observed_external_height = 10;
    */
   outboundTxObservedExternalHeight: bigint;
+
+  /**
+   * @generated from field: uint64 outbound_tx_gas_used = 20;
+   */
+  outboundTxGasUsed: bigint;
+
+  /**
+   * @generated from field: string outbound_tx_effective_gas_price = 21;
+   */
+  outboundTxEffectiveGasPrice: string;
+
+  /**
+   * @generated from field: uint64 outbound_tx_effective_gas_limit = 22;
+   */
+  outboundTxEffectiveGasLimit: bigint;
+
+  /**
+   * @generated from field: string tss_pubkey = 11;
+   */
+  tssPubkey: string;
 
   constructor(data?: PartialMessage<OutboundTxParams>);
 

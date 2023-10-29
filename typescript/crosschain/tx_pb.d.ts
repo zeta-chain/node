@@ -5,7 +5,264 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType, PubKeySet, ReceiveStatus } from "../common/common_pb.js";
+import type { CoinType, Proof, PubKeySet, ReceiveStatus } from "../common/common_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
+ */
+export declare class MsgMigrateTssFunds extends Message<MsgMigrateTssFunds> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string amount = 3;
+   */
+  amount: string;
+
+  constructor(data?: PartialMessage<MsgMigrateTssFunds>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgMigrateTssFunds";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgMigrateTssFunds;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgMigrateTssFunds;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgMigrateTssFunds;
+
+  static equals(a: MsgMigrateTssFunds | PlainMessage<MsgMigrateTssFunds> | undefined, b: MsgMigrateTssFunds | PlainMessage<MsgMigrateTssFunds> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse
+ */
+export declare class MsgMigrateTssFundsResponse extends Message<MsgMigrateTssFundsResponse> {
+  constructor(data?: PartialMessage<MsgMigrateTssFundsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgMigrateTssFundsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgMigrateTssFundsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgMigrateTssFundsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgMigrateTssFundsResponse;
+
+  static equals(a: MsgMigrateTssFundsResponse | PlainMessage<MsgMigrateTssFundsResponse> | undefined, b: MsgMigrateTssFundsResponse | PlainMessage<MsgMigrateTssFundsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgAddToInTxTracker
+ */
+export declare class MsgAddToInTxTracker extends Message<MsgAddToInTxTracker> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string tx_hash = 3;
+   */
+  txHash: string;
+
+  /**
+   * @generated from field: common.CoinType coin_type = 4;
+   */
+  coinType: CoinType;
+
+  /**
+   * @generated from field: common.Proof proof = 5;
+   */
+  proof?: Proof;
+
+  /**
+   * @generated from field: string block_hash = 6;
+   */
+  blockHash: string;
+
+  /**
+   * @generated from field: int64 tx_index = 7;
+   */
+  txIndex: bigint;
+
+  constructor(data?: PartialMessage<MsgAddToInTxTracker>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToInTxTracker";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToInTxTracker;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToInTxTracker;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToInTxTracker;
+
+  static equals(a: MsgAddToInTxTracker | PlainMessage<MsgAddToInTxTracker> | undefined, b: MsgAddToInTxTracker | PlainMessage<MsgAddToInTxTracker> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgAddToInTxTrackerResponse
+ */
+export declare class MsgAddToInTxTrackerResponse extends Message<MsgAddToInTxTrackerResponse> {
+  constructor(data?: PartialMessage<MsgAddToInTxTrackerResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAddToInTxTrackerResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAddToInTxTrackerResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAddToInTxTrackerResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToInTxTrackerResponse;
+
+  static equals(a: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined, b: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddress
+ */
+export declare class MsgUpdateTssAddress extends Message<MsgUpdateTssAddress> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string tss_pubkey = 2;
+   */
+  tssPubkey: string;
+
+  constructor(data?: PartialMessage<MsgUpdateTssAddress>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddress";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddress;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
+
+  static equals(a: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined, b: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse
+ */
+export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAddressResponse> {
+  constructor(data?: PartialMessage<MsgUpdateTssAddressResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddressResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
+
+  static equals(a: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined, b: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20
+ */
+export declare class MsgWhitelistERC20 extends Message<MsgWhitelistERC20> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string erc20_address = 2;
+   */
+  erc20Address: string;
+
+  /**
+   * @generated from field: int64 chain_id = 3;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string name = 4;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string symbol = 5;
+   */
+  symbol: string;
+
+  /**
+   * @generated from field: uint32 decimals = 6;
+   */
+  decimals: number;
+
+  /**
+   * @generated from field: int64 gas_limit = 7;
+   */
+  gasLimit: bigint;
+
+  constructor(data?: PartialMessage<MsgWhitelistERC20>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgWhitelistERC20";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgWhitelistERC20;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgWhitelistERC20;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgWhitelistERC20;
+
+  static equals(a: MsgWhitelistERC20 | PlainMessage<MsgWhitelistERC20> | undefined, b: MsgWhitelistERC20 | PlainMessage<MsgWhitelistERC20> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgWhitelistERC20Response
+ */
+export declare class MsgWhitelistERC20Response extends Message<MsgWhitelistERC20Response> {
+  /**
+   * @generated from field: string zrc20_address = 1;
+   */
+  zrc20Address: string;
+
+  /**
+   * @generated from field: string cctx_index = 2;
+   */
+  cctxIndex: string;
+
+  constructor(data?: PartialMessage<MsgWhitelistERC20Response>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgWhitelistERC20Response";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgWhitelistERC20Response;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgWhitelistERC20Response;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgWhitelistERC20Response;
+
+  static equals(a: MsgWhitelistERC20Response | PlainMessage<MsgWhitelistERC20Response> | undefined, b: MsgWhitelistERC20Response | PlainMessage<MsgWhitelistERC20Response> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgAddToOutTxTracker
@@ -30,6 +287,21 @@ export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> 
    * @generated from field: string tx_hash = 4;
    */
   txHash: string;
+
+  /**
+   * @generated from field: common.Proof proof = 5;
+   */
+  proof?: Proof;
+
+  /**
+   * @generated from field: string block_hash = 6;
+   */
+  blockHash: string;
+
+  /**
+   * @generated from field: int64 tx_index = 7;
+   */
+  txIndex: bigint;
 
   constructor(data?: PartialMessage<MsgAddToOutTxTracker>);
 
@@ -317,9 +589,24 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   observedOutTxBlockHeight: bigint;
 
   /**
-   * @generated from field: string zeta_minted = 5;
+   * @generated from field: uint64 observed_outTx_gas_used = 10;
    */
-  zetaMinted: string;
+  observedOutTxGasUsed: bigint;
+
+  /**
+   * @generated from field: string observed_outTx_effective_gas_price = 11;
+   */
+  observedOutTxEffectiveGasPrice: string;
+
+  /**
+   * @generated from field: uint64 observed_outTx_effective_gas_limit = 12;
+   */
+  observedOutTxEffectiveGasLimit: bigint;
+
+  /**
+   * @generated from field: string value_received = 5;
+   */
+  valueReceived: string;
 
   /**
    * @generated from field: common.ReceiveStatus status = 6;

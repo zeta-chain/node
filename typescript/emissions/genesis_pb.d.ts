@@ -6,6 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Params } from "./params_pb.js";
+import type { WithdrawableEmissions } from "./withdrawable_emissions_pb.js";
 
 /**
  * GenesisState defines the emissions module's genesis state.
@@ -17,6 +18,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: zetachain.zetacore.emissions.Params params = 1;
    */
   params?: Params;
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.emissions.WithdrawableEmissions withdrawableEmissions = 2;
+   */
+  withdrawableEmissions: WithdrawableEmissions[];
 
   constructor(data?: PartialMessage<GenesisState>);
 
