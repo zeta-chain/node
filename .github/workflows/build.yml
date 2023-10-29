@@ -115,7 +115,7 @@ jobs:
         run: |
           make zetanode
           cd contrib/localnet/ 
-          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin --exit-code-from zetaclient0
 
       - name: Run Smoke Test
         run: |
