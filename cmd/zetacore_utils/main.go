@@ -54,7 +54,7 @@ func main() {
 
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
@@ -97,7 +97,7 @@ func main() {
 	time.Sleep(7 * time.Second)
 
 	for i, address := range addresses {
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())

@@ -180,12 +180,12 @@ docs-zetacored:
 .PHONY: docs-zetacored
 
 generate: proto openapi specs docs-zetacored
+.PHONY: generate
+
 mocks:
 	@echo "--> Generating mocks"
 	@bash ./scripts/mocks-generate.sh
-
-generate: proto openapi specs
-.PHONY: generate
+.PHONY: mocks
 
 ###############################################################################
 ###                                Docker Images                             ###
