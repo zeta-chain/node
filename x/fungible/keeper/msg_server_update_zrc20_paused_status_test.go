@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -14,6 +15,7 @@ import (
 func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 	t.Run("can update the paused status of zrc20", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 
 		requireUnpaused := func(zrc20 string) {
@@ -39,7 +41,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		// can pause zrc20
-		_, err := k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20A,
@@ -55,7 +57,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// can unpause zrc20
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20A,
@@ -70,7 +72,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		// can pause already paused zrc20
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20B,
@@ -85,7 +87,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// can unpause already unpaused zrc20
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20C,
@@ -100,7 +102,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		// can pause all zrc20
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20A,
@@ -117,7 +119,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		// can unpause all zrc20
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20A,
@@ -134,20 +136,22 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 
 	t.Run("should fail if invalid message", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		invalidMsg := types.NewMsgUpdateZRC20PausedStatus(admin, []string{}, types.UpdatePausedStatusAction_PAUSE)
 		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
 
-		_, err := k.UpdateZRC20PausedStatus(ctx, invalidMsg)
+		_, err := msgServer.UpdateZRC20PausedStatus(ctx, invalidMsg)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			sample.AccAddress(),
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_PAUSE,
@@ -156,7 +160,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
-		_, err = k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			sample.AccAddress(),
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_UNPAUSE,
@@ -167,6 +171,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
@@ -174,7 +179,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20A))
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20B))
 
-		_, err := k.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
+		_, err := msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
 			[]string{
 				zrc20A,
