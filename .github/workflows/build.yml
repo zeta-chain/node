@@ -116,9 +116,6 @@ jobs:
           make zetanode
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
-          sleep 30 
-          echo "Logs for zetaclient0:"
-          docker logs zetaclient0
 
       - name: Run Smoke Test
         run: |
@@ -128,6 +125,9 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
+          sleep 30 
+          echo "Logs for zetaclient0:"
+          docker logs zetaclient0
 
       - name: Stop Private Network
         if: always()
