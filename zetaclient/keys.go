@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,6 +19,8 @@ import (
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
+
+const HotkeyPasswordEnvVar = "HOTKEY_PASSWORD"
 
 // Keys manages all the keys used by zeta client
 type Keys struct {
@@ -43,6 +46,9 @@ func GetGranteeKeyName(signerName string) string {
 
 // GetKeyringKeybase return keyring and key info
 func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
+
+	// read password from env if using keyring backend file
+
 	granteeName := cfg.AuthzHotkey
 	chainHomeFolder := cfg.ZetaCoreHome
 	password := cfg.SignerPass
@@ -160,4 +166,20 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil
+}
+
+// GetHotkeyPassword retrieves the HOTKEY_PASSWORD environment variable
+// and returns an error if it's not defined or shorter than 8 characters.
+func GetHotkeyPassword() (string, error) {
+	password := os.Getenv(HotkeyPasswordEnvVar)
+
+	if password == "" {
+		return "", errors.New("HOTKEY_PASSWORD environment variable is not defined, use --keyring-backend-test to use the test keyring")
+	}
+
+	if len(password) < 8 {
+		return "", errors.New("HOTKEY_PASSWORD should be at least 8 characters long")
+	}
+
+	return password, nil
 }

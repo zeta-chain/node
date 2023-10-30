@@ -37,7 +37,9 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+// Config is the config for ZetaClient
 // TODO: use snake case for json fields
+// https://github.com/zeta-chain/node/issues/1020
 type Config struct {
 	Peer                string `json:"Peer"`
 	PublicIP            string `json:"PublicIP"`
@@ -56,7 +58,6 @@ type Config struct {
 	TssPath             string `json:"TssPath"`
 	TestTssKeysign      bool   `json:"TestTssKeysign"`
 	CurrentTssPubkey    string `json:"CurrentTssPubkey"`
-	SignerPass          string `json:"SignerPass"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
