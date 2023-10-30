@@ -7,10 +7,13 @@ import (
 
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -143,6 +146,15 @@ func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
+}
+
+func (b *ZetaCoreBridge) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
+	client := banktypes.NewQueryClient(b.grpcConn)
+	resp, err := client.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom})
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	return resp.GetAmount().Amount, nil
 }
 
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {

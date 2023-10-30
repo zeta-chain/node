@@ -106,6 +106,7 @@ func start(_ *cobra.Command, _ []string) error {
 	go zetaBridge.ConfigUpdater(cfg)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
+	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
@@ -240,6 +241,14 @@ func start(_ *cobra.Command, _ []string) error {
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
+	zetaSupplyChecker, errStartingzetaSupplyChecker := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
+	if errStartingzetaSupplyChecker != nil {
+		startLogger.Err(err).Msg("NewZetaSupplyChecker")
+	}
+	if errStartingzetaSupplyChecker == nil {
+		zetaSupplyChecker.Start()
+		defer zetaSupplyChecker.Stop()
+	}
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
