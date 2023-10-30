@@ -5,23 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
-	"time"
-
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/zeta-chain/go-tss/p2p"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -29,13 +13,23 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
-
 	thorcommon "github.com/zeta-chain/go-tss/common"
-	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-
 	"github.com/zeta-chain/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
+	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
+	"github.com/zeta-chain/zetacore/common"
+	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"os"
+	"path"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
 )
 
 type TSSKey struct {
