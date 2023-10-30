@@ -120,6 +120,13 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	rhs := positiveAmounts.Sub(positiveAmounts, negativeAmounts)
 
 	if lhs.Cmp(rhs) != 0 {
+		zs.logger.Error().Msgf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
+		zs.logger.Error().Msgf("aborted tx amounts : %s", AbortedTxAmounts.String())
+		zs.logger.Error().Msgf("genesis amounts : %s", genesisAmounts.String())
+		zs.logger.Error().Msgf("zeta in transit : %s", zetaInTransit.String())
+		zs.logger.Error().Msgf("external chain total supply : %s", externalChainTotalSupply.String())
+		zs.logger.Error().Msgf("zeta token supply on node : %s", zetaTokenSupplyOnNode.String())
+		zs.logger.Error().Msgf("eth locked amount : %s", ethLockedAmount.String())
 		return fmt.Errorf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
 	}
 	return nil
