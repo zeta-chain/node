@@ -3,7 +3,7 @@
 Get you node account
 
 ```
-zetacored get-pubkey [tssKeyName] [Password] [flags]
+zetacored get-pubkey [tssKeyName] [password] [flags]
 ```
 
 ### Options

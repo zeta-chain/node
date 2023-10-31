@@ -188,9 +188,8 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 func (k *Keys) GetHotkeyPassword() (string, error) {
 	if k.GetKeybase().Backend() == ckeys.BackendFile {
 		return getHotkeyPassword()
-	} else {
-		return "", nil
 	}
+	return "", nil
 }
 
 // getHotkeyPassword retrieves the HOTKEY_PASSWORD environment variable
