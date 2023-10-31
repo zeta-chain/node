@@ -133,7 +133,7 @@ func (co *CoreObserver) startSendScheduler() {
 					}
 					//logger.Info().Dur("elapsed", time.Since(tStart)).Msgf("GetAllPendingCctx %d", len(sendList))
 
-					supportedChains := co.Config().ChainsEnabled
+					supportedChains := co.Config().GetEnabledChains()
 					for _, c := range supportedChains {
 						if c.ChainId == common.ZetaChain().ChainId {
 							continue
