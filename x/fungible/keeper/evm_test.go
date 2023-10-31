@@ -18,6 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -75,6 +76,35 @@ func deploySystemContracts(
 	assertContractDeployment(t, evmk, ctx, systemContract)
 
 	return
+}
+
+// assertExampleBarValue asserts value Bar of the contract Example, used to test onCrossChainCall
+func assertExampleBarValue(
+	t *testing.T,
+	ctx sdk.Context,
+	k *keeper.Keeper,
+	address common.Address,
+	expected int64,
+) {
+	exampleABI, err := contracts.ExampleMetaData.GetAbi()
+	require.NoError(t, err)
+	res, err := k.CallEVM(
+		ctx,
+		*exampleABI,
+		types.ModuleAddressEVM,
+		address,
+		big.NewInt(0),
+		nil,
+		false,
+		false,
+		"bar",
+	)
+	unpacked, err := exampleABI.Unpack("bar", res.Ret)
+	require.NoError(t, err)
+	require.NotZero(t, len(unpacked))
+	bar, ok := unpacked[0].(*big.Int)
+	require.True(t, ok)
+	require.Equal(t, big.NewInt(expected), bar)
 }
 
 func TestKeeper_DeployZRC20Contract(t *testing.T) {

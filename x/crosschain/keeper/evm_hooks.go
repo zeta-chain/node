@@ -129,8 +129,13 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if err != nil {
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
 	}
-	gasLimit := foreignCoin.GasLimit
-	// gasLimit+uint64(event.Raw.Index) to genereate different cctx for multiple events in the same tx.
+
+	gasLimit, err := k.fungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(foreignCoin.Zrc20ContractAddress))
+	if err != nil {
+		return fmt.Errorf("cannot query gas limit: %s", err.Error())
+	}
+
+	// gasLimit+uint64(event.Raw.Index) to generate different cctx for multiple events in the same tx.
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		emittingContract.Hex(),
@@ -142,7 +147,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		"",
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
-		gasLimit+uint64(event.Raw.Index),
+		gasLimit.Uint64()+uint64(event.Raw.Index),
 		foreignCoin.CoinType,
 		foreignCoin.Asset,
 	)

@@ -68,3 +68,28 @@ func CmdGasStabilityPoolBalance() *cobra.Command {
 
 	return cmd
 }
+
+func CmdGasStabilityPoolBalances() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gas-stability-pool-balances",
+		Short: "query all gas stability pool balances",
+		Args:  cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.GasStabilityPoolBalanceAll(context.Background(), &types.QueryAllGasStabilityPoolBalance{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

@@ -80,3 +80,24 @@ to [run the smoke test](./contrib/localnet/README.md).
 [Twitter](https://twitter.com/zetablockchain) |
 [Discord](https://discord.com/invite/zetachain) |
 [Telegram](https://t.me/zetachainofficial) | [Website](https://zetachain.com)
+
+## Creating a Release for Mainnet
+Creating a release for mainnet is a straightforward process. Here are the steps to follow:
+
+### Steps
+ - Step 1. Open a Pull Request (PR): Begin by opening a PR from the release candidate branch (e.g., vx.x.x-rc) to the main branch.
+ - Step 2. Testing and Validation: Allow the automated tests, including smoke tests, linting, and upgrade path testing, to run. Ensure that these tests pass successfully.
+ - Step 3. Approval Process: Obtain the necessary approvals from relevant stakeholders or team members.
+ - Step 4. Merging PR: Once all requirements have been met and the PR has received the required approvals, merge the PR. The automation will then be triggered to proceed with the release.
+
+By following these steps, you can efficiently create a release for Mainnet, ensuring that the code has been thoroughly tested and validated before deployment.
+
+## Creating a Release for Testnet
+Creating a release for testnet is a straightforward process. Here are the steps to follow:
+
+### Steps
+ - Step 1. Create the release candidate branch with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
+ - Step 2. Once a RC branch is created the automation will kickoff to build and upload the release and its binaries.
+
+By following these steps, you can efficiently create a release candidate for testnet for QA and validation. In the future we will make this automatically deploy to testnet when a -rc branch is created. 
+Currently, raising the proposal to deploy to testnet is a manual process via GitHub Action pipeline located in the infrastructure repo. 

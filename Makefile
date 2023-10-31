@@ -161,6 +161,11 @@ proto:
 	@buf format -w
 .PHONY: proto
 
+typescript:
+	@echo "--> Generating TypeScript bindings"
+	@bash ./scripts/protoc-gen-typescript.sh
+.PHONY: typescript
+
 proto-format:
 	@bash ./scripts/proto-format.sh
 
@@ -174,11 +179,17 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
+docs-zetacored:
+	@echo "--> Generating zetacored documentation"
+	@bash ./scripts/gen-docs-zetacored.sh
+.PHONY: docs-zetacored
+
 mocks:
 	@echo "--> Generating mocks"
 	@bash ./scripts/mocks-generate.sh
+.PHONY: mocks
 
-generate: proto openapi specs
+generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
@@ -222,7 +233,7 @@ stop-stress-test:
 
 stateful-upgrade:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v9.0.0-rc2 --build-arg new_version=v10.0.0 -t zetanode -f ./Dockerfile-versioned .
+	$(DOCKER) build --build-arg old_version=mock-mainnet-01-5-ga66d0b77 --build-arg new_version=v10.0.0-30 -t zetanode -f ./Dockerfile-versioned .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 

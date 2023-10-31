@@ -37,15 +37,17 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	var address common.Address
 	var err error
 
+	if err = msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
-	if msg.Decimals > 255 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 256")
-	}
+
 	if msg.CoinType == zetacommon.CoinType_Gas {
 		// #nosec G701 always in range
-		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals))
+		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals), big.NewInt(msg.GasLimit))
 		if err != nil {
 			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}

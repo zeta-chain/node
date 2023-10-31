@@ -27,7 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/snapshots"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -69,7 +68,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 		WithViper(EnvPrefix)
 
 	rootCmd := &cobra.Command{
-		Use:   version.AppName,
+		Use:   zetacoredconfig.AppName,
 		Short: "Zetacore Daemon (server)",
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			// set the default command outputs
@@ -92,7 +91,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 
 			customAppTemplate, customAppConfig := initAppConfig()
 
-			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, tmcfg.DefaultConfig())
+			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, initTmConfig())
 		},
 	}
 
@@ -105,6 +104,18 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 // return "", nil if no custom configuration is required for the application.
 func initAppConfig() (string, interface{}) {
 	return servercfg.AppConfig(zetacoredconfig.BaseDenom)
+}
+
+// initTmConfig overrides the default Tendermint config
+func initTmConfig() *tmcfg.Config {
+	cfg := tmcfg.DefaultConfig()
+
+	// use mempool version 1 to enable tx priority
+	if cfg.Mempool != nil {
+		cfg.Mempool.Version = tmcfg.MempoolV1
+	}
+
+	return cfg
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
@@ -140,16 +151,16 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 		rpc.StatusCommand(),
 		queryCommand(),
 		txCommand(),
+		docsCommand(),
 		ethermintclient.KeyCommands(app.DefaultNodeHome),
 	)
 
-	// replace the default hd-path for the key add command
+	// replace the default hd-path for the key add command with Ethereum HD Path
 	if err := SetEthereumHDPath(rootCmd); err != nil {
 		fmt.Printf("warning: unable to set default HD path: %v\n", err)
 	}
 
 	rootCmd.AddCommand(server.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
-
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
@@ -195,7 +206,6 @@ func txCommand() *cobra.Command {
 		authcmd.GetMultiSignCommand(),
 		authcmd.GetMultiSignBatchCmd(),
 		authcmd.GetValidateSignaturesCommand(),
-		flags.LineBreak,
 		authcmd.GetBroadcastCommand(),
 		authcmd.GetEncodeCommand(),
 		authcmd.GetDecodeCommand(),

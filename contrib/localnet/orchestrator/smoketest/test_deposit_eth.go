@@ -127,7 +127,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			TxIndex:   int64(txIndex),
 			TxHash:    txHash.Hex(),
 			Proof:     common.NewEthereumProof(txProof),
-			ChainId:   0,
+			ChainId:   common.GoerliChain().ChainId,
 		})
 		if err != nil {
 			panic(err)
