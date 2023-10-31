@@ -20,6 +20,7 @@ import (
 func TestKeeper_UpdateSystemContract(t *testing.T) {
 	t.Run("can update the system contract", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -53,7 +54,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// can update the system contract
-		_, err = k.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.NoError(t, err)
 
 		// can retrieve the system contract
@@ -75,6 +76,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 	t.Run("should not update the system contract if not admin", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// deploy a new system contracts
@@ -84,13 +86,14 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// should not update the system contract if not admin
-		_, err = k.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(sample.AccAddress(), newSystemContract.Hex()))
+		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(sample.AccAddress(), newSystemContract.Hex()))
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should not update the system contract if invalid address", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -102,7 +105,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotEqual(t, oldSystemContract, newSystemContract)
 
 		// should not update the system contract if invalid address
-		_, err = k.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, "invalid"))
+		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, "invalid"))
 		require.Error(t, err)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
