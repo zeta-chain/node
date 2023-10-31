@@ -125,7 +125,7 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
-          sleep 30
+          sleep 10
 
       - name: Stop Private Network
         if: always()
