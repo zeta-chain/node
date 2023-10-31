@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -17,6 +18,7 @@ import (
 func TestKeeper_WhitelistERC20(t *testing.T) {
 	t.Run("can deploy and whitelist an erc20", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		chainID := getValidEthChainID(t)
@@ -33,7 +35,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		})
 
 		erc20Address := sample.EthAddress().Hex()
-		res, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		res, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: erc20Address,
 			ChainId:      chainID,
@@ -63,7 +65,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		require.Equal(t, uint64(100000), gasLimit.Uint64())
 
 		// Ensure that whitelist a new erc20 create a cctx with a different index
-		res, err = k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		res, err = msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: sample.EthAddress().Hex(),
 			ChainId:      chainID,
@@ -79,9 +81,10 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
-		_, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      sample.AccAddress(),
 			Erc20Address: sample.EthAddress().Hex(),
 			ChainId:      getValidEthChainID(t),
@@ -95,12 +98,13 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 	t.Run("should fail if invalid erc20 address", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 
-		_, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: "invalid",
 			ChainId:      getValidEthChainID(t),
@@ -114,6 +118,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 	t.Run("should fail if foreign coin already exists for the asset", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		admin := sample.AccAddress()
@@ -126,7 +131,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		fc.ForeignChainId = chainID
 		zk.FungibleKeeper.SetForeignCoins(ctx, fc)
 
-		_, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: asset,
 			ChainId:      chainID,
@@ -140,6 +145,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 	t.Run("should fail if no tss set", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		chainID := getValidEthChainID(t)
@@ -147,7 +153,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 
 		erc20Address := sample.EthAddress().Hex()
-		_, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: erc20Address,
 			ChainId:      chainID,
@@ -161,6 +167,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 	t.Run("should fail if nox valid chain ID", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		admin := sample.AccAddress()
@@ -168,7 +175,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		k.SetTssAndUpdateNonce(ctx, *sample.Tss())
 
 		erc20Address := sample.EthAddress().Hex()
-		_, err := k.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
+		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
 			Erc20Address: erc20Address,
 			ChainId:      10000,
