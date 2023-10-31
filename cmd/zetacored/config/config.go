@@ -15,6 +15,7 @@ func SetBech32Prefixes(config *sdk.Config) {
 const (
 	DisplayDenom = "zeta"
 	BaseDenom    = "azeta"
+	AppName      = "zetacored"
 )
 
 // RegisterDenoms registers the base and display denominations to the SDK.
