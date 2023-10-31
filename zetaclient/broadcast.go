@@ -118,11 +118,16 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 		return ctx, err
 	}
 
-	ctx = ctx.WithKeyring(b.keys.GetKeybase())
-	if b.keys.password != "" {
-		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", b.keys.password)))
+	// if password is needed, set it as input
+	password, err := b.keys.GetHotkeyPassword()
+	if err != nil {
+		return ctx, err
+	}
+	if password != "" {
+		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password)))
 	}
 
+	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
 	ctx = ctx.WithFromName(b.cfg.SignerName)

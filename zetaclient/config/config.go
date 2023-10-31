@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,6 +51,14 @@ func Load(path string) (*Config, error) {
 	err = json.Unmarshal(input, &cfg)
 	if err != nil {
 		return nil, err
+	}
+
+	// read keyring backend and use test by default
+	if cfg.KeyringBackend == KeyringBackendUndefined {
+		cfg.KeyringBackend = KeyringBackendTest
+	}
+	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
+		return nil, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
 	}
 
 	// fields sanitization
