@@ -14,6 +14,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -21,6 +22,7 @@ import (
 func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 	t.Run("can update the withdraw fee", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		chainID := getValidChainID(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
@@ -38,7 +40,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.Zero(t, protocolFee.Uint64())
 
 		// can update the protocol fee and gas limit
-		_, err = k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(42),
@@ -55,7 +57,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update protocol fee only
-		_, err = k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(43),
@@ -70,7 +72,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update gas limit only
-		_, err = k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.Uint{},
@@ -87,8 +89,9 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 
-		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			sample.AccAddress(),
 			sample.EthAddress().String(),
 			math.NewUint(42),
@@ -99,10 +102,11 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 	t.Run("should fail if invalid zrc20 address", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
-		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			"invalid_address",
 			math.NewUint(42),
@@ -113,10 +117,11 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 	t.Run("should fail if can't retrieve the foreign coin", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
-		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			sample.EthAddress().String(),
 			math.NewUint(42),
@@ -127,6 +132,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 	t.Run("should fail if can't query old fee", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		// setup
@@ -136,7 +142,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		k.SetForeignCoins(ctx, sample.ForeignCoins(t, zrc20.String()))
 
 		// the method shall fail since we only set the foreign coin manually in the store but didn't deploy the contract
-		_, err := k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err := msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20.String(),
 			math.NewUint(42),
@@ -147,6 +153,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 	t.Run("should fail if contract call for setting new protocol fee fails", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseEVMMock: true})
+		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 
@@ -196,7 +203,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			true,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("transaction failed"))
 
-		_, err = k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.NewUint(42),
@@ -210,6 +217,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 	t.Run("should fail if contract call for setting new protocol fee fails", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{UseEVMMock: true})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 
 		// setup
@@ -258,7 +266,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			true,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("transaction failed"))
 
-		_, err = k.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
+		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
 			zrc20Addr.String(),
 			math.Uint{},
