@@ -13,7 +13,7 @@ import (
 func GetPubKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-pubkey [tssKeyName] [password]",
-		Short: "Get you node account",
+		Short: "Get the node account public key",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
