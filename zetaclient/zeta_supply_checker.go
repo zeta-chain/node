@@ -14,16 +14,27 @@ import (
 )
 
 type ZetaSupplyChecker struct {
-	cfg        *config.Config
-	evmClient  map[int64]*ethclient.Client
-	zetaClient *ZetaCoreBridge
-	ticker     *DynamicTicker
-	stop       chan struct{}
-	logger     zerolog.Logger
+	cfg              *config.Config
+	evmClient        map[int64]*ethclient.Client
+	zetaClient       *ZetaCoreBridge
+	ticker           *DynamicTicker
+	stop             chan struct{}
+	logger           zerolog.Logger
+	externalEvmChain []common.Chain
+	ethereumChain    common.Chain
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
-	zetaSupplyChecker := ZetaSupplyChecker{}
+	zetaSupplyChecker := ZetaSupplyChecker{
+		stop:      make(chan struct{}),
+		ticker:    NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15),
+		evmClient: make(map[int64]*ethclient.Client),
+		logger: logger.With().
+			Str("module", "ZetaSupplyChecker").
+			Logger(),
+		cfg:        cfg,
+		zetaClient: zetaClient,
+	}
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
@@ -32,15 +43,22 @@ func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger
 		if err != nil {
 			return zetaSupplyChecker, err
 		}
+		fmt.Println("Adding evmConfig.Chain.ChainId", evmConfig.Chain.ChainId)
 		zetaSupplyChecker.evmClient[evmConfig.Chain.ChainId] = client
 	}
-	zetaSupplyChecker.zetaClient = zetaClient
-	zetaSupplyChecker.cfg = cfg
-	zetaSupplyChecker.logger = logger.With().
-		Str("module", "ZetaSupplyChecker").
-		Logger()
-	zetaSupplyChecker.stop = make(chan struct{})
-	zetaSupplyChecker.ticker = NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15)
+
+	for chainID, _ := range zetaSupplyChecker.evmClient {
+		chain := common.GetChainFromChainID(chainID)
+		if chain.IsExternalChain() && common.IsEVMChain(chain.ChainId) && !common.IsEthereumChain(chain.ChainId) {
+			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
+		}
+		if common.IsEthereumChain(chain.ChainId) {
+			zetaSupplyChecker.ethereumChain = *chain
+		}
+	}
+
+	logger.Info().Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
+
 	return zetaSupplyChecker, nil
 }
 func (zs *ZetaSupplyChecker) Start() {
@@ -64,24 +82,14 @@ func (b *ZetaSupplyChecker) Stop() {
 }
 
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
-	externalEvmChain := make([]common.Chain, 0)
-	ethereumChain := common.Chain{}
-	for chainID, _ := range zs.evmClient {
-		chain := common.GetChainFromChainID(chainID)
-		if chain.IsExternalChain() && common.IsEVMChain(chain.ChainId) && !common.IsEthereumChain(chain.ChainId) {
-			externalEvmChain = append(externalEvmChain, *chain)
-		}
-		if common.IsEthereumChain(chain.ChainId) {
-			ethereumChain = *chain
-		}
-	}
-	if len(externalEvmChain) == 0 {
-		return fmt.Errorf("no external chain found")
-	}
-	externalChainTotalSupply := big.NewInt(0)
-	for _, chain := range externalEvmChain {
 
-		zetaTokenAddressString := zs.cfg.EVMChainConfigs[chain.ChainId].CoreParams.ZetaTokenContractAddress
+	externalChainTotalSupply := big.NewInt(0)
+	for _, chain := range zs.externalEvmChain {
+		externalEvmChainConfig, ok := zs.cfg.GetEVMConfig(chain.ChainId)
+		if !ok {
+			return fmt.Errorf("externalEvmChainConfig not found for chain id %d", chain.ChainId)
+		}
+		zetaTokenAddressString := externalEvmChainConfig.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
 		zetatokenNonEth, err := FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
@@ -91,13 +99,17 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		if err != nil {
 			return err
 		}
+		fmt.Println("Adding to external chain total supply", totalSupply.String())
 		externalChainTotalSupply.Add(externalChainTotalSupply, totalSupply)
-
 	}
 
-	ethConnectorAddressString := zs.cfg.EVMChainConfigs[ethereumChain.ChainId].CoreParams.ConnectorContractAddress
+	ethConfig, ok := zs.cfg.GetEVMConfig(zs.ethereumChain.ChainId)
+	if !ok {
+		return fmt.Errorf("eth config not found for chain id %d", zs.ethereumChain.ChainId)
+	}
+	ethConnectorAddressString := ethConfig.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
-	ethConnectorContract, err := FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[ethereumChain.ChainId])
+	ethConnectorContract, err := FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
 	if err != nil {
 		return err
 	}
@@ -107,37 +119,60 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		return err
 	}
 
-	zetaInTransit := zs.GetAmountOfZetaInTransit(externalEvmChain)
+	zetaInTransit := zs.GetAmountOfZetaInTransit(zs.externalEvmChain)
 	zetaTokenSupplyOnNode, err := zs.zetaClient.GetZetaTokenSupplyOnNode()
 	if err != nil {
 		return err
 	}
-	genesisAmounts := big.NewInt(0)
-	AbortedTxAmounts := big.NewInt(0)
-	negativeAmounts := genesisAmounts.Add(genesisAmounts, AbortedTxAmounts).Add(genesisAmounts, zetaInTransit)
-	positiveAmounts := externalChainTotalSupply.Add(externalChainTotalSupply, zetaTokenSupplyOnNode.BigInt())
-	lhs := ethLockedAmount
-	rhs := positiveAmounts.Sub(positiveAmounts, negativeAmounts)
+	genesisAmounts := zs.GetGenesistokenAmounts()
+	abortedTxAmounts := zs.AbortedTxAmount()
+	negativeAmounts := big.NewInt(0)
+	negativeAmounts.Add(genesisAmounts, abortedTxAmounts)
+	negativeAmounts.Add(negativeAmounts, zetaInTransit)
 
+	positiveAmounts := big.NewInt(0)
+	positiveAmounts.Add(externalChainTotalSupply, zetaTokenSupplyOnNode.BigInt())
+
+	rhs := big.NewInt(0)
+	lhs := ethLockedAmount
+	rhs.Sub(positiveAmounts, negativeAmounts)
+	copyZetaTokenSupplyOnNode := big.NewInt(0).Set(zetaTokenSupplyOnNode.BigInt())
+	copyGenesisAmounts := big.NewInt(0).Set(genesisAmounts)
+	nodeAmounts := big.NewInt(0).Sub(copyZetaTokenSupplyOnNode, copyGenesisAmounts)
+	zs.logger.Info().Msgf("--------------------------------------------------------------------------------")
+	zs.logger.Info().Msgf("aborted tx amounts : %s", abortedTxAmounts.String())
+	zs.logger.Info().Msgf("zeta in transit : %s", zetaInTransit.String())
+	zs.logger.Info().Msgf("external chain total supply : %s", externalChainTotalSupply.String())
+	zs.logger.Info().Msgf("zeta token on node : %s", nodeAmounts.String())
+	zs.logger.Info().Msgf("eth locked amount : %s", ethLockedAmount.String())
 	if lhs.Cmp(rhs) != 0 {
 		zs.logger.Error().Msgf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
-		zs.logger.Error().Msgf("aborted tx amounts : %s", AbortedTxAmounts.String())
-		zs.logger.Error().Msgf("genesis amounts : %s", genesisAmounts.String())
-		zs.logger.Error().Msgf("zeta in transit : %s", zetaInTransit.String())
-		zs.logger.Error().Msgf("external chain total supply : %s", externalChainTotalSupply.String())
-		zs.logger.Error().Msgf("zeta token supply on node : %s", zetaTokenSupplyOnNode.String())
-		zs.logger.Error().Msgf("eth locked amount : %s", ethLockedAmount.String())
 		return fmt.Errorf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
 	}
+
+	zs.logger.Info().Msgf("zeta supply check passed, lhs : %s , rhs : %s", lhs.String(), rhs.String())
+	zs.logger.Info().Msgf("--------------------------------------------------------------------------------")
 	return nil
 }
 
 func (zs *ZetaSupplyChecker) GetGenesistokenAmounts() *big.Int {
-	return nil
+	i, ok := big.NewInt(0).SetString("108402000200000000000000000", 10)
+	if !ok {
+		panic("error parsing genesis amount")
+	}
+	return i
 }
 
 func (zs *ZetaSupplyChecker) AbortedTxAmount() *big.Int {
-	return nil
+	cctxList, err := zs.zetaClient.GetCctxByStatus(types.CctxStatus_Aborted)
+	if err != nil {
+		panic(err)
+	}
+	amount := sdkmath.ZeroUint()
+	for _, cctx := range cctxList {
+		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
+	}
+	return amount.BigInt()
 }
 
 func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit(externalEvmchain []common.Chain) *big.Int {

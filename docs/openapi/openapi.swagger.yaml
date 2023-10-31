@@ -26646,6 +26646,32 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/crosschain/cctxbyStatus/{status}:
+    get:
+      operationId: Query_CctxByStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryCctxByStatusResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: status
+          in: path
+          required: true
+          type: string
+          enum:
+            - PendingInbound
+            - PendingOutbound
+            - OutboundMined
+            - PendingRevert
+            - Reverted
+            - Aborted
+      tags:
+        - Query
   /zeta-chain/crosschain/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
@@ -50810,6 +50836,14 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainPendingNonces'
+  crosschainQueryCctxByStatusResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
   crosschainQueryConvertGasToZetaResponse:
     type: object
     properties:

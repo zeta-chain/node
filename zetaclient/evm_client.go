@@ -1005,21 +1005,6 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	for {
 		select {
 		case <-ticker.C():
-			contract, err := ob.GetZetaTokenNonEthContract()
-			if err == nil {
-				supply, err := contract.TotalSupply(nil)
-				if err == nil {
-					ob.logger.WatchGasPrice.Info().Msgf("TotalSupply : %d", supply)
-				}
-			}
-
-			ce, err := ob.GetConnectorContractEth()
-			if err == nil {
-				lockedamout, err := ce.GetLockedAmount(nil)
-				if err == nil {
-					ob.logger.WatchGasPrice.Info().Msgf("LockedAmount : %d", lockedamout)
-				}
-			}
 			err = ob.PostGasPrice()
 			if err != nil {
 				height, err := ob.zetaClient.GetBlockHeight()

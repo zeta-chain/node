@@ -148,6 +148,15 @@ func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.CctxByStatus(context.Background(), &types.QueryCctxByStatusRequest{Status: status})
+	if err != nil {
+		return nil, err
+	}
+	return resp.CrossChainTx, nil
+}
+
 func (b *ZetaCoreBridge) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
 	client := banktypes.NewQueryClient(b.grpcConn)
 	resp, err := client.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom})
