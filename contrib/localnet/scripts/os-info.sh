@@ -9,7 +9,7 @@ zetacored keys add operator --algo=secp256k1 --keyring-backend=$KEYRING_TEST
 operator_address=$(zetacored keys show operator -a --keyring-backend=$KEYRING_TEST)
 
 # Hotkey key depending on the keyring-backend
-if [ "$HOTKEY_BACKEND" = "$KEYRING_FILE" ]; then
+if [ "$HOTKEY_BACKEND" == "$KEYRING_FILE" ]; then
     printf "%s\n%s\n" "$HOTKEY_PASSWORD" "$HOTKEY_PASSWORD" | zetacored keys add hotkey --algo=secp256k1 --keyring-backend=$KEYRING_FILE
     hotkey_address=$(printf "%s\n%s\n" "$HOTKEY_PASSWORD" "$HOTKEY_PASSWORD" | zetacored keys show hotkey -a --keyring-backend=$KEYRING_FILE)
 

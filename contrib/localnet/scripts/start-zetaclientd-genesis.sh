@@ -5,7 +5,10 @@
 HOSTNAME=$(hostname)
 
 # read HOTKEY_BACKEND env var for hotkey keyring backend and set default to test
-BACKEND="${HOTKEY_BACKEND:-test}"
+BACKEND="test"
+if [ "$HOTKEY_BACKEND" == "file" ]; then
+    BACKEND="file"
+fi
 
 cp  /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
@@ -23,7 +26,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress"  --log-format=text --public-ip "$MYIP"
+    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress"  --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')

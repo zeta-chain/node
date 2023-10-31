@@ -53,7 +53,6 @@ func init() {
 	InitCmd.Flags().Uint64Var(&initArgs.configUpdateTicker, "config-update-ticker", 5, "config update ticker (default: 0 means no ticker)")
 	InitCmd.Flags().StringVar(&initArgs.TssPath, "tss-path", "~/.tss", "path to tss location")
 	InitCmd.Flags().BoolVar(&initArgs.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
-	InitCmd.Flags().BoolVar(&initArgs.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	InitCmd.Flags().StringVar(&initArgs.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), "keyring backend to use (test, file)")
 }
 
@@ -90,7 +89,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.P2PDiagnosticTicker = initArgs.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = initArgs.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initArgs.KeyringBackend)
-
+	
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
 }
