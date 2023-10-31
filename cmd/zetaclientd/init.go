@@ -89,7 +89,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.P2PDiagnosticTicker = initArgs.p2pDiagnosticTicker
 	configData.ConfigUpdateTicker = initArgs.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initArgs.KeyringBackend)
-	
+
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)
 }
