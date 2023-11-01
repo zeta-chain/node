@@ -353,6 +353,10 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.Nil(t, res)
 		require.True(t, types.IsContractReverted(res, err))
 
+		// check reason is included for revert error
+		// 0xbfb4ebcf is the hash of "Foo()"
+		require.Contains(t, err.Error(), "reason: 0xbfb4ebcf")
+
 		res, err = k.CallEVM(
 			ctx,
 			*abi,
@@ -396,6 +400,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		require.Nil(t, res)
 		require.Error(t, err)
 		require.False(t, types.IsContractReverted(res, err))
+		require.NotContains(t, err.Error(), "reason:")
 
 		// No revert with successfull call
 		res, err = k.CallEVM(
