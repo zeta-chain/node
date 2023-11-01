@@ -291,6 +291,14 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
+	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
+	networkInfo, err := signer.rpcClient.GetNetworkInfo()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
+	}
+	satPerByte := feeRateToSatPerByte(networkInfo.RelayFee)
+	gasprice.Add(gasprice, satPerByte)
+
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 	tx, err := signer.SignWithdrawTx(to, float64(params.Amount.Uint64())/1e8, gasprice, sizelimit, btcClient, height,

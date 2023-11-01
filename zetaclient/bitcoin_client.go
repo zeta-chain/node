@@ -77,7 +77,6 @@ const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
 	dustOffset       = 2000
-	bytesPerKB       = 1000
 	btcBlocksPerDay  = 144
 )
 
@@ -490,9 +489,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if *feeResult.FeeRate > math2.MaxInt64 {
 		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 	}
-	// #nosec G701 always in range
-	feeRate := new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8))
-	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(bytesPerKB))
+	feeRatePerByte := feeRateToSatPerByte(*feeResult.FeeRate)
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
