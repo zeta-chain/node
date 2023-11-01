@@ -1,4 +1,4 @@
-name: Publish Release
+name: Publish Release Candidate Release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - "v*.*.*-rc"
 
 concurrency:
-  group: publish-release
+  group: publish-rc-release
   cancel-in-progress: false
 
 env:
@@ -75,15 +75,14 @@ jobs:
           touch .release-env
           make release
 
-      ## TODO - Will add in later after optimizing docker images
-      # - name: Build, tag, and push docker images
-      #   uses: ./.github/actions/build-docker-images
-      #   with:
-      #     DOCKER_FILENAME: Dockerfile
-      #     REPOSITORY_NAME: zeta-node
-      #     IMAGE_TAG: ${{ env.TAG_NAME }}
-      #     GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
-      #     GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      - name: Build, tag, and push docker images
+        uses: ./.github/actions/build-docker-images
+        with:
+          DOCKER_FILENAME: Dockerfile-relese
+          REPOSITORY_NAME: zeta-node
+          IMAGE_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
   build-alpine:
     runs-on: ["ubuntu-latest"]
@@ -212,20 +211,6 @@ jobs:
             More specific information including block height will be shared as part of the governance proposal.
 
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
-
-      # - name: "SEND:DISCORD:MESSAGE"
-      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
-      #   uses: gzukel/CosmosComposites/send_discord_message@main
-      #   with:
-      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
-      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-      #     discord_message: |
-      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released.
-
-      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
-      #       Please review the release notes for any specific upgrade instructions or considerations.
-
-      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
 
       - name: Clean Up Workspace
         if: always()
