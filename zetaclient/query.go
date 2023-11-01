@@ -9,7 +9,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	types2 "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -170,7 +170,7 @@ func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}
-	appState, err := types2.GenesisStateFromGenDoc(*res.Genesis)
+	appState, err := genutiltypes.GenesisStateFromGenDoc(*res.Genesis)
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}
