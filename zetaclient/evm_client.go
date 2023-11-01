@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"os"
-	"sort"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -558,9 +557,6 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				continue
 			}
-			sort.Slice(trackers, func(i, j int) bool {
-				return trackers[i].Nonce < trackers[j].Nonce
-			})
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
 			// Skip old gabbage trackers as we spent too much time on querying them
