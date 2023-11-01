@@ -21,6 +21,7 @@ type ZetaSupplyChecker struct {
 	logger           zerolog.Logger
 	externalEvmChain []common.Chain
 	ethereumChain    common.Chain
+	genesisSupply    sdkmath.Int
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
@@ -54,6 +55,15 @@ func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger
 			zetaSupplyChecker.ethereumChain = *chain
 		}
 	}
+	balances, err := zetaSupplyChecker.zetaClient.GetGenesisSupply()
+	if err != nil {
+		return zetaSupplyChecker, err
+	}
+	tokensMintedAtBeginBlock, ok := sdkmath.NewIntFromString("200000000000000000")
+	if !ok {
+		return zetaSupplyChecker, fmt.Errorf("error parsing tokens minted at begin block")
+	}
+	zetaSupplyChecker.genesisSupply = balances.Add(tokensMintedAtBeginBlock)
 
 	logger.Info().Msgf("zeta supply checker initialized , external chains : %v ,ethereum chain :%v", zetaSupplyChecker.externalEvmChain, zetaSupplyChecker.ethereumChain)
 
@@ -130,7 +140,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	if err != nil {
 		return err
 	}
-	ValidateZetaSupply(zs.logger, zs.AbortedTxAmount(), zetaInTransit, zs.GetGenesistokenAmounts(), externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
+	ValidateZetaSupply(zs.logger, zs.AbortedTxAmount(), zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
 	return nil
 }
 
@@ -145,7 +155,9 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	logger.Info().Msgf("aborted tx amounts : %s", abortedTxAmounts.String())
 	logger.Info().Msgf("zeta in transit : %s", zetaInTransit.String())
 	logger.Info().Msgf("external chain total supply : %s", externalChainTotalSupply.String())
-	logger.Info().Msgf("zeta token on node : %s", nodeAmounts.String())
+	logger.Info().Msgf("effective zeta supply on node : %s", nodeAmounts.String())
+	logger.Info().Msgf("zeta token supply on node : %s", zetaTokenSupplyOnNode.String())
+	logger.Info().Msgf("genesis amounts : %s", genesisAmounts.String())
 	logger.Info().Msgf("eth locked amount : %s", ethLockedAmount.String())
 	if !lhs.Equal(rhs) {
 		logger.Error().Msgf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
@@ -154,15 +166,6 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	logger.Info().Msgf("zeta supply check passed, lhs : %s , rhs : %s", lhs.String(), rhs.String())
 	logger.Info().Msgf("--------------------------------------------------------------------------------")
 	return true
-}
-
-// TODO :  Get this from genesis supply in genesis.json
-func (zs *ZetaSupplyChecker) GetGenesistokenAmounts() sdkmath.Int {
-	amount, ok := sdkmath.NewIntFromString("108402000200000000000000000")
-	if !ok {
-		panic("error parsing genesis amount")
-	}
-	return amount
 }
 
 func (zs *ZetaSupplyChecker) AbortedTxAmount() sdkmath.Int {
