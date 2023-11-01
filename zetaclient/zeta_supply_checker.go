@@ -42,7 +42,6 @@ func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger
 		if err != nil {
 			return zetaSupplyChecker, err
 		}
-		fmt.Println("Adding evmConfig.Chain.ChainId", evmConfig.Chain.ChainId)
 		zetaSupplyChecker.evmClient[evmConfig.Chain.ChainId] = client
 	}
 
@@ -98,7 +97,6 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println("Adding to external chain total supply", totalSupply.String())
 		totalSupplyInt, ok := sdkmath.NewIntFromString(totalSupply.String())
 		if !ok {
 			zs.logger.Error().Msgf("error parsing total supply for chain %d", chain.ChainId)
@@ -158,12 +156,12 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	return true
 }
 
+// TODO :  Get this from genesis supply in genesis.json
 func (zs *ZetaSupplyChecker) GetGenesistokenAmounts() sdkmath.Int {
 	amount, ok := sdkmath.NewIntFromString("108402000200000000000000000")
 	if !ok {
 		panic("error parsing genesis amount")
 	}
-
 	return amount
 }
 

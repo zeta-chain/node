@@ -9,10 +9,13 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	types2 "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -155,6 +158,24 @@ func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.Cross
 		return nil, err
 	}
 	return resp.CrossChainTx, nil
+}
+
+func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
+	tmUrl := fmt.Sprintf("http://%s", b.cfg.ChainRPC)
+	s, err := tmhttp.New(tmUrl, "/websocket")
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	res, err := s.Genesis(context.Background())
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	appState, err := types2.GenesisStateFromGenDoc(*res.Genesis)
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	bankstate := banktypes.GetGenesisStateFromAppState(b.encodingCfg.Codec, appState)
+	return bankstate.Supply.AmountOf(config.BaseDenom), nil
 }
 
 func (b *ZetaCoreBridge) GetZetaTokenSupplyOnNode() (sdkmath.Int, error) {
