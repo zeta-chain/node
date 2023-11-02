@@ -269,7 +269,6 @@ release:
 		--privileged \
 		-e CGO_ENABLED=1 \
 		-e "GITHUB_TOKEN=${GITHUB_TOKEN}" \
-		-e "GITHUB_TAG_MAJOR_VERSION=${GITHUB_TAG_MAJOR_VERSION}" \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v `pwd`:/go/src/$(PACKAGE_NAME) \
 		-w /go/src/$(PACKAGE_NAME) \
