@@ -62,6 +62,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
             echo -e "${{ github.event.head_commit.message }}" > Release.txt
+            echo "GITHUB_RELEASE_TEXT=${{ github.event.head_commit.message }}" >> ${GITHUB_ENV}
 
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
@@ -94,12 +95,26 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: Create GitHub Release on Pull Request
+
+      - name: Create Release
         if: github.event_name == 'pull_request'
-        uses: softprops/action-gh-release@v1
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          files: Release.txt
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          release_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          body: |
+            ${{ env.GITHUB_RELEASE_TEXT }}
+          draft: false
+          prerelease: false
+
+#      - name: Create GitHub Release on Pull Request
+#        if: github.event_name == 'pull_request'
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+#          files: Release.txt
 
       - name: Create GitHub Release Hot Fix
         if: github.event_name != 'pull_request'
