@@ -210,7 +210,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	if !isNodeActive {
 		startLogger.Error().Msgf("Node %s is not an active observer", zetaBridge.GetKeys().GetOperatorAddress().String())
-		return errors.New("Node is not an active observer")
+		//return errors.New("Node is not an active observer")
 	}
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
@@ -232,8 +232,10 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
-	for _, v := range chainClientMap {
-		v.Start()
+	if isNodeActive {
+		for _, v := range chainClientMap {
+			v.Start()
+		}
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
