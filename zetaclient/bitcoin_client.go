@@ -1073,6 +1073,22 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 		}
 		// 2nd vout: payment to recipient
 		if vout.N == 1 {
+			// Re-encode address with the correct network HRP so we allow the incorrect addresses to pass in Athens3
+			// TODO: remove this special handling after fixing the issue in zetacore
+			cctxAddress, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
+			if err != nil {
+				return fmt.Errorf("checkTSSVout: error decoding receiver address %s", params.Receiver)
+			}
+			if !cctxAddress.IsForNet(config.BitconNetParams) {
+				ob.logger.ObserveOutTx.Error().Msgf("checkTSSVout: address %s is not intended for the network %s", params.Receiver, config.BitconNetParams.Name)
+				correctAddress, err := btcutil.NewAddressWitnessPubKeyHash(cctxAddress.ScriptAddress(), config.BitconNetParams)
+				if err != nil {
+					return errors.Wrapf(err, "checkTSSVout: error re-encoding address %s", params.Receiver)
+				}
+				params.Receiver = correctAddress.EncodeAddress()
+				ob.logger.ObserveOutTx.Info().Msgf("checkTSSVout: re-encoded address %s to %s", params.Receiver, correctAddress.EncodeAddress())
+			}
+
 			if recvAddress != params.Receiver {
 				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", recvAddress, params.Receiver)
 			}

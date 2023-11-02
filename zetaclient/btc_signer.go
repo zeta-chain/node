@@ -279,12 +279,17 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		return
 	}
 
-	// FIXME: config chain params
+	// Check receiver P2WPKH address
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
+	// TODO: enable this check after fixing the issue in zetacore
+	// if !addr.IsForNet(config.BitconNetParams) {
+	// 	logger.Error().Msgf("address %s is not for network %s", params.Receiver, config.BitconNetParams.Name)
+	// 	return
+	// }
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
@@ -295,6 +300,7 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	networkInfo, err := signer.rpcClient.GetNetworkInfo()
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
+		return
 	}
 	satPerByte := feeRateToSatPerByte(networkInfo.RelayFee)
 	gasprice.Add(gasprice, satPerByte)
