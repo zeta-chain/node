@@ -19,10 +19,10 @@ import (
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/rs/zerolog"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
 )
 
 func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cryptotypes.PrivKey, cfg *config.Config) error {
