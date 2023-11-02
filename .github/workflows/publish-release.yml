@@ -39,7 +39,7 @@ jobs:
 
       - name: Major Version in Upgrade Handler Must Match Tag
         run: |
-          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
+          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
           echo $UPGRADE_HANDLER_MAJOR_VERSION
           GITHUB_TAG_MAJOR_VERSION=$(echo ${{ github.ref_name }} | cut -d '.' -f1)
           if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
