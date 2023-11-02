@@ -180,7 +180,7 @@ release:
   # If set to true, will not auto-publish the release.
   # Available only for GitHub and Gitea.
   draft: false
-
+  tag: {{ .Env.GITHUB_TAG_MAJOR_VERSION }}
   target_commitish: "{{ .Commit }}"
 
   # If set, will create a release discussion in the category specified.
