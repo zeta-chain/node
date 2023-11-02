@@ -40,6 +40,7 @@ require (
 	github.com/evmos/ethermint v0.22.0
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
+	github.com/regen-network/keystone/keys v0.0.0-20220129212613-fb67e4f8db9f
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	gitlab.com/thorchain/tss/go-tss v0.0.0-00010101000000-000000000000
@@ -68,6 +69,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
+	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e // indirect
 	github.com/getsentry/sentry-go v0.18.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -78,6 +80,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/libp2p/go-yamux/v4 v4.0.0 // indirect
 	github.com/linxGnu/grocksdb v1.7.15 // indirect
+	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.9.7 // indirect
 	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
@@ -87,6 +90,7 @@ require (
 	github.com/quic-go/webtransport-go v0.5.3 // indirect
 	github.com/rjeczalik/notify v0.9.1 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
+	github.com/thales-e-security/pool v0.0.2 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect

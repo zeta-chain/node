@@ -1,0 +1,5 @@
+{
+  "Path": "/usr/local/lib/softhsm/libsofthsm2.so",
+  "TokenLabel": "My token 1",
+  "Pin": "1234"
+}
