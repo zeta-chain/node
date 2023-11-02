@@ -1,25 +1,41 @@
 name: Publish Release
 
 on:
-  push:
-    tags:
-      - "v*.*.*"  
-      
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'main'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version for manual hotfix release.'
+        required: false
+        default: ''
+
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
-env:
-  GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
-
 jobs:
   pre-release-checks:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
 
       - name: Major Version in Upgrade Handler Must Match Tag
         run: |
@@ -34,12 +50,28 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   publish-release:
+    if: github.event.pull_request.merged == true
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
       - pre-release-checks
     steps:
       - uses: actions/checkout@v3
+
+      - name: Echo Release Notes from PR Message.
+        if: github.event_name == 'pull_request'
+        run: |
+            echo -e "${{ github.event.head_commit.message }}" > Release.txt
+
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
 
       - name: Set CPU Architecture
         shell: bash
@@ -62,7 +94,15 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release on Pull Request
+        if: github.event_name == 'pull_request'
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          files: Release.txt
+
+      - name: Create GitHub Release Hot Fix
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
@@ -75,17 +115,17 @@ jobs:
           touch .release-env
           make release
 
-      ## TODO - Will add in later after optimizing docker images
-      # - name: Build, tag, and push docker images
-      #   uses: ./.github/actions/build-docker-images
-      #   with:
-      #     DOCKER_FILENAME: Dockerfile
-      #     REPOSITORY_NAME: zeta-node
-      #     IMAGE_TAG: ${{ env.TAG_NAME }}
-      #     GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
-      #     GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+      - name: Build, tag, and push docker images
+        uses: ./.github/actions/build-docker-images
+        with:
+          DOCKER_FILENAME: Dockerfile-relese
+          REPOSITORY_NAME: zeta-node
+          IMAGE_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
   build-alpine:
+    if: github.event.pull_request.merged == true
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
     concurrency:
@@ -175,6 +215,7 @@ jobs:
         run: rm -rf *
 
   announce-release:
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs:
@@ -212,20 +253,6 @@ jobs:
             More specific information including block height will be shared as part of the governance proposal.
 
             See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
-
-      # - name: "SEND:DISCORD:MESSAGE"
-      #   if: steps.determine_release_type.outputs.RELEASE_TYPE == 'minor'
-      #   uses: gzukel/CosmosComposites/send_discord_message@main
-      #   with:
-      #     discord_token: "${{ secrets.DISCORD_TOKEN }}"
-      #     discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-      #     discord_message: |
-      #       Hey <@&1122981184255840306>! A new version of the zetachain node has been released.
-
-      #       Minor Version Upgrade (e.g. v5.0.x to v5.1.x) can be applied without a governance proposal.
-      #       Please review the release notes for any specific upgrade instructions or considerations.
-
-      #       See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
 
       - name: Clean Up Workspace
         if: always()
