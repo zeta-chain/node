@@ -1,15 +1,16 @@
-name: Publish Release
+name: Go-Releaser
 
 on:
   push:
     tags:
       - "v*.*.*"
+
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
-  publish-release:
+  go-releaser:
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
