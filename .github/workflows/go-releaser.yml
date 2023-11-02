@@ -1,7 +1,7 @@
 name: Go-Releaser
 
 on:
-  push:
+  create:
     tags:
       - "v*.*.*"
 
