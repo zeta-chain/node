@@ -1,10 +1,10 @@
 package main
 
 import (
-	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/rs/zerolog"
+	ecdsakeygen "github.com/zeta-chain/tss-lib/ecdsa/keygen"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/cmd"
