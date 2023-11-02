@@ -1,0 +1,25 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  publish-release:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 60
+    needs:
+      - pre-release-checks
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Publish Release Files
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+        run: |
+          touch .release-env
+          make release
