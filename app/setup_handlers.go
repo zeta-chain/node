@@ -8,7 +8,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const releaseVersion = "v11.1.0"
+const releaseVersion = "v12.1.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
