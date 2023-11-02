@@ -64,6 +64,16 @@ jobs:
             echo -e "${{ github.event.head_commit.message }}" > Release.txt
             echo "GITHUB_RELEASE_TEXT=${{ github.event.head_commit.message }}" >> ${GITHUB_ENV}
 
+      - name: Generate Release Notes for HotFix
+        if: github.event_name != 'pull_request'
+        run: |
+          COMMIT_MESSAGES=$(git log --merges --pretty=format:"%h %s")
+          RELEASE_NOTES=""
+          while IFS= read -r line; do
+            RELEASE_NOTES="${RELEASE_NOTES}- ${line}"$'\n'
+          done <<< "$COMMIT_MESSAGES"
+          echo "GITHUB_RELEASE_TEXT=${RELEASE_NOTES}" >> ${GITHUB_ENV}
+
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
         run: |
@@ -95,9 +105,7 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-
       - name: Create Release
-        if: github.event_name == 'pull_request'
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,20 +116,6 @@ jobs:
             ${{ env.GITHUB_RELEASE_TEXT }}
           draft: false
           prerelease: false
-
-#      - name: Create GitHub Release on Pull Request
-#        if: github.event_name == 'pull_request'
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-#          files: Release.txt
-
-      - name: Create GitHub Release Hot Fix
-        if: github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          generate_release_notes: true
 
       - name: Publish Release Files
         env:
