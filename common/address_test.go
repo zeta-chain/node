@@ -1,3 +1,6 @@
+//go:build TESTNET
+// +build TESTNET
+
 package common
 
 import (
