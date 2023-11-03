@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -281,6 +282,12 @@ func (sm *SmokeTest) TestEtherDepositAndCall() {
 		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
 	}
 	fmt.Println("Cross-chain call to reverter reverted")
+
+	// check the status message contains revert error hash in case of revert
+	// 0xbfb4ebcf is the hash of "Foo()"
+	if !strings.Contains(cctx.CctxStatus.StatusMessage, "reason: 0xbfb4ebcf") {
+		panic(fmt.Sprintf("expected cctx status message to contain revert reason; got %s", cctx.CctxStatus.StatusMessage))
+	}
 }
 
 func (sm *SmokeTest) TestDepositAndCallRefund() {
