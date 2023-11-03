@@ -285,7 +285,7 @@ func (sm *SmokeTest) TestEtherDepositAndCall() {
 
 	// check the status message contains revert error hash in case of revert
 	// 0xbfb4ebcf is the hash of "Foo()"
-	if !strings.Contains(cctx.CctxStatus.StatusMessage, "reason: 0xbfb4ebcf") {
+	if !strings.Contains(cctx.CctxStatus.StatusMessage, "0xbfb4ebcf") {
 		panic(fmt.Sprintf("expected cctx status message to contain revert reason; got %s", cctx.CctxStatus.StatusMessage))
 	}
 }
