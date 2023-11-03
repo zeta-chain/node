@@ -155,7 +155,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
 	//Wait for Genesis
-	time.Sleep(20 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := NewZetaTxServer(
@@ -175,7 +175,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= 30 {
+		if response.Height >= 60 {
 			break
 		}
 		fmt.Printf("Last ZetaHeight: %d\n", response.Height)

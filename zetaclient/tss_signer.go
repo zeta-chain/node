@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -21,16 +20,17 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	tmcrypto "github.com/tendermint/tendermint/crypto"
+	thorcommon "github.com/zeta-chain/go-tss/common"
+	"github.com/zeta-chain/go-tss/keysign"
+	"github.com/zeta-chain/go-tss/p2p"
+	"github.com/zeta-chain/go-tss/tss"
+	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
 	"github.com/zeta-chain/zetacore/common"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	thorcommon "gitlab.com/thorchain/tss/go-tss/common"
-	"gitlab.com/thorchain/tss/go-tss/keysign"
-	"gitlab.com/thorchain/tss/go-tss/p2p"
-	"gitlab.com/thorchain/tss/go-tss/tss"
 )
 
 type TSSKey struct {

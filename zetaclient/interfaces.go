@@ -13,10 +13,10 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"gitlab.com/thorchain/tss/go-tss/blame"
 )
 
 // ChainClient is the interface for chain clients
