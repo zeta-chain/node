@@ -178,6 +178,10 @@ func (co *CoreObserver) startSendScheduler() {
 								co.logger.ZetaChainWatcher.Error().Msgf("mismatch chainid: want %d, got %d", c.ChainId, params.ReceiverChainId)
 								continue
 							}
+							if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+120 {
+								co.logger.ZetaChainWatcher.Error().Msgf("nonce too high: signing %d, earliest pending %d", params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+								break
+							}
 							// #nosec G701 range is verified
 							currentHeight := uint64(bn)
 							nonce := params.OutboundTxTssNonce
