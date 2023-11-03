@@ -285,11 +285,10 @@ func (signer *BTCSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-	// TODO: enable this check after fixing the issue in zetacore
-	// if !addr.IsForNet(config.BitconNetParams) {
-	// 	logger.Error().Msgf("address %s is not for network %s", params.Receiver, config.BitconNetParams.Name)
-	// 	return
-	// }
+	if !addr.IsForNet(config.BitconNetParams) {
+		logger.Error().Msgf("address %s is not for network %s", params.Receiver, config.BitconNetParams.Name)
+		return
+	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 	if err != nil || !ok {
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
