@@ -97,7 +97,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			hash.Proved = true
 			tracker.HashList = append([]*types.TxHashList{&hash}, tracker.HashList...)
 			k.Logger(ctx).Info("Proof'd outbound transaction")
-		} else {
+		} else if len(tracker.HashList) < 2 {
 			tracker.HashList = append(tracker.HashList, &hash)
 		}
 		k.SetOutTxTracker(ctx, tracker)
