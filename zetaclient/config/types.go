@@ -13,6 +13,15 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// KeyringBackend is the type of keyring backend to use for the hotkey
+type KeyringBackend string
+
+const (
+	KeyringBackendUndefined KeyringBackend = ""
+	KeyringBackendTest      KeyringBackend = "test"
+	KeyringBackendFile      KeyringBackend = "file"
+)
+
 type ClientConfiguration struct {
 	ChainHost       string `json:"chain_host" mapstructure:"chain_host"`
 	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`
@@ -37,26 +46,28 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+// Config is the config for ZetaClient
 // TODO: use snake case for json fields
+// https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	Peer                string `json:"Peer"`
-	PublicIP            string `json:"PublicIP"`
-	LogFormat           string `json:"LogFormat"`
-	LogLevel            int8   `json:"LogLevel"`
-	LogSampler          bool   `json:"LogSampler"`
-	PreParamsPath       string `json:"PreParamsPath"`
-	ZetaCoreHome        string `json:"ZetaCoreHome"`
-	ChainID             string `json:"ChainID"`
-	ZetaCoreURL         string `json:"ZetaCoreURL"`
-	AuthzGranter        string `json:"AuthzGranter"`
-	AuthzHotkey         string `json:"AuthzHotkey"`
-	P2PDiagnostic       bool   `json:"P2PDiagnostic"`
-	ConfigUpdateTicker  uint64 `json:"ConfigUpdateTicker"`
-	P2PDiagnosticTicker uint64 `json:"P2PDiagnosticTicker"`
-	TssPath             string `json:"TssPath"`
-	TestTssKeysign      bool   `json:"TestTssKeysign"`
-	CurrentTssPubkey    string `json:"CurrentTssPubkey"`
-	SignerPass          string `json:"SignerPass"`
+	Peer                string         `json:"Peer"`
+	PublicIP            string         `json:"PublicIP"`
+	LogFormat           string         `json:"LogFormat"`
+	LogLevel            int8           `json:"LogLevel"`
+	LogSampler          bool           `json:"LogSampler"`
+	PreParamsPath       string         `json:"PreParamsPath"`
+	ZetaCoreHome        string         `json:"ZetaCoreHome"`
+	ChainID             string         `json:"ChainID"`
+	ZetaCoreURL         string         `json:"ZetaCoreURL"`
+	AuthzGranter        string         `json:"AuthzGranter"`
+	AuthzHotkey         string         `json:"AuthzHotkey"`
+	P2PDiagnostic       bool           `json:"P2PDiagnostic"`
+	ConfigUpdateTicker  uint64         `json:"ConfigUpdateTicker"`
+	P2PDiagnosticTicker uint64         `json:"P2PDiagnosticTicker"`
+	TssPath             string         `json:"TssPath"`
+	TestTssKeysign      bool           `json:"TestTssKeysign"`
+	CurrentTssPubkey    string         `json:"CurrentTssPubkey"`
+	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
@@ -137,8 +148,22 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 	return *chain, *c.BitcoinConfig, true
 }
 
-// This is the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(keygen *observertypes.Keygen, newChains []common.Chain, evmCoreParams map[int64]*observertypes.CoreParams, btcCoreParams *observertypes.CoreParams, init bool, logger zerolog.Logger) {
+func (c *Config) GetKeyringBackend() KeyringBackend {
+	c.cfgLock.RLock()
+	defer c.cfgLock.RUnlock()
+	return c.KeyringBackend
+}
+
+// UpdateCoreParams updates core params for all chains
+// this must be the ONLY function that writes to core params
+func (c *Config) UpdateCoreParams(
+	keygen *observertypes.Keygen,
+	newChains []common.Chain,
+	evmCoreParams map[int64]*observertypes.CoreParams,
+	btcCoreParams *observertypes.CoreParams,
+	init bool,
+	logger zerolog.Logger,
+) {
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
@@ -194,6 +219,7 @@ func (c *Config) Clone() *Config {
 		P2PDiagnosticTicker: c.P2PDiagnosticTicker,
 		TssPath:             c.TssPath,
 		TestTssKeysign:      c.TestTssKeysign,
+		KeyringBackend:      c.KeyringBackend,
 
 		cfgLock:         &sync.RWMutex{},
 		Keygen:          c.GetKeygen(),

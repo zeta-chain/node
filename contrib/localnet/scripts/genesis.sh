@@ -65,6 +65,8 @@ then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* zetaclient0:~/.zetacored/keyring-test/
+  ssh zetaclient0 mkdir -p ~/.zetacored/keyring-file/
+  scp ~/.zetacored/keyring-file/* zetaclient0:~/.zetacored/keyring-file/
 
 # 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
   for NODE in "${NODELIST[@]}"; do
@@ -132,6 +134,8 @@ then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
+  ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
+  scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
 
   pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
   pps=${pp:1:58}

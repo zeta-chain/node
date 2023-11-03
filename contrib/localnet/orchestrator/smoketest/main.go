@@ -43,9 +43,9 @@ var (
 	ERC20CustodyAddr     = "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
 	UniswapV2FactoryAddr = "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
 	UniswapV2RouterAddr  = "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
-	//SystemContractAddr   = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
-	//ZEVMSwapAppAddr      = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
-	HexToAddress = ethcommon.HexToAddress
+	HexToAddress         = ethcommon.HexToAddress
+	//SystemContractAddr = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+	//ZEVMSwapAppAddr    = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
 
 	// FungibleAdminMnemonic is the mnemonic for the admin account of the fungible module
 	//nolint:gosec - disable nosec because this is a test account

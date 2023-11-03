@@ -1,9 +1,9 @@
 # get-pubkey
 
-Get you node account
+Get the node account public key
 
 ```
-zetacored get-pubkey [tssKeyName] [Password] [flags]
+zetacored get-pubkey [tssKeyName] [password] [flags]
 ```
 
 ### Options

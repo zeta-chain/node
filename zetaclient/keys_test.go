@@ -79,7 +79,6 @@ func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	cfg := &config.Config{
 		AuthzHotkey:  "bob",
 		ZetaCoreHome: "/Users/test/.zetacored/",
-		SignerPass:   "",
 	}
 	_, _, err := GetKeyringKeybase(cfg)
 	c.Assert(err, NotNil)
@@ -100,14 +99,13 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	cfg := &config.Config{
 		AuthzHotkey:  signerNameForTest,
 		ZetaCoreHome: folder,
-		SignerPass:   signerPasswordForTest,
 	}
 
 	k, _, err := GetKeyringKeybase(cfg)
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
 	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
-	ki := NewKeysWithKeybase(k, granter, signerNameForTest, signerPasswordForTest)
+	ki := NewKeysWithKeybase(k, granter, signerNameForTest)
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)

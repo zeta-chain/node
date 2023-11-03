@@ -25,7 +25,7 @@ Zetacore Daemon (server)
 * [zetacored docs](zetacored_docs.md)	 - Generate markdown documentation for zetacored
 * [zetacored export](zetacored_export.md)	 - Export state to JSON
 * [zetacored gentx](zetacored_gentx.md)	 - Generate a genesis tx carrying a self delegation
-* [zetacored get-pubkey](zetacored_get-pubkey.md)	 - Get you node account
+* [zetacored get-pubkey](zetacored_get-pubkey.md)	 - Get the node account public key
 * [zetacored index-eth-tx](zetacored_index-eth-tx.md)	 - Index historical eth txs
 * [zetacored init](zetacored_init.md)	 - Initialize private validator, p2p, genesis, and application configuration files
 * [zetacored keys](zetacored_keys.md)	 - Manage your application's keys
