@@ -312,6 +312,9 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestUpdateBytecode()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
+	smokeTest.TestEtherDepositAndCall()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
 	smokeTest.TestDepositEtherLiquidityCap()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
