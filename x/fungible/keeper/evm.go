@@ -649,9 +649,21 @@ func (k Keeper) CallEVMWithData(
 	if err != nil {
 		return nil, err
 	}
+	logs := evmtypes.LogsToEthereum(res.Logs)
 
 	if res.Failed() {
 		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
+	} else {
+		// call PostTxProcessing hook
+		receipt := &ethtypes.Receipt{
+			Logs:   logs,
+			TxHash: common.HexToHash(res.Hash),
+		}
+		if err = k.evmKeeper.PostTxProcessing(ctx, msg, receipt); err != nil {
+			// if post-processing return error, revert the whole tx
+			k.Logger(ctx).Error("tx post processing failed", "error", err)
+			return nil, cosmoserrors.Wrap(evmtypes.ErrPostTxProcessing, err.Error())
+		}
 	}
 
 	// Emit events and log for the transaction if it is committed
@@ -715,7 +727,6 @@ func (k Keeper) CallEVMWithData(
 			})
 		}
 
-		logs := evmtypes.LogsToEthereum(res.Logs)
 		var bloomReceipt ethtypes.Bloom
 		if len(logs) > 0 {
 			bloom := k.evmKeeper.GetBlockBloomTransient(ctx)
