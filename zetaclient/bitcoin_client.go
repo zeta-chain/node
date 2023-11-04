@@ -282,6 +282,39 @@ func (ob *BitcoinChainClient) WatchInTx() {
 	}
 }
 
+func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
+	bn := tip
+	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
+	if err == nil && res.BlockHeaderState.EarliestHeight > 0 {
+		bn = res.BlockHeaderState.LatestHeight + 1
+	}
+	if bn > tip {
+		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
+	}
+	res2, err := ob.GetBlockByNumberCached(bn)
+	if err != nil {
+		return fmt.Errorf("error getting bitcoin block %d: %s", bn, err)
+	}
+
+	var headerBuf bytes.Buffer
+	err = res2.Header.Serialize(&headerBuf)
+	if err != nil { // should never happen
+		ob.logger.WatchInTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
+		return err
+	}
+	blockHash := res2.Header.BlockHash()
+	_, err = ob.zetaClient.PostAddBlockHeader(
+		ob.chain.ChainId,
+		blockHash[:],
+		res2.Block.Height,
+		common.NewBitcoinHeader(headerBuf.Bytes()),
+	)
+	if err != nil { // error shouldn't block the process
+		ob.logger.WatchInTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
+	}
+	return err
+}
+
 // TODO
 func (ob *BitcoinChainClient) observeInTx() error {
 	cnt, err := ob.rpcClient.GetBlockCount()
@@ -331,22 +364,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// add block header to zetacore
-		var headerBuf bytes.Buffer
-		err = res.Header.Serialize(&headerBuf)
-		if err != nil { // should never happen
-			ob.logger.WatchInTx.Error().Err(err).Msgf("error serializing bitcoin block header: %d", bn)
-			return err
-		}
-		blockHash := res.Header.BlockHash()
-		_, err = ob.zetaClient.PostAddBlockHeader(
-			ob.chain.ChainId,
-			blockHash[:],
-			res.Block.Height,
-			common.NewBitcoinHeader(headerBuf.Bytes()),
-		)
-		if err != nil { // error shouldn't block the process
-			ob.logger.WatchInTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
-		}
+		// #nosec G701 always positive
+		ob.postBlockHeader(bn)
 
 		tssAddress := ob.Tss.BTCAddress()
 		// #nosec G701 always positive
