@@ -31,8 +31,38 @@ const (
 	DefaultRetryInterval            = 5
 )
 
-func GetInBoundVoteMessage(sender string, senderChain int64, txOrigin string, receiver string, receiverChain int64, amount math.Uint, message string, inTxHash string, inBlockHeight uint64, gasLimit uint64, coinType common.CoinType, asset string, signerAddress string) *types.MsgVoteOnObservedInboundTx {
-	msg := types.NewMsgVoteOnObservedInboundTx(signerAddress, sender, senderChain, txOrigin, receiver, receiverChain, amount, message, inTxHash, inBlockHeight, gasLimit, coinType, asset)
+// GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
+func GetInBoundVoteMessage(
+	sender string,
+	senderChain int64,
+	txOrigin string,
+	receiver string,
+	receiverChain int64,
+	amount math.Uint,
+	message string,
+	inTxHash string,
+	inBlockHeight uint64,
+	gasLimit uint64,
+	coinType common.CoinType,
+	asset string,
+	signerAddress string,
+) *types.MsgVoteOnObservedInboundTx {
+	msg := types.NewMsgVoteOnObservedInboundTx(
+		signerAddress,
+		sender,
+		senderChain,
+		txOrigin,
+		receiver,
+		receiverChain,
+		amount,
+		message,
+		inTxHash,
+		inBlockHeight,
+		gasLimit,
+		coinType,
+		asset,
+		0,
+	)
 	return msg
 }
 

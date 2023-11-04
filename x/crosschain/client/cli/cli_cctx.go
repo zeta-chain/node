@@ -166,6 +166,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				250_000,
 				argsCoinType,
 				argsAsset,
+				0,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

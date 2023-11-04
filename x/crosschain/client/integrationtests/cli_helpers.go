@@ -201,6 +201,7 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
+		0,
 	)
 	return msg.Digest()
 }
