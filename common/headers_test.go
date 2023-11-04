@@ -2,8 +2,11 @@ package common_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
+	"math/big"
+	"os"
 	"testing"
 	"time"
 
@@ -12,11 +15,66 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 )
 
 const numHeadersToTest = 100
+
+func TestGetEthereumHeader(t *testing.T) {
+	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
+	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
+	fmt.Printf("Header: %v\n", header)
+	file, _ := os.Create("test_data/eth_header_18495266.json")
+	b, _ := header.MarshalJSON()
+	file.Write(b)
+}
+
+func TestTrueEthereumHeader(t *testing.T) {
+	var header ethtypes.Header
+	// read file into a byte slice
+	file, err := os.Open("./test_data/eth_header_18495266.json")
+	require.NoError(t, err)
+	defer file.Close()
+	headerBytes := make([]byte, 4096)
+	n, err := file.Read(headerBytes)
+	require.NoError(t, err)
+	fmt.Printf("Header bytes: %s\n", string(headerBytes[:n]))
+	err = header.UnmarshalJSON(headerBytes[:n])
+	require.NoError(t, err)
+	var buffer bytes.Buffer
+	err = header.EncodeRLP(&buffer)
+	require.NoError(t, err)
+
+	headerData := common.NewEthereumHeader(buffer.Bytes())
+	err = headerData.Validate(header.Hash().Bytes(), 1, 18495266)
+	require.NoError(t, err)
+}
+
+func TestFalseEthereumHeader(t *testing.T) {
+	var header ethtypes.Header
+	// read file into a byte slice
+	file, err := os.Open("./test_data/eth_header_18495266.json")
+	require.NoError(t, err)
+	defer file.Close()
+	headerBytes := make([]byte, 4096)
+	n, err := file.Read(headerBytes)
+	require.NoError(t, err)
+	fmt.Printf("Header bytes: %s\n", string(headerBytes[:n]))
+	err = header.UnmarshalJSON(headerBytes[:n])
+	require.NoError(t, err)
+	hash := header.Hash()
+	header.Number = big.NewInt(18495267)
+	var buffer bytes.Buffer
+	err = header.EncodeRLP(&buffer)
+	require.NoError(t, err)
+
+	headerData := common.NewEthereumHeader(buffer.Bytes())
+	err = headerData.Validate(hash.Bytes(), 1, 18495267)
+	require.Error(t, err)
+}
 
 func TestTrueBitcoinHeader(t *testing.T) {
 	blocks := LoadTestBlocks(t)
