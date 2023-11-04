@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -67,4 +69,5 @@ type EVMKeeper interface {
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
+	PostTxProcessing(ctx sdk.Context, _ core.Message, receipt *ethtypes.Receipt) error
 }

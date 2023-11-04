@@ -10,6 +10,8 @@ import (
 
 	core "github.com/ethereum/go-ethereum/core"
 
+	coretypes "github.com/ethereum/go-ethereum/core/types"
+
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
 	mock "github.com/stretchr/testify/mock"
@@ -135,6 +137,20 @@ func (_m *FungibleEVMKeeper) GetLogSizeTransient(ctx types.Context) uint64 {
 		r0 = rf(ctx)
 	} else {
 		r0 = ret.Get(0).(uint64)
+	}
+
+	return r0
+}
+
+// PostTxProcessing provides a mock function with given fields: ctx, _a1, receipt
+func (_m *FungibleEVMKeeper) PostTxProcessing(ctx types.Context, _a1 core.Message, receipt *coretypes.Receipt) error {
+	ret := _m.Called(ctx, _a1, receipt)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, core.Message, *coretypes.Receipt) error); ok {
+		r0 = rf(ctx, _a1, receipt)
+	} else {
+		r0 = ret.Error(0)
 	}
 
 	return r0
