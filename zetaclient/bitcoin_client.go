@@ -587,6 +587,7 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 		common.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		0,
 	)
 }
 

@@ -113,9 +113,10 @@ func CmdShowSend() *cobra.Command {
 
 func CmdCCTXInboundVoter() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset]",
+		Use: "inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message" +
+			"] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex]",
 		Short: "Broadcast message sendVoter",
-		Args:  cobra.ExactArgs(11),
+		Args:  cobra.ExactArgs(12),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			argsSender := args[0]
 			argsSenderChain, err := strconv.ParseInt(args[1], 10, 64)
@@ -147,6 +148,11 @@ func CmdCCTXInboundVoter() *cobra.Command {
 
 			argsAsset := args[10]
 
+			argsEventIndex, err := strconv.ParseInt(args[11], 10, 64)
+			if err != nil {
+				return err
+			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -166,7 +172,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				250_000,
 				argsCoinType,
 				argsAsset,
-				0,
+				uint(argsEventIndex),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

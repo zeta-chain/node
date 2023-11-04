@@ -147,10 +147,10 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		"",
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
-		gasLimit.Uint64()+uint64(event.Raw.Index),
+		gasLimit.Uint64(),
 		foreignCoin.CoinType,
 		foreignCoin.Asset,
-		0,
+		event.Raw.Index,
 	)
 	sendHash := msg.Digest()
 
@@ -221,10 +221,10 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		"",
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
-		90000+uint64(event.Raw.Index),
+		90000,
 		common.CoinType_Zeta,
 		"",
-		0,
+		event.Raw.Index,
 	)
 	sendHash := msg.Digest()
 

@@ -46,6 +46,7 @@ func GetInBoundVoteMessage(
 	coinType common.CoinType,
 	asset string,
 	signerAddress string,
+	eventIndex uint,
 ) *types.MsgVoteOnObservedInboundTx {
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		signerAddress,
@@ -61,7 +62,7 @@ func GetInBoundVoteMessage(
 		gasLimit,
 		coinType,
 		asset,
-		0,
+		eventIndex,
 	)
 	return msg
 }
