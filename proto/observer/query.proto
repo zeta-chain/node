@@ -7,6 +7,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
+import "observer/block_header.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
@@ -91,6 +92,10 @@ service Query {
 
   rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
     option (google.api.http).get = "/zeta-chain/observer/get_block_header_by_hash/{block_hash}";
+  }
+
+  rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_block_header_state/{chain_id}";
   }
 
   // merkle proof verification
@@ -240,4 +245,12 @@ message QueryGetBlockHeaderByHashRequest {
 
 message QueryGetBlockHeaderByHashResponse {
   common.BlockHeader block_header = 1;
+}
+
+message QueryGetBlockHeaderStateRequest {
+  int64 chain_id = 1;
+}
+
+message QueryGetBlockHeaderStateResponse {
+  BlockHeaderState block_header_state = 1;
 }
