@@ -155,6 +155,8 @@ message MsgVoteOnObservedInboundTx {
   common.CoinType coin_type = 12;
   string tx_origin = 13;
   string asset = 14;
+  // event index of the sent asset in the observed tx
+  uint64 event_index = 15;
 }
 
 message MsgVoteOnObservedInboundTxResponse {}

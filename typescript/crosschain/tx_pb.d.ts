@@ -735,6 +735,13 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
    */
   asset: string;
 
+  /**
+   * event index of the sent asset in the observed tx
+   *
+   * @generated from field: uint64 event_index = 15;
+   */
+  eventIndex: bigint;
+
   constructor(data?: PartialMessage<MsgVoteOnObservedInboundTx>);
 
   static readonly runtime: typeof proto3;
