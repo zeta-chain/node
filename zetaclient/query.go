@@ -331,7 +331,7 @@ func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (types.PendingNo
 
 func (b *ZetaCoreBridge) GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetBlockHeaderState(context.Background(), &observertypes.QueryGetBlockHeaderStateRequest{ChainId: chainID})
+	resp, err := client.GetBlockHeaderStateByChain(context.Background(), &observertypes.QueryGetBlockHeaderStateRequest{ChainId: chainID})
 	if err != nil {
 		return observertypes.QueryGetBlockHeaderStateResponse{}, err
 	}

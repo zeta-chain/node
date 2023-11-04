@@ -95,7 +95,7 @@ service Query {
   }
 
   rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_block_header_state/{chain_id}";
+    option (google.api.http).get = "/zeta-chain/observer/get_block_header_state_by_chain_id/{chain_id}";
   }
 
   // merkle proof verification
