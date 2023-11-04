@@ -285,7 +285,7 @@ func (ob *BitcoinChainClient) WatchInTx() {
 func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
 	bn := tip
 	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
-	if err == nil && res.BlockHeaderState.EarliestHeight > 0 {
+	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
 		bn = res.BlockHeaderState.LatestHeight + 1
 	}
 	if bn > tip {

@@ -716,7 +716,7 @@ func (ob *EVMChainClient) postBlockHeader(tip int64) error {
 
 	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
 
-	if err != nil && res.BlockHeaderState.EarliestHeight > 0 {
+	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
 		bn = res.BlockHeaderState.LatestHeight
 	}
 
