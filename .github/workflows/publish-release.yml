@@ -104,10 +104,12 @@ jobs:
           if [[ $create_tag == "tag exists" ]]; then
             echo "Delete existing tag to re-create"
             git tag -d ${GITHUB_TAG_MAJOR_VERSION}
-            git push --tags
-            echo "Tag exists, recreating pipeline"
+            git push --delete origin ${GITHUB_TAG_MAJOR_VERSION}
+            echo "sleep for 5 seconds to let github catch up."
+            sleep 5
+            echo "Re-Create Tag."
             git tag ${GITHUB_TAG_MAJOR_VERSION}
-            git push --tags              
+            git push --tags      
           fi
 
       - name: Create GitHub Release on Pull Request
