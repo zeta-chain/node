@@ -58,7 +58,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	fee := sdktypes.NewCoins(sdktypes.NewCoin("azeta", sdktypes.NewInt(40000)))
 	builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
-	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
+	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {
 		return "", err
 	}
@@ -154,22 +154,18 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	return ctx, nil
 }
 
-func (b *ZetaCoreBridge) signTx(
+func (b *ZetaCoreBridge) SignTx(
 	txf clienttx.Factory,
 	name string,
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
 	txConfig client.TxConfig,
-	signMode signing.SignMode,
 ) error {
-	ctx := b.GetContext()
-	err := clienttx.Sign(txf, ctx.GetFromName(), txBuilder, overwriteSig)
-	if err != nil {
-		return err
+	err := error(nil)
+	if b.keys.hsmMode {
+		err = SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
+	} else {
+		err = clienttx.Sign(txf, name, txBuilder, overwriteSig)
 	}
-	err = SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig, signMode)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }

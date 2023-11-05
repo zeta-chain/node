@@ -70,7 +70,6 @@ func SignWithHSM(
 	txBuilder client.TxBuilder,
 	overwriteSig bool,
 	txConfig client.TxConfig,
-	signMode signing.SignMode,
 ) error {
 	hsmCfg, err := GetPKCS11Config()
 	if err != nil {
@@ -89,6 +88,8 @@ func SignWithHSM(
 		PubKey:        pubKey,
 		Address:       sdk.AccAddress(address).String(),
 	}
+
+	signMode := txf.SignMode()
 
 	// For SIGN_MODE_DIRECT, calling SetSignatures calls setSignerInfos on
 	// TxBuilder under the hood, and SignerInfos is needed to generate the

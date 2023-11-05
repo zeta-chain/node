@@ -28,14 +28,16 @@ type Keys struct {
 	signerName      string
 	kb              ckeys.Keyring
 	OperatorAddress sdk.AccAddress
+	hsmMode         bool
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string, hsmMode bool) *Keys {
 	return &Keys{
 		signerName:      granteeName,
 		kb:              kb,
 		OperatorAddress: granterAddress,
+		hsmMode:         hsmMode,
 	}
 }
 
@@ -206,4 +208,12 @@ func getHotkeyPassword() (string, error) {
 	}
 
 	return password, nil
+}
+
+func (k *Keys) SetHsmMode(mode bool) {
+	k.hsmMode = mode
+}
+
+func (k *Keys) GetHsmMode() bool {
+	return k.hsmMode
 }
