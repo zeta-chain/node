@@ -283,6 +283,7 @@ func (ob *BitcoinChainClient) WatchInTx() {
 }
 
 func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
+	ob.logger.WatchInTx.Info().Msgf("postBlockHeader: tip %d", tip)
 	bn := tip
 	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
 	if err == nil && res.BlockHeaderState != nil && res.BlockHeaderState.EarliestHeight > 0 {
@@ -309,6 +310,7 @@ func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
 		res2.Block.Height,
 		common.NewBitcoinHeader(headerBuf.Bytes()),
 	)
+	ob.logger.WatchInTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
 	if err != nil { // error shouldn't block the process
 		ob.logger.WatchInTx.Error().Err(err).Msgf("error posting bitcoin block header: %d", bn)
 	}
