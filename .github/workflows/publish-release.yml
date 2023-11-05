@@ -61,18 +61,9 @@ jobs:
       - name: Echo Release Notes from PR Message.
         if: github.event_name == 'pull_request'
         run: |
-            echo -e "${{ github.event.head_commit.message }}" > Release.txt
-            echo "GITHUB_RELEASE_TEXT=${{ github.event.head_commit.message }}" >> ${GITHUB_ENV}
-
-      - name: Generate Release Notes for HotFix
-        if: github.event_name != 'pull_request'
-        run: |
-          COMMIT_MESSAGES=$(git log --merges --pretty=format:"%h %s")
-          RELEASE_NOTES=""
-          while IFS= read -r line; do
-            RELEASE_NOTES="${RELEASE_NOTES}- ${line}"$'\n'
-          done <<< "$COMMIT_MESSAGES"
-          echo "GITHUB_RELEASE_TEXT=${RELEASE_NOTES}" >> ${GITHUB_ENV}
+          GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
+          echo "GITHUB_RELEASE_TEXT=${GITHUB_RELEASE_TEXT}" >> ${GITHUB_ENV}
+          echo -e ${GITHUB_RELEASE_TEXT} > Release.txt
 
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
@@ -109,7 +100,15 @@ jobs:
         shell: bash
         run: |
           git tag ${GITHUB_TAG_MAJOR_VERSION}
-          git push --tags || echo "tag exists"
+          git push --tags
+          if [ $? -ne 0 ]; then
+            msg=$(git log -1 --pretty=%B)
+            if [[ $msg == *"tag exists"* ]]; then
+              echo "Tag exists, recreating pipeline"
+              git tag ${GITHUB_TAG_MAJOR_VERSION}
+              git push --tags              
+            fi
+          fi
 
       - name: Create GitHub Release on Pull Request
         if: github.event_name == 'pull_request'
@@ -117,6 +116,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           files: Release.txt
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Create GitHub Release Hot Fix
         if: github.event_name != 'pull_request'
@@ -124,6 +124,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           generate_release_notes: true
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
 #      - name: Publish Release Files
 #        env:
