@@ -105,17 +105,25 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: Create Release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release Tag.
+        shell: bash
+        run: |
+          git tag GITHUB_TAG_MAJOR_VERSION
+          git push --tags || echo "tag exists"
+
+      - name: Create GitHub Release on Pull Request
+        if: github.event_name == 'pull_request'
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-          release_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-          body: |
-            ${{ env.GITHUB_RELEASE_TEXT }}
-          draft: false
-          prerelease: false
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          files: Release.txt
+
+      - name: Create GitHub Release Hot Fix
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          generate_release_notes: true
 
 #      - name: Publish Release Files
 #        env:
