@@ -367,7 +367,10 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 		// add block header to zetacore
 		// #nosec G701 always positive
-		ob.postBlockHeader(bn)
+		err = ob.postBlockHeader(bn)
+		if err != nil {
+			ob.logger.WatchInTx.Warn().Err(err).Msgf("error posting block header %d", bn)
+		}
 
 		tssAddress := ob.Tss.BTCAddress()
 		// #nosec G701 always positive
