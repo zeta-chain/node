@@ -60,9 +60,12 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		_, err = btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
 		if err != nil {
 			return "", err
+		}
+		if !addr.IsForNet(chainParams) {
+			return "", fmt.Errorf("address is not for network %s", chainParams.Name)
 		}
 		return addrStr, nil
 	}

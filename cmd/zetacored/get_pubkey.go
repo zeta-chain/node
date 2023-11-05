@@ -10,18 +10,19 @@ import (
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
-func AddTssToGenesisCmd() *cobra.Command {
+func GetPubKeyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-pubkey [tssKeyName] [Password]",
-		Short: "Get you node account",
+		Use:   "get-pubkey [tssKeyName] [password]",
+		Short: "Get the node account public key",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			tssKeyName := args[0]
-			if len(args) == 1 {
-				args = append(args, "")
+			password := ""
+			if len(args) > 1 {
+				password = args[1]
 			}
-			pubKeySet, err := GetPubKeySet(clientCtx, tssKeyName, args[1])
+			pubKeySet, err := GetPubKeySet(clientCtx, tssKeyName, password)
 			if err != nil {
 				return err
 			}

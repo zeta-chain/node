@@ -12,7 +12,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
@@ -113,8 +113,6 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainID := getValidChainID(t)
-
-		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		addr, err := k.DeployZRC20Contract(
@@ -220,7 +218,207 @@ func TestKeeper_DeploySystemContract(t *testing.T) {
 	})
 }
 
+func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
+	t.Run("should deposit and call the contract", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			example,
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.NoError(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
+		require.NoError(t, err)
+		require.Equal(t, int64(42), balance.Int64())
+
+		// check onCrossChainCall has been called
+		exampleABI, err := contracts.ExampleMetaData.GetAbi()
+		require.NoError(t, err)
+		res, err = k.CallEVM(
+			ctx,
+			*exampleABI,
+			types.ModuleAddressEVM,
+			example,
+			big.NewInt(0),
+			nil,
+			false,
+			false,
+			"bar",
+		)
+		unpacked, err := exampleABI.Unpack("bar", res.Ret)
+		require.NoError(t, err)
+		require.NotZero(t, len(unpacked))
+		bar, ok := unpacked[0].(*big.Int)
+		require.True(t, ok)
+		require.Equal(t, big.NewInt(42), bar)
+	})
+
+	t.Run("should return a revert error when the underlying contract call revert", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		// Deploy reverter
+		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			reverter,
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.True(t, types.IsContractReverted(res, err))
+		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
+		require.NoError(t, err)
+		require.Zero(t, balance.Int64())
+	})
+
+	t.Run("should revert if the underlying contract doesn't exist", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
+
+		res, err := k.DepositZRC20AndCallContract(
+			ctx,
+			systemcontract.ZContext{
+				Origin:  sample.EthAddress().Bytes(),
+				Sender:  sample.EthAddress(),
+				ChainID: big.NewInt(chainID),
+			},
+			zrc20,
+			sample.EthAddress(),
+			big.NewInt(42),
+			[]byte(""),
+		)
+		require.True(t, types.IsContractReverted(res, err))
+	})
+}
+
 func TestKeeper_CallEVMWithData(t *testing.T) {
+	t.Run("should return a revert error when the contract call revert", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		// Deploy example
+		contract, err := k.DeployContract(ctx, contracts.ExampleMetaData)
+		require.NoError(t, err)
+		assertContractDeployment(t, sdkk.EvmKeeper, ctx, contract)
+		abi, err := contracts.ExampleMetaData.GetAbi()
+		require.NoError(t, err)
+
+		// doRevert make contract reverted
+		res, err := k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevert",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
+
+		// check reason is included for revert error
+		// 0xbfb4ebcf is the hash of "Foo()"
+		require.Contains(t, err.Error(), "reason: 0xbfb4ebcf")
+
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithMessage",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
+
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doRevertWithRequire",
+		)
+		require.Nil(t, res)
+		require.True(t, types.IsContractReverted(res, err))
+
+		// Not a revert error if another type of error
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doNotExist",
+		)
+		require.Nil(t, res)
+		require.Error(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+		require.NotContains(t, err.Error(), "reason:")
+
+		// No revert with successfull call
+		res, err = k.CallEVM(
+			ctx,
+			*abi,
+			types.ModuleAddressEVM,
+			contract,
+			big.NewInt(0),
+			nil,
+			true,
+			false,
+			"doSucceed",
+		)
+		require.NotNil(t, res)
+		require.NoError(t, err)
+		require.False(t, types.IsContractReverted(res, err))
+	})
+
 	t.Run("apply new message without gas limit estimates gas", func(t *testing.T) {
 		k, ctx := testkeeper.FungibleKeeperAllMocks(t)
 

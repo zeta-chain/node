@@ -114,13 +114,20 @@ func (b *ZetaCoreBridge) Stop() {
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
 func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (uint64, uint64, error) {
-	ctx := b.GetContext()
+	ctx, err := b.GetContext()
+	if err != nil {
+		return 0, 0, err
+	}
 	address := b.keys.GetAddress()
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
 func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
-	ctx := b.GetContext()
+	ctx, err := b.GetContext()
+	if err != nil {
+		b.logger.Error().Err(err).Msg("fail to get context")
+		return
+	}
 	address := b.keys.GetAddress()
 	accN, seq, err := ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 	if err != nil {
@@ -176,15 +183,15 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	var newBTCParams *observertypes.CoreParams
 
 	// check and update core params for each chain
-	for _, params := range coreParams {
-		err := config.ValidateCoreParams(params)
+	for _, coreParam := range coreParams {
+		err := config.ValidateCoreParams(coreParam)
 		if err != nil {
-			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(params.ChainId).ChainName)
+			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(coreParam.ChainId).ChainName)
 		}
-		if common.IsBitcoinChain(params.ChainId) {
-			newBTCParams = params
+		if common.IsBitcoinChain(coreParam.ChainId) {
+			newBTCParams = coreParam
 		} else {
-			newEVMParams[params.ChainId] = params
+			newEVMParams[coreParam.ChainId] = coreParam
 		}
 	}
 
