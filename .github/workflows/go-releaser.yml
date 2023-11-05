@@ -3,11 +3,6 @@ name: Go-Releaser
 on:
   push:
     tags:
-      - "v*.*.*"
-
-concurrency:
-  group: publish-release
-  cancel-in-progress: false
 
 jobs:
   go-releaser:
