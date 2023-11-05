@@ -1,14 +1,11 @@
 name: Go-Releaser
 
 on:
-  create:
-    tags:
-      - "v*.*.*"
   push:
     tags:
       - "v*.*.*"
-  release:
-    types: [published]
+      - "v*.*.*-rc"
+      - "v*.*.*-hotfix"
 
 concurrency:
   group: publish-release
