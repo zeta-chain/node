@@ -100,16 +100,15 @@ jobs:
         shell: bash
         run: |
           git tag ${GITHUB_TAG_MAJOR_VERSION}
-          git push --tags
-          if [ $? -ne 0 ]; then
-            msg=$(git log -1 --pretty=%B)
-            if [[ $msg == *"tag exists"* ]]; then
-              echo "Tag exists, recreating pipeline"
-              git tag ${GITHUB_TAG_MAJOR_VERSION}
-              git push --tags              
-            fi
+          create_tag=$(git push --tags || echo "tag exists")
+          if [[ $create_tag == "tag exists" ]]; then
+            echo "Delete existing tag to re-create"
+            git push --delete origin ${GITHUB_TAG_MAJOR_VERSION}
+            echo "Tag exists, recreating pipeline"
+            git tag ${GITHUB_TAG_MAJOR_VERSION}
+            git push --tags              
           fi
-
+        
       - name: Create GitHub Release on Pull Request
         if: github.event_name == 'pull_request'
         uses: softprops/action-gh-release@v1
