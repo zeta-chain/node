@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - "v*.*.*"
-      - "v*.*.*-rc"
-      - "v*.*.*-hotfix"
 
 concurrency:
   group: publish-release
@@ -15,8 +13,6 @@ jobs:
   go-releaser:
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
-    needs:
-      - pre-release-checks
     steps:
       - uses: actions/checkout@v3
 
