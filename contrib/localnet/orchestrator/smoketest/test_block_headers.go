@@ -40,10 +40,12 @@ func (sm *SmokeTest) TestBlockHeaders() {
 			}
 			bn = bhres.BlockHeader.Height - 1
 			currentHash = bhres.BlockHeader.ParentHash
-			fmt.Printf("found block header %d\n", bhres.BlockHeader.Height)
+			//fmt.Printf("found block header %d\n", bhres.BlockHeader.Height)
 		}
 		if bn > earliestBlock {
 			panic(fmt.Sprintf("block header tracing failed; expected at most %d, got %d", earliestBlock, bn))
+		} else {
+			fmt.Printf("block header tracing succeeded; expected at most %d, got %d\n", earliestBlock, bn)
 		}
 	}
 	checkBlock(common.GoerliChain().ChainId)
