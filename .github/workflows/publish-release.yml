@@ -108,7 +108,7 @@ jobs:
       - name: Create Release Tag.
         shell: bash
         run: |
-          git tag GITHUB_TAG_MAJOR_VERSION
+          git tag ${GITHUB_TAG_MAJOR_VERSION}
           git push --tags || echo "tag exists"
 
       - name: Create GitHub Release on Pull Request
