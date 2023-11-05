@@ -28,18 +28,6 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return nil, observertypes.ErrSupportedChains
 	}
 
-	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
-		ChainID: msg.ChainId,
-		Nonce:   msg.Nonce,
-	})
-	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
-		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
-	}
-	if !IsPending(*cctx.CrossChainTx) {
-		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
-		return &types.MsgAddToOutTxTrackerResponse{}, nil
-	}
-
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
 		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 		isAdmin := msg.Creator == adminPolicyAccount
@@ -62,6 +50,18 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 		}
 		isProven = true
+	}
+
+	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+		ChainID: msg.ChainId,
+		Nonce:   msg.Nonce,
+	})
+	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
+	}
+	if !IsPending(*cctx.CrossChainTx) {
+		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
