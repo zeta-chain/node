@@ -3038,6 +3038,8 @@ github.com/yusufpapurcu/wmi v1.2.2/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQ
 github.com/yvasiyarov/go-metrics v0.0.0-20140926110328-57bccd1ccd43/go.mod h1:aX5oPXxHm3bOH+xeAttToC8pqch2ScQN/JoXYupl6xs=
 github.com/yvasiyarov/gorelic v0.0.0-20141212073537-a9bba5b9ab50/go.mod h1:NUSPSUX/bi6SeDMUh6brw0nXpxHnc96TguQh0+r/ssA=
 github.com/yvasiyarov/newrelic_platform_go v0.0.0-20140908184405-b21fdbd4370f/go.mod h1:GlGEuHIJweS1mbCqG+7vt2nvWLzLLnRHbXz5JKd/Qbg=
+github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2 h1:gd2uE0X+ZbdFJ8DubxNqLbOVlCB12EgWdzSNRAR82tM=
+github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2/go.mod h1:x7Bkwbzt2W2lQfjOirnff0Dj+tykdbTG1FMJPVPZsvE=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b h1:aZRt5BtXdoDdyrUKwcv3B7mS30m/B854cjKjmnXBE5A=
 github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b/go.mod h1:v79f+eY6PMpmLv188FAubst4XV2Mm8mUmx1OgmdFG3c=
 github.com/zondax/hid v0.9.0/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=

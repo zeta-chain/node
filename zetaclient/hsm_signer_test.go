@@ -2,17 +2,23 @@ package zetaclient
 
 import (
 	"crypto/rand"
-	btcsecp256k1 "github.com/btcsuite/btcd/btcec"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	keystone "github.com/regen-network/keystone/keys"
-	"github.com/stretchr/testify/require"
+	"github.com/frumioj/crypto11"
 	"log"
 	"testing"
+
+	btcsecp256k1 "github.com/btcsuite/btcd/btcec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/stretchr/testify/require"
+	keystone "github.com/zeta-chain/keystone/keys"
 )
 
 func TestSignSecp256k1(t *testing.T) {
-	// JSON formatted configuration file
-	config := "./conf-hsm.json"
+	// PKCS11 configuration file
+	config := &crypto11.Config{
+		Path:       "/usr/local/lib/softhsm/libsofthsm2.so",
+		TokenLabel: "My token 1",
+		Pin:        "1234",
+	}
 
 	//Generate random label for key
 	label, err := randomBytes(16)

@@ -141,3 +141,23 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	ctx = ctx.WithClient(client)
 	return ctx
 }
+
+func (b *ZetaCoreBridge) signTx(
+	txf clienttx.Factory,
+	name string,
+	txBuilder client.TxBuilder,
+	overwriteSig bool,
+	txConfig client.TxConfig,
+	signMode signing.SignMode,
+) error {
+	ctx := b.GetContext()
+	err := clienttx.Sign(txf, ctx.GetFromName(), txBuilder, overwriteSig)
+	if err != nil {
+		return err
+	}
+	err = SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig, signMode)
+	if err != nil {
+		return err
+	}
+	return nil
+}

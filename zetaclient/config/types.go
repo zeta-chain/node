@@ -57,6 +57,7 @@ type Config struct {
 	TestTssKeysign      bool   `json:"TestTssKeysign"`
 	CurrentTssPubkey    string `json:"CurrentTssPubkey"`
 	SignerPass          string `json:"SignerPass"`
+	SignerMode          int8   `json:"SignerMode"` // 0 - local keyring, 1 - hsm keyring
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
