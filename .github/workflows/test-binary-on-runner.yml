@@ -1,0 +1,25 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      binary_link:
+        description: 'The link for the binary you want to test.'
+        required: false
+        default: 'https://github.com/zeta-chain/node/releases/download/v10.1.2/zetacored_testnet-linux-amd64'
+
+
+jobs:
+  check_binary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download and test.
+        run: |
+          wget ${{ github.event.inputs.binary_link }} -O ./zetacored
+          sudo chmod a+x ./zetacored
+          zetacored version
