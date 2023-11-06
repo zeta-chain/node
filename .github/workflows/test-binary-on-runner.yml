@@ -20,7 +20,14 @@ jobs:
 
       - name: Download and test.
         run: |
-          wget ${{ github.event.inputs.binary_link }} -O ./zetacored
+          echo "Download test binary"
+          wget -q ${{ github.event.inputs.binary_link }} -O ./zetacored
+          
+          echo "Change permissions"
           sudo chmod a+x ./zetacored
-          ls -lah ./ 
+          
+          echo "Zetacored Version"
           ./zetacored version
+          
+          echo "Print OS Version"
+          lsb_release -d
