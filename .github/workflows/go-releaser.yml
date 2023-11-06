@@ -3,6 +3,7 @@ name: Go-Releaser
 on:
   push:
     tags:
+      - "v*.*.*"
 
 jobs:
   go-releaser:
