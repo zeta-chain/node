@@ -19,7 +19,6 @@ func SetupHandlers(app *App) {
 		}
 		vm[observertypes.ModuleName] = vm[observertypes.ModuleName] - 1
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
-
 	})
 
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

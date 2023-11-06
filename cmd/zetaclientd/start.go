@@ -241,11 +241,11 @@ func start(_ *cobra.Command, _ []string) error {
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, tss, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
-	zetaSupplyChecker, errStartingzetaSupplyChecker := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
-	if errStartingzetaSupplyChecker != nil {
+	zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
+	if err != nil {
 		startLogger.Err(err).Msg("NewZetaSupplyChecker")
 	}
-	if errStartingzetaSupplyChecker == nil {
+	if err == nil {
 		zetaSupplyChecker.Start()
 		defer zetaSupplyChecker.Stop()
 	}

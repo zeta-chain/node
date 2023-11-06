@@ -41,6 +41,7 @@ func TestZetaSupplyChecker_ValidateZetaSupply(t *testing.T) {
 			},
 		},
 		// Todo add more scenarios
+		//https://github.com/zeta-chain/node/issues/1375
 	}
 
 	for _, tc := range tt {
