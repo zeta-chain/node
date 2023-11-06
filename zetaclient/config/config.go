@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,7 @@ import (
 const filename string = "zetaclient_config.json"
 const folder string = "config"
 
+// Save saves ZetaClient config
 func Save(config *Config, path string) error {
 	folderPath := filepath.Join(path, folder)
 	err := os.MkdirAll(folderPath, os.ModePerm)
@@ -30,13 +32,17 @@ func Save(config *Config, path string) error {
 	return nil
 }
 
+// Load loads ZetaClient config from a filepath
 func Load(path string) (*Config, error) {
+	// retrieve file
 	file := filepath.Join(path, folder, filename)
 	file, err := filepath.Abs(file)
 	if err != nil {
 		return nil, err
 	}
 	file = filepath.Clean(file)
+
+	// read config
 	cfg := NewConfig()
 	input, err := os.ReadFile(file)
 	if err != nil {
@@ -46,11 +52,21 @@ func Load(path string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// read keyring backend and use test by default
+	if cfg.KeyringBackend == KeyringBackendUndefined {
+		cfg.KeyringBackend = KeyringBackendTest
+	}
+	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
+		return nil, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
+	}
+
+	// fields sanitization
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
 	cfg.CurrentTssPubkey = ""
 	cfg.ZetaCoreHome = path
-	cfg.SignerPass = "password"
+
 	return cfg, nil
 }
 

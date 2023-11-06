@@ -35,4 +35,5 @@ message EventCrosschainFlagsUpdated {
   bool isOutboundEnabled = 3;
   GasPriceIncreaseFlags gasPriceIncreaseFlags = 4;
   string signer = 5;
+  BlockHeaderVerificationFlags blockHeaderVerificationFlags = 6;
 }

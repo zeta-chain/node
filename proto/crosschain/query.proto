@@ -6,6 +6,7 @@ import "crosschain/chain_nonces.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
+import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
@@ -35,6 +36,13 @@ service Query {
 
   rpc OutTxTrackerAllByChain(QueryAllOutTxTrackerByChainRequest) returns (QueryAllOutTxTrackerByChainResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/outTxTrackerByChain/{chain}";
+  }
+
+  rpc InTxTrackerAllByChain(QueryAllInTxTrackerByChainRequest) returns (QueryAllInTxTrackerByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackerByChain/{chain_id}";
+  }
+  rpc InTxTrackerAll(QueryAllInTxTrackersRequest) returns (QueryAllInTxTrackersResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/inTxTrackers";
   }
 
   // Queries a InTxHashToCctx by index.
@@ -178,6 +186,22 @@ message QueryAllOutTxTrackerByChainRequest {
 message QueryAllOutTxTrackerByChainResponse {
   repeated OutTxTracker outTxTracker = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllInTxTrackerByChainRequest {
+  int64 chain_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryAllInTxTrackerByChainResponse {
+  repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllInTxTrackersRequest {}
+
+message QueryAllInTxTrackersResponse {
+  repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetInTxHashToCctxRequest {

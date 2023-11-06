@@ -7,19 +7,16 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/common"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-
-	"github.com/stretchr/testify/suite"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/stretchr/testify/suite"
+	"github.com/zeta-chain/zetacore/common"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type BTCSignTestSuite struct {
