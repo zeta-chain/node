@@ -19,7 +19,6 @@ concurrency:
 
 jobs:
   pre-release-checks:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -146,7 +145,7 @@ jobs:
 #          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
   build-alpine:
-    if: github.event.pull_request.merged == true
+    #if: github.event.pull_request.merged == true
     runs-on: ["ubuntu-latest"]
     timeout-minutes: 30
     concurrency:
