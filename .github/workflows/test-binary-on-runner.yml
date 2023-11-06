@@ -1,4 +1,4 @@
-name: Publish Release
+name: Test-Cross-Compile-Binary-On-Runner
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   check_binary:
-    runs-on: ubuntu-latest
+    runs-on: ['zeta-runners-athens3']
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
@@ -20,6 +20,14 @@ jobs:
 
       - name: Download and test.
         run: |
-          wget ${{ github.event.inputs.binary_link }} -O ./zetacored
+          echo "Download test binary"
+          wget -q ${{ github.event.inputs.binary_link }} -O ./zetacored
+          
+          echo "Change permissions"
           sudo chmod a+x ./zetacored
-          zetacored version
+          
+          echo "Zetacored Version"
+          ./zetacored version
+          
+          echo "Print OS Version"
+          lsb_release -d
