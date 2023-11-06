@@ -145,137 +145,137 @@ jobs:
 #          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
 #          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-#  build-alpine:
-#    if: github.event.pull_request.merged == true
-#    runs-on: ["ubuntu-latest"]
-#    timeout-minutes: 30
-#    concurrency:
-#      group: "alpine-build-test"
-#    needs:
-#      - pre-release-checks
-#    steps:
-#      - uses: actions/checkout@v3
-#
-#      - name: Set CPU Architecture
-#        shell: bash
-#        run: |
-#          if [ "$(uname -m)" == "aarch64" ]; then
-#            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-#          elif [ "$(uname -m)" == "x86_64" ]; then
-#            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-#          else
-#            echo "Unsupported architecture" >&2
-#            exit 1
-#          fi
-#
-#      - name: Install Pipeline Dependencies
-#        uses: ./.github/actions/install-dependencies
-#        timeout-minutes: 8
-#        with:
-#          cpu_architecture: ${{ env.CPU_ARCH }}
-#          skip_python: "true"
-#          skip_aws_cli: "true"
-#          skip_docker_compose: "false"
-#
-#      - uses: jirutka/setup-alpine@v1
-#        with:
-#          branch: v3.17
-#          arch: x86_64
-#          packages: >
-#            build-base
-#            pkgconf
-#            lld
-#            go
-#            gcc
-#            g++
-#            libusb-dev
-#            linux-headers
-#            git
-#          shell-name: alpine.sh
-#
-#      - name: Build zetacored and zetaclientd
-#        env:
-#          CGO_ENABLED: 1
-#          GOOS: linux
-#          GOARCH: ${{ env.CPU_ARCH }}
-#        shell: alpine.sh --root {0}
-#        run: |
-#          git config --global --add safe.directory '*'
-#          make install-testnet
-#          cp "$HOME"/go/bin/* ./
-#
-#      - name: Binary Docker Test
-#        env:
-#          CPU_ARCH: ${{ env.CPU_ARCH }}
-#        shell: alpine.sh --root {0}
-#        run: |
-#          chmod a+x ./zetacored
-#          ./zetacored version
-#          mv zetacored zetacored-testnet-alpine-$CPU_ARCH
-#          mv zetaclientd zetaclientd-testnet-alpine-$CPU_ARCH
-#
-#      - name: Create GitHub Release
-#        uses: softprops/action-gh-release@v1
-#        with:
-#          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-#          generate_release_notes: true
-#          files: |
-#            zetacored-*
-#            zetaclientd-*
-#
-#      - name: Clean Up Alpine Workspace
-#        if: always()
-#        shell: alpine.sh --root {0}
-#        run: |
-#          set -e # fail on error
-#          rm -rf *
-#
-#      - name: Clean Up Workspace
-#        if: always()
-#        shell: bash
-#        run: rm -rf *
-#
-#  announce-release:
-#    if: github.event.pull_request.merged == true
-#    runs-on: ubuntu-latest
-#    timeout-minutes: 10
-#    needs:
-#      - publish-release
-#      - build-alpine
-#    steps:
-#      - uses: actions/checkout@v3
-#      - name: Get Version
-#        run: |
-#          VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-#          echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
-#
-#      - name: Determine Release Type
-#        id: determine_release_type
-#        run: |
-#          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
-#            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
-#          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
-#            echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
-#          else
-#            echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
-#          fi
-#
-#      - name: "SEND:DISCORD:MESSAGE"
-#        if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
-#        uses: gzukel/CosmosComposites/send_discord_message@main
-#        with:
-#          discord_token: "${{ secrets.DISCORD_TOKEN }}"
-#          discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-#          discord_message: |
-#            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released.
-#
-#            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal.
-#            We will submit a governance proposal in the next few days.
-#            More specific information including block height will be shared as part of the governance proposal.
-#
-#            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
-#
-#      - name: Clean Up Workspace
-#        if: always()
-#        shell: bash
-#        run: rm -rf *
+  build-alpine:
+    if: github.event.pull_request.merged == true
+    runs-on: ["ubuntu-latest"]
+    timeout-minutes: 30
+    concurrency:
+      group: "alpine-build-test"
+    needs:
+      - pre-release-checks
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+
+      - uses: jirutka/setup-alpine@v1
+        with:
+          branch: v3.17
+          arch: x86_64
+          packages: >
+            build-base
+            pkgconf
+            lld
+            go
+            gcc
+            g++
+            libusb-dev
+            linux-headers
+            git
+          shell-name: alpine.sh
+
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+          git config --global --add safe.directory '*'
+          make install-testnet
+          cp "$HOME"/go/bin/* ./
+
+      - name: Binary Docker Test
+        env:
+          CPU_ARCH: ${{ env.CPU_ARCH }}
+        shell: alpine.sh --root {0}
+        run: |
+          chmod a+x ./zetacored
+          ./zetacored version
+          mv zetacored zetacored-testnet-alpine-$CPU_ARCH
+          mv zetaclientd zetaclientd-testnet-alpine-$CPU_ARCH
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          generate_release_notes: true
+          files: |
+            zetacored-*
+            zetaclientd-*
+
+      - name: Clean Up Alpine Workspace
+        if: always()
+        shell: alpine.sh --root {0}
+        run: |
+          set -e # fail on error
+          rm -rf *
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+  announce-release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - publish-release
+      - build-alpine
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get Version
+        run: |
+          VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
+
+      - name: Determine Release Type
+        id: determine_release_type
+        run: |
+          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
+            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
+          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
+            echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
+          else
+            echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
+          fi
+
+      - name: "SEND:DISCORD:MESSAGE"
+        if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
+        uses: gzukel/CosmosComposites/send_discord_message@main
+        with:
+          discord_token: "${{ secrets.DISCORD_TOKEN }}"
+          discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
+          discord_message: |
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released.
+
+            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal.
+            We will submit a governance proposal in the next few days.
+            More specific information including block height will be shared as part of the governance proposal.
+
+            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
