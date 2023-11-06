@@ -1,4 +1,4 @@
-name: Publish Release
+name: Test-Cross-Compile-Binary-On-Runner
 
 on:
   workflow_dispatch:
@@ -22,4 +22,5 @@ jobs:
         run: |
           wget ${{ github.event.inputs.binary_link }} -O ./zetacored
           sudo chmod a+x ./zetacored
-          zetacored version
+          ls -lah ./ 
+          ./zetacored version
