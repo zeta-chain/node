@@ -96,7 +96,7 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
-      - name: Create Release Tag.
+      - name: Create Release Tag
         shell: bash
         run: |
           git tag ${GITHUB_TAG_MAJOR_VERSION}
