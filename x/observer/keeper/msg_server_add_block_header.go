@@ -84,7 +84,6 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	 * Vote finalized, add block header to store
 	 */
 
-	// TODO: add check for parent block header's existence here https://github.com/zeta-chain/node/issues/1133
 	if !found {
 		bhs = types.BlockHeaderState{
 			ChainId:         msg.ChainId,
