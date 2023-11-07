@@ -38,7 +38,7 @@ func (sm *SmokeTest) TestBlockHeaders() {
 				BlockHash: currentHash,
 			})
 			if err != nil {
-				fmt.Printf("error getting block header; tracing stops: %v", err)
+				fmt.Printf("cannot getting block header; tracing stops: %v\n", err)
 				break
 			}
 			bn = bhres.BlockHeader.Height - 1
