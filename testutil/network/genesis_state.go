@@ -105,9 +105,12 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observerTypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
 	crosschainFlags := &observerTypes.CrosschainFlags{
-		IsInboundEnabled:  true,
-		IsOutboundEnabled: true,
+		IsInboundEnabled:             true,
+		IsOutboundEnabled:            true,
+		GasPriceIncreaseFlags:        &observerTypes.DefaultGasPriceIncreaseFlags,
+		BlockHeaderVerificationFlags: &observerTypes.DefaultBlockHeaderVerificationFlags,
 	}
+
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags
 

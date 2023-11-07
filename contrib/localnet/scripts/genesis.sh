@@ -65,6 +65,8 @@ then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient0 mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* zetaclient0:~/.zetacored/keyring-test/
+  ssh zetaclient0 mkdir -p ~/.zetacored/keyring-file/
+  scp ~/.zetacored/keyring-file/* zetaclient0:~/.zetacored/keyring-file/
 
 # 1. Accumulate all the os_info files from other nodes on zetcacore0 and create a genesis.json
   for NODE in "${NODELIST[@]}"; do
@@ -79,7 +81,7 @@ then
 
 # 2. Add the observers, authorizations, required params and accounts to the genesis.json
   zetacored collect-observer-info
-  zetacored add-observer-list
+  zetacored add-observer-list --keygen-block 55
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
@@ -132,6 +134,8 @@ then
   # Misc : Copying the keyring to the client nodes so that they can sign the transactions
   ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-test/
   scp ~/.zetacored/keyring-test/* "zetaclient$INDEX":~/.zetacored/keyring-test/
+  ssh zetaclient"$INDEX" mkdir -p ~/.zetacored/keyring-file/
+  scp ~/.zetacored/keyring-file/* "zetaclient$INDEX":~/.zetacored/keyring-file/
 
   pp=$(cat $HOME/.zetacored/config/gentx/peer/*.json | jq '.body.memo' )
   pps=${pp:1:58}

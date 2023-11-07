@@ -42,7 +42,10 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 
 	flags := flag.NewFlagSet("zetacore", 0)
 
-	ctx := b.GetContext()
+	ctx, err := b.GetContext()
+	if err != nil {
+		return "", err
+	}
 	factory := clienttx.NewFactoryCLI(ctx, flags)
 	factory = factory.WithAccountNumber(b.accountNumber[authzSigner.KeyType])
 	factory = factory.WithSequence(b.seqNumber[authzSigner.KeyType])
@@ -107,13 +110,23 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 }
 
 // GetContext return a valid context with all relevant values set
-func (b *ZetaCoreBridge) GetContext() client.Context {
+func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	ctx := client.Context{}
 	addr, err := b.keys.GetSignerInfo().GetAddress()
 	if err != nil {
-		// TODO : Handle error
 		b.logger.Error().Err(err).Msg("fail to get address from key")
+		return ctx, err
 	}
+
+	// if password is needed, set it as input
+	password, err := b.keys.GetHotkeyPassword()
+	if err != nil {
+		return ctx, err
+	}
+	if password != "" {
+		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password)))
+	}
+
 	ctx = ctx.WithKeyring(b.keys.GetKeybase())
 	ctx = ctx.WithChainID(b.zetaChainID)
 	ctx = ctx.WithHomeDir(b.cfg.ChainHomeFolder)
@@ -131,13 +144,12 @@ func (b *ZetaCoreBridge) GetContext() client.Context {
 	if !strings.HasPrefix(b.cfg.ChainHost, "http") {
 		remote = fmt.Sprintf("tcp://%s", remote)
 	}
-	//fmt.Println("ctx.remote ", remote)
 
 	ctx = ctx.WithNodeURI(remote)
-	client, err := rpchttp.New(remote, "/websocket")
+	wsClient, err := rpchttp.New(remote, "/websocket")
 	if err != nil {
-		panic(err)
+		return ctx, err
 	}
-	ctx = ctx.WithClient(client)
-	return ctx
+	ctx = ctx.WithClient(wsClient)
+	return ctx, nil
 }

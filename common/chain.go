@@ -60,9 +60,12 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		_, err = btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
 		if err != nil {
 			return "", err
+		}
+		if !addr.IsForNet(chainParams) {
+			return "", fmt.Errorf("address is not for network %s", chainParams.Name)
 		}
 		return addrStr, nil
 	}
@@ -100,6 +103,14 @@ func IsEVMChain(chainID int64) bool {
 		chainID == 1 || // eth mainnet
 		chainID == 56 || // bsc mainnet
 		chainID == 137 // polygon mainnet
+}
+
+func IsHeaderSupportedEvmChain(chainID int64) bool {
+	return chainID == 5 || // Goerli
+		chainID == 97 || // BSC testnet
+		chainID == 1337 || // eth privnet
+		chainID == 1 || // eth mainnet
+		chainID == 56 // bsc mainnet
 }
 
 func (chain Chain) IsKlaytnChain() bool {

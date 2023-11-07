@@ -36,7 +36,7 @@ func BtcChainID() int64 {
 }
 
 func BtcDustOffset() int64 {
-	return 0
+	return 2000
 }
 
 func PolygonChain() Chain {

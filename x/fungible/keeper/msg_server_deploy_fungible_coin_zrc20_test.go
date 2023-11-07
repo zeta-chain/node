@@ -122,7 +122,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			admin,
 			sample.EthAddress().Hex(),
 			chainID,
-			256,
+			78,
 			"foo",
 			"foo",
 			common.CoinType_Gas,

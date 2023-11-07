@@ -34,7 +34,9 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.11
     entrypoint: ["/root/genesis.sh", "2"]
-
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetacore1:
     image: zetanode:latest
@@ -47,7 +49,9 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.12
     entrypoint: ["/root/genesis.sh", "2"]
-
+    environment:
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetaclient0:
     image: zetanode:latest
@@ -62,6 +66,8 @@ services:
     entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetaclient1:
     image: zetanode:latest
@@ -76,6 +82,8 @@ services:
     entrypoint: /root/start-zetaclientd-genesis.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   eth:
     image: ethereum/client-go:v1.10.26

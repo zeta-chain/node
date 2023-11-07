@@ -161,6 +161,11 @@ proto:
 	@buf format -w
 .PHONY: proto
 
+typescript:
+	@echo "--> Generating TypeScript bindings"
+	@bash ./scripts/protoc-gen-typescript.sh
+.PHONY: typescript
+
 proto-format:
 	@bash ./scripts/proto-format.sh
 
@@ -174,11 +179,17 @@ specs:
 	@go run ./scripts/gen-spec.go
 .PHONY: specs
 
+docs-zetacored:
+	@echo "--> Generating zetacored documentation"
+	@bash ./scripts/gen-docs-zetacored.sh
+.PHONY: docs-zetacored
+
 mocks:
 	@echo "--> Generating mocks"
 	@bash ./scripts/mocks-generate.sh
+.PHONY: mocks
 
-generate: proto openapi specs
+generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################

@@ -54,7 +54,8 @@ func main() {
 
 	distributionList := make([]TokenDistribution, len(addresses))
 	for i, address := range addresses {
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		// #nosec G204
+		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
@@ -85,6 +86,7 @@ func main() {
 	args = append(args, []string{distributionList[0].TokensDistributed.String(), "--keyring-backend", "test", "--chain-id", chainID, "--yes",
 		"--broadcast-mode", broadcastMode, "--gas=auto", "--gas-adjustment=2", "--gas-prices=0.001azeta", "--node", node}...)
 
+	// #nosec G204
 	cmd := exec.Command("zetacored", args...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -97,7 +99,8 @@ func main() {
 	time.Sleep(7 * time.Second)
 
 	for i, address := range addresses {
-		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node) // #nosec G204
+		// #nosec G204
+		cmd := exec.Command("zetacored", "q", "bank", "balances", address, "--output", "json", "--denom", "azeta", "--node", node)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(cmd.String())
