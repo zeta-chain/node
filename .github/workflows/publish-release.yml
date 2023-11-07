@@ -116,7 +116,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          files: Release.txt
+          body: $(cat Release.txt)
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Create GitHub Release Hot Fix
@@ -144,125 +144,6 @@ jobs:
 #          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
 #          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
 
-  build-alpine:
-    #if: github.event.pull_request.merged == true
-    runs-on: ["ubuntu-latest"]
-    timeout-minutes: 30
-    concurrency:
-      group: "alpine-build-test"
-    needs:
-      - pre-release-checks
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
-
-      - name: Echo Release Notes from PR Message.
-        if: github.event_name == 'pull_request'
-        run: |
-          GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
-          echo "GITHUB_RELEASE_TEXT=${GITHUB_RELEASE_TEXT}" >> ${GITHUB_ENV}
-          echo -e ${GITHUB_RELEASE_TEXT} > Release.txt
-
-      - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
-
-      - name: Set Version for Hotfix Release from Input.
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
-        with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "false"
-
-      - uses: jirutka/setup-alpine@v1
-        with:
-          branch: v3.17
-          arch: x86_64
-          packages: >
-            build-base
-            pkgconf
-            lld
-            go
-            gcc
-            g++
-            libusb-dev
-            linux-headers
-            git
-          shell-name: alpine.sh
-
-      - name: Build zetacored and zetaclientd
-        env:
-          CGO_ENABLED: 1
-          GOOS: linux
-          GOARCH: ${{ env.CPU_ARCH }}
-        shell: alpine.sh --root {0}
-        run: |
-          git config --global --add safe.directory '*'
-          make install-testnet
-          cp "$HOME"/go/bin/* ./
-
-      - name: Binary Docker Test
-        env:
-          CPU_ARCH: ${{ env.CPU_ARCH }}
-        shell: alpine.sh --root {0}
-        run: |
-          chmod a+x ./zetacored
-          ./zetacored version
-          mv zetacored zetacored-testnet-alpine-$CPU_ARCH
-          mv zetaclientd zetaclientd-testnet-alpine-$CPU_ARCH
-
-      - name: Create GitHub Release on Pull Request
-        if: github.event_name == 'pull_request'
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-          body: ${{ env.GITHUB_RELEASE_TEXT }}
-          files: |
-            zetacored-*
-            zetaclientd-*
-
-      - name: Create GitHub Release Hot Fix
-        if: github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          generate_release_notes: true
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-          files: |
-            zetacored-*
-            zetaclientd-*
-
-      - name: Clean Up Alpine Workspace
-        if: always()
-        shell: alpine.sh --root {0}
-        run: |
-          set -e # fail on error
-          rm -rf *
-
-      - name: Clean Up Workspace
-        if: always()
-        shell: bash
-        run: rm -rf *
 
   announce-release:
     if: github.event.pull_request.merged == true
@@ -270,7 +151,6 @@ jobs:
     timeout-minutes: 10
     needs:
       - publish-release
-      - build-alpine
     steps:
       - uses: actions/checkout@v3
       - name: Get Version
