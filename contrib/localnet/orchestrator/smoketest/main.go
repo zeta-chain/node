@@ -271,13 +271,13 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	//
 	//smokeTest.TestDepositAndCallRefund()
 	//smokeTest.CheckZRC20ReserveAndSupply()
+	//
+	//smokeTest.TestERC20Deposit()
+	//smokeTest.CheckZRC20ReserveAndSupply()
 
-	smokeTest.TestERC20Deposit()
+	smokeTest.TestERC20Withdraw()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestERC20Withdraw()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
 	//smokeTest.TestSendZetaOut()
 	//smokeTest.CheckZRC20ReserveAndSupply()
 	//

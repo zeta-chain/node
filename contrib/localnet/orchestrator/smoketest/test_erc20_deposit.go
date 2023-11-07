@@ -4,16 +4,13 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
+	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
 func (sm *SmokeTest) TestERC20Deposit() {
@@ -65,12 +62,6 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		panic(err)
 	}
 	diff = big.NewInt(0).Sub(bal, initialBal)
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	supply, err = sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
 	if diff.Int64() != 1e10 {
 		panic(fmt.Sprintf("balance difference is not correct: %d", diff.Int64()))
 	}
@@ -169,109 +160,4 @@ func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 	}
 	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	return tx.Hash()
-}
-
-func (sm *SmokeTest) TestERC20Withdraw() {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
-	}()
-	LoudPrintf("Withdraw USDT ZRC20\n")
-	sm.WithdrawERC20()
-}
-
-func (sm *SmokeTest) WithdrawERC20() {
-	zevmClient := sm.zevmClient
-	goerliClient := sm.goerliClient
-	cctxClient := sm.cctxClient
-
-	usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err := usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
-
-	gasZRC20, gasFee, err := usdtZRC20.WithdrawGasFee(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("gasZRC20: %s, gasFee: %d\n", gasZRC20.Hex(), gasFee)
-
-	ethZRC20, err := zrc20.NewZRC20(gasZRC20, zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err = ethZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("balance of deployer on ETH ZRC20: %d\n", bal)
-	if bal.Int64() <= 0 {
-		panic("not enough ETH ZRC20 balance!")
-	}
-
-	// Approve
-	tx, err := ethZRC20.Approve(sm.zevmAuth, ethcommon.HexToAddress(USDTZRC20Addr), big.NewInt(1e18))
-	if err != nil {
-		panic(err)
-	}
-	receipt := MustWaitForTxReceipt(zevmClient, tx)
-	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
-	// Withdraw
-	tx, err = usdtZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
-	if err != nil {
-		panic(err)
-	}
-	receipt = MustWaitForTxReceipt(zevmClient, tx)
-	fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	for _, log := range receipt.Logs {
-		event, err := usdtZRC20.ParseWithdrawal(*log)
-		if err != nil {
-			continue
-		}
-		fmt.Printf("  logs: from %s, to %x, value %d, gasfee %d\n", event.From.Hex(), event.To, event.Value, event.Gasfee)
-	}
-
-	sm.wg.Add(1)
-	go func() {
-		defer sm.wg.Done()
-		cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), cctxClient)
-		fmt.Printf("outTx hash %s\n", cctx.GetCurrentOutTxParam().OutboundTxHash)
-
-		USDTERC20, err := erc20.NewUSDT(ethcommon.HexToAddress(USDTERC20Addr), goerliClient)
-		if err != nil {
-			panic(err)
-		}
-		bal, err = USDTERC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("USDT ERC20 bal: %d\n", bal)
-
-		receipt, err := sm.goerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-		for _, log := range receipt.Logs {
-			event, err := USDTERC20.ParseTransfer(*log)
-			if err != nil {
-				continue
-			}
-			fmt.Printf("  logs: from %s, to %s, value %d\n", event.From.Hex(), event.To.Hex(), event.Value)
-			if event.Value.Int64() != 100 {
-				panic("value is not correct")
-			}
-		}
-	}()
-	sm.wg.Wait()
 }
