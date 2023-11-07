@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -140,7 +141,11 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	if err != nil {
 		return err
 	}
-	ValidateZetaSupply(zs.logger, zs.AbortedTxAmount(), zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
+	abortedAmount, err := zs.AbortedTxAmount()
+	if err != nil {
+		return err
+	}
+	ValidateZetaSupply(zs.logger, abortedAmount, zetaInTransit, zs.genesisSupply, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmountInt)
 	return nil
 }
 
@@ -168,10 +173,10 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	return true
 }
 
-func (zs *ZetaSupplyChecker) AbortedTxAmount() sdkmath.Int {
+func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	cctxList, err := zs.zetaClient.GetCctxByStatus(types.CctxStatus_Aborted)
 	if err != nil {
-		panic(err)
+		return sdkmath.ZeroInt(), err
 	}
 	amount := sdkmath.ZeroUint()
 	for _, cctx := range cctxList {
@@ -179,9 +184,9 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() sdkmath.Int {
 	}
 	amountInt, ok := sdkmath.NewIntFromString(amount.String())
 	if !ok {
-		panic("error parsing amount")
+		return sdkmath.ZeroInt(), errors.New("error parsing amount")
 	}
-	return amountInt
+	return amountInt, nil
 }
 
 func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
