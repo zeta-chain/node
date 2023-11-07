@@ -36,7 +36,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, "cannot add block header")
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, msg.BlockHash)
 	}
 
 	bhs, found := k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
