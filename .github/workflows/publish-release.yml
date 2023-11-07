@@ -63,6 +63,8 @@ jobs:
         run: |
           GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
           echo -e ${GITHUB_RELEASE_TEXT} > ./Release.txt
+          echo "RELEASE_TEXT_PATH=$(pwd)/Release.txt" >> ${GITHUB_ENV}
+          echo "DEBUG RELEASE TEXT"
           cat ./Release.txt
 
       - name: Set Version from the PR title.
@@ -117,7 +119,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          body_path: ./Release.txt
+          body_path: ${{ env.RELEASE_TEXT_PATH }}
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Create GitHub Release Hot Fix
