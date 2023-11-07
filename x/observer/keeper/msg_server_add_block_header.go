@@ -41,7 +41,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	bhs, found := k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
 	if found && bhs.EarliestHeight > 0 && bhs.EarliestHeight < msg.Height {
-		phash, err := msg.Header.ParentHash()
+		pHash, err := msg.Header.ParentHash()
 		if err != nil {
 			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
 		}
