@@ -236,6 +236,7 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
+          body: ${{ env.GITHUB_RELEASE_TEXT }}
           files: |
             zetacored-*
             zetaclientd-*
