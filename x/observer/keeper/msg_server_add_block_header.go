@@ -39,7 +39,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", msg.BlockHash))
 	}
 
-	// if parent block header is not found, this tx is rejected
+	// if BlockHeaderState exists and parent block header is not found, this tx is rejected
 	// if no BlockHeaderState is found, allow this vote to pass through to create and initialize
 	// the Earliest/Latest height with this block header (after voting, not here)
 	// if BlockHeaderState is found, check if the block height is valid
