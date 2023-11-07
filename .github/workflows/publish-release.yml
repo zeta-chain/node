@@ -62,9 +62,7 @@ jobs:
         id: release_notes
         run: |
           GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
-          echo "GITHUB_RELEASE_TEXT=${GITHUB_RELEASE_TEXT}" >> ${GITHUB_ENV}
           echo -e ${GITHUB_RELEASE_TEXT} > Release.txt
-          echo "::set-output name=release_notes::${GITHUB_RELEASE_TEXT}"
 
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
@@ -118,7 +116,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          body: ${{ steps.release_notes.outputs.release_notes }}
+          body_path: Release.txt
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Create GitHub Release Hot Fix
