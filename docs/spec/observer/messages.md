@@ -2,9 +2,6 @@
 
 ## MsgAddObserver
 
-AddObserver adds in a new observer to the store.It can be executed using an admin policy account
-Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
-
 ```proto
 message MsgAddObserver {
 	string creator = 1;

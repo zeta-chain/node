@@ -1,11 +1,12 @@
 package types_test
 
 import (
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func TestNewMsgUpdateObserver(t *testing.T) {

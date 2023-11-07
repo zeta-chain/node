@@ -1,6 +1,10 @@
 package keeper_test
 
 import (
+	"math/rand"
+	"testing"
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/assert"
@@ -8,9 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"math/rand"
-	"testing"
-	"time"
 )
 
 func TestMsgServer_UpdateObserver(t *testing.T) {
