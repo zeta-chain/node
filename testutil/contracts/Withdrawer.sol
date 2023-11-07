@@ -14,7 +14,6 @@ contract Withdrawer {
         bytes calldata recipient,
         IZRC20 asset,
         uint256 amount,
-        bytes calldata message,
         uint256 count
     ) external {
         asset.transferFrom(msg.sender, address(this), amount * count);

@@ -17,11 +17,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "bytes",
-        "name": "message",
-        "type": "bytes"
-      },
-      {
         "internalType": "uint256",
         "name": "count",
         "type": "uint256"
