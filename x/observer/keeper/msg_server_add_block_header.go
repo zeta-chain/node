@@ -36,7 +36,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, msg.BlockHash)
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", msg.BlockHash))
 	}
 
 	bhs, found := k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
@@ -45,7 +45,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		if err != nil {
 			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
 		}
-		_, found = k.GetBlockHeader(ctx, phash)
+		_, found = k.GetBlockHeader(ctx, pHash)
 		if !found {
 			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
 		}
