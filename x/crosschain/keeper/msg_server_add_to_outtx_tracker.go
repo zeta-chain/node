@@ -61,7 +61,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 	if !IsPending(*cctx.CrossChainTx) {
 		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
-		return &types.MsgAddToOutTxTrackerResponse{}, nil
+		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
