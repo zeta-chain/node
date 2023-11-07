@@ -148,7 +148,8 @@ func CmdCCTXInboundVoter() *cobra.Command {
 
 			argsAsset := args[10]
 
-			argsEventIndex, err := strconv.ParseUint(args[11], 10, 64)
+			// parse argsp[11] to uint type and not uint64
+			argsEventIndex, err := strconv.ParseUint(args[11], 10, 32)
 			if err != nil {
 				return err
 			}

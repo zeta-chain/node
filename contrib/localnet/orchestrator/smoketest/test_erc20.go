@@ -72,7 +72,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	}
 	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
 	if diff.Int64() != 1e10 {
-		panic("balance is not correct")
+		panic(fmt.Sprintf("balance difference is not correct: %d", diff.Int64()))
 	}
 }
 
@@ -118,13 +118,13 @@ func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 
 func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 	// deploy depositor
-	_, _, depositor, err := testcontract.DeployDepositor(sm.goerliAuth, sm.goerliClient, sm.ERC20CustodyAddr)
+	depositorAddr, _, depositor, err := testcontract.DeployDepositor(sm.goerliAuth, sm.goerliClient, sm.ERC20CustodyAddr)
 	if err != nil {
 		panic(err)
 	}
 
 	// mint
-	tx, err := sm.USDTERC20.Mint(sm.goerliAuth, amount.Mul(amount, count))
+	tx, err := sm.USDTERC20.Mint(sm.goerliAuth, big.NewInt(0).Mul(amount, count))
 	if err != nil {
 		panic(err)
 	}
@@ -134,8 +134,22 @@ func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 	}
 	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
 
+	// approve
+	tx, err = sm.USDTERC20.Approve(sm.goerliAuth, depositorAddr, big.NewInt(1e10))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
+	if receipt.Status == 0 {
+		panic("approve failed")
+	}
+	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
+
 	// deposit
 	tx, err = depositor.RunDeposits(sm.goerliAuth, DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, []byte{}, count)
+	if err != nil {
+		panic(err)
+	}
 	receipt = MustWaitForTxReceipt(sm.goerliClient, tx)
 	if receipt.Status == 0 {
 		panic("deposits failed")
