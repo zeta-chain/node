@@ -17,23 +17,33 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 
 func CreateZetaBridge(cfg *config.Config) (*zetaclient.ZetaCoreBridge, error) {
 	chainIP := cfg.ZetaCoreURL
+
 	kb, _, err := zetaclient.GetKeyringKeybase(cfg)
 	if err != nil {
 		return nil, err
 	}
+
 	granterAddreess, err := cosmos.AccAddressFromBech32(cfg.AuthzGranter)
 	if err != nil {
 		return nil, err
 	}
-	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, cfg.SignerPass)
+
+	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey)
+
 	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, cfg.AuthzHotkey, cfg.ChainID)
 	if err != nil {
 		return nil, err
 	}
+
 	return bridge, nil
 }
 
-func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *config.Config, ts *zetaclient.TelemetryServer) (map[common.Chain]zetaclient.ChainSigner, error) {
+func CreateSignerMap(
+	tss zetaclient.TSSSigner,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *zetaclient.TelemetryServer,
+) (map[common.Chain]zetaclient.ChainSigner, error) {
 	signerMap := make(map[common.Chain]zetaclient.ChainSigner)
 	// EVM signers
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {
@@ -63,7 +73,15 @@ func CreateSignerMap(tss zetaclient.TSSSigner, logger zerolog.Logger, cfg *confi
 	return signerMap, nil
 }
 
-func CreateChainClientMap(bridge *zetaclient.ZetaCoreBridge, tss zetaclient.TSSSigner, dbpath string, metrics *metrics.Metrics, logger zerolog.Logger, cfg *config.Config, ts *zetaclient.TelemetryServer) (map[common.Chain]zetaclient.ChainClient, error) {
+func CreateChainClientMap(
+	bridge *zetaclient.ZetaCoreBridge,
+	tss zetaclient.TSSSigner,
+	dbpath string,
+	metrics *metrics.Metrics,
+	logger zerolog.Logger,
+	cfg *config.Config,
+	ts *zetaclient.TelemetryServer,
+) (map[common.Chain]zetaclient.ChainClient, error) {
 	clientMap := make(map[common.Chain]zetaclient.ChainClient)
 	// EVM clients
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {

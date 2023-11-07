@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
 
@@ -18,6 +19,20 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	chain := common.GetChainFromChainID(msg.ChainId)
 	if ok := k.IsAuthorized(ctx, msg.Creator, chain); !ok {
 		return nil, types.ErrNotAuthorizedPolicy
+	}
+
+	crosschainFlags, found := k.GetCrosschainFlags(ctx)
+	if !found {
+		return nil, fmt.Errorf("crosschain flags not found")
+	}
+	if crosschainFlags.BlockHeaderVerificationFlags == nil {
+		return nil, fmt.Errorf("block header verification flags not found")
+	}
+	if common.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
+	}
+	if common.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
 	// add vote to ballot
@@ -37,7 +52,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	/**
 	 * Vote finalized, add block header to store
 	 */
-	_, found := k.GetBlockHeader(ctx, msg.BlockHash)
+	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
 	if found {
 		hashString, err := common.HashToString(msg.ChainId, msg.BlockHash)
 		if err != nil {

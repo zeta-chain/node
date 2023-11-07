@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -19,21 +20,22 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
+// HotkeyPasswordEnvVar is the environment variable used to retrieve the password for the hotkey
+const HotkeyPasswordEnvVar = "HOTKEY_PASSWORD"
+
 // Keys manages all the keys used by zeta client
 type Keys struct {
 	signerName      string
-	password        string // TODO this is a bad way , need to fix it
 	kb              ckeys.Keyring
-	operatorAddress sdk.AccAddress
+	OperatorAddress sdk.AccAddress
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName, password string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string) *Keys {
 	return &Keys{
 		signerName:      granteeName,
-		password:        password,
 		kb:              kb,
-		operatorAddress: granterAddress,
+		OperatorAddress: granterAddress,
 	}
 }
 
@@ -45,54 +47,66 @@ func GetGranteeKeyName(signerName string) string {
 func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
 	granteeName := cfg.AuthzHotkey
 	chainHomeFolder := cfg.ZetaCoreHome
-	password := cfg.SignerPass
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
 	if len(granteeName) == 0 {
 		return nil, "", fmt.Errorf("signer name is empty")
 	}
-	if len(password) == 0 {
-		return nil, "", fmt.Errorf("password is empty")
+
+	// read password from env if using keyring backend file
+	buf := bytes.NewBufferString("")
+	if cfg.KeyringBackend == config.KeyringBackendFile {
+		password, err := getHotkeyPassword()
+		if err != nil {
+			return nil, "", err
+		}
+		buf.WriteString(password)
+		buf.WriteByte('\n') // the library used by keyring is using ReadLine , which expect a new line
+		buf.WriteString(password)
+		buf.WriteByte('\n')
 	}
 
-	buf := bytes.NewBufferString(password)
-	// the library used by keyring is using ReadLine , which expect a new line
-	buf.WriteByte('\n')
-	buf.WriteString(password)
-	buf.WriteByte('\n')
-	kb, err := getKeybase(chainHomeFolder, buf)
+	kb, err := getKeybase(chainHomeFolder, buf, cfg.KeyringBackend)
 	if err != nil {
 		return nil, "", fmt.Errorf("fail to get keybase,err:%w", err)
 	}
+
 	oldStdIn := os.Stdin
 	defer func() {
 		os.Stdin = oldStdIn
 	}()
 	os.Stdin = nil
+
 	logger.Debug().Msgf("Checking for Hotkey Key: %s \nFolder %s\nBackend %s", granteeName, chainHomeFolder, kb.Backend())
 	rc, err := kb.Key(granteeName)
 	if err != nil {
-		return nil, "", fmt.Errorf("key not presnt with name (%s): %w", granteeName, err)
+		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)
 	}
+
 	pubkeyBech32, err := common.GetPubkeyBech32FromRecord(rc)
 	if err != nil {
 		return nil, "", fmt.Errorf("fail to get pubkey from record,err:%w", err)
 	}
+
 	return kb, pubkeyBech32, nil
 }
 
 // getKeybase will create an instance of Keybase
-func getKeybase(zetaCoreHome string, reader io.Reader) (ckeys.Keyring, error) {
+func getKeybase(zetaCoreHome string, reader io.Reader, keyringBackend config.KeyringBackend) (ckeys.Keyring, error) {
 	cliDir := zetaCoreHome
 	if len(zetaCoreHome) == 0 {
 		return nil, fmt.Errorf("zetaCoreHome is empty")
 	}
-	//FIXME: BackendTest is used for convenient testing with Starport generated accouts.
-	// Change to BackendFile with password!
-
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	return ckeys.New(sdk.KeyringServiceName(), ckeys.BackendTest, cliDir, reader, cdc)
+
+	// create a new keybase based on the selected backend
+	backend := ckeys.BackendTest
+	if keyringBackend == config.KeyringBackendFile {
+		backend = ckeys.BackendFile
+	}
+
+	return ckeys.New(sdk.KeyringServiceName(), backend, cliDir, reader, cdc)
 }
 
 // GetSignerInfo return signer info
@@ -106,7 +120,7 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 }
 
 func (k *Keys) GetOperatorAddress() sdk.AccAddress {
-	return k.operatorAddress
+	return k.OperatorAddress
 }
 
 func (k *Keys) GetAddress() sdk.AccAddress {
@@ -124,13 +138,17 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 
 // GetPrivateKey return the private key
 func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
-	// return k.kb.ExportPrivateKeyObject(k.signerName)
-	signer := GetGranteeKeyName(k.signerName)
-	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, k.password)
+	password, err := k.GetHotkeyPassword()
 	if err != nil {
 		return nil, err
 	}
-	priKey, _, err := crypto.UnarmorDecryptPrivKey(privKeyArmor, k.password)
+
+	signer := GetGranteeKeyName(k.signerName)
+	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, password)
+	if err != nil {
+		return nil, err
+	}
+	priKey, _, err := crypto.UnarmorDecryptPrivKey(privKeyArmor, password)
 	if err != nil {
 		return nil, fmt.Errorf("fail to unarmor private key: %w", err)
 	}
@@ -163,4 +181,29 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil
+}
+
+// GetHotkeyPassword returns the password to be used
+// returns empty if no password is needed
+func (k *Keys) GetHotkeyPassword() (string, error) {
+	if k.GetKeybase().Backend() == ckeys.BackendFile {
+		return getHotkeyPassword()
+	}
+	return "", nil
+}
+
+// getHotkeyPassword retrieves the HOTKEY_PASSWORD environment variable
+// and returns an error if it's not defined or shorter than 8 characters.
+func getHotkeyPassword() (string, error) {
+	password := os.Getenv(HotkeyPasswordEnvVar)
+
+	if password == "" {
+		return "", errors.New("HOTKEY_PASSWORD environment variable is not defined, use --keyring-backend-test to use the test keyring")
+	}
+
+	if len(password) < 8 {
+		return "", errors.New("HOTKEY_PASSWORD should be at least 8 characters long")
+	}
+
+	return password, nil
 }

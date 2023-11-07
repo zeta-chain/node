@@ -20,7 +20,7 @@ func TestNewMsgMigrateTssFunds(t *testing.T) {
 			name: "invalid creator",
 			msg: types.MsgMigrateTssFunds{
 				Creator: "invalid_address",
-				ChainId: common.GoerliChain().ChainId,
+				ChainId: common.DefaultChainsList()[0].ChainId,
 				Amount:  sdkmath.NewUintFromString("100000"),
 			},
 			error: true,
@@ -38,7 +38,7 @@ func TestNewMsgMigrateTssFunds(t *testing.T) {
 			name: "valid msg",
 			msg: types.MsgMigrateTssFunds{
 				Creator: "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				ChainId: common.GoerliChain().ChainId,
+				ChainId: common.DefaultChainsList()[0].ChainId,
 				Amount:  sdkmath.NewUintFromString("100000"),
 			},
 			error: false,

@@ -37,6 +37,7 @@ func CrosschainKeeperWithMocks(
 	t testing.TB,
 	mockOptions CrosschainMockOptions,
 ) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
+	SetConfig(false)
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 

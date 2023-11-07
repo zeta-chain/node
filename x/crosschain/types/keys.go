@@ -54,6 +54,7 @@ const (
 	TSSHistoryKey = "TSS-History-value-"
 
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
+	InTxTrackerKeyPrefix  = "InTxTracker-value-"
 
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
