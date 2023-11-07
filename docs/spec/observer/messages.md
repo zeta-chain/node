@@ -14,6 +14,17 @@ message MsgAddObserver {
 }
 ```
 
+## MsgUpdateObserver
+
+```proto
+message MsgUpdateObserver {
+	string creator = 1;
+	string old_observer_address = 2;
+	string new_observer_address = 3;
+	ObserverUpdateReason update_reason = 4;
+}
+```
+
 ## MsgUpdateCoreParams
 
 UpdateCoreParams updates core parameters for a specific chain. Core parameters include

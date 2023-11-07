@@ -73,7 +73,6 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	if !found {
 		return types.ErrNotValidator
 	}
-
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err

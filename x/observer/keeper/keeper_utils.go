@@ -85,7 +85,23 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 		return types.ErrValidatorStatus
 	}
 	return nil
+}
 
+func (k Keeper) IsOperatorTombstoned(ctx sdk.Context, creator string) (bool, error) {
+	valAddress, err := types.GetOperatorAddressFromAccAddress(creator)
+	if err != nil {
+		return false, err
+	}
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if !found {
+		return false, types.ErrNotValidator
+	}
+
+	consAddress, err := validator.GetConsAddr()
+	if err != nil {
+		return false, err
+	}
+	return k.slashingKeeper.IsTombstoned(ctx, consAddress), nil
 }
 
 func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {
