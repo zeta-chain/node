@@ -83,7 +83,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	/**
 	 * Vote finalized, add block header to store
 	 */
-
+	bhs, found = k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
 	if !found {
 		bhs = types.BlockHeaderState{
 			ChainId:         msg.ChainId,
