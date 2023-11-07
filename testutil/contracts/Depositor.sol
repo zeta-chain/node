@@ -16,7 +16,7 @@ interface ERC20Custody {
 }
 
 // Sample contract for running deposit on EVM
-contract Example {
+contract Depositor {
     ERC20Custody immutable private _custody;
 
     constructor(address custody_) {
