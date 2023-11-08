@@ -1,8 +1,35 @@
-<% if (github.baseRef == 'main') { %>
+# 📜📜📜📜📜📜Checklist📜📜📜📜📜📜
 
-# ZetaChain Release v[version number]
+## Description
 
-We are excited to announce the release of ZetaChain v[version number], which includes numerous updates and enhancements that make our network more robust, secure, and user-friendly.
+Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
+
+Closes: <PD-XXXX>
+
+## Type of change
+
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] This change requires a documentation update
+
+# How Has This Been Tested?
+
+Please describe the tests that you ran to verify your changes. Include instructions and any relevant details so others can reproduce. 
+
+- [ ] Tested CCTX in localnet
+- [ ] Tested in development environment
+- [ ] Go unit tests
+- [ ] Go integration tests
+- [ ] Tested via GitHub Actions 
+
+# Checklist:
+
+- [ ] I have added unit tests that prove my fix feature works
+
+---------
+
+# 🚀🚀🚀🚀🚀🚀RELEASE NOTES🚀🚀🚀🚀🚀🚀🚀
 
 ## 🚀 New Features
 - **Feature 1**: Describe the feature and how it improves the network.
@@ -35,11 +62,6 @@ We are excited to announce the release of ZetaChain v[version number], which inc
 ## 🙏 Acknowledgements
 - Thanks to contributors!
 
-## 🔗 Relevant Links
-- [Link to full changelog](#)
-- [Link to installation or upgrade guide](#)
-- [Link to the migration guide](#)
-
 ## 💬 Get in touch
 - Join our community on [Discord/Telegram/Forum] to discuss this release.
 
@@ -51,38 +73,3 @@ This project is licensed under the MIT License - see the [LICENSE.md](https://ra
 
 ## ✨ How to Contribute
 Interested in contributing to the ZetaChain? Check out our [contributing guidelines](#).
-
----
-
-We look forward to seeing how these updates will improve your experience with ZetaChain. As always, we value your feedback and contributions to our growing community.
-
-<% } else if (github.baseRef != 'main') { %>
-
-# Description
-
-Please include a summary of the changes and the related issue. Please also include relevant motivation and context. List any dependencies that are required for this change.
-
-Closes: <PD-XXXX>
-
-## Type of change
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
-
-# How Has This Been Tested?
-
-Please describe the tests that you ran to verify your changes. Include instructions and any relevant details so others can reproduce. 
-
-- [ ] Tested CCTX in localnet
-- [ ] Tested in development environment
-- [ ] Go unit tests
-- [ ] Go integration tests
-- [ ] Tested via GitHub Actions 
-
-# Checklist:
-
-- [ ] I have added unit tests that prove my fix feature works
-
-<% } %>
