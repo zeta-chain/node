@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -23,7 +24,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -35,8 +40,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		})
 
 		chains := k.GetParams(ctx).GetSupportedChains()
+
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
+
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
+
 		count := uint64(0)
 		for _, chain := range chains {
 			k.SetObserverMapper(ctx, &types.ObserverMapper{
@@ -53,19 +63,72 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Count: count,
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
+			Creator:            accAddressOfValidator.String(),
+			OldObserverAddress: accAddressOfValidator.String(),
+			NewObserverAddress: newOperatorAddress.String(),
+			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
+		})
+		assert.NoError(t, err)
+		acc, found := k.GetNodeAccount(ctx, newOperatorAddress.String())
+		assert.True(t, found)
+		assert.Equal(t, newOperatorAddress.String(), acc.Operator)
+	})
+
+	t.Run("unable to update to a non validator address", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		srv := keeper.NewMsgServerImpl(*k)
+		// #nosec G404 test purpose - weak randomness is not an issue here
+		r := rand.New(rand.NewSource(9))
+
+		// Set validator in the store
+		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		k.GetStakingKeeper().SetValidator(ctx, validator)
+
+		consAddress, err := validator.GetConsAddr()
+		assert.NoError(t, err)
+		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:             consAddress.String(),
+			StartHeight:         0,
+			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
+			Tombstoned:          true,
+			MissedBlocksCounter: 1,
+		})
+
+		chains := k.GetParams(ctx).GetSupportedChains()
+
+		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		assert.NoError(t, err)
+
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
+
+		count := uint64(0)
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  []string{accAddressOfValidator.String()},
+			})
+			count += 1
+		}
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator: accAddressOfValidator.String(),
+		})
+
+		k.SetLastObserverCount(ctx, &types.LastObserverCount{
+			Count: count,
+		})
 
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            accAddressOfValidator.String(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 		})
-		assert.NoError(t, err)
-		acc, found := k.GetNodeAccount(ctx, newOperatorAddress)
-		assert.True(t, found)
-		assert.Equal(t, newOperatorAddress, acc.Operator)
+		assert.ErrorIs(t, err, types.ErrUpdateObserver)
 	})
+
 	t.Run("unable to update tombstoned validator with with non operator account", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
@@ -74,7 +137,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -104,12 +171,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Count: count,
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            sample.AccAddress(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 		})
 		assert.ErrorIs(t, err, types.ErrUpdateObserver)
@@ -122,7 +190,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -152,12 +224,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Count: count,
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            accAddressOfValidator.String(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 		})
 		assert.ErrorIs(t, err, types.ErrUpdateObserver)
@@ -170,7 +243,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -197,12 +274,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Count: count,
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            accAddressOfValidator.String(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 		})
 		assert.ErrorIs(t, err, types.ErrNodeAccountNotFound)
@@ -215,7 +293,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -242,12 +324,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Operator: accAddressOfValidator.String(),
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            accAddressOfValidator.String(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
 		})
 		assert.ErrorIs(t, err, types.ErrLastObserverCountNotFound)
@@ -263,7 +346,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -290,7 +377,8 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Operator: accAddressOfValidator.String(),
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{
 			Count: count,
@@ -299,13 +387,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            admin,
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
 		})
 		assert.NoError(t, err)
-		acc, found := k.GetNodeAccount(ctx, newOperatorAddress)
+		acc, found := k.GetNodeAccount(ctx, newOperatorAddress.String())
 		assert.True(t, found)
-		assert.Equal(t, newOperatorAddress, acc.Operator)
+		assert.Equal(t, newOperatorAddress.String(), acc.Operator)
 	})
 	t.Run("fail to update observer using regular account and update type admin", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -316,7 +404,11 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		// Set validator in the store
 		validator := sample.Validator(t, r)
+		validatorNew := sample.Validator(t, r)
+		validatorNew.Status = stakingtypes.Bonded
+		k.GetStakingKeeper().SetValidator(ctx, validatorNew)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
+
 		consAddress, err := validator.GetConsAddr()
 		assert.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
@@ -343,7 +435,8 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Operator: accAddressOfValidator.String(),
 		})
 
-		newOperatorAddress := sample.AccAddress()
+		newOperatorAddress, err := types.GetAccAddressFromOperatorAddress(validatorNew.OperatorAddress)
+		assert.NoError(t, err)
 
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{
 			Count: count,
@@ -352,7 +445,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
 			Creator:            sample.AccAddress(),
 			OldObserverAddress: accAddressOfValidator.String(),
-			NewObserverAddress: newOperatorAddress,
+			NewObserverAddress: newOperatorAddress.String(),
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
 		})
 		assert.ErrorIs(t, err, types.ErrUpdateObserver)

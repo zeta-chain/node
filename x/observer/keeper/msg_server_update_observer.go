@@ -14,9 +14,14 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 
 	chains := k.GetParams(ctx).GetSupportedChains()
 	for _, chain := range chains {
-		if !k.IsAuthorized(ctx, msg.OldObserverAddress, chain) {
+		if !k.IsObserverPresentInMappers(ctx, msg.OldObserverAddress, chain) {
 			return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized for chain : %s", chain.String()))
 		}
+	}
+
+	err := k.IsValidator(ctx, msg.NewObserverAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUpdateObserver, err.Error())
 	}
 
 	ok, err := k.CheckUpdateReason(ctx, msg)

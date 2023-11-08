@@ -14,7 +14,7 @@ var (
 
 	ErrObserverNotPresent      = errorsmod.Register(ModuleName, 1105, "observer for type and observation does not exist")
 	ErrNotValidator            = errorsmod.Register(ModuleName, 1106, "user needs to be a validator before applying to become an observer")
-	ErrValidatorStatus         = errorsmod.Register(ModuleName, 1107, "corresponding validator needs to be bonded and not jailerd")
+	ErrValidatorStatus         = errorsmod.Register(ModuleName, 1107, "corresponding validator needs to be bonded and not jailed")
 	ErrInvalidAddress          = errorsmod.Register(ModuleName, 1108, "invalid Address")
 	ErrSelfDelegation          = errorsmod.Register(ModuleName, 1109, "self Delegation for operator not found")
 	ErrCheckObserverDelegation = errorsmod.Register(ModuleName, 1110, "observer delegation not sufficient")
