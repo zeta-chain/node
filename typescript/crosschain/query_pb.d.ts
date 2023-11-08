@@ -5,17 +5,65 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { CctxStatus, CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { TSS } from "./tss_pb.js";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
-import type { CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PendingNonces } from "./nonce_to_cctx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusRequest
+ */
+export declare class QueryCctxByStatusRequest extends Message<QueryCctxByStatusRequest> {
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.CctxStatus status = 1;
+   */
+  status: CctxStatus;
+
+  constructor(data?: PartialMessage<QueryCctxByStatusRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryCctxByStatusRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCctxByStatusRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCctxByStatusRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCctxByStatusRequest;
+
+  static equals(a: QueryCctxByStatusRequest | PlainMessage<QueryCctxByStatusRequest> | undefined, b: QueryCctxByStatusRequest | PlainMessage<QueryCctxByStatusRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusResponse
+ */
+export declare class QueryCctxByStatusResponse extends Message<QueryCctxByStatusResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTx = 1;
+   */
+  CrossChainTx: CrossChainTx[];
+
+  constructor(data?: PartialMessage<QueryCctxByStatusResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryCctxByStatusResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCctxByStatusResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCctxByStatusResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCctxByStatusResponse;
+
+  static equals(a: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined, b: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.crosschain.QueryTssHistoryRequest
