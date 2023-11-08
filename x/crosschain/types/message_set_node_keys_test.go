@@ -28,7 +28,7 @@ func TestMsgSetNodeKeys_ValidateBasic(t *testing.T) {
 	_, err := kb.NewAccount(mc.GetGranteeKeyName("signerName"), testdata.TestMnemonic, "", path, hd.Secp256k1)
 	require.NoError(t, err)
 	granterAddress := sdk.AccAddress(crypto.AddressHash([]byte("granterAddress")))
-	k := mc.NewKeysWithKeybase(kb, granterAddress, "signerName")
+	k := mc.NewKeysWithKeybase(kb, granterAddress, "signerName", false)
 	pubKeySet, err := k.GetPubKeySet()
 	assert.NoError(t, err)
 	addr, err := k.GetSignerInfo().GetAddress()

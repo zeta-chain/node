@@ -37,7 +37,7 @@ func (s *MySuite) SetUpTest(c *C) {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
 	}
 
-	k := NewKeysWithKeybase(kb, signerName, signerPass)
+	k := NewKeysWithKeybase(kb, signerName, signerPass, false)
 	//log.Info().Msgf("keybase: %s", k.GetSignerInfo().GetAddress())
 
 	chainIP := os.Getenv("CHAIN_IP")

@@ -45,7 +45,7 @@ func (s *VoterSuite) SetUpTest(c *C) {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := NewKeysWithKeybase(kb, signerName, signerPass, false)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
@@ -68,7 +68,7 @@ func (s *VoterSuite) SetUpTest(c *C) {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := NewKeysWithKeybase(kb, signerName, signerPass, false)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
