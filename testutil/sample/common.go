@@ -30,7 +30,7 @@ func PubKeySet() *common.PubKeySet {
 	return &pubKeySet
 }
 
-func EthHeader() (headerRLP []byte, err error) {
+func EthHeader() (header1, header2, header3 *ethtypes.Header, err error) {
 	url := "https://rpc.ankr.com/eth_goerli"
 	client, err := ethclient.Dial(url)
 	if err != nil {
@@ -41,7 +41,19 @@ func EthHeader() (headerRLP []byte, err error) {
 	if err != nil {
 		return
 	}
-	headerRLP, _ = rlp.EncodeToBytes(block.Header())
+	header1 = block.Header()
+
+	block, err = client.BlockByNumber(context.Background(), big.NewInt(bn+1))
+	if err != nil {
+		return
+	}
+	header2 = block.Header()
+
+	block, err = client.BlockByNumber(context.Background(), big.NewInt(bn+2))
+	if err != nil {
+		return
+	}
+	header2 = block.Header()
 	return
 }
 

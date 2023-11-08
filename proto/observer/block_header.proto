@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "gogoproto/gogo.proto";
+import "observer/observer.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+message BlockHeaderState {
+  int64 chain_id = 1;
+  int64 latest_height = 2;
+  int64 earliest_height = 3;
+  bytes latest_block_hash = 4;
+}
