@@ -82,6 +82,7 @@ func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newOb
 	observerMappers := k.GetAllObserverMappers(ctx)
 	for _, om := range observerMappers {
 		UpdateObserverList(om.ObserverList, oldObserverAddress, newObserverAddress)
+		k.SetObserverMapper(ctx, om)
 	}
 }
 

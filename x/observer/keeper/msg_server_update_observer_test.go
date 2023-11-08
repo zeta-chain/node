@@ -15,7 +15,7 @@ import (
 )
 
 func TestMsgServer_UpdateObserver(t *testing.T) {
-	t.Run("update tombstoned observer", func(t *testing.T) {
+	t.Run("successfully update tombstoned observer", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
@@ -65,6 +65,54 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		acc, found := k.GetNodeAccount(ctx, newOperatorAddress)
 		assert.True(t, found)
 		assert.Equal(t, newOperatorAddress, acc.Operator)
+	})
+	t.Run("unable to update tombstoned validator with with non operator account", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		srv := keeper.NewMsgServerImpl(*k)
+		// #nosec G404 test purpose - weak randomness is not an issue here
+		r := rand.New(rand.NewSource(9))
+
+		// Set validator in the store
+		validator := sample.Validator(t, r)
+		k.GetStakingKeeper().SetValidator(ctx, validator)
+		consAddress, err := validator.GetConsAddr()
+		assert.NoError(t, err)
+		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
+			Address:             consAddress.String(),
+			StartHeight:         0,
+			JailedUntil:         ctx.BlockHeader().Time.Add(1000000 * time.Second),
+			Tombstoned:          true,
+			MissedBlocksCounter: 1,
+		})
+
+		chains := k.GetParams(ctx).GetSupportedChains()
+		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		assert.NoError(t, err)
+		count := uint64(0)
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  []string{accAddressOfValidator.String()},
+			})
+			count += 1
+		}
+		k.SetNodeAccount(ctx, types.NodeAccount{
+			Operator: accAddressOfValidator.String(),
+		})
+
+		k.SetLastObserverCount(ctx, &types.LastObserverCount{
+			Count: count,
+		})
+
+		newOperatorAddress := sample.AccAddress()
+
+		_, err = srv.UpdateObserver(sdk.WrapSDKContext(ctx), &types.MsgUpdateObserver{
+			Creator:            sample.AccAddress(),
+			OldObserverAddress: accAddressOfValidator.String(),
+			NewObserverAddress: newOperatorAddress,
+			UpdateReason:       types.ObserverUpdateReason_Tombstoned,
+		})
+		assert.ErrorIs(t, err, types.ErrUpdateObserver)
 	})
 	t.Run("unable to update non-tombstoned observer with update reason tombstoned", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -308,5 +356,39 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
 		})
 		assert.ErrorIs(t, err, types.ErrUpdateObserver)
+	})
+}
+
+func TestUpdateObserverList(t *testing.T) {
+	t.Run("update observer list", func(t *testing.T) {
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		list := []string{sample.AccAddress(), sample.AccAddress(), sample.AccAddress(), oldObserverAddress}
+		assert.Equal(t, oldObserverAddress, list[3])
+		keeper.UpdateObserverList(list, oldObserverAddress, newObserverAddress)
+		assert.Equal(t, 4, len(list))
+		assert.Equal(t, newObserverAddress, list[3])
+	})
+}
+
+func TestKeeper_UpdateObserverAddress(t *testing.T) {
+	t.Run("update observer address", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		chains := k.GetParams(ctx).GetSupportedChains()
+		observerList := []string{sample.AccAddress(), sample.AccAddress(), sample.AccAddress(), oldObserverAddress}
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  observerList,
+			})
+		}
+		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		observerMappers := k.GetAllObserverMappers(ctx)
+		for _, om := range observerMappers {
+			assert.Equal(t, 4, len(om.ObserverList))
+			assert.Equal(t, newObserverAddress, om.ObserverList[3])
+		}
 	})
 }
