@@ -1,5 +1,4 @@
 <% if (github.baseRef == 'main') { %>
-
 # ZetaChain Release v[version number]
 
 We are excited to announce the release of ZetaChain v[version number], which includes numerous updates and enhancements that make our network more robust, secure, and user-friendly.
