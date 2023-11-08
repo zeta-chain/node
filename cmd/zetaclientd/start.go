@@ -203,15 +203,11 @@ func start(_ *cobra.Command, _ []string) error {
 	isNodeActive := false
 	for _, observer := range observerList {
 		if observer == zetaBridge.GetKeys().GetOperatorAddress().String() {
-			startLogger.Info().Msgf("Observer %s is active", zetaBridge.GetKeys().GetOperatorAddress().String())
 			isNodeActive = true
 			break
 		}
 	}
-	if !isNodeActive {
-		startLogger.Error().Msgf("Node %s is not an active observer", zetaBridge.GetKeys().GetOperatorAddress().String())
-		//return errors.New("Node is not an active observer")
-	}
+
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
 	if err != nil {
@@ -232,7 +228,11 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
-	if isNodeActive {
+
+	if !isNodeActive {
+		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", zetaBridge.GetKeys().GetOperatorAddress().String())
+	} else {
+		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetaBridge.GetKeys().GetOperatorAddress().String())
 		for _, v := range chainClientMap {
 			v.Start()
 		}
