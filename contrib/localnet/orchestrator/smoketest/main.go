@@ -265,60 +265,60 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// The following tests are optional tests; comment out the ones you don't want to run
 	// temporarily to reduce dev/test cycle turnaround time
 
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestContextUpgrade()
-	//
-	//smokeTest.TestDepositAndCallRefund()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestERC20Deposit()
-	//smokeTest.CheckZRC20ReserveAndSupply()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestContextUpgrade()
+
+	smokeTest.TestDepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20Deposit()
+	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestERC20Withdraw()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	//smokeTest.TestSendZetaOut()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestSendZetaOutBTCRevert()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestMessagePassing()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestZRC20Swap()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestBitcoinWithdraw()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestCrosschainSwap()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestMessagePassingRevertFail()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestMessagePassingRevertSuccess()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestPauseZRC20()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestERC20DepositAndCallRefund()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestUpdateBytecode()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestEtherDepositAndCall()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//smokeTest.TestDepositEtherLiquidityCap()
-	//smokeTest.CheckZRC20ReserveAndSupply()
-	//
-	//// add your dev test here
-	//smokeTest.TestMyTest()
+	smokeTest.TestSendZetaOut()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestSendZetaOutBTCRevert()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestMessagePassing()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestZRC20Swap()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestBitcoinWithdraw()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestCrosschainSwap()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestMessagePassingRevertFail()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestMessagePassingRevertSuccess()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestPauseZRC20()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestERC20DepositAndCallRefund()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestUpdateBytecode()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestEtherDepositAndCall()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	smokeTest.TestDepositEtherLiquidityCap()
+	smokeTest.CheckZRC20ReserveAndSupply()
+
+	// add your dev test here
+	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
 }

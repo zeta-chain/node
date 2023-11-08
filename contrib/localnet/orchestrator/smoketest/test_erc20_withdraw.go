@@ -6,8 +6,6 @@ package main
 import (
 	"context"
 	"fmt"
-	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
 
@@ -15,6 +13,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
+	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (sm *SmokeTest) TestERC20Withdraw() {
@@ -22,39 +22,25 @@ func (sm *SmokeTest) TestERC20Withdraw() {
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
-	LoudPrintf("Withdraw USDT ZRC20\n")
-	sm.WithdrawERC20()
 
-	LoudPrintf("Multiple withdraws USDT ZRC20\n")
-	sm.MultipleWithdraws()
-}
-
-func (sm *SmokeTest) WithdrawERC20() {
-	zevmClient := sm.zevmClient
-	cctxClient := sm.cctxClient
-
-	usdtZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(USDTZRC20Addr), zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	bal, err := usdtZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
-	supply, err := usdtZRC20.TotalSupply(&bind.CallOpts{})
+	supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
 
-	gasZRC20, gasFee, err := usdtZRC20.WithdrawGasFee(&bind.CallOpts{})
+	gasZRC20, gasFee, err := sm.USDTZRC20.WithdrawGasFee(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("gasZRC20: %s, gasFee: %d\n", gasZRC20.Hex(), gasFee)
 
-	ethZRC20, err := zrc20.NewZRC20(gasZRC20, zevmClient)
+	ethZRC20, err := zrc20.NewZRC20(gasZRC20, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
@@ -67,23 +53,34 @@ func (sm *SmokeTest) WithdrawERC20() {
 		panic("not enough ETH ZRC20 balance!")
 	}
 
+	LoudPrintf("Withdraw USDT ZRC20\n")
+	sm.WithdrawERC20(ethZRC20)
+
+	LoudPrintf("Multiple withdraws USDT ZRC20\n")
+	sm.MultipleWithdraws(ethZRC20)
+}
+
+func (sm *SmokeTest) WithdrawERC20(ethZRC20 *zrc20.ZRC20) {
 	// approve
 	tx, err := ethZRC20.Approve(sm.zevmAuth, ethcommon.HexToAddress(USDTZRC20Addr), big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := MustWaitForTxReceipt(zevmClient, tx)
+	receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("approve failed")
+	}
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// withdraw
-	tx, err = usdtZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
+	tx, err = sm.USDTZRC20.Withdraw(sm.zevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}
-	receipt = MustWaitForTxReceipt(zevmClient, tx)
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := usdtZRC20.ParseWithdrawal(*log)
+		event, err := sm.USDTZRC20.ParseWithdrawal(*log)
 		if err != nil {
 			continue
 		}
@@ -91,11 +88,11 @@ func (sm *SmokeTest) WithdrawERC20() {
 	}
 
 	// verify the withdraw value
-	cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), cctxClient)
+	cctx := WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.cctxClient)
 	sm.verifyTransferAmountFromCCTX(cctx, 100)
 }
 
-func (sm *SmokeTest) MultipleWithdraws() {
+func (sm *SmokeTest) MultipleWithdraws(ethZRC20 *zrc20.ZRC20) {
 	// deploy withdrawer
 	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(sm.zevmAuth, sm.zevmClient)
 	if err != nil {
@@ -112,6 +109,28 @@ func (sm *SmokeTest) MultipleWithdraws() {
 		panic("approve failed")
 	}
 	fmt.Printf("USDT ZRC20 approve receipt: status %d\n", receipt.Status)
+
+	// approve gas token
+	tx, err = ethZRC20.Approve(sm.zevmAuth, withdrawerAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status == 0 {
+		panic("approve gas token failed")
+	}
+	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
+
+	// check the balance
+	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+
+	if bal.Int64() < 1000 {
+		panic("not enough USDT ZRC20 balance!")
+	}
 
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(sm.zevmAuth, DeployerAddress.Bytes(), sm.USDTZRC20Addr, big.NewInt(100), big.NewInt(10))
