@@ -47,6 +47,7 @@ const (
 	NodeAccountKey            = "NodeAccount-value-"
 	KeygenKey                 = "Keygen-value-"
 	BlockHeaderKey            = "BlockHeader-value-"
+	BlockHeaderStateKey       = "BlockHeaderState-value-"
 
 	BallotListKey = "BallotList-value-"
 )

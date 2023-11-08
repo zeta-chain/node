@@ -319,6 +319,7 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 
 	// add your dev test here
 	smokeTest.TestMyTest()
+	smokeTest.TestBlockHeaders()
 
 	smokeTest.wg.Wait()
 }

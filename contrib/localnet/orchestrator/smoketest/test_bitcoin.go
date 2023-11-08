@@ -99,6 +99,13 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 		fmt.Printf("  watchonly (TSSAddress): %+v\n", bals.WatchOnly)
 	}
 	fmt.Printf("  TSS Address: %s\n", BTCTSSAddress.EncodeAddress())
+	go func() {
+		// keep bitcoin chain going
+		for {
+			_, _ = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
+			time.Sleep(5 * time.Second)
+		}
+	}()
 
 	sm.DepositBTC()
 }
@@ -232,6 +239,21 @@ func (sm *SmokeTest) ProveBTCTransaction(txHash *chainhash.Hash) {
 	pass := bitcoin.Prove(*txHash, header.MerkleRoot, path, index)
 	if !pass {
 		panic("should verify merkle proof")
+	}
+
+	hash := header.BlockHash()
+	for {
+		_, err := sm.observerClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
+			BlockHash: hash.CloneBytes(),
+		})
+		if err != nil {
+			fmt.Printf("waiting for block header to show up in observer... current hash %s; err %s\n", hash.String(), err.Error())
+		}
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+
 	}
 
 	// verify merkle proof through RPC
