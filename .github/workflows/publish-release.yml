@@ -61,10 +61,10 @@ jobs:
         if: github.event_name == 'pull_request'
         id: release_notes
         run: |
-          GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
-          echo -e ${GITHUB_RELEASE_TEXT} > ${{ github.workspace }}-CHANGELOG.txt
+          #GITHUB_RELEASE_TEXT=$(curl --location --request GET ${{ github.event.pull_request.url }} --header 'Authorization: token ${{ secrets.GITHUB_TOKEN }}' | jq .body)
+          cat changelog.md > ${{ github.workspace }}-CHANGELOG.txt
           cat ${{ github.workspace }}-CHANGELOG.txt
-
+          
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
         run: |
