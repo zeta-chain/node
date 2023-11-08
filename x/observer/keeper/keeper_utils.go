@@ -42,6 +42,11 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chai
 			return true
 		}
 	}
+	isTombstoned, err := k.IsOperatorTombstoned(ctx, address)
+	if err != nil || isTombstoned {
+		return false
+	}
+
 	return false
 }
 
