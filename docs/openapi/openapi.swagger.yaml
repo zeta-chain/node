@@ -50629,6 +50629,10 @@ definitions:
     type: object
   crosschainMsgAddToOutTxTrackerResponse:
     type: object
+    properties:
+      is_removed:
+        type: boolean
+        title: if the tx was removed from the tracker due to no pending cctx
   crosschainMsgCreateTSSVoterResponse:
     type: object
   crosschainMsgGasPriceVoterResponse:
