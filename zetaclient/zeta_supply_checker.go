@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 
 	sdkmath "cosmossdk.io/math"
@@ -47,7 +48,7 @@ func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger
 		zetaSupplyChecker.evmClient[evmConfig.Chain.ChainId] = client
 	}
 
-	for chainID, _ := range zetaSupplyChecker.evmClient {
+	for chainID := range zetaSupplyChecker.evmClient {
 		chain := common.GetChainFromChainID(chainID)
 		if chain.IsExternalChain() && common.IsEVMChain(chain.ChainId) && !common.IsEthereumChain(chain.ChainId) {
 			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
@@ -85,9 +86,9 @@ func (zs *ZetaSupplyChecker) Start() {
 	}
 }
 
-func (b *ZetaSupplyChecker) Stop() {
-	b.logger.Info().Msgf("ZetaSupplyChecker is stopping")
-	close(b.stop)
+func (zs *ZetaSupplyChecker) Stop() {
+	zs.logger.Info().Msgf("ZetaSupplyChecker is stopping")
+	close(zs.stop)
 }
 
 func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {

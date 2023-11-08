@@ -146,8 +146,8 @@ func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.Cross
 }
 
 func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
-	tmUrl := fmt.Sprintf("http://%s", b.cfg.ChainRPC)
-	s, err := tmhttp.New(tmUrl, "/websocket")
+	tmURL := fmt.Sprintf("http://%s", b.cfg.ChainRPC)
+	s, err := tmhttp.New(tmURL, "/websocket")
 	if err != nil {
 		return sdkmath.ZeroInt(), err
 	}
