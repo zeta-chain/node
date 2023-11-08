@@ -557,6 +557,7 @@ func (ob *EVMChainClient) observeOutTx() {
 			if err != nil {
 				continue
 			}
+			//FIXME: remove this timeout here to ensure that all trackers are queried
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
 			// Skip old gabbage trackers as we spent too much time on querying them
