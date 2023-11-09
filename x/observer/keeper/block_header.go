@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,4 +76,17 @@ func (k Keeper) GetBlockHeaderByHash(c context.Context, req *types.QueryGetBlock
 	}
 
 	return &types.QueryGetBlockHeaderByHashResponse{BlockHeader: &header}, nil
+}
+
+func (k Keeper) GetBlockHeaderStateByChain(c context.Context, req *types.QueryGetBlockHeaderStateRequest) (*types.QueryGetBlockHeaderStateResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	state, found := k.GetBlockHeaderState(sdk.UnwrapSDKContext(c), req.ChainId)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("not found: chain id %d", req.ChainId))
+	}
+
+	return &types.QueryGetBlockHeaderStateResponse{BlockHeaderState: &state}, nil
 }

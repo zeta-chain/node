@@ -14,6 +14,7 @@ import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pag
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
+import type { BlockHeaderState } from "./block_header_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryProveRequest
@@ -920,5 +921,53 @@ export declare class QueryGetBlockHeaderByHashResponse extends Message<QueryGetB
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderByHashResponse;
 
   static equals(a: QueryGetBlockHeaderByHashResponse | PlainMessage<QueryGetBlockHeaderByHashResponse> | undefined, b: QueryGetBlockHeaderByHashResponse | PlainMessage<QueryGetBlockHeaderByHashResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetBlockHeaderStateRequest
+ */
+export declare class QueryGetBlockHeaderStateRequest extends Message<QueryGetBlockHeaderStateRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<QueryGetBlockHeaderStateRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetBlockHeaderStateRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderStateRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateRequest;
+
+  static equals(a: QueryGetBlockHeaderStateRequest | PlainMessage<QueryGetBlockHeaderStateRequest> | undefined, b: QueryGetBlockHeaderStateRequest | PlainMessage<QueryGetBlockHeaderStateRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetBlockHeaderStateResponse
+ */
+export declare class QueryGetBlockHeaderStateResponse extends Message<QueryGetBlockHeaderStateResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.BlockHeaderState block_header_state = 1;
+   */
+  blockHeaderState?: BlockHeaderState;
+
+  constructor(data?: PartialMessage<QueryGetBlockHeaderStateResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetBlockHeaderStateResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderStateResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateResponse;
+
+  static equals(a: QueryGetBlockHeaderStateResponse | PlainMessage<QueryGetBlockHeaderStateResponse> | undefined, b: QueryGetBlockHeaderStateResponse | PlainMessage<QueryGetBlockHeaderStateResponse> | undefined): boolean;
 }
 
