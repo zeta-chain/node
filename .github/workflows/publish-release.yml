@@ -136,16 +136,6 @@ jobs:
           touch .release-env
           make release
 
-#      - name: Build, tag, and push docker images
-#        uses: ./.github/actions/build-docker-images
-#        with:
-#          DOCKER_FILENAME: Dockerfile-release
-#          REPOSITORY_NAME: zeta-node
-#          IMAGE_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-#          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
-#          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-
   announce-release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
