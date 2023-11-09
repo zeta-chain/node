@@ -1,6 +1,8 @@
 package zetaclient
 
 import (
+	"os"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/crypto/types"
@@ -10,7 +12,6 @@ import (
 	"github.com/frumioj/crypto11"
 	"github.com/pkg/errors"
 	keystone "github.com/zeta-chain/keystone/keys"
-	"os"
 )
 
 const hsmPath = "HSM_PATH"
@@ -38,6 +39,9 @@ func GenerateKey(label string, algorithm keystone.KeygenAlgorithm, config *crypt
 		return nil, err
 	}
 	key, err := keyring.NewKey(algorithm, label)
+	if err != nil {
+		return nil, err
+	}
 	return key, nil
 }
 

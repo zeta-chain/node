@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
@@ -63,7 +64,13 @@ func GetHsmAddress(_ *cobra.Command, _ []string) error {
 	}
 
 	address, err := cosmos.Bech32ifyAddressBytes(cmd.Bech32PrefixAccAddr, pubKey.Address().Bytes())
-	zetaPubKey, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		return err
+	}
+	zetaPubKey, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		return err
+	}
 
 	// Print formatted result
 	fmt.Println("Address: ", address)

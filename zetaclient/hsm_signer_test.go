@@ -2,9 +2,10 @@ package zetaclient
 
 import (
 	"crypto/rand"
-	"github.com/frumioj/crypto11"
 	"log"
 	"testing"
+
+	"github.com/frumioj/crypto11"
 
 	btcsecp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
