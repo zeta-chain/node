@@ -653,20 +653,20 @@ func (k Keeper) CallEVMWithData(
 
 	if res.Failed() {
 		return res, cosmoserrors.Wrap(evmtypes.ErrVMExecution, fmt.Sprintf("%s: ret 0x%x", res.VmError, res.Ret))
-	} else {
-		// call PostTxProcessing hook
-		receipt := &ethtypes.Receipt{
-			Logs:   logs,
-			TxHash: common.HexToHash(res.Hash),
-		}
-		if err = k.evmKeeper.PostTxProcessing(ctx, msg, receipt); err != nil {
-			// if post-processing return error, revert the whole tx
-			k.Logger(ctx).Error("tx post processing failed", "error", err)
-			return nil, cosmoserrors.Wrap(evmtypes.ErrPostTxProcessing, err.Error())
-		}
 	}
 
-	// Emit events and log for the transaction if it is committed
+	// call PostTxProcessing hook
+	receipt := &ethtypes.Receipt{
+		Logs:   logs,
+		TxHash: common.HexToHash(res.Hash),
+	}
+	if err = k.evmKeeper.PostTxProcessing(ctx, msg, receipt); err != nil {
+		// if post-processing return error, revert the whole tx
+		k.Logger(ctx).Error("tx post processing failed", "error", err)
+		return nil, cosmoserrors.Wrap(evmtypes.ErrPostTxProcessing, err.Error())
+	}
+
+	// emit events and log for the transaction if it is committed
 	if commit {
 		msgBytes, err := json.Marshal(msg)
 		if err != nil {
