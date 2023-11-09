@@ -1,0 +1,26 @@
+name: Changelog Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Check for CHANGELOG.md changes
+      run: |
+        git fetch origin ${{ github.base_ref }}
+        CHANGELOG_DIFF=$(git diff origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- changelog.md)
+        echo "${CHANGELOG_DIFF}"
+        if [ -z "$CHANGELOG_DIFF" ]; then
+          echo "ERROR: No changes detected in CHANGELOG.md. Please update the changelog."
+          exit 1
+        else
+          echo "CHANGELOG.md has been updated."
+        fi
