@@ -2,6 +2,7 @@
 
 ## Version: v10.1.0
 ### What's Changed:
+* fix: updated release ci
 * fix: added upgrade name, and allow download. allows to test release can. by @gzukel in https://github.com/zeta-chain/node/pull/1195
 * chore: switch back to `cosmos/cosmos-sdk` by @lumtis in https://github.com/zeta-chain/node/pull/1193
 * test: Stateful upgrade by @kevinssgh in https://github.com/zeta-chain/node/pull/1135
