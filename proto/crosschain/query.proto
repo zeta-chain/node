@@ -127,6 +127,11 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
   }
 
+  // Queries a list of pending send items in nonce range.
+  rpc CctxAllPendingInNonceRange(QueryAllCctxPendingInNonceRangeRequest) returns (QueryAllCctxPendingInNonceRangeResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/cctxPendingInNonceRange";
+  }
+
   // Queries a list of lastMetaHeight items.
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
@@ -314,6 +319,16 @@ message QueryAllCctxPendingRequest {
 message QueryAllCctxPendingResponse {
   repeated CrossChainTx CrossChainTx = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllCctxPendingInNonceRangeRequest {
+  int64 chain_id = 1;
+  uint64 nonce_low = 2;
+  uint64 nonce_high = 3;
+}
+
+message QueryAllCctxPendingInNonceRangeResponse {
+  repeated CrossChainTx cross_chain_tx = 1;
 }
 
 message QueryLastZetaHeightRequest {}

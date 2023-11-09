@@ -86,3 +86,11 @@ func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx
 
 	return nil
 }
+
+func IsPending(cctx types.CrossChainTx) bool {
+	// pending inbound is not considered a "pending" state because it has not reached consensus yet
+	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
+		return true
+	}
+	return false
+}

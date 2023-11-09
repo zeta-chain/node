@@ -28,6 +28,7 @@ type CoreObserver struct {
 	bridge    *ZetaCoreBridge
 	signerMap map[common.Chain]ChainSigner
 	clientMap map[common.Chain]ChainClient
+	scanner   *CctxScanner
 	metrics   *metrics.Metrics
 	tss       *TSS
 	logger    ZetaCoreLog
@@ -36,7 +37,7 @@ type CoreObserver struct {
 	stop      chan struct{}
 }
 
-func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
+func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSigner, clientMap map[common.Chain]ChainClient, dbpath string, metrics *metrics.Metrics, tss *TSS, logger zerolog.Logger, cfg *config.Config, ts *TelemetryServer) *CoreObserver {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
@@ -62,6 +63,12 @@ func NewCoreObserver(bridge *ZetaCoreBridge, signerMap map[common.Chain]ChainSig
 		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
 	}
 
+	scanner, err := NewCctxScanner(bridge, dbpath, false, tss.CurrentPubkey, &co.logger.ZetaChainWatcher)
+	if err == nil {
+		co.scanner = scanner
+	} else {
+		co.logger.ChainLogger.Error().Err(err).Msg("error creating cctx scanner")
+	}
 	return &co
 }
 
@@ -133,6 +140,31 @@ func (co *CoreObserver) startSendScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetAllPendingCctx for chain %s", c.ChainName.String())
 							continue
 						}
+
+						// Hotfix for EVM pending forever cctx
+						if common.IsEVMChain(c.ChainId) {
+							pendingNonces, err := co.bridge.GetPendingNoncesByChain(c.ChainId)
+							if err != nil {
+								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("failed to GetPendingNoncesByChain for chain %s", c.ChainName.String())
+								continue
+							}
+							if len(cctxList) > 0 { // adjust nonceLow to avoid scanning overlapped nonce range of GetAllPendingCctx
+								pendingNonces.NonceLow = int64(cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+							}
+
+							// for smoketest
+							// cctxList = []*types.CrossChainTx{}
+							// pendingNonces.NonceLow = pendingNonces.NonceHigh
+
+							// Scan missed pending (forever) cctx in history and get the earliest
+							// #nosec G701 non negative value
+							co.scanner.ScanMissedPendingCctx(bn, c.ChainId, uint64(pendingNonces.NonceLow))
+							earliestCctx := co.scanner.EarliestPendingCctxByChain(c.ChainId)
+							if earliestCctx != nil { // append earliest missed pending cctx to head
+								cctxList = append([]*types.CrossChainTx{earliestCctx}, cctxList...)
+							}
+						}
+
 						ob, err := co.getUpdatedChainOb(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("getTargetChainOb fail, Chain ID: %s", c.ChainName)

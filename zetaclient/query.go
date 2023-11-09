@@ -145,6 +145,20 @@ func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetAllPendingCctxInNonceRange(chainID int64, nonceLow uint64, nonceHigh uint64) ([]*types.CrossChainTx, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
+	resp, err := client.CctxAllPendingInNonceRange(context.Background(), &types.QueryAllCctxPendingInNonceRangeRequest{
+		ChainId:   chainID,
+		NonceLow:  nonceLow,
+		NonceHigh: nonceHigh,
+	}, maxSizeOption)
+	if err != nil {
+		return nil, err
+	}
+	return resp.CrossChainTx, nil
+}
+
 func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeightAll(context.Background(), &types.QueryAllLastBlockHeightRequest{})

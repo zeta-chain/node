@@ -38,6 +38,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -467,6 +468,9 @@ var lowestOutTxNonceToObserve = map[int64]uint64{
 	80001: 154500, // Mumbai
 }
 
+// the number of garbage trackers to look back
+const garbageTrackersLookback = 2
+
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -494,28 +498,41 @@ func (ob *EVMChainClient) observeOutTx() {
 				return trackers[i].Nonce < trackers[j].Nonce
 			})
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
+			garbageTrackerChecked := 0
 		TRACKERLOOP:
-			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
+					// Look into only a few old gabbage trackers for those old pending-forever cctxs
+					if garbageTrackerChecked >= garbageTrackersLookback {
+						continue
+					}
+					// Skip those problematic trackers whose associated cctxs are no longer pending (Reverted/Outboundminted/Aborted)
+					cctx, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonceInt)
+					if err != nil || cctx == nil {
+						ob.logger.ObserveOutTx.Error().Err(err).Msgf("garbage tracker, error GetCctxByNonce for chain %s nonce %d", ob.chain.String(), nonceInt)
+						continue
+					}
+					if !crosschainkeeper.IsPending(*cctx) {
+						ob.logger.ObserveOutTx.Info().Msgf("garbage tracker chain %s nonce %d is not pending", ob.chain.String(), nonceInt)
+						continue
+					}
+				}
+
+				// Go to next tracker if this one is already confirmed
+				ob.mu.Lock()
+				_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+				ob.mu.Unlock()
+				if found {
 					continue
 				}
-			TXHASHLOOP:
+				trueHash := ""
 				for _, txHash := range tracker.HashList {
-					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
-						ob.mu.Lock()
-						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
-						ob.mu.Unlock()
-						if found {
-							continue
-						}
-
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
@@ -523,14 +540,20 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.mu.Unlock()
+							trueHash = txHash.TxHash
+							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
 
-							break TXHASHLOOP
+							break
 						}
 						if err != nil {
 							ob.logger.ObserveOutTx.Debug().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
 						}
-						//<-inTimeout
 					}
+				}
+				// Count the number of garbage trackers checked
+				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
+					garbageTrackerChecked++
+					ob.logger.ObserveOutTx.Info().Msgf("garbage tracker checked for chain %d nonce %d txHash %s", ob.chain.ChainId, nonceInt, trueHash)
 				}
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().OutTxTicker, ob.logger.ObserveOutTx)

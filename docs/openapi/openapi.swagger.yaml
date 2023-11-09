@@ -26646,6 +26646,37 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/crosschain/cctxPendingInNonceRange:
+    get:
+      summary: Queries a list of pending send items in nonce range.
+      operationId: Query_CctxAllPendingInNonceRange
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryAllCctxPendingInNonceRangeResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: nonce_low
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: nonce_high
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Query
   /zeta-chain/crosschain/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
@@ -50615,6 +50646,14 @@ definitions:
       tss:
         type: string
     title: store key is tss+chainid
+  crosschainQueryAllCctxPendingInNonceRangeResponse:
+    type: object
+    properties:
+      cross_chain_tx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
   crosschainQueryAllCctxPendingResponse:
     type: object
     properties:

@@ -215,6 +215,34 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
 }
 
+func (k Keeper) CctxAllPendingInNonceRange(c context.Context, req *types.QueryAllCctxPendingInNonceRangeRequest) (*types.QueryAllCctxPendingInNonceRangeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.Internal, "tss not found")
+	}
+	cctxs := make([]*types.CrossChainTx, 0)
+
+	for i := req.NonceLow; i < req.NonceHigh; i++ {
+		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, int64(i))
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
+		}
+		cctx, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+		if !found {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+		}
+		if IsPending(cctx) {
+			cctxs = append(cctxs, &cctx)
+		}
+	}
+
+	return &types.QueryAllCctxPendingInNonceRangeResponse{CrossChainTx: cctxs}, nil
+}
+
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
