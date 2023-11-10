@@ -71,5 +71,8 @@
 
 
 
+### Unreleased:
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+
 
 

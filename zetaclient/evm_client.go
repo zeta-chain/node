@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -232,12 +235,31 @@ func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNo
 	return FetchConnectorContract(addr, ob.evmClient)
 }
 
-func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
-	return zetaconnector.NewZetaConnectorNonEth(addr, client)
+func (ob *EVMChainClient) GetConnectorContractEth() (*zetaconnectoreth.ZetaConnectorEth, error) {
+	addr := ethcommon.HexToAddress(ob.GetCoreParams().ConnectorContractAddress)
+	return FetchConnectorContractEth(addr, ob.evmClient)
 }
+
+func (ob *EVMChainClient) GetZetaTokenNonEthContract() (*zeta.ZetaNonEth, error) {
+	addr := ethcommon.HexToAddress(ob.GetCoreParams().ZetaTokenContractAddress)
+	return FetchZetaZetaNonEthTokenContract(addr, ob.evmClient)
+}
+
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetCoreParams().Erc20CustodyContractAddress)
 	return FetchERC20CustodyContract(addr, ob.evmClient)
+}
+
+func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
+	return zetaconnector.NewZetaConnectorNonEth(addr, client)
+}
+
+func FetchConnectorContractEth(addr ethcommon.Address, client EVMRPCClient) (*zetaconnectoreth.ZetaConnectorEth, error) {
+	return zetaconnectoreth.NewZetaConnectorEth(addr, client)
+}
+
+func FetchZetaZetaNonEthTokenContract(addr ethcommon.Address, client EVMRPCClient) (*zeta.ZetaNonEth, error) {
+	return zeta.NewZetaNonEth(addr, client)
 }
 
 func FetchERC20CustodyContract(addr ethcommon.Address, client EVMRPCClient) (*erc20custody.ERC20Custody, error) {
@@ -981,12 +1003,13 @@ func (ob *EVMChainClient) WatchGasPrice() {
 			ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 		}
 	}
+
 	ticker := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.PostGasPrice()
+			err = ob.PostGasPrice()
 			if err != nil {
 				height, err := ob.zetaClient.GetBlockHeight()
 				if err != nil {
