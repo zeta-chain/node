@@ -204,7 +204,7 @@ func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPending
 	// now query the previous nonces up to 100 prior to find any pending cctx that we might have missed
 	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
 	// therefore might mask some lower nonce cctx that is still pending.
-	startNonce := p.NonceLow - 100
+	startNonce := p.NonceLow - 1000
 	if startNonce < 0 {
 		startNonce = 0
 	}

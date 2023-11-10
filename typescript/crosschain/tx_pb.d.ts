@@ -322,6 +322,13 @@ export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> 
  * @generated from message zetachain.zetacore.crosschain.MsgAddToOutTxTrackerResponse
  */
 export declare class MsgAddToOutTxTrackerResponse extends Message<MsgAddToOutTxTrackerResponse> {
+  /**
+   * if the tx was removed from the tracker due to no pending cctx
+   *
+   * @generated from field: bool is_removed = 1;
+   */
+  isRemoved: boolean;
+
   constructor(data?: PartialMessage<MsgAddToOutTxTrackerResponse>);
 
   static readonly runtime: typeof proto3;

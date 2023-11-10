@@ -20,6 +20,7 @@ import (
 
 // AddToOutTxTracker adds a new record to the outbound transaction tracker.
 // only the admin policy account and the observer validators are authorized to broadcast this message without proof.
+// If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
 func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
@@ -49,6 +50,18 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 		}
 		isProven = true
+	}
+
+	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+		ChainID: msg.ChainId,
+		Nonce:   msg.Nonce,
+	})
+	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
+	}
+	if !IsPending(*cctx.CrossChainTx) {
+		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)
@@ -84,7 +97,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			hash.Proved = true
 			tracker.HashList = append([]*types.TxHashList{&hash}, tracker.HashList...)
 			k.Logger(ctx).Info("Proof'd outbound transaction")
-		} else {
+		} else if len(tracker.HashList) < 2 {
 			tracker.HashList = append(tracker.HashList, &hash)
 		}
 		k.SetOutTxTracker(ctx, tracker)
