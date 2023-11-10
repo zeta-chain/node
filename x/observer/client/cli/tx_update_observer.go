@@ -27,7 +27,7 @@ func CmdUpdateObserver() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			updateReason, err := ParseUpdateReason(int32(updateReasonInt))
+			updateReason, err := parseUpdateReason(int32(updateReasonInt))
 			if err != nil {
 				return err
 			}
@@ -49,7 +49,7 @@ func CmdUpdateObserver() *cobra.Command {
 	return cmd
 }
 
-func ParseUpdateReason(i int32) (types.ObserverUpdateReason, error) {
+func parseUpdateReason(i int32) (types.ObserverUpdateReason, error) {
 	if _, ok := types.ObserverUpdateReason_name[i]; ok {
 		switch i {
 		case 1:

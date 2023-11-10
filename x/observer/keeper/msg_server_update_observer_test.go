@@ -470,7 +470,7 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		oldObserverAddress := sample.AccAddress()
 		newObserverAddress := sample.AccAddress()
 		chains := k.GetParams(ctx).GetSupportedChains()
-		observerList := []string{sample.AccAddress(), sample.AccAddress(), sample.AccAddress(), oldObserverAddress}
+		observerList := CreateRandomObserverList(10, oldObserverAddress)
 		for _, chain := range chains {
 			k.SetObserverMapper(ctx, &types.ObserverMapper{
 				ObserverChain: chain,
@@ -480,8 +480,75 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
 		observerMappers := k.GetAllObserverMappers(ctx)
 		for _, om := range observerMappers {
-			assert.Equal(t, 4, len(om.ObserverList))
-			assert.Equal(t, newObserverAddress, om.ObserverList[3])
+			assert.Equal(t, len(observerList), len(om.ObserverList))
+			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
 		}
 	})
+	t.Run("update observer address long observerList", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		chains := k.GetParams(ctx).GetSupportedChains()
+		observerList := CreateRandomObserverList(1000, oldObserverAddress)
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  observerList,
+			})
+		}
+		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		observerMappers := k.GetAllObserverMappers(ctx)
+		for _, om := range observerMappers {
+			assert.Equal(t, len(observerList), len(om.ObserverList))
+			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
+		}
+	})
+	t.Run("update observer address super long observerList", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		chains := k.GetParams(ctx).GetSupportedChains()
+		observerList := CreateRandomObserverList(100000, oldObserverAddress)
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  observerList,
+			})
+		}
+		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		observerMappers := k.GetAllObserverMappers(ctx)
+		for _, om := range observerMappers {
+			assert.Equal(t, len(observerList), len(om.ObserverList))
+			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
+		}
+	})
+	t.Run("update observer address short observerList", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		chains := k.GetParams(ctx).GetSupportedChains()
+		observerList := CreateRandomObserverList(1, oldObserverAddress)
+		for _, chain := range chains {
+			k.SetObserverMapper(ctx, &types.ObserverMapper{
+				ObserverChain: chain,
+				ObserverList:  observerList,
+			})
+		}
+		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		observerMappers := k.GetAllObserverMappers(ctx)
+		for _, om := range observerMappers {
+			assert.Equal(t, len(observerList), len(om.ObserverList))
+			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
+		}
+	})
+}
+
+func CreateRandomObserverList(maxLen int, observerAddress string) []string {
+	r := rand.New(rand.NewSource(9))
+	list := make([]string, r.Intn(maxLen)+1)
+	for i := range list {
+		list[i] = sample.AccAddress()
+	}
+	list = append(list, observerAddress)
+	return list
 }

@@ -23,14 +23,6 @@ type (
 	}
 )
 
-func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {
-	return k.slashingKeeper
-}
-
-func (k Keeper) GetStakingKeeper() types.StakingKeeper {
-	return k.stakingKeeper
-}
-
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
@@ -53,6 +45,14 @@ func NewKeeper(
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashinKeeper,
 	}
+}
+
+func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {
+	return k.slashingKeeper
+}
+
+func (k Keeper) GetStakingKeeper() types.StakingKeeper {
+	return k.stakingKeeper
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

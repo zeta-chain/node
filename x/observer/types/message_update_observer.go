@@ -53,6 +53,9 @@ func (msg *MsgUpdateObserver) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid new observer address (%s)", err)
 	}
+	if msg.UpdateReason != ObserverUpdateReason_Tombstoned && msg.UpdateReason != ObserverUpdateReason_AdminUpdate {
+		return errorsmod.Wrapf(ErrUpdateObserver, "invalid update reason (%s)", msg.UpdateReason)
+	}
 	if msg.UpdateReason == ObserverUpdateReason_Tombstoned && msg.OldObserverAddress != msg.Creator {
 		return errorsmod.Wrapf(ErrUpdateObserver, "invalid old observer address (%s)", msg.OldObserverAddress)
 	}

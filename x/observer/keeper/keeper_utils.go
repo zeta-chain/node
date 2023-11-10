@@ -35,11 +35,14 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 // It also checks if the signer is a validator and if they are not tombstoned
 func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool {
 	isPresentInMapper := k.IsObserverPresentInMappers(ctx, address, chain)
+	if !isPresentInMapper {
+		return false
+	}
 	isTombstoned, err := k.IsOperatorTombstoned(ctx, address)
 	if err != nil || isTombstoned {
 		return false
 	}
-	return isPresentInMapper && !isTombstoned
+	return true
 }
 
 func (k Keeper) IsObserverPresentInMappers(ctx sdk.Context, address string, chain *common.Chain) bool {
