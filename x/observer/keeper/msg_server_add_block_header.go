@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -35,6 +34,43 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
+	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
+	if found {
+		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, fmt.Sprintf("block hash: %x", msg.BlockHash))
+	}
+
+	// if BlockHeaderState exists and parent block header is not found, this tx is rejected
+	// if no BlockHeaderState is found, allow this vote to pass through to create and initialize
+	// the Earliest/Latest height with this block header (after voting, not here)
+	// if BlockHeaderState is found, check if the block height is valid
+	// validate block height as it's not part of the header itself
+	bhs, found := k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
+	if found && bhs.EarliestHeight > 0 && bhs.EarliestHeight < msg.Height {
+		pHash, err := msg.Header.ParentHash()
+		if err != nil {
+			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
+		}
+		_, found = k.GetBlockHeader(ctx, pHash)
+		if !found {
+			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, "parent block header not found")
+		}
+		if msg.Height != bhs.LatestHeight+1 {
+			return nil, cosmoserrors.Wrap(types.ErrNoParentHash, fmt.Sprintf("invalid block height: wanted %d, got %d", bhs.LatestHeight+1, msg.Height))
+		}
+	}
+
+	// Check timestamp
+	err := msg.Header.ValidateTimestamp(ctx.BlockTime())
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
+	}
+
+	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
+	pHash, err := msg.Header.ParentHash()
+	if err != nil {
+		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
+	}
+
 	// add vote to ballot
 	ballot, _, err := k.FindBallot(ctx, msg.Digest(), chain, types.ObservationType_InBoundTx)
 	if err != nil {
@@ -52,28 +88,24 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	/**
 	 * Vote finalized, add block header to store
 	 */
-	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
-	if found {
-		hashString, err := common.HashToString(msg.ChainId, msg.BlockHash)
-		if err != nil {
-			return nil, cosmoserrors.Wrap(err, "block hash conversion failed")
+	bhs, found = k.Keeper.GetBlockHeaderState(ctx, msg.ChainId)
+	if !found {
+		bhs = types.BlockHeaderState{
+			ChainId:         msg.ChainId,
+			LatestHeight:    msg.Height,
+			EarliestHeight:  msg.Height,
+			LatestBlockHash: msg.BlockHash,
 		}
-		return nil, cosmoserrors.Wrap(types.ErrBlockAlreadyExist, hashString)
+	} else {
+		if msg.Height > bhs.LatestHeight {
+			bhs.LatestHeight = msg.Height
+			bhs.LatestBlockHash = msg.BlockHash
+		}
+		if bhs.EarliestHeight == 0 {
+			bhs.EarliestHeight = msg.Height
+		}
 	}
-
-	// Check timestamp
-	err = msg.Header.ValidateTimestamp(ctx.BlockTime())
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrInvalidTimestamp, err.Error())
-	}
-
-	// NOTE: error is checked in BasicValidation in msg; check again for extra caution
-	pHash, err := msg.Header.ParentHash()
-	if err != nil {
-		return nil, cosmoserrors.Wrap(types.ErrNoParentHash, err.Error())
-	}
-
-	// TODO: add check for parent block header's existence here https://github.com/zeta-chain/node/issues/1133
+	k.Keeper.SetBlockHeaderState(ctx, bhs)
 
 	bh := common.BlockHeader{
 		Header:     msg.Header,

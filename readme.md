@@ -96,8 +96,19 @@ By following these steps, you can efficiently create a release for Mainnet, ensu
 Creating a release for testnet is a straightforward process. Here are the steps to follow:
 
 ### Steps
- - Step 1. Create the release candidate branch with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
+ - Step 1. Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
  - Step 2. Once a RC branch is created the automation will kickoff to build and upload the release and its binaries.
 
 By following these steps, you can efficiently create a release candidate for testnet for QA and validation. In the future we will make this automatically deploy to testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GitHub Action pipeline located in the infrastructure repo. 
+
+
+## Creating a Hotfix Release
+Creating a hotfix release is a straightforward process. Here are the steps to follow:
+
+### Steps
+ - Step 1. Execute pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml 
+ - Step 2. select branch when running pipeline manually your hotfix lives on.
+ - Step 3. specify the version in the input field and run workflow. ex. vx.x.x-hotfix recommended.
+
+Wheny ou execute with hotfix it will build and publish the binaries to the releases. 
