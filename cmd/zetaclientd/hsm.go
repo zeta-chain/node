@@ -13,7 +13,7 @@ import (
 
 var HsmCmd = &cobra.Command{
 	Use:   "hsm",
-	Short: "utility command to interact with hsm",
+	Short: "Utility command to interact with hsm",
 }
 
 var GetHsmAddressCmd = &cobra.Command{
