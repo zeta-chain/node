@@ -41,5 +41,8 @@
 * chore: increment handler version by @kingpinXD in https://github.com/zeta-chain/node/pull/1307
 * fix: begin blocker for mock mainnet by @kingpinXD in https://github.com/zeta-chain/node/pull/1308
 
+### Unreleased:
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+
 
 
