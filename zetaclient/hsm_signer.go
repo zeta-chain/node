@@ -28,8 +28,7 @@ func HsmSign(config *crypto11.Config, msg []byte, label string) (signature []byt
 	if err != nil {
 		return
 	}
-	signature, err = key.Sign(msg, nil)
-	return
+	return key.Sign(msg, nil)
 }
 
 // GenerateKey This generates a new key using one of the supported algorithms and a label identifier through the HSM
