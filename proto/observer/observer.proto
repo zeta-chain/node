@@ -17,7 +17,7 @@ enum ObservationType {
 
 enum ObserverUpdateReason {
   option (gogoproto.goproto_enum_stringer) = true;
-  EmptyObserverUpdateReason = 0;
+  Undefined = 0;
   Tombstoned = 1;
   AdminUpdate = 2;
 }

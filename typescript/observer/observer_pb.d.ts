@@ -42,9 +42,9 @@ export declare enum ObservationType {
  */
 export declare enum ObserverUpdateReason {
   /**
-   * @generated from enum value: EmptyObserverUpdateReason = 0;
+   * @generated from enum value: Undefined = 0;
    */
-  EmptyObserverUpdateReason = 0,
+  Undefined = 0,
 
   /**
    * @generated from enum value: Tombstoned = 1;

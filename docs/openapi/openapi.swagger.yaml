@@ -51358,10 +51358,10 @@ definitions:
   observerObserverUpdateReason:
     type: string
     enum:
-      - EmptyObserverUpdateReason
+      - Undefined
       - Tombstoned
       - AdminUpdate
-    default: EmptyObserverUpdateReason
+    default: Undefined
   observerPolicy_Type:
     type: string
     enum:

@@ -95,7 +95,7 @@ func (m *MsgUpdateObserver) GetUpdateReason() ObserverUpdateReason {
 	if m != nil {
 		return m.UpdateReason
 	}
-	return ObserverUpdateReason_EmptyObserverUpdateReason
+	return ObserverUpdateReason_Undefined
 }
 
 type MsgUpdateObserverResponse struct {

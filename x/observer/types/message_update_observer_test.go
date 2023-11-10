@@ -56,6 +56,16 @@ func TestNewMsgUpdateObserver(t *testing.T) {
 			err: types.ErrUpdateObserver,
 		},
 		{
+			name: "invalid Update Reason",
+			msg: types.MsgUpdateObserver{
+				Creator:            sample.AccAddress(),
+				OldObserverAddress: sample.AccAddress(),
+				NewObserverAddress: sample.AccAddress(),
+				UpdateReason:       types.ObserverUpdateReason(100),
+			},
+			err: types.ErrUpdateObserver,
+		},
+		{
 			name: "valid message",
 			msg: types.MsgUpdateObserver{
 				Creator:            sample.AccAddress(),
