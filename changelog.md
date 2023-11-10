@@ -32,14 +32,13 @@
 * [1245](https://github.com/zeta-chain/node/pull/1245) - set unique index for generate cctx
 * [1250](https://github.com/zeta-chain/node/pull/1250) - remove error return in `IsAuthorized`
 * [1261](https://github.com/zeta-chain/node/pull/1261) - Ethereum comparaison checksum/non-checksum format
-* [1264](https://github.com/zeta-chain/node/pull/1264) - Blame index update by @kevinssgh
+* [1264](https://github.com/zeta-chain/node/pull/1264) - Blame index update
 * [1243](https://github.com/zeta-chain/node/pull/1243) - feed sataoshi/B to zetacore and check actual outTx size
 * [1235](https://github.com/zeta-chain/node/pull/1235) - cherry pick all hotfix from v10.0.x (zero-amount, precision, etc.)
 * [1257](https://github.com/zeta-chain/node/pull/1257) - register emissions grpc server
 * [1277](https://github.com/zeta-chain/node/pull/1277) - read gas limit from smart contract
 * [1252](https://github.com/zeta-chain/node/pull/1252) - add CLI command to query system contract
 * [1285](https://github.com/zeta-chain/node/pull/1285) - add notice when using `--ledger` with Ethereum HD path
-* [1290](https://github.com/zeta-chain/node/pull/1290) - gosec issues
 * [1283](https://github.com/zeta-chain/node/pull/1283) - query outtx tracker by chain using prefixed store
 * [1280](https://github.com/zeta-chain/node/pull/1280) - minor fixes to stateful upgrade
 * [1304](https://github.com/zeta-chain/node/pull/1304) - remove check `gasObtained == outTxGasFee`
