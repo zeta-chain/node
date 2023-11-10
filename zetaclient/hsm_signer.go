@@ -55,12 +55,12 @@ func GetHSMAddress(config *crypto11.Config, label string) (types.Address, types.
 }
 
 // SignWithHSM signs a given tx with a named key.
-// // This is adapted from github.com/cosmos/cosmos-sdk/client/tx Sign() function; Modified to use an HSM.
-// // The resulting signature will be added to the transaction builder overwriting the previous
-// // ones if overwrite=true (otherwise, the signature will be appended).
-// // Signing a transaction with multiple signers in the DIRECT mode is not supported and will
-// // return an error.
-// // An error is returned upon failure.
+// This is adapted from github.com/cosmos/cosmos-sdk/client/tx Sign() function; Modified to use an HSM.
+// The resulting signature will be added to the transaction builder overwriting the previous
+// ones if overwrite=true (otherwise, the signature will be appended).
+// Signing a transaction with multiple signers in the DIRECT mode is not supported and will
+// return an error.
+// An error is returned upon failure.
 func SignWithHSM(
 	txf clienttx.Factory,
 	name string,
