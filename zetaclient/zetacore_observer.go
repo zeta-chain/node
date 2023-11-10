@@ -159,7 +159,7 @@ func (co *CoreObserver) startSendScheduler() {
 							// Scan missed pending (forever) cctx in history and get the earliest
 							// #nosec G701 non negative value
 							co.scanner.ScanMissedPendingCctx(bn, c.ChainId, uint64(pendingNonces.NonceLow))
-							earliestCctx := co.scanner.EarliestPendingCctxByChain(c.ChainId)
+							earliestCctx := co.scanner.EarliestPendingCctxByChain(bn, c.ChainId)
 							if earliestCctx != nil { // append earliest missed pending cctx to head
 								cctxList = append([]*types.CrossChainTx{earliestCctx}, cctxList...)
 							}
@@ -221,6 +221,10 @@ func (co *CoreObserver) startSendScheduler() {
 							included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
 							if err != nil {
 								co.logger.ZetaChainWatcher.Error().Err(err).Msgf("IsSendOutTxProcessed fail, Chain ID: %s", c.ChainName)
+								continue
+							}
+							// skip keysign for missed pending (forever) cctx as outTx was already finalized
+							if co.scanner.IsMissedPendingCctx(c.ChainId, params.OutboundTxTssNonce) {
 								continue
 							}
 							if included {

@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	RescanBatch uint64 = 10
+	RescanBatch  uint64 = 10
+	LogPrintBlks int64  = 10
 )
 
 // CctxScanner scans missed pending cctx and updates their status
@@ -82,7 +83,7 @@ func (sc *CctxScanner) ScanMissedPendingCctx(bn int64, chainID int64, maxNonce u
 	}
 }
 
-func (sc *CctxScanner) EarliestPendingCctxByChain(chainID int64) *crosschaintypes.CrossChainTx {
+func (sc *CctxScanner) EarliestPendingCctxByChain(bn int64, chainID int64) *crosschaintypes.CrossChainTx {
 	oldPendingCctxs := sc.AllMissedPendingCctxByChain(chainID)
 
 	// try removing finalized cctx
@@ -107,9 +108,19 @@ func (sc *CctxScanner) EarliestPendingCctxByChain(chainID int64) *crosschaintype
 
 	newPendingCctxs := sc.AllMissedPendingCctxByChain(chainID)
 	if len(newPendingCctxs) == 0 {
+		sc.logger.Info().Msgf("scanner: pending cctxs for chain %d is empty, next nonce to scan %d", chainID, sc.nextNonceToScan[chainID])
 		return nil
 	}
-	return newPendingCctxs[0]
+
+	// log print for monitoring
+	oldestCctx := newPendingCctxs[0]
+	latestCctx := newPendingCctxs[len(newPendingCctxs)-1]
+	if bn%LogPrintBlks == 0 {
+		sc.logger.Info().Msgf("scanner: pending cctxs for chain %d, oldest %d, latest %d, next nonce to scan %d",
+			chainID, oldestCctx.GetCurrentOutTxParam().OutboundTxTssNonce, latestCctx.GetCurrentOutTxParam().OutboundTxTssNonce, sc.nextNonceToScan[chainID])
+	}
+
+	return oldestCctx
 }
 
 // Note: deep clone is unnecessary as the cctx list is used in a single thread
