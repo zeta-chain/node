@@ -42,6 +42,7 @@
 * fix: begin blocker for mock mainnet by @kingpinXD in https://github.com/zeta-chain/node/pull/1308
 
 ### Unreleased:
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
 * add a new tx to update and observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 

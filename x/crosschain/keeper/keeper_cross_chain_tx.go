@@ -127,6 +127,29 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	return &types.QueryAllCctxResponse{CrossChainTx: sends, Pagination: pageRes}, nil
 }
 
+func (k Keeper) CctxByStatus(c context.Context, req *types.QueryCctxByStatusRequest) (*types.QueryCctxByStatusResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+	cctxList := make([]types.CrossChainTx, 0)
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.CrossChainTx
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		if val.CctxStatus.Status == req.Status {
+			cctxList = append(cctxList, val)
+		}
+	}
+
+	return &types.QueryCctxByStatusResponse{CrossChainTx: cctxList}, nil
+}
+
 func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.QueryGetCctxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
