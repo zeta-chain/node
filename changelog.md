@@ -3,7 +3,6 @@
 ## Version: v10.1.2
 
 ### What's Changed:
-* add a new tx to update and observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 * bfa1cb8 skip mainnet addresses in cctxs
 * 6e1fb4a skip garbage trackers and increase btc gas fee
 * fix: added upgrade name, and allow download. allows to test release can. by @gzukel in https://github.com/zeta-chain/node/pull/1195
@@ -41,6 +40,9 @@
 * chore: sync from mockmain  by @brewmaster012 in https://github.com/zeta-chain/node/pull/1265
 * chore: increment handler version by @kingpinXD in https://github.com/zeta-chain/node/pull/1307
 * fix: begin blocker for mock mainnet by @kingpinXD in https://github.com/zeta-chain/node/pull/1308
+
+### Unreleased:
+* add a new tx to update and observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 
 
