@@ -161,7 +161,7 @@ func (b *ZetaCoreBridge) SignTx(
 	overwriteSig bool,
 	txConfig client.TxConfig,
 ) error {
-	if b.keys.hsmMode {
+	if b.cfg.HsmMode {
 		return SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)

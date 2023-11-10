@@ -105,7 +105,7 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
 	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
-	ki := NewKeysWithKeybase(k, granter, signerNameForTest, false)
+	ki := NewKeysWithKeybase(k, granter, signerNameForTest)
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)
 	//c.Assert(kInfo.G, Equals, signerNameForTest)

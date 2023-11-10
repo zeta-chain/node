@@ -33,6 +33,7 @@ type initArguments struct {
 	TestTssKeysign      bool
 	KeyringBackend      string
 	HsmMode             bool
+	HsmHotKey           string
 }
 
 func init() {
@@ -56,6 +57,7 @@ func init() {
 	InitCmd.Flags().BoolVar(&initArgs.TestTssKeysign, "test-tss", false, "set to to true to run a check for TSS keysign on startup")
 	InitCmd.Flags().StringVar(&initArgs.KeyringBackend, "keyring-backend", string(config.KeyringBackendTest), "keyring backend to use (test, file)")
 	InitCmd.Flags().BoolVar(&initArgs.HsmMode, "hsm-mode", false, "enable hsm signer, default disabled")
+	InitCmd.Flags().StringVar(&initArgs.HsmHotKey, "hsm-hotkey", "hsm-hotkey", "name of hotkey associated with hardware security module")
 }
 
 func Initialize(_ *cobra.Command, _ []string) error {
@@ -92,6 +94,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.ConfigUpdateTicker = initArgs.configUpdateTicker
 	configData.KeyringBackend = config.KeyringBackend(initArgs.KeyringBackend)
 	configData.HsmMode = initArgs.HsmMode
+	configData.HsmHotKey = initArgs.HsmHotKey
 
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)

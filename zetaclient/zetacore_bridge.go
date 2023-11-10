@@ -42,7 +42,7 @@ type ZetaCoreBridge struct {
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string, hsmMode bool) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
@@ -50,6 +50,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		SignerName:   signerName,
 		SignerPasswd: "password",
 		ChainRPC:     fmt.Sprintf("%s:26657", chainIP),
+		HsmMode:      hsmMode,
 	}
 
 	httpClient := retryablehttp.NewClient()

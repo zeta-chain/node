@@ -54,7 +54,7 @@ func (s *COSuite) SetUpTest(c *C) {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass, false)
+		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
@@ -77,7 +77,7 @@ func (s *COSuite) SetUpTest(c *C) {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass, false)
+		k := NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
