@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+### Fix
+* [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
+
 ## Version: v10.1.2
 
 ### What's Changed:
