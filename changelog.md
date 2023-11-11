@@ -2,49 +2,71 @@
 
 ## Unreleased
 
-### Fix
+### Features
+
+### Fixes
+
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
+* [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+
+### Refactoring
+
+### Chores
+
+### Tests
+
+### CI
 
 ## Version: v10.1.2
 
-### What's Changed:
-* bfa1cb8 skip mainnet addresses in cctxs
-* 6e1fb4a skip garbage trackers and increase btc gas fee
-* fix: added upgrade name, and allow download. allows to test release can. by @gzukel in https://github.com/zeta-chain/node/pull/1195
-* chore: switch back to `cosmos/cosmos-sdk` by @lumtis in https://github.com/zeta-chain/node/pull/1193
-* test: Stateful upgrade by @kevinssgh in https://github.com/zeta-chain/node/pull/1135
-* fix: address `cosmos-gosec` lint issues by @lumtis in https://github.com/zeta-chain/node/pull/1153
-* chore: changed maxNestedMsgs by @CharlieMc0 in https://github.com/zeta-chain/node/pull/1222
-* ci: cross-compile release binaries and simplify PR testings by @CharlieMc0 in https://github.com/zeta-chain/node/pull/1218
-* feat: external stress test by @kevinssgh in https://github.com/zeta-chain/node/pull/1137
-* feat: allow setting liquidity cap for ZRC20 by @lumtis in https://github.com/zeta-chain/node/pull/1205
-* refactor: call `onCrossChainCall` when depositing to a contract by @lumtis in https://github.com/zeta-chain/node/pull/1226
-* fix(`rpc`): adding namespaces back by @lumtis in https://github.com/zeta-chain/node/pull/1228
-* refactor(`cmd`): change default mempool version in config by @lumtis in https://github.com/zeta-chain/node/pull/1238
-* fix(`MsgWhitelistERC20`): set unique index for generate cctx by @lumtis in https://github.com/zeta-chain/node/pull/1245
-* fix(`observer`): remove error return in `IsAuthorized` by @lumtis in https://github.com/zeta-chain/node/pull/1250
-* fix(`GetForeignCoinFromAsset`): Ethereum comparaison checksum/non-checksum format by @lumtis in https://github.com/zeta-chain/node/pull/1261
-* feat(`fungible`): add ability to update gas limit by @lumtis in https://github.com/zeta-chain/node/pull/1260
-* fix: Blame index update by @kevinssgh in https://github.com/zeta-chain/node/pull/1264
-* fix: feed sataoshi/B to zetacore and check actual outTx size by @ws4charlie in https://github.com/zeta-chain/node/pull/1243
-* fix: cherry pick all hotfix from v10.0.x (zero-amount, precision, etc.) by @ws4charlie in https://github.com/zeta-chain/node/pull/1235
-* fix: register emissions grpc server by @kingpinXD in https://github.com/zeta-chain/node/pull/1257
-* feat: Bitcoin block header and merkle proof by @ws4charlie in https://github.com/zeta-chain/node/pull/1263
-* fix: read gas limit from smart contract by @lumtis in https://github.com/zeta-chain/node/pull/1277
-* fix(`fungible`): add CLI command to query system contract by @lumtis in https://github.com/zeta-chain/node/pull/1252
-* fix(`cmd`): add notice when using `--ledger` with Ethereum HD path by @lumtis in https://github.com/zeta-chain/node/pull/1285
-* fix: gosec issues by @lumtis in https://github.com/zeta-chain/node/pull/1290
-* refactor: remove duplicate funtion name IsEthereum by @lukema95 in https://github.com/zeta-chain/node/pull/1279
-* fix: query outtx tracker by chain using prefixed store by @ws4charlie in https://github.com/zeta-chain/node/pull/1283
-* refactor: skip gas stability pool funding when gasLimit is equal gasUsed by @lukema95 in https://github.com/zeta-chain/node/pull/1289
-* fix: minor fixes to stateful upgrade by @kevinssgh in https://github.com/zeta-chain/node/pull/1280
-* ci: add mainnet builds to goreleaser by @CharlieMc0 in https://github.com/zeta-chain/node/pull/1302
-* feat(`fungible`): add query command to get all gas stability pool balances by @lumtis in https://github.com/zeta-chain/node/pull/1247
-* feat: tss funds migration by @kingpinXD in https://github.com/zeta-chain/node/pull/1143
-* fix(`gas-payment`): remove check `gasObtained == outTxGasFee` by @lumtis in https://github.com/zeta-chain/node/pull/1304
-* chore: sync from mockmain  by @brewmaster012 in https://github.com/zeta-chain/node/pull/1265
-* chore: increment handler version by @kingpinXD in https://github.com/zeta-chain/node/pull/1307
-* fix: begin blocker for mock mainnet by @kingpinXD in https://github.com/zeta-chain/node/pull/1308
+### Features
+* [1137](https://github.com/zeta-chain/node/pull/1137) - external stress testing
+* [1205](https://github.com/zeta-chain/node/pull/1205) - allow setting liquidity cap for ZRC20
+* [1260](https://github.com/zeta-chain/node/pull/1260) - add ability to update gas limit
+* [1263](https://github.com/zeta-chain/node/pull/1263) - Bitcoin block header and merkle proof
+* [1247](https://github.com/zeta-chain/node/pull/1247) - add query command to get all gas stability pool balances
+* [1143](https://github.com/zeta-chain/node/pull/1143) - tss funds migration capability
 
+### Fixes
 
+* [1195](https://github.com/zeta-chain/node/pull/1195) - added upgrade name, and allow download. allows to test release
+* [1153](https://github.com/zeta-chain/node/pull/1153) - address `cosmos-gosec` lint issues
+* [1128](https://github.com/zeta-chain/node/pull/1228) - adding namespaces back in rpc
+* [1245](https://github.com/zeta-chain/node/pull/1245) - set unique index for generate cctx
+* [1250](https://github.com/zeta-chain/node/pull/1250) - remove error return in `IsAuthorized`
+* [1261](https://github.com/zeta-chain/node/pull/1261) - Ethereum comparaison checksum/non-checksum format
+* [1264](https://github.com/zeta-chain/node/pull/1264) - Blame index update
+* [1243](https://github.com/zeta-chain/node/pull/1243) - feed sataoshi/B to zetacore and check actual outTx size
+* [1235](https://github.com/zeta-chain/node/pull/1235) - cherry pick all hotfix from v10.0.x (zero-amount, precision, etc.)
+* [1257](https://github.com/zeta-chain/node/pull/1257) - register emissions grpc server
+* [1277](https://github.com/zeta-chain/node/pull/1277) - read gas limit from smart contract
+* [1252](https://github.com/zeta-chain/node/pull/1252) - add CLI command to query system contract
+* [1285](https://github.com/zeta-chain/node/pull/1285) - add notice when using `--ledger` with Ethereum HD path
+* [1283](https://github.com/zeta-chain/node/pull/1283) - query outtx tracker by chain using prefixed store
+* [1280](https://github.com/zeta-chain/node/pull/1280) - minor fixes to stateful upgrade
+* [1304](https://github.com/zeta-chain/node/pull/1304) - remove check `gasObtained == outTxGasFee`
+* [1308](https://github.com/zeta-chain/node/pull/1308) - begin blocker for mock mainnet
+
+### Refactoring
+
+* [1226](https://github.com/zeta-chain/node/pull/1226) - call `onCrossChainCall` when depositing to a contract
+* [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config 
+* [1279](https://github.com/zeta-chain/node/pull/1279) - remove duplicate funtion name IsEthereum
+* [1289](https://github.com/zeta-chain/node/pull/1289) - skip gas stability pool funding when gasLimit is equal gasUsed
+
+### Chores
+
+* [1193](https://github.com/zeta-chain/node/pull/1193) - switch back to `cosmos/cosmos-sdk`
+* [1222](https://github.com/zeta-chain/node/pull/1222) - changed maxNestedMsgs
+* [1265](https://github.com/zeta-chain/node/pull/1265) - sync from mockmain
+* [1307](https://github.com/zeta-chain/node/pull/1307) - increment handler version
+
+### Tests
+
+* [1135](https://github.com/zeta-chain/node/pull/1135) - Stateful upgrade for smoke tests
+
+### CI
+
+* [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
+* [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
 
