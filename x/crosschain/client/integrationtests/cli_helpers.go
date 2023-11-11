@@ -169,6 +169,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		"100",
 		"Zeta",
 		"",
+		"0",
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -201,6 +202,7 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
+		0,
 	)
 	return msg.Digest()
 }

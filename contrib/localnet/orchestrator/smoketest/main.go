@@ -276,7 +276,6 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestERC20Withdraw()
-	//smokeTest.WithdrawBitcoinMultipleTimes(5)
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestSendZetaOut()
