@@ -75,7 +75,9 @@ message MsgAddToOutTxTracker {
   int64 tx_index = 7;
 }
 
-message MsgAddToOutTxTrackerResponse {}
+message MsgAddToOutTxTrackerResponse {
+  bool is_removed = 1; // if the tx was removed from the tracker due to no pending cctx
+}
 
 message MsgRemoveFromOutTxTracker {
   string creator = 1;
@@ -155,6 +157,8 @@ message MsgVoteOnObservedInboundTx {
   common.CoinType coin_type = 12;
   string tx_origin = 13;
   string asset = 14;
+  // event index of the sent asset in the observed tx
+  uint64 event_index = 15;
 }
 
 message MsgVoteOnObservedInboundTxResponse {}

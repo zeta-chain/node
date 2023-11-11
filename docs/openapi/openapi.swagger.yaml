@@ -26646,6 +26646,32 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/crosschain/cctxbyStatus/{status}:
+    get:
+      operationId: Query_CctxByStatus
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryCctxByStatusResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: status
+          in: path
+          required: true
+          type: string
+          enum:
+            - PendingInbound
+            - PendingOutbound
+            - OutboundMined
+            - PendingRevert
+            - Reverted
+            - Aborted
+      tags:
+        - Query
   /zeta-chain/crosschain/chainNonces:
     get:
       summary: Queries a list of chainNonces items.
@@ -27738,6 +27764,26 @@ paths:
           required: true
           type: string
           format: byte
+      tags:
+        - Query
+  /zeta-chain/observer/get_block_header_state_by_chain_id/{chain_id}:
+    get:
+      operationId: Query_GetBlockHeaderStateByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetBlockHeaderStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
@@ -50609,6 +50655,10 @@ definitions:
     type: object
   crosschainMsgAddToOutTxTrackerResponse:
     type: object
+    properties:
+      is_removed:
+        type: boolean
+        title: if the tx was removed from the tracker due to no pending cctx
   crosschainMsgCreateTSSVoterResponse:
     type: object
   crosschainMsgGasPriceVoterResponse:
@@ -50810,6 +50860,14 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainPendingNonces'
+  crosschainQueryCctxByStatusResponse:
+    type: object
+    properties:
+      CrossChainTx:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/crosschainCrossChainTx'
   crosschainQueryConvertGasToZetaResponse:
     type: object
     properties:
@@ -51099,6 +51157,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
+  observerBlockHeaderState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
   observerBlockHeaderVerificationFlags:
     type: object
     properties:
@@ -51354,6 +51427,11 @@ definitions:
     properties:
       block_header:
         $ref: '#/definitions/commonBlockHeader'
+  observerQueryGetBlockHeaderStateResponse:
+    type: object
+    properties:
+      block_header_state:
+        $ref: '#/definitions/observerBlockHeaderState'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:

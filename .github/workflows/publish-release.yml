@@ -19,7 +19,6 @@ concurrency:
 
 jobs:
   pre-release-checks:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,16 +31,12 @@ jobs:
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
 
-      - name: Set Version for Hotfix Release from Input.
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
-
       - name: Major Version in Upgrade Handler Must Match Tag
+        if: github.event_name == 'pull_request'
         run: |
-          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f1)
+          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
           echo $UPGRADE_HANDLER_MAJOR_VERSION
-          GITHUB_TAG_MAJOR_VERSION=$(echo ${{ github.ref_name }} | cut -d '.' -f1)
+          echo $GITHUB_TAG_MAJOR_VERSION
           if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
             echo "ERROR: The major version of this release (${{ github.ref_name }}) does not match the major version in the releaseVersion constant ($UPGRADE_HANDLER_MAJOR_VERSION) found in app/setup_handlers.go"
             echo "Did you forget to update the 'releaseVersion' in app/setup_handlers.go?" 
@@ -50,7 +45,6 @@ jobs:
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
   publish-release:
-    if: github.event.pull_request.merged == true
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
@@ -60,8 +54,10 @@ jobs:
 
       - name: Echo Release Notes from PR Message.
         if: github.event_name == 'pull_request'
+        id: release_notes
         run: |
-            echo -e "${{ github.event.head_commit.message }}" > Release.txt
+          cat changelog.md > ${{ github.workspace }}-CHANGELOG.txt
+          cat ${{ github.workspace }}-CHANGELOG.txt
 
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
@@ -94,12 +90,29 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "true"
 
+      - name: Create Release Tag
+        shell: bash
+        run: |
+          git tag ${GITHUB_TAG_MAJOR_VERSION}
+          create_tag=$(git push --tags || echo "tag exists")
+          if [[ $create_tag == "tag exists" ]]; then
+            echo "Delete existing tag to re-create"
+            git tag -d ${GITHUB_TAG_MAJOR_VERSION}
+            git push --delete origin ${GITHUB_TAG_MAJOR_VERSION}
+            echo "sleep for 5 seconds to let github catch up."
+            sleep 5
+            echo "Re-Create Tag."
+            git tag ${GITHUB_TAG_MAJOR_VERSION}
+            git push --tags      
+          fi
+
       - name: Create GitHub Release on Pull Request
         if: github.event_name == 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          files: Release.txt
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Create GitHub Release Hot Fix
         if: github.event_name != 'pull_request'
@@ -107,112 +120,15 @@ jobs:
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           generate_release_notes: true
+          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Publish Release Files
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
+          GORELEASER_CURRENT_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
         run: |
           touch .release-env
           make release
-
-      - name: Build, tag, and push docker images
-        uses: ./.github/actions/build-docker-images
-        with:
-          DOCKER_FILENAME: Dockerfile-relese
-          REPOSITORY_NAME: zeta-node
-          IMAGE_TAG: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-          GHCR_USERNAME: ${{ secrets.PAT_GITHUB_SERVICE_ACCT_USERNAME }}
-          GHCR_TOKEN: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-
-  build-alpine:
-    if: github.event.pull_request.merged == true
-    runs-on: ["ubuntu-latest"]
-    timeout-minutes: 30
-    concurrency:
-      group: "alpine-build-test"
-    needs:
-      - pre-release-checks
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set CPU Architecture
-        shell: bash
-        run: |
-          if [ "$(uname -m)" == "aarch64" ]; then
-            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-          elif [ "$(uname -m)" == "x86_64" ]; then
-            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-          else
-            echo "Unsupported architecture" >&2
-            exit 1
-          fi
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
-        with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "false"
-
-      - uses: jirutka/setup-alpine@v1
-        with:
-          branch: v3.17
-          arch: x86_64
-          packages: >
-            build-base
-            pkgconf
-            lld
-            go
-            gcc 
-            g++
-            libusb-dev 
-            linux-headers
-            git
-          shell-name: alpine.sh
-
-      - name: Build zetacored and zetaclientd
-        env:
-          CGO_ENABLED: 1
-          GOOS: linux
-          GOARCH: ${{ env.CPU_ARCH }}
-        shell: alpine.sh --root {0}
-        run: |
-          git config --global --add safe.directory '*'
-          make install-testnet
-          cp "$HOME"/go/bin/* ./
-
-      - name: Binary Docker Test
-        env:
-          CPU_ARCH: ${{ env.CPU_ARCH }}
-        shell: alpine.sh --root {0}
-        run: |
-          chmod a+x ./zetacored
-          ./zetacored version
-          mv zetacored zetacored-testnet-alpine-$CPU_ARCH
-          mv zetaclientd zetaclientd-testnet-alpine-$CPU_ARCH
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          generate_release_notes: true
-          files: |
-            zetacored-*
-            zetaclientd-*
-
-      - name: Clean Up Alpine Workspace
-        if: always()
-        shell: alpine.sh --root {0}
-        run: |
-          set -e # fail on error
-          rm -rf *
-
-      - name: Clean Up Workspace
-        if: always()
-        shell: bash
-        run: rm -rf *
 
   announce-release:
     if: github.event.pull_request.merged == true
@@ -220,7 +136,6 @@ jobs:
     timeout-minutes: 10
     needs:
       - publish-release
-      - build-alpine
     steps:
       - uses: actions/checkout@v3
       - name: Get Version
@@ -246,9 +161,9 @@ jobs:
           discord_token: "${{ secrets.DISCORD_TOKEN }}"
           discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
           discord_message: |
-            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released. 
+            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released.
 
-            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal. 
+            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal.
             We will submit a governance proposal in the next few days.
             More specific information including block height will be shared as part of the governance proposal.
 
