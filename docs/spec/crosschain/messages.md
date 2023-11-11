@@ -219,6 +219,7 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
+	uint64 event_index = 15;
 }
 ```
 

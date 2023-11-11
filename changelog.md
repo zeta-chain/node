@@ -1,10 +1,13 @@
 # CHANGELOG
 
-## Unreleasd
+## Unreleased
 
 ### Features
 
 ### Fixes
+
+* [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
+* [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
 
 ### Refactoring
 
@@ -66,13 +69,4 @@
 
 * [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
 * [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
-
-
-
-
-
-### Unreleased:
-* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
-
-
 
