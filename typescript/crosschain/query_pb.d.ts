@@ -18,6 +18,49 @@ import type { PendingNonces } from "./nonce_to_cctx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.QueryAbortedZetaAmountRequest
+ */
+export declare class QueryAbortedZetaAmountRequest extends Message<QueryAbortedZetaAmountRequest> {
+  constructor(data?: PartialMessage<QueryAbortedZetaAmountRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryAbortedZetaAmountRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAbortedZetaAmountRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountRequest;
+
+  static equals(a: QueryAbortedZetaAmountRequest | PlainMessage<QueryAbortedZetaAmountRequest> | undefined, b: QueryAbortedZetaAmountRequest | PlainMessage<QueryAbortedZetaAmountRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryAbortedZetaAmountResponse
+ */
+export declare class QueryAbortedZetaAmountResponse extends Message<QueryAbortedZetaAmountResponse> {
+  /**
+   * @generated from field: string amount = 6;
+   */
+  amount: string;
+
+  constructor(data?: PartialMessage<QueryAbortedZetaAmountResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryAbortedZetaAmountResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAbortedZetaAmountResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountResponse;
+
+  static equals(a: QueryAbortedZetaAmountResponse | PlainMessage<QueryAbortedZetaAmountResponse> | undefined, b: QueryAbortedZetaAmountResponse | PlainMessage<QueryAbortedZetaAmountResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusRequest
  */
 export declare class QueryCctxByStatusRequest extends Message<QueryCctxByStatusRequest> {

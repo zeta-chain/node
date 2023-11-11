@@ -26477,6 +26477,20 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/abortedZetaAmount:
+    get:
+      operationId: Query_AbortedZetaAmount
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryAbortedZetaAmountResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of send items.
@@ -50754,6 +50768,11 @@ definitions:
       tss:
         type: string
     title: store key is tss+chainid
+  crosschainQueryAbortedZetaAmountResponse:
+    type: object
+    properties:
+      amount:
+        type: string
   crosschainQueryAllCctxPendingResponse:
     type: object
     properties:

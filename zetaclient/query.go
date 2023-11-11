@@ -145,6 +145,15 @@ func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.Cross
 	return resp.CrossChainTx, nil
 }
 
+func (b *ZetaCoreBridge) GetAbortedZetaAmount() (sdkmath.Uint, error) {
+	client := types.NewQueryClient(b.grpcConn)
+	resp, err := client.AbortedZetaAmount(context.Background(), &types.QueryAbortedZetaAmountRequest{})
+	if err != nil {
+		return sdkmath.ZeroUint(), err
+	}
+	return resp.Amount, nil
+}
+
 func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
 	tmURL := fmt.Sprintf("http://%s", b.cfg.ChainRPC)
 	s, err := tmhttp.New(tmURL, "/websocket")
