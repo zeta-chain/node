@@ -14,13 +14,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// SetCctxAndNonceToCctxAndInTxHashToCctx set a specific send in the store from its index
-func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send types.CrossChainTx) {
+// SetCctxAndNonceToCctxAndInTxHashToCctx does the following things in one function:
+// 1. set the cctx in the store
+// 2. set the mapping inTxHash -> cctxIndex , one inTxHash can be connected to multiple cctxindex
+// 3. set the mapping nonce => cctx
 
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-	b := k.cdc.MustMarshal(&send)
-	store.Set(types.KeyPrefix(send.Index), b)
+func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send types.CrossChainTx) {
+	k.SetCrossChainTx(ctx, send)
 
 	// set mapping inTxHash -> cctxIndex
 	in, _ := k.GetInTxHashToCctx(ctx, send.InboundTxParams.InboundTxObservedHash)
@@ -50,6 +50,9 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 			CctxIndex: send.Index,
 			Tss:       tss.TssPubkey,
 		})
+	}
+	if send.CctxStatus.Status == types.CctxStatus_Aborted {
+		k.AddAbortedZetaAmount(ctx, send.GetCurrentOutTxParam().Amount)
 	}
 }
 

@@ -58,6 +58,7 @@ const (
 
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
+	AbortedZetaAmountKey   = "AbortedZetaAmount-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields

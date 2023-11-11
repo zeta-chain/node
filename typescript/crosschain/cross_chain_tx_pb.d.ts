@@ -130,6 +130,30 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.AbortedZetaAmount
+ */
+export declare class AbortedZetaAmount extends Message<AbortedZetaAmount> {
+  /**
+   * @generated from field: string amount = 6;
+   */
+  amount: string;
+
+  constructor(data?: PartialMessage<AbortedZetaAmount>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.AbortedZetaAmount";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AbortedZetaAmount;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AbortedZetaAmount;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AbortedZetaAmount;
+
+  static equals(a: AbortedZetaAmount | PlainMessage<AbortedZetaAmount> | undefined, b: AbortedZetaAmount | PlainMessage<AbortedZetaAmount> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.OutboundTxParams
  */
 export declare class OutboundTxParams extends Message<OutboundTxParams> {

@@ -32,6 +32,13 @@ message InboundTxParams {
   uint64 inbound_tx_finalized_zeta_height = 10;
 }
 
+message AbortedZetaAmount {
+  string amount = 6 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message OutboundTxParams {
   string receiver = 1;
   int64 receiver_chainId = 2;
