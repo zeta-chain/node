@@ -3,7 +3,7 @@
 Broadcast message sendVoter
 
 ```
-zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset] [flags]
+zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex] [flags]
 ```
 
 ### Options

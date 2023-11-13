@@ -30,6 +30,7 @@ func NewMsgVoteOnObservedInboundTx(
 	gasLimit uint64,
 	coinType common.CoinType,
 	asset string,
+	eventIndex uint,
 ) *MsgVoteOnObservedInboundTx {
 	return &MsgVoteOnObservedInboundTx{
 		Creator:       creator,
@@ -45,6 +46,7 @@ func NewMsgVoteOnObservedInboundTx(
 		GasLimit:      gasLimit,
 		CoinType:      coinType,
 		Asset:         asset,
+		EventIndex:    uint64(eventIndex),
 	}
 }
 

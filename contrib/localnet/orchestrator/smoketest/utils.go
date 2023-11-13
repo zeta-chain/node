@@ -8,21 +8,25 @@ import (
 	"sync"
 	"time"
 
-	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-
-	"github.com/ethereum/go-ethereum"
-
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *types.CrossChainTx {
+	cctxs := WaitCctxsMinedByInTxHash(inTxHash, cctxClient)
+	return cctxs[len(cctxs)-1]
+}
+
+// WaitCctxsMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
+func WaitCctxsMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) []*types.CrossChainTx {
 	var cctxIndexes []string
 	for {
 		time.Sleep(5 * time.Second)
@@ -56,7 +60,7 @@ func WaitCctxMinedByInTxHash(inTxHash string, cctxClient types.QueryClient) *typ
 		}()
 	}
 	wg.Wait()
-	return cctxs[len(cctxs)-1]
+	return cctxs
 }
 
 func IsTerminalStatus(status types.CctxStatus) bool {
