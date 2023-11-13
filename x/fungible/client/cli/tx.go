@@ -19,6 +19,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		CmdDeploySystemContracts(),
 		CmdDeployFungibleCoinZRC4(),
 		CmdRemoveForeignCoin(),
 		CmdUpdateZRC20LiquidityCap(),
