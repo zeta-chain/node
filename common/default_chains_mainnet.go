@@ -1,6 +1,3 @@
-//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
-// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
-
 package common
 
 func EthChain() Chain {
@@ -24,6 +21,27 @@ func ZetaChain() Chain {
 	}
 }
 
+func ZetaTestnetChain() Chain {
+	return Chain{
+		ChainName: ChainName_zeta_testnet,
+		ChainId:   7001,
+	}
+}
+
+func ZetaMocknetChain() Chain {
+	return Chain{
+		ChainName: ChainName_zeta_mainnet,
+		ChainId:   70000,
+	}
+}
+
+func ZetaPrivnetChain() Chain {
+	return Chain{
+		ChainName: ChainName_zeta_mainnet,
+		ChainId:   101,
+	}
+}
+
 func BtcMainnetChain() Chain {
 	return Chain{
 		ChainName: ChainName_btc_mainnet,
@@ -43,6 +61,20 @@ func PolygonChain() Chain {
 	return Chain{
 		ChainName: ChainName_polygon_mainnet,
 		ChainId:   137,
+	}
+}
+
+func BtcRegtestChain() Chain {
+	return Chain{
+		ChainName: ChainName_btc_regtest,
+		ChainId:   18444,
+	}
+}
+
+func GoerliChain() Chain {
+	return Chain{
+		ChainName: ChainName_goerli_localnet,
+		ChainId:   1337,
 	}
 }
 

@@ -1,6 +1,3 @@
-//go:build !PRIVNET && !TESTNET && !MOCK_MAINNET
-// +build !PRIVNET,!TESTNET,!MOCK_MAINNET
-
 package types
 
 import (

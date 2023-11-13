@@ -38,7 +38,8 @@ func GetCoreParams() CoreParamsList {
 				OutTxTicker:                 2,
 				OutboundTxScheduleInterval:  2,
 				OutboundTxScheduleLookahead: 5,
-			}},
+			},
+		},
 	}
 	chainList := common.ExternalChainList()
 	requiredParams := len(chainList)
