@@ -51049,6 +51049,19 @@ definitions:
     properties:
       address:
         type: string
+  fungibleMsgDeploySystemContractsResponse:
+    type: object
+    properties:
+      uniswapV2Factory:
+        type: string
+      wzeta:
+        type: string
+      uniswapV2Router:
+        type: string
+      connectorZEVM:
+        type: string
+      systemContract:
+        type: string
   fungibleMsgRemoveForeignCoinResponse:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
