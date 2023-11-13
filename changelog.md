@@ -11,6 +11,8 @@
 
 ### Refactoring
 
+* [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
+
 ### Chores
 
 ### Tests
