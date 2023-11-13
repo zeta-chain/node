@@ -143,6 +143,17 @@ service Query {
   rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
   }
+
+  rpc CctxByStatus(QueryCctxByStatusRequest) returns (QueryCctxByStatusResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/cctxbyStatus/{status}";
+  }
+}
+
+message QueryCctxByStatusRequest {
+  CctxStatus status = 1;
+}
+message QueryCctxByStatusResponse {
+  repeated CrossChainTx CrossChainTx = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryTssHistoryRequest {}

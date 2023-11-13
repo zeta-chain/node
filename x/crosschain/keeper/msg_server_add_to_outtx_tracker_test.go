@@ -25,7 +25,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, 0)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   admin,
@@ -47,7 +47,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -69,7 +69,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, 1)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -91,7 +91,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -113,7 +113,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -134,7 +134,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
-		setupTss(k, ctx)
+		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -151,8 +151,22 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 	})
 }
 
-func setupTss(k *keeper.Keeper, ctx sdk.Context) {
+func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce int64) {
 	k.SetTSS(ctx, types.TSS{
 		TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
+	})
+	cctx := types.CrossChainTx{
+		Creator: "any",
+		Index:   "0x123",
+		CctxStatus: &types.Status{
+			Status: types.CctxStatus_PendingOutbound,
+		},
+	}
+	k.SetCrossChainTx(ctx, cctx)
+	k.SetNonceToCctx(ctx, types.NonceToCctx{
+		ChainId:   chainId,
+		Nonce:     nonce,
+		CctxIndex: "0x123",
+		Tss:       "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
 	})
 }

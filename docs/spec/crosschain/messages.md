@@ -4,6 +4,7 @@
 
 AddToOutTxTracker adds a new record to the outbound transaction tracker.
 only the admin policy account and the observer validators are authorized to broadcast this message without proof.
+If no pending cctx is found, the tracker is removed, if there is an existed tracker with the nonce & chainID.
 
 ```proto
 message MsgAddToOutTxTracker {
@@ -218,6 +219,7 @@ message MsgVoteOnObservedInboundTx {
 	common.CoinType coin_type = 12;
 	string tx_origin = 13;
 	string asset = 14;
+	uint64 event_index = 15;
 }
 ```
 
