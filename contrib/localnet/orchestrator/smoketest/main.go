@@ -164,7 +164,13 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	//Wait for keygen to be completed. ~ height 30
+	// deploy system contracts and ZRC20 contracts on ZetaChain
+	err = DeploySystemContractsAndZRC20(zetaTxServer)
+	if err != nil {
+		panic(err)
+	}
+
+	// wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})

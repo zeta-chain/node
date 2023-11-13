@@ -87,17 +87,17 @@ func NewSmokeTest(
 	btcRPCClient *rpcclient.Client,
 ) *SmokeTest {
 	// query system contract address
-	systemContractAddr, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
+	systemContractRes, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("System contract address: %s\n", systemContractAddr)
 
-	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractAddr.SystemContract.SystemContract), zevmClient)
+	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractRes.SystemContract.SystemContract), zevmClient)
 	if err != nil {
 		panic(err)
 	}
-	SystemContractAddr := HexToAddress(systemContractAddr.SystemContract.SystemContract)
+	systemContractAddr := HexToAddress(systemContractRes.SystemContract.SystemContract)
+	fmt.Printf("System contract address: %s\n", systemContractAddr)
 
 	response := &crosschaintypes.QueryGetTssAddressResponse{}
 	for {
@@ -129,6 +129,6 @@ func NewSmokeTest(
 		zevmAuth:           zevmAuth,
 		btcRPCClient:       btcRPCClient,
 		SystemContract:     SystemContract,
-		SystemContractAddr: SystemContractAddr,
+		SystemContractAddr: systemContractAddr,
 	}
 }
