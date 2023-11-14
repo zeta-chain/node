@@ -82,7 +82,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("  USDT ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	bal1, _ := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	bal1, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("  ZEVMSwapApp ETHZRC20 balance %d", bal1)
 	tx, err = sm.BTCZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
 	if err != nil {
@@ -90,7 +93,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("  BTC ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	bal2, _ := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	bal2, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("  ZEVMSwapApp BTCZRC20 balance %d", bal2)
 
 	// msg would be [ZEVMSwapAppAddr, memobytes]

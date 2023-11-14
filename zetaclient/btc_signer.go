@@ -293,7 +293,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
 		return
 	}
-	
+
 	// Check receiver P2WPKH address
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {

@@ -162,9 +162,15 @@ func StressTest(_ *cobra.Command, _ []string) {
 		smokeTest.TestDepositEtherIntoZRC20()
 		smokeTest.TestSendZetaIn()
 	} else if stressTestArgs.network == "TESTNET" {
-		ethZRC20Addr, _ := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		ethZRC20Addr, err := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		if err != nil {
+			panic(err)
+		}
 		smokeTest.ETHZRC20Addr = ethZRC20Addr
-		smokeTest.ETHZRC20, _ = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
+		smokeTest.ETHZRC20, err = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		err := errors.New("invalid network argument: " + stressTestArgs.network)
 		panic(err)

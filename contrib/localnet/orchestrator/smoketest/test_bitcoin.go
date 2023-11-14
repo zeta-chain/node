@@ -99,7 +99,10 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	go func() {
 		// keep bitcoin chain going
 		for {
-			_, _ = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
+			_, err = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
+			if err != nil {
+				fmt.Println(err)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}()

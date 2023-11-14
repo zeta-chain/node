@@ -129,7 +129,10 @@ func WaitForBlockHeight(height int64) {
 	}
 	status := &coretypes.ResultStatus{}
 	for status.SyncInfo.LatestBlockHeight < height {
-		status, _ = rpc.Status(context.Background())
+		status, err = rpc.Status(context.Background())
+		if err != nil {
+			panic(err)
+		}
 		time.Sleep(time.Second * 5)
 		fmt.Printf("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
 	}

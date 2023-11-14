@@ -68,7 +68,10 @@ func GetTempDir(t testing.TB) string {
 	// this change's rationale.
 	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+	t.Cleanup(func() {
+		err := os.RemoveAll(tempdir)
+		require.NoError(t, err)
+	})
 	return tempdir
 }
 

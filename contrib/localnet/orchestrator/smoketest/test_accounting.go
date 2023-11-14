@@ -13,8 +13,14 @@ import (
 
 func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 	{
-		tssBal, _ := sm.goerliClient.BalanceAt(context.Background(), TSSAddress, nil)
-		zrc20Supply, _ := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+		tssBal, err := sm.goerliClient.BalanceAt(context.Background(), TSSAddress, nil)
+		if err != nil {
+			panic(err)
+		}
+		zrc20Supply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
 		if tssBal.Cmp(zrc20Supply) < 0 {
 			panic(fmt.Sprintf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply))
 		} else {
@@ -33,7 +39,10 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 				btcBalance += utxo.Amount
 			}
 		}
-		zrc20Supply, _ := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
+		zrc20Supply, err := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
 		// #nosec G701 smoketest - always in range
 		if int64(btcBalance*1e8) < zrc20Supply.Int64() {
 			// #nosec G701 smoketest - always in range
@@ -49,7 +58,10 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		if err != nil {
 			panic(err)
 		}
-		zrc20Supply, _ := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
+		zrc20Supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
+		if err != nil {
+			panic(err)
+		}
 		if usdtBal.Cmp(zrc20Supply) < 0 {
 			panic(fmt.Sprintf("USDT: TSS balance (%d) < ZRC20 TotalSupply (%d) ", usdtBal, zrc20Supply))
 		} else {

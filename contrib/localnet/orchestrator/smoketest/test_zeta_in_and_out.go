@@ -59,17 +59,29 @@ func (sm *SmokeTest) TestSendZetaIn() {
 
 	sm.wg.Add(1)
 	go func() {
-		bn, _ := sm.zevmClient.BlockNumber(context.Background())
+		bn, err := sm.zevmClient.BlockNumber(context.Background())
+		if err != nil {
+			panic(err)
+		}
 		// #nosec G701 smoketest - always in range
-		initialBal, _ := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+		initialBal, err := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+		if err != nil {
+			panic(err)
+		}
 		fmt.Printf("Zeta block %d, Initial Deployer Zeta balance: %d\n", bn, initialBal)
 
 		defer sm.wg.Done()
 		for {
 			time.Sleep(5 * time.Second)
-			bn, _ = sm.zevmClient.BlockNumber(context.Background())
+			bn, err = sm.zevmClient.BlockNumber(context.Background())
+			if err != nil {
+				panic(err)
+			}
 			// #nosec G701 smoketest - always in range
-			bal, _ := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+			bal, err := sm.zevmClient.BalanceAt(context.Background(), DeployerAddress, big.NewInt(int64(bn)))
+			if err != nil {
+				panic(err)
+			}
 			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
 
 			diff := big.NewInt(0)
