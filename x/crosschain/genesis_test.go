@@ -3,6 +3,7 @@ package crosschain_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -14,6 +15,9 @@ import (
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
+		AbortedZetaAmount: types.AbortedZetaAmount{
+			Amount: sdkmath.OneUint(),
+		},
 		OutTxTrackerList: []types.OutTxTracker{
 			sample.OutTxTracker(t, "0"),
 			sample.OutTxTracker(t, "1"),

@@ -10,7 +10,7 @@ import type { OutTxTracker } from "./out_tx_tracker_pb.js";
 import type { TSS } from "./tss_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
-import type { CrossChainTx } from "./cross_chain_tx_pb.js";
+import type { AbortedZetaAmount, CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
@@ -70,6 +70,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;
    */
   inTxTrackerList: InTxTracker[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.AbortedZetaAmount aborted_zeta_amount = 12;
+   */
+  abortedZetaAmount?: AbortedZetaAmount;
 
   constructor(data?: PartialMessage<GenesisState>);
 
