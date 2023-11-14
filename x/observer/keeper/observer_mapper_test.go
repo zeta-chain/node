@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package keeper
 
 import (

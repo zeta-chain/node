@@ -84,7 +84,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPu
 	if err != nil {
 		return nil, err
 	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitcoinRegnetParams)
 	if err != nil {
 		return nil, err
 	}

@@ -170,7 +170,7 @@ func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc 
 		if err != nil {
 			return fmt.Errorf("failed to parse public key")
 		}
-		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitconNetParams)
+		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitcoinRegnetParams)
 		if err != nil {
 			return fmt.Errorf("failed to create P2WPKH address")
 		}

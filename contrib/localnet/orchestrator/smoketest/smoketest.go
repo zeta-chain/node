@@ -112,7 +112,7 @@ func NewSmokeTest(
 	}
 
 	TSSAddress = ethcommon.HexToAddress(response.Eth)
-	BTCTSSAddress, _ = btcutil.DecodeAddress(response.Btc, config.BitconNetParams)
+	BTCTSSAddress, _ = btcutil.DecodeAddress(response.Btc, config.BitcoinRegnetParams)
 	fmt.Printf("TSS EthAddress: %s\n TSS BTC address %s\n", response.GetEth(), response.GetBtc())
 
 	return &SmokeTest{

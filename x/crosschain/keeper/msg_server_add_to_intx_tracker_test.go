@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
