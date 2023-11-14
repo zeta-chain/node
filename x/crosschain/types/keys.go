@@ -36,20 +36,11 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	TxinKey      = "Txin-value-"
-	TxinVoterKey = "TxinVoter-value-"
+	SendKey            = "Send-value-"
+	LastBlockHeightKey = "LastBlockHeight-value-"
+	ChainNoncesKey     = "ChainNonces-value-"
+	GasPriceKey        = "GasPrice-value-"
 
-	TxoutKey             = "Txout-value-"
-	TxoutCountKey        = "Txout-count-"
-	TxoutConfirmationKey = "TxoutConfirmation-value-"
-	SendKey              = "Send-value-"
-	VoteCounterKey       = "VoteCounter-value-"
-	ReceiveKey           = "Receive-value-"
-	LastBlockHeightKey   = "LastBlockHeight-value-"
-	ChainNoncesKey       = "ChainNonces-value-"
-	GasPriceKey          = "GasPrice-value-"
-
-	GasBalanceKey = "GasBalance-value-"
 	TSSKey        = "TSS-value-"
 	TSSHistoryKey = "TSS-History-value-"
 
@@ -58,7 +49,9 @@ const (
 
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
-	AbortedZetaAmountKey   = "AbortedZetaAmount-value-"
+	// #nosec G101: Potential hardcoded credentials (gosec)
+	// AbortedZetaAmountKey value is used as prefix for storing AbortedZetaAmountKey
+	AbortedZetaAmountKey = "AbortedZetaAmount-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
