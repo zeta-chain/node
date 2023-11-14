@@ -177,11 +177,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				if err != nil {
 					return err
 				}
-				err = k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
-				if err != nil {
-					return err
-				}
-				return nil
+				return k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
 			}()
 			if err != nil {
 				// do not commit anything here as the CCTX should be aborted
@@ -212,34 +208,30 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		commit()
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+	}
 
-	} else { // Cross Chain SWAP
-		tmpCtx, commit := ctx.CacheContext()
-		err = func() error {
-			err := k.PayGasAndUpdateCctx(
-				tmpCtx,
-				receiverChain.ChainId,
-				&cctx,
-				cctx.InboundTxParams.Amount,
-				false,
-			)
-			if err != nil {
-				return err
-			}
-			err = k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
-			if err != nil {
-				return err
-			}
-			return nil
-		}()
+	// Received is not ZetaChain: Cross Chain SWAP
+	tmpCtx, commit := ctx.CacheContext()
+	err = func() error {
+		err := k.PayGasAndUpdateCctx(
+			tmpCtx,
+			receiverChain.ChainId,
+			&cctx,
+			cctx.InboundTxParams.Amount,
+			false,
+		)
 		if err != nil {
-			// do not commit anything here as the CCTX should be aborted
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+			return err
 		}
-		commit()
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
-		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
+		return k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
+	}()
+	if err != nil {
+		// do not commit anything here as the CCTX should be aborted
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
+	commit()
+	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
+	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }

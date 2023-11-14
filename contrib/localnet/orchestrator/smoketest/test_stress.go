@@ -17,8 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
@@ -87,6 +86,9 @@ func StressTest(_ *cobra.Command, _ []string) {
 	fmt.Printf("Deployer address: %s, balance: %d Wei\n", DeployerAddress.Hex(), bal)
 
 	chainid, err := goerliClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
 	deployerPrivkey, err := crypto.HexToECDSA(stressTestArgs.deployerPrivateKey)
 	if err != nil {
 		panic(err)
@@ -101,7 +103,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	cctxClient := types.NewQueryClient(grpcConn)
+	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
@@ -111,7 +113,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 	time.Sleep(20 * time.Second)
 	for {
 		time.Sleep(5 * time.Second)
-		response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
 			continue
@@ -195,6 +197,9 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
 	blockNum, err := smokeTest.zevmClient.BlockNumber(context.Background())
+	if err != nil {
+		panic(err)
+	}
 
 	// #nosec G701 smoketest - always in range
 	nonce, err := smokeTest.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
@@ -241,7 +246,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
+			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &crosschaintypes.QueryAllCctxPendingRequest{
 				ChainId: getChainID(),
 			})
 			if err != nil {
@@ -258,7 +263,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			}
 			//
 			// Get all trackers
-			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &types2.QueryAllOutTxTrackerRequest{})
+			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
 			if err != nil {
 				continue
 			}

@@ -23,9 +23,8 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		}
 		if tssBal.Cmp(zrc20Supply) < 0 {
 			panic(fmt.Sprintf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply))
-		} else {
-			fmt.Printf("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", tssBal, zrc20Supply)
 		}
+		fmt.Printf("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", tssBal, zrc20Supply)
 	}
 
 	{
@@ -47,10 +46,10 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		if int64(btcBalance*1e8) < zrc20Supply.Int64() {
 			// #nosec G701 smoketest - always in range
 			panic(fmt.Sprintf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply))
-		} else {
-			// #nosec G701 smoketest - always in range
-			fmt.Printf("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)\n", int64(btcBalance*1e8), zrc20Supply)
 		}
+
+		// #nosec G701 smoketest - always in range
+		fmt.Printf("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)\n", int64(btcBalance*1e8), zrc20Supply)
 	}
 
 	{
@@ -64,9 +63,8 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 		}
 		if usdtBal.Cmp(zrc20Supply) < 0 {
 			panic(fmt.Sprintf("USDT: TSS balance (%d) < ZRC20 TotalSupply (%d) ", usdtBal, zrc20Supply))
-		} else {
-			fmt.Printf("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", usdtBal, zrc20Supply)
 		}
+		fmt.Printf("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", usdtBal, zrc20Supply)
 	}
 
 	{

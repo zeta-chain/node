@@ -234,12 +234,18 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	receipt := MustWaitForTxReceipt(zevmClient, tx)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
+
 	zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+
 	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
 	smokeTest.ZEVMSwapApp = zevmSwapApp
 

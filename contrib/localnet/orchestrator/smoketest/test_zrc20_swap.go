@@ -22,7 +22,7 @@ func (sm *SmokeTest) TestZRC20Swap() {
 		}
 		receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
 
-		fmt.Printf("USDT-ETH pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status)
+		fmt.Printf("USDT-ETH pair receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	}
 
 	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)

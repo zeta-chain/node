@@ -64,9 +64,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if !fcRes.GetForeignCoins().Paused {
 		panic("ETH should be paused")
-	} else {
-		fmt.Printf("ETH is paused\n")
 	}
+	fmt.Printf("ETH is paused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can no longer do operations on ETH ZRC20")
@@ -140,9 +139,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if fcRes.GetForeignCoins().Paused {
 		panic("ETH should be unpaused")
-	} else {
-		fmt.Printf("ETH is unpaused\n")
 	}
+	fmt.Printf("ETH is unpaused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can do operations on ETH ZRC20 again")

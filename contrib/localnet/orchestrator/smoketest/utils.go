@@ -45,6 +45,7 @@ func WaitCctxsMinedByInTxHash(inTxHash string, cctxClient crosschaintypes.QueryC
 	var wg sync.WaitGroup
 	var cctxs []*crosschaintypes.CrossChainTx
 	for _, cctxIndex := range cctxIndexes {
+		cctxIndex := cctxIndex
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -153,13 +154,13 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	}
 
 	// set system contract
-	res, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgUpdateSystemContract(FungibleAdminAddress, sc))
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgUpdateSystemContract(FungibleAdminAddress, sc))
 	if err != nil {
 		return err
 	}
 
 	// deploy eth zrc20
-	res, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
 		"",
 		common.GoerliChain().ChainId,
@@ -174,7 +175,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	}
 
 	// deploy btc zrc20
-	res, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
 		"",
 		common.BtcRegtestChain().ChainId,
@@ -190,7 +191,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 
 	// deploy usdt zrc20
 	usdtAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	res, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
 		usdtAddr,
 		common.GoerliChain().ChainId,

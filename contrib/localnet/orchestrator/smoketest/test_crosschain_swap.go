@@ -175,6 +175,9 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 
 		amount := 0.1
 		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, amount, utxos[0:2], sm.btcRPCClient, memo)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 		if err != nil {
