@@ -9,12 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-var (
-	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
-	SigningAlgoEd25519   = SigninAlgo("ed25519")
-)
-
-// return the ChainName from a string
+// ParseChainName returns the ChainName from a string
 // if no such name exists, returns the empty chain name: ChainName_empty
 func ParseChainName(chain string) ChainName {
 	c := ChainName_value[chain]
@@ -29,7 +24,7 @@ type SigninAlgo string
 // Chains represent a slice of Chain
 type Chains []Chain
 
-// Equals compare two chain to see whether they represent the same chain
+// IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
 	if chain.ChainName == c.ChainName && chain.ChainId == c.ChainId {
 		return true
@@ -44,7 +39,7 @@ func (chain Chain) IsExternalChain() bool {
 	return !chain.IsEqual(ZetaChain())
 }
 
-// bytes representations of address
+// EncodeAddress bytes representations of address
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
@@ -166,16 +161,6 @@ func (chains Chains) Strings() []string {
 		strings[i] = c.String()
 	}
 	return strings
-}
-
-func GetChainFromChainName(chainName ChainName) *Chain {
-	chains := DefaultChainsList()
-	for _, chain := range chains {
-		if chainName == chain.ChainName {
-			return chain
-		}
-	}
-	return nil
 }
 
 func GetChainFromChainID(chainID int64) *Chain {
