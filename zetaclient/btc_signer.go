@@ -294,7 +294,6 @@ func (signer *BTCSigner) TryProcessOutTx(
 		return
 	}
 
-	// FIXME: config chain params
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
