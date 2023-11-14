@@ -183,15 +183,15 @@ func (_m *CrosschainFungibleKeeper) FundGasStabilityPool(ctx types.Context, chai
 }
 
 // GetAllForeignCoins provides a mock function with given fields: ctx
-func (_m *CrosschainFungibleKeeper) GetAllForeignCoins(ctx types.Context) []fungibletypes.ForeignCoins {
+func (_m *CrosschainFungibleKeeper) GetAllForeignCoins(ctx types.Context) []fungibletypes.ForeignCoin {
 	ret := _m.Called(ctx)
 
-	var r0 []fungibletypes.ForeignCoins
-	if rf, ok := ret.Get(0).(func(types.Context) []fungibletypes.ForeignCoins); ok {
+	var r0 []fungibletypes.ForeignCoin
+	if rf, ok := ret.Get(0).(func(types.Context) []fungibletypes.ForeignCoin); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]fungibletypes.ForeignCoins)
+			r0 = ret.Get(0).([]fungibletypes.ForeignCoin)
 		}
 	}
 
@@ -199,15 +199,15 @@ func (_m *CrosschainFungibleKeeper) GetAllForeignCoins(ctx types.Context) []fung
 }
 
 // GetAllForeignCoinsForChain provides a mock function with given fields: ctx, foreignChainID
-func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context, foreignChainID int64) []fungibletypes.ForeignCoins {
+func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context, foreignChainID int64) []fungibletypes.ForeignCoin {
 	ret := _m.Called(ctx, foreignChainID)
 
-	var r0 []fungibletypes.ForeignCoins
-	if rf, ok := ret.Get(0).(func(types.Context, int64) []fungibletypes.ForeignCoins); ok {
+	var r0 []fungibletypes.ForeignCoin
+	if rf, ok := ret.Get(0).(func(types.Context, int64) []fungibletypes.ForeignCoin); ok {
 		r0 = rf(ctx, foreignChainID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]fungibletypes.ForeignCoins)
+			r0 = ret.Get(0).([]fungibletypes.ForeignCoin)
 		}
 	}
 
@@ -215,18 +215,18 @@ func (_m *CrosschainFungibleKeeper) GetAllForeignCoinsForChain(ctx types.Context
 }
 
 // GetForeignCoinFromAsset provides a mock function with given fields: ctx, asset, chainID
-func (_m *CrosschainFungibleKeeper) GetForeignCoinFromAsset(ctx types.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool) {
+func (_m *CrosschainFungibleKeeper) GetForeignCoinFromAsset(ctx types.Context, asset string, chainID int64) (fungibletypes.ForeignCoin, bool) {
 	ret := _m.Called(ctx, asset, chainID)
 
-	var r0 fungibletypes.ForeignCoins
+	var r0 fungibletypes.ForeignCoin
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string, int64) (fungibletypes.ForeignCoins, bool)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) (fungibletypes.ForeignCoin, bool)); ok {
 		return rf(ctx, asset, chainID)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, string, int64) fungibletypes.ForeignCoins); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) fungibletypes.ForeignCoin); ok {
 		r0 = rf(ctx, asset, chainID)
 	} else {
-		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+		r0 = ret.Get(0).(fungibletypes.ForeignCoin)
 	}
 
 	if rf, ok := ret.Get(1).(func(types.Context, string, int64) bool); ok {
@@ -239,18 +239,18 @@ func (_m *CrosschainFungibleKeeper) GetForeignCoinFromAsset(ctx types.Context, a
 }
 
 // GetForeignCoins provides a mock function with given fields: ctx, zrc20Addr
-func (_m *CrosschainFungibleKeeper) GetForeignCoins(ctx types.Context, zrc20Addr string) (fungibletypes.ForeignCoins, bool) {
+func (_m *CrosschainFungibleKeeper) GetForeignCoins(ctx types.Context, zrc20Addr string) (fungibletypes.ForeignCoin, bool) {
 	ret := _m.Called(ctx, zrc20Addr)
 
-	var r0 fungibletypes.ForeignCoins
+	var r0 fungibletypes.ForeignCoin
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string) (fungibletypes.ForeignCoins, bool)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, string) (fungibletypes.ForeignCoin, bool)); ok {
 		return rf(ctx, zrc20Addr)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, string) fungibletypes.ForeignCoins); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, string) fungibletypes.ForeignCoin); ok {
 		r0 = rf(ctx, zrc20Addr)
 	} else {
-		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+		r0 = ret.Get(0).(fungibletypes.ForeignCoin)
 	}
 
 	if rf, ok := ret.Get(1).(func(types.Context, string) bool); ok {
@@ -263,18 +263,18 @@ func (_m *CrosschainFungibleKeeper) GetForeignCoins(ctx types.Context, zrc20Addr
 }
 
 // GetGasCoinForForeignCoin provides a mock function with given fields: ctx, chainID
-func (_m *CrosschainFungibleKeeper) GetGasCoinForForeignCoin(ctx types.Context, chainID int64) (fungibletypes.ForeignCoins, bool) {
+func (_m *CrosschainFungibleKeeper) GetGasCoinForForeignCoin(ctx types.Context, chainID int64) (fungibletypes.ForeignCoin, bool) {
 	ret := _m.Called(ctx, chainID)
 
-	var r0 fungibletypes.ForeignCoins
+	var r0 fungibletypes.ForeignCoin
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, int64) (fungibletypes.ForeignCoins, bool)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, int64) (fungibletypes.ForeignCoin, bool)); ok {
 		return rf(ctx, chainID)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, int64) fungibletypes.ForeignCoins); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, int64) fungibletypes.ForeignCoin); ok {
 		r0 = rf(ctx, chainID)
 	} else {
-		r0 = ret.Get(0).(fungibletypes.ForeignCoins)
+		r0 = ret.Get(0).(fungibletypes.ForeignCoin)
 	}
 
 	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
@@ -493,7 +493,7 @@ func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx typ
 }
 
 // SetForeignCoins provides a mock function with given fields: ctx, foreignCoins
-func (_m *CrosschainFungibleKeeper) SetForeignCoins(ctx types.Context, foreignCoins fungibletypes.ForeignCoins) {
+func (_m *CrosschainFungibleKeeper) SetForeignCoins(ctx types.Context, foreignCoins fungibletypes.ForeignCoin) {
 	_m.Called(ctx, foreignCoins)
 }
 

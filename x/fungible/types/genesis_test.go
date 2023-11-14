@@ -22,7 +22,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			desc: "valid genesis state",
 			genState: &types.GenesisState{
 
-				ForeignCoinsList: []types.ForeignCoins{
+				ForeignCoinsList: []types.ForeignCoin{
 					{
 						Zrc20ContractAddress: "0",
 					},
@@ -36,7 +36,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc: "duplicated foreignCoins",
 			genState: &types.GenesisState{
-				ForeignCoinsList: []types.ForeignCoins{
+				ForeignCoinsList: []types.ForeignCoin{
 					{
 						Zrc20ContractAddress: "0",
 					},
