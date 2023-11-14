@@ -202,7 +202,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 
 // Set existing deployed contracts
 func (sm *SmokeTest) setContracts() {
-	err := error(nil)
+	var err error
 	var contracts Contracts
 
 	// Read contracts toml file

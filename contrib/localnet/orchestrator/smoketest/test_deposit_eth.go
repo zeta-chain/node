@@ -79,6 +79,8 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		LoudPrintf("Merkle Proof\n")
 		txHash := receipt.TxHash
 		blockHash := receipt.BlockHash
+
+		// #nosec G701 smoketest - always in range
 		txIndex := int(receipt.TransactionIndex)
 
 		block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)

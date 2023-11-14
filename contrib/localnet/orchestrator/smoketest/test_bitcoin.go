@@ -434,6 +434,8 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 
 func (sm *SmokeTest) WithdrawBitcoinMultipleTimes(repeat int64) {
 	totalAmount := big.NewInt(int64(0.1 * 1e8))
+
+	// #nosec G701 smoketest - always in range
 	amount := big.NewInt(int64(0.1 * 1e8 / float64(repeat)))
 
 	// check if the deposit is successful

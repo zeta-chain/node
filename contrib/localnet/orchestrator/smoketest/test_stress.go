@@ -189,10 +189,14 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
 	blockNum, err := smokeTest.zevmClient.BlockNumber(context.Background())
+
+	// #nosec G701 smoketest - always in range
 	nonce, err := smokeTest.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
+
+	// #nosec G701 smoketest - always in range
 	zevmNonce = big.NewInt(int64(nonce))
 
 	// -------------- TEST BEGINS ------------------

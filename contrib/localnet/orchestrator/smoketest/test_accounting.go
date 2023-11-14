@@ -34,9 +34,12 @@ func (sm *SmokeTest) CheckZRC20ReserveAndSupply() {
 			}
 		}
 		zrc20Supply, _ := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
+		// #nosec G701 smoketest - always in range
 		if int64(btcBalance*1e8) < zrc20Supply.Int64() {
+			// #nosec G701 smoketest - always in range
 			panic(fmt.Sprintf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply))
 		} else {
+			// #nosec G701 smoketest - always in range
 			fmt.Printf("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)\n", int64(btcBalance*1e8), zrc20Supply)
 		}
 	}
