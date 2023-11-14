@@ -149,7 +149,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	}
 
 	// add to the foreign coins
-	foreignCoin := fungibletypes.ForeignCoins{
+	foreignCoin := fungibletypes.ForeignCoin{
 		Zrc20ContractAddress: zrc20Addr.Hex(),
 		Asset:                msg.Erc20Address,
 		ForeignChainId:       msg.ChainId,

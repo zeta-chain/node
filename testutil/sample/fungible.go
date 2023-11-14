@@ -7,10 +7,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func ForeignCoins(t *testing.T, address string) types.ForeignCoins {
+func ForeignCoins(t *testing.T, address string) types.ForeignCoin {
 	r := newRandFromStringSeed(t, address)
 
-	return types.ForeignCoins{
+	return types.ForeignCoin{
 		Zrc20ContractAddress: address,
 		Asset:                EthAddress().String(),
 		ForeignChainId:       r.Int63(),

@@ -11,6 +11,6 @@ option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 // GenesisState defines the fungible module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
-  repeated ForeignCoins foreignCoinsList = 2 [(gogoproto.nullable) = false];
+  repeated ForeignCoin foreignCoinsList = 2 [(gogoproto.nullable) = false];
   SystemContract systemContract = 3;
 }

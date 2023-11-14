@@ -70,12 +70,12 @@ type ZetaObserverKeeper interface {
 }
 
 type FungibleKeeper interface {
-	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoins, found bool)
-	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoins)
-	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoins)
-	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoins)
-	GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (fungibletypes.ForeignCoins, bool)
-	GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (fungibletypes.ForeignCoins, bool)
+	GetForeignCoins(ctx sdk.Context, zrc20Addr string) (val fungibletypes.ForeignCoin, found bool)
+	GetAllForeignCoins(ctx sdk.Context) (list []fungibletypes.ForeignCoin)
+	SetForeignCoins(ctx sdk.Context, foreignCoins fungibletypes.ForeignCoin)
+	GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []fungibletypes.ForeignCoin)
+	GetForeignCoinFromAsset(ctx sdk.Context, asset string, chainID int64) (fungibletypes.ForeignCoin, bool)
+	GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (fungibletypes.ForeignCoin, bool)
 	GetSystemContract(ctx sdk.Context) (val fungibletypes.SystemContract, found bool)
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
 	GetUniswapV2Router02Address(ctx sdk.Context) (eth.Address, error)

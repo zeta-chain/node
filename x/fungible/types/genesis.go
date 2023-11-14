@@ -7,7 +7,7 @@ import (
 // DefaultGenesis returns the default fungible genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		ForeignCoinsList: []ForeignCoins{},
+		ForeignCoinsList: []ForeignCoin{},
 		SystemContract:   nil,
 		Params:           DefaultParams(),
 	}

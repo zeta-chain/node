@@ -61,7 +61,7 @@ message QueryGetForeignCoinsRequest {
 }
 
 message QueryGetForeignCoinsResponse {
-  ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+  ForeignCoin foreignCoin = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryAllForeignCoinsRequest {
@@ -69,7 +69,7 @@ message QueryAllForeignCoinsRequest {
 }
 
 message QueryAllForeignCoinsResponse {
-  repeated ForeignCoins foreignCoins = 1 [(gogoproto.nullable) = false];
+  repeated ForeignCoin foreignCoin = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

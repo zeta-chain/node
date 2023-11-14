@@ -32,7 +32,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	asset string,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var ZRC20Contract eth.Address
-	var coin types.ForeignCoins
+	var coin types.ForeignCoin
 	var found bool
 
 	// get foreign coin

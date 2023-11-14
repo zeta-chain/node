@@ -6,7 +6,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
-message ForeignCoins {
+message ForeignCoin {
   //  string index = 1;
   string zrc20_contract_address = 2; // index
   string asset = 3;

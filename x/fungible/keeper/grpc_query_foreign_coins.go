@@ -16,14 +16,14 @@ func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoi
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var foreignCoinss []types.ForeignCoins
+	var foreignCoinss []types.ForeignCoin
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
 	foreignCoinsStore := prefix.NewStore(store, types.KeyPrefix(types.ForeignCoinsKeyPrefix))
 
 	pageRes, err := query.Paginate(foreignCoinsStore, req.Pagination, func(key []byte, value []byte) error {
-		var foreignCoins types.ForeignCoins
+		var foreignCoins types.ForeignCoin
 		if err := k.cdc.Unmarshal(value, &foreignCoins); err != nil {
 			return err
 		}
@@ -36,7 +36,7 @@ func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoi
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryAllForeignCoinsResponse{ForeignCoins: foreignCoinss, Pagination: pageRes}, nil
+	return &types.QueryAllForeignCoinsResponse{ForeignCoin: foreignCoinss, Pagination: pageRes}, nil
 }
 
 // Change this query to take Chain as well
@@ -54,5 +54,5 @@ func (k Keeper) ForeignCoins(c context.Context, req *types.QueryGetForeignCoinsR
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	return &types.QueryGetForeignCoinsResponse{ForeignCoins: val}, nil
+	return &types.QueryGetForeignCoinsResponse{ForeignCoin: val}, nil
 }
