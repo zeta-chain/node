@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Version: v10.1.0
+## Version: v12.1.0
 ### What's Changed:
 * fix: updated release ci
 * fix: added upgrade name, and allow download. allows to test release can. by @gzukel in https://github.com/zeta-chain/node/pull/1195
