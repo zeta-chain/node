@@ -32,7 +32,20 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 }
 
 // IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
+// It also checks if the signer is a validator and if they are not tombstoned
 func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool {
+	isPresentInMapper := k.IsObserverPresentInMappers(ctx, address, chain)
+	if !isPresentInMapper {
+		return false
+	}
+	isTombstoned, err := k.IsOperatorTombstoned(ctx, address)
+	if err != nil || isTombstoned {
+		return false
+	}
+	return true
+}
+
+func (k Keeper) IsObserverPresentInMappers(ctx sdk.Context, address string, chain *common.Chain) bool {
 	observerMapper, found := k.GetObserverMapper(ctx, chain)
 	if !found {
 		return false
@@ -85,7 +98,23 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 		return types.ErrValidatorStatus
 	}
 	return nil
+}
 
+func (k Keeper) IsOperatorTombstoned(ctx sdk.Context, creator string) (bool, error) {
+	valAddress, err := types.GetOperatorAddressFromAccAddress(creator)
+	if err != nil {
+		return false, err
+	}
+	validator, found := k.stakingKeeper.GetValidator(ctx, valAddress)
+	if !found {
+		return false, types.ErrNotValidator
+	}
+
+	consAddress, err := validator.GetConsAddr()
+	if err != nil {
+		return false, err
+	}
+	return k.slashingKeeper.IsTombstoned(ctx, consAddress), nil
 }
 
 func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {

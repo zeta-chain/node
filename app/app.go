@@ -332,6 +332,7 @@ func New(
 		keys[zetaObserverModuleTypes.MemStoreKey],
 		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
 		&stakingKeeper,
+		app.SlashingKeeper,
 	)
 
 	// register the staking hooks

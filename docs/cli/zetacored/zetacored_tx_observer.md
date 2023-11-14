@@ -31,4 +31,5 @@ zetacored tx observer [flags]
 * [zetacored tx observer update-client-params](zetacored_tx_observer_update-client-params.md)	 - Broadcast message updateClientParams
 * [zetacored tx observer update-crosschain-flags](zetacored_tx_observer_update-crosschain-flags.md)	 - Update crosschain flags
 * [zetacored tx observer update-keygen](zetacored_tx_observer_update-keygen.md)	 - command to update the keygen block via a group proposal
+* [zetacored tx observer update-observer](zetacored_tx_observer_update-observer.md)	 - Broadcast message add-observer
 
