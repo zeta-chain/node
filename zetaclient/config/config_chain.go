@@ -31,7 +31,7 @@ func GetERC20CustodyABI() string {
 }
 
 var (
-	BitconNetParams      = &chaincfg.MainNetParams
+	BitconNetParams      = &chaincfg.RegressionNetParams
 	BitcoinMainnetParams = &chaincfg.MainNetParams
 	BitcoinRegnetParams  = &chaincfg.RegressionNetParams
 )
