@@ -207,11 +207,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 
-		} else { // successful HandleEVMDeposit;
-			commit()
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		}
+		// successful HandleEVMDeposit;
+		commit()
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
+		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+
 	} else { // Cross Chain SWAP
 		tmpCtx, commit := ctx.CacheContext()
 		err = func() error {

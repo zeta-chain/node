@@ -1099,9 +1099,10 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
 		}
 		return block.Tx[res.BlockIndex], nil
-	} else { // res.Confirmations < 0 (meaning not included)
-		return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 	}
+
+	// res.Confirmations < 0 (meaning not included)
+	return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 }
 
 // checkTSSVin checks vin is valid if:

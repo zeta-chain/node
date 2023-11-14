@@ -125,11 +125,11 @@ func (sm *SmokeTest) DepositBTC() {
 	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
 	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
 	fmt.Printf("Now sending two txs to TSS address...\n")
-	txHash_1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
+	txHash1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
 	}
-	txHash_2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	txHash2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
 	if err != nil {
 		panic(err)
 	}
@@ -176,8 +176,8 @@ func (sm *SmokeTest) DepositBTC() {
 	// prove the two transactions of the deposit
 	LoudPrintf("Bitcoin Merkle Proof\n")
 
-	sm.ProveBTCTransaction(txHash_1)
-	sm.ProveBTCTransaction(txHash_2)
+	sm.ProveBTCTransaction(txHash1)
+	sm.ProveBTCTransaction(txHash2)
 }
 
 func (sm *SmokeTest) ProveBTCTransaction(txHash *chainhash.Hash) {
@@ -579,11 +579,17 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		fmt.Printf("  value: %d\n", txout.Value)
 		fmt.Printf("  PkScript: %x\n", txout.PkScript)
 	}
-	var inputsForSign []btcjson.RawTxWitnessInput
+
+	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
 	for i, input := range inputs {
 		inputsForSign = append(inputsForSign, btcjson.RawTxWitnessInput{
-			Txid: input.Txid, Vout: input.Vout, Amount: &amounts[i], ScriptPubKey: scriptPubkeys[i]})
+			Txid:         input.Txid,
+			Vout:         input.Vout,
+			Amount:       &amounts[i],
+			ScriptPubKey: scriptPubkeys[i],
+		})
 	}
+
 	//stx, signed, err := btc.SignRawTransactionWithWallet(tx)
 	stx, signed, err := btc.SignRawTransactionWithWallet2(tx, inputsForSign)
 	if err != nil {

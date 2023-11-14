@@ -194,7 +194,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(ContractsConfigFile, b, 0666)
+	err = os.WriteFile(ContractsConfigFile, b, 0600)
 	if err != nil {
 		panic(err)
 	}

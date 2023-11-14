@@ -104,7 +104,7 @@ func NewSmokeTest(
 		response, err = cctxClient.GetTssAddress(context.Background(), &crosschaintypes.QueryGetTssAddressRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
-			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore netowrk...\n")
+			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore network...\n")
 			time.Sleep(5 * time.Second)
 			continue
 		}

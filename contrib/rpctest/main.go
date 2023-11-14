@@ -86,12 +86,10 @@ func main() {
 	if resp.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", resp.Error.Message, resp.Error.Code)
 		panic(resp.Error.Message)
-	} else {
-		//fmt.Printf("Result: %s\n", string(resp.Result))
-		err = json.Unmarshal(resp.Result, &jsonObject)
-		if err != nil {
-			panic(err)
-		}
+	}
+	err = json.Unmarshal(resp.Result, &jsonObject)
+	if err != nil {
+		panic(err)
 	}
 
 	txs, ok := jsonObject["transactions"].([]interface{})
@@ -154,23 +152,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Printf("Deploy EthZeta Contract Receipt: %+v\n", receipt)
 	receipt2 := client.EthGetTransactionReceipt(tx2.Hash().Hex())
 	if receipt2.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", receipt2.Error.Message, receipt2.Error.Code)
 		panic(tx.Error.Message)
-	} else {
-		jsonObject = make(map[string]interface{})
-		err = json.Unmarshal(receipt2.Result, &jsonObject)
-		if err != nil {
-			panic(err)
-		}
-		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Result: %s\n", string(prettyJSON))
 	}
+	jsonObject = make(map[string]interface{})
+	err = json.Unmarshal(receipt2.Result, &jsonObject)
+	if err != nil {
+		panic(err)
+	}
+	prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Result: %s\n", string(prettyJSON))
+
 	fmt.Printf("ZetaEth Contract Address: %s\n", zetaContractAddress.Hex())
 	if zetaContractAddress != receipt.ContractAddress {
 		panic(fmt.Sprintf("Contract address mismatch: wanted %s, got %s", zetaContractAddress, receipt.ContractAddress))

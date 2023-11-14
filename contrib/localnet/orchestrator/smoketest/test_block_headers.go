@@ -44,9 +44,8 @@ func (sm *SmokeTest) TestBlockHeaders() {
 		}
 		if bn > earliestBlock {
 			panic(fmt.Sprintf("block header tracing failed; expected at most %d, got %d", earliestBlock, bn))
-		} else {
-			fmt.Printf("block header tracing succeeded; expected at most %d, got %d\n", earliestBlock, bn)
 		}
+		fmt.Printf("block header tracing succeeded; expected at most %d, got %d\n", earliestBlock, bn)
 	}
 	checkBlock(common.GoerliChain().ChainId)
 	checkBlock(common.BtcRegtestChain().ChainId)

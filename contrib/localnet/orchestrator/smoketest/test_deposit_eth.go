@@ -502,7 +502,7 @@ func (sm *SmokeTest) TestDepositEtherLiquidityCap() {
 	fmt.Println("New deposit succeeded")
 }
 
-func (sm *SmokeTest) SendEther(to ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+func (sm *SmokeTest) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	goerliClient := sm.goerliClient
 
 	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)
