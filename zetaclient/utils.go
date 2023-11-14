@@ -26,7 +26,15 @@ import (
 
 const (
 	satoshiPerBitcoin = 1e8
+	bytesPerKB        = 1000
 )
+
+// feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
+func feeRateToSatPerByte(rate float64) *big.Int {
+	// #nosec G701 always in range
+	satPerKB := new(big.Int).SetInt64(int64(rate * satoshiPerBitcoin))
+	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
+}
 
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented

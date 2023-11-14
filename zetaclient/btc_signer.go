@@ -293,10 +293,15 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Msgf("cannot convert gas price  %s ", params.OutboundTxGasPrice)
 		return
 	}
-
+	
+	// Check receiver P2WPKH address
 	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
+		return
+	}
+	if !addr.IsForNet(config.BitconNetParams) {
+		logger.Error().Msgf("address %s is not for network %s", params.Receiver, config.BitconNetParams.Name)
 		return
 	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
@@ -304,6 +309,15 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
 		return
 	}
+
+	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
+	networkInfo, err := signer.rpcClient.GetNetworkInfo()
+	if err != nil {
+		logger.Error().Err(err).Msgf("cannot get bitcoin network info")
+		return
+	}
+	satPerByte := feeRateToSatPerByte(networkInfo.RelayFee)
+	gasprice.Add(gasprice, satPerByte)
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
