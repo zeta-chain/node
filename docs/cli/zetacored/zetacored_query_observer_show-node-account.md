@@ -3,7 +3,7 @@
 shows a NodeAccount
 
 ```
-zetacored query observer show-node-account [index] [flags]
+zetacored query observer show-node-account [operator_address] [flags]
 ```
 
 ### Options
