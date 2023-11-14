@@ -22,7 +22,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if len(genState.CoreParamsList.CoreParams) > 0 {
 		k.SetCoreParams(ctx, genState.CoreParamsList)
 	} else {
-		k.SetCoreParams(ctx, types.GetCoreParams())
+		coreParams, err := types.GetCoreParams()
+		if err != nil {
+			panic(err)
+		}
+		k.SetCoreParams(ctx, coreParams)
 	}
 
 	// Set all the nodeAccount

@@ -2,12 +2,11 @@ package types
 
 import (
 	"fmt"
-
-	"github.com/coinbase/rosetta-sdk-go/types"
+	
 	"github.com/zeta-chain/zetacore/common"
 )
 
-func GetCoreParams() CoreParamsList {
+func GetCoreParams() (CoreParamsList, error) {
 	params := CoreParamsList{
 		CoreParams: []*CoreParams{
 			{
@@ -117,19 +116,18 @@ func GetCoreParams() CoreParamsList {
 			},
 		},
 	}
+
+	// check all core params correspond to a chain
+	chainMap := make(map[int64]struct{})
 	chainList := common.ExternalChainList()
-	requiredParams := len(chainList)
-	availableParams := 0
 	for _, chain := range chainList {
-		for _, param := range params.CoreParams {
-			if chain.ChainId == param.ChainId {
-				availableParams++
-			}
+		chainMap[chain.ChainId] = struct{}{}
+	}
+	for _, param := range params.CoreParams {
+		if _, ok := chainMap[param.ChainId]; !ok {
+			return params, fmt.Errorf("chain id %d not found in chain list", param.ChainId)
 		}
 	}
-	if availableParams != requiredParams {
-		panic(fmt.Sprintf("Core params are not available for all chains , DefaultChains : %s , CoreParams : %s",
-			types.PrettyPrintStruct(chainList), params.String()))
-	}
-	return params
+
+	return params, nil
 }
