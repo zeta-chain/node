@@ -51309,6 +51309,8 @@ definitions:
     type: object
   observerMsgUpdateKeygenResponse:
     type: object
+  observerMsgUpdateObserverResponse:
+    type: object
   observerNode:
     type: object
     properties:
@@ -51372,6 +51374,13 @@ definitions:
         type: string
       is_supported:
         type: boolean
+  observerObserverUpdateReason:
+    type: string
+    enum:
+      - Undefined
+      - Tombstoned
+      - AdminUpdate
+    default: Undefined
   observerPolicy_Type:
     type: string
     enum:

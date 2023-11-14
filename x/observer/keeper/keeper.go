@@ -14,11 +14,12 @@ import (
 
 type (
 	Keeper struct {
-		cdc           codec.BinaryCodec
-		storeKey      storetypes.StoreKey
-		memKey        storetypes.StoreKey
-		paramstore    paramtypes.Subspace
-		stakingKeeper types.StakingKeeper
+		cdc            codec.BinaryCodec
+		storeKey       storetypes.StoreKey
+		memKey         storetypes.StoreKey
+		paramstore     paramtypes.Subspace
+		stakingKeeper  types.StakingKeeper
+		slashingKeeper types.SlashingKeeper
 	}
 )
 
@@ -28,6 +29,7 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	stakingKeeper types.StakingKeeper,
+	slashinKeeper types.SlashingKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -36,12 +38,21 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:           cdc,
-		storeKey:      storeKey,
-		memKey:        memKey,
-		paramstore:    ps,
-		stakingKeeper: stakingKeeper,
+		cdc:            cdc,
+		storeKey:       storeKey,
+		memKey:         memKey,
+		paramstore:     ps,
+		stakingKeeper:  stakingKeeper,
+		slashingKeeper: slashinKeeper,
 	}
+}
+
+func (k Keeper) GetSlashingKeeper() types.SlashingKeeper {
+	return k.slashingKeeper
+}
+
+func (k Keeper) GetStakingKeeper() types.StakingKeeper {
+	return k.stakingKeeper
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

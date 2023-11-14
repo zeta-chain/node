@@ -7,6 +7,7 @@
 ### Fixes
 
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
+* [1367](https://github.com/zeta-chain/node/pull/1367) - fix minRelayTxFee issue and check misuse of bitcoin mainnet/testnet addresses
 * [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
 
 ### Refactoring
@@ -18,6 +19,9 @@
 ### CI
 
 ## Version: v10.1.2
+### Unreleased:
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+* add a new tx to update an observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 ### Features
 * [1137](https://github.com/zeta-chain/node/pull/1137) - external stress testing
@@ -26,7 +30,8 @@
 * [1263](https://github.com/zeta-chain/node/pull/1263) - Bitcoin block header and merkle proof
 * [1247](https://github.com/zeta-chain/node/pull/1247) - add query command to get all gas stability pool balances
 * [1143](https://github.com/zeta-chain/node/pull/1143) - tss funds migration capability
-
+* [1358](https://github.com/zeta-chain/node/pull/1358) - zetaclient thread for zeta supply checks
+* [1384](https://github.com/zeta-chain/node/pull/1384) - tx to update an observer
 ### Fixes
 
 * [1195](https://github.com/zeta-chain/node/pull/1195) - added upgrade name, and allow download. allows to test release

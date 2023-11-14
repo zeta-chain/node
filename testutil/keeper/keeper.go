@@ -5,6 +5,9 @@ import (
 	"testing"
 	"time"
 
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -81,6 +84,7 @@ type SDKKeepers struct {
 	AuthKeeper      authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
 	StakingKeeper   stakingkeeper.Keeper
+	SlashingKeeper  slashingkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 	EvmKeeper       *evmkeeper.Keeper
 }
@@ -197,6 +201,13 @@ func StakingKeeper(
 		bankKeeper,
 		paramKeeper.Subspace(stakingtypes.ModuleName),
 	)
+}
+
+// SlashingKeeper instantiates a slashing keeper for testing purposes
+func SlashingKeeper(cdc codec.Codec, db *tmdb.MemDB, ss store.CommitMultiStore, stakingKeeper stakingkeeper.Keeper, paramKeeper paramskeeper.Keeper) slashingkeeper.Keeper {
+	storeKey := sdk.NewKVStoreKey(slashingtypes.StoreKey)
+	ss.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	return slashingkeeper.NewKeeper(cdc, storeKey, stakingKeeper, paramKeeper.Subspace(slashingtypes.ModuleName))
 }
 
 // DistributionKeeper instantiates a distribution keeper for testing purposes
@@ -319,7 +330,7 @@ func NewSDKKeepers(
 	stakingKeeper := StakingKeeper(cdc, db, ss, authKeeper, bankKeeper, paramsKeeper)
 	feeMarketKeeper := FeeMarketKeeper(cdc, db, ss, paramsKeeper)
 	evmKeeper := EVMKeeper(cdc, db, ss, authKeeper, bankKeeper, stakingKeeper, feeMarketKeeper, paramsKeeper)
-
+	slashingKeeper := SlashingKeeper(cdc, db, ss, stakingKeeper, paramsKeeper)
 	return SDKKeepers{
 		ParamsKeeper:    paramsKeeper,
 		AuthKeeper:      authKeeper,
@@ -327,6 +338,7 @@ func NewSDKKeepers(
 		StakingKeeper:   stakingKeeper,
 		FeeMarketKeeper: feeMarketKeeper,
 		EvmKeeper:       evmKeeper,
+		SlashingKeeper:  slashingKeeper,
 	}
 }
 

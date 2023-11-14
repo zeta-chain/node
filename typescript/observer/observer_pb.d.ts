@@ -38,6 +38,26 @@ export declare enum ObservationType {
 }
 
 /**
+ * @generated from enum zetachain.zetacore.observer.ObserverUpdateReason
+ */
+export declare enum ObserverUpdateReason {
+  /**
+   * @generated from enum value: Undefined = 0;
+   */
+  Undefined = 0,
+
+  /**
+   * @generated from enum value: Tombstoned = 1;
+   */
+  Tombstoned = 1,
+
+  /**
+   * @generated from enum value: AdminUpdate = 2;
+   */
+  AdminUpdate = 2,
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.ObserverMapper
  */
 export declare class ObserverMapper extends Message<ObserverMapper> {

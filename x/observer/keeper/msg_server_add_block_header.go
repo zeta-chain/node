@@ -28,10 +28,10 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, fmt.Errorf("block header verification flags not found")
 	}
 	if common.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
 	}
 	if common.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
-		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerficationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
+		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
 	_, found = k.GetBlockHeader(ctx, msg.BlockHash)
