@@ -45,9 +45,12 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	if err != nil {
 		panic(err)
 	}
-	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliChain().ChainId))
+	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
+	}
+	if (ethZRC20Addr == ethcommon.Address{}) {
+		panic("eth zrc20 not found")
 	}
 	sm.ETHZRC20Addr = ethZRC20Addr
 	fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
@@ -127,7 +130,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			TxIndex:   int64(txIndex),
 			TxHash:    txHash.Hex(),
 			Proof:     common.NewEthereumProof(txProof),
-			ChainId:   common.GoerliChain().ChainId,
+			ChainId:   common.GoerliLocalnetChain().ChainId,
 		})
 		if err != nil {
 			panic(err)

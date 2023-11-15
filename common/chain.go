@@ -26,7 +26,7 @@ type Chains []Chain
 
 // IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
-	if chain.ChainName == c.ChainName && chain.ChainId == c.ChainId {
+	if chain.ChainId == c.ChainId {
 		return true
 	}
 	return false

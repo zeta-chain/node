@@ -47,6 +47,6 @@ func (sm *SmokeTest) TestBlockHeaders() {
 		}
 		fmt.Printf("block header tracing succeeded; expected at most %d, got %d\n", earliestBlock, bn)
 	}
-	checkBlock(common.GoerliChain().ChainId)
+	checkBlock(common.GoerliLocalnetChain().ChainId)
 	checkBlock(common.BtcRegtestChain().ChainId)
 }
