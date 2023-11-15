@@ -2,10 +2,11 @@ package zetaclient
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

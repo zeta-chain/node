@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 
 var HsmCmd = &cobra.Command{

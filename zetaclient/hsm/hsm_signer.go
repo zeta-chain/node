@@ -18,8 +18,8 @@ const hsmPath = "HSM_PATH"
 const hsmPIN = "HSM_PIN"
 const hsmLabel = "HSM_LABEL"
 
-// HsmSign Generates signature of msg using the key indexed by the label through the HSM defined in the config
-func HsmSign(config *crypto11.Config, msg []byte, label string) (signature []byte, err error) {
+// Sign Generates signature of msg using the key indexed by the label through the HSM defined in the config
+func Sign(config *crypto11.Config, msg []byte, label string) (signature []byte, err error) {
 	keyring, err := keystone.NewPkcs11(config)
 	if err != nil {
 		return
@@ -131,7 +131,7 @@ func SignWithHSM(
 	}
 
 	// Sign those bytes
-	sigBytes, err := HsmSign(hsmCfg, bytesToSign, name)
+	sigBytes, err := Sign(hsmCfg, bytesToSign, name)
 	if err != nil {
 		return err
 	}

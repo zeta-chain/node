@@ -36,7 +36,7 @@ func TestSignSecp256k1(t *testing.T) {
 	//Create sample message
 	msg := []byte("Signing this plaintext tells me what exactly?")
 
-	signature, err := HsmSign(config, msg, string(label))
+	signature, err := Sign(config, msg, string(label))
 	require.NoError(t, err)
 	require.NotNil(t, signature)
 	require.Equal(t, key.KeyType(), keystone.KEYGEN_SECP256K1)
