@@ -17,11 +17,18 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy, ballotMaturityBlocks int64) Params {
-	return Params{ObserverParams: observerParams, AdminPolicy: adminParams, BallotMaturityBlocks: ballotMaturityBlocks}
+	return Params{
+		ObserverParams:       observerParams,
+		AdminPolicy:          adminParams,
+		BallotMaturityBlocks: ballotMaturityBlocks,
+	}
 }
 
+// DefaultParams returns a default set of parameters.
+// privnet chains are supported by default for testing purposes
+// custom params must be provided in genesis for other networks
 func DefaultParams() Params {
-	chains := common.DefaultChainsList()
+	chains := common.PrivnetChainList()
 	observerParams := make([]*ObserverParams, len(chains))
 	for i, chain := range chains {
 		observerParams[i] = &ObserverParams{

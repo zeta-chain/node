@@ -5,6 +5,13 @@ package common
 func ZetaChain() Chain {
 	return Chain{
 		ChainName: ChainName_zeta_mainnet,
+		ChainId:   101,
+	}
+}
+
+func ZetaChainMainnet() Chain {
+	return Chain{
+		ChainName: ChainName_zeta_mainnet,
 		ChainId:   7000,
 	}
 }
@@ -116,7 +123,7 @@ func BtcDustOffset() int64 {
 
 // DefaultChainsList returns a list of default chains
 func DefaultChainsList() []*Chain {
-	chains := []Chain{
+	return chainListPointers([]Chain{
 		BtcMainnetChain(),
 		BscMainnetChain(),
 		EthChain(),
@@ -127,17 +134,42 @@ func DefaultChainsList() []*Chain {
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
 		ZetaChain(),
-	}
-	var c []*Chain
-	for i := 0; i < len(chains); i++ {
-		c = append(c, &chains[i])
-	}
-	return c
+	})
+}
+
+// MainnetChainList returns a list of mainnet chains
+func MainnetChainList() []*Chain {
+	return chainListPointers([]Chain{
+		ZetaChainMainnet(),
+		BtcMainnetChain(),
+		BscMainnetChain(),
+		EthChain(),
+	})
+}
+
+// TestnetChainList returns a list of testnet chains
+func TestnetChainList() []*Chain {
+	return chainListPointers([]Chain{
+		ZetaTestnetChain(),
+		BtcTestNetChain(),
+		MumbaiChain(),
+		BscTestnetChain(),
+		GoerliChain(),
+	})
+}
+
+// PrivnetChainList returns a list of privnet chains
+func PrivnetChainList() []*Chain {
+	return chainListPointers([]Chain{
+		ZetaPrivnetChain(),
+		BtcRegtestChain(),
+		GoerliLocalnetChain(),
+	})
 }
 
 // ExternalChainList returns a list chains that are not Zeta
 func ExternalChainList() []*Chain {
-	chains := []Chain{
+	return chainListPointers([]Chain{
 		BtcMainnetChain(),
 		BscMainnetChain(),
 		EthChain(),
@@ -147,7 +179,11 @@ func ExternalChainList() []*Chain {
 		GoerliChain(),
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
-	}
+	})
+}
+
+// chainListPointers returns a list of chain pointers
+func chainListPointers(chains []Chain) []*Chain {
 	var c []*Chain
 	for i := 0; i < len(chains); i++ {
 		c = append(c, &chains[i])
