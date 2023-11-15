@@ -1,4 +1,7 @@
-package zetaclient
+//go:build hsm_test
+// +build hsm_test
+
+package hsm
 
 import (
 	"crypto/rand"
@@ -14,8 +17,6 @@ import (
 )
 
 func TestSignSecp256k1(t *testing.T) {
-	//Skipping test as it isn't guaranteed that an HSM will be configured
-	t.SkipNow()
 	// PKCS11 configuration file
 	config := &crypto11.Config{
 		Path:       "/usr/local/lib/softhsm/libsofthsm2.so",

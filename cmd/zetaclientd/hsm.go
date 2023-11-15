@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
 var HsmCmd = &cobra.Command{
@@ -54,11 +54,11 @@ func init() {
 func GetHsmAddress(_ *cobra.Command, _ []string) error {
 	SetupConfigForTest()
 
-	config, err := zetaclient.GetPKCS11Config()
+	config, err := hsm.GetPKCS11Config()
 	if err != nil {
 		return err
 	}
-	_, pubKey, err := zetaclient.GetHSMAddress(config, hsmArgs.label)
+	_, pubKey, err := hsm.GetHSMAddress(config, hsmArgs.label)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func GetHsmAddress(_ *cobra.Command, _ []string) error {
 }
 
 func GenerateHsmKey(_ *cobra.Command, _ []string) error {
-	config, err := zetaclient.GetPKCS11Config()
+	config, err := hsm.GetPKCS11Config()
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func GenerateHsmKey(_ *cobra.Command, _ []string) error {
 		return errors.New("invalid algorithm selected")
 	}
 	algo := []keystone.KeygenAlgorithm{keystone.KEYGEN_SECP256K1, keystone.KEYGEN_SECP256R1, keystone.KEYGEN_ED25519}
-	key, err := zetaclient.GenerateKey(hsmArgs.label, algo[hsmKeyGenArgs.algorithm], config)
+	key, err := hsm.GenerateKey(hsmArgs.label, algo[hsmKeyGenArgs.algorithm], config)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package zetaclient
+package hsm
 
 import (
 	"os"

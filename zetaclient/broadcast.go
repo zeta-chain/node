@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 	"regexp"
 	"strconv"
 	"strings"
@@ -162,7 +163,7 @@ func (b *ZetaCoreBridge) SignTx(
 	txConfig client.TxConfig,
 ) error {
 	if b.cfg.HsmMode {
-		return SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
+		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
