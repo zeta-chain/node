@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
@@ -42,6 +44,7 @@ func SetupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		memStoreKey,
 		paramsSubspace,
 		stakingkeeper.Keeper{},
+		slashingkeeper.Keeper{},
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, nil)

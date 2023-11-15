@@ -551,9 +551,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 // The lowest nonce we observe outTx for each chain
 var lowestOutTxNonceToObserve = map[int64]uint64{
-	5:     70000,  // Goerli
-	97:    95000,  // BSC testnet
-	80001: 120000, // Mumbai
+	5:     113000, // Goerli
+	97:    102600, // BSC testnet
+	80001: 154500, // Mumbai
 }
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
@@ -643,7 +643,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msg("TransactionReceipt/TransactionByHash error")
+			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
 		}
 		return nil, nil, err
 	}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -20,6 +22,7 @@ func initObserverKeeper(
 	db *tmdb.MemDB,
 	ss store.CommitMultiStore,
 	stakingKeeper stakingkeeper.Keeper,
+	slashingKeeper slashingkeeper.Keeper,
 	paramKeeper paramskeeper.Keeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -33,6 +36,7 @@ func initObserverKeeper(
 		memKey,
 		paramKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
+		slashingKeeper,
 	)
 }
 
@@ -68,6 +72,7 @@ func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		memStoreKey,
 		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
 		sdkKeepers.StakingKeeper,
+		sdkKeepers.SlashingKeeper,
 	)
 
 	k.SetParams(ctx, types.DefaultParams())

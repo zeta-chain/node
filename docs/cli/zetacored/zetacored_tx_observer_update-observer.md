@@ -1,9 +1,9 @@
-# tx crosschain inbound-voter
+# tx observer update-observer
 
-Broadcast message sendVoter
+Broadcast message add-observer
 
 ```
-zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [receiver] [receiverChainID] [amount] [message] [inTxHash] [inBlockHeight] [coinType] [asset] [eventIndex] [flags]
+zetacored tx observer update-observer [old-observer-address] [new-observer-address] [update-reason] [flags]
 ```
 
 ### Options
@@ -21,7 +21,7 @@ zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [recei
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for inbound-voter
+  -h, --help                     help for update-observer
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -48,5 +48,5 @@ zetacored tx crosschain inbound-voter [sender] [senderChainID] [txOrigin] [recei
 
 ### SEE ALSO
 
-* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
+* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
 

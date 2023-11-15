@@ -80,6 +80,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		db,
 		stateStore,
 		sdkKeepers.StakingKeeper,
+		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
 	)
 	zetaKeepers := ZetaKeepers{

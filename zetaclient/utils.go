@@ -26,7 +26,15 @@ import (
 
 const (
 	satoshiPerBitcoin = 1e8
+	bytesPerKB        = 1000
 )
+
+// feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
+func feeRateToSatPerByte(rate float64) *big.Int {
+	// #nosec G701 always in range
+	satPerKB := new(big.Int).SetInt64(int64(rate * satoshiPerBitcoin))
+	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
+}
 
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
@@ -125,6 +133,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		common.CoinType_ERC20,
 		event.Asset.String(),
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		event.Raw.Index,
 	), nil
 }
 
@@ -160,6 +169,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		common.CoinType_Zeta,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		event.Raw.Index,
 	), nil
 }
 
@@ -185,5 +195,6 @@ func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Ha
 		common.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		0, // not a smart contract call
 	)
 }

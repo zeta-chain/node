@@ -75,7 +75,6 @@ const (
 	minConfirmations = 0
 	maxHeightDiff    = 10000
 	btcBlocksPerDay  = 144
-	bytesPerKB       = 1000
 )
 
 func (ob *BitcoinChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
@@ -543,9 +542,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if *feeResult.FeeRate > math.MaxInt64 {
 		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 	}
-	// #nosec G701 always in range
-	feeRate := new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8))
-	feeRatePerByte := new(big.Int).Div(feeRate, big.NewInt(bytesPerKB))
+	feeRatePerByte := feeRateToSatPerByte(*feeResult.FeeRate)
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
@@ -611,6 +608,7 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 		common.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		0,
 	)
 }
 
