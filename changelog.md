@@ -32,6 +32,7 @@
 * [1143](https://github.com/zeta-chain/node/pull/1143) - tss funds migration capability
 * [1358](https://github.com/zeta-chain/node/pull/1358) - zetaclient thread for zeta supply checks
 * [1384](https://github.com/zeta-chain/node/pull/1384) - tx to update an observer
+
 ### Fixes
 
 * [1195](https://github.com/zeta-chain/node/pull/1195) - added upgrade name, and allow download. allows to test release
@@ -58,6 +59,7 @@
 * [1238](https://github.com/zeta-chain/node/pull/1238) - change default mempool version in config 
 * [1279](https://github.com/zeta-chain/node/pull/1279) - remove duplicate funtion name IsEthereum
 * [1289](https://github.com/zeta-chain/node/pull/1289) - skip gas stability pool funding when gasLimit is equal gasUsed
+* [1400](https://github.com/zeta-chain/node/pull/1400) - decouple evm cctx scheduler from btc cctx scheduler
 
 ### Chores
 
