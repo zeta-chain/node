@@ -26479,12 +26479,12 @@ paths:
         - Query
   /zeta-chain/crosschain/abortedZetaAmount:
     get:
-      operationId: Query_AbortedZetaAmount
+      operationId: Query_ZetaAccounting
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryAbortedZetaAmountResponse'
+            $ref: '#/definitions/crosschainQueryZetaAccountingResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50768,11 +50768,6 @@ definitions:
       tss:
         type: string
     title: store key is tss+chainid
-  crosschainQueryAbortedZetaAmountResponse:
-    type: object
-    properties:
-      amount:
-        type: string
   crosschainQueryAllCctxPendingResponse:
     type: object
     properties:
@@ -50971,6 +50966,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainTSS'
+  crosschainQueryZetaAccountingResponse:
+    type: object
+    properties:
+      aborted_zeta_amount:
+        type: string
   crosschainTSS:
     type: object
     properties:

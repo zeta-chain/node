@@ -18,46 +18,46 @@ import type { PendingNonces } from "./nonce_to_cctx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryAbortedZetaAmountRequest
+ * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingRequest
  */
-export declare class QueryAbortedZetaAmountRequest extends Message<QueryAbortedZetaAmountRequest> {
-  constructor(data?: PartialMessage<QueryAbortedZetaAmountRequest>);
+export declare class QueryZetaAccountingRequest extends Message<QueryZetaAccountingRequest> {
+  constructor(data?: PartialMessage<QueryZetaAccountingRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAbortedZetaAmountRequest";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryZetaAccountingRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAbortedZetaAmountRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryZetaAccountingRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryZetaAccountingRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryZetaAccountingRequest;
 
-  static equals(a: QueryAbortedZetaAmountRequest | PlainMessage<QueryAbortedZetaAmountRequest> | undefined, b: QueryAbortedZetaAmountRequest | PlainMessage<QueryAbortedZetaAmountRequest> | undefined): boolean;
+  static equals(a: QueryZetaAccountingRequest | PlainMessage<QueryZetaAccountingRequest> | undefined, b: QueryZetaAccountingRequest | PlainMessage<QueryZetaAccountingRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryAbortedZetaAmountResponse
+ * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingResponse
  */
-export declare class QueryAbortedZetaAmountResponse extends Message<QueryAbortedZetaAmountResponse> {
+export declare class QueryZetaAccountingResponse extends Message<QueryZetaAccountingResponse> {
   /**
-   * @generated from field: string amount = 1;
+   * @generated from field: string aborted_zeta_amount = 1;
    */
-  amount: string;
+  abortedZetaAmount: string;
 
-  constructor(data?: PartialMessage<QueryAbortedZetaAmountResponse>);
+  constructor(data?: PartialMessage<QueryZetaAccountingResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAbortedZetaAmountResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryZetaAccountingResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAbortedZetaAmountResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryZetaAccountingResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryZetaAccountingResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAbortedZetaAmountResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryZetaAccountingResponse;
 
-  static equals(a: QueryAbortedZetaAmountResponse | PlainMessage<QueryAbortedZetaAmountResponse> | undefined, b: QueryAbortedZetaAmountResponse | PlainMessage<QueryAbortedZetaAmountResponse> | undefined): boolean;
+  static equals(a: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined, b: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined): boolean;
 }
 
 /**

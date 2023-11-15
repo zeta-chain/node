@@ -9,8 +9,8 @@ import (
 
 func CmdGetZetaAccounting() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-aborted-zeta-amount",
-		Short: "Query current tss address",
+		Use:   "get-zeta-accounting",
+		Short: "Query zeta accounting",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
