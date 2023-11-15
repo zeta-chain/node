@@ -256,7 +256,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			common.CoinType_Cmd,
 		)
 		if err != nil {
-			logger.Error().Err(err).Msg("error posting confirmation to meta core")
+			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 		}
 		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
@@ -277,7 +277,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msg("error posting confirmation to meta core")
+				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
@@ -297,7 +297,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -342,7 +342,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -378,7 +378,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Err(err).Msg("error posting confirmation to meta core")
+							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
@@ -406,7 +406,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Zeta,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -444,7 +444,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_ERC20,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -474,6 +474,13 @@ const garbageTrackersLookback = 2
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	// The garbage trackers associated with finalized cctxs
+	finalizedCctxTrackers := map[int64]map[uint64]bool{
+		5:     make(map[uint64]bool), // Goerli
+		97:    make(map[uint64]bool), // BSC testnet
+		80001: make(map[uint64]bool), // Mumbai
+	}
+
 	// read env variables if set
 	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
 	if err != nil || timeoutNonce <= 0 {
@@ -507,13 +514,17 @@ func (ob *EVMChainClient) observeOutTx() {
 					if garbageTrackerChecked >= garbageTrackersLookback {
 						continue
 					}
+					if finalizedCctxTrackers[ob.chain.ChainId][nonceInt] {
+						continue
+					}
 					// Skip those problematic trackers whose associated cctxs are no longer pending (Reverted/Outboundminted/Aborted)
 					cctx, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonceInt)
 					if err != nil || cctx == nil {
-						ob.logger.ObserveOutTx.Error().Err(err).Msgf("garbage tracker, error GetCctxByNonce for chain %s nonce %d", ob.chain.String(), nonceInt)
+						ob.logger.ObserveOutTx.Error().Err(err).Msgf("garbage tracker, error GetCctxByNonce for chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						continue
 					}
 					if !crosschainkeeper.IsPending(*cctx) {
+						finalizedCctxTrackers[ob.chain.ChainId][nonceInt] = true
 						ob.logger.ObserveOutTx.Info().Msgf("garbage tracker chain %s nonce %d is not pending", ob.chain.String(), nonceInt)
 						continue
 					}
@@ -578,6 +589,9 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
+		if nonce == 2527 {
+			logger.Warn().Err(err).Msgf("TransactionReceipt failed for nonce %d txHash %s", nonce, txHash)
+		}
 		if err != ethereum.NotFound {
 			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
 		}
