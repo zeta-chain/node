@@ -80,7 +80,7 @@ type ZetaCoreBridger interface {
 	GetAllPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, error)
 	GetPendingNoncesByChain(chainID int64) (crosschaintypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]crosschaintypes.OutTxTracker, error)
+	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList(chain common.Chain) ([]string, error)
 	GetKeyGen() (*observertypes.Keygen, error)

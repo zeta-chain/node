@@ -420,20 +420,6 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		return false, false, err
 	}
 
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
 	if !included {
 		if !broadcasted {
 			return false, false, nil
@@ -959,7 +945,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C():
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, Ascending)
 			if err != nil {
 				ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error GetAllOutTxTrackerByChain")
 				continue
