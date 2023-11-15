@@ -233,7 +233,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 }
 
 func (signer *BTCSigner) TryProcessOutTx(
-	send *types.CrossChainTx,
+	cctx *types.CrossChainTx,
 	outTxMan *OutTxProcessorManager,
 	outTxID string,
 	chainclient ChainClient,
@@ -243,22 +243,22 @@ func (signer *BTCSigner) TryProcessOutTx(
 	defer func() {
 		outTxMan.EndTryProcess(outTxID)
 		if err := recover(); err != nil {
-			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", send.Index, err)
+			signer.logger.Error().Msgf("BTC TryProcessOutTx: %s, caught panic error: %v", cctx.Index, err)
 		}
 	}()
 
 	logger := signer.logger.With().
 		Str("OutTxID", outTxID).
-		Str("SendHash", send.Index).
+		Str("SendHash", cctx.Index).
 		Logger()
 
-	params := send.GetCurrentOutTxParam()
+	params := cctx.GetCurrentOutTxParam()
 	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
 
-	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", send.Index, params.Amount.BigInt(), params.Receiver)
+	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
 	btcClient, ok := chainclient.(*BitcoinChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
@@ -277,9 +277,9 @@ func (signer *BTCSigner) TryProcessOutTx(
 	// Early return if the send is already processed
 	// FIXME: handle revert case
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, err := btcClient.IsSendOutTxProcessed(send.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
+	included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
 	if err != nil {
-		logger.Error().Err(err).Msgf("cannot check if send %s is processed", send.Index)
+		logger.Error().Err(err).Msgf("cannot check if send %s is processed", cctx.Index)
 		return
 	}
 	if included || confirmed {
@@ -295,13 +295,17 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	// Check receiver P2WPKH address
-	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitconNetParams)
+	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitcoinNetParamsFromChainID(params.ReceiverChainId))
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-	if !addr.IsForNet(config.BitconNetParams) {
-		logger.Error().Msgf("address %s is not for network %s", params.Receiver, config.BitconNetParams.Name)
+	if !addr.IsForNet(config.BitcoinNetParamsFromChainID(params.ReceiverChainId)) {
+		logger.Error().Msgf(
+			"address %s is not for network %s",
+			params.Receiver,
+			config.BitcoinNetParamsFromChainID(params.ReceiverChainId),
+		)
 		return
 	}
 	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
@@ -336,7 +340,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)
 		return
 	}
-	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
+	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
+
 	// FIXME: add prometheus metrics
 	_, err = zetaBridge.GetObserverList(btcClient.chain)
 	if err != nil {

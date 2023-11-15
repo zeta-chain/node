@@ -33,20 +33,20 @@ func GetERC20CustodyABI() string {
 }
 
 var (
-	BitconNetParams      = &chaincfg.RegressionNetParams
 	BitcoinMainnetParams = &chaincfg.MainNetParams
 	BitcoinRegnetParams  = &chaincfg.RegressionNetParams
+	BitcoinTestnetParams = &chaincfg.TestNet3Params
 )
 
 func New() Config {
 	return Config{
 		EVMChainConfigs: evmChainsConfigs,
-		BitcoinConfig:   bitcoinConfig,
+		BitcoinConfig:   bitcoinConfigRegnet,
 		ChainsEnabled:   []common.Chain{},
 	}
 }
 
-var bitcoinConfig = &BTCConfig{
+var bitcoinConfigRegnet = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
@@ -76,4 +76,19 @@ var evmChainsConfigs = map[int64]*EVMConfig{
 		Chain:    common.GoerliLocalnetChain(),
 		Endpoint: "http://eth:8545",
 	},
+}
+
+// BitcoinNetParamsFromChainID returns the bitcoin net params to be used from the chain id
+func BitcoinNetParamsFromChainID(chainID int64) *chaincfg.Params {
+	switch chainID {
+	case common.BtcRegtestChain().ChainId:
+		return BitcoinRegnetParams
+	case common.BtcMainnetChain().ChainId:
+		return BitcoinMainnetParams
+	case common.BtcTestNetChain().ChainId:
+		return BitcoinTestnetParams
+	default:
+		return BitcoinRegnetParams
+	}
+
 }

@@ -321,7 +321,6 @@ func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
 	return err
 }
 
-// TODO
 func (ob *BitcoinChainClient) observeInTx() error {
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -378,7 +377,13 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 		tssAddress := ob.Tss.BTCAddress()
 		// #nosec G701 always positive
-		inTxs := FilterAndParseIncomingTx(res.Block.Tx, uint64(res.Block.Height), tssAddress, &ob.logger.WatchInTx)
+		inTxs := FilterAndParseIncomingTx(
+			res.Block.Tx,
+			uint64(res.Block.Height),
+			tssAddress,
+			&ob.logger.WatchInTx,
+			ob.chain.ChainId,
+		)
 
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
@@ -580,13 +585,19 @@ type BTCInTxEvnet struct {
 // relevant tx must have the following vouts as the first two vouts:
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
-func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
+func FilterAndParseIncomingTx(
+	txs []btcjson.TxRawResult,
+	blockNumber uint64,
+	targetAddress string,
+	logger *zerolog.Logger,
+	chainID int64,
+) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
-		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger)
+		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
 		if err != nil {
 			logger.Error().Err(err).Msg("error getting btc event")
 			continue
@@ -622,7 +633,13 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 	)
 }
 
-func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint64, logger *zerolog.Logger) (*BTCInTxEvnet, error) {
+func GetBtcEvent(
+	tx btcjson.TxRawResult,
+	targetAddress string,
+	blockNumber uint64,
+	logger *zerolog.Logger,
+	chainID int64,
+) (*BTCInTxEvnet, error) {
 	found := false
 	var value float64
 	var memo []byte
@@ -635,7 +652,8 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 			if err != nil {
 				return nil, err
 			}
-			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+
+			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitcoinNetParamsFromChainID(chainID))
 			if err != nil {
 				return nil, err
 			}
@@ -681,7 +699,7 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 					return nil, errors.Wrapf(err, "error decoding pubkey")
 				}
 				hash := btcutil.Hash160(pkBytes)
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitcoinNetParamsFromChainID(chainID))
 				if err != nil {
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
@@ -742,7 +760,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, config.BitconNetParams)
+	address, err := btcutil.DecodeAddress(tssAddr, config.BitcoinNetParamsFromChainID(ob.chain.ChainId))
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}

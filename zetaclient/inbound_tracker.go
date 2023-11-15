@@ -100,7 +100,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 		return "", err
 	}
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx)
+	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx, ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}

@@ -622,7 +622,13 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		panic(err)
 	}
 
-	events := zetaclient.FilterAndParseIncomingTx([]btcjson.TxRawResult{*rawtx}, 0, BTCTSSAddress.EncodeAddress(), &log.Logger)
+	events := zetaclient.FilterAndParseIncomingTx(
+		[]btcjson.TxRawResult{*rawtx},
+		0,
+		BTCTSSAddress.EncodeAddress(),
+		&log.Logger,
+		common.BtcRegtestChain().ChainId,
+	)
 	fmt.Printf("bitcoin intx events:\n")
 	for _, event := range events {
 		fmt.Printf("  TxHash: %s\n", event.TxHash)

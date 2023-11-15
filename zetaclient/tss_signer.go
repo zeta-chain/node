@@ -68,6 +68,10 @@ type TSS struct {
 	Signers       []string
 	CoreBridge    ZetaCoreBridger
 	Metrics       *ChainMetrics
+
+	// TODO: support multiple Bitcoin network, not just one network
+	// https://github.com/zeta-chain/node/issues/1397
+	BitcoinChainID int64
 }
 
 // NewTSS creates a new TSS instance
@@ -79,17 +83,19 @@ func NewTSS(
 	bridge ZetaCoreBridger,
 	tssHistoricalList []types.TSS,
 	metrics *metrics.Metrics,
+	bitcoinChainID int64,
 ) (*TSS, error) {
 	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
 	newTss := TSS{
-		Server:        server,
-		Keys:          make(map[string]*TSSKey),
-		CurrentPubkey: cfg.CurrentTssPubkey,
-		logger:        log.With().Str("module", "tss_signer").Logger(),
-		CoreBridge:    bridge,
+		Server:         server,
+		Keys:           make(map[string]*TSSKey),
+		CurrentPubkey:  cfg.CurrentTssPubkey,
+		logger:         log.With().Str("module", "tss_signer").Logger(),
+		CoreBridge:     bridge,
+		BitcoinChainID: bitcoinChainID,
 	}
 
 	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
@@ -175,8 +181,9 @@ func (tss *TSS) Pubkey() []byte {
 	return tss.Keys[tss.CurrentPubkey].PubkeyInBytes
 }
 
+// Sign signs a digest
 // digest should be Hashes of some data
-// Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
+// NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
 func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
@@ -372,7 +379,7 @@ func (tss *TSS) EVMAddress() ethcommon.Address {
 
 // BTCAddress generates a bech32 p2wpkh address from pubkey
 func (tss *TSS) BTCAddress() string {
-	addr, err := GetTssAddrBTC(tss.CurrentPubkey)
+	addr, err := GetTssAddrBTC(tss.CurrentPubkey, tss.BitcoinChainID)
 	if err != nil {
 		log.Error().Err(err).Msg("getKeyAddr error")
 		return ""
@@ -381,7 +388,7 @@ func (tss *TSS) BTCAddress() string {
 }
 
 func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey)
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tss.CurrentPubkey, tss.BitcoinChainID)
 	if err != nil {
 		log.Error().Err(err).Msg("BTCAddressPubkeyHash error")
 		return nil
@@ -481,9 +488,8 @@ func (tss *TSS) LoadTssFilesFromDirectory(tssPath string) error {
 	return nil
 }
 
-// FIXME: mainnet/testnet
-func GetTssAddrBTC(tssPubkey string) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
+func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinChainID)
 	if err != nil {
 		log.Fatal().Err(err)
 		return "", err
@@ -590,12 +596,12 @@ func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 	return false
 }
 
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err
 	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitconNetParams)
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitcoinNetParamsFromChainID(chainID))
 	if err != nil {
 		return nil, err
 	}
