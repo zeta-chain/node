@@ -27,5 +27,5 @@ message GenesisState {
   repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
   repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
   repeated InTxTracker in_tx_tracker_list = 11 [(gogoproto.nullable) = false];
-  AbortedZetaAmount aborted_zeta_amount = 12 [(gogoproto.nullable) = false];
+  ZetaAccounting zeta_accounting = 12 [(gogoproto.nullable) = false];
 }

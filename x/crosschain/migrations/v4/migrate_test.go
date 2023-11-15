@@ -19,9 +19,9 @@ func TestMigrateStore(t *testing.T) {
 	amount := SetCrossRandomTx(10, ctx, *k)
 	err := v4.MigrateStore(ctx, k.GetStoreKey(), k.GetCodec())
 	assert.NoError(t, err)
-	abortedZetaAmount, found := k.GetAbortedZetaAmount(ctx)
+	abortedZetaAmount, found := k.GetZetaAccounting(ctx)
 	assert.True(t, found)
-	assert.Equal(t, amount, abortedZetaAmount.Amount)
+	assert.Equal(t, amount, abortedZetaAmount.AbortedZetaAmount)
 
 }
 

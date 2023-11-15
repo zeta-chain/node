@@ -48,7 +48,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 		})
 	}
 	if send.CctxStatus.Status == types.CctxStatus_Aborted {
-		k.AddAbortedZetaAmount(ctx, send.GetCurrentOutTxParam().Amount)
+		k.AddZetaAccounting(ctx, send.GetCurrentOutTxParam().Amount)
 	}
 }
 

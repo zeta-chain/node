@@ -41,7 +41,7 @@ export declare class QueryAbortedZetaAmountRequest extends Message<QueryAbortedZ
  */
 export declare class QueryAbortedZetaAmountResponse extends Message<QueryAbortedZetaAmountResponse> {
   /**
-   * @generated from field: string amount = 6;
+   * @generated from field: string amount = 1;
    */
   amount: string;
 

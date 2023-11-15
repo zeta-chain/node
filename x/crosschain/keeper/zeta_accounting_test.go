@@ -10,40 +10,40 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestKeeper_AddAbortedZetaAmount(t *testing.T) {
+func TestKeeper_AddZetaAccounting(t *testing.T) {
 
 	t.Run("should add aborted zeta amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		originalAmount := sdkmath.NewUint(rand.Uint64())
-		k.SetAbortedZetaAmount(ctx, types.AbortedZetaAmount{
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{
 			originalAmount,
 		})
-		val, found := k.GetAbortedZetaAmount(ctx)
+		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
-		require.Equal(t, originalAmount, val.Amount)
+		require.Equal(t, originalAmount, val.AbortedZetaAmount)
 		addAmount := sdkmath.NewUint(rand.Uint64())
-		k.AddAbortedZetaAmount(ctx, addAmount)
-		val, found = k.GetAbortedZetaAmount(ctx)
+		k.AddZetaAccounting(ctx, addAmount)
+		val, found = k.GetZetaAccounting(ctx)
 		require.True(t, found)
-		require.Equal(t, originalAmount.Add(addAmount), val.Amount)
+		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
 	})
 
 	t.Run("cant find aborted amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		val, found := k.GetAbortedZetaAmount(ctx)
+		val, found := k.GetZetaAccounting(ctx)
 		require.False(t, found)
-		require.Equal(t, types.AbortedZetaAmount{}, val)
+		require.Equal(t, types.ZetaAccounting{}, val)
 	})
 
 	t.Run("add very high zeta amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		highAmount := sdkmath.NewUintFromString("100000000000000000000000000000000000000000000000")
-		k.SetAbortedZetaAmount(ctx, types.AbortedZetaAmount{
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{
 			highAmount,
 		})
-		val, found := k.GetAbortedZetaAmount(ctx)
+		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
-		require.Equal(t, highAmount, val.Amount)
+		require.Equal(t, highAmount, val.AbortedZetaAmount)
 	})
 
 }

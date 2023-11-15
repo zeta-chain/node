@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func CmdGetAbortedZetaAmount() *cobra.Command {
+func CmdGetZetaAccounting() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-aborted-zeta-amount",
 		Short: "Query current tss address",
@@ -18,8 +18,8 @@ func CmdGetAbortedZetaAmount() *cobra.Command {
 				return err
 			}
 			queryClient := types.NewQueryClient(clientCtx)
-			params := &types.QueryAbortedZetaAmountRequest{}
-			res, err := queryClient.AbortedZetaAmount(cmd.Context(), params)
+			params := &types.QueryZetaAccountingRequest{}
+			res, err := queryClient.ZetaAccounting(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -12,13 +12,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) AbortedZetaAmount(c context.Context, _ *types.QueryAbortedZetaAmountRequest) (*types.QueryAbortedZetaAmountResponse, error) {
+func (k Keeper) ZetaAccounting(c context.Context, _ *types.QueryZetaAccountingRequest) (*types.QueryZetaAccountingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	amount, found := k.GetAbortedZetaAmount(ctx)
+	amount, found := k.GetZetaAccounting(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "aborted zeta amount not found")
 	}
-	return &types.QueryAbortedZetaAmountResponse{Amount: amount.Amount}, nil
+	return &types.QueryZetaAccountingResponse{AbortedZetaAmount: amount.AbortedZetaAmount}, nil
 }
 
 func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*types.QueryAllCctxResponse, error) {

@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Params
 	k.SetParams(ctx, genState.Params)
 
-	k.SetAbortedZetaAmount(ctx, genState.AbortedZetaAmount)
+	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
@@ -118,9 +118,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.TssHistory = k.GetAllTSS(ctx)
-	amount, found := k.GetAbortedZetaAmount(ctx)
+	amount, found := k.GetZetaAccounting(ctx)
 	if found {
-		genesis.AbortedZetaAmount = amount
+		genesis.ZetaAccounting = amount
 	}
 
 	return &genesis

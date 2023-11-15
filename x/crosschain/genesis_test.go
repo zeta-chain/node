@@ -15,8 +15,8 @@ import (
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
 		Params: types.DefaultParams(),
-		AbortedZetaAmount: types.AbortedZetaAmount{
-			Amount: sdkmath.OneUint(),
+		ZetaAccounting: types.ZetaAccounting{
+			AbortedZetaAmount: sdkmath.OneUint(),
 		},
 		OutTxTrackerList: []types.OutTxTracker{
 			sample.OutTxTracker(t, "0"),

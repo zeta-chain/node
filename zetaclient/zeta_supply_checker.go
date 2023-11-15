@@ -174,9 +174,6 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	return true
 }
 
-// TODO : Add genesis state for Aborted amount in zeta
-// TODO : Add tests for keeper functions
-// TODO : Add cli commands for querying aborted amount
 func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	amount, err := zs.zetaClient.GetAbortedZetaAmount()
 	if err != nil {

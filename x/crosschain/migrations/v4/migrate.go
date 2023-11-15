@@ -35,8 +35,8 @@ func MigrateStore(
 			abortedAmount = abortedAmount.Add(val.GetCurrentOutTxParam().Amount)
 		}
 	}
-	b := cdc.MustMarshal(&types.AbortedZetaAmount{Amount: abortedAmount})
+	b := cdc.MustMarshal(&types.ZetaAccounting{AbortedZetaAmount: abortedAmount})
 	store := ctx.KVStore(crossChainStoreKey)
-	store.Set([]byte(types.AbortedZetaAmountKey), b)
+	store.Set([]byte(types.ZetaAccountingKey), b)
 	return nil
 }

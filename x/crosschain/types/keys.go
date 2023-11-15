@@ -50,8 +50,8 @@ const (
 	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
 	PendingNoncesKeyPrefix = "PendingNonces-value-"
 	// #nosec G101: Potential hardcoded credentials (gosec)
-	// AbortedZetaAmountKey value is used as prefix for storing AbortedZetaAmountKey
-	AbortedZetaAmountKey = "AbortedZetaAmount-value-"
+	// ZetaAccountingKey value is used as prefix for storing ZetaAccountingKey
+	ZetaAccountingKey = "ZetaAccounting-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields

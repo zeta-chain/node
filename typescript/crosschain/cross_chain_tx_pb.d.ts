@@ -130,27 +130,27 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.AbortedZetaAmount
+ * @generated from message zetachain.zetacore.crosschain.ZetaAccounting
  */
-export declare class AbortedZetaAmount extends Message<AbortedZetaAmount> {
+export declare class ZetaAccounting extends Message<ZetaAccounting> {
   /**
-   * @generated from field: string amount = 6;
+   * @generated from field: string aborted_zeta_amount = 1;
    */
-  amount: string;
+  abortedZetaAmount: string;
 
-  constructor(data?: PartialMessage<AbortedZetaAmount>);
+  constructor(data?: PartialMessage<ZetaAccounting>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.AbortedZetaAmount";
+  static readonly typeName = "zetachain.zetacore.crosschain.ZetaAccounting";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AbortedZetaAmount;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ZetaAccounting;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): AbortedZetaAmount;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ZetaAccounting;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): AbortedZetaAmount;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ZetaAccounting;
 
-  static equals(a: AbortedZetaAmount | PlainMessage<AbortedZetaAmount> | undefined, b: AbortedZetaAmount | PlainMessage<AbortedZetaAmount> | undefined): boolean;
+  static equals(a: ZetaAccounting | PlainMessage<ZetaAccounting> | undefined, b: ZetaAccounting | PlainMessage<ZetaAccounting> | undefined): boolean;
 }
 
 /**

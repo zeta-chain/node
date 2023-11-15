@@ -147,11 +147,11 @@ func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.Cross
 
 func (b *ZetaCoreBridge) GetAbortedZetaAmount() (sdkmath.Uint, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.AbortedZetaAmount(context.Background(), &types.QueryAbortedZetaAmountRequest{})
+	resp, err := client.ZetaAccounting(context.Background(), &types.QueryZetaAccountingRequest{})
 	if err != nil {
 		return sdkmath.ZeroUint(), err
 	}
-	return resp.Amount, nil
+	return resp.AbortedZetaAmount, nil
 }
 
 func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
