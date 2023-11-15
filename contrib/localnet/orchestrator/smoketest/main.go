@@ -28,8 +28,10 @@ import (
 )
 
 var (
-	ZetaChainID          = "athens_101-1"
-	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	ZetaChainID     = "athens_101-1"
+	DeployerAddress = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	// DeployerPrivateKey is the private key for the deployer account
+	// #nosec G101 - used for testing
 	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress           = ethcommon.HexToAddress("0x0Da38EA1B43758F55eB97590D41e244913A00b26")
 	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", config.BitcoinRegnetParams)
