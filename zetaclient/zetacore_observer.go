@@ -159,11 +159,9 @@ func (co *CoreObserver) startCctxScheduler() {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						co.logger.ZetaChainWatcher.Info().Msgf("startCctxScheduler: chain %d, zetaHeight %d, pending cctxs %d", c.ChainId, zetaHeight, len(cctxList))
 						if common.IsEVMChain(c.ChainId) {
 							co.scheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else if common.IsBitcoinChain(c.ChainId) {
-							co.logger.ZetaChainWatcher.Info().Msgf("startCctxScheduler: chain %d, zetaHeight %d, pending cctxs %d", c.ChainId, zetaHeight, len(cctxList))
 							co.scheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							co.logger.ZetaChainWatcher.Error().Msgf("startCctxScheduler: unsupported chain %d", c.ChainId)
