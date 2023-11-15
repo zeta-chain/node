@@ -118,6 +118,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.TssHistory = k.GetAllTSS(ctx)
+	amount, found := k.GetAbortedZetaAmount(ctx)
+	if found {
+		genesis.AbortedZetaAmount = amount
+	}
 
 	return &genesis
 }
