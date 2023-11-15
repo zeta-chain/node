@@ -74,12 +74,16 @@ type DynamicTicker struct {
 	impl     *time.Ticker
 }
 
-func NewDynamicTicker(name string, interval uint64) *DynamicTicker {
+func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
+	if interval <= 0 {
+		return nil, fmt.Errorf("non-positive ticker interval %d for %s", interval, name)
+	}
+
 	return &DynamicTicker{
 		name:     name,
 		interval: interval,
 		impl:     time.NewTicker(time.Duration(interval) * time.Second),
-	}
+	}, nil
 }
 
 func (t *DynamicTicker) C() <-chan time.Time {

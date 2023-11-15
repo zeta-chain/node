@@ -27,9 +27,14 @@ type ZetaSupplyChecker struct {
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+	dynamicTicker, err := NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15)
+	if err != nil {
+		return ZetaSupplyChecker{}, err
+	}
+
 	zetaSupplyChecker := ZetaSupplyChecker{
 		stop:      make(chan struct{}),
-		ticker:    NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15),
+		ticker:    dynamicTicker,
 		evmClient: make(map[int64]*ethclient.Client),
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").

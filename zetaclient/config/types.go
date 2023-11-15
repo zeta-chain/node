@@ -188,10 +188,12 @@ func (c *Config) UpdateCoreParams(
 	}
 	c.Keygen = *keygen
 	c.ChainsEnabled = newChains
-	if c.BitcoinConfig != nil && btcCoreParams != nil { // update core params for bitcoin if it has config in file
+	// update core params for bitcoin if it has config in file
+	if c.BitcoinConfig != nil && btcCoreParams != nil {
 		c.BitcoinConfig.CoreParams = *btcCoreParams
 	}
-	for _, params := range evmCoreParams { // update core params for evm chains we have configs in file
+	// update core params for evm chains we have configs in file
+	for _, params := range evmCoreParams {
 		curCfg, found := c.EVMChainConfigs[params.ChainId]
 		if found {
 			curCfg.CoreParams = *params
