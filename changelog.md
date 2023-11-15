@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Features
-
+* [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 ### Fixes
 
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
