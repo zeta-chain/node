@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	// #nosec
+	// #nosec G101 - used for testing only
 	ZetaEthPriv           = "9D00E4D7A8A14384E01CD90B83745BCA847A66AD8797A9904A200C28C2648E64"
 	SystemContractAddress = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 )
@@ -284,7 +284,8 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close() //#nosec
+	// #nosec G107 - defer close
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -325,7 +326,8 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close() //#nosec
+	// #nosec G107 - defer close
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -366,7 +368,8 @@ func (c *EthClient) EthGetLogs() {
 	//if err != nil {
 	//	panic(err)
 	//}
-	//defer resp.Body.Close() //#nosec
+	//// #nosec G107 - defer close
+	//defer resp.Body.Close()
 	//// Decode the response from JSON
 	//var rpcResp Response
 	//err = json.NewDecoder(resp.Body).Decode(&rpcResp)
