@@ -587,12 +587,12 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 
 	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
 	for i, input := range inputs {
-		inputsForSign = append(inputsForSign, btcjson.RawTxWitnessInput{
+		inputsForSign[i] = btcjson.RawTxWitnessInput{
 			Txid:         input.Txid,
 			Vout:         input.Vout,
 			Amount:       &amounts[i],
 			ScriptPubKey: scriptPubkeys[i],
-		})
+		}
 	}
 
 	//stx, signed, err := btc.SignRawTransactionWithWallet(tx)
