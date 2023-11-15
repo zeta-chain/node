@@ -151,7 +151,13 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	sm.wg.Add(1)
 	go func() {
 		defer sm.wg.Done()
-		WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+		cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+		if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+			panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
+				cctx.CctxStatus.Status.String(),
+				cctx.CctxStatus.StatusMessage),
+			)
+		}
 		c <- 0
 	}()
 	sm.wg.Add(1)

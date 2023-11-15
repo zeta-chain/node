@@ -163,7 +163,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
 		"",
-		common.GoerliChain().ChainId,
+		common.GoerliLocalnetChain().ChainId,
 		18,
 		"ETH",
 		"gETH",
@@ -194,7 +194,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
 		usdtAddr,
-		common.GoerliChain().ChainId,
+		common.GoerliLocalnetChain().ChainId,
 		6,
 		"USDT",
 		"USDT",
