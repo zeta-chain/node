@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
 )
 
@@ -31,12 +30,6 @@ func GetConnectorABI() string {
 func GetERC20CustodyABI() string {
 	return ERC20CustodyAbiString
 }
-
-var (
-	BitcoinMainnetParams = &chaincfg.MainNetParams
-	BitcoinRegnetParams  = &chaincfg.RegressionNetParams
-	BitcoinTestnetParams = &chaincfg.TestNet3Params
-)
 
 func New() Config {
 	return Config{
@@ -76,19 +69,4 @@ var evmChainsConfigs = map[int64]*EVMConfig{
 		Chain:    common.GoerliLocalnetChain(),
 		Endpoint: "http://eth:8545",
 	},
-}
-
-// BitcoinNetParamsFromChainID returns the bitcoin net params to be used from the chain id
-func BitcoinNetParamsFromChainID(chainID int64) *chaincfg.Params {
-	switch chainID {
-	case common.BtcRegtestChain().ChainId:
-		return BitcoinRegnetParams
-	case common.BtcMainnetChain().ChainId:
-		return BitcoinMainnetParams
-	case common.BtcTestNetChain().ChainId:
-		return BitcoinTestnetParams
-	default:
-		return BitcoinRegnetParams
-	}
-
 }

@@ -1,8 +1,9 @@
 package common
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	. "gopkg.in/check.v1"
 )

@@ -653,7 +653,7 @@ func GetBtcEvent(
 				return nil, err
 			}
 
-			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitcoinNetParamsFromChainID(chainID))
+			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, common.BitcoinNetParamsFromChainID(chainID))
 			if err != nil {
 				return nil, err
 			}
@@ -699,7 +699,7 @@ func GetBtcEvent(
 					return nil, errors.Wrapf(err, "error decoding pubkey")
 				}
 				hash := btcutil.Hash160(pkBytes)
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitcoinNetParamsFromChainID(chainID))
+				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, common.BitcoinNetParamsFromChainID(chainID))
 				if err != nil {
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
@@ -760,7 +760,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, config.BitcoinNetParamsFromChainID(ob.chain.ChainId))
+	address, err := btcutil.DecodeAddress(tssAddr, common.BitcoinNetParamsFromChainID(ob.chain.ChainId))
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}

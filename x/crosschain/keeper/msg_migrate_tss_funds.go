@@ -58,7 +58,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if err != nil {
 		return err
 	}
-	btcAddressOld, err := getTssAddrBTC(currentTss.TssPubkey)
+	btcAddressOld, err := getTssAddrBTC(currentTss.TssPubkey, common.BitcoinNetParamsFromChainID(chainID))
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if err != nil {
 		return err
 	}
-	btcAddressNew, err := getTssAddrBTC(newTss.TssPubkey)
+	btcAddressNew, err := getTssAddrBTC(newTss.TssPubkey, common.BitcoinNetParamsFromChainID(chainID))
 	if err != nil {
 		return err
 	}

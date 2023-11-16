@@ -26872,6 +26872,11 @@ paths:
           in: query
           required: false
           type: string
+        - name: bitcoin_chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:

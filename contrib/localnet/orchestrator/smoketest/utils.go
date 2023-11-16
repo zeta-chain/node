@@ -5,10 +5,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"

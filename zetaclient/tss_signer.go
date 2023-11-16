@@ -601,7 +601,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.A
 	if err != nil {
 		return nil, err
 	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitcoinNetParamsFromChainID(chainID))
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), common.BitcoinNetParamsFromChainID(chainID))
 	if err != nil {
 		return nil, err
 	}

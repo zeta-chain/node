@@ -3,13 +3,13 @@ package keeper
 import (
 	"context"
 
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -41,7 +41,13 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	btcAddress, err := getTssAddrBTC(tssPubKey)
+
+	bitcoinParams := common.BitcoinRegnetParams
+	if req.BitcoinChainId != 0 {
+		bitcoinParams = common.BitcoinNetParamsFromChainID(req.BitcoinChainId)
+	}
+
+	btcAddress, err := getTssAddrBTC(tssPubKey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -70,8 +76,8 @@ func getTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	return keyAddr, nil
 }
 
-func getTssAddrBTC(tssPubkey string) (string, error) {
-	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey)
+func getTssAddrBTC(tssPubkey string, bitcoinParams *chaincfg.Params) (string, error) {
+	addrWPKH, err := getKeyAddrBTCWitnessPubkeyHash(tssPubkey, bitcoinParams)
 	if err != nil {
 		return "", err
 	}
@@ -79,12 +85,12 @@ func getTssAddrBTC(tssPubkey string) (string, error) {
 	return addrWPKH.EncodeAddress(), nil
 }
 
-func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string) (*btcutil.AddressWitnessPubKeyHash, error) {
+func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, bitcoinParams *chaincfg.Params) (*btcutil.AddressWitnessPubKeyHash, error) {
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err
 	}
-	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), config.BitcoinRegnetParams)
+	addr, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubk.Bytes()), bitcoinParams)
 	if err != nil {
 		return nil, err
 	}

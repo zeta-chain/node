@@ -118,7 +118,7 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
 			msg := &crosschaintypes.MsgAddToOutTxTracker{
-				ChainId: common.BtcChainID(),
+				ChainId: common.BtcRegtestChain().ChainId,
 				Nonce:   nonce,
 				TxHash:  outTxid,
 			}

@@ -295,16 +295,16 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	// Check receiver P2WPKH address
-	addr, err := btcutil.DecodeAddress(params.Receiver, config.BitcoinNetParamsFromChainID(params.ReceiverChainId))
+	addr, err := btcutil.DecodeAddress(params.Receiver, common.BitcoinNetParamsFromChainID(params.ReceiverChainId))
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-	if !addr.IsForNet(config.BitcoinNetParamsFromChainID(params.ReceiverChainId)) {
+	if !addr.IsForNet(common.BitcoinNetParamsFromChainID(params.ReceiverChainId)) {
 		logger.Error().Msgf(
 			"address %s is not for network %s",
 			params.Receiver,
-			config.BitcoinNetParamsFromChainID(params.ReceiverChainId),
+			common.BitcoinNetParamsFromChainID(params.ReceiverChainId),
 		)
 		return
 	}

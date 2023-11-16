@@ -242,16 +242,6 @@ func (c *Config) Clone() *Config {
 	return copied
 }
 
-func (c *Config) IsBitcoinMainnet() bool {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-
-	if c.BitcoinConfig == nil {
-		return false
-	}
-	return c.BitcoinConfig.ChainId == 1
-}
-
 // ValidateCoreParams performs some basic checks on core params
 func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
 	if coreParams == nil {
