@@ -135,7 +135,7 @@ func (co *CoreObserver) startSendScheduler() {
 
 					supportedChains := co.Config().GetEnabledChains()
 					for _, c := range supportedChains {
-						if c.ChainId == common.ZetaChain().ChainId {
+						if c.ChainId == co.bridge.ZetaChain().ChainId {
 							continue
 						}
 						signer := co.signerMap[c]

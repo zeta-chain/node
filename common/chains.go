@@ -1,13 +1,8 @@
 package common
 
-// Zeta chains
+import "fmt"
 
-func ZetaChain() Chain {
-	return Chain{
-		ChainName: ChainName_zeta_mainnet,
-		ChainId:   101,
-	}
-}
+// Zeta chains
 
 func ZetaChainMainnet() Chain {
 	return Chain{
@@ -133,7 +128,10 @@ func DefaultChainsList() []*Chain {
 		GoerliChain(),
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
-		ZetaChain(),
+		ZetaChainMainnet(),
+		ZetaTestnetChain(),
+		ZetaMocknetChain(),
+		ZetaPrivnetChain(),
 	})
 }
 
@@ -180,6 +178,37 @@ func ExternalChainList() []*Chain {
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
 	})
+}
+
+// ZetaChainList returns a list of Zeta chains
+func ZetaChainList() []*Chain {
+	return chainListPointers([]Chain{
+		ZetaChainMainnet(),
+		ZetaTestnetChain(),
+		ZetaMocknetChain(),
+		ZetaPrivnetChain(),
+	})
+}
+
+// ZetaChainFromChainID returns a ZetaChain chainobject  from a Cosmos chain ID
+func ZetaChainFromChainID(chainID string) (Chain, error) {
+	ethChainID, err := CosmosToEthChainID(chainID)
+	if err != nil {
+		return Chain{}, err
+	}
+
+	switch ethChainID {
+	case ZetaPrivnetChain().ChainId:
+		return ZetaPrivnetChain(), nil
+	case ZetaChainMainnet().ChainId:
+		return ZetaChainMainnet(), nil
+	case ZetaTestnetChain().ChainId:
+		return ZetaTestnetChain(), nil
+	case ZetaMocknetChain().ChainId:
+		return ZetaMocknetChain(), nil
+	default:
+		return Chain{}, fmt.Errorf("chain %d not found", ethChainID)
+	}
 }
 
 // chainListPointers returns a list of chain pointers

@@ -18,9 +18,6 @@ func ParseChainName(chain string) ChainName {
 
 type SigninAlgo string
 
-// Chain is an alias of string , represent a block chain
-//type Chain string
-
 // Chains represent a slice of Chain
 type Chains []Chain
 
@@ -33,10 +30,10 @@ func (chain Chain) IsEqual(c Chain) bool {
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.IsEqual(ZetaChain())
+	return chain.InChainList(ZetaChainList())
 }
 func (chain Chain) IsExternalChain() bool {
-	return !chain.IsEqual(ZetaChain())
+	return !chain.InChainList(ZetaChainList())
 }
 
 // EncodeAddress bytes representations of address
@@ -87,6 +84,10 @@ func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
 		return []byte(addr), nil
 	}
 	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
+}
+
+func IsZetaChain(chainID int64) bool {
+	return ChainIDInChainList(chainID, ZetaChainList())
 }
 
 func IsEVMChain(chainID int64) bool {
@@ -192,4 +193,19 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
 	}
+}
+
+// InChainList checks whether the chain is in the chain list
+func (chain Chain) InChainList(chainList []*Chain) bool {
+	return ChainIDInChainList(chain.ChainId, chainList)
+}
+
+// ChainIDInChainList checks whether the chainID is in the chain list
+func ChainIDInChainList(chainID int64, chainList []*Chain) bool {
+	for _, c := range chainList {
+		if chainID == c.ChainId {
+			return true
+		}
+	}
+	return false
 }

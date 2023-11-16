@@ -136,14 +136,14 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 		{
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
-				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
 			assertChain: common.ChainName_goerli_localnet,
 			isFound:     true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
-				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
 			assertChain: common.ChainName_btc_regtest,
 			isFound:     false,
 		},

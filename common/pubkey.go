@@ -88,29 +88,34 @@ func (pubKey PubKey) String() string {
 
 // GetAddress will return an address for the given chain
 func (pubKey PubKey) GetAddress(chain Chain) (Address, error) {
-	if pubKey.IsEmpty() {
-		return NoAddress, nil
-	}
-
 	if IsEVMChain(chain.ChainId) {
-		// retrieve compressed pubkey bytes from bechh32 encoded str
-		pk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, string(pubKey))
-		if err != nil {
-			return NoAddress, err
-		}
-		// parse compressed bytes removing 5 first bytes (amino encoding) to get uncompressed
-		pub, err := secp256k1.ParsePubKey(pk.Bytes())
-		if err != nil {
-			return NoAddress, err
-		}
-		str := strings.ToLower(eth.PubkeyToAddress(*pub.ToECDSA()).String())
-		return NewAddress(str, chain)
+		return pubKey.GetEVMAddress()
 	}
 	return NoAddress, nil
 }
 
+// GetEVMAddress will return the evm address
+func (pubKey PubKey) GetEVMAddress() (Address, error) {
+	if pubKey.IsEmpty() {
+		return NoAddress, nil
+	}
+
+	// retrieve compressed pubkey bytes from bechh32 encoded str
+	pk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, string(pubKey))
+	if err != nil {
+		return NoAddress, err
+	}
+	// parse compressed bytes removing 5 first bytes (amino encoding) to get uncompressed
+	pub, err := secp256k1.ParsePubKey(pk.Bytes())
+	if err != nil {
+		return NoAddress, err
+	}
+	str := strings.ToLower(eth.PubkeyToAddress(*pub.ToECDSA()).String())
+	return NewAddress(str), nil
+}
+
 func (pubKey PubKey) GetZetaAddress() (cosmos.AccAddress, error) {
-	addr, err := pubKey.GetAddress(ZetaChain())
+	addr, err := pubKey.GetEVMAddress()
 	if err != nil {
 		return nil, err
 	}

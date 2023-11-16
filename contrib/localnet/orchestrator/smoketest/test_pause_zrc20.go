@@ -85,7 +85,7 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	if receipt.Status == 1 {
 		panic("burn should fail")
 	}
-	
+
 	// Operation on a contract that interact with ETH ZRC20 should fail
 	fmt.Printf("Vault contract can no longer interact with ETH ZRC20: %s\n", sm.ETHZRC20Addr.Hex())
 	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
