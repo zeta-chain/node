@@ -571,7 +571,7 @@ func (k Keeper) CallEVM(
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf("contract call failed: method '%s', contract '%s'", method, contract.Hex())
+		errMes := fmt.Sprintf("contract call failed: method '%s', contract '%s', args: %v", method, contract.Hex(), args)
 
 		// if it is a revert error then add the revert reason to the error message
 		revertErr, ok := err.(*evmtypes.RevertError)

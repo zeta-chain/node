@@ -58,7 +58,10 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	if err != nil {
 		panic(err)
 	}
-	BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
+	BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
+		&chaincfg.RegressionNetParams,
+	)
 	if err != nil {
 		panic(err)
 	}

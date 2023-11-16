@@ -132,6 +132,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	fmt.Printf("#utxos %d\n", len(utxos))
 	//fmt.Printf("Unimplemented!\n")
+	fmt.Printf("memo address %s\n", sm.USDTZRC20Addr)
 	memo, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, sm.USDTZRC20Addr, DeployerAddress.Bytes())
 	if err != nil {
 		panic(err)

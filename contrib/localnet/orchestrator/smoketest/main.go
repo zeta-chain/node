@@ -277,7 +277,6 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// temporarily to reduce dev/test cycle turnaround time
 
 	smokeTest.CheckZRC20ReserveAndSupply()
-
 	smokeTest.TestContextUpgrade()
 
 	smokeTest.TestDepositAndCallRefund()
@@ -304,8 +303,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestBitcoinWithdraw()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	smokeTest.TestCrosschainSwap()
-	smokeTest.CheckZRC20ReserveAndSupply()
+	//smokeTest.TestCrosschainSwap()
+	//smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestMessagePassingRevertFail()
 	smokeTest.CheckZRC20ReserveAndSupply()

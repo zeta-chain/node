@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"sync"
 	"time"
 
@@ -16,9 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -58,6 +58,13 @@ func WaitCctxsMinedByInTxHash(inTxHash string, cctxClient crosschaintypes.QueryC
 					break
 				} else if err != nil {
 					fmt.Println("Error getting cctx by index: ", err.Error())
+				} else {
+					cctxStatus := res.CrossChainTx.CctxStatus
+					fmt.Printf(
+						"Deposit receipt cctx status: %s; Message: %s; Waiting for the cctx to be processed\n",
+						cctxStatus.Status.String(),
+						cctxStatus.StatusMessage,
+					)
 				}
 			}
 		}()
@@ -148,13 +155,23 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	}
 	fmt.Println("System contracts deployed")
 
-	sc, err := fetchAttribute(res, "SystemContractAddress")
+	address, err := fetchAttribute(res, "SystemContractAddress")
 	if err != nil {
 		return err
 	}
 
 	// set system contract
-	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgUpdateSystemContract(FungibleAdminAddress, sc))
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgUpdateSystemContract(FungibleAdminAddress, address))
+	if err != nil {
+		return err
+	}
+
+	// set uniswap contract addresses
+	UniswapV2FactoryAddr, err = fetchAttribute(res, "UniswapV2Factory")
+	if err != nil {
+		return err
+	}
+	UniswapV2RouterAddr, err = fetchAttribute(res, "DeployUniswapV2Router02")
 	if err != nil {
 		return err
 	}
@@ -190,10 +207,9 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	}
 
 	// deploy usdt zrc20
-	usdtAddr := "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
-	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	res, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		FungibleAdminAddress,
-		usdtAddr,
+		USDTERC20Addr,
 		common.GoerliLocalnetChain().ChainId,
 		6,
 		"USDT",
@@ -205,5 +221,18 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 		return err
 	}
 
+	// fetch the usdt zrc20 contract address and remove the quotes
+	address, err = fetchAttribute(res, "Contract")
+	if err != nil {
+		return err
+	}
+	if len(address) < 2 {
+		return fmt.Errorf("invalid address in event: %s", address)
+	}
+	address = address[1 : len(address)-1]
+	if !ethcommon.IsHexAddress(address) {
+		return fmt.Errorf("invalid address in event: %s", address)
+	}
+	USDTZRC20Addr = address
 	return nil
 }

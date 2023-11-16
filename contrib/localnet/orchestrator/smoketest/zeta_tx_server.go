@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -203,15 +204,17 @@ func fetchAttribute(res *sdktypes.TxResponse, key string) (string, error) {
 		return "", err
 	}
 
+	var attributes []string
 	for _, log := range logs {
 		for _, event := range log.Events {
 			for _, attr := range event.Attributes {
-				if attr.Key == key {
+				attributes = append(attributes, attr.Key)
+				if strings.EqualFold(attr.Key, key) {
 					return attr.Value, nil
 				}
 			}
 		}
 	}
 
-	return "", errors.New("attribute not found")
+	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
 }
