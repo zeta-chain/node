@@ -21,7 +21,7 @@ import (
 // **Caller should feed temporary ctx into this function**
 func (k Keeper) PayGasAndUpdateCctx(
 	ctx sdk.Context,
-	chainID int64,
+	chainID int64, // Chain Id is the outbound chain chain id , this can be receiver chain for regular transactions and sender-chain to reverted transactions
 	cctx *types.CrossChainTx,
 	inputAmount math.Uint,
 	noEthereumTxEvent bool,

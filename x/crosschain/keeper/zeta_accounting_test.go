@@ -16,13 +16,13 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		originalAmount := sdkmath.NewUint(rand.Uint64())
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{
-			originalAmount,
+			AbortedZetaAmount: originalAmount,
 		})
 		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, originalAmount, val.AbortedZetaAmount)
 		addAmount := sdkmath.NewUint(rand.Uint64())
-		k.AddZetaAccounting(ctx, addAmount)
+		k.AddZetaAbortedAmount(ctx, addAmount)
 		val, found = k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
@@ -39,11 +39,32 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		highAmount := sdkmath.NewUintFromString("100000000000000000000000000000000000000000000000")
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{
-			highAmount,
+			AbortedZetaAmount: highAmount,
 		})
 		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, highAmount, val.AbortedZetaAmount)
+	})
+	t.Run("should add aborted gas and erc20 amounts", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		originalAmount := sdkmath.NewUint(rand.Uint64())
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{
+			AbortedZetaAmount:  originalAmount,
+			AbortedGasAmount:   originalAmount,
+			AbortedErc20Amount: originalAmount,
+		})
+		val, found := k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, originalAmount, val.AbortedZetaAmount)
+		addAmount := sdkmath.NewUint(rand.Uint64())
+		k.AddZetaAbortedAmount(ctx, addAmount)
+		k.AddErc20AbortedAmount(ctx, addAmount)
+		k.AddGasAbortedAmount(ctx, addAmount)
+		val, found = k.GetZetaAccounting(ctx)
+		require.True(t, found)
+		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
+		require.Equal(t, originalAmount.Add(addAmount), val.AbortedErc20Amount)
+		require.Equal(t, originalAmount.Add(addAmount), val.AbortedGasAmount)
 	})
 
 }

@@ -36,7 +36,15 @@ message ZetaAccounting {
   string aborted_zeta_amount = 1 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
-  ];
+  ]; // This stores the total aborted amount for cctx of coin-type ZETA
+  string aborted_gas_amount = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ]; // This stores the total aborted amount for cctx of coin-type GAS
+  string aborted_erc20_amount = 3 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
+    (gogoproto.nullable) = false
+  ]; // This stores the total aborted amount for cctx of coin-type ERC20
 }
 
 message OutboundTxParams {

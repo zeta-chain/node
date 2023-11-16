@@ -48,7 +48,17 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, send typ
 		})
 	}
 	if send.CctxStatus.Status == types.CctxStatus_Aborted {
-		k.AddZetaAccounting(ctx, send.GetCurrentOutTxParam().Amount)
+		switch send.GetCurrentOutTxParam().CoinType {
+		case common.CoinType_Zeta:
+			k.AddZetaAbortedAmount(ctx, send.GetCurrentOutTxParam().Amount)
+		case common.CoinType_Gas:
+			k.AddGasAbortedAmount(ctx, send.GetCurrentOutTxParam().Amount)
+		case common.CoinType_ERC20:
+			k.AddErc20AbortedAmount(ctx, send.GetCurrentOutTxParam().Amount)
+		default:
+			ctx.Logger().Error(fmt.Sprintf("unknown coin type %s", send.GetCurrentOutTxParam().CoinType))
+			return
+		}
 	}
 }
 

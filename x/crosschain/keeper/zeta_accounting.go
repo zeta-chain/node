@@ -22,7 +22,7 @@ func (k Keeper) GetZetaAccounting(ctx sdk.Context) (val types.ZetaAccounting, fo
 	return val, true
 }
 
-func (k Keeper) AddZetaAccounting(ctx sdk.Context, amount sdkmath.Uint) {
+func (k Keeper) AddZetaAbortedAmount(ctx sdk.Context, amount sdkmath.Uint) {
 	zetaAccounting, found := k.GetZetaAccounting(ctx)
 	if !found {
 		zetaAccounting = types.ZetaAccounting{
@@ -30,6 +30,30 @@ func (k Keeper) AddZetaAccounting(ctx sdk.Context, amount sdkmath.Uint) {
 		}
 	} else {
 		zetaAccounting.AbortedZetaAmount = zetaAccounting.AbortedZetaAmount.Add(amount)
+	}
+	k.SetZetaAccounting(ctx, zetaAccounting)
+}
+
+func (k Keeper) AddGasAbortedAmount(ctx sdk.Context, amount sdkmath.Uint) {
+	zetaAccounting, found := k.GetZetaAccounting(ctx)
+	if !found {
+		zetaAccounting = types.ZetaAccounting{
+			AbortedGasAmount: amount,
+		}
+	} else {
+		zetaAccounting.AbortedGasAmount = zetaAccounting.AbortedGasAmount.Add(amount)
+	}
+	k.SetZetaAccounting(ctx, zetaAccounting)
+}
+
+func (k Keeper) AddErc20AbortedAmount(ctx sdk.Context, amount sdkmath.Uint) {
+	zetaAccounting, found := k.GetZetaAccounting(ctx)
+	if !found {
+		zetaAccounting = types.ZetaAccounting{
+			AbortedErc20Amount: amount,
+		}
+	} else {
+		zetaAccounting.AbortedErc20Amount = zetaAccounting.AbortedErc20Amount.Add(amount)
 	}
 	k.SetZetaAccounting(ctx, zetaAccounting)
 }

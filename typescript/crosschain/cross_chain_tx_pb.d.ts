@@ -134,9 +134,25 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
  */
 export declare class ZetaAccounting extends Message<ZetaAccounting> {
   /**
+   * This stores the total aborted amount for cctx of coin-type ZETA
+   *
    * @generated from field: string aborted_zeta_amount = 1;
    */
   abortedZetaAmount: string;
+
+  /**
+   * This stores the total aborted amount for cctx of coin-type GAS
+   *
+   * @generated from field: string aborted_gas_amount = 2;
+   */
+  abortedGasAmount: string;
+
+  /**
+   * This stores the total aborted amount for cctx of coin-type ERC20
+   *
+   * @generated from field: string aborted_erc20_amount = 3;
+   */
+  abortedErc20Amount: string;
 
   constructor(data?: PartialMessage<ZetaAccounting>);
 
