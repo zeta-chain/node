@@ -86,6 +86,15 @@ func (sm *SmokeTest) TestPauseZRC20() {
 		panic("burn should fail")
 	}
 
+	fmt.Println("ALL FOREIGN COINS")
+	fcs, err := sm.fungibleClient.ForeignCoinsAll(context.Background(), &fungibletypes.QueryAllForeignCoinsRequest{})
+	if err != nil {
+		panic(err)
+	}
+	for _, fc := range fcs.ForeignCoins {
+		fmt.Printf("%s\n", fc.String())
+	}
+
 	// Operation on a contract that interact with ETH ZRC20 should fail
 	fmt.Println("Vault contract can no longer interact with ETH ZRC20")
 	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
