@@ -53,7 +53,7 @@ func DebugCmd() *cobra.Command {
 			txHash := args[0]
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
-			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainID)
+			bridge, err := zetaclient.NewZetaCoreBridge(&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())}, debugArgs.zetaNode, "", debugArgs.zetaChainID, false)
 			if err != nil {
 				return err
 			}
