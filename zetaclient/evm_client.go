@@ -324,7 +324,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			common.CoinType_Cmd,
 		)
 		if err != nil {
-			logger.Error().Err(err).Msg("error posting confirmation to meta core")
+			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 		}
 		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
@@ -345,7 +345,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msg("error posting confirmation to meta core")
+				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
@@ -365,7 +365,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -410,7 +410,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -446,7 +446,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Err(err).Msg("error posting confirmation to meta core")
+							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
@@ -474,7 +474,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Zeta,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -512,7 +512,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_ERC20,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -588,21 +588,18 @@ func (ob *EVMChainClient) observeOutTx() {
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
 					continue
 				}
-			TXHASHLOOP:
+				ob.Mu.Lock()
+				_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+				ob.Mu.Unlock()
+				if found { // Go to next tracker if this one has already been confirmed
+					continue
+				}
 				for _, txHash := range tracker.HashList {
-					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
-						ob.Mu.Lock()
-						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
-						ob.Mu.Unlock()
-						if found {
-							continue
-						}
-
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
@@ -610,13 +607,13 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.Mu.Unlock()
+							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
 
-							break TXHASHLOOP
+							break
 						}
 						if err != nil {
 							ob.logger.ObserveOutTx.Debug().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
 						}
-						//<-inTimeout
 					}
 				}
 			}
