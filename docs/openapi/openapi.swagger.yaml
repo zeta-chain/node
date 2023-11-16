@@ -26477,20 +26477,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/crosschain/abortedZetaAmount:
-    get:
-      operationId: Query_ZetaAccounting
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryZetaAccountingResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of send items.
@@ -27377,6 +27363,20 @@ paths:
           description: A successful response.
           schema:
             $ref: '#/definitions/crosschainQueryTssHistoryResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/crosschain/zetaAccounting:
+    get:
+      operationId: Query_ZetaAccounting
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryZetaAccountingResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50970,6 +50970,10 @@ definitions:
     type: object
     properties:
       aborted_zeta_amount:
+        type: string
+      aborted_gas_amount:
+        type: string
+      aborted_erc20_amount:
         type: string
   crosschainTSS:
     type: object

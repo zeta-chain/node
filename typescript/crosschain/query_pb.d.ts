@@ -45,6 +45,16 @@ export declare class QueryZetaAccountingResponse extends Message<QueryZetaAccoun
    */
   abortedZetaAmount: string;
 
+  /**
+   * @generated from field: string aborted_gas_amount = 2;
+   */
+  abortedGasAmount: string;
+
+  /**
+   * @generated from field: string aborted_erc20_amount = 3;
+   */
+  abortedErc20Amount: string;
+
   constructor(data?: PartialMessage<QueryZetaAccountingResponse>);
 
   static readonly runtime: typeof proto3;

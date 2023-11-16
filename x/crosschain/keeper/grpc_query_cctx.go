@@ -18,7 +18,11 @@ func (k Keeper) ZetaAccounting(c context.Context, _ *types.QueryZetaAccountingRe
 	if !found {
 		return nil, status.Error(codes.Internal, "aborted zeta amount not found")
 	}
-	return &types.QueryZetaAccountingResponse{AbortedZetaAmount: amount.AbortedZetaAmount}, nil
+	return &types.QueryZetaAccountingResponse{
+		AbortedZetaAmount:  amount.AbortedZetaAmount.String(),
+		AbortedGasAmount:   amount.AbortedGasAmount.String(),
+		AbortedErc20Amount: amount.AbortedErc20Amount.String(),
+	}, nil
 }
 
 func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*types.QueryAllCctxResponse, error) {

@@ -179,7 +179,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 	if err != nil {
 		return sdkmath.ZeroInt(), errors.Wrap(err, "error getting aborted zeta amount")
 	}
-	amountInt, ok := sdkmath.NewIntFromString(amount.String())
+	amountInt, ok := sdkmath.NewIntFromString(amount)
 	if !ok {
 		return sdkmath.ZeroInt(), errors.New("error parsing aborted zeta amount")
 	}

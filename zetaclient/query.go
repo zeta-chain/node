@@ -145,11 +145,11 @@ func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.Cross
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetAbortedZetaAmount() (sdkmath.Uint, error) {
+func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.ZetaAccounting(context.Background(), &types.QueryZetaAccountingRequest{})
 	if err != nil {
-		return sdkmath.ZeroUint(), err
+		return "", err
 	}
 	return resp.AbortedZetaAmount, nil
 }

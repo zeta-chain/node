@@ -149,17 +149,16 @@ service Query {
   }
 
   rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/abortedZetaAmount";
+    option (google.api.http).get = "/zeta-chain/crosschain/zetaAccounting";
   }
 }
 
 message QueryZetaAccountingRequest {}
 
 message QueryZetaAccountingResponse {
-  string aborted_zeta_amount = 1 [
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
-    (gogoproto.nullable) = false
-  ];
+  string aborted_zeta_amount = 1;
+  string aborted_gas_amount = 2;
+  string aborted_erc20_amount = 3;
 }
 
 message QueryCctxByStatusRequest {
