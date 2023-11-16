@@ -26,6 +26,7 @@ MAINNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 TEST_DIR?="./..."
 TEST_BUILD_FLAGS := -tags TESTNET,pebbledb,ledger
 PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb,ledger
+HSM_BUILD_FLAGS := -tags TESTNET,pebbled,ledger,hsm_test
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -64,6 +65,9 @@ test :clean-test-dir run-test
 
 test-priv:
 	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}
+
+test-hsm:
+	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
 
 gosec:
 	gosec  -exclude-dir=localnet ./...

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Features
+* [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
 
 ### Fixes
 
