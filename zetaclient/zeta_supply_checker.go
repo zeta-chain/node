@@ -157,8 +157,8 @@ type ZetaSupplyCheckLogs struct {
 	ZetaTokenSupplyOnNode    sdkmath.Int `json:"zeta_token_supply_on_node"`
 	EthLockedAmount          sdkmath.Int `json:"eth_locked_amount"`
 	NodeAmounts              sdkmath.Int `json:"node_amounts"`
-	Lhs                      sdkmath.Int `json:"lhs"`
-	Rhs                      sdkmath.Int `json:"rhs"`
+	LHS                      sdkmath.Int `json:"LHS"`
+	RHS                      sdkmath.Int `json:"RHS"`
 	SupplyCheckSuccess       bool        `json:"supply_check_success"`
 }
 
@@ -181,8 +181,8 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 		NodeAmounts:              nodeAmounts,
 		ZetaTokenSupplyOnNode:    zetaTokenSupplyOnNode,
 		EthLockedAmount:          ethLockedAmount,
-		Lhs:                      lhs,
-		Rhs:                      rhs,
+		LHS:                      lhs,
+		RHS:                      rhs,
 	}
 	defer logs.LogOutput()
 	if !lhs.Equal(rhs) {
