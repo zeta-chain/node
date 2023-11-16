@@ -1,9 +1,9 @@
-# query crosschain get-aborted-zeta-amount
+# query crosschain get-zeta-accounting
 
-Query current tss address
+Query zeta accounting
 
 ```
-zetacored query crosschain get-aborted-zeta-amount [flags]
+zetacored query crosschain get-zeta-accounting [flags]
 ```
 
 ### Options
@@ -12,7 +12,7 @@ zetacored query crosschain get-aborted-zeta-amount [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for get-aborted-zeta-amount
+  -h, --help               help for get-zeta-accounting
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
