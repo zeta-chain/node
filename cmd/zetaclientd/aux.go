@@ -16,6 +16,11 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 }
 
 func CreateZetaBridge(cfg *config.Config) (*zetaclient.ZetaCoreBridge, error) {
+	hotKey := cfg.AuthzHotkey
+	if cfg.HsmMode {
+		hotKey = cfg.HsmHotKey
+	}
+
 	chainIP := cfg.ZetaCoreURL
 
 	kb, _, err := zetaclient.GetKeyringKeybase(cfg)
@@ -30,7 +35,7 @@ func CreateZetaBridge(cfg *config.Config) (*zetaclient.ZetaCoreBridge, error) {
 
 	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey)
 
-	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, cfg.AuthzHotkey, cfg.ChainID)
+	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode)
 	if err != nil {
 		return nil, err
 	}
