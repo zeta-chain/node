@@ -27,7 +27,10 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}
-
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("TSS address not found "))
+	}
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
 		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 		isAdmin := msg.Creator == adminPolicyAccount
@@ -62,6 +65,18 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if !IsPending(*cctx.CrossChainTx) {
 		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
 		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
+	}
+
+	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
+	if !found {
+		return nil, cosmoserrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, ", chain.ChainId))
+	}
+	if pendingNonces.NonceLow < 0 {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidNonce, fmt.Sprintf("NonceLow is negative %d, ", chain.ChainId))
+	}
+	nonceLowUint := uint64(pendingNonces.NonceLow)
+	if nonceLowUint > msg.Nonce {
+		return nil, cosmoserrors.Wrap(types.ErrInvalidNonce, fmt.Sprintf("NonceLow %d is higher that nonce provided %d", nonceLowUint, msg.Nonce))
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)

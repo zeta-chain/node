@@ -40,4 +40,5 @@ var (
 	ErrInvalidCoinType        = errorsmod.Register(ModuleName, 1139, "invalid coin type")
 	ErrCannotMigrateTss       = errorsmod.Register(ModuleName, 1140, "Cannot migrate TSS funds")
 	ErrTxBodyVerificationFail = errorsmod.Register(ModuleName, 1141, "transaction body verification fail")
+	ErrInvalidNonce           = errorsmod.Register(ModuleName, 1142, "invalid nonce")
 )
