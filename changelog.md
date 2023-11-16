@@ -4,6 +4,8 @@
 
 ### Features
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
+* [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+
 ### Fixes
 
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest

@@ -6,7 +6,7 @@
 ###############################################################################
 
 # The network chain ID
-chain-id = ""
+chain-id = "athens_101-1"
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "test"
 # CLI output format (text|json)

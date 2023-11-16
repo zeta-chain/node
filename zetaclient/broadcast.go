@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -58,7 +60,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	fee := sdktypes.NewCoins(sdktypes.NewCoin("azeta", sdktypes.NewInt(40000)))
 	builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
-	err = clienttx.Sign(factory, ctx.GetFromName(), builder, true)
+	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {
 		return "", err
 	}
@@ -152,4 +154,17 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	}
 	ctx = ctx.WithClient(wsClient)
 	return ctx, nil
+}
+
+func (b *ZetaCoreBridge) SignTx(
+	txf clienttx.Factory,
+	name string,
+	txBuilder client.TxBuilder,
+	overwriteSig bool,
+	txConfig client.TxConfig,
+) error {
+	if b.cfg.HsmMode {
+		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
+	}
+	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
 }
