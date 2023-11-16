@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -17,6 +18,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/common"
@@ -28,6 +30,19 @@ const (
 	satoshiPerBitcoin = 1e8
 	bytesPerKB        = 1000
 )
+
+func PrettyPrintStruct(val interface{}) string {
+	prettyStruct, err := json.MarshalIndent(
+		val,
+		"",
+		" ",
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msgf("error marshalling struct")
+	}
+
+	return string(prettyStruct)
+}
 
 // feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func feeRateToSatPerByte(rate float64) *big.Int {
