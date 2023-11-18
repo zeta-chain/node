@@ -228,7 +228,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		chainID := getValidEthChainID(t)
 
-		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
+		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
 			CoinType:             common.CoinType_Gas,
@@ -261,7 +261,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		asset := sample.EthAddress().String()
 
-		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
+		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
 			CoinType:             common.CoinType_ERC20,

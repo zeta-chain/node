@@ -10,7 +10,7 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// Set all the foreignCoins
-	for _, elem := range genState.ForeignCoinsList {
+	for _, elem := range genState.ForeignCoinList {
 		k.SetForeignCoins(ctx, elem)
 	}
 	// Set if defined
@@ -26,7 +26,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis types.GenesisState
 
 	genesis.Params = k.GetParams(ctx)
-	genesis.ForeignCoinsList = k.GetAllForeignCoins(ctx)
+	genesis.ForeignCoinList = k.GetAllForeignCoins(ctx)
 
 	// Get all zetaDepositAndCallContract
 	system, found := k.GetSystemContract(ctx)

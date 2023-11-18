@@ -14,8 +14,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func createNForeignCoins(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ForeignCoins {
-	items := make([]types.ForeignCoins, n)
+func createNForeignCoins(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.ForeignCoin {
+	items := make([]types.ForeignCoin, n)
 	for i := range items {
 		items[i].Zrc20ContractAddress = strconv.Itoa(i)
 
@@ -24,7 +24,7 @@ func createNForeignCoins(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.
 	return items
 }
 
-func setForeignCoins(ctx sdk.Context, k *keeper.Keeper, fc ...types.ForeignCoins) {
+func setForeignCoins(ctx sdk.Context, k *keeper.Keeper, fc ...types.ForeignCoin) {
 	for _, item := range fc {
 		k.SetForeignCoins(ctx, item)
 	}
@@ -35,31 +35,31 @@ func TestKeeper_GetGasCoinForForeignCoin(t *testing.T) {
 
 	// populate
 	setForeignCoins(ctx, k,
-		types.ForeignCoins{
+		types.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
 			CoinType:             common.CoinType_ERC20,
 			Name:                 "foo",
 		},
-		types.ForeignCoins{
+		types.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
 			CoinType:             common.CoinType_ERC20,
 			Name:                 "foo",
 		},
-		types.ForeignCoins{
+		types.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
 			CoinType:             common.CoinType_Gas,
 			Name:                 "bar",
 		},
-		types.ForeignCoins{
+		types.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       2,
 			CoinType:             common.CoinType_ERC20,
 			Name:                 "foo",
 		},
-		types.ForeignCoins{
+		types.ForeignCoin{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       2,
 			CoinType:             common.CoinType_ERC20,
@@ -84,35 +84,35 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 
 		// populate
 		setForeignCoins(ctx, k,
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       1,
 				CoinType:             common.CoinType_ERC20,
 				Name:                 "foo",
 			},
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                gasAsset,
 				ForeignChainId:       1,
 				CoinType:             common.CoinType_ERC20,
 				Name:                 "bar",
 			},
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       1,
 				CoinType:             common.CoinType_Gas,
 				Name:                 "foo",
 			},
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       2,
 				CoinType:             common.CoinType_ERC20,
 				Name:                 "foo",
 			},
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       2,
@@ -138,7 +138,7 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
 		setForeignCoins(ctx, k,
-			types.ForeignCoins{
+			types.ForeignCoin{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 				ForeignChainId:       1,

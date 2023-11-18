@@ -30,14 +30,14 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 			request: &types.QueryGetForeignCoinsRequest{
 				Index: msgs[0].Zrc20ContractAddress,
 			},
-			response: &types.QueryGetForeignCoinsResponse{ForeignCoins: msgs[0]},
+			response: &types.QueryGetForeignCoinsResponse{ForeignCoin: msgs[0]},
 		},
 		{
 			desc: "Second",
 			request: &types.QueryGetForeignCoinsRequest{
 				Index: msgs[1].Zrc20ContractAddress,
 			},
-			response: &types.QueryGetForeignCoinsResponse{ForeignCoins: msgs[1]},
+			response: &types.QueryGetForeignCoinsResponse{ForeignCoin: msgs[1]},
 		},
 		{
 			desc: "KeyNotFound",
@@ -86,10 +86,10 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.ForeignCoinsAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.ForeignCoins), step)
+			require.LessOrEqual(t, len(resp.ForeignCoin), step)
 			require.Subset(t,
 				nullify.Fill(msgs),
-				nullify.Fill(resp.ForeignCoins),
+				nullify.Fill(resp.ForeignCoin),
 			)
 		}
 	})
@@ -99,10 +99,10 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.ForeignCoinsAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.ForeignCoins), step)
+			require.LessOrEqual(t, len(resp.ForeignCoin), step)
 			require.Subset(t,
 				nullify.Fill(msgs),
-				nullify.Fill(resp.ForeignCoins),
+				nullify.Fill(resp.ForeignCoin),
 			)
 			next = resp.Pagination.NextKey
 		}
@@ -113,7 +113,7 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
 			nullify.Fill(msgs),
-			nullify.Fill(resp.ForeignCoins),
+			nullify.Fill(resp.ForeignCoin),
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
