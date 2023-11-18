@@ -4,6 +4,7 @@
 
 ### Features
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+* [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 
 ### Fixes
 
