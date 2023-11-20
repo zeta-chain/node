@@ -106,8 +106,13 @@ jobs:
           wget -q ${latest_state_export}
           
           echo "*********DOWNLOAD UPGRADE BINARY AND PUT IN ZETAVISOR UPGRADES FOLDER*********"
+          echo "*********DOWNLOADING: ${github_binary_version_link}*********"
           wget -q ${github_binary_version_link} -O /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
+          
+          echo "GET CHECKSUME OF DOWNLOADED BINARY"
           ZETACORED_CHECKSUM=$(shasum -b -a 256 /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored | cut -d ' ' -f 1)
+          
+          echo "CHANGE PERMISSIONS"
           sudo chmod a+x /home/runner/.zetacored/zetavisor/upgrades/${{ github.event.inputs.version }}/bin/zetacored
 
           echo "UPGRADE_INFO=${UPGRADE_INFO}" >> ${GITHUB_ENV}
