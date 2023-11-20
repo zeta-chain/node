@@ -61,11 +61,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - id: install-aws-cli
-        uses: unfor19/install-aws-cli-action@v1
-        with:
-          version: 2
-
       - uses: actions/setup-go@v4
         with:
           check-latest: false
