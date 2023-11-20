@@ -22,7 +22,7 @@ jobs:
     runs-on: ["buildjet-8vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://storage.googleapis.com/statesync-rpc-snapshots-zetachain-dev/latest.json"
-      github_binary_version_link: "https://github.com/zeta-chain/node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
+      github_binary_version_link: "https://github.com/zeta-chain/ci-testing-node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
       downloaded_binary_name: "zetacored-testnet-linux-amd64"
       VERSION: "${{ github.event.inputs.version }}"
       aws_region: "us-east-1"
