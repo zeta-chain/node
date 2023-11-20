@@ -19,7 +19,7 @@ on:
 jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
-    runs-on: ["gcp-runners-athens"]
+    runs-on: ["buildjet-32vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://storage.googleapis.com/statesync-rpc-snapshots-zetachain-dev/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/ci-testing-node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
@@ -199,6 +199,13 @@ jobs:
           zetacored validate-genesis
                 
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
+          
+          echo "enable swap"
+          sudo fallocate -l 50G ./swapfile
+          sudo chmod 600 ./swapfile
+          sudo mkswap ./swapfile
+          sudo swapon ./swapfile
+          sudo swapon --show
           
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
