@@ -208,7 +208,7 @@ jobs:
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
                     
-          python .github/actions/upgrade-testing/scripts/create_genesis.py
+          /usr/bin/time -v python .github/actions/upgrade-testing/scripts/create_genesis.py
           
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
