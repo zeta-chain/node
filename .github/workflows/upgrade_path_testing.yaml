@@ -148,6 +148,7 @@ jobs:
 
       - name: "START_TESTING_NETWORK"
         run: |
+          pip install memory_profiler
           zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
           
           zetacored config chain-id $CHAINID --home ${DAEMON_HOME}
