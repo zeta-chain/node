@@ -208,11 +208,14 @@ jobs:
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
-          ls -lah ./
-          du -h ./
-          free 
-          /usr/bin/time -v python .github/actions/upgrade-testing/scripts/create_genesis.py
+          /usr/bin/time -v python .github/actions/upgrade-testing/scripts/create_genesis.py &
+          PYTHON_PID=$!
           
+          # Loop while the Python process is running
+          while ps -p $PYTHON_PID > /dev/null 2>&1; do
+              free
+              sleep 1  # Pause for 1 second before the next check
+          done
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           
