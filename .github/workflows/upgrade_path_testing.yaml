@@ -19,7 +19,7 @@ on:
 jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
-    runs-on: ["buildjet-8vcpu-ubuntu-2204"]
+    runs-on: ["buildjet-16vcpu-ubuntu-2204"]
     env:
       latest_state_export: "https://storage.googleapis.com/statesync-rpc-snapshots-zetachain-dev/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/ci-testing-node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
