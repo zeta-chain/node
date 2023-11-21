@@ -20,6 +20,7 @@ jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
     runs-on: ["buildjet-16vcpu-ubuntu-2204"]
+    timeout-minutes: 3000
     env:
       latest_state_export: "https://storage.googleapis.com/statesync-rpc-snapshots-zetachain-dev/latest.json"
       github_binary_version_link: "https://github.com/zeta-chain/ci-testing-node/releases/download/${{ github.event.inputs.version }}/zetacored_testnet-linux-amd64"
@@ -239,8 +240,6 @@ jobs:
               echo "Looping..."
               sleep 1
           done
-          sleep ${UPGRADES_SLEEP_TIME}
-          cat cosmovisor.log
 
       - name: "DETERMINE_UPGRADE_TYPE"
         shell: python
@@ -273,6 +272,7 @@ jobs:
       - name: "NON_CONSENSUS_BREAKING_UPGRADE"
         if: env.UPGRADE_TYPE == 'NONCON'
         run: |
+          cat cosmovisor.log
           echo ${UPGRADE_TYPE}
           echo "*********CHECK VERSION BEFORE BINARY SWITCH*********"
           zetavisor version
