@@ -218,12 +218,12 @@ jobs:
               free
               sleep 1  # Pause for 1 second before the next check
           done
-          
-          ls -lah ./
-          
+                    
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
-          ls -lah ./
+          echo "DAEMON HOME: $DAEMON_HOME"
+          ls -lah  $DAEMON_HOME/config/
+          
           cat $DAEMON_HOME/config/genesis.json | grep -A 10 -B 10 out_tx_tracker
           
           echo "Zetavisor Version"
