@@ -19,7 +19,7 @@ on:
 jobs:
   upgrade_path_test_state_export:
     name: "UPGRADE_PATH_TEST_STATE_EXPORT"
-    runs-on: ["buildjet-16vcpu-ubuntu-2204"]
+    runs-on: ["gcp-runners-athens"]
     timeout-minutes: 3000
     env:
       latest_state_export: "https://storage.googleapis.com/statesync-rpc-snapshots-zetachain-dev/latest.json"
