@@ -229,6 +229,15 @@ jobs:
           zetavisor version || echo "zetavisor not found"
           zetacored version || echo "zetcored not found"
           
+          echo "BEFORE CHANGE CONFIG DB"
+          cat $DAEMON_HOME/config/config.toml
+          echo "***************************"
+        
+          sed -i 's/db_backend = "goleveldb"/db_backend = "pebbledb"/' $DAEMON_HOME/config/config.toml
+          
+          echo "AFTER CHANGE CONFIG DB"
+          cat $DAEMON_HOME/config/config.toml
+          echo "***************************"
 
       - name: "START_TESTING_NETWORK"
         run: |
