@@ -199,7 +199,6 @@ jobs:
           zetacored validate-genesis
                 
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
-          df -h 
           echo "enable swap"
           sudo fallocate -l 30G ./swapfile
           sudo chmod 600 ./swapfile
@@ -223,9 +222,7 @@ jobs:
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
           echo "DAEMON HOME: $DAEMON_HOME"
           ls -lah  $DAEMON_HOME/config/
-          
-          cat $DAEMON_HOME/config/genesis.json | grep -A 10 -B 10 out_tx_tracker
-          
+                    
           echo "Zetavisor Version"
           zetavisor version || echo "zetavisor not found"
           zetacored version || echo "zetcored not found"
