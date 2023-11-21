@@ -38,6 +38,7 @@ jobs:
       DENOM: "azeta"
       DAEMON_ALLOW_DOWNLOAD_BINARIES: "true"
       DAEMON_RESTART_AFTER_UPGRADE: "true"
+      SLEEP_START_TIME: "800"
       MONIKER: "zeta"
       BLOCK_TIME_SECONDS: "6"
       PROPOSAL_TIME_SECONDS: "60"
@@ -238,11 +239,12 @@ jobs:
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           duration=10
           start_time=$SECONDS
-          while [ $(($SECONDS - start_time)) -lt ${UPGRADES_SLEEP_TIME} ]; do
+          while [ $(($SECONDS - start_time)) -lt ${SLEEP_START_TIME} ]; do
               free
               echo "Looping..."
               sleep 1
           done
+          cat cosmovisor.log
 
       - name: "DETERMINE_UPGRADE_TYPE"
         shell: python
