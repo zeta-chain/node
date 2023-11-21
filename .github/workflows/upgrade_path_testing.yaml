@@ -233,6 +233,7 @@ jobs:
           cat $DAEMON_HOME/config/config.toml
           echo "***************************"
         
+          echo "fix db"
           sed -i 's/db_backend = "goleveldb"/db_backend = "pebbledb"/' $DAEMON_HOME/config/config.toml
           
           echo "AFTER CHANGE CONFIG DB"
