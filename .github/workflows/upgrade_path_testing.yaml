@@ -210,7 +210,7 @@ jobs:
           echo "Do Genesis Manipulation"
           export OLD_GENESIS=./latest.json
           export NEW_GENESIS=./genesis.json
-          nohup /usr/bin/time -v python .github/actions/upgrade-testing/scripts/create_genesis.py & > python_script.log 2>&1
+          nohup /usr/bin/time -v python .github/actions/upgrade-testing/scripts/create_genesis.py & 
           PYTHON_PID=$!
           
           # Loop while the Python process is running
@@ -219,15 +219,11 @@ jobs:
               sleep 1  # Pause for 1 second before the next check
           done
           
-          echo "PYTHON LOG"
-          cat python_script.log
-          
-          
           ls -lah ./
           
           echo "Move Manipulated Genesis"
           cp ./genesis-edited.json $DAEMON_HOME/config/genesis.json
-          
+          ls -lah ./
           cat $DAEMON_HOME/config/genesis.json | grep -A 10 -B 10 out_tx_tracker
           
           echo "Zetavisor Version"
