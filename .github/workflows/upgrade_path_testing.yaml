@@ -199,9 +199,9 @@ jobs:
           zetacored validate-genesis
                 
           cp $DAEMON_HOME/config/genesis.json ./genesis.json
-          
+          df -h 
           echo "enable swap"
-          sudo fallocate -l 50G ./swapfile
+          sudo fallocate -l 20G ./swapfile
           sudo chmod 600 ./swapfile
           sudo mkswap ./swapfile
           sudo swapon ./swapfile
