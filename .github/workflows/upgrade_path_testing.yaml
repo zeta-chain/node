@@ -141,7 +141,7 @@ jobs:
           sudo chmod a+x /home/runner/.zetacored/zetavisor/genesis/bin/zetacored
           echo "PATH=/home/runner/.zetacored/zetavisor/genesis/bin:$PATH" >> ${GITHUB_ENV}
 
-      - name: "START_TESTING_NETWORK"
+      - name: "SETUP:GENESIS"
         run: |
           pip install memory_profiler
           zetacored config keyring-backend $KEYRING --home ${DAEMON_HOME}
@@ -227,6 +227,9 @@ jobs:
           zetavisor version || echo "zetavisor not found"
           zetacored version || echo "zetcored not found"
           
+
+      - name: "START_TESTING_NETWORK"
+        run: |
           echo "Start Network"
           nohup zetavisor start --rpc.laddr tcp://0.0.0.0:26657 --minimum-gas-prices ${GAS_PRICES} "--grpc.enable=true" > cosmovisor.log 2>&1 &
           
