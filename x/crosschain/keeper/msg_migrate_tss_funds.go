@@ -29,6 +29,14 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
 	}
+	tssHistory := k.GetAllTSS(ctx)
+	sort.SliceStable(tssHistory, func(i, j int) bool {
+		return tssHistory[i].FinalizedZetaHeight < tssHistory[j].FinalizedZetaHeight
+	})
+	if tss.TssPubkey == tssHistory[len(tssHistory)-1].TssPubkey {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds no new tss address has been generated")
+	}
+
 	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
@@ -54,7 +62,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	})
 	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
-	ethAddressOld, err := getTssAddrEVM(currentTss.TssPubkey)
+	ethAddressOld, err := GetTssAddrEVM(currentTss.TssPubkey)
 	if err != nil {
 		return err
 	}
@@ -62,7 +70,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if err != nil {
 		return err
 	}
-	ethAddressNew, err := getTssAddrEVM(newTss.TssPubkey)
+	ethAddressNew, err := GetTssAddrEVM(newTss.TssPubkey)
 	if err != nil {
 		return err
 	}
@@ -79,7 +87,6 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
-
 	cctx := types.CrossChainTx{
 		Creator:        "",
 		Index:          index,
@@ -134,6 +141,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if err != nil {
 		return err
 	}
+
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	EmitEventInboundFinalized(ctx, &cctx)
 	return nil

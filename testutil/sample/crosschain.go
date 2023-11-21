@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -21,8 +22,18 @@ func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 }
 
 func Tss() *types.TSS {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		panic(err)
+	}
+	pk, err := common.NewPubKey(spk)
+	if err != nil {
+		panic(err)
+	}
+	pubkeyString := pk.String()
 	return &types.TSS{
-		TssPubkey:           ed25519.GenPrivKey().PubKey().String(),
+		TssPubkey:           pubkeyString,
 		FinalizedZetaHeight: 1000,
 		KeyGenZetaHeight:    1000,
 	}

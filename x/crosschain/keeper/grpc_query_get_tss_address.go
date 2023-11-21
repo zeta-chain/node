@@ -37,7 +37,7 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 			}
 		}
 	}
-	ethAddress, err := getTssAddrEVM(tssPubKey)
+	ethAddress, err := GetTssAddrEVM(tssPubKey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -52,7 +52,7 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	}, nil
 }
 
-func getTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
+func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
 	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
