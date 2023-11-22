@@ -27520,6 +27520,30 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}:
+    get:
+      summary: Query if a voter has voted for a ballot
+      operationId: Query_HasVoted
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryHasVotedResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: ballot_identifier
+          in: path
+          required: true
+          type: string
+        - name: voter_address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/observer/keygen:
     get:
       summary: Queries a keygen by index.
@@ -51296,6 +51320,11 @@ definitions:
     properties:
       node_account:
         $ref: '#/definitions/observerNodeAccount'
+  observerQueryHasVotedResponse:
+    type: object
+    properties:
+      has_voted:
+        type: boolean
   observerQueryObserversByChainResponse:
     type: object
     properties:

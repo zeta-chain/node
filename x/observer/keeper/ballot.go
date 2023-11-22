@@ -77,6 +77,24 @@ func (k Keeper) GetMaturedBallotList(ctx sdk.Context) []string {
 
 // Queries
 
+func (k Keeper) HasVoted(goCtx context.Context, req *types.QueryHasVotedRequest) (*types.QueryHasVotedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	ballot, found := k.GetBallot(ctx, req.BallotIdentifier)
+	if !found {
+		return &types.QueryHasVotedResponse{
+			HasVoted: false,
+		}, nil
+	}
+	hasVoted := ballot.HasVoted(req.VoterAddress)
+
+	return &types.QueryHasVotedResponse{
+		HasVoted: hasVoted,
+	}, nil
+}
+
 func (k Keeper) BallotByIdentifier(goCtx context.Context, req *types.QueryBallotByIdentifierRequest) (*types.QueryBallotByIdentifierResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
