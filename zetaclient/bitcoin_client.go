@@ -438,7 +438,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	)
 	if err != nil {
 		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s outTxID %s", res.TxID, outTxID)
-	} else {
+	} else if zetaHash != "" {
 		logger.Info().Msgf("IsSendOutTxProcessed: confirmed bitcoin outTx %s outTxID %s, zeta tx hash %s", res.TxID, outTxID, zetaHash)
 	}
 	return true, true, nil

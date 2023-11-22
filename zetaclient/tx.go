@@ -96,11 +96,6 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	nonce uint64,
 	coinType common.CoinType,
 ) (string, error) {
-	lastReport, found := b.lastOutTxReportTime[outTxHash]
-	if found && time.Since(lastReport) < 10*time.Minute {
-		return "", fmt.Errorf("PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s", outTxHash, lastReport)
-	}
-
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		signerAddress,
@@ -116,6 +111,24 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 		nonce,
 		coinType,
 	)
+
+	// TODO: enable this check once zetacoind is upgraded to support it
+	// don't post confirmation if has already voted before
+	// hasVoted, err := b.HasVoted(msg.Digest(), msg.Creator)
+	// if err != nil {
+	// 	return "", fmt.Errorf("PostReceiveConfirmation: unable to check if already voted for ballot %s: %w", msg.Digest(), err)
+	// }
+	// if hasVoted {
+	// 	return "", nil
+	// }
+
+	// TODO: remove this check once above check is enabled
+	// prevent uncessary confirmation
+	lastReport, found := b.lastOutTxReportTime[outTxHash]
+	if found && time.Since(lastReport) < 10*time.Minute {
+		return "", nil
+	}
+
 	authzMsg, authzSigner := b.WrapMessageWithAuthz(msg)
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.

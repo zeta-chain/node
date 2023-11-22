@@ -257,8 +257,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		)
 		if err != nil {
 			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+		} else if zetaHash != "" {
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		}
-		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
@@ -278,8 +279,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+			} else if zetaHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
@@ -298,8 +300,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
@@ -344,8 +347,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if zetaHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -380,8 +384,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if metaHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -407,8 +412,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_ERC20 {
@@ -446,8 +452,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if zetaHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range

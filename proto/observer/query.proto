@@ -21,6 +21,10 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/params";
   }
+  // Query if a voter has voted for a ballot
+  rpc HasVoted(QueryHasVotedRequest) returns (QueryHasVotedResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}";
+  }
   // Queries a list of VoterByIdentifier items.
   rpc BallotByIdentifier(QueryBallotByIdentifierRequest) returns (QueryBallotByIdentifierResponse) {
     option (google.api.http).get = "/zeta-chain/observer/ballot_by_identifier/{ballot_identifier}";
@@ -117,6 +121,15 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryHasVotedRequest {
+  string ballot_identifier = 1;
+  string voter_address = 2;
+}
+
+message QueryHasVotedResponse {
+  bool has_voted = 1;
 }
 
 message QueryBallotByIdentifierRequest {
