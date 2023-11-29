@@ -886,8 +886,12 @@ func (ob *EVMChainClient) observeInTX() error {
 			cnt.Inc()
 		}
 
+		guard := make(map[string]bool) // txhash=>bool, allow only one event per tx
 		// Pull out arguments from logs
 		for depositedLogs.Next() {
+			if guard[depositedLogs.Event.Raw.TxHash.Hex()] {
+				continue
+			}
 			msg, err := ob.GetInboundVoteMsgForDepositedEvent(depositedLogs.Event)
 			if err != nil {
 				continue
@@ -897,6 +901,7 @@ func (ob *EVMChainClient) observeInTX() error {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 				return
 			}
+			guard[depositedLogs.Event.Raw.TxHash.Hex()] = true
 			ob.logger.ExternalChainWatcher.Info().Msgf("ZRC20Custody Deposited event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 	}()
