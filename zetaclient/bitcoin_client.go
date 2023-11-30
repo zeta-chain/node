@@ -414,21 +414,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	ob.Mu.Unlock()
 
 	// Get original cctx parameters
-	params, err := ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
+	params, err := ob.GetCctxParams(nonce)
 	if err != nil {
 		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
 		return false, false, err
@@ -490,9 +476,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		common.CoinType_Gas,
 	)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error posting to zeta core")
+		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s outTxID %s", res.TxID, outTxID)
 	} else {
-		logger.Info().Msgf("Bitcoin outTx %s confirmed: PostReceiveConfirmation zeta tx: %s", res.TxID, zetaHash)
+		logger.Info().Msgf("IsSendOutTxProcessed: confirmed bitcoin outTx %s outTxID %s, zeta tx hash %s", res.TxID, outTxID, zetaHash)
 	}
 	return true, true, nil
 }
@@ -935,11 +921,12 @@ func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 
 	broadcastEntry := clienttypes.ToOutTxHashSQLType(txHash, outTxID)
 	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
-		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
+		ob.logger.ObserveOutTx.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outTx %s", txHash, outTxID)
 	}
+	ob.logger.ObserveOutTx.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outTx %s", txHash, outTxID)
 }
 
-func (ob *BitcoinChainClient) GetPendingCctxParams(nonce uint64) (types.OutboundTxParams, error) {
+func (ob *BitcoinChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParams, error) {
 	send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 	if err != nil {
 		return types.OutboundTxParams{}, err
@@ -947,10 +934,7 @@ func (ob *BitcoinChainClient) GetPendingCctxParams(nonce uint64) (types.Outbound
 	if send.GetCurrentOutTxParam() == nil { // never happen
 		return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: nil outbound tx params")
 	}
-	if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		return *send.GetCurrentOutTxParam(), nil
-	}
-	return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: not a pending cctx")
+	return *send.GetCurrentOutTxParam(), nil
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
@@ -967,9 +951,9 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				params, err := ob.GetPendingCctxParams(tracker.Nonce)
+				params, err := ob.GetCctxParams(tracker.Nonce)
 				if err != nil {
-					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find pending cctx for nonce %d", tracker.Nonce)
+					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find cctx for nonce %d", tracker.Nonce)
 					break
 				}
 				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check
