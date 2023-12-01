@@ -276,9 +276,9 @@ export declare class MsgUpdateContractBytecode extends Message<MsgUpdateContract
   contractAddress: string;
 
   /**
-   * @generated from field: string new_bytecode_address = 3;
+   * @generated from field: string new_code_hash = 3;
    */
-  newBytecodeAddress: string;
+  newCodeHash: string;
 
   constructor(data?: PartialMessage<MsgUpdateContractBytecode>);
 
@@ -299,11 +299,6 @@ export declare class MsgUpdateContractBytecode extends Message<MsgUpdateContract
  * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse
  */
 export declare class MsgUpdateContractBytecodeResponse extends Message<MsgUpdateContractBytecodeResponse> {
-  /**
-   * @generated from field: bytes new_bytecode_hash = 1;
-   */
-  newBytecodeHash: Uint8Array;
-
   constructor(data?: PartialMessage<MsgUpdateContractBytecodeResponse>);
 
   static readonly runtime: typeof proto3;
