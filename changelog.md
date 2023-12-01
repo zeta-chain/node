@@ -16,6 +16,8 @@
 
 ### Refactoring
 
+* update `MsgUpdateContractBytecode` to use code hash instead of contract address
+
 ### Chores
 
 ### Tests

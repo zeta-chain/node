@@ -67,7 +67,7 @@ the new contract can add new variable but cannot remove any existing variable
 message MsgUpdateContractBytecode {
 	string creator = 1;
 	string contract_address = 2;
-	string new_bytecode_address = 3;
+	string new_code_hash = 3;
 }
 ```
 

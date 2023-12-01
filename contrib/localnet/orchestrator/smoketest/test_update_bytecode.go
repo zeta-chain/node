@@ -4,6 +4,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"time"
@@ -36,10 +37,25 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 
 	// Deploy the TestZRC20 contract
 	fmt.Println("Deploying contract with new bytecode")
-	newZRC20Address, _, newZRC20Contract, err := testzrc20.DeployTestZRC20(sm.zevmAuth, sm.zevmClient, big.NewInt(5), uint8(common.CoinType_Gas))
+	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(sm.zevmAuth, sm.zevmClient, big.NewInt(5), uint8(common.CoinType_Gas))
 	if err != nil {
 		panic(err)
 	}
+
+	// Wait for the contract to be deployed
+	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
+	if receipt.Status != 1 {
+		panic("contract deployment failed")
+	}
+
+	// Get the code hash of the new contract
+	codeHashRes, err := sm.fungibleClient.CodeHash(context.Background(), &fungibletypes.QueryCodeHashRequest{
+		Address: newZRC20Address.String(),
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("New contract code hash: %s\n", codeHashRes.CodeHash)
 
 	// Get current info of the ZRC20
 	name, err := sm.ETHZRC20.Name(&bind.CallOpts{})
@@ -70,8 +86,8 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 	fmt.Println("Updating the bytecode of the ZRC20")
 	msg := fungibletypes.NewMsgUpdateContractBytecode(
 		FungibleAdminAddress,
-		sm.ETHZRC20Addr,
-		newZRC20Address,
+		sm.ETHZRC20Addr.Hex(),
+		codeHashRes.CodeHash,
 	)
 	res, err := sm.zetaTxServer.BroadcastTx(FungibleAdminName, msg)
 	if err != nil {

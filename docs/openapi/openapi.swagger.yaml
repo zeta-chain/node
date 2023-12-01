@@ -27434,6 +27434,26 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/fungible/code_hash/{address}:
+    get:
+      summary: Code hash query the code hash of a contract.
+      operationId: Query_CodeHash
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/fungibleQueryCodeHashResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /zeta-chain/fungible/foreign_coins:
     get:
       summary: Queries a list of ForeignCoins items.
@@ -51053,10 +51073,6 @@ definitions:
     type: object
   fungibleMsgUpdateContractBytecodeResponse:
     type: object
-    properties:
-      new_bytecode_hash:
-        type: string
-        format: byte
   fungibleMsgUpdateSystemContractResponse:
     type: object
   fungibleMsgUpdateZRC20LiquidityCapResponse:
@@ -51083,6 +51099,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/QueryAllGasStabilityPoolBalanceResponseBalance'
+  fungibleQueryCodeHashResponse:
+    type: object
+    properties:
+      code_hash:
+        type: string
   fungibleQueryGetForeignCoinsResponse:
     type: object
     properties:
