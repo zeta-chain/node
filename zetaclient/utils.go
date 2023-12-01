@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -28,6 +29,18 @@ const (
 	satoshiPerBitcoin = 1e8
 	bytesPerKB        = 1000
 )
+
+func PrettyPrintStruct(val interface{}) (string, error) {
+	prettyStruct, err := json.MarshalIndent(
+		val,
+		"",
+		" ",
+	)
+	if err != nil {
+		return "", err
+	}
+	return string(prettyStruct), nil
+}
 
 // feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func feeRateToSatPerByte(rate float64) *big.Int {
