@@ -11,6 +11,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/vault"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -120,6 +121,21 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	if receipt.Status == 0 {
 		panic("BTC vault deposit should succeed")
 	}
+
+	// Check deposit revert when paused
+	signedTx, err := sm.SendEther(TSSAddress, big.NewInt(1e17), nil)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("deposit eth tx failed")
+	}
+	cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
+	}
+	fmt.Println("CCTX has been reverted")
 
 	// Unpause ETH ZRC20
 	fmt.Println("Unpausing ETH")

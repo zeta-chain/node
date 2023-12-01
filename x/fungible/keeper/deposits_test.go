@@ -153,6 +153,38 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		require.Equal(t, big.NewInt(500), balance)
 	})
 
+	t.Run("should fail if coin paused", func(t *testing.T) {
+		// setup gas coin
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainList := common.DefaultChainsList()
+		chain := chainList[0]
+
+		// deploy the system contracts
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+
+		// pause the coin
+		coin, found := k.GetForeignCoins(ctx, zrc20.String())
+		require.True(t, found)
+		coin.Paused = true
+		k.SetForeignCoins(ctx, coin)
+
+		to := sample.EthAddress()
+		_, _, err := k.ZRC20DepositAndCallContract(
+			ctx,
+			sample.EthAddress().Bytes(),
+			to,
+			big.NewInt(42),
+			chain,
+			[]byte{},
+			common.CoinType_Gas,
+			sample.EthAddress().String(),
+		)
+		require.ErrorIs(t, err, types.ErrPausedZRC20)
+	})
+
 	t.Run("should fail if liquidity cap reached", func(t *testing.T) {
 		// setup gas coin
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
