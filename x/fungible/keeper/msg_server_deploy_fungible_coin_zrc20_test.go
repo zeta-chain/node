@@ -154,4 +154,40 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 	})
+
+	t.Run("should not deploy an existing gas or erc20 contract", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+		admin := sample.AccAddress()
+		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		chainID := getValidChainID(t)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		deployMsg := types.NewMsgDeployFungibleCoinZRC20(
+			admin,
+			sample.EthAddress().Hex(),
+			chainID,
+			8,
+			"foo",
+			"foo",
+			common.CoinType_Gas,
+			1000000,
+		)
+
+		// Attempt to deploy the same gas token twice should result in error
+		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
+		require.NoError(t, err)
+		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrForeignCoinAlreadyExist)
+
+		// Similar to above, redeploying existing erc20 should also fail
+		deployMsg.CoinType = common.CoinType_ERC20
+		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
+		require.NoError(t, err)
+		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrForeignCoinAlreadyExist)
+	})
 }

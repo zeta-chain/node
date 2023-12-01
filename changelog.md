@@ -6,7 +6,7 @@
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
 
 ### Fixes
-
+* 1b8fdd3394c35afa47e830a5858b3c5c133fad8e - Added check for redeployment of gas and asset token contracts
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
 * [1367](https://github.com/zeta-chain/node/pull/1367) - fix minRelayTxFee issue and check misuse of bitcoin mainnet/testnet addresses
 * [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
