@@ -66,9 +66,7 @@ func (k Keeper) HandleEVMDeposit(
 			msg.CoinType,
 			msg.Asset,
 		)
-		if fungibletypes.IsContractReverted(evmTxResponse, err) ||
-			errors.Is(err, fungibletypes.ErrForeignCoinCapReached) ||
-			errors.Is(err, fungibletypes.ErrCallNonContract) {
+		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
 		} else if err != nil {
 			return false, err
@@ -103,6 +101,14 @@ func (k Keeper) HandleEVMDeposit(
 		}
 	}
 	return false, nil
+}
+
+// errShouldRevertCctx returns true if the cctx should revert from the error of the deposit
+// we revert the cctx if a non-contract is tried to be called, if the liquidity cap is reached, or if the zrc20 is paused
+func errShouldRevertCctx(err error) bool {
+	return errors.Is(err, fungibletypes.ErrForeignCoinCapReached) ||
+		errors.Is(err, fungibletypes.ErrCallNonContract) ||
+		errors.Is(err, fungibletypes.ErrPausedZRC20)
 }
 
 // parseAddressAndData parses the message string into an address and data
