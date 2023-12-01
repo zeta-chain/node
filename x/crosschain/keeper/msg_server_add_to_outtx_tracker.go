@@ -76,6 +76,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			Nonce:    msg.Nonce,
 			HashList: []*types.TxHashList{&hash},
 		})
+		ctx.Logger().Info(fmt.Sprintf("Add tracker %s: , Block Height : %d ", getOutTrackerIndex(chain.ChainId, msg.Nonce), ctx.BlockHeight()))
 		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}
 
