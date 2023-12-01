@@ -107,8 +107,8 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 
-	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
-	if !isFinalized {
+	ballot, isFinalizedInThisBlock := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
+	if !isFinalizedInThisBlock {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}

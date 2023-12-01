@@ -23,7 +23,7 @@ func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot types.Ballot, address st
 // This function with only return true if the ballot moves for pending to success or failed status with this vote.
 // If the ballot is already finalized in the previous vote , it will return false
 func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (types.Ballot, bool) {
-	ballot, isFinalized := ballot.IsBallotFinalized()
+	ballot, isFinalized := ballot.IsFinalizingVote()
 	if !isFinalized {
 		return ballot, false
 	}
