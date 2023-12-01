@@ -221,6 +221,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// #nosec G701 always in range
 	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
+	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(msg.OutTxChain, msg.OutTxTssNonce), ctx.BlockHeight()))
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
