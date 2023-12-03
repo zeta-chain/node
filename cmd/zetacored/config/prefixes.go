@@ -1,6 +1,3 @@
-//go:build !testnet
-// +build !testnet
-
 package config
 
 import sdk "github.com/cosmos/cosmos-sdk/types"

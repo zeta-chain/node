@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -37,7 +34,13 @@ func (sm *SmokeTest) TestUpdateBytecode() {
 
 	// Deploy the TestZRC20 contract
 	fmt.Println("Deploying contract with new bytecode")
-	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(sm.zevmAuth, sm.zevmClient, big.NewInt(5), uint8(common.CoinType_Gas))
+	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(
+		sm.zevmAuth,
+		sm.zevmClient,
+		big.NewInt(5),
+		// #nosec G701 smoketest - always in range
+		uint8(common.CoinType_Gas),
+	)
 	if err != nil {
 		panic(err)
 	}

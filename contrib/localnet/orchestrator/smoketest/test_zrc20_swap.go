@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -25,7 +22,7 @@ func (sm *SmokeTest) TestZRC20Swap() {
 		}
 		receipt := MustWaitForTxReceipt(sm.zevmClient, tx)
 
-		fmt.Printf("USDT-ETH pair receipt txhash %s status %d pair addr %s\n", receipt.TxHash, receipt.Status)
+		fmt.Printf("USDT-ETH pair receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 	}
 
 	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
@@ -48,8 +45,24 @@ func (sm *SmokeTest) TestZRC20Swap() {
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("ETH ZRC20 approval receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
 
+	// temporarily increase gas limit to 400000
+	previousGasLimit := sm.zevmAuth.GasLimit
+	defer func() {
+		sm.zevmAuth.GasLimit = previousGasLimit
+	}()
+
 	sm.zevmAuth.GasLimit = 400000
-	tx, err = sm.UniswapV2Router.AddLiquidity(sm.zevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr, big.NewInt(90000), big.NewInt(1000), big.NewInt(90000), big.NewInt(1000), DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
+	tx, err = sm.UniswapV2Router.AddLiquidity(
+		sm.zevmAuth,
+		sm.USDTZRC20Addr,
+		sm.ETHZRC20Addr,
+		big.NewInt(90000),
+		big.NewInt(1000),
+		big.NewInt(90000),
+		big.NewInt(1000),
+		DeployerAddress,
+		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -61,13 +74,14 @@ func (sm *SmokeTest) TestZRC20Swap() {
 		panic(err)
 	}
 	ethOutAmout := big.NewInt(1)
-	/*usdtEth, err := contracts.NewUniswapV2Pair(usdtEthPair, sm.zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	res, err := usdtEth.GetReserves(&bind.CallOpts{})
-	fmt.Printf("Reserves %s %s\n", res.Reserve0, res.Reserve1)*/
-	tx, err = sm.UniswapV2Router.SwapExactTokensForTokens(sm.zevmAuth, big.NewInt(1000), ethOutAmout, []ethcommon.Address{sm.USDTZRC20Addr, sm.ETHZRC20Addr}, DeployerAddress, big.NewInt(time.Now().Add(10*time.Minute).Unix()))
+	tx, err = sm.UniswapV2Router.SwapExactTokensForTokens(
+		sm.zevmAuth,
+		big.NewInt(1000),
+		ethOutAmout,
+		[]ethcommon.Address{sm.USDTZRC20Addr, sm.ETHZRC20Addr},
+		DeployerAddress,
+		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
+	)
 	if err != nil {
 		panic(err)
 	}

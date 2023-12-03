@@ -1,29 +1,18 @@
-//go:build TESTNET
-// +build TESTNET
-
 package config
 
 import (
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/zeta-chain/zetacore/common"
 )
 
 const (
+	BtcConfirmationCount    = 1
+	DevEthConfirmationCount = 2
+
+	// TssTestPrivkey is the private key of the TSS address
+	// #nosec G101 - used for testing only
 	TssTestPrivkey = "2082bc9775d6ee5a05ef221a9d1c00b3cc3ecb274a4317acc0a182bc1e05d1bb"
 	TssTestAddress = "0xE80B6467863EbF8865092544f441da8fD3cF6074"
-	//TestReceiver  = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
-)
 
-// Constants
-// #nosec G101
-const (
-
-	// Ticker timers
-	EthBlockTime     = 12
-	PolygonBlockTime = 2
-	BscBlockTime     = 5
-
-	// to catch up:
 	MaxBlocksPerPeriod = 100
 )
 
@@ -34,33 +23,36 @@ const (
 [{"inputs":[{"internalType":"address","name":"_TSSAddress","type":"address"},{"internalType":"address","name":"_TSSAddressUpdater","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"InvalidSender","type":"error"},{"inputs":[],"name":"InvalidTSSUpdater","type":"error"},{"inputs":[],"name":"IsPaused","type":"error"},{"inputs":[],"name":"NotPaused","type":"error"},{"inputs":[],"name":"NotWhitelisted","type":"error"},{"inputs":[],"name":"ZeroAddress","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bytes","name":"recipient","type":"bytes"},{"indexed":false,"internalType":"address","name":"asset","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"message","type":"bytes"}],"name":"Deposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"sender","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"asset","type":"address"}],"name":"Unwhitelisted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"asset","type":"address"}],"name":"Whitelisted","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"address","name":"asset","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Withdrawn","type":"event"},{"inputs":[],"name":"TSSAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"TSSAddressUpdater","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes","name":"recipient","type":"bytes"},{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"message","type":"bytes"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"pause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceTSSAddressUpdater","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"unpause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"unwhitelist","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"}],"name":"updateTSSAddress","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"asset","type":"address"}],"name":"whitelist","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"whitelisted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"address","name":"asset","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}]`
 )
 
-var (
-	BitconNetParams = &chaincfg.TestNet3Params
-)
-
 func GetConnectorABI() string {
 	return ConnectorAbiString
 }
+
 func GetERC20CustodyABI() string {
 	return ERC20CustodyAbiString
 }
 
-var BitcoinConfig = &BTCConfig{
+func New() Config {
+	return Config{
+		EVMChainConfigs: evmChainsConfigs,
+		BitcoinConfig:   bitcoinConfigRegnet,
+		ChainsEnabled:   []common.Chain{},
+	}
+}
+
+var bitcoinConfigRegnet = &BTCConfig{
 	RPCUsername: "smoketest",
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",
 }
 
-func New() Config {
-	return Config{
-		BitcoinConfig:   BitcoinConfig,
-		EVMChainConfigs: evmChainsConfig,
-		ChainsEnabled:   []common.Chain{},
-	}
-}
-
-var evmChainsConfig = map[int64]*EVMConfig{
+var evmChainsConfigs = map[int64]*EVMConfig{
+	common.EthChain().ChainId: {
+		Chain: common.EthChain(),
+	},
+	common.BscMainnetChain().ChainId: {
+		Chain: common.BscMainnetChain(),
+	},
 	common.GoerliChain().ChainId: {
 		Chain:    common.GoerliChain(),
 		Endpoint: "",
@@ -72,5 +64,9 @@ var evmChainsConfig = map[int64]*EVMConfig{
 	common.MumbaiChain().ChainId: {
 		Chain:    common.MumbaiChain(),
 		Endpoint: "",
+	},
+	common.GoerliLocalnetChain().ChainId: {
+		Chain:    common.GoerliLocalnetChain(),
+		Endpoint: "http://eth:8545",
 	},
 }

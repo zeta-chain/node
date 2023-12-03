@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
@@ -29,7 +26,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 	header3RLP, err := rlp.EncodeToBytes(header3)
 	assert.NoError(t, err)
 
-	observerChain := common.GoerliChain()
+	observerChain := common.GoerliLocalnetChain()
 	r := rand.New(rand.NewSource(9))
 	validator := sample.Validator(t, r)
 	observerAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
@@ -47,7 +44,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "success submit eth header",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
 				Header:    common.NewEthereumHeader(header1RLP),
@@ -61,7 +58,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "failure submit eth header eth disabled",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
 				Header:    common.NewEthereumHeader(header1RLP),
@@ -77,7 +74,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "failure submit eth header eth disabled",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   sample.AccAddress(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
 				Header:    common.NewEthereumHeader(header1RLP),
@@ -93,7 +90,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "should fail if block header parent does not exist",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header3.Hash().Bytes(),
 				Height:    3,
 				Header:    common.NewEthereumHeader(header3RLP),
@@ -109,7 +106,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "should succeed if block header parent does exist",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header2.Hash().Bytes(),
 				Height:    2,
 				Header:    common.NewEthereumHeader(header2RLP),
@@ -123,7 +120,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "should succeed to post 3rd header if 2nd header is posted",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliChain().ChainId,
+				ChainId:   common.GoerliLocalnetChain().ChainId,
 				BlockHash: header3.Hash().Bytes(),
 				Height:    3,
 				Header:    common.NewEthereumHeader(header3RLP),

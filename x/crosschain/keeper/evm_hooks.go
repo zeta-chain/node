@@ -124,7 +124,10 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 
 	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
-	senderChain := common.ZetaChain()
+	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
+	if err != nil {
+		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to convert chainID: %s", err.Error())
+	}
 	toAddr, err := receiverChain.EncodeAddress(event.To)
 	if err != nil {
 		return fmt.Errorf("cannot encode address %s: %s", event.To, err.Error())
@@ -207,7 +210,10 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return types.ErrUnableToSendCoinType
 	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
-	senderChain := common.ZetaChain()
+	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
+	if err != nil {
+		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
+	}
 	amount := math.NewUintFromBigInt(event.ZetaValueAndGas)
 
 	// Bump gasLimit by event index (which is very unlikely to be larger than 1000) to always have different ZetaSent events msgs.

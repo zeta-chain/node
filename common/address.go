@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"strings"
 
 	eth "github.com/ethereum/go-ethereum/common"
@@ -19,16 +18,12 @@ var (
 const ETHAddressLen = 42
 
 // NewAddress create a new Address. Supports Ethereum, BSC, Polygon
-func NewAddress(address string, chain Chain) (Address, error) {
-
+func NewAddress(address string) Address {
 	// Check is eth address
-	if IsEVMChain(chain.ChainId) {
-		if eth.IsHexAddress(address) {
-			return Address(address), nil
-		}
+	if eth.IsHexAddress(address) {
+		return Address(address)
 	}
-
-	return NoAddress, fmt.Errorf("address format not supported: %s", address)
+	return NoAddress
 }
 
 func (addr Address) AccAddress() (cosmos.AccAddress, error) {

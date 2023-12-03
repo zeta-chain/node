@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -151,7 +148,7 @@ func (sm *SmokeTest) createZetaERC20LiquidityPool() error {
 	}
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	if receipt.Status == 0 {
-		return errors.New("add liquidity failed")
+		return fmt.Errorf("add liquidity failed")
 	}
 
 	return nil

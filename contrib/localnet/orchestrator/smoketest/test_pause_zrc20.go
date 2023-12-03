@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -68,9 +65,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if !fcRes.GetForeignCoins().Paused {
 		panic("ETH should be paused")
-	} else {
-		fmt.Printf("ETH is paused\n")
 	}
+	fmt.Printf("ETH is paused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can no longer do operations on ETH ZRC20")
@@ -92,7 +88,7 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 
 	// Operation on a contract that interact with ETH ZRC20 should fail
-	fmt.Println("Vault contract can no longer interact with ETH ZRC20")
+	fmt.Printf("Vault contract can no longer interact with ETH ZRC20: %s\n", sm.ETHZRC20Addr.Hex())
 	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
 	if err != nil {
 		panic(err)
@@ -159,9 +155,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if fcRes.GetForeignCoins().Paused {
 		panic("ETH should be unpaused")
-	} else {
-		fmt.Printf("ETH is unpaused\n")
 	}
+	fmt.Printf("ETH is unpaused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can do operations on ETH ZRC20 again")

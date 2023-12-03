@@ -570,7 +570,12 @@ func (ob *EVMChainClient) observeOutTx() {
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
 
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetCoreParams().OutTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetCoreParams().OutTxTicker)
+	if err != nil {
+		ob.logger.ObserveOutTx.Error().Err(err).Msg("failed to create ticker")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
@@ -713,7 +718,12 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
+		return
+	}
+
 	defer ticker.Stop()
 	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher started")
 	for {
@@ -1001,7 +1011,12 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		}
 	}
 
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
+	if err != nil {
+		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {

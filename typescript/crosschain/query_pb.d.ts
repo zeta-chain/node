@@ -580,6 +580,11 @@ export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddres
    */
   tssPubKey: string;
 
+  /**
+   * @generated from field: int64 bitcoin_chain_id = 2;
+   */
+  bitcoinChainId: bigint;
+
   constructor(data?: PartialMessage<QueryGetTssAddressRequest>);
 
   static readonly runtime: typeof proto3;

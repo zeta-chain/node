@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package common
 
 import (
@@ -106,26 +103,6 @@ func (s *PubKeyTestSuite) TestPubKey(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(pk2.Equals(pk), Equals, true)
 }
-
-//
-//func (s *PubKeyTestSuite) TestPubKeySet(c *C) {
-//	_, pubKey, _ := testdata.KeyTestPubAddr()
-//	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-//	c.Assert(err, IsNil)
-//	pk, err := NewPubKey(spk)
-//	c.Assert(err, IsNil)
-//
-//	c.Check(PubKeySet{}.Contains(pk), Equals, false)
-//
-//	pks := PubKeySet{
-//		Secp256k1: pk,
-//	}
-//	c.Check(pks.Contains(pk), Equals, true)
-//	pks = PubKeySet{
-//		Ed25519: pk,
-//	}
-//	c.Check(pks.Contains(pk), Equals, true)
-//}
 
 func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 	original := os.Getenv("NET")

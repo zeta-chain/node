@@ -67,7 +67,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
-          make install-testnet
+          make install
           cp "$HOME"/go/bin/* ./
           chmod a+x ./zetacored
           ./zetacored version

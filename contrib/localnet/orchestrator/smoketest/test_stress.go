@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -20,8 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	types2 "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
@@ -58,7 +54,7 @@ func init() {
 	RootCmd.AddCommand(StressCmd)
 	StressCmd.Flags().StringVar(&stressTestArgs.ethURL, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
 	StressCmd.Flags().StringVar(&stressTestArgs.grpcURL, "grpcURL", "zetacore0:9090", "--grpcURL zetacore0:9090")
-	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", "http://zetacore0:8545", "--zevmURL http://zetacore0:8545")
+	StressCmd.Flags().StringVar(&stressTestArgs.zevmURL, "zevmURL", zevmRPC, "--zevmURL http://zetacore0:8545")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "PRIVNET", "--network PRIVNET")
@@ -90,6 +86,9 @@ func StressTest(_ *cobra.Command, _ []string) {
 	fmt.Printf("Deployer address: %s, balance: %d Wei\n", DeployerAddress.Hex(), bal)
 
 	chainid, err := goerliClient.ChainID(context.Background())
+	if err != nil {
+		panic(err)
+	}
 	deployerPrivkey, err := crypto.HexToECDSA(stressTestArgs.deployerPrivateKey)
 	if err != nil {
 		panic(err)
@@ -104,7 +103,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	cctxClient := types.NewQueryClient(grpcConn)
+	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
 	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
@@ -114,7 +113,7 @@ func StressTest(_ *cobra.Command, _ []string) {
 	time.Sleep(20 * time.Second)
 	for {
 		time.Sleep(5 * time.Second)
-		response, err := cctxClient.LastZetaHeight(context.Background(), &types.QueryLastZetaHeightRequest{})
+		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
 			continue
@@ -165,9 +164,15 @@ func StressTest(_ *cobra.Command, _ []string) {
 		smokeTest.TestDepositEtherIntoZRC20()
 		smokeTest.TestSendZetaIn()
 	} else if stressTestArgs.network == "TESTNET" {
-		ethZRC20Addr, _ := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		ethZRC20Addr, err := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		if err != nil {
+			panic(err)
+		}
 		smokeTest.ETHZRC20Addr = ethZRC20Addr
-		smokeTest.ETHZRC20, _ = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
+		smokeTest.ETHZRC20, err = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.zevmClient)
+		if err != nil {
+			panic(err)
+		}
 	} else {
 		err := errors.New("invalid network argument: " + stressTestArgs.network)
 		panic(err)
@@ -192,10 +197,17 @@ func StressTest(_ *cobra.Command, _ []string) {
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
 	blockNum, err := smokeTest.zevmClient.BlockNumber(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	// #nosec G701 smoketest - always in range
 	nonce, err := smokeTest.zevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
+
+	// #nosec G701 smoketest - always in range
 	zevmNonce = big.NewInt(int64(nonce))
 
 	// -------------- TEST BEGINS ------------------
@@ -234,7 +246,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &types2.QueryAllCctxPendingRequest{
+			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &crosschaintypes.QueryAllCctxPendingRequest{
 				ChainId: getChainID(),
 			})
 			if err != nil {
@@ -251,7 +263,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 			}
 			//
 			// Get all trackers
-			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &types2.QueryAllOutTxTrackerRequest{})
+			trackerResp, err := sm.cctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
 			if err != nil {
 				continue
 			}

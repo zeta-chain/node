@@ -1,5 +1,15 @@
 # Messages
 
+## MsgDeploySystemContracts
+
+DeploySystemContracts deploy new instances of the system contracts
+
+```proto
+message MsgDeploySystemContracts {
+	string creator = 1;
+}
+```
+
 ## MsgDeployFungibleCoinZRC20
 
 DeployFungibleCoinZRC20 deploys a fungible coin from a connected chains as a ZRC20 on ZetaChain.

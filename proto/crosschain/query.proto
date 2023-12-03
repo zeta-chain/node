@@ -242,6 +242,7 @@ message QueryAllInTxHashToCctxResponse {
 
 message QueryGetTssAddressRequest {
   string tss_pub_key = 1;
+  int64 bitcoin_chain_id = 2;
 }
 
 message QueryGetTssAddressResponse {

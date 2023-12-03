@@ -91,7 +91,7 @@ func CoreParams(chainID int64) *types.CoreParams {
 }
 
 func CoreParamsList() (cpl types.CoreParamsList) {
-	chainList := common.DefaultChainsList()
+	chainList := common.PrivnetChainList()
 
 	for _, chain := range chainList {
 		cpl.CoreParams = append(cpl.CoreParams, CoreParams(chain.ChainId))

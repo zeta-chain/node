@@ -26872,6 +26872,11 @@ paths:
           in: query
           required: false
           type: string
+        - name: bitcoin_chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
@@ -51068,6 +51073,19 @@ definitions:
     type: object
     properties:
       address:
+        type: string
+  fungibleMsgDeploySystemContractsResponse:
+    type: object
+    properties:
+      uniswapV2Factory:
+        type: string
+      wzeta:
+        type: string
+      uniswapV2Router:
+        type: string
+      connectorZEVM:
+        type: string
+      systemContract:
         type: string
   fungibleMsgRemoveForeignCoinResponse:
     type: object
