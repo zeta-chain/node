@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -85,7 +82,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("  USDT ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	bal1, _ := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	bal1, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("  ZEVMSwapApp ETHZRC20 balance %d", bal1)
 	tx, err = sm.BTCZRC20.Transfer(sm.zevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
 	if err != nil {
@@ -93,7 +93,10 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	receipt = MustWaitForTxReceipt(sm.zevmClient, tx)
 	fmt.Printf("  BTC ZRC20 transfer receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
-	bal2, _ := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	bal2, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("  ZEVMSwapApp BTCZRC20 balance %d", bal2)
 
 	// msg would be [ZEVMSwapAppAddr, memobytes]
@@ -113,13 +116,23 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
 	cctx1 := WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
+	// check the cctx status
+	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected outbound mined status; got %s, message: %s", cctx1.CctxStatus.Status.String(), cctx1.CctxStatus.StatusMessage))
+	}
+
 	_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
 	cctx2 := WaitCctxMinedByInTxHash(cctx1.Index, sm.cctxClient)
-	_ = cctx2
+
+	// check the cctx status
+	if cctx2.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected outbound mined status; got %s, message: %s", cctx2.CctxStatus.Status.String(), cctx2.CctxStatus.StatusMessage))
+	}
+
 	fmt.Printf("cctx2 outbound tx hash %s\n", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
 	fmt.Printf("******* Second test: BTC -> USDT\n")
@@ -129,6 +142,7 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 	}
 	fmt.Printf("#utxos %d\n", len(utxos))
 	//fmt.Printf("Unimplemented!\n")
+	fmt.Printf("memo address %s\n", sm.USDTZRC20Addr)
 	memo, err := sm.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, sm.USDTZRC20Addr, DeployerAddress.Bytes())
 	if err != nil {
 		panic(err)
@@ -172,6 +186,9 @@ func (sm *SmokeTest) TestCrosschainSwap() {
 
 		amount := 0.1
 		txid, err := SendToTSSFromDeployerWithMemo(BTCTSSAddress, amount, utxos[0:2], sm.btcRPCClient, memo)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Printf("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation\n", txid)
 		_, err = sm.btcRPCClient.GenerateToAddress(10, BTCDeployerAddress, nil)
 		if err != nil {

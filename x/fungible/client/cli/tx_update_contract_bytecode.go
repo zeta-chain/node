@@ -8,7 +8,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func CndUpdateContractBytecode() *cobra.Command {
+func CmdUpdateContractBytecode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-contract-bytecode [contract-address] [new-code-hash]",
 		Short: "Broadcast message UpdateContractBytecode",

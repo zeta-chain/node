@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -24,7 +21,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 	if err != nil {
 		panic(err)
 	}
-	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
+	txhash := sm.DepositERC20(big.NewInt(1e18), []byte{})
 	WaitCctxMinedByInTxHash(txhash.Hex(), sm.cctxClient)
 
 	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, DeployerAddress)
@@ -41,7 +38,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		panic(err)
 	}
 	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
-	if diff.Int64() != 1e9 {
+	if diff.Int64() != 1e18 {
 		panic("balance is not correct")
 	}
 
@@ -51,7 +48,7 @@ func (sm *SmokeTest) TestERC20Deposit() {
 		panic(err)
 	}
 	txhash = sm.MultipleDeposits(big.NewInt(1e9), big.NewInt(10))
-	cctxs := WaitCctxsMinedByInTxHash(txhash.Hex(), sm.cctxClient)
+	cctxs := WaitCctxsMinedByInTxHash(txhash.Hex(), sm.cctxClient, 10)
 	if len(cctxs) != 10 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -69,14 +66,14 @@ func (sm *SmokeTest) TestERC20Deposit() {
 
 func (sm *SmokeTest) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
 	USDT := sm.USDTERC20
-	tx, err := USDT.Mint(sm.goerliAuth, big.NewInt(1e10))
+	tx, err := USDT.Mint(sm.goerliAuth, amount)
 	if err != nil {
 		panic(err)
 	}
 	receipt := MustWaitForTxReceipt(sm.goerliClient, tx)
 	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
 
-	tx, err = USDT.Approve(sm.goerliAuth, sm.ERC20CustodyAddr, big.NewInt(1e10))
+	tx, err = USDT.Approve(sm.goerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -114,8 +111,10 @@ func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 		panic(err)
 	}
 
+	fullAmount := big.NewInt(0).Mul(amount, count)
+
 	// mint
-	tx, err := sm.USDTERC20.Mint(sm.goerliAuth, big.NewInt(0).Mul(amount, count))
+	tx, err := sm.USDTERC20.Mint(sm.goerliAuth, fullAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -126,7 +125,7 @@ func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
 
 	// approve
-	tx, err = sm.USDTERC20.Approve(sm.goerliAuth, depositorAddr, big.NewInt(1e10))
+	tx, err = sm.USDTERC20.Approve(sm.goerliAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -153,10 +152,7 @@ func (sm *SmokeTest) MultipleDeposits(amount, count *big.Int) ethcommon.Hash {
 			continue
 		}
 		fmt.Printf("Multiple deposit event: \n")
-		fmt.Printf("  Recipient address: %x, \n", event.Recipient)
-		fmt.Printf("  ERC20 address: %s, \n", event.Asset.Hex())
 		fmt.Printf("  Amount: %d, \n", event.Amount)
-		fmt.Printf("  Message: %x, \n", event.Message)
 	}
 	fmt.Printf("gas limit %d\n", sm.zevmAuth.GasLimit)
 	return tx.Hash()

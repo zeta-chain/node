@@ -271,7 +271,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
+		return cosmoserrors.Wrapf(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin, chaind ID %d", chainID)
 	}
 
 	// get the gas price

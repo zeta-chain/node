@@ -39,6 +39,11 @@ func (gs GenesisState) Validate() error {
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
+	// check for invalid core params
+	if err := gs.CoreParamsList.Validate(); err != nil {
+		return err
+	}
+
 	return VerifyObserverMapper(gs.Observers)
 }
 

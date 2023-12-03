@@ -16,6 +16,7 @@
 
 ### Refactoring
 
+* [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
 
 ### Chores

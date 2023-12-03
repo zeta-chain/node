@@ -185,13 +185,6 @@ func (AppModule) ConsensusVersion() uint64 { return 3 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the crosschain module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	if ctx.BlockHeight() == 200 {
-		err := am.keeper.TestWhitelistERC20(ctx)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	err := am.keeper.IterateAndUpdateCctxGasPrice(ctx)
 	if err != nil {
 		ctx.Logger().Error("Error iterating and updating pending cctx gas price", "err", err.Error())

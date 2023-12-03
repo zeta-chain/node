@@ -215,6 +215,60 @@ export declare class EventZRC20PausedStatusUpdated extends Message<EventZRC20Pau
 }
 
 /**
+ * @generated from message zetachain.zetacore.fungible.EventSystemContractsDeployed
+ */
+export declare class EventSystemContractsDeployed extends Message<EventSystemContractsDeployed> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: string uniswap_v2_factory = 2;
+   */
+  uniswapV2Factory: string;
+
+  /**
+   * @generated from field: string wzeta = 3;
+   */
+  wzeta: string;
+
+  /**
+   * @generated from field: string uniswap_v2_router = 4;
+   */
+  uniswapV2Router: string;
+
+  /**
+   * @generated from field: string connector_zevm = 5;
+   */
+  connectorZevm: string;
+
+  /**
+   * @generated from field: string system_contract = 6;
+   */
+  systemContract: string;
+
+  /**
+   * @generated from field: string signer = 7;
+   */
+  signer: string;
+
+  constructor(data?: PartialMessage<EventSystemContractsDeployed>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.EventSystemContractsDeployed";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventSystemContractsDeployed;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventSystemContractsDeployed;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventSystemContractsDeployed;
+
+  static equals(a: EventSystemContractsDeployed | PlainMessage<EventSystemContractsDeployed> | undefined, b: EventSystemContractsDeployed | PlainMessage<EventSystemContractsDeployed> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.fungible.EventBytecodeUpdated
  */
 export declare class EventBytecodeUpdated extends Message<EventBytecodeUpdated> {

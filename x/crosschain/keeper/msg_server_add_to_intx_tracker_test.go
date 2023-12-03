@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
@@ -14,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_AddToInTxTracker(t *testing.T) {
@@ -41,7 +38,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 	t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := int64(5)
+		chainID := getValidEthChainID(t)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
@@ -55,14 +52,14 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
 
 	t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		chainID := int64(5)
+		chainID := getValidEthChainID(t)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
 		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
@@ -76,14 +73,14 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
 		require.False(t, found)
 	})
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
-		chainID := int64(5)
+		chainID := getValidEthChainID(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -94,7 +91,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		require.ErrorIs(t, observerTypes.ErrNotAuthorized, err)
+		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
 		require.False(t, found)
 	})
@@ -103,7 +100,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
-		chainID := int64(5)
+		chainID := getValidEthChainID(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -123,7 +120,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
-		chainID := int64(5)
+		chainID := getValidEthChainID(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -144,7 +141,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
 	params := zk.ObserverKeeper.GetParams(ctx)
-	params.ObserverParams = append(params.ObserverParams, &observerTypes.ObserverParams{
+	params.ObserverParams = append(params.ObserverParams, &observertypes.ObserverParams{
 		Chain: &common.Chain{
 			ChainId:   chainID,
 			ChainName: common.ChainName_goerli_testnet,
@@ -161,14 +158,14 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 		ChainId:    chainID,
 		Header:     common.NewEthereumHeader(headerRLP),
 	})
-	zk.ObserverKeeper.SetCoreParams(ctx, observerTypes.CoreParamsList{CoreParams: []*observerTypes.CoreParams{
+	zk.ObserverKeeper.SetCoreParams(ctx, observertypes.CoreParamsList{CoreParams: []*observertypes.CoreParams{
 		{
 			ChainId:                  chainID,
 			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),
 		},
 	}})
-	zk.ObserverKeeper.SetCrosschainFlags(ctx, observerTypes.CrosschainFlags{
-		BlockHeaderVerificationFlags: &observerTypes.BlockHeaderVerificationFlags{
+	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
+		BlockHeaderVerificationFlags: &observertypes.BlockHeaderVerificationFlags{
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: false,
 		},

@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -61,7 +58,10 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	if err != nil {
 		panic(err)
 	}
-	BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()), &chaincfg.RegressionNetParams)
+	BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
+		&chaincfg.RegressionNetParams,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -102,7 +102,10 @@ func (sm *SmokeTest) TestBitcoinSetup() {
 	go func() {
 		// keep bitcoin chain going
 		for {
-			_, _ = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
+			_, err = btc.GenerateToAddress(4, BTCDeployerAddress, nil)
+			if err != nil {
+				fmt.Println(err)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}()
@@ -128,11 +131,11 @@ func (sm *SmokeTest) DepositBTC() {
 	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
 	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
 	fmt.Printf("Now sending two txs to TSS address...\n")
-	txHash_1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
+	txHash1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
 	}
-	txHash_2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	txHash2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
 	if err != nil {
 		panic(err)
 	}
@@ -179,8 +182,8 @@ func (sm *SmokeTest) DepositBTC() {
 	// prove the two transactions of the deposit
 	LoudPrintf("Bitcoin Merkle Proof\n")
 
-	sm.ProveBTCTransaction(txHash_1)
-	sm.ProveBTCTransaction(txHash_2)
+	sm.ProveBTCTransaction(txHash1)
+	sm.ProveBTCTransaction(txHash2)
 }
 
 func (sm *SmokeTest) ProveBTCTransaction(txHash *chainhash.Hash) {
@@ -437,6 +440,8 @@ func (sm *SmokeTest) WithdrawBitcoin() {
 
 func (sm *SmokeTest) WithdrawBitcoinMultipleTimes(repeat int64) {
 	totalAmount := big.NewInt(int64(0.1 * 1e8))
+
+	// #nosec G701 smoketest - always in range
 	amount := big.NewInt(int64(0.1 * 1e8 / float64(repeat)))
 
 	// check if the deposit is successful
@@ -582,11 +587,17 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		fmt.Printf("  value: %d\n", txout.Value)
 		fmt.Printf("  PkScript: %x\n", txout.PkScript)
 	}
-	var inputsForSign []btcjson.RawTxWitnessInput
+
+	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
 	for i, input := range inputs {
-		inputsForSign = append(inputsForSign, btcjson.RawTxWitnessInput{
-			Txid: input.Txid, Vout: input.Vout, Amount: &amounts[i], ScriptPubKey: scriptPubkeys[i]})
+		inputsForSign[i] = btcjson.RawTxWitnessInput{
+			Txid:         input.Txid,
+			Vout:         input.Vout,
+			Amount:       &amounts[i],
+			ScriptPubKey: scriptPubkeys[i],
+		}
 	}
+
 	//stx, signed, err := btc.SignRawTransactionWithWallet(tx)
 	stx, signed, err := btc.SignRawTransactionWithWallet2(tx, inputsForSign)
 	if err != nil {
@@ -614,7 +625,13 @@ func SendToTSSFromDeployerWithMemo(to btcutil.Address, amount float64, inputUTXO
 		panic(err)
 	}
 
-	events := zetaclient.FilterAndParseIncomingTx([]btcjson.TxRawResult{*rawtx}, 0, BTCTSSAddress.EncodeAddress(), &log.Logger)
+	events := zetaclient.FilterAndParseIncomingTx(
+		[]btcjson.TxRawResult{*rawtx},
+		0,
+		BTCTSSAddress.EncodeAddress(),
+		&log.Logger,
+		common.BtcRegtestChain().ChainId,
+	)
 	fmt.Printf("bitcoin intx events:\n")
 	for _, event := range events {
 		fmt.Printf("  TxHash: %s\n", event.TxHash)

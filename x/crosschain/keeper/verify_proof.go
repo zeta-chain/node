@@ -86,7 +86,9 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 		}
 		return nil
 	case common.CoinType_Gas:
-		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{
+			BitcoinChainId: msg.ChainId,
+		})
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
@@ -15,6 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func getEthereumChainID() int64 {
@@ -103,7 +101,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
 		require.False(t, found)
 	})
@@ -125,7 +123,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     1,
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, 1)
 		require.False(t, found)
 	})
@@ -147,7 +145,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		require.ErrorIs(t, types.ErrTxBodyVerificationFail, err)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
 		require.False(t, found)
 	})
@@ -169,7 +167,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		require.ErrorIs(t, types.ErrProofVerificationFail, err)
+		require.ErrorIs(t, err, types.ErrProofVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
 		require.False(t, found)
 	})

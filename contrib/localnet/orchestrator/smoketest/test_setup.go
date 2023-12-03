@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -160,7 +157,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	}
 	fmt.Printf("USDT ZRC20 Address: %s\n", zrc20addr)
 	if HexToAddress(zrc20addr) != HexToAddress(USDTZRC20Addr) {
-		panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
+		panic(fmt.Sprintf("mismatch of foreign coin USDT ZRC20 %s and the USDTZRC20Addr constant %s in smoketest", zrc20addr, USDTZRC20Addr))
 	}
 
 	sm.USDTZRC20Addr = ethcommon.HexToAddress(zrc20addr)
@@ -197,7 +194,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(ContractsConfigFile, b, 0666)
+	err = os.WriteFile(ContractsConfigFile, b, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +202,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 
 // Set existing deployed contracts
 func (sm *SmokeTest) setContracts() {
-	err := error(nil)
+	var err error
 	var contracts Contracts
 
 	// Read contracts toml file

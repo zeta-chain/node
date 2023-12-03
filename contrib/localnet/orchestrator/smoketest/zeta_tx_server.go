@@ -1,13 +1,12 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -77,12 +76,6 @@ func NewZetaTxServer(rpcAddr string, names []string, mnemonics []string) (ZetaTx
 		if err != nil {
 			return ZetaTxServer{}, fmt.Errorf("failed to get account address: %s", err.Error())
 		}
-		//fmt.Printf(
-		//	"Added account for Zeta tx server\nname: %s\nmnemonic: %s\naddress: %s\n",
-		//	names[i],
-		//	mnemonics[i],
-		//	addr.String(),
-		//)
 	}
 
 	clientCtx := newContext(rpc, cdc, reg, kr)
@@ -181,10 +174,56 @@ func newFactory(clientCtx client.Context) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
 		WithKeybase(clientCtx.Keyring).
-		WithGas(300000).
-		WithGasAdjustment(1.0).
+		WithGas(10000000).
+		WithGasAdjustment(1).
 		WithSignMode(signing.SignMode_SIGN_MODE_UNSPECIFIED).
 		WithAccountRetriever(clientCtx.AccountRetriever).
 		WithTxConfig(clientCtx.TxConfig).
-		WithFees("50azeta")
+		WithFees("1000azeta")
+}
+
+type messageLog struct {
+	Events []event `json:"events"`
+}
+
+type event struct {
+	Type       string      `json:"type"`
+	Attributes []attribute `json:"attributes"`
+}
+
+type attribute struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+// fetchAttribute fetches the attribute from the tx response
+func fetchAttribute(res *sdktypes.TxResponse, key string) (string, error) {
+	var logs []messageLog
+	err := json.Unmarshal([]byte(res.RawLog), &logs)
+	if err != nil {
+		return "", err
+	}
+
+	var attributes []string
+	for _, log := range logs {
+		for _, event := range log.Events {
+			for _, attr := range event.Attributes {
+				attributes = append(attributes, attr.Key)
+				if strings.EqualFold(attr.Key, key) {
+					address := attr.Value
+
+					if len(address) < 2 {
+						return "", fmt.Errorf("invalid address: %s", address)
+					}
+
+					// trim the quotes
+					address = address[1 : len(address)-1]
+
+					return address, nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
 }

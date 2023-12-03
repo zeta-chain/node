@@ -87,6 +87,7 @@ type ZetaCoreBridger interface {
 	GetBtcTssAddress() (string, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
 	GetLogger() *zerolog.Logger
+	ZetaChain() common.Chain
 	Pause()
 	Unpause()
 }

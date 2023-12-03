@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -143,7 +140,7 @@ func (sm *SmokeTest) MultipleWithdraws(ethZRC20 *zrc20.ZRC20) {
 	}
 	fmt.Printf("Withdraws receipt: status %d\n", receipt.Status)
 
-	cctxs := WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient)
+	cctxs := WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.cctxClient, 10)
 	if len(cctxs) != 10 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}

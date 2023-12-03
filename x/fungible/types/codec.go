@@ -9,6 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDeployFungibleCoinZRC20{}, "fungible/DeployFungibleCoinZRC20", nil)
+	cdc.RegisterConcrete(&MsgDeploySystemContracts{}, "fungible/MsgDeploySystemContracts", nil)
 	cdc.RegisterConcrete(&MsgRemoveForeignCoin{}, "fungible/RemoveForeignCoin", nil)
 	cdc.RegisterConcrete(&MsgUpdateSystemContract{}, "fungible/UpdateSystemContract", nil)
 	cdc.RegisterConcrete(&MsgUpdateZRC20WithdrawFee{}, "fungible/UpdateZRC20WithdrawFee", nil)
@@ -20,6 +21,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDeployFungibleCoinZRC20{},
+		&MsgDeploySystemContracts{},
 		&MsgRemoveForeignCoin{},
 		&MsgUpdateSystemContract{},
 		&MsgUpdateZRC20WithdrawFee{},
