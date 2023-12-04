@@ -246,14 +246,20 @@ func start(_ *cobra.Command, _ []string) error {
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
-	zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
-	if err != nil {
-		startLogger.Err(err).Msg("NewZetaSupplyChecker")
-	}
-	if err == nil {
-		zetaSupplyChecker.Start()
-		defer zetaSupplyChecker.Stop()
-	}
+	// start zeta supply checker
+	// TODO: enable
+	// https://github.com/zeta-chain/node/issues/1354
+	// NOTE: this is disabled for now because we need to determine the frequency on how to handle invalid check
+	// The method uses GRPC query to the node we might need to improve for performance
+	//zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
+	//if err != nil {
+	//	startLogger.Err(err).Msg("NewZetaSupplyChecker")
+	//}
+	//if err == nil {
+	//	zetaSupplyChecker.Start()
+	//	defer zetaSupplyChecker.Stop()
+	//}
+
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
