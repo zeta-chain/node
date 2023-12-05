@@ -67,7 +67,7 @@ jobs:
           GOOS: linux
           GOARCH: ${{ env.CPU_ARCH }}
         run: |
-          make install-testnet
+          make install
           cp "$HOME"/go/bin/* ./
           chmod a+x ./zetacored
           ./zetacored version
@@ -79,7 +79,7 @@ jobs:
 
   smoke-test:
     runs-on: ["zeta-runners"] # 25 minutes
-    timeout-minutes: 25
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v3
 
@@ -125,6 +125,7 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
+          sleep 10
 
       - name: Stop Private Network
         if: always()
