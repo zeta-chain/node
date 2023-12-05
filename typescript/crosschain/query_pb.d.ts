@@ -18,6 +18,49 @@ import type { PendingNonces } from "./nonce_to_cctx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingRequest
+ */
+export declare class QueryZetaAccountingRequest extends Message<QueryZetaAccountingRequest> {
+  constructor(data?: PartialMessage<QueryZetaAccountingRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryZetaAccountingRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryZetaAccountingRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryZetaAccountingRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryZetaAccountingRequest;
+
+  static equals(a: QueryZetaAccountingRequest | PlainMessage<QueryZetaAccountingRequest> | undefined, b: QueryZetaAccountingRequest | PlainMessage<QueryZetaAccountingRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingResponse
+ */
+export declare class QueryZetaAccountingResponse extends Message<QueryZetaAccountingResponse> {
+  /**
+   * @generated from field: string aborted_zeta_amount = 1;
+   */
+  abortedZetaAmount: string;
+
+  constructor(data?: PartialMessage<QueryZetaAccountingResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryZetaAccountingResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryZetaAccountingResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryZetaAccountingResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryZetaAccountingResponse;
+
+  static equals(a: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined, b: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusRequest
  */
 export declare class QueryCctxByStatusRequest extends Message<QueryCctxByStatusRequest> {

@@ -147,6 +147,16 @@ service Query {
   rpc CctxByStatus(QueryCctxByStatusRequest) returns (QueryCctxByStatusResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxbyStatus/{status}";
   }
+
+  rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/zetaAccounting";
+  }
+}
+
+message QueryZetaAccountingRequest {}
+
+message QueryZetaAccountingResponse {
+  string aborted_zeta_amount = 1;
 }
 
 message QueryCctxByStatusRequest {

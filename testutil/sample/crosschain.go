@@ -28,6 +28,13 @@ func Tss() *types.TSS {
 	}
 }
 
+func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
+	r := newRandFromStringSeed(t, index)
+	return types.ZetaAccounting{
+		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
+	}
+}
+
 func GasPrice(t *testing.T, index string) *types.GasPrice {
 	r := newRandFromStringSeed(t, index)
 

@@ -13,6 +13,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Params
 	k.SetParams(ctx, genState.Params)
 
+	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
@@ -70,6 +71,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			k.SetTSSHistory(ctx, elem)
 		}
 	}
+
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -116,6 +118,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	genesis.TssHistory = k.GetAllTSS(ctx)
+	amount, found := k.GetZetaAccounting(ctx)
+	if found {
+		genesis.ZetaAccounting = amount
+	}
 
 	return &genesis
 }

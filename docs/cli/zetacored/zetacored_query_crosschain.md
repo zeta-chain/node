@@ -26,6 +26,7 @@ zetacored query crosschain [flags]
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
 * [zetacored query crosschain get-tss-address](zetacored_query_crosschain_get-tss-address.md)	 - Query current tss address
+* [zetacored query crosschain get-zeta-accounting](zetacored_query_crosschain_get-zeta-accounting.md)	 - Query zeta accounting
 * [zetacored query crosschain in-tx-hash-to-cctx-data](zetacored_query_crosschain_in-tx-hash-to-cctx-data.md)	 - query a cctx data from a in tx hash
 * [zetacored query crosschain last-zeta-height](zetacored_query_crosschain_last-zeta-height.md)	 - Query last Zeta Height
 * [zetacored query crosschain list-all-in-tx-trackers](zetacored_query_crosschain_list-all-in-tx-trackers.md)	 - shows all inTxTrackers
