@@ -132,6 +132,59 @@ export declare class QueryParamsResponse extends Message<QueryParamsResponse> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.QueryHasVotedRequest
+ */
+export declare class QueryHasVotedRequest extends Message<QueryHasVotedRequest> {
+  /**
+   * @generated from field: string ballot_identifier = 1;
+   */
+  ballotIdentifier: string;
+
+  /**
+   * @generated from field: string voter_address = 2;
+   */
+  voterAddress: string;
+
+  constructor(data?: PartialMessage<QueryHasVotedRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryHasVotedRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHasVotedRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHasVotedRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHasVotedRequest;
+
+  static equals(a: QueryHasVotedRequest | PlainMessage<QueryHasVotedRequest> | undefined, b: QueryHasVotedRequest | PlainMessage<QueryHasVotedRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryHasVotedResponse
+ */
+export declare class QueryHasVotedResponse extends Message<QueryHasVotedResponse> {
+  /**
+   * @generated from field: bool has_voted = 1;
+   */
+  hasVoted: boolean;
+
+  constructor(data?: PartialMessage<QueryHasVotedResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryHasVotedResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHasVotedResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHasVotedResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHasVotedResponse;
+
+  static equals(a: QueryHasVotedResponse | PlainMessage<QueryHasVotedResponse> | undefined, b: QueryHasVotedResponse | PlainMessage<QueryHasVotedResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.QueryBallotByIdentifierRequest
  */
 export declare class QueryBallotByIdentifierRequest extends Message<QueryBallotByIdentifierRequest> {

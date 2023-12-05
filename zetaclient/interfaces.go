@@ -59,7 +59,7 @@ type ZetaCoreBridger interface {
 		chain common.Chain,
 		nonce uint64,
 		coinType common.CoinType,
-	) (string, error)
+	) (string, string, error)
 	PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
 	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error)
 	GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error)
