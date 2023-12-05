@@ -597,14 +597,14 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	receipt, err := ob.EvmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if nonce == 2527 {
-			logger.Warn().Err(err).Msgf("TransactionReceipt failed for nonce %d txHash %s", nonce, txHash)
+			logger.Warn().Err(err).Msgf("queryTxByHash: TransactionReceipt failed for nonce %d txHash %s", nonce, txHash)
 		}
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
+			logger.Warn().Err(err).Msgf("queryTxByHash: TransactionReceipt/TransactionByHash error, txHash %s", txHash)
 		}
 		return nil, nil, err
 	}
-	transaction, _, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	transaction, isPending, err := ob.EvmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -612,14 +612,19 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
-	if confHeight < 0 || confHeight >= math2.MaxInt64 {
-		return nil, nil, fmt.Errorf("confHeight is out of range")
+	if confHeight >= math2.MaxInt64 {
+		return nil, nil, fmt.Errorf("queryTxByHash: confHeight is out of range")
 	}
 
 	// #nosec G701 checked in range
 	if int64(confHeight) > ob.GetLastBlockHeight() {
-		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
+		log.Warn().Msgf("queryTxByHash: included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
+	}
+	// transaction must NOT be pending
+	if isPending {
+		log.Error().Msgf("queryTxByHash: confirmed but still pending: txHash %s nonce %d receipt block %d", txHash, nonce, receipt.BlockNumber)
+		return nil, nil, fmt.Errorf("confirmed but still pending")
 	}
 	return receipt, transaction, nil
 }
