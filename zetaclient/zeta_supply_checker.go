@@ -203,17 +203,13 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 }
 
 func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
-	cctxList, err := zs.zetaClient.GetCctxByStatus(types.CctxStatus_Aborted)
+	amount, err := zs.zetaClient.GetAbortedZetaAmount()
 	if err != nil {
-		return sdkmath.ZeroInt(), err
+		return sdkmath.ZeroInt(), errors.Wrap(err, "error getting aborted zeta amount")
 	}
-	amount := sdkmath.ZeroUint()
-	for _, cctx := range cctxList {
-		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
-	}
-	amountInt, ok := sdkmath.NewIntFromString(amount.String())
+	amountInt, ok := sdkmath.NewIntFromString(amount)
 	if !ok {
-		return sdkmath.ZeroInt(), errors.New("error parsing amount")
+		return sdkmath.ZeroInt(), errors.New("error parsing aborted zeta amount")
 	}
 	return amountInt, nil
 }

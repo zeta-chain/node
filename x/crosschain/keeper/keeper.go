@@ -81,3 +81,15 @@ func (k Keeper) GetFungibleKeeper() types.FungibleKeeper {
 func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
 	return k.zetaObserverKeeper
 }
+
+func (k Keeper) GetStoreKey() storetypes.StoreKey {
+	return k.storeKey
+}
+
+func (k Keeper) GetMemKey() storetypes.StoreKey {
+	return k.memKey
+}
+
+func (k Keeper) GetCodec() codec.Codec {
+	return k.cdc
+}

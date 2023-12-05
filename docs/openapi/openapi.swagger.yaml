@@ -27374,6 +27374,20 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/crosschain/zetaAccounting:
+    get:
+      operationId: Query_ZetaAccounting
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/crosschainQueryZetaAccountingResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/emissions/get_emissions_factors:
     get:
       summary: Queries a list of GetEmmisonsFactors items.
@@ -50977,6 +50991,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainTSS'
+  crosschainQueryZetaAccountingResponse:
+    type: object
+    properties:
+      aborted_zeta_amount:
+        type: string
   crosschainTSS:
     type: object
     properties:
