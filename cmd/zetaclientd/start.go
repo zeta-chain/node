@@ -77,7 +77,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("ZetaBridge is ready")
 	zetaBridge.SetAccountNumber(common.ZetaClientGranteeKey)
 
-	// cross check chainid
+	// cross-check chainid
 	res, err := zetaBridge.GetNodeInfo()
 	if err != nil {
 		panic(err)
@@ -103,7 +103,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
-	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
+	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
 	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
 	go zetaBridge.ConfigUpdater(cfg)
