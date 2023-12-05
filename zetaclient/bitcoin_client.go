@@ -471,7 +471,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+	zetaHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
@@ -486,9 +486,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		common.CoinType_Gas,
 	)
 	if err != nil {
-		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s outTxID %s", res.TxID, outTxID)
-	} else {
-		logger.Info().Msgf("IsSendOutTxProcessed: confirmed bitcoin outTx %s outTxID %s, zeta tx hash %s", res.TxID, outTxID, zetaHash)
+		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
+	} else if zetaHash != "" {
+		logger.Info().Msgf("IsSendOutTxProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
 	}
 	return true, true, nil
 }

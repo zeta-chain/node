@@ -421,3 +421,15 @@ func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, p
 	}
 	return resp.Valid, nil
 }
+
+func (b *ZetaCoreBridge) HasVoted(ballotIndex string, voterAddress string) (bool, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.HasVoted(context.Background(), &observertypes.QueryHasVotedRequest{
+		BallotIdentifier: ballotIndex,
+		VoterAddress:     voterAddress,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.HasVoted, nil
+}

@@ -25,21 +25,20 @@ var _ ZetaCoreBridger = &ZetaCoreBridge{}
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger              zerolog.Logger
-	blockHeight         int64
-	accountNumber       map[common.KeyType]uint64
-	seqNumber           map[common.KeyType]uint64
-	grpcConn            *grpc.ClientConn
-	httpClient          *retryablehttp.Client
-	cfg                 config.ClientConfiguration
-	encodingCfg         params.EncodingConfig
-	keys                *Keys
-	broadcastLock       *sync.RWMutex
-	zetaChainID         string
-	zetaChain           common.Chain
-	lastOutTxReportTime map[string]time.Time
-	stop                chan struct{}
-	pause               chan struct{}
+	logger        zerolog.Logger
+	blockHeight   int64
+	accountNumber map[common.KeyType]uint64
+	seqNumber     map[common.KeyType]uint64
+	grpcConn      *grpc.ClientConn
+	httpClient    *retryablehttp.Client
+	cfg           config.ClientConfiguration
+	encodingCfg   params.EncodingConfig
+	keys          *Keys
+	broadcastLock *sync.RWMutex
+	zetaChainID   string
+	zetaChain     common.Chain
+	stop          chan struct{}
+	pause         chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
@@ -78,20 +77,19 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 	}
 
 	return &ZetaCoreBridge{
-		logger:              logger,
-		grpcConn:            grpcConn,
-		httpClient:          httpClient,
-		accountNumber:       accountsMap,
-		seqNumber:           seqMap,
-		cfg:                 cfg,
-		encodingCfg:         app.MakeEncodingConfig(),
-		keys:                k,
-		broadcastLock:       &sync.RWMutex{},
-		lastOutTxReportTime: map[string]time.Time{},
-		stop:                make(chan struct{}),
-		zetaChainID:         chainID,
-		zetaChain:           zetaChain,
-		pause:               make(chan struct{}),
+		logger:        logger,
+		grpcConn:      grpcConn,
+		httpClient:    httpClient,
+		accountNumber: accountsMap,
+		seqNumber:     seqMap,
+		cfg:           cfg,
+		encodingCfg:   app.MakeEncodingConfig(),
+		keys:          k,
+		broadcastLock: &sync.RWMutex{},
+		stop:          make(chan struct{}),
+		zetaChainID:   chainID,
+		zetaChain:     zetaChain,
+		pause:         make(chan struct{}),
 	}, nil
 }
 

@@ -310,7 +310,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
 		}
-		zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+		zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 			sendHash,
 			receipt.TxHash.Hex(),
 			receipt.BlockNumber.Uint64(),
@@ -325,13 +325,14 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		)
 		if err != nil {
 			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+		} else if zetaTxHash != "" {
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 		}
-		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
-			zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -346,12 +347,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -366,8 +368,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
@@ -396,7 +399,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						sendhash := vLog.Topics[3].Hex()
 						//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 						mMint := receivedLog.ZetaValue
-						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -412,8 +415,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if zetaTxHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -432,7 +436,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						sendhash := vLog.Topics[2].Hex()
 						mMint := revertedLog.RemainingZetaValue
-						metaHash, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -448,8 +452,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if zetaTxHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -460,7 +465,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -475,8 +480,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	} else if cointype == common.CoinType_ERC20 {
@@ -498,7 +504,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 					if int64(confHeight) < ob.GetLastBlockHeight() {
 
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-						zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -514,8 +520,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
+						} else if zetaTxHash != "" {
+							logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 						}
-						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 						return true, true, nil
 					}
 					// #nosec G701 always in range
@@ -525,7 +532,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			}
 		} else {
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -540,8 +547,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+			} else if zetaTxHash != "" {
+				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
-			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
 		}
 	}
