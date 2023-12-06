@@ -12,9 +12,9 @@ import (
 
 func CmdAddWhiteListERC20() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add-whitelist-erc20 [erc20Address] [chainId] [name] [symbol] [decimals] [gasLimit]",
+		Use:   "add-whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit]",
 		Short: "Add a new erc20 address to whitelist",
-		Args: cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -22,7 +22,7 @@ func CmdAddWhiteListERC20() *cobra.Command {
 			}
 
 			erc20Address := args[0]
-			chainId, err := strconv.ParseInt(args[1], 10, 64)
+			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
@@ -42,7 +42,7 @@ func CmdAddWhiteListERC20() *cobra.Command {
 			msg := types.NewMsgWhitelistERC20(
 				clientCtx.GetFromAddress().String(),
 				erc20Address,
-				chainId,
+				chainID,
 				name,
 				symbol,
 				uint32(decimals),
@@ -52,7 +52,7 @@ func CmdAddWhiteListERC20() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
-			
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
