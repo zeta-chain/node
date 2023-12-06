@@ -51,7 +51,7 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	// check if the system contract address is valid
+	// check if the contract address is valid
 	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
 	}
