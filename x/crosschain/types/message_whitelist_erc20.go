@@ -55,8 +55,8 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
 	}
-	if msg.Decimals > 128 {
-		return sdkerrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
+	if msg.Decimals > 77 {
+		return sdkerrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d), decimals must be less than 78", msg.Decimals)
 	}
 	if msg.GasLimit <= 0 {
 		return sdkerrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
