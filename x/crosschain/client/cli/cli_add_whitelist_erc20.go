@@ -13,7 +13,7 @@ import (
 func CmdAddWhiteListERC20() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-whitelist-erc20 [erc20Address] [chainId] [name] [symbol] [decimals] [gasLimit]",
-		Short: "Add a new whitelist erc20",
+		Short: "Add a new erc20 address to whitelist",
 		Args: cobra.ExactArgs(6),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
