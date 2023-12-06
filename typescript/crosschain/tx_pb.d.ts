@@ -8,6 +8,64 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CoinType, Proof, PubKeySet, ReceiveStatus } from "../common/common_pb.js";
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
+ */
+export declare class MsgCreateTSSVoter extends Message<MsgCreateTSSVoter> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string tss_pubkey = 2;
+   */
+  tssPubkey: string;
+
+  /**
+   * @generated from field: int64 keyGenZetaHeight = 3;
+   */
+  keyGenZetaHeight: bigint;
+
+  /**
+   * @generated from field: common.ReceiveStatus status = 4;
+   */
+  status: ReceiveStatus;
+
+  constructor(data?: PartialMessage<MsgCreateTSSVoter>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoter";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoter;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
+
+  static equals(a: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined, b: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse
+ */
+export declare class MsgCreateTSSVoterResponse extends Message<MsgCreateTSSVoterResponse> {
+  constructor(data?: PartialMessage<MsgCreateTSSVoterResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoterResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
+
+  static equals(a: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined, b: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
  */
 export declare class MsgMigrateTssFunds extends Message<MsgMigrateTssFunds> {
@@ -58,6 +116,54 @@ export declare class MsgMigrateTssFundsResponse extends Message<MsgMigrateTssFun
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgMigrateTssFundsResponse;
 
   static equals(a: MsgMigrateTssFundsResponse | PlainMessage<MsgMigrateTssFundsResponse> | undefined, b: MsgMigrateTssFundsResponse | PlainMessage<MsgMigrateTssFundsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddress
+ */
+export declare class MsgUpdateTssAddress extends Message<MsgUpdateTssAddress> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string tss_pubkey = 2;
+   */
+  tssPubkey: string;
+
+  constructor(data?: PartialMessage<MsgUpdateTssAddress>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddress";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddress;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
+
+  static equals(a: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined, b: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse
+ */
+export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAddressResponse> {
+  constructor(data?: PartialMessage<MsgUpdateTssAddressResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddressResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
+
+  static equals(a: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined, b: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined): boolean;
 }
 
 /**
@@ -131,54 +237,6 @@ export declare class MsgAddToInTxTrackerResponse extends Message<MsgAddToInTxTra
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAddToInTxTrackerResponse;
 
   static equals(a: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined, b: MsgAddToInTxTrackerResponse | PlainMessage<MsgAddToInTxTrackerResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddress
- */
-export declare class MsgUpdateTssAddress extends Message<MsgUpdateTssAddress> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: string tss_pubkey = 2;
-   */
-  tssPubkey: string;
-
-  constructor(data?: PartialMessage<MsgUpdateTssAddress>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddress";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddress;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddress;
-
-  static equals(a: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined, b: MsgUpdateTssAddress | PlainMessage<MsgUpdateTssAddress> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse
- */
-export declare class MsgUpdateTssAddressResponse extends Message<MsgUpdateTssAddressResponse> {
-  constructor(data?: PartialMessage<MsgUpdateTssAddressResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgUpdateTssAddressResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateTssAddressResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateTssAddressResponse;
-
-  static equals(a: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined, b: MsgUpdateTssAddressResponse | PlainMessage<MsgUpdateTssAddressResponse> | undefined): boolean;
 }
 
 /**
@@ -395,64 +453,6 @@ export declare class MsgRemoveFromOutTxTrackerResponse extends Message<MsgRemove
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveFromOutTxTrackerResponse;
 
   static equals(a: MsgRemoveFromOutTxTrackerResponse | PlainMessage<MsgRemoveFromOutTxTrackerResponse> | undefined, b: MsgRemoveFromOutTxTrackerResponse | PlainMessage<MsgRemoveFromOutTxTrackerResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
- */
-export declare class MsgCreateTSSVoter extends Message<MsgCreateTSSVoter> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: string tss_pubkey = 2;
-   */
-  tssPubkey: string;
-
-  /**
-   * @generated from field: int64 keyGenZetaHeight = 3;
-   */
-  keyGenZetaHeight: bigint;
-
-  /**
-   * @generated from field: common.ReceiveStatus status = 4;
-   */
-  status: ReceiveStatus;
-
-  constructor(data?: PartialMessage<MsgCreateTSSVoter>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoter";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoter;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static equals(a: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined, b: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse
- */
-export declare class MsgCreateTSSVoterResponse extends Message<MsgCreateTSSVoterResponse> {
-  constructor(data?: PartialMessage<MsgCreateTSSVoterResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static equals(a: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined, b: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined): boolean;
 }
 
 /**

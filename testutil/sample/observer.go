@@ -4,8 +4,10 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -97,4 +99,22 @@ func CoreParamsList() (cpl types.CoreParamsList) {
 		cpl.CoreParams = append(cpl.CoreParams, CoreParams(chain.ChainId))
 	}
 	return
+}
+
+func Tss() types.TSS {
+	_, pubKey, _ := testdata.KeyTestPubAddr()
+	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+	if err != nil {
+		panic(err)
+	}
+	pk, err := common.NewPubKey(spk)
+	if err != nil {
+		panic(err)
+	}
+	pubkeyString := pk.String()
+	return types.TSS{
+		TssPubkey:           pubkeyString,
+		FinalizedZetaHeight: 1000,
+		KeyGenZetaHeight:    1000,
+	}
 }

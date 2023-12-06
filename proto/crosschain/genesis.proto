@@ -9,7 +9,6 @@ import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
-import "crosschain/tss.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
@@ -18,14 +17,11 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated OutTxTracker outTxTrackerList = 2 [(gogoproto.nullable) = false];
-  TSS tss = 4;
   repeated GasPrice gasPriceList = 5;
   repeated ChainNonces chainNoncesList = 6;
   repeated CrossChainTx CrossChainTxs = 7;
-
   repeated LastBlockHeight lastBlockHeightList = 8;
   repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
-  repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
   repeated InTxTracker in_tx_tracker_list = 11 [(gogoproto.nullable) = false];
   ZetaAccounting zeta_accounting = 12 [(gogoproto.nullable) = false];
 }

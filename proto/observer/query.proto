@@ -13,6 +13,7 @@ import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/tss.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -106,6 +107,42 @@ service Query {
   rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
     option (google.api.http).get = "/zeta-chain/observer/prove";
   }
+
+  // Queries a list of GetTssAddress items.
+  rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
+  }
+
+  // Queries a tSS by index.
+  rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/TSS";
+  }
+
+  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+  }
+}
+
+message QueryGetTSSRequest {}
+
+message QueryGetTSSResponse {
+  TSS TSS = 1;
+}
+
+message QueryGetTssAddressRequest {
+  string tss_pub_key = 1;
+  int64 bitcoin_chain_id = 2;
+}
+
+message QueryGetTssAddressResponse {
+  string eth = 1;
+  string btc = 2;
+}
+
+message QueryTssHistoryRequest {}
+
+message QueryTssHistoryResponse {
+  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryProveRequest {

@@ -14,23 +14,20 @@ import (
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func GenerateTss(
-	logger zerolog.Logger,
+func GenerateTss(logger zerolog.Logger,
 	cfg *config.Config,
 	zetaBridge *mc.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
 	ts *mc.TelemetryServer,
-	tssHistoricalList []types.TSS,
-	metrics *metrics.Metrics,
-) (*mc.TSS, error) {
+	tssHistoricalList []observertypes.TSS,
+	metrics *metrics.Metrics) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
 	// Bitcoin chain ID is currently used for using the correct signature format
@@ -72,16 +69,16 @@ func GenerateTss(
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
 		keyGen := cfg.GetKeygen()
-		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
+		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
-		if keyGen.Status == observerTypes.KeygenStatus_KeyGenFailed {
+		if keyGen.Status == observertypes.KeygenStatus_KeyGenFailed {
 			triedKeygenAtBlock = false
 			continue
 		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if keyGen.Status == observerTypes.KeygenStatus_PendingKeygen {
+		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {

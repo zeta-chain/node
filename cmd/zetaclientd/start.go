@@ -19,7 +19,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -154,7 +153,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	metrics.Start()
 
-	var tssHistoricalList []types.TSS
+	var tssHistoricalList []observerTypes.TSS
 	tssHistoricalList, err = zetaBridge.GetTssHistory()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")

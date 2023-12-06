@@ -26470,7 +26470,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetTSSResponse'
+            $ref: '#/definitions/observerQueryGetTSSResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -26862,7 +26862,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryGetTssAddressResponse'
+            $ref: '#/definitions/observerQueryGetTssAddressResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27367,7 +27367,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/crosschainQueryTssHistoryResponse'
+            $ref: '#/definitions/observerQueryTssHistoryResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -50971,18 +50971,6 @@ definitions:
     properties:
       outTxTracker:
         $ref: '#/definitions/crosschainOutTxTracker'
-  crosschainQueryGetTSSResponse:
-    type: object
-    properties:
-      TSS:
-        $ref: '#/definitions/crosschainTSS'
-  crosschainQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
   crosschainQueryInTxHashToCctxDataResponse:
     type: object
     properties:
@@ -51007,38 +50995,11 @@ definitions:
     properties:
       pending_nonces:
         $ref: '#/definitions/crosschainPendingNonces'
-  crosschainQueryTssHistoryResponse:
-    type: object
-    properties:
-      tss_list:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainTSS'
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
       aborted_zeta_amount:
         type: string
-  crosschainTSS:
-    type: object
-    properties:
-      tss_pubkey:
-        type: string
-      tss_participant_list:
-        type: array
-        items:
-          type: string
-      operator_address_list:
-        type: array
-        items:
-          type: string
-      finalizedZetaHeight:
-        type: string
-        format: int64
-      keyGenZetaHeight:
-        type: string
-        format: int64
   crosschainTxHashList:
     type: object
     properties:
@@ -51548,6 +51509,18 @@ definitions:
     properties:
       node_account:
         $ref: '#/definitions/observerNodeAccount'
+  observerQueryGetTSSResponse:
+    type: object
+    properties:
+      TSS:
+        $ref: '#/definitions/observerTSS'
+  observerQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
   observerQueryHasVotedResponse:
     type: object
     properties:
@@ -51578,6 +51551,33 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/commonChain'
+  observerQueryTssHistoryResponse:
+    type: object
+    properties:
+      tss_list:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerTSS'
+  observerTSS:
+    type: object
+    properties:
+      tss_pubkey:
+        type: string
+      tss_participant_list:
+        type: array
+        items:
+          type: string
+      operator_address_list:
+        type: array
+        items:
+          type: string
+      finalizedZetaHeight:
+        type: string
+        format: int64
+      keyGenZetaHeight:
+        type: string
+        format: int64
   observerVoteType:
     type: string
     enum:

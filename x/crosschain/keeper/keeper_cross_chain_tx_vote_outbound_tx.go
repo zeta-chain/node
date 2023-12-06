@@ -135,7 +135,10 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		)
 	}
 
-	tss, _ := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return nil, types.ErrCannotFindTSSKeys
+	}
 
 	// FinalizeOutbound sets final status for a successful vote
 	// FinalizeOutbound updates CCTX Prices and Nonce for a revert

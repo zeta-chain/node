@@ -11,7 +11,6 @@ import "crosschain/last_block_height.proto";
 import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
-import "crosschain/tss.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -58,16 +57,6 @@ service Query {
   // Queries a list of InTxHashToCctx items.
   rpc InTxHashToCctxAll(QueryAllInTxHashToCctxRequest) returns (QueryAllInTxHashToCctxResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
-  }
-
-  // Queries a list of GetTssAddress items.
-  rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
-  }
-
-  // Queries a tSS by index.
-  rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/TSS";
   }
 
   // Queries a gasPrice by index.
@@ -140,10 +129,6 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
 
-  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
-  }
-
   rpc CctxByStatus(QueryCctxByStatusRequest) returns (QueryCctxByStatusResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxbyStatus/{status}";
   }
@@ -164,12 +149,6 @@ message QueryCctxByStatusRequest {
 }
 message QueryCctxByStatusResponse {
   repeated CrossChainTx CrossChainTx = 1 [(gogoproto.nullable) = false];
-}
-
-message QueryTssHistoryRequest {}
-
-message QueryTssHistoryResponse {
-  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -248,22 +227,6 @@ message QueryAllInTxHashToCctxRequest {
 message QueryAllInTxHashToCctxResponse {
   repeated InTxHashToCctx inTxHashToCctx = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryGetTssAddressRequest {
-  string tss_pub_key = 1;
-  int64 bitcoin_chain_id = 2;
-}
-
-message QueryGetTssAddressResponse {
-  string eth = 1;
-  string btc = 2;
-}
-
-message QueryGetTSSRequest {}
-
-message QueryGetTSSResponse {
-  TSS TSS = 1;
 }
 
 message QueryGetGasPriceRequest {

@@ -7,7 +7,6 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
-import type { TSS } from "./tss_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
@@ -30,11 +29,6 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.crosschain.OutTxTracker outTxTrackerList = 2;
    */
   outTxTrackerList: OutTxTracker[];
-
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.TSS tss = 4;
-   */
-  tss?: TSS;
 
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 5;
@@ -60,11 +54,6 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.crosschain.InTxHashToCctx inTxHashToCctxList = 9;
    */
   inTxHashToCctxList: InTxHashToCctx[];
-
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.TSS tss_history = 10;
-   */
-  tssHistory: TSS[];
 
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;

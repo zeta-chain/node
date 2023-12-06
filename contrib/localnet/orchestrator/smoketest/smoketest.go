@@ -99,9 +99,9 @@ func NewSmokeTest(
 	systemContractAddr := HexToAddress(systemContractRes.SystemContract.SystemContract)
 	fmt.Printf("System contract address: %s\n", systemContractAddr)
 
-	response := &crosschaintypes.QueryGetTssAddressResponse{}
+	response := &observertypes.QueryGetTssAddressResponse{}
 	for {
-		response, err = cctxClient.GetTssAddress(context.Background(), &crosschaintypes.QueryGetTssAddressRequest{})
+		response, err = observerClient.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 		if err != nil {
 			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
 			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore network...\n")

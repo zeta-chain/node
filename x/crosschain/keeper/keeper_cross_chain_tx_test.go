@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
@@ -6,9 +6,11 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -19,7 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.CctxStatus) []types.CrossChainTx {
+func createNCctxWithStatus(keeper *keeper.Keeper, ctx sdk.Context, n int, status types.CctxStatus) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -31,6 +33,7 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 		}
 		items[i].ZetaFees = math.OneUint()
 		items[i].InboundTxParams = &types.InboundTxParams{InboundTxObservedHash: fmt.Sprintf("%d", i), Amount: math.OneUint()}
+		items[i].OutboundTxParams = []*types.OutboundTxParams{{Amount: math.ZeroUint()}}
 
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
 	}
@@ -38,7 +41,7 @@ func createNCctxWithStatus(keeper *Keeper, ctx sdk.Context, n int, status types.
 }
 
 // Keeper Tests
-func createNCctx(keeper *Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
+func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossChainTx {
 	items := make([]types.CrossChainTx, n)
 	for i := range items {
 		items[i].Creator = "any"
@@ -112,8 +115,10 @@ func TestSends(t *testing.T) {
 	for _, tt := range sendsTest {
 		tt := tt
 		t.Run(tt.TestName, func(t *testing.T) {
-			keeper, ctx := setupKeeper(t)
+			keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+			keeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: math.ZeroUint()})
 			var sends []types.CrossChainTx
+			zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert)...)
@@ -135,7 +140,8 @@ func TestSends(t *testing.T) {
 }
 
 func TestSendGetAll(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	items := createNCctx(keeper, ctx, 10)
 	cctx := keeper.GetAllCrossChainTx(ctx)
 	c := make([]types.CrossChainTx, len(cctx))
@@ -148,7 +154,8 @@ func TestSendGetAll(t *testing.T) {
 // Querier Tests
 
 func TestSendQuerySingle(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNCctx(keeper, ctx, 2)
 	for _, tc := range []struct {
@@ -190,7 +197,8 @@ func TestSendQuerySingle(t *testing.T) {
 }
 
 func TestSendQueryPaginated(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNCctx(keeper, ctx, 5)
 

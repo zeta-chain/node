@@ -27,7 +27,6 @@ import (
 	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
 	"github.com/zeta-chain/zetacore/common"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -81,7 +80,7 @@ func NewTSS(
 	preParams *keygen.LocalPreParams,
 	cfg *config.Config,
 	bridge ZetaCoreBridger,
-	tssHistoricalList []types.TSS,
+	tssHistoricalList []observertypes.TSS,
 	metrics *metrics.Metrics,
 	bitcoinChainID int64,
 ) (*TSS, error) {
@@ -430,7 +429,7 @@ func (tss *TSS) RegisterMetrics(metrics *metrics.Metrics) error {
 	return nil
 }
 
-func (tss *TSS) VerifyKeysharesForPubkeys(tssList []types.TSS, granteePubKey32 string) error {
+func (tss *TSS) VerifyKeysharesForPubkeys(tssList []observertypes.TSS, granteePubKey32 string) error {
 	for _, t := range tssList {
 		if wasNodePartOfTss(granteePubKey32, t.TssParticipantList) {
 			if _, ok := tss.Keys[t.TssPubkey]; !ok {

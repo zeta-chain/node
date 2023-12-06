@@ -6,7 +6,6 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { CctxStatus, CrossChainTx } from "./cross_chain_tx_pb.js";
-import type { TSS } from "./tss_pb.js";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
@@ -106,49 +105,6 @@ export declare class QueryCctxByStatusResponse extends Message<QueryCctxByStatus
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCctxByStatusResponse;
 
   static equals(a: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined, b: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryTssHistoryRequest
- */
-export declare class QueryTssHistoryRequest extends Message<QueryTssHistoryRequest> {
-  constructor(data?: PartialMessage<QueryTssHistoryRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryTssHistoryRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssHistoryRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssHistoryRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssHistoryRequest;
-
-  static equals(a: QueryTssHistoryRequest | PlainMessage<QueryTssHistoryRequest> | undefined, b: QueryTssHistoryRequest | PlainMessage<QueryTssHistoryRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryTssHistoryResponse
- */
-export declare class QueryTssHistoryResponse extends Message<QueryTssHistoryResponse> {
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.TSS tss_list = 1;
-   */
-  tssList: TSS[];
-
-  constructor(data?: PartialMessage<QueryTssHistoryResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryTssHistoryResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssHistoryResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssHistoryResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssHistoryResponse;
-
-  static equals(a: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined, b: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined): boolean;
 }
 
 /**
@@ -612,107 +568,6 @@ export declare class QueryAllInTxHashToCctxResponse extends Message<QueryAllInTx
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllInTxHashToCctxResponse;
 
   static equals(a: QueryAllInTxHashToCctxResponse | PlainMessage<QueryAllInTxHashToCctxResponse> | undefined, b: QueryAllInTxHashToCctxResponse | PlainMessage<QueryAllInTxHashToCctxResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressRequest
- */
-export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddressRequest> {
-  /**
-   * @generated from field: string tss_pub_key = 1;
-   */
-  tssPubKey: string;
-
-  /**
-   * @generated from field: int64 bitcoin_chain_id = 2;
-   */
-  bitcoinChainId: bigint;
-
-  constructor(data?: PartialMessage<QueryGetTssAddressRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTssAddressRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
-
-  static equals(a: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined, b: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressResponse
- */
-export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddressResponse> {
-  /**
-   * @generated from field: string eth = 1;
-   */
-  eth: string;
-
-  /**
-   * @generated from field: string btc = 2;
-   */
-  btc: string;
-
-  constructor(data?: PartialMessage<QueryGetTssAddressResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTssAddressResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
-
-  static equals(a: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined, b: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetTSSRequest
- */
-export declare class QueryGetTSSRequest extends Message<QueryGetTSSRequest> {
-  constructor(data?: PartialMessage<QueryGetTSSRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTSSRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTSSRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTSSRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTSSRequest;
-
-  static equals(a: QueryGetTSSRequest | PlainMessage<QueryGetTSSRequest> | undefined, b: QueryGetTSSRequest | PlainMessage<QueryGetTSSRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryGetTSSResponse
- */
-export declare class QueryGetTSSResponse extends Message<QueryGetTSSResponse> {
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.TSS TSS = 1;
-   */
-  TSS?: TSS;
-
-  constructor(data?: PartialMessage<QueryGetTSSResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTSSResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTSSResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTSSResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTSSResponse;
-
-  static equals(a: QueryGetTSSResponse | PlainMessage<QueryGetTSSResponse> | undefined, b: QueryGetTSSResponse | PlainMessage<QueryGetTSSResponse> | undefined): boolean;
 }
 
 /**

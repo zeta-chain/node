@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,30 +16,6 @@ import (
 func (k Keeper) AppendTss(ctx sdk.Context, tss types.TSS) {
 	k.SetTSS(ctx, tss)
 	k.SetTSSHistory(ctx, tss)
-}
-
-func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
-	k.SetTSS(ctx, tss)
-	// initialize the nonces and pending nonces of all enabled chains
-	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
-	for _, chain := range supportedChains {
-		chainNonce := types.ChainNonces{
-			Index:   chain.ChainName.String(),
-			ChainId: chain.ChainId,
-			Nonce:   0,
-			// #nosec G701 always positive
-			FinalizedHeight: uint64(ctx.BlockHeight()),
-		}
-		k.SetChainNonces(ctx, chainNonce)
-
-		p := types.PendingNonces{
-			NonceLow:  0,
-			NonceHigh: 0,
-			ChainId:   chain.ChainId,
-			Tss:       tss.TssPubkey,
-		}
-		k.SetPendingNonces(ctx, p)
-	}
 }
 
 // SetTSS sets tss information to the store

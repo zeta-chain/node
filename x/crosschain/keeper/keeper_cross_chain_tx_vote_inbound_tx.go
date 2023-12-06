@@ -72,7 +72,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
 	tssPub := ""
-	tss, tssFound := k.GetTSS(ctx)
+	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if tssFound {
 		tssPub = tss.TssPubkey
 	}

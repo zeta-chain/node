@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -36,7 +36,6 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-
 	bitcoinParams := common.BitcoinRegnetParams
 	if req.BitcoinChainId != 0 {
 		bitcoinParams, err = common.BitcoinNetParamsFromChainID(req.BitcoinChainId)
@@ -44,7 +43,6 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-
 	btcAddress, err := common.GetTssAddrBTC(tssPubKey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

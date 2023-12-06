@@ -30,7 +30,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
-	tss, found := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}

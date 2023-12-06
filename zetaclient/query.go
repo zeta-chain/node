@@ -286,9 +286,9 @@ func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTx
 	return resp.InTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
+func (b *ZetaCoreBridge) GetCurrentTss() (*observertypes.TSS, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.TSS(context.Background(), &observertypes.QueryGetTSSRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -296,8 +296,8 @@ func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
 }
 
 func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 	if err != nil {
 		return "", err
 	}
@@ -305,17 +305,17 @@ func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
 }
 
 func (b *ZetaCoreBridge) GetBtcTssAddress() (string, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 	if err != nil {
 		return "", err
 	}
 	return resp.Btc, nil
 }
 
-func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
+func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.TssHistory(context.Background(), &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return nil, err
 	}

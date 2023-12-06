@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -81,6 +82,30 @@ func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chain
 	}
 }
 
+func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss observerTypes.TSS) {
+	k.zetaObserverKeeper.SetTSS(ctx, tss)
+	// initialize the nonces and pending nonces of all enabled chains
+	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+	for _, chain := range supportedChains {
+		chainNonce := types.ChainNonces{
+			Index:   chain.ChainName.String(),
+			ChainId: chain.ChainId,
+			Nonce:   0,
+			// #nosec G701 always positive
+			FinalizedHeight: uint64(ctx.BlockHeight()),
+		}
+		k.SetChainNonces(ctx, chainNonce)
+
+		p := types.PendingNonces{
+			NonceLow:  0,
+			NonceHigh: 0,
+			ChainId:   chain.ChainId,
+			Tss:       tss.TssPubkey,
+		}
+		k.SetPendingNonces(ctx, p)
+	}
+}
+
 func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNoncesRequest) (*types.QueryAllPendingNoncesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -100,7 +125,7 @@ func (k Keeper) PendingNoncesByChain(c context.Context, req *types.QueryPendingN
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	tss, found := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "tss not found")
 	}

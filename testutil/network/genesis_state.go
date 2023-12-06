@@ -121,6 +121,16 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 		GasPriceIncreaseFlags:        &observertypes.DefaultGasPriceIncreaseFlags,
 		BlockHeaderVerificationFlags: &observertypes.DefaultBlockHeaderVerificationFlags,
 	}
+	tss := observertypes.TSS{
+		TssPubkey:           "tssPubkey",
+		TssParticipantList:  []string{"tssParticipantList"},
+		OperatorAddressList: []string{"operatorAddressList"},
+		FinalizedZetaHeight: 1,
+		KeyGenZetaHeight:    1,
+	}
+	state.Tss = &tss
+
+	state.TssHistory = []observertypes.TSS{tss}
 
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags
@@ -159,25 +169,6 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 	for i := 0; i < n; i++ {
 		state.LastBlockHeightList = append(state.LastBlockHeightList, &types.LastBlockHeight{Creator: "ANY", Index: strconv.Itoa(i)})
 	}
-	tss := types.TSS{
-		TssPubkey:           "tssPubkey",
-		TssParticipantList:  []string{"tssParticipantList"},
-		OperatorAddressList: []string{"operatorAddressList"},
-		FinalizedZetaHeight: 1,
-		KeyGenZetaHeight:    1,
-	}
-	state.Tss = &tss
-
-	state.TssHistory = []types.TSS{tss}
-	for i := 0; i < n; i++ {
-		outTxTracker := types.OutTxTracker{
-			Index:   fmt.Sprintf("%d-%d", i, i),
-			ChainId: int64(i),
-			Nonce:   uint64(i),
-		}
-		nullify.Fill(&outTxTracker)
-		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
-	}
 
 	for i := 0; i < n; i++ {
 		inTxTracker := types.InTxTracker{
@@ -195,6 +186,15 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 		}
 		nullify.Fill(&inTxHashToCctx)
 		state.InTxHashToCctxList = append(state.InTxHashToCctxList, inTxHashToCctx)
+	}
+	for i := 0; i < n; i++ {
+		outTxTracker := types.OutTxTracker{
+			Index:   fmt.Sprintf("%d-%d", i, i),
+			ChainId: int64(i),
+			Nonce:   uint64(i),
+		}
+		nullify.Fill(&outTxTracker)
+		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
 	}
 
 	assert.NoError(t, state.Validate())

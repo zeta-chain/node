@@ -6,8 +6,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestNewMsgMigrateTssFunds(t *testing.T) {
@@ -46,7 +46,7 @@ func TestNewMsgMigrateTssFunds(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			observerTypes.SetConfig(false)
+			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)
