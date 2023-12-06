@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
@@ -30,6 +31,10 @@ func GetPubKeyCmd() *cobra.Command {
 			return nil
 		},
 	}
+
+	cmd.PersistentFlags().String(flags.FlagKeyringDir, "", "The client Keyring directory; if omitted, the default 'home' directory will be used")
+	cmd.PersistentFlags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
+	
 	return cmd
 }
 
