@@ -10,8 +10,8 @@ import (
 	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // MESSAGES
@@ -35,11 +35,11 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	// No need to create a ballot if keygen does not exist
 	keygen, found := k.zetaObserverKeeper.GetKeygen(ctx)
 	if !found {
-		return &types.MsgCreateTSSVoterResponse{}, observerTypes.ErrKeygenNotFound
+		return &types.MsgCreateTSSVoterResponse{}, observertypes.ErrKeygenNotFound
 	}
 	// USE a separate transaction to update KEYGEN status to pending when trying to change the TSS address
-	if keygen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
-		return &types.MsgCreateTSSVoterResponse{}, observerTypes.ErrKeygenCompleted
+	if keygen.Status == observertypes.KeygenStatus_KeyGenSuccess {
+		return &types.MsgCreateTSSVoterResponse{}, observertypes.ErrKeygenCompleted
 	}
 	index := msg.Digest()
 	// Add votes and Set Ballot
@@ -52,32 +52,32 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		for _, nodeAccount := range k.zetaObserverKeeper.GetAllNodeAccount(ctx) {
 			voterList = append(voterList, nodeAccount.Operator)
 		}
-		ballot = observerTypes.Ballot{
+		ballot = observertypes.Ballot{
 			Index:                "",
 			BallotIdentifier:     index,
 			VoterList:            voterList,
-			Votes:                observerTypes.CreateVotes(len(voterList)),
-			ObservationType:      observerTypes.ObservationType_TSSKeyGen,
+			Votes:                observertypes.CreateVotes(len(voterList)),
+			ObservationType:      observertypes.ObservationType_TSSKeyGen,
 			BallotThreshold:      sdk.MustNewDecFromStr("1.00"),
-			BallotStatus:         observerTypes.BallotStatus_BallotInProgress,
+			BallotStatus:         observertypes.BallotStatus_BallotInProgress,
 			BallotCreationHeight: ctx.BlockHeight(),
 		}
 		k.zetaObserverKeeper.AddBallotToList(ctx, ballot)
 	}
 	var err error
 	if msg.Status == common.ReceiveStatus_Success {
-		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
+		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observertypes.VoteType_SuccessObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	} else if msg.Status == common.ReceiveStatus_Failed {
-		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_FailureObservation)
+		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observertypes.VoteType_FailureObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
 	}
 	if !found {
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
+		keeper.EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
 	}
 
 	ballot, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
@@ -87,8 +87,8 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 	}
 	// Set TSS only on success, set Keygen either way.
 	// Keygen block can be updated using a policy transaction if keygen fails
-	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
-		tss := types.TSS{
+	if ballot.BallotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
+		tss := observertypes.TSS{
 			TssPubkey:           msg.TssPubkey,
 			TssParticipantList:  keygen.GetGranteePubkeys(),
 			OperatorAddressList: ballot.VoterList,
@@ -98,35 +98,20 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		// Set TSS history only, current TSS is updated via admin transaction
 		// In Case this is the first TSS address update both current and history
 
-		tssList := k.GetAllTSS(ctx)
+		tssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 		if len(tssList) == 0 {
 			k.SetTssAndUpdateNonce(ctx, tss)
 		}
-		k.SetTSSHistory(ctx, tss)
-		keygen.Status = observerTypes.KeygenStatus_KeyGenSuccess
+		k.zetaObserverKeeper.SetTSSHistory(ctx, tss)
+		keygen.Status = observertypes.KeygenStatus_KeyGenSuccess
 		keygen.BlockNumber = ctx.BlockHeight()
 
-	} else if ballot.BallotStatus == observerTypes.BallotStatus_BallotFinalized_FailureObservation {
-		keygen.Status = observerTypes.KeygenStatus_KeyGenFailed
+	} else if ballot.BallotStatus == observertypes.BallotStatus_BallotFinalized_FailureObservation {
+		keygen.Status = observertypes.KeygenStatus_KeyGenFailed
 		keygen.BlockNumber = math2.MaxInt64
 	}
 	k.zetaObserverKeeper.SetKeygen(ctx, keygen)
 	return &types.MsgCreateTSSVoterResponse{}, nil
-}
-
-func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateTssAddress) (*types.MsgUpdateTssAddressResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	// TODO : Add a new policy type for updating the TSS address
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group2) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
-	}
-	tss, ok := k.CheckIfTssPubkeyHasBeenGenerated(ctx, msg.TssPubkey)
-	if !ok {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "tss pubkey has not been generated")
-	}
-	k.SetTssAndUpdateNonce(ctx, tss)
-
-	return &types.MsgUpdateTssAddressResponse{}, nil
 }
 
 // IsAuthorizedNodeAccount checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type

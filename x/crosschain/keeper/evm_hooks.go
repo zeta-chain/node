@@ -114,7 +114,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return types.ErrNotEnoughPermissions
 	}
 	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
-	tss, found := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "ProcessZRC20WithdrawalEvent: cannot be processed without TSS keys")
 	}
@@ -183,7 +183,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		event.DestinationChainId,
 	))
 
-	tss, found := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "ProcessZetaSentEvent: cannot be processed without TSS keys")
 	}

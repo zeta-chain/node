@@ -5,14 +5,14 @@ import (
 
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowTSS() {
 	ctx := s.network.Validators[0].ClientCtx
-	obj := s.crosschainState.Tss
+	obj := s.observerState.Tss
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}

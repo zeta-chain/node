@@ -82,6 +82,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	} else {
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
+
+	if genState.Tss != nil {
+		k.SetTSS(ctx, *genState.Tss)
+	}
+	for _, elem := range genState.TssHistory {
+		k.SetTSSHistory(ctx, elem)
+	}
+
 }
 
 // ExportGenesis returns the observer module's exported genesis.
@@ -120,6 +128,15 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		oc = &observerCount
 	}
 
+	// Get tss
+	tss := &types.TSS{}
+	t, found := k.GetTSS(ctx)
+	if found {
+		tss = &t
+	}
+
+	tssHistory := k.GetAllTSS(ctx)
+
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
@@ -129,5 +146,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		CrosschainFlags:   cf,
 		Keygen:            kn,
 		LastObserverCount: oc,
+		Tss:               tss,
+		TssHistory:        tssHistory,
 	}
 }

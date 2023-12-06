@@ -25,9 +25,19 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds while inbound is enabled")
 	}
-	tss, found := k.GetTSS(ctx)
+	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
+	}
+	tssHistory := k.zetaObserverKeeper.GetAllTSS(ctx)
+	sort.SliceStable(tssHistory, func(i, j int) bool {
+		return tssHistory[i].KeyGenZetaHeight < tssHistory[j].KeyGenZetaHeight
+	})
+	if tss.TssPubkey == tssHistory[len(tssHistory)-1].TssPubkey {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "no new tss address has been generated")
+	}
+	if tss.KeyGenZetaHeight >= tssHistory[len(tssHistory)-1].KeyGenZetaHeight {
+		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "current tss is the latest")
 	}
 	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
 	if !found {
@@ -43,8 +53,8 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	return &types.MsgMigrateTssFundsResponse{}, nil
 }
 
-func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss types.TSS) error {
-	tssList := k.GetAllTSS(ctx)
+func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss observerTypes.TSS) error {
+	tssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 	if len(tssList) < 2 {
 		return errorsmod.Wrap(types.ErrCannotMigrateTss, "only one TSS found")
 	}
@@ -61,11 +71,10 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
 	}
-	indexString := fmt.Sprintf("%s-%s-%d-%s-%d", currentTss.TssPubkey, newTss.TssPubkey, chainID, amount.String(), ctx.BlockHeight())
+	indexString := GetIndexStringForTssMigration(currentTss.TssPubkey, newTss.TssPubkey, chainID, amount, ctx.BlockHeight())
 
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
-
 	cctx := types.CrossChainTx{
 		Creator:        "",
 		Index:          index,
@@ -104,7 +113,6 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			OutboundTxEffectiveGasLimit:      0,
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
-
 	// Set the sender and receiver addresses for EVM chain
 	if common.IsEVMChain(chainID) {
 		ethAddressOld, err := common.GetTssAddrEVM(currentTss.TssPubkey)
@@ -118,7 +126,6 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
 	}
-
 	// Set the sender and receiver addresses for Bitcoin chain
 	if common.IsBitcoinChain(chainID) {
 		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
@@ -150,4 +157,8 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	EmitEventInboundFinalized(ctx, &cctx)
 
 	return nil
+}
+
+func GetIndexStringForTssMigration(currentTssPubkey, newTssPubkey string, chainID int64, amount sdkmath.Uint, height int64) string {
+	return fmt.Sprintf("%s-%s-%d-%s-%d", currentTssPubkey, newTssPubkey, chainID, amount.String(), height)
 }

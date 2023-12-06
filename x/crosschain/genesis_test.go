@@ -20,7 +20,6 @@ func TestGenesis(t *testing.T) {
 			sample.OutTxTracker(t, "1"),
 			sample.OutTxTracker(t, "2"),
 		},
-		Tss: sample.Tss(),
 		GasPriceList: []*types.GasPrice{
 			sample.GasPrice(t, "0"),
 			sample.GasPrice(t, "1"),

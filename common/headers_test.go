@@ -23,7 +23,7 @@ import (
 
 const numHeadersToTest = 100
 
-func TestGetEthereumHeader(t *testing.T) {
+func init() {
 	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
 	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
 	file, _ := os.Create("test_data/eth_header_18495266.json")

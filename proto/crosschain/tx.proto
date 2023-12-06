@@ -11,7 +11,7 @@ service Msg {
   rpc AddToOutTxTracker(MsgAddToOutTxTracker) returns (MsgAddToOutTxTrackerResponse);
   rpc AddToInTxTracker(MsgAddToInTxTracker) returns (MsgAddToInTxTrackerResponse);
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
-  rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
+
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
   rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
@@ -19,8 +19,19 @@ service Msg {
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
+  rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
+
   //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
+
+message MsgCreateTSSVoter {
+  string creator = 1;
+  string tss_pubkey = 2;
+  int64 keyGenZetaHeight = 3;
+  common.ReceiveStatus status = 4;
+}
+
+message MsgCreateTSSVoterResponse {}
 
 message MsgMigrateTssFunds {
   string creator = 1;
@@ -32,6 +43,13 @@ message MsgMigrateTssFunds {
 }
 message MsgMigrateTssFundsResponse {}
 
+message MsgUpdateTssAddress {
+  string creator = 1;
+  string tss_pubkey = 2;
+}
+
+message MsgUpdateTssAddressResponse {}
+
 message MsgAddToInTxTracker {
   string creator = 1;
   int64 chain_id = 2;
@@ -42,13 +60,6 @@ message MsgAddToInTxTracker {
   int64 tx_index = 7;
 }
 message MsgAddToInTxTrackerResponse {}
-
-message MsgUpdateTssAddress {
-  string creator = 1;
-  string tss_pubkey = 2;
-}
-
-message MsgUpdateTssAddressResponse {}
 
 message MsgWhitelistERC20 {
   string creator = 1;
@@ -86,15 +97,6 @@ message MsgRemoveFromOutTxTracker {
 }
 
 message MsgRemoveFromOutTxTrackerResponse {}
-
-message MsgCreateTSSVoter {
-  string creator = 1;
-  string tss_pubkey = 2;
-  int64 keyGenZetaHeight = 3;
-  common.ReceiveStatus status = 4;
-}
-
-message MsgCreateTSSVoterResponse {}
 
 message MsgGasPriceVoter {
   string creator = 1;

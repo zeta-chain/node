@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,6 +68,13 @@ type ZetaObserverKeeper interface {
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
+	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (zetaObserverTypes.TSS, bool)
+	GetPreviousTSS(ctx sdk.Context) (val zetaObserverTypes.TSS, found bool)
+	GetAllTSS(ctx sdk.Context) (list []zetaObserverTypes.TSS)
+	GetTSS(ctx sdk.Context) (val zetaObserverTypes.TSS, found bool)
+	SetTSS(ctx sdk.Context, tss zetaObserverTypes.TSS)
+	SetTSSHistory(ctx sdk.Context, tss zetaObserverTypes.TSS)
+	GetTssAddress(goCtx context.Context, req *zetaObserverTypes.QueryGetTssAddressRequest) (*zetaObserverTypes.QueryGetTssAddressResponse, error)
 }
 
 type FungibleKeeper interface {

@@ -162,26 +162,26 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 			// Add node accounts to cross chain genesis state
 			zetaCrossChainGenState := crosschaintypes.GetGenesisStateFromAppState(cdc, appState)
-
+			tss := types.TSS{}
 			if keyGenBlock == 0 {
 				operatorList := make([]string, len(nodeAccounts))
 				for i, nodeAccount := range nodeAccounts {
 					operatorList[i] = nodeAccount.Operator
 				}
-				tss := crosschaintypes.TSS{
+				tss = types.TSS{
 					TssPubkey:           tssPubkey,
 					TssParticipantList:  keygenPubKeys,
 					OperatorAddressList: operatorList,
 					FinalizedZetaHeight: 0,
 					KeyGenZetaHeight:    0,
 				}
-				zetaCrossChainGenState.Tss = &tss
 			}
 
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
 			zetaObserverGenState.Observers = observerMapper
 			zetaObserverGenState.NodeAccountList = nodeAccounts
+			zetaObserverGenState.Tss = &tss
 			keyGenStatus := types.KeygenStatus_PendingKeygen
 			if keyGenBlock == 0 {
 				keyGenStatus = types.KeygenStatus_KeyGenSuccess

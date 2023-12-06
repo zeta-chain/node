@@ -17,11 +17,12 @@
 * fix Athens-3 issue - include bitcoin outtx regardless of the cctx status
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 
+
 ### Refactoring
 
 * [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
-
+* move tss state date from crosschain to observer
 ### Chores
 
 ### Tests

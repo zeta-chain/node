@@ -41,8 +41,7 @@ const (
 	ChainNoncesKey     = "ChainNonces-value-"
 	GasPriceKey        = "GasPrice-value-"
 
-	TSSKey        = "TSS-value-"
-	TSSHistoryKey = "TSS-History-value-"
+	GasBalanceKey = "GasBalance-value-"
 
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 	InTxTrackerKeyPrefix  = "InTxTracker-value-"

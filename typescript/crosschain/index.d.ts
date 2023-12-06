@@ -10,5 +10,4 @@ export * from "./nonce_to_cctx_pb";
 export * from "./out_tx_tracker_pb";
 export * from "./params_pb";
 export * from "./query_pb";
-export * from "./tss_pb";
 export * from "./tx_pb";

@@ -56,19 +56,16 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
 		}
 	}
-
-	if genState.Tss != nil {
-		k.SetTSS(ctx, *genState.Tss)
+	// InitGenesis for observer module needs to be executed before crosschain module
+	tss, found := k.GetObserverKeeper().GetTSS(ctx)
+	if found {
 		for _, chain := range common.DefaultChainsList() {
 			k.SetPendingNonces(ctx, types.PendingNonces{
 				NonceLow:  0,
 				NonceHigh: 0,
 				ChainId:   chain.ChainId,
-				Tss:       genState.Tss.TssPubkey,
+				Tss:       tss.TssPubkey,
 			})
-		}
-		for _, elem := range genState.TssHistory {
-			k.SetTSSHistory(ctx, elem)
 		}
 	}
 
@@ -82,12 +79,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
 	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)
-
-	// Get tss
-	tss, found := k.GetTSS(ctx)
-	if found {
-		genesis.Tss = &tss
-	}
 
 	// Get all gas prices
 	gasPriceList := k.GetAllGasPrice(ctx)
@@ -117,7 +108,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &elem)
 	}
 
-	genesis.TssHistory = k.GetAllTSS(ctx)
 	amount, found := k.GetZetaAccounting(ctx)
 	if found {
 		genesis.ZetaAccounting = amount

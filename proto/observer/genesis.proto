@@ -8,6 +8,7 @@ import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/tss.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -20,4 +21,6 @@ message GenesisState {
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
   CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
+  TSS tss = 9;
+  repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
 }

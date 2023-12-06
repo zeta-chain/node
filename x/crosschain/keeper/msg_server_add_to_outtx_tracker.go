@@ -111,7 +111,7 @@ func (k Keeper) VerifyOutTxBody(ctx sdk.Context, msg *types.MsgAddToOutTxTracker
 	if common.IsBitcoinChain(msg.ChainId) {
 		bitcoinChainID = msg.ChainId
 	}
-	tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{
+	tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
 		BitcoinChainId: bitcoinChainID,
 	})
 	if err != nil {

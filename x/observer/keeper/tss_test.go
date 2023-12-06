@@ -1,19 +1,21 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func createTSS(keeper *Keeper, ctx sdk.Context, n int) []types.TSS {
+func createTSS(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.TSS {
 	tssList := make([]types.TSS, n)
 	for i := 0; i < n; i++ {
 		tss := types.TSS{
@@ -31,7 +33,7 @@ func createTSS(keeper *Keeper, ctx sdk.Context, n int) []types.TSS {
 }
 
 func TestTSSGet(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := keepertest.ObserverKeeper(t)
 	tssSaved := createTSS(keeper, ctx, 1)
 	tss, found := keeper.GetTSS(ctx)
 	assert.True(t, found)
@@ -39,7 +41,7 @@ func TestTSSGet(t *testing.T) {
 
 }
 func TestTSSRemove(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := keepertest.ObserverKeeper(t)
 	_ = createTSS(keeper, ctx, 1)
 	keeper.RemoveTSS(ctx)
 	_, found := keeper.GetTSS(ctx)
@@ -47,7 +49,7 @@ func TestTSSRemove(t *testing.T) {
 }
 
 func TestTSSQuerySingle(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createTSS(keeper, ctx, 1)
 	for _, tc := range []struct {
@@ -79,7 +81,7 @@ func TestTSSQuerySingle(t *testing.T) {
 }
 
 func TestTSSQueryHistory(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	keeper, ctx := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	for _, tc := range []struct {
 		desc          string

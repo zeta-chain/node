@@ -50,6 +50,8 @@ const (
 	BlockHeaderStateKey       = "BlockHeaderState-value-"
 
 	BallotListKey = "BallotList-value-"
+	TSSKey        = "TSS-value-"
+	TSSHistoryKey = "TSS-History-value-"
 )
 
 func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {
