@@ -242,7 +242,7 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []common.Ch
 			}
 		}
 
-		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain, Ascending)
+		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain.ChainId, Ascending)
 		if err != nil {
 			continue
 		}
