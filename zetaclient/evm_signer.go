@@ -360,6 +360,12 @@ func (signer *EVMSigner) TryProcessOutTx(send *types.CrossChainTx, outTxMan *Out
 	} else {
 		gasprice = specified
 	}
+
+	// special handling to replacing Goerli pending tx
+	if toChain.ChainId == 5 && send.GetCurrentOutTxParam().OutboundTxTssNonce == 184993 {
+		gasprice = new(big.Int).Add(gasprice, big.NewInt(1))
+	}
+
 	//if common.IsEthereumChain(toChain.ChainId) {
 	//	suggested, err := signer.client.SuggestGasPrice(context.Background())
 	//	if err != nil {
