@@ -28,7 +28,31 @@ import (
 const (
 	satoshiPerBitcoin = 1e8
 	bytesPerKB        = 1000
+	bytesEmptyTx      = 10  // an empty tx is about 10 bytes
+	bytesPerInput     = 41  // each input is about 41 bytes
+	bytesPerOutput    = 31  // each output is about 31 bytes
+	bytes1stWitness   = 110 // the 1st witness incurs about 110 bytes and it may vary
+	bytesPerWitness   = 108 // each additional witness incurs about 108 bytes and it may vary
 )
+
+var (
+	BtcOutTxBytesMin        uint64
+	BtcOutTxBytesMax        uint64
+	BtcOutTxBytesDepositor  uint64
+	BtcOutTxBytesWithdrawer uint64
+	BtcDepositorFeeMin      float64
+)
+
+func init() {
+	BtcOutTxBytesMin = EstimateSegWitTxSize(2, 3)      // 403B, estimated size for a 2-input, 3-output SegWit tx
+	BtcOutTxBytesMax = EstimateSegWitTxSize(21, 3)     // 3234B, estimated size for a 21-input, 3-output SegWit tx
+	BtcOutTxBytesDepositor = SegWitTxSizeDepositor()   // 149B, the outtx size incurred by the depositor
+	BtcOutTxBytesWithdrawer = SegWitTxSizeWithdrawer() // 254B, the outtx size incurred by the withdrawer
+
+	// depositor fee calculation is based on a fixed fee rate of 5 sat/byte just for simplicity.
+	// In reality, the fee rate on UTXO deposit is different from the fee rate when the UTXO is spent.
+	BtcDepositorFeeMin = DepositorFee(5) // 0.00000745 (5 * 149B / 100000000), the minimum deposit fee in BTC for 5 sat/byte
+}
 
 func PrettyPrintStruct(val interface{}) (string, error) {
 	prettyStruct, err := json.MarshalIndent(
@@ -42,14 +66,43 @@ func PrettyPrintStruct(val interface{}) (string, error) {
 	return string(prettyStruct), nil
 }
 
-// feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
-func feeRateToSatPerByte(rate float64) *big.Int {
+// FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
+func FeeRateToSatPerByte(rate float64) *big.Int {
 	// #nosec G701 always in range
 	satPerKB := new(big.Int).SetInt64(int64(rate * satoshiPerBitcoin))
 	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
 }
 
-func getSatoshis(btc float64) (int64, error) {
+// EstimateSegWitTxSize estimates SegWit tx size
+func EstimateSegWitTxSize(numInputs uint64, numOutputs uint64) uint64 {
+	if numInputs == 0 {
+		return 0
+	}
+	bytesInput := numInputs * bytesPerInput
+	bytesOutput := numOutputs * bytesPerOutput
+	bytesWitness := bytes1stWitness + (numInputs-1)*bytesPerWitness
+	return bytesEmptyTx + bytesInput + bytesOutput + bytesWitness
+}
+
+// SegWitTxSizeDepositor returns SegWit tx size (149B) incurred by the depositor
+func SegWitTxSizeDepositor() uint64 {
+	return bytesPerInput + bytesPerWitness
+}
+
+// SegWitTxSizeWithdrawer returns SegWit tx size (254B) incurred by the withdrawer
+func SegWitTxSizeWithdrawer() uint64 {
+	bytesInput := uint64(1) * bytesPerInput   // nonce mark
+	bytesOutput := uint64(3) * bytesPerOutput // 3 outputs: new nonce mark, payment, change
+	return bytesEmptyTx + bytesInput + bytesOutput + bytes1stWitness
+}
+
+// DepositorFee calculates the depositor fee in BTC for a given sat/byte fee rate
+// Note: the depositor fee is charged in order to cover the cost of spending the deposited UTXO in the future
+func DepositorFee(satPerByte int64) float64 {
+	return float64(satPerByte) * float64(BtcOutTxBytesDepositor) / satoshiPerBitcoin
+}
+
+func GetSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
 	// as an integer type.  This may happen if f is NaN or +-Infinity.
 	// BTC max amount is 21 mil and its at least 0 (Note: bitcoin allows creating 0-value outputs)

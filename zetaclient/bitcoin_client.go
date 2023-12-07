@@ -326,14 +326,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	if err != nil {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
-	if cnt < 0 || cnt >= math.MaxInt64 {
+	if cnt < 0 {
 		return fmt.Errorf("block count is out of range: %d", cnt)
 	}
 
 	// "confirmed" current block number
 	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
-	if confirmedBlockNum < 0 || confirmedBlockNum > math.MaxInt64 {
+	if confirmedBlockNum < 0 {
 		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
 	}
 	ob.SetLastBlockHeight(confirmedBlockNum)
@@ -543,7 +543,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if *feeResult.FeeRate > math.MaxInt64 {
 		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 	}
-	feeRatePerByte := feeRateToSatPerByte(*feeResult.FeeRate)
+	feeRatePerByte := FeeRateToSatPerByte(*feeResult.FeeRate)
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
@@ -650,7 +650,12 @@ func GetBtcEvent(
 			if wpkhAddress.EncodeAddress() != targetAddress {
 				return nil, err
 			}
-			value = out.Value
+			// deposit amount has to be no less than the minimum depositor fee
+			if out.Value < BtcDepositorFeeMin {
+				return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than minimum depositor fee %v", value, tx.Txid, BtcDepositorFeeMin)
+			}
+			value = out.Value - BtcDepositorFeeMin
+
 			out = tx.Vout[1]
 			script = out.ScriptPubKey.Hex
 			if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
@@ -666,7 +671,7 @@ func GetBtcEvent(
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
 					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
-				if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
+				if bytes.Equal(memoBytes, []byte(DonationMessage)) {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
@@ -674,10 +679,9 @@ func GetBtcEvent(
 				found = true
 			}
 		}
-
 	}
 	if found {
-		fmt.Println("found tx: ", tx.Txid)
+		logger.Info().Msgf("found bitcoin intx: %s", tx.Txid)
 		var fromAddress string
 		if len(tx.Vin) > 0 {
 			vin := tx.Vin[0]
@@ -771,7 +775,6 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	if err != nil {
 		return err
 	}
-	//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos in confirmation range [0, %d]", len(unspents), maxConfirmations)
 
 	// rigid sort to make utxo list deterministic
 	sort.SliceStable(utxos, func(i, j int) bool {
@@ -784,9 +787,17 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
+	// filter UTXOs big enough to cover the cost of spending themselves
+	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
+	for _, utxo := range utxos {
+		if utxo.Amount >= BtcDepositorFeeMin {
+			utxosFiltered = append(utxosFiltered, utxo)
+		}
+	}
+
 	ob.Mu.Lock()
-	ob.ts.SetNumberOfUTXOs(len(utxos))
-	ob.utxos = utxos
+	ob.ts.SetNumberOfUTXOs(len(utxosFiltered))
+	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil
 }
@@ -861,7 +872,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := common.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
-		sats, err := getSatoshis(utxo.Amount)
+		sats, err := GetSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
@@ -1182,7 +1193,7 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		amount, err := getSatoshis(vout.Value)
+		amount, err := GetSatoshis(vout.Value)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVout: error getting satoshis")
 		}
