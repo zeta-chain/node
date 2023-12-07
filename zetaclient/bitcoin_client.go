@@ -995,7 +995,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C():
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, Ascending)
 			if err != nil {
 				ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error GetAllOutTxTrackerByChain")
 				continue

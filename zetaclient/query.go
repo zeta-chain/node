@@ -334,10 +334,10 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order Order) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
-		Chain: chain.ChainId,
+		Chain: chainID,
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
