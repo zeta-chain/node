@@ -131,11 +131,13 @@ func (sm *SmokeTest) DepositBTC() {
 	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
 	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
 	fmt.Printf("Now sending two txs to TSS address...\n")
-	txHash1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 1.1, utxos[:2], btc)
+	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
+	txHash1, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, amount1, utxos[:2], btc)
 	if err != nil {
 		panic(err)
 	}
-	txHash2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, 0.05, utxos[2:4], btc)
+	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
+	txHash2, err := SendToTSSFromDeployerToDeposit(BTCTSSAddress, amount2, utxos[2:4], btc)
 	if err != nil {
 		panic(err)
 	}
