@@ -12,6 +12,7 @@ import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { CoreParamsList, Params } from "./params_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { TSS } from "./tss_pb.js";
+import type { TssFundMigratorInfo } from "./tss_funds_migrator_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.GenesisState
@@ -66,6 +67,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: repeated zetachain.zetacore.observer.TSS tss_history = 10;
    */
   tssHistory: TSS[];
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.TssFundMigratorInfo tss_fund_migrators = 11;
+   */
+  tssFundMigrators: TssFundMigratorInfo[];
 
   constructor(data?: PartialMessage<GenesisState>);
 

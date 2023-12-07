@@ -5,11 +5,8 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
@@ -19,31 +16,6 @@ func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 		Index:   index,
 		ChainId: r.Int63(),
 		Nonce:   r.Uint64(),
-	}
-}
-
-func TssPointer() *observertypes.TSS {
-	_, pubKey, _ := testdata.KeyTestPubAddr()
-	spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
-	if err != nil {
-		panic(err)
-	}
-	pk, err := common.NewPubKey(spk)
-	if err != nil {
-		panic(err)
-	}
-	pubkeyString := pk.String()
-	return &observertypes.TSS{
-		TssPubkey:           pubkeyString,
-		FinalizedZetaHeight: 1000,
-		KeyGenZetaHeight:    1000,
-	}
-}
-
-func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
-	r := newRandFromStringSeed(t, index)
-	return types.ZetaAccounting{
-		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
 	}
 }
 
@@ -148,5 +120,12 @@ func InTxHashToCctx(t *testing.T, inTxHash string) types.InTxHashToCctx {
 	return types.InTxHashToCctx{
 		InTxHash:  inTxHash,
 		CctxIndex: []string{StringRandom(r, 32), StringRandom(r, 32)},
+	}
+}
+
+func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
+	r := newRandFromStringSeed(t, index)
+	return types.ZetaAccounting{
+		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
 	}
 }

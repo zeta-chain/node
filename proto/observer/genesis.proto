@@ -9,6 +9,7 @@ import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
 import "observer/tss.proto";
+import "observer/tss_funds_migrator.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -23,4 +24,5 @@ message GenesisState {
   CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
   TSS tss = 9;
   repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
+  repeated TssFundMigratorInfo tss_fund_migrators = 11 [(gogoproto.nullable) = false];
 }

@@ -9,5 +9,6 @@ export * from "./node_account_pb";
 export * from "./observer_pb";
 export * from "./params_pb";
 export * from "./query_pb";
+export * from "./tss_funds_migrator_pb";
 export * from "./tss_pb";
 export * from "./tx_pb";
