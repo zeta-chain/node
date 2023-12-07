@@ -118,3 +118,10 @@ func Tss() types.TSS {
 		KeyGenZetaHeight:    1000,
 	}
 }
+
+func TssFundsMigrator(chainID int64) types.TssFundMigratorInfo {
+	return types.TssFundMigratorInfo{
+		ChainId:            chainID,
+		MigrationCctxIndex: "sampleIndex",
+	}
+}

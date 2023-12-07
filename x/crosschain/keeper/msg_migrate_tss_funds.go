@@ -14,59 +14,49 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateTssFunds) (*types.MsgMigrateTssFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observerTypes.Policy_Type_group2) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group2) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds while inbound is enabled")
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot migrate funds while inbound is enabled")
 	}
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find current TSS")
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot find current TSS")
 	}
 	tssHistory := k.zetaObserverKeeper.GetAllTSS(ctx)
 	sort.SliceStable(tssHistory, func(i, j int) bool {
-		return tssHistory[i].KeyGenZetaHeight < tssHistory[j].KeyGenZetaHeight
+		return tssHistory[i].FinalizedZetaHeight < tssHistory[j].FinalizedZetaHeight
 	})
 	if tss.TssPubkey == tssHistory[len(tssHistory)-1].TssPubkey {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "no new tss address has been generated")
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "no new tss address has been generated")
 	}
-	if tss.KeyGenZetaHeight >= tssHistory[len(tssHistory)-1].KeyGenZetaHeight {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "current tss is the latest")
+	// This check is to deal with an edge case where the current TSS is not part of the TSS history list at all
+	if tss.FinalizedZetaHeight >= tssHistory[len(tssHistory)-1].FinalizedZetaHeight {
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "current tss is the latest")
 	}
 	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
 	if !found {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot find pending nonces for chain")
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot find pending nonces for chain")
 	}
 	if pendingNonces.NonceLow != pendingNonces.NonceHigh {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot migrate funds when there are pending nonces")
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot migrate funds when there are pending nonces")
 	}
-	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss)
+	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss, tssHistory)
 	if err != nil {
-		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, err.Error())
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, err.Error())
 	}
 	return &types.MsgMigrateTssFundsResponse{}, nil
 }
 
-func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss observerTypes.TSS) error {
-	tssList := k.zetaObserverKeeper.GetAllTSS(ctx)
-	if len(tssList) < 2 {
-		return errorsmod.Wrap(types.ErrCannotMigrateTss, "only one TSS found")
-	}
-
-	// Sort tssList by FinalizedZetaHeight
-	sort.SliceStable(tssList, func(i, j int) bool {
-		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
-	})
-
+func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount sdkmath.Uint, currentTss observertypes.TSS, tssList []observertypes.TSS) error {
 	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
-
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
 		return types.ErrUnableToGetGasPrice
@@ -145,15 +135,31 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	}
 
 	if cctx.GetCurrentOutTxParam().Receiver == "" {
-		return errorsmod.Wrap(types.ErrCannotMigrateTss, fmt.Sprintf("chain %d is not supported", chainID))
+		return errorsmod.Wrap(types.ErrReceiverIsEmpty, fmt.Sprintf("chain %d is not supported", chainID))
 	}
 
 	err := k.UpdateNonce(ctx, chainID, &cctx)
 	if err != nil {
 		return err
 	}
+	// The migrate funds can be run again to update the migration cctx index if the migration fails
+	// This should be used after carefully calculating the amount again
+	existingMigrationInfo, found := k.zetaObserverKeeper.GetFundMigrator(ctx, chainID)
+	if found {
+		olderMigrationCctx, found := k.GetCrossChainTx(ctx, existingMigrationInfo.MigrationCctxIndex)
+		if !found {
+			return errorsmod.Wrapf(types.ErrCannotFindCctx, "cannot find existing migration cctx but migration info is present for chainID %d , migrator info : %s", chainID, existingMigrationInfo.String())
+		}
+		if olderMigrationCctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
+			return errorsmod.Wrapf(types.ErrUnsupportedStatus, "cannot migrate funds while there are pending migrations , migrator info :  %s", existingMigrationInfo.String())
+		}
+	}
 
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
+	k.zetaObserverKeeper.SetFundMigrator(ctx, observertypes.TssFundMigratorInfo{
+		ChainId:            chainID,
+		MigrationCctxIndex: index,
+	})
 	EmitEventInboundFinalized(ctx, &cctx)
 
 	return nil

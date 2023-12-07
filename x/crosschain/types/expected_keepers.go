@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type StakingKeeper interface {
@@ -45,36 +45,41 @@ type BankKeeper interface {
 }
 
 type ZetaObserverKeeper interface {
-	SetObserverMapper(ctx sdk.Context, om *zetaObserverTypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val zetaObserverTypes.ObserverMapper, found bool)
-	GetAllObserverMappers(ctx sdk.Context) (mappers []*zetaObserverTypes.ObserverMapper)
-	SetBallot(ctx sdk.Context, ballot *zetaObserverTypes.Ballot)
-	GetBallot(ctx sdk.Context, index string) (val zetaObserverTypes.Ballot, found bool)
-	GetAllBallots(ctx sdk.Context) (voters []*zetaObserverTypes.Ballot)
-	GetParams(ctx sdk.Context) (params zetaObserverTypes.Params)
-	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *zetaObserverTypes.CoreParams, found bool)
-	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount zetaObserverTypes.NodeAccount, found bool)
-	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []zetaObserverTypes.NodeAccount)
-	SetNodeAccount(ctx sdk.Context, nodeAccount zetaObserverTypes.NodeAccount)
+	SetObserverMapper(ctx sdk.Context, om *observertypes.ObserverMapper)
+	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val observertypes.ObserverMapper, found bool)
+	GetAllObserverMappers(ctx sdk.Context) (mappers []*observertypes.ObserverMapper)
+	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
+	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
+	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
+	GetParams(ctx sdk.Context) (params observertypes.Params)
+	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
+	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount observertypes.NodeAccount, found bool)
+	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []observertypes.NodeAccount)
+	SetNodeAccount(ctx sdk.Context, nodeAccount observertypes.NodeAccount)
 	IsInboundEnabled(ctx sdk.Context) (found bool)
-	GetCrosschainFlags(ctx sdk.Context) (val zetaObserverTypes.CrosschainFlags, found bool)
-	GetKeygen(ctx sdk.Context) (val zetaObserverTypes.Keygen, found bool)
-	SetKeygen(ctx sdk.Context, keygen zetaObserverTypes.Keygen)
-	SetCrosschainFlags(ctx sdk.Context, crosschainFlags zetaObserverTypes.CrosschainFlags)
-	SetLastObserverCount(ctx sdk.Context, lbc *zetaObserverTypes.LastObserverCount)
-	AddVoteToBallot(ctx sdk.Context, ballot zetaObserverTypes.Ballot, address string, observationType zetaObserverTypes.VoteType) (zetaObserverTypes.Ballot, error)
-	CheckIfFinalizingVote(ctx sdk.Context, ballot zetaObserverTypes.Ballot) (zetaObserverTypes.Ballot, bool)
+	GetCrosschainFlags(ctx sdk.Context) (val observertypes.CrosschainFlags, found bool)
+	GetKeygen(ctx sdk.Context) (val observertypes.Keygen, found bool)
+	SetKeygen(ctx sdk.Context, keygen observertypes.Keygen)
+	SetCrosschainFlags(ctx sdk.Context, crosschainFlags observertypes.CrosschainFlags)
+	SetLastObserverCount(ctx sdk.Context, lbc *observertypes.LastObserverCount)
+	AddVoteToBallot(ctx sdk.Context, ballot observertypes.Ballot, address string, observationType observertypes.VoteType) (observertypes.Ballot, error)
+	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool
-	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType zetaObserverTypes.ObservationType) (ballot zetaObserverTypes.Ballot, isNew bool, err error)
-	AddBallotToList(ctx sdk.Context, ballot zetaObserverTypes.Ballot)
+	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
+	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
-	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (zetaObserverTypes.TSS, bool)
-	GetPreviousTSS(ctx sdk.Context) (val zetaObserverTypes.TSS, found bool)
-	GetAllTSS(ctx sdk.Context) (list []zetaObserverTypes.TSS)
-	GetTSS(ctx sdk.Context) (val zetaObserverTypes.TSS, found bool)
-	SetTSS(ctx sdk.Context, tss zetaObserverTypes.TSS)
-	SetTSSHistory(ctx sdk.Context, tss zetaObserverTypes.TSS)
-	GetTssAddress(goCtx context.Context, req *zetaObserverTypes.QueryGetTssAddressRequest) (*zetaObserverTypes.QueryGetTssAddressResponse, error)
+	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (observertypes.TSS, bool)
+	GetPreviousTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
+	GetAllTSS(ctx sdk.Context) (list []observertypes.TSS)
+	GetTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
+	SetTSS(ctx sdk.Context, tss observertypes.TSS)
+	SetTSSHistory(ctx sdk.Context, tss observertypes.TSS)
+	GetTssAddress(goCtx context.Context, req *observertypes.QueryGetTssAddressRequest) (*observertypes.QueryGetTssAddressResponse, error)
+
+	SetFundMigrator(ctx sdk.Context, fm observertypes.TssFundMigratorInfo)
+	GetFundMigrator(ctx sdk.Context, chainID int64) (val observertypes.TssFundMigratorInfo, found bool)
+	GetAllTssFundMigrators(ctx sdk.Context) (fms []observertypes.TssFundMigratorInfo)
+	RemoveAllExistingMigrators(ctx sdk.Context)
 }
 
 type FungibleKeeper interface {

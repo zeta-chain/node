@@ -36,6 +36,7 @@ func TestGenesis(t *testing.T) {
 		Keygen:            sample.Keygen(t),
 		LastObserverCount: sample.LastObserverCount(1000),
 		CoreParamsList:    sample.CoreParamsList(),
+		TssFundMigrators:  []types.TssFundMigratorInfo{sample.TssFundsMigrator(1), sample.TssFundsMigrator(2)},
 	}
 
 	// Init and export

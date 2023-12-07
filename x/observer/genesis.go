@@ -90,6 +90,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetTSSHistory(ctx, elem)
 	}
 
+	for _, elem := range genState.TssFundMigrators {
+		k.SetFundMigrator(ctx, elem)
+	}
+
 }
 
 // ExportGenesis returns the observer module's exported genesis.
@@ -136,7 +140,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	tssHistory := k.GetAllTSS(ctx)
-
+	fundMigrators := k.GetAllTssFundMigrators(ctx)
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
@@ -148,5 +152,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		LastObserverCount: oc,
 		Tss:               tss,
 		TssHistory:        tssHistory,
+		TssFundMigrators:  fundMigrators,
 	}
 }

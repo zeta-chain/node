@@ -223,6 +223,26 @@ func (_m *CrosschainObserverKeeper) GetAllTSS(ctx types.Context) []observertypes
 	return r0
 }
 
+// GetAllTssFundMigrators provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetAllTssFundMigrators(ctx types.Context) []observertypes.TssFundMigratorInfo {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllTssFundMigrators")
+	}
+
+	var r0 []observertypes.TssFundMigratorInfo
+	if rf, ok := ret.Get(0).(func(types.Context) []observertypes.TssFundMigratorInfo); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.TssFundMigratorInfo)
+		}
+	}
+
+	return r0
+}
+
 // GetBallot provides a mock function with given fields: ctx, index
 func (_m *CrosschainObserverKeeper) GetBallot(ctx types.Context, index string) (observertypes.Ballot, bool) {
 	ret := _m.Called(ctx, index)
@@ -330,6 +350,34 @@ func (_m *CrosschainObserverKeeper) GetCrosschainFlags(ctx types.Context) (obser
 
 	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
 		r1 = rf(ctx)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetFundMigrator provides a mock function with given fields: ctx, chainID
+func (_m *CrosschainObserverKeeper) GetFundMigrator(ctx types.Context, chainID int64) (observertypes.TssFundMigratorInfo, bool) {
+	ret := _m.Called(ctx, chainID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFundMigrator")
+	}
+
+	var r0 observertypes.TssFundMigratorInfo
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, int64) (observertypes.TssFundMigratorInfo, bool)); ok {
+		return rf(ctx, chainID)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, int64) observertypes.TssFundMigratorInfo); ok {
+		r0 = rf(ctx, chainID)
+	} else {
+		r0 = ret.Get(0).(observertypes.TssFundMigratorInfo)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
+		r1 = rf(ctx, chainID)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -561,6 +609,11 @@ func (_m *CrosschainObserverKeeper) IsInboundEnabled(ctx types.Context) bool {
 	return r0
 }
 
+// RemoveAllExistingMigrators provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) RemoveAllExistingMigrators(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // SetBallot provides a mock function with given fields: ctx, ballot
 func (_m *CrosschainObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
 	_m.Called(ctx, ballot)
@@ -569,6 +622,11 @@ func (_m *CrosschainObserverKeeper) SetBallot(ctx types.Context, ballot *observe
 // SetCrosschainFlags provides a mock function with given fields: ctx, crosschainFlags
 func (_m *CrosschainObserverKeeper) SetCrosschainFlags(ctx types.Context, crosschainFlags observertypes.CrosschainFlags) {
 	_m.Called(ctx, crosschainFlags)
+}
+
+// SetFundMigrator provides a mock function with given fields: ctx, fm
+func (_m *CrosschainObserverKeeper) SetFundMigrator(ctx types.Context, fm observertypes.TssFundMigratorInfo) {
+	_m.Called(ctx, fm)
 }
 
 // SetKeygen provides a mock function with given fields: ctx, keygen
