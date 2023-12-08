@@ -1,13 +1,9 @@
 package keeper
 
 import (
-	"context"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // SetKeygen set keygen in the store
@@ -34,15 +30,4 @@ func (k Keeper) GetKeygen(ctx sdk.Context) (val types.Keygen, found bool) {
 func (k Keeper) RemoveKeygen(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.KeygenKey))
 	store.Delete([]byte{0})
-}
-
-// Query
-
-func (k Keeper) Keygen(c context.Context, _ *types.QueryGetKeygenRequest) (*types.QueryGetKeygenResponse, error) {
-	ctx := sdk.UnwrapSDKContext(c)
-	val, found := k.GetKeygen(ctx)
-	if !found {
-		return nil, status.Error(codes.InvalidArgument, "not found")
-	}
-	return &types.QueryGetKeygenResponse{Keygen: &val}, nil
 }

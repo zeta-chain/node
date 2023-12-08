@@ -20,6 +20,7 @@ message MsgAddToOutTxTracker {
 
 ## MsgAddToInTxTracker
 
+AddToInTxTracker adds a new record to the inbound transaction tracker.
 TODO https://github.com/zeta-chain/node/issues/1269
 
 ```proto
@@ -49,7 +50,7 @@ message MsgRemoveFromOutTxTracker {
 
 ## MsgGasPriceVoter
 
-Submit information about the connected chain's gas price at a specific block
+GasPriceVoter submits information about the connected chain's gas price at a specific block
 height. Gas price submitted by each validator is recorded separately and a
 median index is updated.
 
@@ -62,18 +63,6 @@ message MsgGasPriceVoter {
 	uint64 price = 3;
 	uint64 block_number = 4;
 	string supply = 5;
-}
-```
-
-## MsgNonceVoter
-
-Deprecated.
-
-```proto
-message MsgNonceVoter {
-	string creator = 1;
-	int64 chain_id = 2;
-	uint64 nonce = 3;
 }
 ```
 

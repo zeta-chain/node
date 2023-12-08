@@ -1,15 +1,12 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func GetObserverMapperIndex(chain *common.Chain) string {
@@ -81,46 +78,6 @@ func (k Keeper) GetAllObserverMappersForAddress(ctx sdk.Context, address string)
 		}
 	}
 	return
-}
-
-// Tx
-
-// AddObserver adds in a new observer to the store.It can be executed using an admin policy account
-// Once added, the function also resets keygen and pauses inbound so that a new TSS can be generated.
-
-//Queries
-
-func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserversByChainRequest) (*types.QueryObserversByChainResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO move parsing to client
-	// https://github.com/zeta-chain/node/issues/867
-
-	chainName := common.ParseChainName(req.ObservationChain)
-	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
-	if chain == nil {
-		return &types.QueryObserversByChainResponse{}, types.ErrSupportedChains
-	}
-	mapper, found := k.GetObserverMapper(ctx, chain)
-	if !found {
-		return &types.QueryObserversByChainResponse{}, types.ErrObserverNotPresent
-	}
-	return &types.QueryObserversByChainResponse{Observers: mapper.ObserverList}, nil
-}
-
-func (k Keeper) AllObserverMappers(goCtx context.Context, req *types.QueryAllObserverMappersRequest) (*types.QueryAllObserverMappersResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	mappers := k.GetAllObserverMappers(ctx)
-	return &types.QueryAllObserverMappersResponse{ObserverMappers: mappers}, nil
 }
 
 // Utils

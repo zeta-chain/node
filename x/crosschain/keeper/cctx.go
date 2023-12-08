@@ -98,8 +98,6 @@ func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
 	store.Delete(types.KeyPrefix(index))
 }
 
-// Queries
-
 func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender

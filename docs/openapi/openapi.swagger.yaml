@@ -50728,8 +50728,6 @@ definitions:
     type: object
   crosschainMsgMigrateTssFundsResponse:
     type: object
-  crosschainMsgNonceVoterResponse:
-    type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
   crosschainMsgUpdateTssAddressResponse:
