@@ -79,7 +79,7 @@ jobs:
 
   smoke-test:
     runs-on: ["zeta-runners"] # 25 minutes
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v3
 

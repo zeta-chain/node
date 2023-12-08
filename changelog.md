@@ -5,6 +5,7 @@
 ### Features
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+* enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
 
 ### Fixes
 * 6582f6b42f4f0eb0358e6fdefe5278295c791166 - masked zetaclient config at startup

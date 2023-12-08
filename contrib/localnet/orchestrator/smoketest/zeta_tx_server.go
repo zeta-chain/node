@@ -179,7 +179,7 @@ func newFactory(clientCtx client.Context) tx.Factory {
 		WithSignMode(signing.SignMode_SIGN_MODE_UNSPECIFIED).
 		WithAccountRetriever(clientCtx.AccountRetriever).
 		WithTxConfig(clientCtx.TxConfig).
-		WithFees("1000azeta")
+		WithFees("100000000000000000azeta")
 }
 
 type messageLog struct {
