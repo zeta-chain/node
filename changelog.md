@@ -22,8 +22,8 @@
 
 
 ### Refactoring
+* [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
-
 * [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
 * move tss state date from crosschain to observer

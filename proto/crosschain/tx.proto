@@ -13,15 +13,12 @@ service Msg {
   rpc RemoveFromOutTxTracker(MsgRemoveFromOutTxTracker) returns (MsgRemoveFromOutTxTrackerResponse);
 
   rpc GasPriceVoter(MsgGasPriceVoter) returns (MsgGasPriceVoterResponse);
-  rpc NonceVoter(MsgNonceVoter) returns (MsgNonceVoterResponse);
   rpc VoteOnObservedOutboundTx(MsgVoteOnObservedOutboundTx) returns (MsgVoteOnObservedOutboundTxResponse);
   rpc VoteOnObservedInboundTx(MsgVoteOnObservedInboundTx) returns (MsgVoteOnObservedInboundTxResponse);
   rpc WhitelistERC20(MsgWhitelistERC20) returns (MsgWhitelistERC20Response);
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
-
-  //  rpc ProveOutboundTx(MsgProveOutboundTx) returns (MsgProveOutboundTxResponse);
 }
 
 message MsgCreateTSSVoter {
@@ -108,14 +105,6 @@ message MsgGasPriceVoter {
 
 message MsgGasPriceVoterResponse {}
 
-message MsgNonceVoter {
-  string creator = 1;
-  int64 chain_id = 2;
-  uint64 nonce = 3;
-}
-
-message MsgNonceVoterResponse {}
-
 message MsgVoteOnObservedOutboundTx {
   string creator = 1;
   string cctx_hash = 2;
@@ -164,11 +153,3 @@ message MsgVoteOnObservedInboundTx {
 }
 
 message MsgVoteOnObservedInboundTxResponse {}
-
-message MsgSetNodeKeys {
-  string creator = 1;
-  common.PubKeySet pubkeySet = 2;
-  string tss_signer_Address = 3;
-}
-
-message MsgSetNodeKeysResponse {}

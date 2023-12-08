@@ -63,9 +63,11 @@ service Query {
   rpc NodeAccountAll(QueryAllNodeAccountRequest) returns (QueryAllNodeAccountResponse) {
     option (google.api.http).get = "/zeta-chain/observer/nodeAccount";
   }
+
   rpc CrosschainFlags(QueryGetCrosschainFlagsRequest) returns (QueryGetCrosschainFlagsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/crosschain_flags";
   }
+
   // Queries a keygen by index.
   rpc Keygen(QueryGetKeygenRequest) returns (QueryGetKeygenResponse) {
     option (google.api.http).get = "/zeta-chain/observer/keygen";

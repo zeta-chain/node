@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType, Proof, PubKeySet, ReceiveStatus } from "../common/common_pb.js";
+import type { CoinType, Proof, ReceiveStatus } from "../common/common_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
@@ -519,59 +519,6 @@ export declare class MsgGasPriceVoterResponse extends Message<MsgGasPriceVoterRe
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.MsgNonceVoter
- */
-export declare class MsgNonceVoter extends Message<MsgNonceVoter> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: int64 chain_id = 2;
-   */
-  chainId: bigint;
-
-  /**
-   * @generated from field: uint64 nonce = 3;
-   */
-  nonce: bigint;
-
-  constructor(data?: PartialMessage<MsgNonceVoter>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgNonceVoter";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgNonceVoter;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgNonceVoter;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgNonceVoter;
-
-  static equals(a: MsgNonceVoter | PlainMessage<MsgNonceVoter> | undefined, b: MsgNonceVoter | PlainMessage<MsgNonceVoter> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgNonceVoterResponse
- */
-export declare class MsgNonceVoterResponse extends Message<MsgNonceVoterResponse> {
-  constructor(data?: PartialMessage<MsgNonceVoterResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgNonceVoterResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgNonceVoterResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgNonceVoterResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgNonceVoterResponse;
-
-  static equals(a: MsgNonceVoterResponse | PlainMessage<MsgNonceVoterResponse> | undefined, b: MsgNonceVoterResponse | PlainMessage<MsgNonceVoterResponse> | undefined): boolean;
-}
-
-/**
  * @generated from message zetachain.zetacore.crosschain.MsgVoteOnObservedOutboundTx
  */
 export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObservedOutboundTx> {
@@ -781,58 +728,5 @@ export declare class MsgVoteOnObservedInboundTxResponse extends Message<MsgVoteO
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteOnObservedInboundTxResponse;
 
   static equals(a: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined, b: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgSetNodeKeys
- */
-export declare class MsgSetNodeKeys extends Message<MsgSetNodeKeys> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: common.PubKeySet pubkeySet = 2;
-   */
-  pubkeySet?: PubKeySet;
-
-  /**
-   * @generated from field: string tss_signer_Address = 3;
-   */
-  tssSignerAddress: string;
-
-  constructor(data?: PartialMessage<MsgSetNodeKeys>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgSetNodeKeys";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgSetNodeKeys;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgSetNodeKeys;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgSetNodeKeys;
-
-  static equals(a: MsgSetNodeKeys | PlainMessage<MsgSetNodeKeys> | undefined, b: MsgSetNodeKeys | PlainMessage<MsgSetNodeKeys> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgSetNodeKeysResponse
- */
-export declare class MsgSetNodeKeysResponse extends Message<MsgSetNodeKeysResponse> {
-  constructor(data?: PartialMessage<MsgSetNodeKeysResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgSetNodeKeysResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgSetNodeKeysResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgSetNodeKeysResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgSetNodeKeysResponse;
-
-  static equals(a: MsgSetNodeKeysResponse | PlainMessage<MsgSetNodeKeysResponse> | undefined, b: MsgSetNodeKeysResponse | PlainMessage<MsgSetNodeKeysResponse> | undefined): boolean;
 }
 
