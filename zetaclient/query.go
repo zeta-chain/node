@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -230,6 +231,25 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 		return 0, err
 	}
 	return resp.Height, nil
+}
+
+func (b *ZetaCoreBridge) GetBaseGasPrice() (int64, error) {
+	client := feemarkettypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Params(context.Background(), &feemarkettypes.QueryParamsRequest{})
+	if err != nil {
+		return 0, err
+	}
+	if resp.Params.BaseFee.IsNil() {
+		return 0, fmt.Errorf("base fee is nil")
+	}
+	return resp.Params.BaseFee.Int64(), nil
+}
+
+func (b *ZetaCoreBridge) GetBallotByID(id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	return client.BallotByIdentifier(context.Background(), &observertypes.QueryBallotByIdentifierRequest{
+		BallotIdentifier: id,
+	})
 }
 
 func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {

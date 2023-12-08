@@ -180,29 +180,29 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 	// Deploy new system contracts
 	res, err := zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgDeploySystemContracts(FungibleAdminAddress))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 	fmt.Println("System contracts deployed")
 
 	address, err := fetchAttribute(res, "system_contract")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
 	}
 
 	// set system contract
 	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, fungibletypes.NewMsgUpdateSystemContract(FungibleAdminAddress, address))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
 
 	// set uniswap contract addresses
 	UniswapV2FactoryAddr, err = fetchAttribute(res, "uniswap_v2_factory")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
 	}
 	UniswapV2RouterAddr, err = fetchAttribute(res, "uniswap_v2_router")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
 	}
 
 	// deploy eth zrc20
@@ -217,7 +217,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 		1000000,
 	))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
 
 	// deploy btc zrc20
@@ -232,7 +232,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 		1000000,
 	))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
 	// deploy usdt zrc20
@@ -247,13 +247,13 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 		1000000,
 	))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to deploy usdt zrc20: %s", err.Error())
 	}
 
 	// fetch the usdt zrc20 contract address and remove the quotes
 	address, err = fetchAttribute(res, "Contract")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch usdt zrc20 contract address: %s", err.Error())
 	}
 	if !ethcommon.IsHexAddress(address) {
 		return fmt.Errorf("invalid address in event: %s", address)
