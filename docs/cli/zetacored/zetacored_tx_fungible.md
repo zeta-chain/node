@@ -28,4 +28,8 @@ zetacored tx fungible [flags]
 * [zetacored tx fungible deploy-fungible-coin-zrc-4](zetacored_tx_fungible_deploy-fungible-coin-zrc-4.md)	 - Broadcast message DeployFungibleCoinZRC20
 * [zetacored tx fungible remove-foreign-coin](zetacored_tx_fungible_remove-foreign-coin.md)	 - Broadcast message RemoveForeignCoin
 * [zetacored tx fungible update-zrc20-liquidity-cap](zetacored_tx_fungible_update-zrc20-liquidity-cap.md)	 - Broadcast message UpdateZRC20LiquidityCap
+* [zetacored tx fungible update-zrc20-paused-status](zetacored_tx_fungible_update-zrc20-paused-status.md) - Broadcast message UpdateZRC20PausedStatus
+* [zetacored tx fungible update-contract-bytecode](zetacored_tx_fungible_update-contract-bytecode.md) - Broadcast message MsgUpdateContractBytecode
+* [zetacored tx fungible update-system-contract](zetacored_tx_fungible_update-system-contract.md) - Broadcast message UpdateSystemContract
+* [zetacored tx fungible update-zrc20-withdraw-fee](zetacored_tx_fungible_update-zrc20-withdraw-fee.md) - Broadcast message UpdateZRC20WithdrawFee
 
