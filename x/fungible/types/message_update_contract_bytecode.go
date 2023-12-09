@@ -13,12 +13,12 @@ const TypeMsgUpdateContractBytecode = "update_contract_bytecode"
 var _ sdk.Msg = &MsgUpdateContractBytecode{}
 
 func NewMsgUpdateContractBytecode(
-	creator string, contractAddress ethcommon.Address, newBytecodeAddress ethcommon.Address,
+	creator string, contractAddress string, newBytecodeAddress string,
 ) *MsgUpdateContractBytecode {
 	return &MsgUpdateContractBytecode{
 		Creator:            creator,
-		ContractAddress:    contractAddress.Hex(),
-		NewBytecodeAddress: newBytecodeAddress.Hex(),
+		ContractAddress:    contractAddress,
+		NewBytecodeAddress: newBytecodeAddress,
 	}
 }
 
@@ -46,6 +46,10 @@ func (msg *MsgUpdateContractBytecode) GetSignBytes() []byte {
 func (msg *MsgUpdateContractBytecode) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Creator); err != nil {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	if msg.ContractAddress == msg.NewBytecodeAddress {
+		return cosmoserror.Wrapf(sdkerrors.ErrInvalidRequest, "contract address and new bytecode address cannot be the same")
 	}
 
 	// check if the contract address is valid

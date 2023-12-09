@@ -8,11 +8,11 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func CmdUpdateSystemContract() *cobra.Command {
+func CmdUpdateContractBytecode() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-system-contract [contractAddress]",
-		Short: "Broadcast message UpdateSystemContract",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-contract-bytecode [contractAddress] [newBytecodeAddress]",
+		Short: "Broadcast message UpdateContractBytecode",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -21,9 +21,12 @@ func CmdUpdateSystemContract() *cobra.Command {
 
 			contractAddress := args[0]
 
-			msg := types.NewMsgUpdateSystemContract(
+			newBytecodeAddress := args[1]
+
+			msg := types.NewMsgUpdateContractBytecode(
 				clientCtx.GetFromAddress().String(),
 				contractAddress,
+				newBytecodeAddress,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

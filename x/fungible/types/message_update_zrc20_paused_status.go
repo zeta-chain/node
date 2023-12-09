@@ -55,10 +55,15 @@ func (msg *MsgUpdateZRC20PausedStatus) ValidateBasic() error {
 	}
 
 	// check if all zrc20 addresses are valid
+	found := make(map[string]bool)
 	for _, zrc20 := range msg.Zrc20Addresses {
 		if !ethcommon.IsHexAddress(zrc20) {
 			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid zrc20 contract address (%s)", zrc20)
 		}
+		if found[zrc20] {
+			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "duplicate zrc20 contract address (%s)", zrc20)
+		}
+		found[zrc20] = true
 	}
 	return nil
 }

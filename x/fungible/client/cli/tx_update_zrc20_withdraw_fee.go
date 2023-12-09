@@ -6,13 +6,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
+	sdkmath "cosmossdk.io/math"
 )
 
-func CmdUpdateSystemContract() *cobra.Command {
+func CmdUpdateZRC20WithdrawFee() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-system-contract [contractAddress]",
-		Short: "Broadcast message UpdateSystemContract",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-zrc20-withdraw-fee [contractAddress] [newWithdrawFee] [newGasLimit]",
+		Short: "Broadcast message UpdateZRC20WithdrawFee",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -21,9 +22,15 @@ func CmdUpdateSystemContract() *cobra.Command {
 
 			contractAddress := args[0]
 
-			msg := types.NewMsgUpdateSystemContract(
+			newWithdrawFee := sdkmath.NewUintFromString(args[1])
+
+			newGasLimit := sdkmath.NewUintFromString(args[2])
+			
+			msg := types.NewMsgUpdateZRC20WithdrawFee(
 				clientCtx.GetFromAddress().String(),
 				contractAddress,
+				newWithdrawFee,
+				newGasLimit,
 			)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

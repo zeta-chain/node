@@ -96,8 +96,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// update the bytecode
 		res, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			zrc20,
-			newCodeAddress,
+			zrc20.Hex(),
+			newCodeAddress.Hex(),
 		))
 		require.NoError(t, err)
 
@@ -137,8 +137,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NoError(t, err)
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			zrc20,
-			newCodeAddress,
+			zrc20.Hex(),
+			newCodeAddress.Hex(),
 		))
 		require.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
@@ -171,8 +171,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can update the bytecode of the new connector with the old connector contract
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			newConnector,
-			oldConnector,
+			newConnector.Hex(),
+			oldConnector.Hex(),
 		))
 		require.NoError(t, err)
 	})
@@ -183,8 +183,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			sample.AccAddress(),
-			sample.EthAddress(),
-			sample.EthAddress(),
+			sample.EthAddress().Hex(),
+			sample.EthAddress().Hex(),
 		))
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
@@ -222,8 +222,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			contractAddr,
-			sample.EthAddress(),
+			contractAddr.Hex(),
+			sample.EthAddress().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 
@@ -242,8 +242,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can't update the bytecode of the wzeta contract
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			wzeta,
-			sample.EthAddress(),
+			wzeta.Hex(),
+			sample.EthAddress().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrInvalidContract)
 	})
@@ -263,8 +263,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can't update the bytecode of the wzeta contract
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			connector,
-			sample.EthAddress(),
+			connector.Hex(),
+			sample.EthAddress().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
 	})
@@ -331,8 +331,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			contractAddr,
-			newBytecodeAddr,
+			contractAddr.Hex(),
+			newBytecodeAddr.Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 
@@ -376,8 +376,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			contractAddr,
-			newBytecodeAddr,
+			contractAddr.Hex(),
+			newBytecodeAddr.Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrSetBytecode)
 
