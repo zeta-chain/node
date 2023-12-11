@@ -26,7 +26,7 @@ type ZetaSupplyChecker struct {
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
-	dynamicTicker, err := NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15)
+	dynamicTicker, err := NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err
 	}
