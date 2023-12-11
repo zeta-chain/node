@@ -55,9 +55,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				common.CoinType(argCoinType),
 				argGasLimit,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

@@ -175,9 +175,7 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				argsAsset,
 				uint(argsEventIndex),
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -262,9 +260,7 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				outTxNonce,
 				argsCoinType,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

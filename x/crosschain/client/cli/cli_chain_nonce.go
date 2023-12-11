@@ -120,9 +120,7 @@ func CmdNonceVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgNonceVoter(clientCtx.GetFromAddress().String(), argsChain, argsNonce)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
