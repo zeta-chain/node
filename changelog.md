@@ -8,6 +8,7 @@
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
 
 ### Fixes
+* fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
 * 6582f6b42f4f0eb0358e6fdefe5278295c791166 - masked zetaclient config at startup
 * 1b8fdd3394c35afa47e830a5858b3c5c133fad8e - Added check for redeployment of gas and asset token contracts
 * [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest

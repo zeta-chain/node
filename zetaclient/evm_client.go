@@ -69,7 +69,7 @@ type EVMChainClient struct {
 	zetaClient                ZetaCoreBridger
 	Tss                       TSSSigner
 	lastBlockScanned          int64
-	lastBlock                 int64
+	lastBlock                 uint64
 	BlockTimeExternalChain    uint64 // block time in seconds
 	txWatchList               map[ethcommon.Hash]string
 	Mu                        *sync.Mutex
@@ -389,8 +389,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				receivedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReceived(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (outTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					// #nosec G701 checked in range
-					if int64(confHeight) < ob.GetLastBlockHeight() {
+					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 4 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -420,15 +419,13 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						return true, true, nil
 					}
-					// #nosec G701 always in range
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", confHeight-ob.GetLastBlockHeight(), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 				revertedLog, err := connector.ZetaConnectorNonEthFilterer.ParseZetaReverted(*vLog)
 				if err == nil {
 					logger.Info().Msgf("Found (revertTx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					// #nosec G701 checked in range
-					if int64(confHeight) < ob.GetLastBlockHeight() {
+					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						if len(vLog.Topics) != 3 {
 							logger.Error().Msgf("wrong number of topics in log %d", len(vLog.Topics))
@@ -457,8 +454,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						return true, true, nil
 					}
-					// #nosec G701 always in range
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", confHeight-ob.GetLastBlockHeight(), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
@@ -500,9 +496,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				}
 				if err == nil {
 					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
-					// #nosec G701 checked in range
-					if int64(confHeight) < ob.GetLastBlockHeight() {
-
+					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
 						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 							sendHash,
@@ -525,8 +519,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						return true, true, nil
 					}
-					// #nosec G701 always in range
-					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", int(vLog.BlockNumber+params.ConfirmationCount)-int(ob.GetLastBlockHeight()), ob.chain.String(), nonce)
+					logger.Info().Msgf("Included; %d blocks before confirmed! chain %s nonce %d", confHeight-ob.GetLastBlockHeight(), ob.chain.String(), nonce)
 					return true, false, nil
 				}
 			}
@@ -653,11 +646,11 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
+			logger.Warn().Err(err).Msgf("queryTxByHash: TransactionReceipt/TransactionByHash error, txHash %s nonce %d", txHash, nonce)
 		}
 		return nil, nil, err
 	}
-	transaction, _, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	transaction, isPending, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -665,14 +658,18 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
-	if confHeight < 0 || confHeight >= math.MaxInt64 {
-		return nil, nil, fmt.Errorf("confHeight is out of range")
+	if confHeight >= math.MaxInt64 {
+		return nil, nil, fmt.Errorf("queryTxByHash: confHeight is out of range")
 	}
 
-	// #nosec G701 checked in range
-	if int64(confHeight) > ob.GetLastBlockHeight() {
-		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
+	if confHeight > ob.GetLastBlockHeight() {
+		log.Info().Msgf("queryTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d", txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
+	}
+	// transaction must NOT be pending
+	if isPending {
+		log.Error().Msgf("queryTxByHash: confirmed but still pending: txHash %s nonce %d receipt block %d", txHash, nonce, receipt.BlockNumber)
+		return nil, nil, fmt.Errorf("confirmed but still pending")
 	}
 	return receipt, transaction, nil
 }
@@ -701,23 +698,17 @@ func (ob *EVMChainClient) GetLastBlockHeightScanned() int64 {
 	return height
 }
 
-// SetLastBlockHeight set external last block height (confirmed with confirmation count)
-func (ob *EVMChainClient) SetLastBlockHeight(block int64) {
-	if block < 0 {
-		panic("lastBlock is negative")
-	}
-	if block >= math.MaxInt64 {
+// SetLastBlockHeight set external last block height
+func (ob *EVMChainClient) SetLastBlockHeight(height uint64) {
+	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
-	atomic.StoreInt64(&ob.lastBlock, block)
+	atomic.StoreUint64(&ob.lastBlock, height)
 }
 
-// GetLastBlockHeight get external last block height (confirmed with confirmation count)
-func (ob *EVMChainClient) GetLastBlockHeight() int64 {
-	height := atomic.LoadInt64(&ob.lastBlock)
-	if height < 0 {
-		panic("lastBlock is negative")
-	}
+// GetLastBlockHeight get external last block height
+func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
+	height := atomic.LoadUint64(&ob.lastBlock)
 	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
@@ -791,10 +782,9 @@ func (ob *EVMChainClient) observeInTX() error {
 	if err != nil {
 		return err
 	}
-	// "confirmed" current block number
+	// update last block height
+	ob.SetLastBlockHeight(header.Number.Uint64())
 	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
-	// #nosec G701 always in range
-	ob.SetLastBlockHeight(int64(confirmedBlockNum))
 
 	crosschainFlags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
