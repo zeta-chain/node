@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
@@ -192,13 +191,13 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
+func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmservice.Block, error) {
 	client := tmservice.NewServiceClient(b.grpcConn)
 	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, err
 	}
-	return res.Block, nil
+	return res.SdkBlock, nil
 }
 
 func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {

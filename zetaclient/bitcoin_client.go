@@ -207,14 +207,11 @@ func (ob *BitcoinChainClient) Stop() {
 	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
-	if block < 0 {
+func (ob *BitcoinChainClient) SetLastBlockHeight(height int64) {
+	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
-	atomic.StoreInt64(&ob.lastBlock, block)
+	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
@@ -222,30 +219,22 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if height >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
 	return height
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeightScanned(block int64) {
-	if block < 0 {
+func (ob *BitcoinChainClient) SetLastBlockHeightScanned(height int64) {
+	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if block >= math.MaxInt64 {
-		panic("lastBlockScanned is too large")
-	}
-	atomic.StoreInt64(&ob.lastBlockScanned, block)
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), (block))
+	atomic.StoreInt64(&ob.lastBlockScanned, height)
+	// #nosec G701 checked as positive
+	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), uint64(height))
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeightScanned() int64 {
 	height := atomic.LoadInt64(&ob.lastBlockScanned)
 	if height < 0 {
 		panic("lastBlockScanned is negative")
-	}
-	if height >= math.MaxInt64 {
-		panic("lastBlockScanned is too large")
 	}
 	return height
 }
@@ -327,14 +316,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		return fmt.Errorf("error getting block count: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("block count is out of range: %d", cnt)
+		return fmt.Errorf("block count is negative: %d", cnt)
 	}
 
 	// "confirmed" current block number
 	// #nosec G701 always in range
 	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
 	if confirmedBlockNum < 0 {
-		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
+		return fmt.Errorf("skipping observer , current block number %d is too small", cnt)
 	}
 	ob.SetLastBlockHeight(confirmedBlockNum)
 
@@ -346,9 +335,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
-	lastBN := ob.GetLastBlockHeightScanned()
-
 	// query incoming gas asset
+	lastBN := ob.GetLastBlockHeightScanned()
 	if confirmedBlockNum > lastBN {
 		bn := lastBN + 1
 		res, err := ob.GetBlockByNumberCached(bn)
@@ -397,7 +385,8 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 		// Save LastBlockHeight
 		ob.SetLastBlockHeightScanned(bn)
-		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())).Error; err != nil {
+		// #nosec G701 always positive
+		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(uint64(ob.GetLastBlockHeightScanned()))).Error; err != nil {
 			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
 		}
 	}
@@ -1269,10 +1258,12 @@ func (ob *BitcoinChainClient) LoadLastBlock() error {
 		ob.logger.ChainLogger.Info().Msg("LastBlockNum not found in DB, scan from latest")
 		ob.SetLastBlockHeightScanned(bn)
 	} else {
-		ob.SetLastBlockHeightScanned(lastBlockNum.Num)
+		// #nosec G701 always in range
+		lastBN := int64(lastBlockNum.Num)
+		ob.SetLastBlockHeightScanned(lastBN)
 
 		//If persisted block number is too low, use the latest height
-		if (bn - lastBlockNum.Num) > maxHeightDiff {
+		if (bn - lastBN) > maxHeightDiff {
 			ob.logger.ChainLogger.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
 			ob.SetLastBlockHeightScanned(bn)
 		}

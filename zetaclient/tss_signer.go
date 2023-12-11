@@ -340,7 +340,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 					return [][65]byte{}, fmt.Errorf("signuature verification fail")
 				}
 				compressedPubkey := crypto.CompressPubkey(sigPublicKey)
-				if bytes.Compare(pubkey.Bytes(), compressedPubkey) != 0 {
+				if !bytes.Equal(pubkey.Bytes(), compressedPubkey) {
 					log.Warn().Msgf("%d-th pubkey %s recovered pubkey %s", j, pubkey.String(), hex.EncodeToString(compressedPubkey))
 					return [][65]byte{}, fmt.Errorf("signuature verification fail")
 				}
@@ -577,7 +577,7 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	}
 	compressedPubkey := crypto.CompressPubkey(sigPublicKey)
 	log.Info().Msgf("pubkey %s recovered pubkey %s", pubkey.String(), hex.EncodeToString(compressedPubkey))
-	return bytes.Compare(pubkey.Bytes(), compressedPubkey) == 0
+	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
 }
 
 func combineDigests(digestList []string) []byte {

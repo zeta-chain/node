@@ -164,9 +164,11 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	redeemTx.AddTxOut(txOut)
 	txSigHashes := txscript.NewTxSigHashes(redeemTx)
 	pkScript, err = payToWitnessPubKeyHashScript(addr.WitnessProgram())
+	c.Assert(err, IsNil)
 
 	{
 		txWitness, err := txscript.WitnessSignature(redeemTx, txSigHashes, 0, 100000000, pkScript, txscript.SigHashAll, privKey, true)
+		c.Assert(err, IsNil)
 		redeemTx.TxIn[0].Witness = txWitness
 		// Prove that the transaction has been validly signed by executing the
 		// script pair.
@@ -185,6 +187,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 		witnessHash, err := txscript.CalcWitnessSigHash(pkScript, txSigHashes, txscript.SigHashAll, redeemTx, 0, 100000000)
 		c.Assert(err, IsNil)
 		sig, err := privKey.Sign(witnessHash)
+		c.Assert(err, IsNil)
 		txWitness := wire.TxWitness{append(sig.Serialize(), byte(txscript.SigHashAll)), pubKeyHash}
 		redeemTx.TxIn[0].Witness = txWitness
 

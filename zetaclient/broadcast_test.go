@@ -8,7 +8,6 @@ import (
 )
 
 type BcastSuite struct {
-	bridge *ZetaCoreBridge
 }
 
 var _ = Suite(&BcastSuite{})
