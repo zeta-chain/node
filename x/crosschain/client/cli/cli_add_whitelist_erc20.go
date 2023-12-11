@@ -49,10 +49,6 @@ func CmdAddWhiteListERC20() *cobra.Command {
 				gasLimit,
 			)
 
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
