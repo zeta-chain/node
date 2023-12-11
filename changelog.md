@@ -17,8 +17,8 @@
 * [1406](https://github.com/zeta-chain/node/pull/1406) - improve log prints and speed up evm outtx inclusion
 * fix Athens-3 issue - include bitcoin outtx regardless of the cctx status
 * add check to verify new tss has been produced when triggering tss funds migration
-
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
+* fix docker build issues with version: golang:1.20-alpine3.18
 
 
 ### Refactoring
