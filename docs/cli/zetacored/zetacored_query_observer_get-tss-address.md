@@ -1,9 +1,9 @@
-# query crosschain get-tss-address
+# query observer get-tss-address
 
 Query current tss address
 
 ```
-zetacored query crosschain get-tss-address [tss-pubkey] [flags]
+zetacored query observer get-tss-address [tss-pubkey] [flags]
 ```
 
 ### Options
@@ -29,5 +29,5 @@ zetacored query crosschain get-tss-address [tss-pubkey] [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 

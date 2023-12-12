@@ -40,6 +40,9 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdBlameByIdentifier(),
 		CmdGetAllBlameRecords(),
 		CmdGetBlameByChainAndNonce(),
+		CmdGetTssAddress(),
+		CmdListTssHistory(),
+		CmdShowTSS(),
 	)
 
 	return cmd
