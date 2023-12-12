@@ -25,7 +25,6 @@ zetacored query crosschain [flags]
 ### SEE ALSO
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
-* [zetacored query crosschain get-tss-address](zetacored_query_crosschain_get-tss-address.md)	 - Query current tss address
 * [zetacored query crosschain get-zeta-accounting](zetacored_query_crosschain_get-zeta-accounting.md)	 - Query zeta accounting
 * [zetacored query crosschain in-tx-hash-to-cctx-data](zetacored_query_crosschain_in-tx-hash-to-cctx-data.md)	 - query a cctx data from a in tx hash
 * [zetacored query crosschain last-zeta-height](zetacored_query_crosschain_last-zeta-height.md)	 - Query last Zeta Height
@@ -38,12 +37,10 @@ zetacored query crosschain [flags]
 * [zetacored query crosschain list-out-tx-tracker](zetacored_query_crosschain_list-out-tx-tracker.md)	 - list all OutTxTracker
 * [zetacored query crosschain list-pending-cctx](zetacored_query_crosschain_list-pending-cctx.md)	 - shows pending CCTX
 * [zetacored query crosschain list-pending-nonces](zetacored_query_crosschain_list-pending-nonces.md)	 - shows a chainNonces
-* [zetacored query crosschain list-tss-history](zetacored_query_crosschain_list-tss-history.md)	 - show historical list of TSS
 * [zetacored query crosschain params](zetacored_query_crosschain_params.md)	 - shows the parameters of the module
 * [zetacored query crosschain show-cctx](zetacored_query_crosschain_show-cctx.md)	 - shows a CCTX
 * [zetacored query crosschain show-chain-nonces](zetacored_query_crosschain_show-chain-nonces.md)	 - shows a chainNonces
 * [zetacored query crosschain show-gas-price](zetacored_query_crosschain_show-gas-price.md)	 - shows a gasPrice
 * [zetacored query crosschain show-in-tx-hash-to-cctx](zetacored_query_crosschain_show-in-tx-hash-to-cctx.md)	 - shows a inTxHashToCctx
 * [zetacored query crosschain show-out-tx-tracker](zetacored_query_crosschain_show-out-tx-tracker.md)	 - shows a OutTxTracker
-* [zetacored query crosschain show-tss](zetacored_query_crosschain_show-tss.md)	 - shows a TSS
 

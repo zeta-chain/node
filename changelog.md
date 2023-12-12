@@ -29,6 +29,7 @@
 * [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
 * move tss state date from crosschain to observer
+* move tss related cli from crosschain to observer
 ### Chores
 
 ### Tests
