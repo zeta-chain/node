@@ -6,12 +6,12 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { TSS } from "./tss_pb.js";
+import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { BlockHeader, Chain, Proof } from "../common/common_pb.js";
 import type { CoreParams, CoreParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType, ObserverMapper } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
-import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
@@ -65,11 +65,6 @@ export declare class QueryGetTSSResponse extends Message<QueryGetTSSResponse> {
  */
 export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddressRequest> {
   /**
-   * @generated from field: string tss_pub_key = 1;
-   */
-  tssPubKey: string;
-
-  /**
    * @generated from field: int64 bitcoin_chain_id = 2;
    */
   bitcoinChainId: bigint;
@@ -119,9 +114,72 @@ export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddre
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightRequest
+ */
+export declare class QueryGetTssAddressByFinalizedHeightRequest extends Message<QueryGetTssAddressByFinalizedHeightRequest> {
+  /**
+   * @generated from field: int64 finalized_zeta_height = 1;
+   */
+  finalizedZetaHeight: bigint;
+
+  /**
+   * @generated from field: int64 bitcoin_chain_id = 2;
+   */
+  bitcoinChainId: bigint;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressByFinalizedHeightRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static equals(a: QueryGetTssAddressByFinalizedHeightRequest | PlainMessage<QueryGetTssAddressByFinalizedHeightRequest> | undefined, b: QueryGetTssAddressByFinalizedHeightRequest | PlainMessage<QueryGetTssAddressByFinalizedHeightRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse
+ */
+export declare class QueryGetTssAddressByFinalizedHeightResponse extends Message<QueryGetTssAddressByFinalizedHeightResponse> {
+  /**
+   * @generated from field: string eth = 1;
+   */
+  eth: string;
+
+  /**
+   * @generated from field: string btc = 2;
+   */
+  btc: string;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressByFinalizedHeightResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static equals(a: QueryGetTssAddressByFinalizedHeightResponse | PlainMessage<QueryGetTssAddressByFinalizedHeightResponse> | undefined, b: QueryGetTssAddressByFinalizedHeightResponse | PlainMessage<QueryGetTssAddressByFinalizedHeightResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.QueryTssHistoryRequest
  */
 export declare class QueryTssHistoryRequest extends Message<QueryTssHistoryRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
   constructor(data?: PartialMessage<QueryTssHistoryRequest>);
 
   static readonly runtime: typeof proto3;
@@ -145,6 +203,11 @@ export declare class QueryTssHistoryResponse extends Message<QueryTssHistoryResp
    * @generated from field: repeated zetachain.zetacore.observer.TSS tss_list = 1;
    */
   tssList: TSS[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
 
   constructor(data?: PartialMessage<QueryTssHistoryResponse>);
 
@@ -928,6 +991,11 @@ export declare class QueryBlameByIdentifierResponse extends Message<QueryBlameBy
  * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsRequest
  */
 export declare class QueryAllBlameRecordsRequest extends Message<QueryAllBlameRecordsRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
   constructor(data?: PartialMessage<QueryAllBlameRecordsRequest>);
 
   static readonly runtime: typeof proto3;
@@ -951,6 +1019,11 @@ export declare class QueryAllBlameRecordsResponse extends Message<QueryAllBlameR
    * @generated from field: repeated zetachain.zetacore.observer.Blame blame_info = 1;
    */
   blameInfo: Blame[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
 
   constructor(data?: PartialMessage<QueryAllBlameRecordsResponse>);
 

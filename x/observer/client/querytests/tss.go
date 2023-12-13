@@ -43,7 +43,7 @@ func (s *CliTestSuite) TestShowTSS() {
 				var resp types.QueryGetTSSResponse
 				s.Require().NoError(s.network.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 				s.Require().NotNil(resp.TSS)
-				s.Require().Equal(tc.obj, resp.TSS)
+				s.Require().Equal(*tc.obj, resp.TSS)
 			}
 		})
 	}

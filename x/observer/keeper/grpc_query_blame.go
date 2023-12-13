@@ -29,13 +29,14 @@ func (k Keeper) GetAllBlameRecords(goCtx context.Context, request *types.QueryAl
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	blameRecords, found := k.GetAllBlame(ctx)
-	if !found {
-		return nil, status.Error(codes.NotFound, "blame info not found")
+	blameRecords, pageRes, err := k.GetAllBlamePaginated(ctx, request.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryAllBlameRecordsResponse{
-		BlameInfo: blameRecords,
+		BlameInfo:  blameRecords,
+		Pagination: pageRes,
 	}, nil
 }
 

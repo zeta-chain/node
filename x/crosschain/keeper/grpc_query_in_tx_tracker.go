@@ -20,9 +20,12 @@ func (k Keeper) InTxTrackerAllByChain(goCtx context.Context, request *types.Quer
 	return &types.QueryAllInTxTrackerByChainResponse{InTxTracker: inTxTrackers, Pagination: pageRes}, nil
 }
 
-func (k Keeper) InTxTrackerAll(goCtx context.Context, _ *types.QueryAllInTxTrackersRequest) (*types.QueryAllInTxTrackersResponse, error) {
+func (k Keeper) InTxTrackerAll(goCtx context.Context, req *types.QueryAllInTxTrackersRequest) (*types.QueryAllInTxTrackersResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	var inTxTrackers []types.InTxTracker
-	inTxTrackers = k.GetAllInTxTracker(ctx)
-	return &types.QueryAllInTxTrackersResponse{InTxTracker: inTxTrackers}, nil
+	inTxTrackers, pageRes, err := k.GetAllInTxTrackerPaginated(ctx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryAllInTxTrackersResponse{InTxTracker: inTxTrackers, Pagination: pageRes}, nil
 }

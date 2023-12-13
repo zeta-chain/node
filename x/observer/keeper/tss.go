@@ -6,6 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -27,6 +28,23 @@ func (k Keeper) SetTSSHistory(ctx sdk.Context, tss types.TSS) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
 	b := k.cdc.MustMarshal(&tss)
 	store.Set(types.KeyPrefix(fmt.Sprintf("%d", tss.FinalizedZetaHeight)), b)
+}
+
+// GetHistoricalTssByFinalizedHeight Returns the TSS address the specified finalized zeta height
+// Finalized zeta height is the zeta block height at which the voting for the generation of a new TSS is finalized
+func (k Keeper) GetHistoricalTssByFinalizedHeight(ctx sdk.Context, finalizedZetaHeight int64) (types.TSS, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
+	b := store.Get(types.KeyPrefix(fmt.Sprintf("%d", finalizedZetaHeight)))
+	if b == nil {
+		return types.TSS{}, false
+	}
+	var tss types.TSS
+	err := k.cdc.Unmarshal(b, &tss)
+	if err != nil {
+		return types.TSS{}, false
+	}
+	return tss, true
+
 }
 
 // GetTSS returns the current tss information
@@ -58,6 +76,19 @@ func (k Keeper) GetAllTSS(ctx sdk.Context) (list []types.TSS) {
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
 		list = append(list, val)
 	}
+	return
+}
+
+func (k Keeper) GetAllTSSPaginated(ctx sdk.Context, pagination *query.PageRequest) (list []types.TSS, pageRes *query.PageResponse, err error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TSSHistoryKey))
+	pageRes, err = query.Paginate(store, pagination, func(key []byte, value []byte) error {
+		var tss types.TSS
+		if err := k.cdc.Unmarshal(value, &tss); err != nil {
+			return err
+		}
+		list = append(list, tss)
+		return nil
+	})
 	return
 }
 

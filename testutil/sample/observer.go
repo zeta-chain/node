@@ -1,6 +1,7 @@
 package sample
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -119,9 +120,35 @@ func Tss() types.TSS {
 	}
 }
 
+func TssList(n int) (tssList []types.TSS) {
+	for i := 0; i < n; i++ {
+		tss := Tss()
+		tss.FinalizedZetaHeight = tss.FinalizedZetaHeight + int64(i)
+		tss.KeyGenZetaHeight = tss.KeyGenZetaHeight + int64(i)
+		tssList = append(tssList, tss)
+	}
+	return
+}
+
 func TssFundsMigrator(chainID int64) types.TssFundMigratorInfo {
 	return types.TssFundMigratorInfo{
 		ChainId:            chainID,
 		MigrationCctxIndex: "sampleIndex",
 	}
+}
+
+func BlameRecord(t *testing.T, index string) types.Blame {
+	r := newRandFromStringSeed(t, index)
+	return types.Blame{
+		Index:         fmt.Sprintf("%d-%s", r.Int63(), index),
+		FailureReason: "sample failure reason",
+		Nodes:         nil,
+	}
+}
+func BlameRecordsList(t *testing.T, n int) []types.Blame {
+	blameList := make([]types.Blame, n)
+	for i := 0; i < n; i++ {
+		blameList[i] = BlameRecord(t, fmt.Sprintf("%d", i))
+	}
+	return blameList
 }

@@ -245,7 +245,7 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 
 func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	zetaBlame := &observerTypes.Blame{
+	zetaBlame := observerTypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
 		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),

@@ -299,11 +299,11 @@ func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTx
 	return resp.InTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetCurrentTss() (*observertypes.TSS, error) {
+func (b *ZetaCoreBridge) GetCurrentTss() (observertypes.TSS, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.TSS(context.Background(), &observertypes.QueryGetTSSRequest{})
 	if err != nil {
-		return nil, err
+		return observertypes.TSS{}, err
 	}
 	return resp.TSS, nil
 }

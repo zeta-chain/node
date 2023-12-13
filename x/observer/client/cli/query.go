@@ -43,6 +43,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdGetTssAddress(),
 		CmdListTssHistory(),
 		CmdShowTSS(),
+		CmdGetTssAddressByFinalizedZetaHeight(),
 	)
 
 	return cmd

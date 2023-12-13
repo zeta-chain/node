@@ -25,6 +25,7 @@ zetacored query observer [flags]
 ### SEE ALSO
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
+* [zetacored query observer get-historical-tss-address](zetacored_query_observer_get-historical-tss-address.md)	 - Query tss address by finalized zeta height (for historical tss addresses)
 * [zetacored query observer get-tss-address](zetacored_query_observer_get-tss-address.md)	 - Query current tss address
 * [zetacored query observer list-blame](zetacored_query_observer_list-blame.md)	 - Query AllBlameRecords
 * [zetacored query observer list-blame-by-msg](zetacored_query_observer_list-blame-by-msg.md)	 - Query AllBlameRecords
