@@ -119,13 +119,9 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/cctx";
   }
 
-  // Queries a list of send items.
-  rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
+  // Queries a list of pending cctxs.
+  rpc CctxListPending(QueryListCctxPendingRequest) returns (QueryListCctxPendingResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
-  }
-
-  rpc CctxByStatus(QueryCctxByStatusRequest) returns (QueryCctxByStatusResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/cctxbyStatus/{status}";
   }
 
   rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
@@ -142,13 +138,6 @@ message QueryZetaAccountingRequest {}
 
 message QueryZetaAccountingResponse {
   string aborted_zeta_amount = 1;
-}
-
-message QueryCctxByStatusRequest {
-  CctxStatus status = 1;
-}
-message QueryCctxByStatusResponse {
-  repeated CrossChainTx CrossChainTx = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -315,14 +304,14 @@ message QueryAllCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllCctxPendingRequest {
+message QueryListCctxPendingRequest {
   int64 chain_id = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  uint32 limit = 2;
 }
 
-message QueryAllCctxPendingResponse {
+message QueryListCctxPendingResponse {
   repeated CrossChainTx CrossChainTx = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  uint64 totalPending = 2;
 }
 
 message QueryLastZetaHeightRequest {}

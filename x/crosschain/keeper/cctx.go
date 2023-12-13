@@ -53,11 +53,11 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 }
 
 // SetCrossChainTx set a specific send in the store from its index
-func (k Keeper) SetCrossChainTx(ctx sdk.Context, send types.CrossChainTx) {
+func (k Keeper) SetCrossChainTx(ctx sdk.Context, cctx types.CrossChainTx) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-	b := k.cdc.MustMarshal(&send)
-	store.Set(types.KeyPrefix(send.Index), b)
+	b := k.cdc.MustMarshal(&cctx)
+	store.Set(types.KeyPrefix(cctx.Index), b)
 }
 
 // GetCrossChainTx returns a send from its index

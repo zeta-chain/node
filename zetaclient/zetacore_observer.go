@@ -140,9 +140,9 @@ func (co *CoreObserver) startCctxScheduler() {
 						}
 						signer := co.signerMap[c]
 
-						cctxList, err := co.bridge.GetAllPendingCctx(c.ChainId)
+						cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
 						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: GetAllPendingCctx failed for chain %d", c.ChainId)
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
 							continue
 						}
 						ob, err := co.getUpdatedChainOb(c.ChainId)
@@ -155,7 +155,7 @@ func (co *CoreObserver) startCctxScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: failed to get prometheus gauge: %s for chain %d", metrics.PendingTxs, c.ChainId)
 							continue
 						}
-						gauge.Set(float64(len(cctxList)))
+						gauge.Set(float64(totalPending))
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)

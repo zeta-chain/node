@@ -5,12 +5,12 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CctxStatus, CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
+import type { CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PendingNonces } from "./nonce_to_cctx_pb.js";
@@ -57,54 +57,6 @@ export declare class QueryZetaAccountingResponse extends Message<QueryZetaAccoun
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryZetaAccountingResponse;
 
   static equals(a: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined, b: QueryZetaAccountingResponse | PlainMessage<QueryZetaAccountingResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusRequest
- */
-export declare class QueryCctxByStatusRequest extends Message<QueryCctxByStatusRequest> {
-  /**
-   * @generated from field: zetachain.zetacore.crosschain.CctxStatus status = 1;
-   */
-  status: CctxStatus;
-
-  constructor(data?: PartialMessage<QueryCctxByStatusRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryCctxByStatusRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCctxByStatusRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCctxByStatusRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCctxByStatusRequest;
-
-  static equals(a: QueryCctxByStatusRequest | PlainMessage<QueryCctxByStatusRequest> | undefined, b: QueryCctxByStatusRequest | PlainMessage<QueryCctxByStatusRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.QueryCctxByStatusResponse
- */
-export declare class QueryCctxByStatusResponse extends Message<QueryCctxByStatusResponse> {
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTx = 1;
-   */
-  CrossChainTx: CrossChainTx[];
-
-  constructor(data?: PartialMessage<QueryCctxByStatusResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryCctxByStatusResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCctxByStatusResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCctxByStatusResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCctxByStatusResponse;
-
-  static equals(a: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined, b: QueryCctxByStatusResponse | PlainMessage<QueryCctxByStatusResponse> | undefined): boolean;
 }
 
 /**
@@ -1095,61 +1047,61 @@ export declare class QueryAllCctxResponse extends Message<QueryAllCctxResponse> 
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryAllCctxPendingRequest
+ * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingRequest
  */
-export declare class QueryAllCctxPendingRequest extends Message<QueryAllCctxPendingRequest> {
+export declare class QueryListCctxPendingRequest extends Message<QueryListCctxPendingRequest> {
   /**
    * @generated from field: int64 chain_id = 1;
    */
   chainId: bigint;
 
   /**
-   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 2;
+   * @generated from field: uint32 limit = 2;
    */
-  pagination?: PageRequest;
+  limit: number;
 
-  constructor(data?: PartialMessage<QueryAllCctxPendingRequest>);
+  constructor(data?: PartialMessage<QueryListCctxPendingRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAllCctxPendingRequest";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllCctxPendingRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllCctxPendingRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllCctxPendingRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingRequest;
 
-  static equals(a: QueryAllCctxPendingRequest | PlainMessage<QueryAllCctxPendingRequest> | undefined, b: QueryAllCctxPendingRequest | PlainMessage<QueryAllCctxPendingRequest> | undefined): boolean;
+  static equals(a: QueryListCctxPendingRequest | PlainMessage<QueryListCctxPendingRequest> | undefined, b: QueryListCctxPendingRequest | PlainMessage<QueryListCctxPendingRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.crosschain.QueryAllCctxPendingResponse
+ * @generated from message zetachain.zetacore.crosschain.QueryListCctxPendingResponse
  */
-export declare class QueryAllCctxPendingResponse extends Message<QueryAllCctxPendingResponse> {
+export declare class QueryListCctxPendingResponse extends Message<QueryListCctxPendingResponse> {
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTx = 1;
    */
   CrossChainTx: CrossChainTx[];
 
   /**
-   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   * @generated from field: uint64 totalPending = 2;
    */
-  pagination?: PageResponse;
+  totalPending: bigint;
 
-  constructor(data?: PartialMessage<QueryAllCctxPendingResponse>);
+  constructor(data?: PartialMessage<QueryListCctxPendingResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.QueryAllCctxPendingResponse";
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryListCctxPendingResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllCctxPendingResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryListCctxPendingResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllCctxPendingResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryListCctxPendingResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllCctxPendingResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryListCctxPendingResponse;
 
-  static equals(a: QueryAllCctxPendingResponse | PlainMessage<QueryAllCctxPendingResponse> | undefined, b: QueryAllCctxPendingResponse | PlainMessage<QueryAllCctxPendingResponse> | undefined): boolean;
+  static equals(a: QueryListCctxPendingResponse | PlainMessage<QueryListCctxPendingResponse> | undefined, b: QueryListCctxPendingResponse | PlainMessage<QueryListCctxPendingResponse> | undefined): boolean;
 }
 
 /**

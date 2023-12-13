@@ -17,6 +17,9 @@ message GasPriceIncreaseFlags {
   // Maximum gas price increase in percent of the median gas price
   // Default is used if 0
   uint32 gasPriceIncreaseMax = 4;
+
+  // Maximum number of pending crosschain transactions to check for gas price increase
+  uint32 maxPendingCctxs = 5;
 }
 message BlockHeaderVerificationFlags {
   bool isEthTypeChainEnabled = 1;
