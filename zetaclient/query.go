@@ -126,23 +126,17 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return nil, err
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx, error) {
+// ListPendingCctx returns a list of pending cctxs for a given chainID
+// the returned list has a limited size of crosschainkeeper.MaxPendingCctxs
+// the total number of pending cctxs is returned
+func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	resp, err := client.CctxListPending(context.Background(), &types.QueryListCctxPendingRequest{ChainId: chainID}, maxSizeOption)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return resp.CrossChainTx, nil
-}
-
-func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.CrossChainTx, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxByStatus(context.Background(), &types.QueryCctxByStatusRequest{Status: status})
-	if err != nil {
-		return nil, err
-	}
-	return resp.CrossChainTx, nil
+	return resp.CrossChainTx, resp.TotalPending, nil
 }
 
 func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {

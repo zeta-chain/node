@@ -246,7 +246,7 @@ func (sm *SmokeTest) EchoNetworkMetrics() {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := sm.cctxClient.CctxAllPending(context.Background(), &crosschaintypes.QueryAllCctxPendingRequest{
+			cctxResp, err := sm.cctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
 				ChainId: getChainID(),
 			})
 			if err != nil {

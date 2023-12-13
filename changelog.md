@@ -18,10 +18,10 @@
 * prevent deposits for paused zrc20
 * [1406](https://github.com/zeta-chain/node/pull/1406) - improve log prints and speed up evm outtx inclusion
 * fix Athens-3 issue - include bitcoin outtx regardless of the cctx status
+* set limit for queried pending cctxs
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
-
 
 ### Refactoring
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files

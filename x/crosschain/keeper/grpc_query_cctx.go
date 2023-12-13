@@ -12,6 +12,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	// MaxPendingCctxs is the maximum number of pending cctxs that can be queried
+	MaxPendingCctxs = 500
+)
+
 func (k Keeper) ZetaAccounting(c context.Context, _ *types.QueryZetaAccountingRequest) (*types.QueryZetaAccountingResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	amount, found := k.GetZetaAccounting(ctx)
@@ -47,29 +52,6 @@ func (k Keeper) CctxAll(c context.Context, req *types.QueryAllCctxRequest) (*typ
 	}
 
 	return &types.QueryAllCctxResponse{CrossChainTx: sends, Pagination: pageRes}, nil
-}
-
-func (k Keeper) CctxByStatus(c context.Context, req *types.QueryCctxByStatusRequest) (*types.QueryCctxByStatusResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(c)
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
-
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
-
-	defer iterator.Close()
-	cctxList := make([]types.CrossChainTx, 0)
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.CrossChainTx
-		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.CctxStatus.Status == req.Status {
-			cctxList = append(cctxList, val)
-		}
-	}
-
-	return &types.QueryCctxByStatusResponse{CrossChainTx: cctxList}, nil
 }
 
 func (k Keeper) Cctx(c context.Context, req *types.QueryGetCctxRequest) (*types.QueryGetCctxResponse, error) {
@@ -108,54 +90,90 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 	return &types.QueryGetCctxResponse{CrossChainTx: &val}, nil
 }
 
-func (k Keeper) CctxAllPending(c context.Context, req *types.QueryAllCctxPendingRequest) (*types.QueryAllCctxPendingResponse, error) {
+// CctxListPending returns a list of pending cctxs and the total number of pending cctxs
+// a limit for the number of cctxs to return can be specified
+// if no limit is specified, the default is MaxPendingCctxs
+func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendingRequest) (*types.QueryListCctxPendingResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
+	// check limit
+	// if no limit specified, default to MaxPendingCctxs
+	if req.Limit > MaxPendingCctxs {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("limit exceeds max limit of %d", MaxPendingCctxs))
+	}
+	limit := req.Limit
+	if limit == 0 {
+		limit = MaxPendingCctxs
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
+
+	// query the nonces that are pending
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
-	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
 	if !found {
 		return nil, status.Error(codes.Internal, "pending nonces not found")
 	}
-	sends := make([]*types.CrossChainTx, 0)
 
-	// now query the previous nonces up to 100 prior to find any pending cctx that we might have missed
+	cctxs := make([]*types.CrossChainTx, 0)
+	maxCCTXsReached := func() bool {
+		// #nosec G701 len always positive
+		return uint32(len(cctxs)) >= limit
+	}
+
+	totalPending := uint64(0)
+
+	// now query the previous nonces up to 1000 prior to find any pending cctx that we might have missed
 	// need this logic because a confirmation of higher nonce will automatically update the p.NonceLow
 	// therefore might mask some lower nonce cctx that is still pending.
-	startNonce := p.NonceLow - 1000
+	startNonce := pendingNonces.NonceLow - 1000
 	if startNonce < 0 {
 		startNonce = 0
 	}
-	for i := startNonce; i < p.NonceLow; i++ {
-		res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
+	for i := startNonce; i < pendingNonces.NonceLow; i++ {
+		nonceToCctx, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
 		}
-		send, found := k.GetCrossChainTx(ctx, res.CctxIndex)
+		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
 		if !found {
-			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", res.CctxIndex))
+			return nil, status.Error(codes.Internal, fmt.Sprintf("cctx not found: index %s", nonceToCctx.CctxIndex))
 		}
-		if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-			sends = append(sends, &send)
+		if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
+			totalPending++
+
+			// we check here if max cctxs is reached because we want to return the total pending cctxs
+			// even if we have reached the limit
+			if !maxCCTXsReached() {
+				cctxs = append(cctxs, &cctx)
+			}
 		}
 	}
 
+	// add the pending nonces to the total pending
+	// #nosec G701 always in range
+	totalPending += uint64(pendingNonces.NonceHigh - pendingNonces.NonceLow)
+
 	// now query the pending nonces that we know are pending
-	for i := p.NonceLow; i < p.NonceHigh; i++ {
-		ntc, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
+	for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh && !maxCCTXsReached(); i++ {
+		nonceToCctx, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, "nonceToCctx not found")
 		}
-		cctx, found := k.GetCrossChainTx(ctx, ntc.CctxIndex)
+		cctx, found := k.GetCrossChainTx(ctx, nonceToCctx.CctxIndex)
 		if !found {
 			return nil, status.Error(codes.Internal, "cctxIndex not found")
 		}
-		sends = append(sends, &cctx)
+		cctxs = append(cctxs, &cctx)
 	}
 
-	return &types.QueryAllCctxPendingResponse{CrossChainTx: sends}, nil
+	return &types.QueryListCctxPendingResponse{
+		CrossChainTx: cctxs,
+		TotalPending: totalPending,
+	}, nil
 }
