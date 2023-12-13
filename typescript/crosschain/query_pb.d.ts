@@ -13,7 +13,7 @@ import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { CrossChainTx } from "./cross_chain_tx_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
 import type { ChainNonces } from "./chain_nonces_pb.js";
-import type { PendingNonces } from "./nonce_to_cctx_pb.js";
+import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 
 /**
@@ -334,6 +334,11 @@ export declare class QueryAllInTxTrackerByChainResponse extends Message<QueryAll
  * @generated from message zetachain.zetacore.crosschain.QueryAllInTxTrackersRequest
  */
 export declare class QueryAllInTxTrackersRequest extends Message<QueryAllInTxTrackersRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
   constructor(data?: PartialMessage<QueryAllInTxTrackersRequest>);
 
   static readonly runtime: typeof proto3;
@@ -357,6 +362,11 @@ export declare class QueryAllInTxTrackersResponse extends Message<QueryAllInTxTr
    * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker inTxTracker = 1;
    */
   inTxTracker: InTxTracker[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
 
   constructor(data?: PartialMessage<QueryAllInTxTrackersResponse>);
 
@@ -728,6 +738,11 @@ export declare class QueryAllChainNoncesResponse extends Message<QueryAllChainNo
  * @generated from message zetachain.zetacore.crosschain.QueryAllPendingNoncesRequest
  */
 export declare class QueryAllPendingNoncesRequest extends Message<QueryAllPendingNoncesRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
   constructor(data?: PartialMessage<QueryAllPendingNoncesRequest>);
 
   static readonly runtime: typeof proto3;
@@ -751,6 +766,11 @@ export declare class QueryAllPendingNoncesResponse extends Message<QueryAllPendi
    * @generated from field: repeated zetachain.zetacore.crosschain.PendingNonces pending_nonces = 1;
    */
   pendingNonces: PendingNonces[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
 
   constructor(data?: PartialMessage<QueryAllPendingNoncesResponse>);
 

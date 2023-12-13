@@ -9,6 +9,7 @@ import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
+import "crosschain/pending_nonces.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
@@ -24,4 +25,5 @@ message GenesisState {
   repeated InTxHashToCctx inTxHashToCctxList = 9 [(gogoproto.nullable) = false];
   repeated InTxTracker in_tx_tracker_list = 11 [(gogoproto.nullable) = false];
   ZetaAccounting zeta_accounting = 12 [(gogoproto.nullable) = false];
+  repeated PendingNonces pending_nonces = 13 [(gogoproto.nullable) = false];
 }

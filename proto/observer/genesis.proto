@@ -3,6 +3,7 @@ package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
 import "observer/ballot.proto";
+import "observer/blame.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
@@ -25,4 +26,5 @@ message GenesisState {
   TSS tss = 9;
   repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
   repeated TssFundMigratorInfo tss_fund_migrators = 11 [(gogoproto.nullable) = false];
+  repeated Blame blame_list = 12 [(gogoproto.nullable) = false];
 }

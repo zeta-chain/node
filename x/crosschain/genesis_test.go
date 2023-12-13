@@ -45,6 +45,7 @@ func TestGenesis(t *testing.T) {
 			sample.InTxHashToCctx(t, "0x1"),
 			sample.InTxHashToCctx(t, "0x2"),
 		},
+		PendingNonces: sample.PendingNoncesList(t, "sample", 20),
 	}
 
 	// Init and export

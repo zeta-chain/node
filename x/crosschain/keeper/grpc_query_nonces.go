@@ -64,10 +64,13 @@ func (k Keeper) PendingNoncesAll(c context.Context, req *types.QueryAllPendingNo
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	list := k.GetAllPendingNonces(ctx)
-
+	list, pageRes, err := k.GetAllPendingNoncesPaginated(ctx, req.Pagination)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	return &types.QueryAllPendingNoncesResponse{
 		PendingNonces: list,
+		Pagination:    pageRes,
 	}, nil
 }
 

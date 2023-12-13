@@ -13,6 +13,7 @@ import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
+import type { PendingNonces } from "./pending_nonces_pb.js";
 
 /**
  * GenesisState defines the metacore module's genesis state.
@@ -64,6 +65,11 @@ export declare class GenesisState extends Message<GenesisState> {
    * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 12;
    */
   zetaAccounting?: ZetaAccounting;
+
+  /**
+   * @generated from field: repeated zetachain.zetacore.crosschain.PendingNonces pending_nonces = 13;
+   */
+  pendingNonces: PendingNonces[];
 
   constructor(data?: PartialMessage<GenesisState>);
 

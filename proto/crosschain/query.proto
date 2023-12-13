@@ -11,6 +11,7 @@ import "crosschain/last_block_height.proto";
 import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
+import "crosschain/pending_nonces.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -187,10 +188,13 @@ message QueryAllInTxTrackerByChainResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllInTxTrackersRequest {}
+message QueryAllInTxTrackersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryAllInTxTrackersResponse {
   repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetInTxHashToCctxRequest {
@@ -251,10 +255,13 @@ message QueryAllChainNoncesResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllPendingNoncesRequest {}
+message QueryAllPendingNoncesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryAllPendingNoncesResponse {
-  repeated PendingNonces pending_nonces = 1;
+  repeated PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryPendingNoncesByChainRequest {
