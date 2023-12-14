@@ -9,7 +9,8 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddObserver{}, "observer/AddObserver", nil)
-	cdc.RegisterConcrete(&MsgUpdateCoreParams{}, "observer/UpdateCoreParam", nil)
+	cdc.RegisterConcrete(&MsgUpdateCoreParams{}, "observer/UpdateCoreParams", nil)
+	cdc.RegisterConcrete(&MsgRemoveCoreParams{}, "observer/RemoveCoreParams", nil)
 	cdc.RegisterConcrete(&MsgAddBlameVote{}, "crosschain/AddBlameVote", nil)
 	cdc.RegisterConcrete(&MsgUpdateCrosschainFlags{}, "crosschain/UpdateCrosschainFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateKeygen{}, "crosschain/UpdateKeygen", nil)
@@ -21,6 +22,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgAddObserver{},
 		&MsgUpdateCoreParams{},
+		&MsgRemoveCoreParams{},
 		&MsgAddBlameVote{},
 		&MsgUpdateCrosschainFlags{},
 		&MsgUpdateKeygen{},

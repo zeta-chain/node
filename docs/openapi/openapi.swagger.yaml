@@ -51264,6 +51264,8 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
+  observerMsgRemoveCoreParamsResponse:
+    type: object
   observerMsgUpdateCoreParamsResponse:
     type: object
   observerMsgUpdateCrosschainFlagsResponse:

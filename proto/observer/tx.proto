@@ -16,6 +16,7 @@ service Msg {
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateObserver(MsgUpdateObserver) returns (MsgUpdateObserverResponse);
   rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+  rpc RemoveCoreParams(MsgRemoveCoreParams) returns (MsgRemoveCoreParamsResponse);
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
   rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags) returns (MsgUpdateCrosschainFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
@@ -46,6 +47,13 @@ message MsgUpdateCoreParams {
 }
 
 message MsgUpdateCoreParamsResponse {}
+
+message MsgRemoveCoreParams {
+  string creator = 1;
+  int64 chain_id = 2;
+}
+
+message MsgRemoveCoreParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;

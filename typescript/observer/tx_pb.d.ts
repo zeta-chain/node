@@ -181,6 +181,54 @@ export declare class MsgUpdateCoreParamsResponse extends Message<MsgUpdateCorePa
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.MsgRemoveCoreParams
+ */
+export declare class MsgRemoveCoreParams extends Message<MsgRemoveCoreParams> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<MsgRemoveCoreParams>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveCoreParams";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveCoreParams;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveCoreParams;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveCoreParams;
+
+  static equals(a: MsgRemoveCoreParams | PlainMessage<MsgRemoveCoreParams> | undefined, b: MsgRemoveCoreParams | PlainMessage<MsgRemoveCoreParams> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgRemoveCoreParamsResponse
+ */
+export declare class MsgRemoveCoreParamsResponse extends Message<MsgRemoveCoreParamsResponse> {
+  constructor(data?: PartialMessage<MsgRemoveCoreParamsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveCoreParamsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveCoreParamsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveCoreParamsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveCoreParamsResponse;
+
+  static equals(a: MsgRemoveCoreParamsResponse | PlainMessage<MsgRemoveCoreParamsResponse> | undefined, b: MsgRemoveCoreParamsResponse | PlainMessage<MsgRemoveCoreParamsResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.MsgAddObserver
  */
 export declare class MsgAddObserver extends Message<MsgAddObserver> {
