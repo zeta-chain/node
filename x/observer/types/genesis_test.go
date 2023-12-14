@@ -9,7 +9,7 @@ import (
 
 func TestGenesisState_Validate(t *testing.T) {
 	invalidCoreParamsGen := types.DefaultGenesis()
-	coreParams := types.GetCoreParams().CoreParams
+	coreParams := types.GetDefaultCoreParams().CoreParams
 	invalidCoreParamsGen.CoreParamsList.CoreParams = append(coreParams, coreParams[0])
 
 	for _, tc := range []struct {
@@ -42,7 +42,4 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 		})
 	}
-
-	list := types.GetCoreParams()
-	list.CoreParams = append(list.CoreParams, list.CoreParams[0])
 }

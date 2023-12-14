@@ -21,9 +21,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// If core params are defined set them, otherwise set default
 	if len(genState.CoreParamsList.CoreParams) > 0 {
-		k.SetCoreParams(ctx, genState.CoreParamsList)
-	} else {
-		k.SetCoreParams(ctx, types.GetCoreParams())
+		k.SetCoreParamsList(ctx, genState.CoreParamsList)
 	}
 
 	// Set all the nodeAccount
@@ -128,7 +126,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	coreParams, found := k.GetAllCoreParams(ctx)
+	coreParams, found := k.GetCoreParamsList(ctx)
 	if !found {
 		coreParams = types.CoreParamsList{}
 	}

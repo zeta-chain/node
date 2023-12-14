@@ -30,7 +30,7 @@ func (k Keeper) GetCoreParams(goCtx context.Context, req *types.QueryGetCorePara
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	coreParams, found := k.GetAllCoreParams(ctx)
+	coreParams, found := k.GetCoreParamsList(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "core params not found")
 	}

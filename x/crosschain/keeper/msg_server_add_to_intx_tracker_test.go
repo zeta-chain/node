@@ -158,7 +158,7 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 		ChainId:    chainID,
 		Header:     common.NewEthereumHeader(headerRLP),
 	})
-	zk.ObserverKeeper.SetCoreParams(ctx, observertypes.CoreParamsList{CoreParams: []*observertypes.CoreParams{
+	zk.ObserverKeeper.SetCoreParamsList(ctx, observertypes.CoreParamsList{CoreParams: []*observertypes.CoreParams{
 		{
 			ChainId:                  chainID,
 			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),

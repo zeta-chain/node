@@ -79,17 +79,21 @@ func CoreParams(chainID int64) *types.CoreParams {
 	r := newRandFromSeed(chainID)
 
 	return &types.CoreParams{
-		ChainId:                     chainID,
-		ConfirmationCount:           r.Uint64(),
-		GasPriceTicker:              r.Uint64(),
-		InTxTicker:                  r.Uint64(),
-		OutTxTicker:                 r.Uint64(),
-		WatchUtxoTicker:             r.Uint64(),
+		ChainId:           chainID,
+		ConfirmationCount: r.Uint64(),
+
+		GasPriceTicker:              Uint64InRange(r, 1, 300),
+		InTxTicker:                  Uint64InRange(r, 1, 300),
+		OutTxTicker:                 Uint64InRange(r, 1, 300),
+		WatchUtxoTicker:             Uint64InRange(r, 1, 300),
 		ZetaTokenContractAddress:    EthAddress().String(),
 		ConnectorContractAddress:    EthAddress().String(),
 		Erc20CustodyContractAddress: EthAddress().String(),
-		OutboundTxScheduleInterval:  r.Int63(),
-		OutboundTxScheduleLookahead: r.Int63(),
+		OutboundTxScheduleInterval:  Int64InRange(r, 1, 100),
+		OutboundTxScheduleLookahead: Int64InRange(r, 1, 500),
+		BallotThreshold:             sdk.NewDec(r.Int63()),
+		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		IsSupported:                 false,
 	}
 }
 

@@ -2,20 +2,26 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
+	errorsmod "cosmossdk.io/errors"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 )
 
-// GetCoreParams returns a list of default core params
-func GetCoreParams() CoreParamsList {
+const zeroAddress = "0x0000000000000000000000000000000000000000"
+
+// GetDefaultCoreParams returns a list of default core params
+func GetDefaultCoreParams() CoreParamsList {
 	return CoreParamsList{
 		CoreParams: []*CoreParams{
 			{
 				ChainId:                     common.EthChain().ChainId,
 				ConfirmationCount:           14,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				InTxTicker:                  12,
 				OutTxTicker:                 15,
 				WatchUtxoTicker:             0,
@@ -26,9 +32,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.BscMainnetChain().ChainId,
 				ConfirmationCount:           14,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				InTxTicker:                  5,
 				OutTxTicker:                 15,
 				WatchUtxoTicker:             0,
@@ -39,9 +45,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.BtcMainnetChain().ChainId,
 				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				WatchUtxoTicker:             30,
 				InTxTicker:                  120,
 				OutTxTicker:                 60,
@@ -54,8 +60,8 @@ func GetCoreParams() CoreParamsList {
 				ConfirmationCount: 6,
 				// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 				ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				InTxTicker:                  12,
 				OutTxTicker:                 15,
 				WatchUtxoTicker:             0,
@@ -66,9 +72,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.BscTestnetChain().ChainId,
 				ConfirmationCount:           6,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				InTxTicker:                  5,
 				OutTxTicker:                 15,
 				WatchUtxoTicker:             0,
@@ -79,9 +85,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.MumbaiChain().ChainId,
 				ConfirmationCount:           12,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				InTxTicker:                  2,
 				OutTxTicker:                 15,
 				WatchUtxoTicker:             0,
@@ -92,9 +98,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.BtcTestNetChain().ChainId,
 				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				WatchUtxoTicker:             30,
 				InTxTicker:                  120,
 				OutTxTicker:                 12,
@@ -105,9 +111,9 @@ func GetCoreParams() CoreParamsList {
 			{
 				ChainId:                     common.BtcRegtestChain().ChainId,
 				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    "",
-				ConnectorContractAddress:    "",
-				Erc20CustodyContractAddress: "",
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
 				GasPriceTicker:              5,
 				WatchUtxoTicker:             1,
 				InTxTicker:                  1,
@@ -143,14 +149,79 @@ func (cpl CoreParamsList) Validate() error {
 		externalChainMap[chain.ChainId] = struct{}{}
 	}
 
-	for _, param := range cpl.CoreParams {
-		if _, ok := externalChainMap[param.ChainId]; !ok {
-			return fmt.Errorf("chain id %d not found in chain list", param.ChainId)
+	// validate the core params and check for duplicates
+	for _, coreParam := range cpl.CoreParams {
+		if err := ValidateCoreParams(coreParam); err != nil {
+			return err
 		}
-		if _, ok := existingChainMap[param.ChainId]; ok {
-			return fmt.Errorf("duplicated chain id %d found", param.ChainId)
+
+		if _, ok := externalChainMap[coreParam.ChainId]; !ok {
+			return fmt.Errorf("chain id %d not found in chain list", coreParam.ChainId)
 		}
-		existingChainMap[param.ChainId] = struct{}{}
+		if _, ok := existingChainMap[coreParam.ChainId]; ok {
+			return fmt.Errorf("duplicated chain id %d found", coreParam.ChainId)
+		}
+		existingChainMap[coreParam.ChainId] = struct{}{}
 	}
 	return nil
+}
+
+// ValidateCoreParams performs some basic checks on core params
+func ValidateCoreParams(params *CoreParams) error {
+	if params == nil {
+		return fmt.Errorf("core params cannot be nil")
+	}
+	chain := common.GetChainFromChainID(params.ChainId)
+	if chain == nil {
+		return fmt.Errorf("ChainId %d not supported", params.ChainId)
+	}
+	// zeta chain skips the rest of the checks for now
+	if chain.IsZetaChain() {
+		return nil
+	}
+
+	if params.ConfirmationCount == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "ConfirmationCount must be greater than 0")
+	}
+	if params.GasPriceTicker <= 0 || params.GasPriceTicker > 300 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "GasPriceTicker %d out of range", params.GasPriceTicker)
+	}
+	if params.InTxTicker <= 0 || params.InTxTicker > 300 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "InTxTicker %d out of range", params.InTxTicker)
+	}
+	if params.OutTxTicker <= 0 || params.OutTxTicker > 300 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutTxTicker %d out of range", params.OutTxTicker)
+	}
+	if params.OutboundTxScheduleInterval == 0 || params.OutboundTxScheduleInterval > 100 { // 600 secs
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleInterval %d out of range", params.OutboundTxScheduleInterval)
+	}
+	if params.OutboundTxScheduleLookahead == 0 || params.OutboundTxScheduleLookahead > 500 { // 500 cctxs
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "OutboundTxScheduleLookahead %d out of range", params.OutboundTxScheduleLookahead)
+	}
+
+	// chain type specific checks
+	if common.IsBitcoinChain(params.ChainId) {
+		if params.WatchUtxoTicker == 0 || params.WatchUtxoTicker > 300 {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "WatchUtxoTicker %d out of range", params.WatchUtxoTicker)
+		}
+	}
+	if common.IsEVMChain(params.ChainId) {
+		if !validCoreContractAddress(params.ZetaTokenContractAddress) {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
+		}
+		if !validCoreContractAddress(params.ConnectorContractAddress) {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ConnectorContractAddress %s", params.ConnectorContractAddress)
+		}
+		if !validCoreContractAddress(params.Erc20CustodyContractAddress) {
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
+		}
+	}
+	return nil
+}
+
+func validCoreContractAddress(address string) bool {
+	if !strings.HasPrefix(address, "0x") {
+		return false
+	}
+	return ethcommon.IsHexAddress(address)
 }
