@@ -90,8 +90,12 @@ func IsZetaChain(chainID int64) bool {
 	return ChainIDInChainList(chainID, ZetaChainList())
 }
 
+// IsEVMChain returns true if the chain is an EVM chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsEVMChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 80001 || // Polygon mumbai
 		chainID == 97 || // BSC testnet
 		chainID == 1001 || // klaytn baobab
@@ -101,8 +105,12 @@ func IsEVMChain(chainID int64) bool {
 		chainID == 137 // polygon mainnet
 }
 
+// IsHeaderSupportedEvmChain returns true if the chain is an EVM chain supporting block header-based verification
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsHeaderSupportedEvmChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 97 || // BSC testnet
 		chainID == 1337 || // eth privnet
 		chainID == 1 || // eth mainnet
@@ -118,15 +126,22 @@ func (chain Chain) SupportMerkleProof() bool {
 	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
 }
 
+// IsBitcoinChain returns true if the chain is a Bitcoin chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsBitcoinChain(chainID int64) bool {
 	return chainID == 18444 || // regtest
 		chainID == 18332 || //testnet
 		chainID == 8332 // mainnet
 }
 
+// IsEthereumChain returns true if the chain is an Ethereum chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsEthereumChain(chainID int64) bool {
 	return chainID == 1 || // eth mainnet
 		chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 1337 // eth privnet
 }
 
@@ -157,11 +172,11 @@ func (chains Chains) Distinct() Chains {
 }
 
 func (chains Chains) Strings() []string {
-	strings := make([]string, len(chains))
+	str := make([]string, len(chains))
 	for i, c := range chains {
-		strings[i] = c.String()
+		str[i] = c.String()
 	}
-	return strings
+	return str
 }
 
 func GetChainFromChainID(chainID int64) *Chain {

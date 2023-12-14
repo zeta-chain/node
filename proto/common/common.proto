@@ -51,6 +51,7 @@ enum ChainName {
   bsc_testnet = 10;
   zeta_testnet = 11;
   btc_testnet = 12;
+  sepolia_testnet = 13;
   //  LocalNet
   //  zeta_localnet = 13;
   goerli_localnet = 14;
