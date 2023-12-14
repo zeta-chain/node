@@ -24,18 +24,26 @@ message MsgUpdateObserver {
 
 ## MsgUpdateCoreParams
 
-UpdateCoreParams updates core parameters for a specific chain. Core parameters include
-confirmation count, outbound transaction schedule interval, ZETA token,
+UpdateCoreParams updates core parameters for a specific chain, or add a new one.
+Core parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
 connector and ERC20 custody contract addresses, etc.
-
-Throws an error if the chain ID is not supported.
-
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
 message MsgUpdateCoreParams {
 	string creator = 1;
 	CoreParams coreParams = 2;
+}
+```
+
+## MsgRemoveCoreParams
+
+RemoveCoreParams removes core parameters for a specific chain.
+
+```proto
+message MsgRemoveCoreParams {
+	string creator = 1;
+	int64 chain_id = 2;
 }
 ```
 
