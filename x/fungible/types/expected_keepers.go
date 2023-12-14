@@ -49,6 +49,7 @@ type ObserverKeeper interface {
 	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
+	GetSupportedChains(ctx sdk.Context) []*common.Chain
 }
 
 type EVMKeeper interface {

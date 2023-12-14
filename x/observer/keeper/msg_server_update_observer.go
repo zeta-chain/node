@@ -20,7 +20,7 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
 	}
 
-	chains := k.GetParams(ctx).GetSupportedChains()
+	chains := k.GetSupportedChains(ctx)
 	for _, chain := range chains {
 		if !k.IsObserverPresentInMappers(ctx, msg.OldObserverAddress, chain) {
 			return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized for chain : %s", chain.String()))

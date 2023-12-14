@@ -30,7 +30,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 	// Each connected chain should have its own tss migrator
-	if len(k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()) != len(tssMigrators) {
+	if len(k.zetaObserverKeeper.GetSupportedChains(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot update tss address not enough migrations have been created and completed")
 	}
 	// GetAllTssFundMigrators would return the migrators created for the current migration

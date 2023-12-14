@@ -123,15 +123,6 @@ func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	return ObserverParams{}
 }
 
-func (p Params) GetSupportedChains() (chains []*common.Chain) {
-	for _, observerParam := range p.GetObserverParams() {
-		if observerParam.IsSupported {
-			chains = append(chains, observerParam.Chain)
-		}
-	}
-	return
-}
-
 // Deprecated: observer params are now stored in core params
 func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
 	for _, observerParam := range p.GetObserverParams() {

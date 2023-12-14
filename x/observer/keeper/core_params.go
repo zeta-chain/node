@@ -55,3 +55,20 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *co
 	}
 	return nil
 }
+
+// GetSupportedChains returns the list of supported chains
+// TODO: test this function
+func (k Keeper) GetSupportedChains(ctx sdk.Context) []*common.Chain {
+	cpl, found := k.GetCoreParamsList(ctx)
+	if !found {
+		return []*common.Chain{}
+	}
+
+	var chains []*common.Chain
+	for _, cp := range cpl.CoreParams {
+		if cp.IsSupported {
+			chains = append(chains, common.GetChainFromChainID(cp.ChainId))
+		}
+	}
+	return chains
+}
