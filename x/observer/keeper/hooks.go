@@ -85,11 +85,13 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	tokensToBurn := sdk.NewDecFromInt(validator.Tokens).Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
 	for _, mapper := range mappers {
-		obsParams := k.GetParams(ctx).GetParamsForChain(mapper.ObserverChain)
-		if !obsParams.IsSupported {
+
+		cp, found := k.GetCoreParamsByChainID(ctx, mapper.ObserverChain.ChainId)
+		if !found || cp == nil || !cp.IsSupported {
 			return types.ErrSupportedChains
 		}
-		if sdk.NewDecFromInt(resultingTokens).LT(obsParams.MinObserverDelegation) {
+
+		if sdk.NewDecFromInt(resultingTokens).LT(cp.MinObserverDelegation) {
 			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
 			k.SetObserverMapper(ctx, mapper)
 		}
