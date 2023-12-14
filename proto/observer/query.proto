@@ -115,6 +115,10 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
   }
 
+  rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest) returns (QueryGetTssAddressByFinalizedHeightResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}";
+  }
+
   // Queries a tSS by index.
   rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/TSS";
@@ -128,11 +132,10 @@ service Query {
 message QueryGetTSSRequest {}
 
 message QueryGetTSSResponse {
-  TSS TSS = 1;
+  TSS TSS = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetTssAddressRequest {
-  string tss_pub_key = 1;
   int64 bitcoin_chain_id = 2;
 }
 
@@ -141,10 +144,23 @@ message QueryGetTssAddressResponse {
   string btc = 2;
 }
 
-message QueryTssHistoryRequest {}
+message QueryGetTssAddressByFinalizedHeightRequest {
+  int64 finalized_zeta_height = 1;
+  int64 bitcoin_chain_id = 2;
+}
+
+message QueryGetTssAddressByFinalizedHeightResponse {
+  string eth = 1;
+  string btc = 2;
+}
+
+message QueryTssHistoryRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryTssHistoryResponse {
   repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryProveRequest {
@@ -267,10 +283,13 @@ message QueryBlameByIdentifierResponse {
   Blame blame_info = 1;
 }
 
-message QueryAllBlameRecordsRequest {}
+message QueryAllBlameRecordsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryAllBlameRecordsResponse {
-  repeated Blame blame_info = 1;
+  repeated Blame blame_info = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryBlameByChainAndNonceRequest {

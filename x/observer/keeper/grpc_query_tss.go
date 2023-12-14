@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Tss returns the tss address for the current tss only
 func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.QueryGetTSSResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -22,7 +23,7 @@ func (k Keeper) TSS(c context.Context, req *types.QueryGetTSSRequest) (*types.Qu
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
-	return &types.QueryGetTSSResponse{TSS: &val}, nil
+	return &types.QueryGetTSSResponse{TSS: val}, nil
 }
 
 // TssHistory Query historical list of TSS information
@@ -39,25 +40,12 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	var tssPubKey string
-	if req.TssPubKey == "" {
-		tss, found := k.GetTSS(ctx)
-		if !found {
-			return nil, status.Error(codes.NotFound, "current tss not set")
-		}
-		tssPubKey = tss.TssPubkey
-	} else {
-		tssList := k.GetAllTSS(ctx)
-		for _, t := range tssList {
-			if t.TssPubkey == req.TssPubKey {
-				tssPubKey = t.TssPubkey
-				break
-			}
-		}
+	tss, found := k.GetTSS(ctx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "current tss not set")
 	}
-	ethAddress, err := common.GetTssAddrEVM(tssPubKey)
+	ethAddress, err := common.GetTssAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -68,12 +56,42 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	btcAddress, err := common.GetTssAddrBTC(tssPubKey, bitcoinParams)
+	btcAddress, err := common.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryGetTssAddressResponse{
+		Eth: ethAddress.String(),
+		Btc: btcAddress,
+	}, nil
+}
+
+func (k Keeper) GetTssAddressByFinalizedHeight(goCtx context.Context, req *types.QueryGetTssAddressByFinalizedHeightRequest) (*types.QueryGetTssAddressByFinalizedHeightResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	tss, found := k.GetHistoricalTssByFinalizedHeight(ctx, req.FinalizedZetaHeight)
+	if !found {
+		return nil, status.Error(codes.NotFound, "tss not found")
+	}
+	ethAddress, err := common.GetTssAddrEVM(tss.TssPubkey)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	bitcoinParams := common.BitcoinRegnetParams
+	if req.BitcoinChainId != 0 {
+		bitcoinParams, err = common.BitcoinNetParamsFromChainID(req.BitcoinChainId)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+	}
+	btcAddress, err := common.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryGetTssAddressByFinalizedHeightResponse{
 		Eth: ethAddress.String(),
 		Btc: btcAddress,
 	}, nil

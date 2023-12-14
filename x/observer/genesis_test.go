@@ -15,8 +15,9 @@ func TestGenesis(t *testing.T) {
 	params := types.DefaultParams()
 	tss := sample.Tss()
 	genesisState := types.GenesisState{
-		Params: &params,
-		Tss:    &tss,
+		Params:    &params,
+		Tss:       &tss,
+		BlameList: sample.BlameRecordsList(t, 10),
 		Ballots: []*types.Ballot{
 			sample.Ballot(t, "0"),
 			sample.Ballot(t, "1"),

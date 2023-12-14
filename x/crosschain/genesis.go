@@ -69,6 +69,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
+	// Set all the pending nonces
+	for _, pendingNonce := range genState.PendingNonces {
+		k.SetPendingNonces(ctx, pendingNonce)
+	}
+
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -111,6 +116,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	amount, found := k.GetZetaAccounting(ctx)
 	if found {
 		genesis.ZetaAccounting = amount
+	}
+	pendingNonces, err := k.GetAllPendingNonces(ctx)
+	if err == nil {
+		genesis.PendingNonces = pendingNonces
 	}
 
 	return &genesis

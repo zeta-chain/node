@@ -67,7 +67,7 @@ message MsgAddObserverResponse {}
 message MsgAddBlameVote {
   string creator = 1;
   int64 chain_id = 2;
-  Blame blame_info = 3;
+  Blame blame_info = 3 [(gogoproto.nullable) = false];
 }
 
 message MsgAddBlameVoteResponse {}
