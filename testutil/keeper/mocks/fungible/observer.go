@@ -160,6 +160,26 @@ func (_m *FungibleObserverKeeper) GetParams(ctx types.Context) observertypes.Par
 	return r0
 }
 
+// GetSupportedChains provides a mock function with given fields: ctx
+func (_m *FungibleObserverKeeper) GetSupportedChains(ctx types.Context) []*common.Chain {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSupportedChains")
+	}
+
+	var r0 []*common.Chain
+	if rf, ok := ret.Get(0).(func(types.Context) []*common.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*common.Chain)
+		}
+	}
+
+	return r0
+}
+
 // SetBallot provides a mock function with given fields: ctx, ballot
 func (_m *FungibleObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
 	_m.Called(ctx, ballot)
