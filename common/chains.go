@@ -64,6 +64,13 @@ func PolygonChain() Chain {
 
 // Testnet chains
 
+func SepoliaChain() Chain {
+	return Chain{
+		ChainName: ChainName_sepolia_testnet,
+		ChainId:   11155111,
+	}
+}
+
 func GoerliChain() Chain {
 	return Chain{
 		ChainName: ChainName_goerli_testnet,
@@ -122,6 +129,7 @@ func DefaultChainsList() []*Chain {
 		MumbaiChain(),
 		BscTestnetChain(),
 		GoerliChain(),
+		SepoliaChain(),
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
 		ZetaChainMainnet(),
@@ -149,6 +157,7 @@ func TestnetChainList() []*Chain {
 		MumbaiChain(),
 		BscTestnetChain(),
 		GoerliChain(),
+		SepoliaChain(),
 	})
 }
 
@@ -171,6 +180,7 @@ func ExternalChainList() []*Chain {
 		MumbaiChain(),
 		BscTestnetChain(),
 		GoerliChain(),
+		SepoliaChain(),
 		BtcRegtestChain(),
 		GoerliLocalnetChain(),
 	})
