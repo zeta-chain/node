@@ -82,6 +82,7 @@ type ZetaObserverKeeper interface {
 	RemoveAllExistingMigrators(ctx sdk.Context)
 
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain
+	GetSupportedChains(ctx sdk.Context) []*common.Chain
 }
 
 type FungibleKeeper interface {

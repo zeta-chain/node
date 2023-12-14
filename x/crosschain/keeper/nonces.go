@@ -133,7 +133,7 @@ func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chain
 func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss observerTypes.TSS) {
 	k.zetaObserverKeeper.SetTSS(ctx, tss)
 	// initialize the nonces and pending nonces of all enabled chains
-	supportedChains := k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()
+	supportedChains := k.zetaObserverKeeper.GetSupportedChains(ctx)
 	for _, chain := range supportedChains {
 		chainNonce := types.ChainNonces{
 			Index:   chain.ChainName.String(),
