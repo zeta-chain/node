@@ -114,14 +114,6 @@ func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
 	}
 	return ""
 }
-func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
-	for _, ObserverParam := range p.GetObserverParams() {
-		if ObserverParam.Chain.IsEqual(*chain) {
-			return *ObserverParam
-		}
-	}
-	return ObserverParams{}
-}
 
 // Deprecated: observer params are now stored in core params
 func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {

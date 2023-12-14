@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -58,23 +57,30 @@ func (k Keeper) IsObserverPresentInMappers(ctx sdk.Context, address string, chai
 	return false
 }
 
-func (k Keeper) FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType types.ObservationType) (ballot types.Ballot, isNew bool, err error) {
+func (k Keeper) FindBallot(
+	ctx sdk.Context,
+	index string,
+	chain *common.Chain,
+	observationType types.ObservationType,
+) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.GetBallot(ctx, index)
 	if !found {
 		observerMapper, _ := k.GetObserverMapper(ctx, chain)
-		obsParams := k.GetParams(ctx).GetParamsForChain(chain)
-		if !obsParams.IsSupported {
-			err = errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
+
+		cp, found := k.GetCoreParamsByChainID(ctx, chain.ChainId)
+		if !found || cp == nil || !cp.IsSupported {
+			err = types.ErrSupportedChains
 			return
 		}
+
 		ballot = types.Ballot{
 			Index:                "",
 			BallotIdentifier:     index,
 			VoterList:            observerMapper.ObserverList,
 			Votes:                types.CreateVotes(len(observerMapper.ObserverList)),
 			ObservationType:      observationType,
-			BallotThreshold:      obsParams.BallotThreshold,
+			BallotThreshold:      cp.BallotThreshold,
 			BallotStatus:         types.BallotStatus_BallotInProgress,
 			BallotCreationHeight: ctx.BlockHeight(),
 		}
@@ -135,13 +141,14 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 	if !found {
 		return types.ErrSelfDelegation
 	}
-	obsParams := k.GetParams(ctx).GetParamsForChain(chain)
-	if !obsParams.IsSupported {
-		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Chain not suported %s ", chain.String()))
+
+	cp, found := k.GetCoreParamsByChainID(ctx, chain.ChainId)
+	if !found || cp == nil || !cp.IsSupported {
+		return types.ErrSupportedChains
 	}
 
 	tokens := validator.TokensFromShares(delegation.Shares)
-	if tokens.LT(obsParams.MinObserverDelegation) {
+	if tokens.LT(cp.MinObserverDelegation) {
 		return types.ErrCheckObserverDelegation
 	}
 	return nil
