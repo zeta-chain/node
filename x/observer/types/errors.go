@@ -33,4 +33,5 @@ var (
 	ErrNodeAccountNotFound             = errorsmod.Register(ModuleName, 1125, "node account not found")
 	ErrInvalidCoreParams               = errorsmod.Register(ModuleName, 1126, "invalid core params")
 	ErrCoreParamsNotFound              = errorsmod.Register(ModuleName, 1127, "core params not found")
+	ErrParamsMinObserverDelegation     = errorsmod.Register(ModuleName, 1128, "min observer delegation cannot be nil")
 )

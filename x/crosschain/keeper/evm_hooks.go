@@ -123,7 +123,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		return fmt.Errorf("cannot find foreign coin with emittingContract address %s", event.Raw.Address.Hex())
 	}
 
-	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(foreignCoin.ForeignChainId)
+	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to convert chainID: %s", err.Error())
@@ -197,7 +197,8 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	}
 
 	receiverChainID := event.DestinationChainId
-	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(receiverChainID.Int64())
+
+	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiverChainID.Int64())
 	if receiverChain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
