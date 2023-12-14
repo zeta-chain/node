@@ -51,6 +51,11 @@ export declare class CoreParamsList extends Message<CoreParamsList> {
  */
 export declare class CoreParams extends Message<CoreParams> {
   /**
+   * @generated from field: int64 chain_id = 11;
+   */
+  chainId: bigint;
+
+  /**
    * @generated from field: uint64 confirmation_count = 1;
    */
   confirmationCount: bigint;
@@ -91,11 +96,6 @@ export declare class CoreParams extends Message<CoreParams> {
   erc20CustodyContractAddress: string;
 
   /**
-   * @generated from field: int64 chain_id = 11;
-   */
-  chainId: bigint;
-
-  /**
    * @generated from field: int64 outbound_tx_schedule_interval = 12;
    */
   outboundTxScheduleInterval: bigint;
@@ -104,6 +104,21 @@ export declare class CoreParams extends Message<CoreParams> {
    * @generated from field: int64 outbound_tx_schedule_lookahead = 13;
    */
   outboundTxScheduleLookahead: bigint;
+
+  /**
+   * @generated from field: string ballot_threshold = 14;
+   */
+  ballotThreshold: string;
+
+  /**
+   * @generated from field: string min_observer_delegation = 15;
+   */
+  minObserverDelegation: string;
+
+  /**
+   * @generated from field: bool is_supported = 16;
+   */
+  isSupported: boolean;
 
   constructor(data?: PartialMessage<CoreParams>);
 
@@ -121,6 +136,9 @@ export declare class CoreParams extends Message<CoreParams> {
 }
 
 /**
+ * Deprecated: Use CoreParamsList
+ * TODO: Remove in v12
+ *
  * @generated from message zetachain.zetacore.observer.ObserverParams
  */
 export declare class ObserverParams extends Message<ObserverParams> {
@@ -195,6 +213,9 @@ export declare class Admin_Policy extends Message<Admin_Policy> {
  */
 export declare class Params extends Message<Params> {
   /**
+   * Deprecated: Use CoreParamsList
+   * TODO: Remove in v12
+   *
    * @generated from field: repeated zetachain.zetacore.observer.ObserverParams observer_params = 1;
    */
   observerParams: ObserverParams[];

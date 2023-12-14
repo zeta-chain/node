@@ -51309,6 +51309,9 @@ definitions:
   observerCoreParams:
     type: object
     properties:
+      chain_id:
+        type: string
+        format: int64
       confirmation_count:
         type: string
         format: uint64
@@ -51330,15 +51333,18 @@ definitions:
         type: string
       erc20_custody_contract_address:
         type: string
-      chain_id:
-        type: string
-        format: int64
       outbound_tx_schedule_interval:
         type: string
         format: int64
       outbound_tx_schedule_lookahead:
         type: string
         format: int64
+      ballot_threshold:
+        type: string
+      min_observer_delegation:
+        type: string
+      is_supported:
+        type: boolean
   observerCoreParamsList:
     type: object
     properties:
@@ -51486,6 +51492,9 @@ definitions:
         type: string
       is_supported:
         type: boolean
+    title: |-
+      Deprecated: Use CoreParamsList
+      TODO: Remove in v12
   observerObserverUpdateReason:
     type: string
     enum:
@@ -51881,6 +51890,9 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerObserverParams'
+        title: |-
+          Deprecated: Use CoreParamsList
+          TODO: Remove in v12
       admin_policy:
         type: array
         items:
