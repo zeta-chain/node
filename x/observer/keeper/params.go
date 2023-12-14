@@ -23,14 +23,14 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramstore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) SetCoreParams(ctx sdk.Context, coreParams types.CoreParamsList) {
+func (k Keeper) SetCoreParamsList(ctx sdk.Context, coreParams types.CoreParamsList) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&coreParams)
 	key := types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams))
 	store.Set(key, b)
 }
 
-func (k Keeper) GetAllCoreParams(ctx sdk.Context) (val types.CoreParamsList, found bool) {
+func (k Keeper) GetCoreParamsList(ctx sdk.Context) (val types.CoreParamsList, found bool) {
 	found = false
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams)))
@@ -43,7 +43,7 @@ func (k Keeper) GetAllCoreParams(ctx sdk.Context) (val types.CoreParamsList, fou
 }
 
 func (k Keeper) GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (*types.CoreParams, bool) {
-	allCoreParams, found := k.GetAllCoreParams(ctx)
+	allCoreParams, found := k.GetCoreParamsList(ctx)
 	if !found {
 		return &types.CoreParams{}, false
 	}
