@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,133 +11,14 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
-const zeroAddress = "0x0000000000000000000000000000000000000000"
+const (
+	zeroAddress = "0x0000000000000000000000000000000000000000"
+)
 
-// GetDefaultCoreParams returns a list of default core params
-func GetDefaultCoreParams() CoreParamsList {
-	return CoreParamsList{
-		CoreParams: []*CoreParams{
-			{
-				ChainId:                     common.EthChain().ChainId,
-				ConfirmationCount:           14,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				InTxTicker:                  12,
-				OutTxTicker:                 15,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.BscMainnetChain().ChainId,
-				ConfirmationCount:           14,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				InTxTicker:                  5,
-				OutTxTicker:                 15,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.BtcMainnetChain().ChainId,
-				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				WatchUtxoTicker:             30,
-				InTxTicker:                  120,
-				OutTxTicker:                 60,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:           common.GoerliChain().ChainId,
-				ConfirmationCount: 6,
-				// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
-				ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				InTxTicker:                  12,
-				OutTxTicker:                 15,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.BscTestnetChain().ChainId,
-				ConfirmationCount:           6,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				InTxTicker:                  5,
-				OutTxTicker:                 15,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.MumbaiChain().ChainId,
-				ConfirmationCount:           12,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				InTxTicker:                  2,
-				OutTxTicker:                 15,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 60,
-			},
-			{
-				ChainId:                     common.BtcTestNetChain().ChainId,
-				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				WatchUtxoTicker:             30,
-				InTxTicker:                  120,
-				OutTxTicker:                 12,
-				GasPriceTicker:              30,
-				OutboundTxScheduleInterval:  30,
-				OutboundTxScheduleLookahead: 100,
-			},
-			{
-				ChainId:                     common.BtcRegtestChain().ChainId,
-				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    zeroAddress,
-				ConnectorContractAddress:    zeroAddress,
-				Erc20CustodyContractAddress: zeroAddress,
-				GasPriceTicker:              5,
-				WatchUtxoTicker:             1,
-				InTxTicker:                  1,
-				OutTxTicker:                 2,
-				OutboundTxScheduleInterval:  2,
-				OutboundTxScheduleLookahead: 5,
-			},
-			{
-				ChainId:                     common.GoerliLocalnetChain().ChainId,
-				ConfirmationCount:           2,
-				ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
-				ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
-				Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
-				InTxTicker:                  2,
-				OutTxTicker:                 2,
-				WatchUtxoTicker:             0,
-				GasPriceTicker:              5,
-				OutboundTxScheduleInterval:  2,
-				OutboundTxScheduleLookahead: 5,
-			},
-		},
-	}
-}
+var (
+	DefaultMinObserverDelegation = sdk.MustNewDecFromStr("1000000000000000000000")
+	DefaultBallotThreshold       = sdk.MustNewDecFromStr("0.66")
+)
 
 // Validate checks all core params correspond to a chain and there is no duplicate chain id
 func (cpl CoreParamsList) Validate() error {
@@ -216,6 +98,15 @@ func ValidateCoreParams(params *CoreParams) error {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
 		}
 	}
+
+	if params.BallotThreshold.IsNil() || params.BallotThreshold.GT(sdk.OneDec()) {
+		return ErrParamsThreshold
+	}
+
+	if params.MinObserverDelegation.IsNil() {
+		return ErrParamsMinObserverDelegation
+	}
+
 	return nil
 }
 
@@ -224,4 +115,159 @@ func validCoreContractAddress(address string) bool {
 		return false
 	}
 	return ethcommon.IsHexAddress(address)
+}
+
+// GetDefaultCoreParams returns a list of default core params
+// TODO: remove this function
+// https://github.com/zeta-chain/node-private/issues/100
+func GetDefaultCoreParams() CoreParamsList {
+	return CoreParamsList{
+		CoreParams: []*CoreParams{
+			{
+				ChainId:                     common.EthChain().ChainId,
+				ConfirmationCount:           14,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				InTxTicker:                  12,
+				OutTxTicker:                 15,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.BscMainnetChain().ChainId,
+				ConfirmationCount:           14,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				InTxTicker:                  5,
+				OutTxTicker:                 15,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.BtcMainnetChain().ChainId,
+				ConfirmationCount:           2,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				WatchUtxoTicker:             30,
+				InTxTicker:                  120,
+				OutTxTicker:                 60,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:           common.GoerliChain().ChainId,
+				ConfirmationCount: 6,
+				// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
+				ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				InTxTicker:                  12,
+				OutTxTicker:                 15,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.BscTestnetChain().ChainId,
+				ConfirmationCount:           6,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				InTxTicker:                  5,
+				OutTxTicker:                 15,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.MumbaiChain().ChainId,
+				ConfirmationCount:           12,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				InTxTicker:                  2,
+				OutTxTicker:                 15,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 60,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.BtcTestNetChain().ChainId,
+				ConfirmationCount:           2,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				WatchUtxoTicker:             30,
+				InTxTicker:                  120,
+				OutTxTicker:                 12,
+				GasPriceTicker:              30,
+				OutboundTxScheduleInterval:  30,
+				OutboundTxScheduleLookahead: 100,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.BtcRegtestChain().ChainId,
+				ConfirmationCount:           2,
+				ZetaTokenContractAddress:    zeroAddress,
+				ConnectorContractAddress:    zeroAddress,
+				Erc20CustodyContractAddress: zeroAddress,
+				GasPriceTicker:              5,
+				WatchUtxoTicker:             1,
+				InTxTicker:                  1,
+				OutTxTicker:                 2,
+				OutboundTxScheduleInterval:  2,
+				OutboundTxScheduleLookahead: 5,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+			{
+				ChainId:                     common.GoerliLocalnetChain().ChainId,
+				ConfirmationCount:           2,
+				ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
+				ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+				Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
+				InTxTicker:                  2,
+				OutTxTicker:                 2,
+				WatchUtxoTicker:             0,
+				GasPriceTicker:              5,
+				OutboundTxScheduleInterval:  2,
+				OutboundTxScheduleLookahead: 5,
+				BallotThreshold:             DefaultBallotThreshold,
+				MinObserverDelegation:       DefaultMinObserverDelegation,
+				IsSupported:                 false,
+			},
+		},
+	}
 }

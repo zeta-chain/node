@@ -80,6 +80,8 @@ type ZetaObserverKeeper interface {
 	GetFundMigrator(ctx sdk.Context, chainID int64) (val observertypes.TssFundMigratorInfo, found bool)
 	GetAllTssFundMigrators(ctx sdk.Context) (fms []observertypes.TssFundMigratorInfo)
 	RemoveAllExistingMigrators(ctx sdk.Context)
+
+	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain
 }
 
 type FungibleKeeper interface {

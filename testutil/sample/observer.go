@@ -77,6 +77,11 @@ func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 func CoreParams(chainID int64) *types.CoreParams {
 	r := newRandFromSeed(chainID)
 
+	fiftyPercent, err := sdk.NewDecFromStr("0.5")
+	if err != nil {
+		return nil
+	}
+
 	return &types.CoreParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
@@ -90,7 +95,7 @@ func CoreParams(chainID int64) *types.CoreParams {
 		Erc20CustodyContractAddress: EthAddress().String(),
 		OutboundTxScheduleInterval:  Int64InRange(r, 1, 100),
 		OutboundTxScheduleLookahead: Int64InRange(r, 1, 500),
-		BallotThreshold:             sdk.NewDec(r.Int63()),
+		BallotThreshold:             fiftyPercent,
 		MinObserverDelegation:       sdk.NewDec(r.Int63()),
 		IsSupported:                 false,
 	}

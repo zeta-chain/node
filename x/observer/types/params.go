@@ -123,15 +123,6 @@ func (p Params) GetParamsForChain(chain *common.Chain) ObserverParams {
 	return ObserverParams{}
 }
 
-func (p Params) GetParamsForChainID(chainID int64) ObserverParams {
-	for _, ObserverParam := range p.GetObserverParams() {
-		if ObserverParam.Chain.ChainId == chainID {
-			return *ObserverParam
-		}
-	}
-	return ObserverParams{}
-}
-
 func (p Params) GetSupportedChains() (chains []*common.Chain) {
 	for _, observerParam := range p.GetObserverParams() {
 		if observerParam.IsSupported {
@@ -141,16 +132,7 @@ func (p Params) GetSupportedChains() (chains []*common.Chain) {
 	return
 }
 
-func (p Params) GetChainFromChainID(chainID int64) *common.Chain {
-	chainList := p.GetObserverParams()
-	for _, observerParam := range chainList {
-		if observerParam.Chain.ChainId == chainID && observerParam.IsSupported {
-			return observerParam.Chain
-		}
-	}
-	return nil
-}
-
+// Deprecated: observer params are now stored in core params
 func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
 	for _, observerParam := range p.GetObserverParams() {
 		if observerParam.Chain.ChainName == name && observerParam.IsSupported {
@@ -158,24 +140,4 @@ func (p Params) GetChainFromChainName(name common.ChainName) *common.Chain {
 		}
 	}
 	return nil
-}
-
-func (p Params) IsChainSupported(checkChain common.Chain) bool {
-	chains := p.GetSupportedChains()
-	for _, chain := range chains {
-		if checkChain.IsEqual(*chain) {
-			return true
-		}
-	}
-	return false
-}
-
-func (p Params) IsChainIDSupported(checkChainID int64) bool {
-	chains := p.GetSupportedChains()
-	for _, chain := range chains {
-		if chain.ChainId == checkChainID {
-			return true
-		}
-	}
-	return false
 }
