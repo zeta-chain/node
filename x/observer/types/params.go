@@ -77,6 +77,7 @@ func (p Params) String() string {
 	return string(out)
 }
 
+// Deprecated: observer params are now stored in core params
 func validateVotingThresholds(i interface{}) error {
 	v, ok := i.([]*ObserverParams)
 	if !ok {

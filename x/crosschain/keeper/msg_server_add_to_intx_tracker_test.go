@@ -141,15 +141,6 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
 	params := zk.ObserverKeeper.GetParams(ctx)
-	params.ObserverParams = append(params.ObserverParams, &observertypes.ObserverParams{
-		Chain: &common.Chain{
-			ChainId:   chainID,
-			ChainName: common.ChainName_goerli_testnet,
-		},
-		BallotThreshold:       sdk.OneDec(),
-		MinObserverDelegation: sdk.OneDec(),
-		IsSupported:           true,
-	})
 	zk.ObserverKeeper.SetParams(ctx, params)
 	zk.ObserverKeeper.SetBlockHeader(ctx, common.BlockHeader{
 		Height:     block.Number().Int64(),
@@ -162,6 +153,9 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 		{
 			ChainId:                  chainID,
 			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),
+			BallotThreshold:          sdk.OneDec(),
+			MinObserverDelegation:    sdk.OneDec(),
+			IsSupported:              true,
 		},
 	}})
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{

@@ -157,14 +157,18 @@ func setupTssMigrationParams(
 		IsInboundEnabled:  false,
 		IsOutboundEnabled: true,
 	})
-	params := zk.ObserverKeeper.GetParamsIfExists(ctx)
-	params.ObserverParams = append(params.ObserverParams, &observerTypes.ObserverParams{
-		Chain:                 &chain,
-		BallotThreshold:       sdk.NewDec(0),
-		MinObserverDelegation: sdk.OneDec(),
-		IsSupported:           true,
+
+	zk.ObserverKeeper.SetCoreParamsList(ctx, observerTypes.CoreParamsList{
+		CoreParams: []*observerTypes.CoreParams{
+			{
+				ChainId:               chain.ChainId,
+				BallotThreshold:       sdk.NewDec(0),
+				MinObserverDelegation: sdk.OneDec(),
+				IsSupported:           true,
+			},
+		},
 	})
-	zk.ObserverKeeper.SetParams(ctx, params)
+
 	currentTss := sample.Tss()
 	newTss := sample.Tss()
 	newTss.FinalizedZetaHeight = currentTss.FinalizedZetaHeight + 1
