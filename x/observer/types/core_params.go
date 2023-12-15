@@ -124,21 +124,21 @@ func validCoreContractAddress(address string) bool {
 func GetDefaultCoreParams() CoreParamsList {
 	return CoreParamsList{
 		CoreParams: []*CoreParams{
-			DefaultEthMainnetCoreParams,
-			DefaultBscMainnetCoreParams,
-			DefaultBtcMainnetCoreParams,
-			DefaultGoerliTestnetCoreParams,
-			DefaultBscTestnetCoreParams,
-			DefaultMumbaiTestnetCoreParams,
-			DefaultBtcTestnetCoreParams,
-			DefaultBtcRegtestCoreParams,
-			DefaultGoerliLocalnetCoreParams,
+			GetDefaultEthMainnetCoreParams(),
+			GetDefaultBscMainnetCoreParams(),
+			GetDefaultBtcMainnetCoreParams(),
+			GetDefaultGoerliTestnetCoreParams(),
+			GetDefaultBscTestnetCoreParams(),
+			GetDefaultMumbaiTestnetCoreParams(),
+			GetDefaultBtcTestnetCoreParams(),
+			GetDefaultBtcRegtestCoreParams(),
+			GetDefaultGoerliLocalnetCoreParams(),
 		},
 	}
 }
 
-var (
-	DefaultEthMainnetCoreParams = &CoreParams{
+func GetDefaultEthMainnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.EthChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -154,7 +154,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultBscMainnetCoreParams = &CoreParams{
+}
+func GetDefaultBscMainnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.BscMainnetChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -170,7 +172,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultBtcMainnetCoreParams = &CoreParams{
+}
+func GetDefaultBtcMainnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.BtcMainnetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -186,7 +190,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultGoerliTestnetCoreParams = &CoreParams{
+}
+func GetDefaultGoerliTestnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:           common.GoerliChain().ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
@@ -203,7 +209,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultBscTestnetCoreParams = &CoreParams{
+}
+func GetDefaultBscTestnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.BscTestnetChain().ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -219,7 +227,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultMumbaiTestnetCoreParams = &CoreParams{
+}
+func GetDefaultMumbaiTestnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.MumbaiChain().ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -235,7 +245,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultBtcTestnetCoreParams = &CoreParams{
+}
+func GetDefaultBtcTestnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.BtcTestNetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -251,7 +263,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultBtcRegtestCoreParams = &CoreParams{
+}
+func GetDefaultBtcRegtestCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.BtcRegtestChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -267,7 +281,9 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	DefaultGoerliLocalnetCoreParams = &CoreParams{
+}
+func GetDefaultGoerliLocalnetCoreParams() *CoreParams {
+	return &CoreParams{
 		ChainId:                     common.GoerliLocalnetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
@@ -283,4 +299,4 @@ var (
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-)
+}
