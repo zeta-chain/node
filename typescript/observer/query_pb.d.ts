@@ -693,9 +693,9 @@ export declare class QueryBallotByIdentifierResponse extends Message<QueryBallot
  */
 export declare class QueryObserversByChainRequest extends Message<QueryObserversByChainRequest> {
   /**
-   * @generated from field: string observation_chain = 1;
+   * @generated from field: int64 chain_id = 2;
    */
-  observationChain: string;
+  chainId: bigint;
 
   constructor(data?: PartialMessage<QueryObserversByChainRequest>);
 

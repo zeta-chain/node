@@ -192,15 +192,15 @@ func request_Query_ObserversByChain_0(ctx context.Context, marshaler runtime.Mar
 		_   = err
 	)
 
-	val, ok = pathParams["observation_chain"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_chain")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ObservationChain, err = runtime.String(val)
+	protoReq.ChainId, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_chain", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	msg, err := client.ObserversByChain(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -219,15 +219,15 @@ func local_request_Query_ObserversByChain_0(ctx context.Context, marshaler runti
 		_   = err
 	)
 
-	val, ok = pathParams["observation_chain"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "observation_chain")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ObservationChain, err = runtime.String(val)
+	protoReq.ChainId, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "observation_chain", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	msg, err := server.ObserversByChain(ctx, &protoReq)
@@ -2440,7 +2440,7 @@ var (
 
 	pattern_Query_BallotByIdentifier_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "ballot_by_identifier", "ballot_identifier"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ObserversByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "observers_by_chain", "observation_chain"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ObserversByChain_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"zeta-chain", "observer", "observers_by_chain", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_AllObserverMappers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"zeta-chain", "observer", "all_observer_mappers"}, "", runtime.AssumeColonVerbOpt(false)))
 

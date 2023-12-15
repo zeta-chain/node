@@ -118,34 +118,34 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 	tt := []struct {
 		name             string
 		mapper           []*types.ObserverMapper
-		assertChain      common.ChainName
+		assertChain      common.Chain
 		assertObsListLen int
 		isFound          bool
 	}{
 		{
 			name:        "4 ETH InBoundTx Observers",
 			mapper:      types.CreateObserverMapperList(1, common.GoerliChain()),
-			assertChain: common.ChainName_goerli_localnet,
+			assertChain: common.GoerliLocalnetChain(),
 			isFound:     true,
 		},
 		{
 			name:        "4 BTC InBoundTx Observers",
 			mapper:      types.CreateObserverMapperList(1, common.BtcRegtestChain()),
-			assertChain: common.ChainName_btc_regtest,
+			assertChain: common.BtcRegtestChain(),
 			isFound:     true,
 		},
 		{
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
 				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
-			assertChain: common.ChainName_goerli_localnet,
+			assertChain: common.GoerliLocalnetChain(),
 			isFound:     true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
 				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
-			assertChain: common.ChainName_btc_regtest,
+			assertChain: common.BtcRegtestChain(),
 			isFound:     false,
 		},
 	}
@@ -160,7 +160,7 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
 			msg := &types.QueryObserversByChainRequest{
-				ObservationChain: test.assertChain.String(),
+				ChainId: test.assertChain.ChainId,
 			}
 
 			mapper, _ := k.ObserversByChain(goCtx, msg)
