@@ -109,19 +109,18 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
 	state := observertypes.GenesisState{}
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
+
+	// set core params
+	state.CoreParamsList = observertypes.GetDefaultCoreParams()
+
+	// set params
 	if len(ballots) > 0 {
 		state.Ballots = ballots
 	}
-	//params := observerTypes.DefaultParams()
-	//params.BallotMaturityBlocks = 3
 	state.Params.BallotMaturityBlocks = 3
 	state.Keygen = &observertypes.Keygen{BlockNumber: 10, GranteePubkeys: []string{}}
-	crosschainFlags := &observertypes.CrosschainFlags{
-		IsInboundEnabled:             true,
-		IsOutboundEnabled:            true,
-		GasPriceIncreaseFlags:        &observertypes.DefaultGasPriceIncreaseFlags,
-		BlockHeaderVerificationFlags: &observertypes.DefaultBlockHeaderVerificationFlags,
-	}
+
+	// set tss
 	tss := observertypes.TSS{
 		TssPubkey:           "tssPubkey",
 		TssParticipantList:  []string{"tssParticipantList"},
@@ -130,9 +129,15 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 		KeyGenZetaHeight:    1,
 	}
 	state.Tss = &tss
-
 	state.TssHistory = []observertypes.TSS{tss}
 
+	// set crosschain flags
+	crosschainFlags := &observertypes.CrosschainFlags{
+		IsInboundEnabled:             true,
+		IsOutboundEnabled:            true,
+		GasPriceIncreaseFlags:        &observertypes.DefaultGasPriceIncreaseFlags,
+		BlockHeaderVerificationFlags: &observertypes.DefaultBlockHeaderVerificationFlags,
+	}
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags
 
@@ -140,8 +145,10 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 		state.ChainNonces = append(state.ChainNonces, observertypes.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
 	}
 
+	// check genesis state validity
 	assert.NoError(t, state.Validate())
 
+	// marshal genesis state
 	buf, err := codec.MarshalJSON(&state)
 	assert.NoError(t, err)
 	genesisState[observertypes.ModuleName] = buf
