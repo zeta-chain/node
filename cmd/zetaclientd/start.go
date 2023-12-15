@@ -198,7 +198,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
-	observerList, err := zetaBridge.GetObserverList(cfg.ChainsEnabled[0])
+	observerList, err := zetaBridge.GetObserverList()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetObserverList error")
 		return err

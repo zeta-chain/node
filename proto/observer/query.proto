@@ -33,11 +33,8 @@ service Query {
   }
 
   // Queries a list of ObserversByChainAndType items.
-  rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
-  }
-  rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
+  rpc ObserverSet(QueryObserverSet) returns (QueryObserverSetResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/observer_set";
   }
 
   rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
@@ -207,17 +204,10 @@ message QueryBallotByIdentifierResponse {
   BallotStatus ballot_status = 4;
 }
 
-message QueryObserversByChainRequest {
-  string observation_chain = 1;
-}
+message QueryObserverSet {}
 
-message QueryObserversByChainResponse {
+message QueryObserverSetResponse {
   repeated string observers = 1;
-}
-
-message QueryAllObserverMappersRequest {}
-message QueryAllObserverMappersResponse {
-  repeated ObserverMapper observer_mappers = 1;
 }
 
 message QuerySupportedChains {}

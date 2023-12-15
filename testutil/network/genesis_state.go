@@ -65,15 +65,10 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	// Observer genesis state
 	var observerGenesis observertypes.GenesisState
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &observerGenesis))
-	observerMapper := make([]*observertypes.ObserverMapper, len(common.PrivnetChainList()))
-
-	for i, chain := range common.PrivnetChainList() {
-		observerMapper[i] = &observertypes.ObserverMapper{
-			ObserverChain: chain,
-			ObserverList:  observerList,
-		}
+	observerSet := observertypes.ObserverSet{
+		ObserverList: observerList,
 	}
-	observerGenesis.Observers = observerMapper
+	observerGenesis.Observers = observerSet
 	observerGenesis.NodeAccountList = nodeAccountList
 	observerGenesis.Keygen = &observertypes.Keygen{
 		Status:         observertypes.KeygenStatus_PendingKeygen,

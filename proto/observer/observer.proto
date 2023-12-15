@@ -22,10 +22,8 @@ enum ObserverUpdateReason {
   AdminUpdate = 2;
 }
 
-message ObserverMapper {
-  string index = 1;
-  common.Chain observer_chain = 2;
-  repeated string observer_list = 4;
+message ObserverSet {
+  repeated string observer_list = 1;
 }
 
 message LastObserverCount {

@@ -112,12 +112,12 @@ func (b *ZetaCoreBridge) GetCctxByNonce(chainID int64, nonce uint64) (*types.Cro
 	return resp.CrossChainTx, nil
 }
 
-func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
+func (b *ZetaCoreBridge) GetObserverList() ([]string, error) {
 	var err error
 	client := observertypes.NewQueryClient(b.grpcConn)
 
 	for i := 0; i <= DefaultRetryCount; i++ {
-		resp, err := client.ObserversByChain(context.Background(), &observertypes.QueryObserversByChainRequest{ObservationChain: chain.ChainName.String()})
+		resp, err := client.ObserverSet(context.Background(), &observertypes.QueryObserverSet{})
 		if err == nil {
 			return resp.Observers, nil
 		}

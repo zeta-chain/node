@@ -30,7 +30,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
 		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 		isAdmin := msg.Creator == adminPolicyAccount
-		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
 
 		// Sender needs to be either the admin policy account or an observer
 		if !(isAdmin || isObserver) {

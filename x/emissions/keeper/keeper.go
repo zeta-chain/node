@@ -21,7 +21,7 @@ type (
 		feeCollectorName string
 		bankKeeper       types.BankKeeper
 		stakingKeeper    types.StakingKeeper
-		observerKeeper   types.ZetaObserverKeeper
+		observerKeeper   types.ObserverKeeper
 	}
 )
 
@@ -33,7 +33,7 @@ func NewKeeper(
 	feeCollectorName string,
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
-	observerKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -70,6 +70,6 @@ func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 	return k.stakingKeeper
 }
 
-func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
+func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 	return k.observerKeeper
 }

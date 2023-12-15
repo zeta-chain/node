@@ -40,15 +40,9 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 		return &types.MsgAddObserverResponse{}, nil
 	}
-
-	observerMappers := k.GetAllObserverMappers(ctx)
-	totalObserverCountCurrentBlock := uint64(0)
-	for _, mapper := range observerMappers {
-		mapper.ObserverList = append(mapper.ObserverList, msg.ObserverAddress)
-		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
-		k.SetObserverMapper(ctx, mapper)
-	}
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock})
-	EmitEventAddObserver(ctx, totalObserverCountCurrentBlock, msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
+	k.AddObserverToSet(ctx, msg.ObserverAddress)
+	observerSet, _ := k.GetObserverSet(ctx)
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
+	EmitEventAddObserver(ctx, observerSet.LenUint(), msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
 	return &types.MsgAddObserverResponse{}, nil
 }

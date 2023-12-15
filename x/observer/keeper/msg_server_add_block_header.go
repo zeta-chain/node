@@ -16,7 +16,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 
 	// check authorization for this chain
 	chain := common.GetChainFromChainID(msg.ChainId)
-	if ok := k.IsAuthorized(ctx, msg.Creator, chain); !ok {
+	if ok := k.IsAuthorized(ctx, msg.Creator); !ok {
 		return nil, types.ErrNotAuthorizedPolicy
 	}
 

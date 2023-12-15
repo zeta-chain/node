@@ -9,15 +9,12 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	genesisObservers := genState.Observers
-	observerCount := uint64(0)
-	for _, mapper := range genesisObservers {
-		if mapper != nil {
-			k.SetObserverMapper(ctx, mapper)
-			observerCount += uint64(len(mapper.ObserverList))
-		}
-	}
 
+	observerCount := uint64(0)
+	if genState.Observers.Len() > 0 {
+		k.SetObservers(ctx, genState.Observers)
+		observerCount = uint64(len(genState.Observers.ObserverList))
+	}
 	// If core params are defined set them, otherwise set default
 	if len(genState.CoreParamsList.CoreParams) > 0 {
 		k.SetCoreParams(ctx, genState.CoreParamsList)
@@ -143,12 +140,18 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		tss = &t
 	}
 
+	os := types.ObserverSet{}
+	observers, found := k.GetObserverSet(ctx)
+	if found {
+		os = observers
+	}
+
 	tssHistory := k.GetAllTSS(ctx)
 	fundMigrators := k.GetAllTssFundMigrators(ctx)
 	blameRecords := k.GetAllBlame(ctx)
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
-		Observers:         k.GetAllObserverMappers(ctx),
+		Observers:         os,
 		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
