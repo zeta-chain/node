@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMigrateStore(t *testing.T) {
+func TestMigrateCrosschainFlags(t *testing.T) {
 
 	k, ctx := keepertest.ObserverKeeper(t)
 	store := prefix.NewStore(ctx.KVStore(k.StoreKey()), types.KeyPrefix(types.CrosschainFlagsKey))
