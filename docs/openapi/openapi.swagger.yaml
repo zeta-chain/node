@@ -28112,7 +28112,7 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/observer/observers_by_chain/{observation_chain}:
+  /zeta-chain/observer/observers_by_chain/{chain_id}:
     get:
       summary: Queries a list of ObserversByChainAndType items.
       operationId: Query_ObserversByChain
@@ -28126,10 +28126,11 @@ paths:
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
-        - name: observation_chain
+        - name: chain_id
           in: path
           required: true
           type: string
+          format: int64
       tags:
         - Query
   /zeta-chain/observer/params:

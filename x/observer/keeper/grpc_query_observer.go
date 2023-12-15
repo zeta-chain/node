@@ -4,7 +4,6 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -19,8 +18,7 @@ func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserver
 	// TODO move parsing to client
 	// https://github.com/zeta-chain/node/issues/867
 
-	chainName := common.ParseChainName(req.ObservationChain)
-	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
+	chain := k.GetSupportedChainFromChainID(ctx, req.ChainId)
 	if chain == nil {
 		return &types.QueryObserversByChainResponse{}, types.ErrSupportedChains
 	}

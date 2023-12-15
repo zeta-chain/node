@@ -3,7 +3,7 @@
 Query ObserversByChainAndType , Use common.chain for querying
 
 ```
-zetacored query observer show-observer [observation-chain] [flags]
+zetacored query observer show-observer [chain-id] [flags]
 ```
 
 ### Options

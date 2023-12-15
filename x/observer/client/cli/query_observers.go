@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strconv"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
@@ -33,11 +35,14 @@ func CmdAllObserverMappers() *cobra.Command {
 
 func CmdObserversByChainAndType() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-observer [observation-chain]",
+		Use:   "show-observer [chain-id]",
 		Short: "Query ObserversByChainAndType , Use common.chain for querying",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			reqObservationChain := args[0]
+			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return err
+			}
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -47,7 +52,7 @@ func CmdObserversByChainAndType() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			params := &types.QueryObserversByChainRequest{
-				ObservationChain: reqObservationChain,
+				ChainId: chainID,
 			}
 
 			res, err := queryClient.ObserversByChain(cmd.Context(), params)
