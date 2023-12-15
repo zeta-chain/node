@@ -268,6 +268,11 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				}
 				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message)
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
+
+				outStr := out.String()
+				if strings.Contains(outStr, "failed") {
+					fmt.Println(outStr)
+				}
 				s.Require().NoError(err)
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))

@@ -110,8 +110,11 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	state := observertypes.GenesisState{}
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
 
-	// set core params
+	// set core params with chains all enabled
 	state.CoreParamsList = observertypes.GetDefaultCoreParams()
+	for i := range state.CoreParamsList.CoreParams {
+		state.CoreParamsList.CoreParams[i].IsSupported = true
+	}
 
 	// set params
 	if len(ballots) > 0 {

@@ -102,6 +102,12 @@ func CoreParams(chainID int64) *types.CoreParams {
 	}
 }
 
+func CoreParamsSupported(chainID int64) *types.CoreParams {
+	cp := CoreParams(chainID)
+	cp.IsSupported = true
+	return cp
+}
+
 func CoreParamsList() (cpl types.CoreParamsList) {
 	chainList := common.PrivnetChainList()
 

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"math/rand"
 	"testing"
 	"time"
@@ -9,8 +8,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -25,6 +27,19 @@ func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs .
 	observerKeeper.SetCoreParamsList(ctx, types.CoreParamsList{
 		CoreParams: coreParamsList,
 	})
+}
+
+// getValidEthChainIDWithIndex get a valid eth chain id with index
+func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
+	switch index {
+	case 0:
+		return zetacommon.GoerliLocalnetChain().ChainId
+	case 1:
+		return zetacommon.GoerliChain().ChainId
+	default:
+		require.Fail(t, "invalid index")
+	}
+	return 0
 }
 
 func TestKeeper_IsAuthorized(t *testing.T) {
