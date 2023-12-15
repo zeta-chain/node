@@ -264,7 +264,7 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 // SetCoreParams sets the core params with local Goerli and BtcRegtest chains enabled
 func SetCoreParams(zetaTxServer ZetaTxServer) error {
 	// set btc regtest  core params
-	btcCoreParams := observertypes.DefaultBtcRegtestCoreParams
+	btcCoreParams := observertypes.GetDefaultBtcRegtestCoreParams()
 	btcCoreParams.IsSupported = true
 	_, err := zetaTxServer.BroadcastTx(FungibleAdminName, observertypes.NewMsgUpdateCoreParams(
 		FungibleAdminAddress,
@@ -275,7 +275,7 @@ func SetCoreParams(zetaTxServer ZetaTxServer) error {
 	}
 
 	// set goerli localnet core params
-	goerliCoreParams := observertypes.DefaultGoerliLocalnetCoreParams
+	goerliCoreParams := observertypes.GetDefaultGoerliLocalnetCoreParams()
 	goerliCoreParams.IsSupported = true
 	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, observertypes.NewMsgUpdateCoreParams(
 		FungibleAdminAddress,
