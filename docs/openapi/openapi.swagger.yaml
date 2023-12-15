@@ -27707,20 +27707,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/all_observer_mappers:
-    get:
-      operationId: Query_AllObserverMappers
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryAllObserverMappersResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -28112,24 +28098,19 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/observer/observers_by_chain/{observation_chain}:
+  /zeta-chain/observer/observer_set:
     get:
       summary: Queries a list of ObserversByChainAndType items.
-      operationId: Query_ObserversByChain
+      operationId: Query_ObserverSet
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryObserversByChainResponse'
+            $ref: '#/definitions/observerQueryObserverSetResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: observation_chain
-          in: path
-          required: true
-          type: string
       tags:
         - Query
   /zeta-chain/observer/params:
@@ -51508,17 +51489,6 @@ definitions:
       - TSSKeyGen
       - TSSKeySign
     default: EmptyObserverType
-  observerObserverMapper:
-    type: object
-    properties:
-      index:
-        type: string
-      observer_chain:
-        $ref: '#/definitions/commonChain'
-      observer_list:
-        type: array
-        items:
-          type: string
   observerObserverParams:
     type: object
     properties:
@@ -51573,14 +51543,6 @@ definitions:
           $ref: '#/definitions/observerNodeAccount'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllObserverMappersResponse:
-    type: object
-    properties:
-      observer_mappers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerObserverMapper'
   observerQueryBallotByIdentifierResponse:
     type: object
     properties:
@@ -51667,7 +51629,7 @@ definitions:
     properties:
       has_voted:
         type: boolean
-  observerQueryObserversByChainResponse:
+  observerQueryObserverSetResponse:
     type: object
     properties:
       observers:
