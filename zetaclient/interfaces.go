@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
@@ -90,6 +92,7 @@ type ZetaCoreBridger interface {
 	ZetaChain() common.Chain
 	Pause()
 	Unpause()
+	GetZetaHotKeyBalance() (sdkmath.Int, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

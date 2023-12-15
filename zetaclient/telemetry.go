@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -27,6 +28,7 @@ type TelemetryServer struct {
 	lastStartTimestamp     time.Time
 	status                 types.Status
 	ipAddress              string
+	hotKeyBurnRate         *metrics.BurnRate
 }
 
 // NewTelemetryServer should only listen to the loopback
@@ -35,6 +37,7 @@ func NewTelemetryServer() *TelemetryServer {
 		logger:                 log.With().Str("module", "http").Logger(),
 		lastScannedBlockNumber: make(map[int64]uint64),
 		lastStartTimestamp:     time.Now(),
+		hotKeyBurnRate:         metrics.NewBurnRate(100),
 	}
 	s := &http.Server{
 		Addr:              ":8123",
@@ -109,6 +112,15 @@ func (t *TelemetryServer) SetNumberOfUTXOs(numberOfUTXOs int) {
 	t.mu.Unlock()
 }
 
+func (t *TelemetryServer) AddFeeEntry(block int64, amount int64) {
+	t.mu.Lock()
+	err := t.hotKeyBurnRate.AddFee(amount, block)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to update hotkey burn rate")
+	}
+	t.mu.Unlock()
+}
+
 // NewHandler registers the API routes and returns a new HTTP handler
 func (t *TelemetryServer) Handlers() http.Handler {
 	router := mux.NewRouter()
@@ -120,6 +132,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/lastcoreblock", http.HandlerFunc(t.lastCoreBlockHandler)).Methods(http.MethodGet)
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
+	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
 	// router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	// router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	// router.HandleFunc("/debug/pprof/", pprof.Index)
@@ -231,4 +244,11 @@ func (t *TelemetryServer) lastStartTimestampHandler(w http.ResponseWriter, _ *ht
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	fmt.Fprintf(w, "%s", t.lastStartTimestamp.Format(time.RFC3339))
+}
+
+func (t *TelemetryServer) hotKeyFeeBurnRate(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	fmt.Fprintf(w, "%v", t.hotKeyBurnRate.GetBurnRate())
 }
