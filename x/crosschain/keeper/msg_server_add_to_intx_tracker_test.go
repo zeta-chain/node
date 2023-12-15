@@ -78,9 +78,10 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		require.False(t, found)
 	})
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -101,6 +102,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -121,6 +123,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,

@@ -1,16 +1,31 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"math/rand"
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// setSupportedChain sets the supported chains for the observer module
+func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs ...int64) {
+	coreParamsList := make([]*types.CoreParams, len(chainIDs))
+	for i, chainID := range chainIDs {
+		coreParams := sample.CoreParams(chainID)
+		coreParams.IsSupported = true
+		coreParamsList[i] = coreParams
+	}
+	observerKeeper.SetCoreParamsList(ctx, types.CoreParamsList{
+		CoreParams: coreParamsList,
+	})
+}
 
 func TestKeeper_IsAuthorized(t *testing.T) {
 	t.Run("authorized observer", func(t *testing.T) {
