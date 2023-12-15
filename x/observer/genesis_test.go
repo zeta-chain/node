@@ -23,11 +23,7 @@ func TestGenesis(t *testing.T) {
 			sample.Ballot(t, "1"),
 			sample.Ballot(t, "2"),
 		},
-		Observers: []*types.ObserverMapper{
-			sample.ObserverMapper(t, "0"),
-			sample.ObserverMapper(t, "1"),
-			sample.ObserverMapper(t, "2"),
-		},
+		Observers: sample.ObserverSet(3),
 		NodeAccountList: []*types.NodeAccount{
 			sample.NodeAccount(),
 			sample.NodeAccount(),
@@ -35,7 +31,7 @@ func TestGenesis(t *testing.T) {
 		},
 		CrosschainFlags:   types.DefaultCrosschainFlags(),
 		Keygen:            sample.Keygen(t),
-		LastObserverCount: sample.LastObserverCount(1000),
+		LastObserverCount: sample.LastObserverCount(10),
 		CoreParamsList:    sample.CoreParamsList(),
 		TssFundMigrators:  []types.TssFundMigratorInfo{sample.TssFundsMigrator(1), sample.TssFundsMigrator(2)},
 		ChainNonces: []types.ChainNonces{

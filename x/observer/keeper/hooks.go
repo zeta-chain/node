@@ -77,22 +77,19 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	if err != nil {
 		return err
 	}
-	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
-	if len(mappers) == 0 {
+	observerSet, found := k.GetObserverSet(ctx)
+	if observerSet.Len() == 0 || !found {
 		return nil
 	}
 
 	tokensToBurn := sdk.NewDecFromInt(validator.Tokens).Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
-	for _, mapper := range mappers {
-		obsParams := k.GetParams(ctx).GetParamsForChain(mapper.ObserverChain)
-		if !obsParams.IsSupported {
-			return types.ErrSupportedChains
-		}
-		if sdk.NewDecFromInt(resultingTokens).LT(obsParams.MinObserverDelegation) {
-			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
-			k.SetObserverMapper(ctx, mapper)
-		}
+	mindelegation, ok := types.GetMinObserverDelegation()
+	if !ok {
+		return types.ErrMinDelegationNotFound
+	}
+	if resultingTokens.LT(mindelegation) {
+		k.RemoveObserverFromSet(ctx, accAddress.String())
 	}
 	return nil
 }
@@ -103,62 +100,39 @@ func (k Keeper) CleanObservers(ctx sdk.Context, valAddress sdk.ValAddress) error
 	if err != nil {
 		return err
 	}
-	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
-	for _, mapper := range mappers {
-		mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
-		k.SetObserverMapper(ctx, mapper)
-	}
+	k.RemoveObserverFromSet(ctx, accAddress.String())
 	return nil
 }
 
-// CleanObservers cleans a observer Mapper checking delegation amount
+// CheckAndCleanObserver checks if the observer self-delegation is sufficient,
+// if not it removes the observer from the set
 func (k Keeper) CheckAndCleanObserver(ctx sdk.Context, valAddress sdk.ValAddress) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err
 	}
-	k.CleanMapper(ctx, accAddress)
+	err = k.CheckObserverSelfDelegation(ctx, accAddress.String())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// CleanObservers cleans a observer Mapper checking delegation amount for a speficific delagator. It is used when delgator is the validator .
-// That is when when the validator is trying to remove self delgation
+// CheckAndCleanObserverDelegator first checks if the delegation is self delegation,
+// if it is, then it checks if the total delegation is sufficient after the delegation is removed,
+// if not it removes the observer from the set
 func (k Keeper) CheckAndCleanObserverDelegator(ctx sdk.Context, valAddress sdk.ValAddress, delAddress sdk.AccAddress) error {
 	accAddress, err := types.GetAccAddressFromOperatorAddress(valAddress.String())
 	if err != nil {
 		return err
 	}
+	// Check if this is a self delegation, if it's not then return, we only check self-delegation for cleaning observer set
 	if !(accAddress.String() == delAddress.String()) {
 		return nil
 	}
-	k.CleanMapper(ctx, accAddress)
+	err = k.CheckObserverSelfDelegation(ctx, accAddress.String())
+	if err != nil {
+		return err
+	}
 	return nil
-}
-
-func CleanAddressList(addresslist []string, address string) []string {
-	index := -1
-	for i, addr := range addresslist {
-		if addr == address {
-			index = i
-		}
-	}
-	if index != -1 {
-		addresslist = RemoveIndex(addresslist, index)
-	}
-	return addresslist
-}
-
-func RemoveIndex(s []string, index int) []string {
-	return append(s[:index], s[index+1:]...)
-}
-
-func (k Keeper) CleanMapper(ctx sdk.Context, accAddress sdk.AccAddress) {
-	mappers := k.GetAllObserverMappersForAddress(ctx, accAddress.String())
-	for _, mapper := range mappers {
-		err := k.CheckObserverDelegation(ctx, accAddress.String(), mapper.ObserverChain)
-		if err != nil {
-			mapper.ObserverList = CleanAddressList(mapper.ObserverList, accAddress.String())
-			k.SetObserverMapper(ctx, mapper)
-		}
-	}
 }

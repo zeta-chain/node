@@ -5,7 +5,6 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../common/common_pb.js";
 
 /**
  * @generated from enum zetachain.zetacore.observer.ObservationType
@@ -58,37 +57,27 @@ export declare enum ObserverUpdateReason {
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.ObserverMapper
+ * @generated from message zetachain.zetacore.observer.ObserverSet
  */
-export declare class ObserverMapper extends Message<ObserverMapper> {
+export declare class ObserverSet extends Message<ObserverSet> {
   /**
-   * @generated from field: string index = 1;
-   */
-  index: string;
-
-  /**
-   * @generated from field: common.Chain observer_chain = 2;
-   */
-  observerChain?: Chain;
-
-  /**
-   * @generated from field: repeated string observer_list = 4;
+   * @generated from field: repeated string observer_list = 1;
    */
   observerList: string[];
 
-  constructor(data?: PartialMessage<ObserverMapper>);
+  constructor(data?: PartialMessage<ObserverSet>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.ObserverMapper";
+  static readonly typeName = "zetachain.zetacore.observer.ObserverSet";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverMapper;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverSet;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverMapper;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverSet;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverMapper;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverSet;
 
-  static equals(a: ObserverMapper | PlainMessage<ObserverMapper> | undefined, b: ObserverMapper | PlainMessage<ObserverMapper> | undefined): boolean;
+  static equals(a: ObserverSet | PlainMessage<ObserverSet> | undefined, b: ObserverSet | PlainMessage<ObserverSet> | undefined): boolean;
 }
 
 /**

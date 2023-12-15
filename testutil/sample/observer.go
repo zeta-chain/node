@@ -27,13 +27,14 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 	}
 }
 
-func ObserverMapper(t *testing.T, index string) *types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
+func ObserverSet(n int) types.ObserverSet {
+	observerList := make([]string, n)
+	for i := 0; i < n; i++ {
+		observerList[i] = AccAddress()
+	}
 
-	return &types.ObserverMapper{
-		Index:         index,
-		ObserverChain: Chain(r.Int63()),
-		ObserverList:  []string{AccAddress(), AccAddress()},
+	return types.ObserverSet{
+		ObserverList: observerList,
 	}
 }
 

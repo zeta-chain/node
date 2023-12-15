@@ -17,7 +17,7 @@ import (
 // It initializes the aborted zeta amount to 0
 func MigrateStore(
 	ctx sdk.Context,
-	observerKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
@@ -122,7 +122,7 @@ func MoveNonceToObserverModule(
 }
 
 func MoveTssToObserverModule(ctx sdk.Context,
-	observerKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec) {
 	// Using New Types from observer module as the structure is the same
