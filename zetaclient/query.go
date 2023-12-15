@@ -63,15 +63,6 @@ func (b *ZetaCoreBridge) GetCoreParams() ([]*observertypes.CoreParams, error) {
 	return nil, fmt.Errorf("failed to get core params | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) GetObserverParams() (observertypes.Params, error) {
-	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.Params(context.Background(), &observertypes.QueryParamsRequest{})
-	if err != nil {
-		return observertypes.Params{}, err
-	}
-	return resp.Params, nil
-}
-
 func (b *ZetaCoreBridge) GetUpgradePlan() (*upgradetypes.Plan, error) {
 	client := upgradetypes.NewQueryClient(b.grpcConn)
 
