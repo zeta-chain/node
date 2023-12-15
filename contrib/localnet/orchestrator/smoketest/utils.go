@@ -8,20 +8,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereum/go-ethereum/rpc"
-
-	"github.com/zeta-chain/zetacore/common"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rpc"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -259,5 +258,32 @@ func DeploySystemContractsAndZRC20(zetaTxServer ZetaTxServer) error {
 		return fmt.Errorf("invalid address in event: %s", address)
 	}
 	USDTZRC20Addr = address
+	return nil
+}
+
+// SetCoreParams sets the core params with local Goerli and BtcRegtest chains enabled
+func SetCoreParams(zetaTxServer ZetaTxServer) error {
+	// set btc regtest  core params
+	btcCoreParams := observertypes.DefaultBtcRegtestCoreParams
+	btcCoreParams.IsSupported = true
+	_, err := zetaTxServer.BroadcastTx(FungibleAdminName, observertypes.NewMsgUpdateCoreParams(
+		FungibleAdminAddress,
+		btcCoreParams,
+	))
+	if err != nil {
+		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
+	}
+
+	// set goerli localnet core params
+	goerliCoreParams := observertypes.DefaultGoerliLocalnetCoreParams
+	goerliCoreParams.IsSupported = true
+	_, err = zetaTxServer.BroadcastTx(FungibleAdminName, observertypes.NewMsgUpdateCoreParams(
+		FungibleAdminAddress,
+		goerliCoreParams,
+	))
+	if err != nil {
+		return fmt.Errorf("failed to set core params for goerli: %s", err.Error())
+	}
+
 	return nil
 }

@@ -169,9 +169,13 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// set core params with enabled chains
+	if err = SetCoreParams(zetaTxServer); err != nil {
+		panic(err)
+	}
+
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	err = DeploySystemContractsAndZRC20(zetaTxServer)
-	if err != nil {
+	if err = DeploySystemContractsAndZRC20(zetaTxServer); err != nil {
 		panic(err)
 	}
 
