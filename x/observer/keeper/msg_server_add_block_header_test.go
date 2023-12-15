@@ -132,6 +132,22 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 				require.Error(t, err)
 			},
 		},
+		{
+			name: "should fail if chain is not supported",
+			msg: &types.MsgAddBlockHeader{
+				Creator:   observerAddress.String(),
+				ChainId:   9999,
+				BlockHash: header3.Hash().Bytes(),
+				Height:    3,
+				Header:    common.NewEthereumHeader(header3RLP),
+			},
+			IsEthTypeChainEnabled: true,
+			IsBtcTypeChainEnabled: true,
+			validator:             validator,
+			wantErr: func(t require.TestingT, err error, i ...interface{}) {
+				require.ErrorIs(t, err, types.ErrSupportedChains)
+			},
+		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
@@ -151,6 +167,9 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 					IsBtcTypeChainEnabled: tc.IsBtcTypeChainEnabled,
 				},
 			})
+
+			setSupportedChain(ctx, *k, common.GoerliLocalnetChain().ChainId)
+
 			_, err := srv.AddBlockHeader(ctx, tc.msg)
 			tc.wantErr(t, err)
 			if err == nil {

@@ -15,7 +15,12 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization for this chain
-	chain := common.GetChainFromChainID(msg.ChainId)
+
+	chain := k.GetSupportedChainFromChainID(ctx, msg.ChainId)
+	if chain == nil {
+		return nil, cosmoserrors.Wrapf(types.ErrSupportedChains, "chain id: %d", msg.ChainId)
+	}
+
 	if ok := k.IsAuthorized(ctx, msg.Creator, chain); !ok {
 		return nil, types.ErrNotAuthorizedPolicy
 	}
