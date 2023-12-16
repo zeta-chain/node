@@ -7,13 +7,13 @@ import (
 )
 
 func (k Keeper) SetObservers(ctx sdk.Context, om types.ObserverSet) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverSetKey))
 	b := k.cdc.MustMarshal(&om)
 	store.Set([]byte{0}, b)
 }
 
 func (k Keeper) GetObserverSet(ctx sdk.Context) (val types.ObserverSet, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverMapperKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverSetKey))
 	b := store.Get([]byte{0})
 	if b == nil {
 		return val, false
