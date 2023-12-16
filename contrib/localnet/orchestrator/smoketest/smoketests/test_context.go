@@ -1,4 +1,4 @@
-package main
+package smoketests
 
 import (
 	"bytes"
@@ -8,16 +8,18 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-// this tests sending ZETA out of ZetaChain to Ethereum
-func (sm *SmokeTest) TestContextUpgrade() {
+// TestContextUpgrade tests sending ZETA out of ZetaChain to Ethereum
+func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 	startTime := time.Now()
 	defer func() {
 		fmt.Printf("test finishes in %s\n", time.Since(startTime))
 	}()
-	goerliClient := sm.goerliClient
-	LoudPrintf("Test ContextApp\n")
+	goerliClient := sm.GoerliClient
+	utils.LoudPrintf("Test ContextApp\n")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
@@ -29,13 +31,13 @@ func (sm *SmokeTest) TestContextUpgrade() {
 	data = append(data, sm.ContextAppAddr.Bytes()...)
 	data = append(data, []byte("filler")...) // just to make sure that this is a contract call;
 
-	signedTx, err := sm.SendEther(TSSAddress, value, data)
+	signedTx, err := sm.SendEther(sm.TSSAddress, value, data)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Printf("GOERLI tx sent: %s; to %s, nonce %d\n", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx)
 	fmt.Printf("GOERLI tx receipt: %d\n", receipt.Status)
 	fmt.Printf("  tx hash: %s\n", receipt.TxHash.String())
 	fmt.Printf("  to: %s\n", signedTx.To().String())
@@ -60,10 +62,10 @@ func (sm *SmokeTest) TestContextUpgrade() {
 			fmt.Printf("  chainid: %d\n", eventIter.Event.ChainID)
 			fmt.Printf("  msgsender: %s\n", eventIter.Event.MsgSender.Hex())
 			found = true
-			if bytes.Compare(eventIter.Event.Origin, DeployerAddress.Bytes()) != 0 {
+			if bytes.Compare(eventIter.Event.Origin, sm.DeployerAddress.Bytes()) != 0 {
 				panic("origin mismatch")
 			}
-			chainID, err := sm.goerliClient.ChainID(context.Background())
+			chainID, err := sm.GoerliClient.ChainID(context.Background())
 			if err != nil {
 				panic(err)
 			}

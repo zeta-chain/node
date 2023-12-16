@@ -1,18 +1,20 @@
-package main
+package smoketests
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (sm *SmokeTest) TestBlockHeaders() {
-	LoudPrintf("TESTING BLOCK HEADERS\n")
+func TestBlockHeaders(sm *runner.SmokeTestRunner) {
+	utils.LoudPrintf("TESTING BLOCK HEADERS\n")
 	// test ethereum block headers; should have a chain
 	checkBlock := func(chainID int64) {
-		bhs, err := sm.observerClient.GetBlockHeaderStateByChain(context.TODO(), &observertypes.QueryGetBlockHeaderStateRequest{
+		bhs, err := sm.ObserverClient.GetBlockHeaderStateByChain(context.TODO(), &observertypes.QueryGetBlockHeaderStateRequest{
 			ChainId: chainID,
 		})
 		if err != nil {
@@ -31,7 +33,7 @@ func (sm *SmokeTest) TestBlockHeaders() {
 		bn := latestBlock
 		currentHash := latestBlockHash
 		for {
-			bhres, err := sm.observerClient.GetBlockHeaderByHash(context.TODO(), &observertypes.QueryGetBlockHeaderByHashRequest{
+			bhres, err := sm.ObserverClient.GetBlockHeaderByHash(context.TODO(), &observertypes.QueryGetBlockHeaderByHashRequest{
 				BlockHash: currentHash,
 			})
 			if err != nil {

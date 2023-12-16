@@ -32,9 +32,11 @@
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
 * move tss state date from crosschain to observer
 * move tss related cli from crosschain to observer
+* reorganize smoke tests structure
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
+
 ### Chores
 
 ### Tests
