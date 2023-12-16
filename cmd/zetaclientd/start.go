@@ -66,9 +66,18 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
+	telemetryServer := mc.NewTelemetryServer()
+	go func() {
+		err := telemetryServer.Start()
+		if err != nil {
+			startLogger.Error().Err(err).Msg("telemetryServer error")
+			panic("telemetryServer error")
+		}
+	}()
+
 	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetaBridge, err := CreateZetaBridge(cfg)
+	zetaBridge, err := CreateZetaBridge(cfg, telemetryServer)
 	if err != nil {
 		panic(err)
 	}
@@ -136,15 +145,6 @@ func start(_ *cobra.Command, _ []string) error {
 			return err
 		}
 	}
-
-	telemetryServer := mc.NewTelemetryServer()
-	go func() {
-		err := telemetryServer.Start()
-		if err != nil {
-			startLogger.Error().Err(err).Msg("telemetryServer error")
-			panic("telemetryServer error")
-		}
-	}()
 
 	metrics, err := metrics2.NewMetrics()
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/pkg/errors"
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -18,6 +20,7 @@ import (
 const (
 	MaxLookaheadNonce   = 120
 	OutboundTxSignCount = "zetaclient_Outbound_tx_sign_count"
+	HotKeyBurnRate      = "zetaclient_hotkey_burn_rate"
 )
 
 type ZetaCoreLog struct {
@@ -27,14 +30,15 @@ type ZetaCoreLog struct {
 
 // CoreObserver wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
-	bridge    ZetaCoreBridger
-	signerMap map[common.Chain]ChainSigner
-	clientMap map[common.Chain]ChainClient
-	metrics   *metrics.Metrics
-	logger    ZetaCoreLog
-	cfg       *config.Config
-	ts        *TelemetryServer
-	stop      chan struct{}
+	bridge              ZetaCoreBridger
+	signerMap           map[common.Chain]ChainSigner
+	clientMap           map[common.Chain]ChainClient
+	metrics             *metrics.Metrics
+	logger              ZetaCoreLog
+	cfg                 *config.Config
+	ts                  *TelemetryServer
+	stop                chan struct{}
+	lastOperatorBalance sdkmath.Int
 }
 
 // NewCoreObserver creates a new CoreObserver
@@ -70,6 +74,15 @@ func NewCoreObserver(
 	if err != nil {
 		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
 	}
+	err = metrics.RegisterGauge(HotKeyBurnRate, "Fee burn rate of the hotkey")
+	if err != nil {
+		co.logger.ChainLogger.Error().Err(err).Msg("error registering gauge")
+	}
+	balance, err := bridge.GetZetaHotKeyBalance()
+	if err != nil {
+		co.logger.ChainLogger.Error().Err(err).Msg("error getting last balance of the hot key")
+	}
+	co.lastOperatorBalance = balance
 
 	return &co
 }
@@ -84,6 +97,14 @@ func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 		return nil, errors.New("counter not found")
 	}
 	return cnt, nil
+}
+
+func (co *CoreObserver) GetPromGauge(name string) (prom.Gauge, error) {
+	gauge, found := metrics.Gauges[name]
+	if !found {
+		return nil, errors.New("gauge not found")
+	}
+	return gauge, nil
 }
 
 func (co *CoreObserver) MonitorCore() {
@@ -132,6 +153,25 @@ func (co *CoreObserver) startCctxScheduler() {
 						co.logger.ZetaChainWatcher.Debug().Msgf("startCctxScheduler: ZetaCore heart beat: %d", bn)
 					}
 
+					balance, err := co.bridge.GetZetaHotKeyBalance()
+					if err != nil {
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("couldn't get operator balance")
+					} else {
+						diff := co.lastOperatorBalance.Sub(balance)
+						if diff.GT(sdkmath.NewInt(0)) {
+							co.ts.AddFeeEntry(bn, diff.Int64())
+							co.lastOperatorBalance = balance
+						}
+					}
+
+					// Set Current Hot key burn rate
+					gauge, err := co.GetPromGauge(HotKeyBurnRate)
+					if err != nil {
+						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: failed to get prometheus gauge: %s for observer", metrics.PendingTxs)
+						continue
+					} // Gauge only takes float values
+					gauge.Set(float64(co.ts.hotKeyBurnRate.GetBurnRate().Int64()))
+
 					// schedule keysign for pending cctxs on each chain
 					supportedChains := co.Config().GetEnabledChains()
 					for _, c := range supportedChains {
@@ -150,6 +190,7 @@ func (co *CoreObserver) startCctxScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
 						}
+						// Set Pending transactions prometheus gauge
 						gauge, err := ob.GetPromGauge(metrics.PendingTxs)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: failed to get prometheus gauge: %s for chain %d", metrics.PendingTxs, c.ChainId)
