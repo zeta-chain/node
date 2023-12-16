@@ -153,3 +153,23 @@ func BlameRecordsList(t *testing.T, n int) []types.Blame {
 	}
 	return blameList
 }
+
+func LegacyObserverMapper(t *testing.T, index string, observerList []string) *types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+
+	return &types.ObserverMapper{
+		Index:         index,
+		ObserverChain: Chain(r.Int63()),
+		ObserverList:  observerList,
+	}
+}
+
+func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+	observerList := []string{AccAddress(), AccAddress()}
+	observerMapperList := make([]*types.ObserverMapper, n)
+	for i := 0; i < n; i++ {
+		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
+	}
+	return observerMapperList
+}

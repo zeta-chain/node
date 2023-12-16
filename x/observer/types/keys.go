@@ -48,9 +48,11 @@ func BallotListKeyPrefix(p int64) []byte {
 const (
 	BlameKey = "Blame-"
 	// TODO change identifier for VoterKey to something more descriptive
-	VoterKey                      = "Voter-value-"
-	AllCoreParams                 = "CoreParams"
-	ObserverMapperKey             = "Observer-value-"
+	VoterKey          = "Voter-value-"
+	AllCoreParams     = "CoreParams"
+	ObserverMapperKey = "Observer-value-"
+
+	ObserverSetKey                = "ObserverSet-value-"
 	ObserverParamsKey             = "ObserverParams"
 	AdminPolicyParamsKey          = "AdminParams"
 	BallotMaturityBlocksParamsKey = "BallotMaturityBlocksParams"
