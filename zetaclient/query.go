@@ -440,3 +440,15 @@ func (b *ZetaCoreBridge) HasVoted(ballotIndex string, voterAddress string) (bool
 	}
 	return resp.HasVoted, nil
 }
+
+func (b *ZetaCoreBridge) GetZetaHotKeyBalance() (sdkmath.Int, error) {
+	client := banktypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Balance(context.Background(), &banktypes.QueryBalanceRequest{
+		Address: b.keys.GetAddress().String(),
+		Denom:   config.BaseDenom,
+	})
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	return resp.Balance.Amount, nil
+}

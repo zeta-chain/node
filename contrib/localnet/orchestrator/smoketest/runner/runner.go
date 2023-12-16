@@ -1,10 +1,7 @@
-package main
+package runner
 
 import (
-	"context"
-	"fmt"
 	"sync"
-	"time"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
@@ -20,35 +17,51 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/txserver"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-type SmokeTest struct {
-	zevmClient   *ethclient.Client
-	goerliClient *ethclient.Client
-	btcRPCClient *rpcclient.Client
-	zetaTxServer ZetaTxServer
+// SmokeTestRunner stores all the clients and addresses needed for smoke test
+// Exposes a method to run smoke test
+// It also provides some helper functions
+type SmokeTestRunner struct {
+	// accounts
+	DeployerAddress       ethcommon.Address
+	DeployerPrivateKey    string
+	TSSAddress            ethcommon.Address
+	BTCTSSAddress         btcutil.Address
+	BTCDeployerAddress    *btcutil.AddressWitnessPubKeyHash
+	FungibleAdminMnemonic string
 
-	cctxClient     crosschaintypes.QueryClient
-	fungibleClient fungibletypes.QueryClient
-	authClient     authtypes.QueryClient
-	bankClient     banktypes.QueryClient
-	observerClient observertypes.QueryClient
+	// rpc clients
+	ZevmClient   *ethclient.Client
+	GoerliClient *ethclient.Client
+	BtcRPCClient *rpcclient.Client
 
-	wg               sync.WaitGroup
-	ZetaEth          *zetaeth.ZetaEth
-	ZetaEthAddr      ethcommon.Address
-	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
-	ConnectorEthAddr ethcommon.Address
-	goerliAuth       *bind.TransactOpts
-	zevmAuth         *bind.TransactOpts
+	// grpc clients
+	CctxClient     crosschaintypes.QueryClient
+	FungibleClient fungibletypes.QueryClient
+	AuthClient     authtypes.QueryClient
+	BankClient     banktypes.QueryClient
+	ObserverClient observertypes.QueryClient
 
+	// zeta client
+	ZetaTxServer txserver.ZetaTxServer
+
+	// evm auth
+	GoerliAuth *bind.TransactOpts
+	ZevmAuth   *bind.TransactOpts
+
+	// contracts
+	ZetaEthAddr          ethcommon.Address
+	ZetaEth              *zetaeth.ZetaEth
+	ConnectorEthAddr     ethcommon.Address
+	ConnectorEth         *zetaconnectoreth.ZetaConnectorEth
 	ERC20CustodyAddr     ethcommon.Address
 	ERC20Custody         *erc20custody.ERC20Custody
 	USDTERC20Addr        ethcommon.Address
@@ -68,16 +81,25 @@ type SmokeTest struct {
 	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
 	ContextAppAddr       ethcommon.Address
 	ContextApp           *contextapp.ContextApp
+	SystemContractAddr   ethcommon.Address
+	SystemContract       *systemcontract.SystemContract
 
-	SystemContract     *systemcontract.SystemContract
-	SystemContractAddr ethcommon.Address
+	// other
+	WG sync.WaitGroup
 }
 
-func NewSmokeTest(
+// SmokeTest is a function representing a smoke test
+// It takes a SmokeTestRunner as an argument
+type SmokeTest func(*SmokeTestRunner)
+
+func NewSmokeTestRunner(
+	deployerAddress ethcommon.Address,
+	deployerPrivateKey string,
+	fungibleAdminMnemonic string,
 	goerliClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
-	zetaTxServer ZetaTxServer,
+	zetaTxServer txserver.ZetaTxServer,
 	fungibleClient fungibletypes.QueryClient,
 	authClient authtypes.QueryClient,
 	bankClient banktypes.QueryClient,
@@ -85,53 +107,41 @@ func NewSmokeTest(
 	goerliAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
-) *SmokeTest {
-	// query system contract address
-	systemContractRes, err := fungibleClient.SystemContract(context.Background(), &fungibletypes.QueryGetSystemContractRequest{})
-	if err != nil {
-		panic(err)
-	}
+) *SmokeTestRunner {
+	return &SmokeTestRunner{
+		DeployerAddress:       deployerAddress,
+		DeployerPrivateKey:    deployerPrivateKey,
+		FungibleAdminMnemonic: fungibleAdminMnemonic,
 
-	SystemContract, err := systemcontract.NewSystemContract(HexToAddress(systemContractRes.SystemContract.SystemContract), zevmClient)
-	if err != nil {
-		panic(err)
-	}
-	systemContractAddr := HexToAddress(systemContractRes.SystemContract.SystemContract)
-	fmt.Printf("System contract address: %s\n", systemContractAddr)
+		ZevmClient:     zevmClient,
+		GoerliClient:   goerliClient,
+		ZetaTxServer:   zetaTxServer,
+		CctxClient:     cctxClient,
+		FungibleClient: fungibleClient,
+		AuthClient:     authClient,
+		BankClient:     bankClient,
+		ObserverClient: observerClient,
 
-	response := &observertypes.QueryGetTssAddressResponse{}
-	for {
-		response, err = observerClient.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
-		if err != nil {
-			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
-			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore network...\n")
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		break
-	}
+		GoerliAuth:   goerliAuth,
+		ZevmAuth:     zevmAuth,
+		BtcRPCClient: btcRPCClient,
 
-	TSSAddress = ethcommon.HexToAddress(response.Eth)
-	BTCTSSAddress, err = btcutil.DecodeAddress(response.Btc, common.BitcoinRegnetParams)
-	if err != nil {
-		panic(err)
+		WG: sync.WaitGroup{},
 	}
-	fmt.Printf("TSS EthAddress: %s\n TSS BTC address %s\n", response.GetEth(), response.GetBtc())
+}
 
-	return &SmokeTest{
-		zevmClient:         zevmClient,
-		goerliClient:       goerliClient,
-		zetaTxServer:       zetaTxServer,
-		cctxClient:         cctxClient,
-		fungibleClient:     fungibleClient,
-		authClient:         authClient,
-		bankClient:         bankClient,
-		observerClient:     observerClient,
-		wg:                 sync.WaitGroup{},
-		goerliAuth:         goerliAuth,
-		zevmAuth:           zevmAuth,
-		btcRPCClient:       btcRPCClient,
-		SystemContract:     SystemContract,
-		SystemContractAddr: systemContractAddr,
+// RunSmokeTests runs a list of smoke tests
+func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
+	for _, smokeTest := range smokeTests {
+		sm.RunSmokeTest(smokeTest)
 	}
+}
+
+// RunSmokeTest runs a smoke test
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTest SmokeTest) {
+	// run smoke test
+	smokeTest(sm)
+
+	// check supplies
+	sm.CheckZRC20ReserveAndSupply()
 }

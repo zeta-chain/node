@@ -50645,6 +50645,7 @@ definitions:
       - bsc_testnet
       - zeta_testnet
       - btc_testnet
+      - sepolia_testnet
       - goerli_localnet
       - btc_regtest
     default: empty

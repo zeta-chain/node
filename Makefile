@@ -101,7 +101,7 @@ install-zetaclient-race-test-only-build: go.sum
 
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
+		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 ###############################################################################
 ###                             Local network                               ###

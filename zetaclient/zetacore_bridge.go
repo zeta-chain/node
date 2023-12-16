@@ -39,10 +39,16 @@ type ZetaCoreBridge struct {
 	zetaChain     common.Chain
 	stop          chan struct{}
 	pause         chan struct{}
+	Telemetry     *TelemetryServer
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string, hsmMode bool) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string,
+	signerName string,
+	chainID string,
+	hsmMode bool,
+	telemetry *TelemetryServer) (*ZetaCoreBridge, error) {
+
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
@@ -90,6 +96,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		zetaChainID:   chainID,
 		zetaChain:     zetaChain,
 		pause:         make(chan struct{}),
+		Telemetry:     telemetry,
 	}, nil
 }
 
