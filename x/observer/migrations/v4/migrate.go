@@ -8,8 +8,21 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func MigrateStore(ctx sdk.Context, observerStoreKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
-	if err := MigrateCrosschainFlags(ctx, observerStoreKey, cdc); err != nil {
+// observerKeeper prevents circular dependency
+type observerKeeper interface {
+	GetParams(ctx sdk.Context) types.Params
+	SetParams(ctx sdk.Context, params types.Params)
+	GetCoreParamsList(ctx sdk.Context) (params types.CoreParamsList, found bool)
+	SetCoreParamsList(ctx sdk.Context, params types.CoreParamsList)
+	StoreKey() storetypes.StoreKey
+	Codec() codec.BinaryCodec
+}
+
+func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
+	if err := MigrateCrosschainFlags(ctx, observerKeeper.StoreKey(), observerKeeper.Codec()); err != nil {
+		return err
+	}
+	if err := MigrateObserverParams(ctx, observerKeeper); err != nil {
 		return err
 	}
 	return nil
@@ -33,5 +46,33 @@ func MigrateCrosschainFlags(ctx sdk.Context, observerStoreKey storetypes.StoreKe
 		return err
 	}
 	store.Set([]byte{0}, b)
+	return nil
+}
+
+// MigrateObserverParams migrates the observer params to the core params
+// the function assumes that each oberver params entry has a corresponding core params entry
+// if the chain is not found, the observer params entry is ignored because it is considered as not supported
+func MigrateObserverParams(ctx sdk.Context, observerKeeper observerKeeper) error {
+	coreParamsList, found := observerKeeper.GetCoreParamsList(ctx)
+	if !found {
+		// no core params found, nothing to migrate
+		return nil
+	}
+
+	// search for the observer params with core params entry
+	observerParams := observerKeeper.GetParams(ctx).ObserverParams
+	for _, observerParam := range observerParams {
+		for i := range coreParamsList.CoreParams {
+			// if the chain is found, update the core params with the observer params
+			if coreParamsList.CoreParams[i].ChainId == observerParam.Chain.ChainId {
+				coreParamsList.CoreParams[i].MinObserverDelegation = observerParam.MinObserverDelegation
+				coreParamsList.CoreParams[i].BallotThreshold = observerParam.BallotThreshold
+				coreParamsList.CoreParams[i].IsSupported = observerParam.IsSupported
+				break
+			}
+		}
+	}
+
+	observerKeeper.SetCoreParamsList(ctx, coreParamsList)
 	return nil
 }
