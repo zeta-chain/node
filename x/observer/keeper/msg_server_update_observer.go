@@ -19,7 +19,7 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 	if !ok {
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
 	}
-	// WE do not use IsAuthorized here because we want to allow tombstoned observers to be updated
+	// We do not use IsAuthorized here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
 		return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
 	}
