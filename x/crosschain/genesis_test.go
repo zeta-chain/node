@@ -25,11 +25,6 @@ func TestGenesis(t *testing.T) {
 			sample.GasPrice(t, "1"),
 			sample.GasPrice(t, "2"),
 		},
-		ChainNoncesList: []*types.ChainNonces{
-			sample.ChainNonces(t, "0"),
-			sample.ChainNonces(t, "1"),
-			sample.ChainNonces(t, "2"),
-		},
 		CrossChainTxs: []*types.CrossChainTx{
 			sample.CrossChainTx(t, "0"),
 			sample.CrossChainTx(t, "1"),
@@ -45,7 +40,6 @@ func TestGenesis(t *testing.T) {
 			sample.InTxHashToCctx(t, "0x1"),
 			sample.InTxHashToCctx(t, "0x2"),
 		},
-		PendingNonces: sample.PendingNoncesList(t, "sample", 20),
 	}
 
 	// Init and export

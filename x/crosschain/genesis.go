@@ -2,7 +2,6 @@ package crosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -37,11 +36,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the chain nonces
-	for _, elem := range genState.ChainNoncesList {
-		if elem != nil {
-			k.SetChainNonces(ctx, *elem)
-		}
-	}
 
 	// Set all the last block heights
 	for _, elem := range genState.LastBlockHeightList {
@@ -55,23 +49,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if elem != nil {
 			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
 		}
-	}
-	// InitGenesis for observer module needs to be executed before crosschain module
-	tss, found := k.GetObserverKeeper().GetTSS(ctx)
-	if found {
-		for _, chain := range common.DefaultChainsList() {
-			k.SetPendingNonces(ctx, types.PendingNonces{
-				NonceLow:  0,
-				NonceHigh: 0,
-				ChainId:   chain.ChainId,
-				Tss:       tss.TssPubkey,
-			})
-		}
-	}
-
-	// Set all the pending nonces
-	for _, pendingNonce := range genState.PendingNonces {
-		k.SetPendingNonces(ctx, pendingNonce)
 	}
 
 }
@@ -92,13 +69,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.GasPriceList = append(genesis.GasPriceList, &elem)
 	}
 
-	// Get all chain nonces
-	chainNoncesList := k.GetAllChainNonces(ctx)
-	for _, elem := range chainNoncesList {
-		elem := elem
-		genesis.ChainNoncesList = append(genesis.ChainNoncesList, &elem)
-	}
-
 	// Get all last block heights
 	lastBlockHeightList := k.GetAllLastBlockHeight(ctx)
 	for _, elem := range lastBlockHeightList {
@@ -116,10 +86,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	amount, found := k.GetZetaAccounting(ctx)
 	if found {
 		genesis.ZetaAccounting = amount
-	}
-	pendingNonces, err := k.GetAllPendingNonces(ctx)
-	if err == nil {
-		genesis.PendingNonces = pendingNonces
 	}
 
 	return &genesis

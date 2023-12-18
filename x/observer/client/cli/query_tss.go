@@ -60,5 +60,3 @@ func CmdListTssHistory() *cobra.Command {
 
 	return cmd
 }
-
-// Transaction CLI /////////////////////////

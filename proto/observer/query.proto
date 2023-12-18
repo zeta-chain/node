@@ -8,11 +8,13 @@ import "google/api/annotations.proto";
 import "observer/ballot.proto";
 import "observer/blame.proto";
 import "observer/block_header.proto";
+import "observer/chain_nonces.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/pending_nonces.proto";
 import "observer/tss.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
@@ -112,21 +114,73 @@ service Query {
 
   // Queries a list of GetTssAddress items.
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
+    option (google.api.http).get = "/zeta-chain/observer/get_tss_address";
   }
 
   rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest) returns (QueryGetTssAddressByFinalizedHeightResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}";
+    option (google.api.http).get = "/zeta-chain/observer/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}";
   }
 
   // Queries a tSS by index.
   rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/TSS";
+    option (google.api.http).get = "/zeta-chain/observer/TSS";
   }
 
   rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
+    option (google.api.http).get = "/zeta-chain/observer/tssHistory";
   }
+
+  rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/pendingNonces";
+  }
+
+  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/pendingNonces/{chain_id}";
+  }
+
+  // Queries a chainNonces by index.
+  rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/chainNonces/{index}";
+  }
+
+  // Queries a list of chainNonces items.
+  rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/chainNonces";
+  }
+}
+
+message QueryGetChainNoncesRequest {
+  string index = 1;
+}
+
+message QueryGetChainNoncesResponse {
+  ChainNonces ChainNonces = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAllChainNoncesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllChainNoncesResponse {
+  repeated ChainNonces ChainNonces = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryAllPendingNoncesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllPendingNoncesResponse {
+  repeated PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryPendingNoncesByChainRequest {
+  int64 chain_id = 1;
+}
+
+message QueryPendingNoncesByChainResponse {
+  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetTSSRequest {}

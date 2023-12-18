@@ -40,7 +40,7 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	if tss.FinalizedZetaHeight >= tssHistory[len(tssHistory)-1].FinalizedZetaHeight {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "current tss is the latest")
 	}
-	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
+	pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot find pending nonces for chain")
 	}

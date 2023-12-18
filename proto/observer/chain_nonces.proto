@@ -1,9 +1,10 @@
 syntax = "proto3";
-package zetachain.zetacore.crosschain;
+package zetachain.zetacore.observer;
 
+import "common/common.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message ChainNonces {
   string creator = 1;

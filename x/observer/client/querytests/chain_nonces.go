@@ -6,15 +6,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/client/cli"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (s *CliTestSuite) TestShowChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.ChainNoncesList
+	objs := s.observerState.ChainNonces
 	common := []string{
 		fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 	}
@@ -23,7 +23,7 @@ func (s *CliTestSuite) TestShowChainNonces() {
 		id   string
 		args []string
 		err  error
-		obj  *types.ChainNonces
+		obj  types.ChainNonces
 	}{
 		{
 			desc: "found",
@@ -60,7 +60,7 @@ func (s *CliTestSuite) TestShowChainNonces() {
 
 func (s *CliTestSuite) TestListChainNonces() {
 	ctx := s.network.Validators[0].ClientCtx
-	objs := s.crosschainState.ChainNoncesList
+	objs := s.observerState.ChainNonces
 	request := func(next []byte, offset, limit uint64, total bool) []string {
 		args := []string{
 			fmt.Sprintf("--%s=json", tmcli.OutputFlag),
