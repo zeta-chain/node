@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_MigrateTssFunds(t *testing.T) {
@@ -63,7 +63,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		chain := getValidEthChain(t)
 		amount := sdkmath.NewUint(100)
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
-		k.SetPendingNonces(ctx, crosschaintypes.PendingNonces{
+		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
 			NonceHigh: 10,
 			ChainId:   chain.ChainId,
@@ -89,7 +89,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		chain := getValidEthChain(t)
 		amount := sdkmath.NewUint(100)
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
-		k.SetPendingNonces(ctx, crosschaintypes.PendingNonces{
+		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
 			NonceHigh: 1,
 			ChainId:   chain.ChainId,
@@ -98,7 +98,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		existingCctx := sample.CrossChainTx(t, "sample_index")
 		existingCctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *existingCctx)
-		k.GetObserverKeeper().SetFundMigrator(ctx, observerTypes.TssFundMigratorInfo{
+		k.GetObserverKeeper().SetFundMigrator(ctx, observertypes.TssFundMigratorInfo{
 			ChainId:            chain.ChainId,
 			MigrationCctxIndex: existingCctx.Index,
 		})
@@ -153,12 +153,12 @@ func setupTssMigrationParams(
 	setNewTss bool,
 	setCurrentTSS bool,
 ) (string, string) {
-	zk.ObserverKeeper.SetCrosschainFlags(ctx, observerTypes.CrosschainFlags{
+	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
 		IsInboundEnabled:  false,
 		IsOutboundEnabled: true,
 	})
 	params := zk.ObserverKeeper.GetParamsIfExists(ctx)
-	params.ObserverParams = append(params.ObserverParams, &observerTypes.ObserverParams{
+	params.ObserverParams = append(params.ObserverParams, &observertypes.ObserverParams{
 		Chain:                 &chain,
 		BallotThreshold:       sdk.NewDec(0),
 		MinObserverDelegation: sdk.OneDec(),
@@ -176,7 +176,7 @@ func setupTssMigrationParams(
 	if setNewTss {
 		k.GetObserverKeeper().SetTSSHistory(ctx, newTss)
 	}
-	k.SetPendingNonces(ctx, crosschaintypes.PendingNonces{
+	k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 		NonceLow:  1,
 		NonceHigh: 1,
 		ChainId:   chain.ChainId,
@@ -191,7 +191,7 @@ func setupTssMigrationParams(
 		Prices:      []uint64{1, 1, 1},
 		MedianIndex: 1,
 	})
-	k.SetChainNonces(ctx, crosschaintypes.ChainNonces{
+	k.GetObserverKeeper().SetChainNonces(ctx, observertypes.ChainNonces{
 		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
 		Nonce:   1,

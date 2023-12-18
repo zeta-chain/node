@@ -152,3 +152,51 @@ func BlameRecordsList(t *testing.T, n int) []types.Blame {
 	}
 	return blameList
 }
+
+func ChainNonces(t *testing.T, index string) types.ChainNonces {
+	r := newRandFromStringSeed(t, index)
+	return types.ChainNonces{
+		Creator:         AccAddress(),
+		Index:           index,
+		ChainId:         r.Int63(),
+		Nonce:           r.Uint64(),
+		Signers:         []string{AccAddress(), AccAddress()},
+		FinalizedHeight: r.Uint64(),
+	}
+}
+
+func ChainNoncesList(t *testing.T, n int) []types.ChainNonces {
+	chainNoncesList := make([]types.ChainNonces, n)
+	for i := 0; i < n; i++ {
+		chainNoncesList[i] = ChainNonces(t, fmt.Sprintf("%d", i))
+	}
+	return chainNoncesList
+}
+
+func PendingNoncesList(t *testing.T, index string, count int) []types.PendingNonces {
+	r := newRandFromStringSeed(t, index)
+	nonceLow := r.Int63()
+	list := make([]types.PendingNonces, count)
+	for i := 0; i < count; i++ {
+		list[i] = types.PendingNonces{
+			ChainId:   int64(i),
+			NonceLow:  nonceLow,
+			NonceHigh: nonceLow + r.Int63(),
+			Tss:       StringRandom(r, 32),
+		}
+	}
+	return list
+}
+
+func NonceToCctxList(t *testing.T, index string, count int) []types.NonceToCctx {
+	r := newRandFromStringSeed(t, index)
+	list := make([]types.NonceToCctx, count)
+	for i := 0; i < count; i++ {
+		list[i] = types.NonceToCctx{
+			ChainId:   int64(i),
+			Nonce:     r.Int63(),
+			CctxIndex: StringRandom(r, 32),
+		}
+	}
+	return list
+}

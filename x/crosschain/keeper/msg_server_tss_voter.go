@@ -100,7 +100,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 
 		tssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 		if len(tssList) == 0 {
-			k.SetTssAndUpdateNonce(ctx, tss)
+			k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, tss)
 		}
 		k.zetaObserverKeeper.SetTSSHistory(ctx, tss)
 		keygen.Status = observertypes.KeygenStatus_KeyGenSuccess

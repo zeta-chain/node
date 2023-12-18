@@ -213,7 +213,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		ctx.Logger().Error(err.Error())
 		// #nosec G701 always in range
-		k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
+		k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 		k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
@@ -222,7 +222,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// Set the ballot index to the finalized ballot
 	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 	// #nosec G701 always in range
-	k.RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
+	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)
 	ctx.Logger().Info(fmt.Sprintf("Remove tracker %s: , Block Height : %d ", getOutTrackerIndex(msg.OutTxChain, msg.OutTxTssNonce), ctx.BlockHeight()))
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)

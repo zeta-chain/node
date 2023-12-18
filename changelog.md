@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Breaking Changes
+- PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
+- ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
+- ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+
 ### Features
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
@@ -30,7 +35,8 @@
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
 * [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
 * update `MsgUpdateContractBytecode` to use code hash instead of contract address
-* move tss state date from crosschain to observer
+* move tss state from crosschain to observer
+* move pending nonces, chain nonces and nonce to cctx to observer
 * move tss related cli from crosschain to observer
 * reorganize smoke tests structure
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory

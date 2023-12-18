@@ -1,9 +1,9 @@
-# query crosschain show-chain-nonces
+# query observer list-pending-nonces
 
 shows a chainNonces
 
 ```
-zetacored query crosschain show-chain-nonces [index] [flags]
+zetacored query observer list-pending-nonces [flags]
 ```
 
 ### Options
@@ -12,7 +12,7 @@ zetacored query crosschain show-chain-nonces [index] [flags]
       --grpc-addr string   the gRPC endpoint to use for this chain
       --grpc-insecure      allow gRPC over insecure channels, if not TLS the server must use TLS
       --height int         Use a specific height to query state at (this can error if the node is pruning state)
-  -h, --help               help for show-chain-nonces
+  -h, --help               help for list-pending-nonces
       --node string        [host]:[port] to Tendermint RPC interface for this chain 
   -o, --output string      Output format (text|json) 
 ```
@@ -29,5 +29,5 @@ zetacored query crosschain show-chain-nonces [index] [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 

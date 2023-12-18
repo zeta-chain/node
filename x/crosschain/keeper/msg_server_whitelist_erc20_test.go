@@ -27,7 +27,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
-		k.SetTssAndUpdateNonce(ctx, sample.Tss())
+		k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, sample.Tss())
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -172,7 +172,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
-		k.SetTssAndUpdateNonce(ctx, sample.Tss())
+		k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, sample.Tss())
 
 		erc20Address := sample.EthAddress().Hex()
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{

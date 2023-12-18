@@ -33,19 +33,6 @@ func GasPrice(t *testing.T, index string) *types.GasPrice {
 	}
 }
 
-func ChainNonces(t *testing.T, index string) *types.ChainNonces {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.ChainNonces{
-		Creator:         AccAddress(),
-		Index:           index,
-		ChainId:         r.Int63(),
-		Nonce:           r.Uint64(),
-		Signers:         []string{AccAddress(), AccAddress()},
-		FinalizedHeight: r.Uint64(),
-	}
-}
-
 func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 	return &types.InboundTxParams{
 		Sender:                          EthAddress().String(),
@@ -128,19 +115,4 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	return types.ZetaAccounting{
 		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
 	}
-}
-
-func PendingNoncesList(t *testing.T, index string, count int) []types.PendingNonces {
-	r := newRandFromStringSeed(t, index)
-	nonceLow := r.Int63()
-	list := make([]types.PendingNonces, count)
-	for i := 0; i < count; i++ {
-		list[i] = types.PendingNonces{
-			ChainId:   int64(i),
-			NonceLow:  nonceLow,
-			NonceHigh: nonceLow + r.Int63(),
-			Tss:       StringRandom(r, 32),
-		}
-	}
-	return list
 }

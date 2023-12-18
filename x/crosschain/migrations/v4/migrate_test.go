@@ -3,6 +3,7 @@ package v4_test
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -53,6 +54,38 @@ func TestMigrateStore(t *testing.T) {
 		assert.Equal(t, 2, len(tssHistory))
 		assert.Equal(t, tss1, tssHistory[0])
 		assert.Equal(t, tss2, tssHistory[1])
+	})
+	t.Run("test migrate store move nonce from cross chain to observer", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		chainNonces := sample.ChainNoncesList(t, 10)
+		pendingNonces := sample.PendingNoncesList(t, "sample", 10)
+		nonceToCctxList := sample.NonceToCctxList(t, "sample", 10)
+		store := prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.ChainNoncesKey))
+		for _, nonce := range chainNonces {
+			store.Set([]byte(nonce.Index), k.GetCodec().MustMarshal(&nonce))
+		}
+		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
+		for _, nonce := range pendingNonces {
+			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d", nonce.Tss, nonce.ChainId)), k.GetCodec().MustMarshal(&nonce))
+		}
+		store = prefix.NewStore(ctx.KVStore(k.GetStoreKey()), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
+		for _, nonce := range nonceToCctxList {
+			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)), k.GetCodec().MustMarshal(&nonce))
+		}
+		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k.GetStoreKey(), k.GetCodec())
+		assert.NoError(t, err)
+		pn, err := k.GetObserverKeeper().GetAllPendingNonces(ctx)
+		assert.NoError(t, err)
+		sort.Slice(pn, func(i, j int) bool {
+			return pn[i].ChainId < pn[j].ChainId
+		})
+		sort.Slice(pendingNonces, func(i, j int) bool {
+			return pendingNonces[i].ChainId < pendingNonces[j].ChainId
+		})
+		assert.Equal(t, pendingNonces, pn)
+		assert.Equal(t, chainNonces, k.GetObserverKeeper().GetAllChainNonces(ctx))
+		assert.Equal(t, nonceToCctxList, k.GetObserverKeeper().GetAllNonceToCctx(ctx))
+
 	})
 }
 

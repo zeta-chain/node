@@ -2,16 +2,13 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "crosschain/chain_nonces.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
 import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
-import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
-import "crosschain/pending_nonces.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -76,24 +73,6 @@ service Query {
 
   rpc ProtocolFee(QueryMessagePassingProtocolFeeRequest) returns (QueryMessagePassingProtocolFeeResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/protocolFee";
-  }
-
-  // Queries a chainNonces by index.
-  rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/chainNonces/{index}";
-  }
-
-  // Queries a list of chainNonces items.
-  rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
-  }
-
-  rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
-  }
-
-  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
   }
 
   // Queries a lastBlockHeight by index.
@@ -237,39 +216,6 @@ message QueryAllGasPriceRequest {
 message QueryAllGasPriceResponse {
   repeated GasPrice GasPrice = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetChainNoncesRequest {
-  string index = 1;
-}
-
-message QueryGetChainNoncesResponse {
-  ChainNonces ChainNonces = 1;
-}
-
-message QueryAllChainNoncesRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllChainNoncesResponse {
-  repeated ChainNonces ChainNonces = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryAllPendingNoncesRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllPendingNoncesResponse {
-  repeated PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryPendingNoncesByChainRequest {
-  int64 chain_id = 1;
-}
-
-message QueryPendingNoncesByChainResponse {
-  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetLastBlockHeightRequest {

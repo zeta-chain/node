@@ -245,11 +245,11 @@ func (b *ZetaCoreBridge) GetBallotByID(id string) (*observertypes.QueryBallotByI
 	})
 }
 
-func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
+func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (observertypes.ChainNonces, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ChainNonces(context.Background(), &observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
 	if err != nil {
-		return nil, err
+		return observertypes.ChainNonces{}, err
 	}
 	return resp.ChainNonces, nil
 }
@@ -384,11 +384,11 @@ func (b *ZetaCoreBridge) GetClientParams(chainID int64) (observertypes.QueryGetC
 	return *resp, nil
 }
 
-func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (types.PendingNonces, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PendingNoncesByChain(context.Background(), &types.QueryPendingNoncesByChainRequest{ChainId: chainID})
+func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PendingNoncesByChain(context.Background(), &observertypes.QueryPendingNoncesByChainRequest{ChainId: chainID})
 	if err != nil {
-		return types.PendingNonces{}, err
+		return observertypes.PendingNonces{}, err
 	}
 	return resp.PendingNonces, nil
 }
@@ -411,9 +411,9 @@ func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
 	return resp.GetChains(), nil
 }
 
-func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PendingNoncesAll(context.Background(), &types.QueryAllPendingNoncesRequest{})
+func (b *ZetaCoreBridge) GetPendingNonces() (*observertypes.QueryAllPendingNoncesResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PendingNoncesAll(context.Background(), &observertypes.QueryAllPendingNoncesRequest{})
 	if err != nil {
 		return nil, err
 	}

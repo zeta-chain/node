@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -7,15 +7,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func TestChainNoncesQuerySingle(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	k, ctx := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNChainNonces(keeper, ctx, 2)
+	chainNonces := sample.ChainNoncesList(t, 2)
+	for _, nonce := range chainNonces {
+		k.SetChainNonces(ctx, nonce)
+	}
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryGetChainNoncesRequest
@@ -24,13 +29,13 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 	}{
 		{
 			desc:     "First",
-			request:  &types.QueryGetChainNoncesRequest{Index: msgs[0].Index},
-			response: &types.QueryGetChainNoncesResponse{ChainNonces: &msgs[0]},
+			request:  &types.QueryGetChainNoncesRequest{Index: chainNonces[0].Index},
+			response: &types.QueryGetChainNoncesResponse{ChainNonces: chainNonces[0]},
 		},
 		{
 			desc:     "Second",
-			request:  &types.QueryGetChainNoncesRequest{Index: msgs[1].Index},
-			response: &types.QueryGetChainNoncesResponse{ChainNonces: &msgs[1]},
+			request:  &types.QueryGetChainNoncesRequest{Index: chainNonces[1].Index},
+			response: &types.QueryGetChainNoncesResponse{ChainNonces: chainNonces[1]},
 		},
 		{
 			desc:    "KeyNotFound",
@@ -44,7 +49,7 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.ChainNonces(wctx, tc.request)
+			response, err := k.ChainNonces(wctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -55,9 +60,12 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 }
 
 func TestChainNoncesQueryPaginated(t *testing.T) {
-	keeper, ctx := setupKeeper(t)
+	k, ctx := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
-	msgs := createNChainNonces(keeper, ctx, 5)
+	chainNonces := sample.ChainNoncesList(t, 5)
+	for _, nonce := range chainNonces {
+		k.SetChainNonces(ctx, nonce)
+	}
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllChainNoncesRequest {
 		return &types.QueryAllChainNoncesRequest{
@@ -71,33 +79,33 @@ func TestChainNoncesQueryPaginated(t *testing.T) {
 	}
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
-		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ChainNoncesAll(wctx, request(nil, uint64(i), uint64(step), false))
+		for i := 0; i < len(chainNonces); i += step {
+			resp, err := k.ChainNoncesAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
-			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.ChainNonces[j-i])
+			for j := i; j < len(chainNonces) && j < i+step; j++ {
+				assert.Equal(t, chainNonces[j], resp.ChainNonces[j-i])
 			}
 		}
 	})
 	t.Run("ByKey", func(t *testing.T) {
 		step := 2
 		var next []byte
-		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.ChainNoncesAll(wctx, request(next, 0, uint64(step), false))
+		for i := 0; i < len(chainNonces); i += step {
+			resp, err := k.ChainNoncesAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
-			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.ChainNonces[j-i])
+			for j := i; j < len(chainNonces) && j < i+step; j++ {
+				assert.Equal(t, chainNonces[j], resp.ChainNonces[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.ChainNoncesAll(wctx, request(nil, 0, 0, true))
+		resp, err := k.ChainNoncesAll(wctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
-		require.Equal(t, len(msgs), int(resp.Pagination.Total))
+		require.Equal(t, len(chainNonces), int(resp.Pagination.Total))
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.ChainNoncesAll(wctx, nil)
+		_, err := k.ChainNoncesAll(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

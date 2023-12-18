@@ -1,9 +1,9 @@
-# query crosschain list-chain-nonces
+# query observer list-chain-nonces
 
 list all chainNonces
 
 ```
-zetacored query crosschain list-chain-nonces [flags]
+zetacored query observer list-chain-nonces [flags]
 ```
 
 ### Options
@@ -35,5 +35,5 @@ zetacored query crosschain list-chain-nonces [flags]
 
 ### SEE ALSO
 
-* [zetacored query crosschain](zetacored_query_crosschain.md)	 - Querying commands for the crosschain module
+* [zetacored query observer](zetacored_query_observer.md)	 - Querying commands for the observer module
 

@@ -26,13 +26,14 @@ func createCctxWithNonceRange(
 	high int,
 	chainID int64,
 	tss observertypes.TSS,
+	zk keepertest.ZetaKeepers,
 ) (cctxs []*types.CrossChainTx) {
 	for i := 0; i < low; i++ {
 		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d", i))
 		cctx.CctxStatus.Status = types.CctxStatus_OutboundMined
 		cctx.InboundTxParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetNonceToCctx(ctx, types.NonceToCctx{
+		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,
 			Nonce:     int64(i),
 			CctxIndex: cctx.Index,
@@ -44,7 +45,7 @@ func createCctxWithNonceRange(
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundTxParams.SenderChainId = chainID
 		k.SetCrossChainTx(ctx, *cctx)
-		k.SetNonceToCctx(ctx, types.NonceToCctx{
+		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
 			ChainId:   chainID,
 			Nonce:     int64(i),
 			CctxIndex: cctx.Index,
@@ -52,7 +53,7 @@ func createCctxWithNonceRange(
 		})
 		cctxs = append(cctxs, cctx)
 	}
-	k.SetPendingNonces(ctx, types.PendingNonces{
+	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
 		ChainId:   chainID,
 		NonceLow:  int64(low),
 		NonceHigh: int64(high),
@@ -97,7 +98,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
-		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss)
+		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
 
 		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID, Limit: 100})
 		require.NoError(t, err)
@@ -117,7 +118,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
-		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 1100, chainID, tss)
+		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 1100, chainID, tss, zk)
 
 		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID})
 		require.NoError(t, err)
@@ -131,7 +132,7 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
-		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss)
+		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
 
 		// set some cctxs as pending below nonce
 		cctx1, found := k.GetCrossChainTx(ctx, "940")

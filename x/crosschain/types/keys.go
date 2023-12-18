@@ -38,16 +38,14 @@ func KeyPrefix(p string) []byte {
 const (
 	SendKey            = "Send-value-"
 	LastBlockHeightKey = "LastBlockHeight-value-"
-	ChainNoncesKey     = "ChainNonces-value-"
-	GasPriceKey        = "GasPrice-value-"
+
+	GasPriceKey = "GasPrice-value-"
 
 	GasBalanceKey = "GasBalance-value-"
 
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 	InTxTrackerKeyPrefix  = "InTxTracker-value-"
 
-	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
-	PendingNoncesKeyPrefix = "PendingNonces-value-"
 	// #nosec G101: Potential hardcoded credentials (gosec)
 	// ZetaAccountingKey value is used as prefix for storing ZetaAccountingKey
 	ZetaAccountingKey = "ZetaAccounting-value-"

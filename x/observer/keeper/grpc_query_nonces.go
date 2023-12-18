@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -19,7 +19,7 @@ func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNonces
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	var chainNoncess []*types.ChainNonces
+	var chainNoncess []types.ChainNonces
 	ctx := sdk.UnwrapSDKContext(c)
 
 	store := ctx.KVStore(k.storeKey)
@@ -31,7 +31,7 @@ func (k Keeper) ChainNoncesAll(c context.Context, req *types.QueryAllChainNonces
 			return err
 		}
 
-		chainNoncess = append(chainNoncess, &chainNonces)
+		chainNoncess = append(chainNoncess, chainNonces)
 		return nil
 	})
 
@@ -53,7 +53,7 @@ func (k Keeper) ChainNonces(c context.Context, req *types.QueryGetChainNoncesReq
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
 
-	return &types.QueryGetChainNoncesResponse{ChainNonces: &val}, nil
+	return &types.QueryGetChainNoncesResponse{ChainNonces: val}, nil
 }
 
 // Pending nonces queries
@@ -80,7 +80,7 @@ func (k Keeper) PendingNoncesByChain(c context.Context, req *types.QueryPendingN
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	tss, found := k.GetTSS(ctx)
 	if !found {
 		return nil, status.Error(codes.NotFound, "tss not found")
 	}
