@@ -57,7 +57,7 @@ func SetZetaAccounting(
 
 func MoveNonceToObserverModule(
 	ctx sdk.Context,
-	observerKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) {

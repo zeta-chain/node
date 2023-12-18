@@ -69,6 +69,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		}
 		observerGenesis.ChainNonces = chainNonceList
 	}
+
 	observerGenesis.Observers = observerSet
 	observerGenesis.NodeAccountList = nodeAccountList
 	observerGenesis.Keygen = &observertypes.Keygen{
