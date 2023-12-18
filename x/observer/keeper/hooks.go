@@ -78,14 +78,14 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 		return err
 	}
 	observerSet, found := k.GetObserverSet(ctx)
-	if observerSet.Len() == 0 || !found {
+	if !found || observerSet.Len() == 0 {
 		return nil
 	}
 
 	tokensToBurn := sdk.NewDecFromInt(validator.Tokens).Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
 	mindelegation, found := types.GetMinObserverDelegation()
-	if !ok {
+	if !found {
 		return types.ErrMinDelegationNotFound
 	}
 	if resultingTokens.LT(mindelegation) {
