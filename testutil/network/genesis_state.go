@@ -30,17 +30,6 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 			NodeStatus: observertypes.NodeStatus_Active,
 		}
 	}
-	if setupChainNonces {
-		chainNonceList := make([]*types.ChainNonces, len(common.PrivnetChainList()))
-		for i, chain := range common.PrivnetChainList() {
-			chainNonceList[i] = &types.ChainNonces{
-				Index:   chain.ChainName.String(),
-				ChainId: chain.ChainId,
-				Nonce:   0,
-			}
-		}
-		crossChainGenesis.ChainNoncesList = chainNonceList
-	}
 
 	crossChainGenesis.Params.Enabled = true
 	assert.NoError(t, crossChainGenesis.Validate())
@@ -67,6 +56,17 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &observerGenesis))
 	observerSet := observertypes.ObserverSet{
 		ObserverList: observerList,
+	}
+	if setupChainNonces {
+		chainNonceList := make([]observertypes.ChainNonces, len(common.PrivnetChainList()))
+		for i, chain := range common.PrivnetChainList() {
+			chainNonceList[i] = observertypes.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   0,
+			}
+		}
+		observerGenesis.ChainNonces = chainNonceList
 	}
 	observerGenesis.Observers = observerSet
 	observerGenesis.NodeAccountList = nodeAccountList
@@ -100,7 +100,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	genesisState[evmtypes.ModuleName] = evmGenesisBz
 }
 
-func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
+func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
 	state := observertypes.GenesisState{}
 	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
 	if len(ballots) > 0 {
@@ -130,6 +130,10 @@ func AddObserverData(t *testing.T, genesisState map[string]json.RawMessage, code
 	nullify.Fill(&crosschainFlags)
 	state.CrosschainFlags = crosschainFlags
 
+	for i := 0; i < n; i++ {
+		state.ChainNonces = append(state.ChainNonces, observertypes.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
+	}
+
 	assert.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
@@ -155,9 +159,7 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 			ZetaFees:         math.OneUint()},
 		)
 	}
-	for i := 0; i < n; i++ {
-		state.ChainNoncesList = append(state.ChainNoncesList, &types.ChainNonces{Creator: "ANY", Index: strconv.Itoa(i), Signers: []string{}})
-	}
+
 	for i := 0; i < n; i++ {
 		state.GasPriceList = append(state.GasPriceList, &types.GasPrice{Creator: "ANY", ChainId: int64(i), Index: strconv.Itoa(i), Prices: []uint64{}, BlockNums: []uint64{}, Signers: []string{}})
 	}

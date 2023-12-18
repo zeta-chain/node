@@ -23,7 +23,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 		return zetaObserverTypes.ErrSupportedChains
 	}
 
-	nonce, found := k.GetChainNonces(ctx, chain.ChainName.String())
+	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
 		return cosmoserrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
@@ -35,7 +35,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
-	p, found := k.GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
+	p, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, receiveChainID)
 	if !found {
 		return cosmoserrors.Wrap(types.ErrCannotFindPendingNonces, fmt.Sprintf("chain_id %d, nonce %d", receiveChainID, nonce.Nonce))
 	}
@@ -47,8 +47,8 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	nonce.Nonce++
 	p.NonceHigh++
-	k.SetChainNonces(ctx, nonce)
-	k.SetPendingNonces(ctx, p)
+	k.GetObserverKeeper().SetChainNonces(ctx, nonce)
+	k.GetObserverKeeper().SetPendingNonces(ctx, p)
 	return nil
 }
 

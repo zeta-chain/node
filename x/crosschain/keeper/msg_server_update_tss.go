@@ -48,7 +48,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 
 	}
 
-	k.SetTssAndUpdateNonce(ctx, tss)
+	k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, tss)
 	// Remove all migrators once the tss address has been updated successfully,
 	// A new set of migrators will be created when the next migration is triggered
 	k.zetaObserverKeeper.RemoveAllExistingMigrators(ctx)

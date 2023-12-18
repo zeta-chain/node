@@ -163,6 +163,26 @@ func (_m *CrosschainObserverKeeper) GetAllBallots(ctx types.Context) []*observer
 	return r0
 }
 
+// GetAllChainNonces provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetAllChainNonces(ctx types.Context) []observertypes.ChainNonces {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllChainNonces")
+	}
+
+	var r0 []observertypes.ChainNonces
+	if rf, ok := ret.Get(0).(func(types.Context) []observertypes.ChainNonces); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.ChainNonces)
+		}
+	}
+
+	return r0
+}
+
 // GetAllNodeAccount provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetAllNodeAccount(ctx types.Context) []observertypes.NodeAccount {
 	ret := _m.Called(ctx)
@@ -181,6 +201,56 @@ func (_m *CrosschainObserverKeeper) GetAllNodeAccount(ctx types.Context) []obser
 	}
 
 	return r0
+}
+
+// GetAllNonceToCctx provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetAllNonceToCctx(ctx types.Context) []observertypes.NonceToCctx {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllNonceToCctx")
+	}
+
+	var r0 []observertypes.NonceToCctx
+	if rf, ok := ret.Get(0).(func(types.Context) []observertypes.NonceToCctx); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.NonceToCctx)
+		}
+	}
+
+	return r0
+}
+
+// GetAllPendingNonces provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetAllPendingNonces(ctx types.Context) ([]observertypes.PendingNonces, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllPendingNonces")
+	}
+
+	var r0 []observertypes.PendingNonces
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context) ([]observertypes.PendingNonces, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) []observertypes.PendingNonces); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]observertypes.PendingNonces)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetAllTSS provides a mock function with given fields: ctx
@@ -272,6 +342,34 @@ func (_m *CrosschainObserverKeeper) GetBlockHeader(ctx types.Context, hash []byt
 
 	if rf, ok := ret.Get(1).(func(types.Context, []byte) bool); ok {
 		r1 = rf(ctx, hash)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetChainNonces provides a mock function with given fields: ctx, index
+func (_m *CrosschainObserverKeeper) GetChainNonces(ctx types.Context, index string) (observertypes.ChainNonces, bool) {
+	ret := _m.Called(ctx, index)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetChainNonces")
+	}
+
+	var r0 observertypes.ChainNonces
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string) (observertypes.ChainNonces, bool)); ok {
+		return rf(ctx, index)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string) observertypes.ChainNonces); ok {
+		r0 = rf(ctx, index)
+	} else {
+		r0 = ret.Get(0).(observertypes.ChainNonces)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string) bool); ok {
+		r1 = rf(ctx, index)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -421,6 +519,34 @@ func (_m *CrosschainObserverKeeper) GetNodeAccount(ctx types.Context, address st
 	return r0, r1
 }
 
+// GetNonceToCctx provides a mock function with given fields: ctx, tss, chainID, nonce
+func (_m *CrosschainObserverKeeper) GetNonceToCctx(ctx types.Context, tss string, chainID int64, nonce int64) (observertypes.NonceToCctx, bool) {
+	ret := _m.Called(ctx, tss, chainID, nonce)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetNonceToCctx")
+	}
+
+	var r0 observertypes.NonceToCctx
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64, int64) (observertypes.NonceToCctx, bool)); ok {
+		return rf(ctx, tss, chainID, nonce)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64, int64) observertypes.NonceToCctx); ok {
+		r0 = rf(ctx, tss, chainID, nonce)
+	} else {
+		r0 = ret.Get(0).(observertypes.NonceToCctx)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, int64, int64) bool); ok {
+		r1 = rf(ctx, tss, chainID, nonce)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetObserverSet provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetObserverSet(ctx types.Context) (observertypes.ObserverSet, bool) {
 	ret := _m.Called(ctx)
@@ -465,6 +591,34 @@ func (_m *CrosschainObserverKeeper) GetParams(ctx types.Context) observertypes.P
 	}
 
 	return r0
+}
+
+// GetPendingNonces provides a mock function with given fields: ctx, tss, chainID
+func (_m *CrosschainObserverKeeper) GetPendingNonces(ctx types.Context, tss string, chainID int64) (observertypes.PendingNonces, bool) {
+	ret := _m.Called(ctx, tss, chainID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPendingNonces")
+	}
+
+	var r0 observertypes.PendingNonces
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) (observertypes.PendingNonces, bool)); ok {
+		return rf(ctx, tss, chainID)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64) observertypes.PendingNonces); ok {
+		r0 = rf(ctx, tss, chainID)
+	} else {
+		r0 = ret.Get(0).(observertypes.PendingNonces)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, int64) bool); ok {
+		r1 = rf(ctx, tss, chainID)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // GetPreviousTSS provides a mock function with given fields: ctx
@@ -594,9 +748,29 @@ func (_m *CrosschainObserverKeeper) RemoveAllExistingMigrators(ctx types.Context
 	_m.Called(ctx)
 }
 
+// RemoveChainNonces provides a mock function with given fields: ctx, index
+func (_m *CrosschainObserverKeeper) RemoveChainNonces(ctx types.Context, index string) {
+	_m.Called(ctx, index)
+}
+
+// RemoveFromPendingNonces provides a mock function with given fields: ctx, tss, chainID, nonce
+func (_m *CrosschainObserverKeeper) RemoveFromPendingNonces(ctx types.Context, tss string, chainID int64, nonce int64) {
+	_m.Called(ctx, tss, chainID, nonce)
+}
+
+// RemoveNonceToCctx provides a mock function with given fields: ctx, cctx
+func (_m *CrosschainObserverKeeper) RemoveNonceToCctx(ctx types.Context, cctx observertypes.NonceToCctx) {
+	_m.Called(ctx, cctx)
+}
+
 // SetBallot provides a mock function with given fields: ctx, ballot
 func (_m *CrosschainObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
 	_m.Called(ctx, ballot)
+}
+
+// SetChainNonces provides a mock function with given fields: ctx, chainNonces
+func (_m *CrosschainObserverKeeper) SetChainNonces(ctx types.Context, chainNonces observertypes.ChainNonces) {
+	_m.Called(ctx, chainNonces)
 }
 
 // SetCrosschainFlags provides a mock function with given fields: ctx, crosschainFlags
@@ -624,9 +798,19 @@ func (_m *CrosschainObserverKeeper) SetNodeAccount(ctx types.Context, nodeAccoun
 	_m.Called(ctx, nodeAccount)
 }
 
+// SetNonceToCctx provides a mock function with given fields: ctx, nonceToCctx
+func (_m *CrosschainObserverKeeper) SetNonceToCctx(ctx types.Context, nonceToCctx observertypes.NonceToCctx) {
+	_m.Called(ctx, nonceToCctx)
+}
+
 // SetObservers provides a mock function with given fields: ctx, om
 func (_m *CrosschainObserverKeeper) SetObservers(ctx types.Context, om observertypes.ObserverSet) {
 	_m.Called(ctx, om)
+}
+
+// SetPendingNonces provides a mock function with given fields: ctx, pendingNonces
+func (_m *CrosschainObserverKeeper) SetPendingNonces(ctx types.Context, pendingNonces observertypes.PendingNonces) {
+	_m.Called(ctx, pendingNonces)
 }
 
 // SetTSS provides a mock function with given fields: ctx, tss
@@ -636,6 +820,11 @@ func (_m *CrosschainObserverKeeper) SetTSS(ctx types.Context, tss observertypes.
 
 // SetTSSHistory provides a mock function with given fields: ctx, tss
 func (_m *CrosschainObserverKeeper) SetTSSHistory(ctx types.Context, tss observertypes.TSS) {
+	_m.Called(ctx, tss)
+}
+
+// SetTssAndUpdateNonce provides a mock function with given fields: ctx, tss
+func (_m *CrosschainObserverKeeper) SetTssAndUpdateNonce(ctx types.Context, tss observertypes.TSS) {
 	_m.Called(ctx, tss)
 }
 

@@ -7,6 +7,7 @@ import "observer/blame.proto";
 import "observer/crosschain_flags.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/pending_nonces.proto";
 import "observer/tss.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";

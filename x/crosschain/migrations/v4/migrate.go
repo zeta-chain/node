@@ -23,6 +23,7 @@ func MigrateStore(
 ) error {
 	SetZetaAccounting(ctx, crossChainStoreKey, cdc)
 	MoveTssToObserverModule(ctx, observerKeeper, crossChainStoreKey, cdc)
+	MoveNonceToObserverModule(ctx, observerKeeper, crossChainStoreKey, cdc)
 	return nil
 }
 
@@ -52,6 +53,72 @@ func SetZetaAccounting(
 	})
 	store := ctx.KVStore(crossChainStoreKey)
 	store.Set([]byte(types.ZetaAccountingKey), b)
+}
+
+func MoveNonceToObserverModule(
+	ctx sdk.Context,
+	observerKeeper types.ObserverKeeper,
+	crossChainStoreKey storetypes.StoreKey,
+	cdc codec.BinaryCodec,
+) {
+	var chainNonces []observertypes.ChainNonces
+	var pendingNonces []observertypes.PendingNonces
+	var nonceToCcTx []observertypes.NonceToCctx
+	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.ChainNoncesKey))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator sdk.Iterator) {
+		err := iterator.Close()
+		if err != nil {
+			return
+		}
+	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
+		var val observertypes.ChainNonces
+		err := cdc.Unmarshal(iterator.Value(), &val)
+		if err == nil {
+			chainNonces = append(chainNonces, val)
+		}
+	}
+	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.PendingNoncesKeyPrefix))
+	iterator = sdk.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator sdk.Iterator) {
+		err := iterator.Close()
+		if err != nil {
+			return
+		}
+	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
+		var val observertypes.PendingNonces
+		err := cdc.Unmarshal(iterator.Value(), &val)
+		if err == nil {
+			pendingNonces = append(pendingNonces, val)
+		}
+	}
+	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.NonceToCctxKeyPrefix))
+	iterator = sdk.KVStorePrefixIterator(store, []byte{})
+	defer func(iterator sdk.Iterator) {
+		err := iterator.Close()
+		if err != nil {
+			return
+		}
+	}(iterator)
+	for ; iterator.Valid(); iterator.Next() {
+		var val observertypes.NonceToCctx
+		err := cdc.Unmarshal(iterator.Value(), &val)
+		if err == nil {
+			nonceToCcTx = append(nonceToCcTx, val)
+		}
+	}
+	for _, c := range chainNonces {
+		observerKeeper.SetChainNonces(ctx, c)
+	}
+	for _, p := range pendingNonces {
+		observerKeeper.SetPendingNonces(ctx, p)
+	}
+	for _, n := range nonceToCcTx {
+		observerKeeper.SetNonceToCctx(ctx, n)
+	}
+
 }
 
 func MoveTssToObserverModule(ctx sdk.Context,
@@ -91,5 +158,4 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	if writeTss {
 		observerKeeper.SetTSS(ctx, tss)
 	}
-
 }

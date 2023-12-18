@@ -34,6 +34,13 @@ func TestGenesis(t *testing.T) {
 		LastObserverCount: sample.LastObserverCount(10),
 		CoreParamsList:    sample.CoreParamsList(),
 		TssFundMigrators:  []types.TssFundMigratorInfo{sample.TssFundsMigrator(1), sample.TssFundsMigrator(2)},
+		ChainNonces: []types.ChainNonces{
+			sample.ChainNonces(t, "0"),
+			sample.ChainNonces(t, "1"),
+			sample.ChainNonces(t, "2"),
+		},
+		PendingNonces: sample.PendingNoncesList(t, "sample", 20),
+		NonceToCctx:   sample.NonceToCctxList(t, "sample", 20),
 	}
 
 	// Init and export

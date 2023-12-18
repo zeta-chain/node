@@ -30,8 +30,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdShowOutTxTracker(),
 		CmdListGasPrice(),
 		CmdShowGasPrice(),
-		CmdListChainNonces(),
-		CmdShowChainNonces(),
+
 		CmdListSend(),
 		CmdShowSend(),
 		CmdLastZetaHeight(),
@@ -39,7 +38,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListInTxHashToCctx(),
 		CmdShowInTxHashToCctx(),
 		CmdQueryParams(),
-		CmdListPendingNonces(),
+
 		CmdPendingCctx(),
 		CmdListInTxTrackerByChain(),
 		CmdListInTxTrackers(),

@@ -78,7 +78,7 @@ func (k Keeper) CctxByNonce(c context.Context, req *types.QueryGetCctxByNonceReq
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
 	// #nosec G701 always in range
-	res, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
+	res, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainID, int64(req.Nonce))
 	if !found {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", req.Nonce, req.ChainID))
 	}
@@ -115,7 +115,7 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 	if !found {
 		return nil, status.Error(codes.Internal, "tss not found")
 	}
-	pendingNonces, found := k.GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
+	pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, req.ChainId)
 	if !found {
 		return nil, status.Error(codes.Internal, "pending nonces not found")
 	}
@@ -136,7 +136,7 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 		startNonce = 0
 	}
 	for i := startNonce; i < pendingNonces.NonceLow; i++ {
-		nonceToCctx, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
+		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, fmt.Sprintf("nonceToCctx not found: nonce %d, chainid %d", i, req.ChainId))
 		}
@@ -161,7 +161,7 @@ func (k Keeper) CctxListPending(c context.Context, req *types.QueryListCctxPendi
 
 	// now query the pending nonces that we know are pending
 	for i := pendingNonces.NonceLow; i < pendingNonces.NonceHigh && !maxCCTXsReached(); i++ {
-		nonceToCctx, found := k.GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
+		nonceToCctx, found := k.GetObserverKeeper().GetNonceToCctx(ctx, tss.TssPubkey, req.ChainId, i)
 		if !found {
 			return nil, status.Error(codes.Internal, "nonceToCctx not found")
 		}

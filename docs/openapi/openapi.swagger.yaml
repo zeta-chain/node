@@ -26462,21 +26462,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/TSS:
-    get:
-      summary: Queries a tSS by index.
-      operationId: Query_TSS
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetTSSResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of send items.
@@ -26608,85 +26593,6 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/crosschain/chainNonces:
-    get:
-      summary: Queries a list of chainNonces items.
-      operationId: Query_ChainNoncesAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryAllChainNoncesResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /zeta-chain/crosschain/chainNonces/{index}:
-    get:
-      summary: Queries a chainNonces by index.
-      operationId: Query_ChainNonces
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryGetChainNoncesResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /zeta-chain/crosschain/convertGasToZeta:
     get:
       operationId: Query_ConvertGasToZeta
@@ -26788,52 +26694,6 @@ paths:
           in: path
           required: true
           type: string
-      tags:
-        - Query
-  /zeta-chain/crosschain/get_tss_address:
-    get:
-      summary: Queries a list of GetTssAddress items.
-      operationId: Query_GetTssAddress
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetTssAddressResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: bitcoin_chain_id
-          in: query
-          required: false
-          type: string
-          format: int64
-      tags:
-        - Query
-  /zeta-chain/crosschain/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}:
-    get:
-      operationId: Query_GetTssAddressByFinalizedHeight
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetTssAddressByFinalizedHeightResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: finalized_zeta_height
-          in: path
-          required: true
-          type: string
-          format: int64
-        - name: bitcoin_chain_id
-          in: path
-          required: true
-          type: string
-          format: int64
       tags:
         - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
@@ -27313,84 +27173,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/crosschain/pendingNonces:
-    get:
-      operationId: Query_PendingNoncesAll
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryAllPendingNoncesResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /zeta-chain/crosschain/pendingNonces/{chain_id}:
-    get:
-      operationId: Query_PendingNoncesByChain
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/crosschainQueryPendingNoncesByChainResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: chain_id
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
   /zeta-chain/crosschain/protocolFee:
     get:
       operationId: Query_ProtocolFee
@@ -27403,64 +27185,6 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
-  /zeta-chain/crosschain/tssHistory:
-    get:
-      operationId: Query_TssHistory
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryTssHistoryResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: |-
-            offset is a numeric offset that can be used when key is unavailable.
-            It is less efficient than using key. Only one of offset or key should
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: |-
-            limit is the total number of results to be returned in the result page.
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: |-
-            count_total is set to true  to indicate that the result set should include
-            a count of the total number of items available for pagination in UIs.
-            count_total is only respected when offset is used. It is ignored when key
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: |-
-            reverse is set to true if results are to be returned in the descending order.
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   /zeta-chain/crosschain/zetaAccounting:
@@ -27707,6 +27431,21 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/TSS:
+    get:
+      summary: Queries a tSS by index.
+      operationId: Query_TSS
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetTSSResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -27768,6 +27507,85 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: blame_identifier
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /zeta-chain/observer/chainNonces:
+    get:
+      summary: Queries a list of chainNonces items.
+      operationId: Query_ChainNoncesAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryAllChainNoncesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/observer/chainNonces/{index}:
+    get:
+      summary: Queries a chainNonces by index.
+      operationId: Query_ChainNonces
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetChainNoncesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: index
           in: path
           required: true
           type: string
@@ -27980,6 +27798,52 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/get_tss_address:
+    get:
+      summary: Queries a list of GetTssAddress items.
+      operationId: Query_GetTssAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetTssAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: bitcoin_chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/observer/get_tss_address_historical/{finalized_zeta_height}/{bitcoin_chain_id}:
+    get:
+      operationId: Query_GetTssAddressByFinalizedHeight
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetTssAddressByFinalizedHeightResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: finalized_zeta_height
+          in: path
+          required: true
+          type: string
+          format: int64
+        - name: bitcoin_chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/has_voted/{ballot_identifier}/{voter_address}:
     get:
       summary: Query if a voter has voted for a ballot
@@ -28128,6 +27992,84 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/observer/pendingNonces:
+    get:
+      operationId: Query_PendingNoncesAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryAllPendingNoncesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/observer/pendingNonces/{chain_id}:
+    get:
+      operationId: Query_PendingNoncesByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryPendingNoncesByChainResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/prove:
     get:
       summary: merkle proof verification
@@ -28205,6 +28147,64 @@ paths:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/tssHistory:
+    get:
+      operationId: Query_TssHistory
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryTssHistoryResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
       tags:
         - Query
   /zeta-chain/zetacore/fungible/gas_stability_pool_balance:
@@ -50698,26 +50698,6 @@ definitions:
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
        - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
-  crosschainChainNonces:
-    type: object
-    properties:
-      creator:
-        type: string
-      index:
-        type: string
-      chain_id:
-        type: string
-        format: int64
-      nonce:
-        type: string
-        format: uint64
-      signers:
-        type: array
-        items:
-          type: string
-      finalizedHeight:
-        type: string
-        format: uint64
   crosschainCrossChainTx:
     type: object
     properties:
@@ -50915,21 +50895,6 @@ definitions:
         format: uint64
       tss_pubkey:
         type: string
-  crosschainPendingNonces:
-    type: object
-    properties:
-      nonce_low:
-        type: string
-        format: int64
-      nonce_high:
-        type: string
-        format: int64
-      chain_id:
-        type: string
-        format: int64
-      tss:
-        type: string
-    title: store key is tss+chainid
   crosschainQueryAllCctxResponse:
     type: object
     properties:
@@ -50938,16 +50903,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainCrossChainTx'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllChainNoncesResponse:
-    type: object
-    properties:
-      ChainNonces:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainChainNonces'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryAllGasPriceResponse:
@@ -51020,16 +50975,6 @@ definitions:
           $ref: '#/definitions/crosschainOutTxTracker'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  crosschainQueryAllPendingNoncesResponse:
-    type: object
-    properties:
-      pending_nonces:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/crosschainPendingNonces'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
   crosschainQueryConvertGasToZetaResponse:
     type: object
     properties:
@@ -51045,11 +50990,6 @@ definitions:
     properties:
       CrossChainTx:
         $ref: '#/definitions/crosschainCrossChainTx'
-  crosschainQueryGetChainNoncesResponse:
-    type: object
-    properties:
-      ChainNonces:
-        $ref: '#/definitions/crosschainChainNonces'
   crosschainQueryGetGasPriceResponse:
     type: object
     properties:
@@ -51100,11 +51040,6 @@ definitions:
     properties:
       feeInZeta:
         type: string
-  crosschainQueryPendingNoncesByChainResponse:
-    type: object
-    properties:
-      pending_nonces:
-        $ref: '#/definitions/crosschainPendingNonces'
   crosschainQueryZetaAccountingResponse:
     type: object
     properties:
@@ -51332,6 +51267,26 @@ definitions:
         type: boolean
       isBtcTypeChainEnabled:
         type: boolean
+  observerChainNonces:
+    type: object
+    properties:
+      creator:
+        type: string
+      index:
+        type: string
+      chain_id:
+        type: string
+        format: int64
+      nonce:
+        type: string
+        format: uint64
+      signers:
+        type: array
+        items:
+          type: string
+      finalizedHeight:
+        type: string
+        format: uint64
   observerCoreParams:
     type: object
     properties:
@@ -51508,6 +51463,21 @@ definitions:
       - Tombstoned
       - AdminUpdate
     default: Undefined
+  observerPendingNonces:
+    type: object
+    properties:
+      nonce_low:
+        type: string
+        format: int64
+      nonce_high:
+        type: string
+        format: int64
+      chain_id:
+        type: string
+        format: int64
+      tss:
+        type: string
+    title: store key is tss+chainid
   observerPolicy_Type:
     type: string
     enum:
@@ -51534,6 +51504,16 @@ definitions:
           $ref: '#/definitions/commonBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
+  observerQueryAllChainNoncesResponse:
+    type: object
+    properties:
+      ChainNonces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerChainNonces'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllNodeAccountResponse:
     type: object
     properties:
@@ -51542,6 +51522,16 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNodeAccount'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  observerQueryAllPendingNoncesResponse:
+    type: object
+    properties:
+      pending_nonces:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/observerPendingNonces'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryBallotByIdentifierResponse:
@@ -51581,6 +51571,11 @@ definitions:
     properties:
       block_header_state:
         $ref: '#/definitions/observerBlockHeaderState'
+  observerQueryGetChainNoncesResponse:
+    type: object
+    properties:
+      ChainNonces:
+        $ref: '#/definitions/observerChainNonces'
   observerQueryGetCoreParamsForChainResponse:
     type: object
     properties:
@@ -51637,6 +51632,11 @@ definitions:
         type: array
         items:
           type: string
+  observerQueryPendingNoncesByChainResponse:
+    type: object
+    properties:
+      pending_nonces:
+        $ref: '#/definitions/observerPendingNonces'
   observerQueryProveResponse:
     type: object
     properties:

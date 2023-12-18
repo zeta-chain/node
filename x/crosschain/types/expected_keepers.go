@@ -79,6 +79,19 @@ type ObserverKeeper interface {
 	GetFundMigrator(ctx sdk.Context, chainID int64) (val observertypes.TssFundMigratorInfo, found bool)
 	GetAllTssFundMigrators(ctx sdk.Context) (fms []observertypes.TssFundMigratorInfo)
 	RemoveAllExistingMigrators(ctx sdk.Context)
+	SetChainNonces(ctx sdk.Context, chainNonces observertypes.ChainNonces)
+	GetChainNonces(ctx sdk.Context, index string) (val observertypes.ChainNonces, found bool)
+	RemoveChainNonces(ctx sdk.Context, index string)
+	GetAllChainNonces(ctx sdk.Context) (list []observertypes.ChainNonces)
+	SetNonceToCctx(ctx sdk.Context, nonceToCctx observertypes.NonceToCctx)
+	GetNonceToCctx(ctx sdk.Context, tss string, chainID int64, nonce int64) (val observertypes.NonceToCctx, found bool)
+	RemoveNonceToCctx(ctx sdk.Context, cctx observertypes.NonceToCctx)
+	GetAllPendingNonces(ctx sdk.Context) (list []observertypes.PendingNonces, err error)
+	GetPendingNonces(ctx sdk.Context, tss string, chainID int64) (val observertypes.PendingNonces, found bool)
+	SetPendingNonces(ctx sdk.Context, pendingNonces observertypes.PendingNonces)
+	SetTssAndUpdateNonce(ctx sdk.Context, tss observertypes.TSS)
+	RemoveFromPendingNonces(ctx sdk.Context, tss string, chainID int64, nonce int64)
+	GetAllNonceToCctx(ctx sdk.Context) (list []observertypes.NonceToCctx)
 }
 
 type FungibleKeeper interface {
