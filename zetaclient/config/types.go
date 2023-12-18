@@ -182,10 +182,11 @@ func (c *Config) UpdateCoreParams(
 	if !init {
 		if len(c.ChainsEnabled) != len(newChains) {
 			logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
-		}
-		for i, chain := range newChains {
-			if chain != c.ChainsEnabled[i] {
-				logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
+		} else {
+			for i, chain := range newChains {
+				if chain != c.ChainsEnabled[i] {
+					logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
+				}
 			}
 		}
 	}

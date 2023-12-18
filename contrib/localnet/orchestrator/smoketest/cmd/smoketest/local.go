@@ -154,6 +154,11 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize core params with local chains enabled
+	if err = zetaTxServer.InitializeCoreParams(utils.FungibleAdminName); err != nil {
+		panic(err)
+	}
+
 	// wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
