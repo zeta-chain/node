@@ -22,10 +22,7 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 	if err := MigrateCrosschainFlags(ctx, observerKeeper.StoreKey(), observerKeeper.Codec()); err != nil {
 		return err
 	}
-	if err := MigrateObserverParams(ctx, observerKeeper); err != nil {
-		return err
-	}
-	return nil
+	return MigrateObserverParams(ctx, observerKeeper)
 }
 
 func MigrateCrosschainFlags(ctx sdk.Context, observerStoreKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
