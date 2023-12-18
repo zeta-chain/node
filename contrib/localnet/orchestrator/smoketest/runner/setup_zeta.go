@@ -130,22 +130,3 @@ func (sm *SmokeTestRunner) SetupContextApp() {
 	sm.ContextAppAddr = contextAppAddr
 	sm.ContextApp = contextApp
 }
-
-// SetCoreParams sets the core params with local Goerli and BtcRegtest chains enabled
-func (sm *SmokeTestRunner) SetCoreParams() error {
-	// set btc regtest  core params
-	btcCoreParams := observertypes.GetDefaultBtcRegtestCoreParams()
-	btcCoreParams.IsSupported = true
-	if err := sm.ZetaTxServer.UpdateCoreParams(utils.FungibleAdminName, btcCoreParams); err != nil {
-		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
-	}
-
-	// set goerli localnet core params
-	goerliCoreParams := observertypes.GetDefaultGoerliLocalnetCoreParams()
-	goerliCoreParams.IsSupported = true
-	if err := sm.ZetaTxServer.UpdateCoreParams(utils.FungibleAdminName, goerliCoreParams); err != nil {
-		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
-	}
-
-	return nil
-}
