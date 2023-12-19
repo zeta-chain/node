@@ -44,6 +44,7 @@
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
 
 ### Chores
+* renamed file `zetaclientd/aux.go` to `zetaclientd/aux_.go` to avoid complaints from go package resolver. 
 
 ### Tests
 - Add unit tests for adding votes to a ballot 
