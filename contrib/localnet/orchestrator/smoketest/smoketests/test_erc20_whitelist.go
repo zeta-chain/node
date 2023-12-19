@@ -2,24 +2,15 @@ package smoketests
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestWhitelistERC20(sm *runner.SmokeTestRunner) {
-	utils.LoudPrintf("Test ERC20 whitelist\n")
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
-	}()
-
 	res, err := sm.ObserverClient.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{
 		ChainId: int64(1337),
 	})
@@ -43,6 +34,6 @@ func TestWhitelistERC20(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	for iter.Next() {
-		fmt.Printf("whitelisted: %s\n", iter.Event.Asset.Hex())
+		sm.Logger.Info("whitelisted: %s", iter.Event.Asset.Hex())
 	}
 }

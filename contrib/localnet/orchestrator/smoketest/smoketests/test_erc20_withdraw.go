@@ -18,25 +18,25 @@ import (
 func TestERC20Withdraw(sm *runner.SmokeTestRunner) {
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Info("test finishes in %s", time.Since(startTime))
 	}()
 
 	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 	supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
+	sm.Logger.Info("supply of USDT ZRC20: %d", supply)
 
 	gasZRC20, gasFee, err := sm.USDTZRC20.WithdrawGasFee(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("gasZRC20: %s, gasFee: %d\n", gasZRC20.Hex(), gasFee)
+	sm.Logger.Info("gasZRC20: %s, gasFee: %d", gasZRC20.Hex(), gasFee)
 
 	ethZRC20, err := zrc20.NewZRC20(gasZRC20, sm.ZevmClient)
 	if err != nil {
@@ -46,15 +46,15 @@ func TestERC20Withdraw(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on ETH ZRC20: %d\n", bal)
+	sm.Logger.Info("balance of deployer on ETH ZRC20: %d", bal)
 	if bal.Int64() <= 0 {
 		panic("not enough ETH ZRC20 balance!")
 	}
 
-	utils.LoudPrintf("Withdraw USDT ZRC20\n")
+	sm.Logger.InfoLoud("Withdraw USDT ZRC20")
 	WithdrawERC20(sm, ethZRC20)
 
-	utils.LoudPrintf("Multiple withdraws USDT ZRC20\n")
+	sm.Logger.InfoLoud("Multiple withdraws USDT ZRC20")
 	MultipleWithdraws(sm, ethZRC20)
 }
 
@@ -64,29 +64,29 @@ func WithdrawERC20(sm *runner.SmokeTestRunner, ethZRC20 *zrc20.ZRC20) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
+	sm.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
 	tx, err = sm.USDTZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
-	fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.USDTZRC20.ParseWithdrawal(*log)
 		if err != nil {
 			continue
 		}
-		fmt.Printf("  logs: from %s, to %x, value %d, gasfee %d\n", event.From.Hex(), event.To, event.Value, event.Gasfee)
+		sm.Logger.Info("  logs: from %s, to %x, value %d, gasfee %d", event.From.Hex(), event.To, event.Value, event.Gasfee)
 	}
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient)
+	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
 	verifyTransferAmountFromCCTX(sm, cctx, 100)
 }
 
@@ -102,29 +102,29 @@ func MultipleWithdraws(sm *runner.SmokeTestRunner, ethZRC20 *zrc20.ZRC20) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	fmt.Printf("USDT ZRC20 approve receipt: status %d\n", receipt.Status)
+	sm.Logger.Info("USDT ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
 	tx, err = ethZRC20.Approve(sm.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve gas token failed")
 	}
-	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
+	sm.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// check the balance
 	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 
 	if bal.Int64() < 1000 {
 		panic("not enough USDT ZRC20 balance!")
@@ -141,13 +141,13 @@ func MultipleWithdraws(sm *runner.SmokeTestRunner, ethZRC20 *zrc20.ZRC20) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
-	fmt.Printf("Withdraws receipt: status %d\n", receipt.Status)
+	sm.Logger.Info("Withdraws receipt: status %d", receipt.Status)
 
-	cctxs := utils.WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.CctxClient, 10)
+	cctxs := utils.WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.CctxClient, 10, sm.Logger)
 	if len(cctxs) != 10 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -160,7 +160,7 @@ func MultipleWithdraws(sm *runner.SmokeTestRunner, ethZRC20 *zrc20.ZRC20) {
 
 // verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on Goerli
 func verifyTransferAmountFromCCTX(sm *runner.SmokeTestRunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
-	fmt.Printf("outTx hash %s\n", cctx.GetCurrentOutTxParam().OutboundTxHash)
+	sm.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
 	receipt, err := sm.GoerliClient.TransactionReceipt(
 		context.Background(),
@@ -169,13 +169,13 @@ func verifyTransferAmountFromCCTX(sm *runner.SmokeTestRunner, cctx *crosschainty
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Receipt txhash %s status %d\n", receipt.TxHash, receipt.Status)
+	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.USDTERC20.ParseTransfer(*log)
 		if err != nil {
 			continue
 		}
-		fmt.Printf("  logs: from %s, to %s, value %d\n", event.From.Hex(), event.To.Hex(), event.Value)
+		sm.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
 		if event.Value.Int64() != amount {
 			panic("value is not correct")
 		}

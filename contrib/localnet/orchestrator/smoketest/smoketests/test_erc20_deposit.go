@@ -3,7 +3,6 @@ package smoketests
 import (
 	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -13,18 +12,12 @@ import (
 )
 
 func TestERC20Deposit(sm *runner.SmokeTestRunner) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
-	}()
-	utils.LoudPrintf("Deposit USDT ERC20 into ZEVM\n")
-
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	txhash := sm.DepositERC20(big.NewInt(1e18), []byte{})
-	utils.WaitCctxMinedByInTxHash(txhash.Hex(), sm.CctxClient)
+	utils.WaitCctxMinedByInTxHash(txhash.Hex(), sm.CctxClient, sm.Logger)
 
 	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
@@ -34,23 +27,23 @@ func TestERC20Deposit(sm *runner.SmokeTestRunner) {
 	diff := big.NewInt(0)
 	diff.Sub(bal, initialBal)
 
-	fmt.Printf("balance of deployer on USDT ZRC20: %d\n", bal)
+	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 	supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("supply of USDT ZRC20: %d\n", supply)
+	sm.Logger.Info("supply of USDT ZRC20: %d", supply)
 	if diff.Int64() != 1e18 {
 		panic("balance is not correct")
 	}
 
-	utils.LoudPrintf("Same-transaction multiple deposit USDT ERC20 into ZEVM\n")
+	sm.Logger.InfoLoud("Same-transaction multiple deposit USDT ERC20 into ZEVM")
 	initialBal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	txhash = MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(10))
-	cctxs := utils.WaitCctxsMinedByInTxHash(txhash.Hex(), sm.CctxClient, 10)
+	cctxs := utils.WaitCctxsMinedByInTxHash(txhash.Hex(), sm.CctxClient, 10, sm.Logger)
 	if len(cctxs) != 10 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -80,42 +73,42 @@ func MultipleDeposits(sm *runner.SmokeTestRunner, amount, count *big.Int) ethcom
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("mint failed")
 	}
-	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
+	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 
 	// approve
 	tx, err = sm.USDTERC20.Approve(sm.GoerliAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
+	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
 	tx, err = depositor.RunDeposits(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, []byte{}, count)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposits failed")
 	}
-	fmt.Printf("Deposits receipt tx hash: %s\n", tx.Hash().Hex())
+	sm.Logger.Info("Deposits receipt tx hash: %s", tx.Hash().Hex())
 
 	for _, log := range receipt.Logs {
 		event, err := sm.ERC20Custody.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}
-		fmt.Printf("Multiple deposit event: \n")
-		fmt.Printf("  Amount: %d, \n", event.Amount)
+		sm.Logger.Info("Multiple deposit event: ")
+		sm.Logger.Info("  Amount: %d, ", event.Amount)
 	}
-	fmt.Printf("gas limit %d\n", sm.ZevmAuth.GasLimit)
+	sm.Logger.Info("gas limit %d", sm.ZevmAuth.GasLimit)
 	return tx.Hash()
 }

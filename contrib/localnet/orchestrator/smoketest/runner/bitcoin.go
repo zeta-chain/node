@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
@@ -39,10 +38,10 @@ func (sm *SmokeTestRunner) DepositBTC() {
 			spendableUTXOs++
 		}
 	}
-	fmt.Printf("ListUnspent:\n")
-	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
-	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
-	fmt.Printf("Now sending two txs to TSS address...\n")
+	sm.Logger.Info("ListUnspent:")
+	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
+	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	sm.Logger.Info("Now sending two txs to TSS address...")
 	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
 	txHash1, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount1, utxos[:2], btc, sm.BTCDeployerAddress)
 	if err != nil {
@@ -58,7 +57,7 @@ func (sm *SmokeTestRunner) DepositBTC() {
 		panic(err)
 	}
 
-	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
+	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
 	// check if the deposit is successful
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
@@ -66,7 +65,7 @@ func (sm *SmokeTestRunner) DepositBTC() {
 		panic(err)
 	}
 	sm.BTCZRC20Addr = BTCZRC20Addr
-	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
+	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -84,17 +83,17 @@ func (sm *SmokeTestRunner) DepositBTC() {
 		}
 		diff := big.NewInt(0)
 		diff.Sub(balance, initialBalance)
-		fmt.Printf("BTC Difference in balance: %d", diff.Uint64())
+		sm.Logger.Info("BTC Difference in balance: %d", diff.Uint64())
 		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
-			fmt.Printf("waiting for BTC balance to show up in ZRC contract... current bal %d\n", balance)
+			sm.Logger.Info("waiting for BTC balance to show up in ZRC contract... current bal %d", balance)
 		} else {
-			fmt.Printf("BTC balance is in ZRC contract! Success\n")
+			sm.Logger.Info("BTC balance is in ZRC contract! Success")
 			break
 		}
 	}
 
 	// prove the two transactions of the deposit
-	utils.LoudPrintf("Bitcoin Merkle Proof\n")
+	sm.Logger.InfoLoud("Bitcoin Merkle Proof\n")
 
 	sm.ProveBTCTransaction(txHash1)
 	sm.ProveBTCTransaction(txHash2)
@@ -164,13 +163,12 @@ func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 			BlockHash: hash.CloneBytes(),
 		})
 		if err != nil {
-			fmt.Printf("waiting for block header to show up in observer... current hash %s; err %s\n", hash.String(), err.Error())
+			sm.Logger.Info("waiting for block header to show up in observer... current hash %s; err %s", hash.String(), err.Error())
 		}
 		if err == nil {
 			break
 		}
 		time.Sleep(2 * time.Second)
-
 	}
 
 	// verify merkle proof through RPC
@@ -187,7 +185,7 @@ func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	if !res.Valid {
 		panic("txProof should be valid")
 	}
-	fmt.Printf("OK: txProof verified for inTx: %s\n", txHash.String())
+	sm.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
 
 func (sm *SmokeTestRunner) SendToTSSFromDeployerToDeposit(
@@ -195,7 +193,6 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerToDeposit(
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
 	btc *rpcclient.Client,
-
 	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
 	return sm.SendToTSSFromDeployerWithMemo(to, amount, inputUTXOs, btc, sm.DeployerAddress.Bytes(), btcDeployerAddress)
@@ -240,7 +237,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("nulldata (len %d): %x\n", len(nulldata), nulldata)
+	sm.Logger.Info("nulldata (len %d): %x", len(nulldata), nulldata)
 	if err != nil {
 		panic(err)
 	}
@@ -250,17 +247,17 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 
 	// make sure that TxOut[0] is sent to "to" address; TxOut[2] is change to oneself. TxOut[1] is memo.
 	if bytes.Compare(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) != 0 {
-		fmt.Printf("tx.TxOut[0].PkScript: %x\n", tx.TxOut[0].PkScript)
-		fmt.Printf("to.ScriptAddress():   %x\n", to.ScriptAddress())
-		fmt.Printf("swapping txout[0] with txout[2]\n")
+		sm.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
+		sm.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
+		sm.Logger.Info("swapping txout[0] with txout[2]")
 		tx.TxOut[0], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[0]
 	}
 
-	fmt.Printf("raw transaction: \n")
+	sm.Logger.Info("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
-		fmt.Printf("txout %d\n", idx)
-		fmt.Printf("  value: %d\n", txout.Value)
-		fmt.Printf("  PkScript: %x\n", txout.PkScript)
+		sm.Logger.Info("txout %d", idx)
+		sm.Logger.Info("  value: %d", txout.Value)
+		sm.Logger.Info("  PkScript: %x", txout.PkScript)
 	}
 
 	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
@@ -285,7 +282,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("txid: %+v\n", txid)
+	sm.Logger.Info("txid: %+v", txid)
 	_, err = btc.GenerateToAddress(6, btcDeployerAddress, nil)
 	if err != nil {
 		panic(err)
@@ -294,7 +291,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("rawtx confirmation: %d\n", gtx.BlockIndex)
+	sm.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
 	rawtx, err := btc.GetRawTransactionVerbose(txid)
 	if err != nil {
 		panic(err)
@@ -307,13 +304,13 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		&log.Logger,
 		common.BtcRegtestChain().ChainId,
 	)
-	fmt.Printf("bitcoin intx events:\n")
+	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
-		fmt.Printf("  TxHash: %s\n", event.TxHash)
-		fmt.Printf("  From: %s\n", event.FromAddress)
-		fmt.Printf("  To: %s\n", event.ToAddress)
-		fmt.Printf("  Amount: %f\n", event.Value)
-		fmt.Printf("  Memo: %x\n", event.MemoBytes)
+		sm.Logger.Info("  TxHash: %s", event.TxHash)
+		sm.Logger.Info("  From: %s", event.FromAddress)
+		sm.Logger.Info("  To: %s", event.ToAddress)
+		sm.Logger.Info("  Amount: %f", event.Value)
+		sm.Logger.Info("  Memo: %x", event.MemoBytes)
 	}
 	return txid, nil
 }

@@ -13,7 +13,11 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce uint64) error {
+func CheckNonce(
+	client *ethclient.Client,
+	addr ethcommon.Address,
+	expectedNonce uint64,
+) error {
 	nonce, err := client.PendingNonceAt(context.Background(), addr)
 	if err != nil {
 		return err
@@ -26,7 +30,11 @@ func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce 
 
 // MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
 // timeout and panic after 30s.
-func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *ethtypes.Receipt {
+func MustWaitForTxReceipt(
+	client *ethclient.Client,
+	tx *ethtypes.Transaction,
+	logger infoLogger,
+) *ethtypes.Receipt {
 	start := time.Now()
 	for {
 		if time.Since(start) > 30*time.Second {
@@ -36,7 +44,7 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
 		if err != nil {
 			if !errors.Is(err, ethereum.NotFound) {
-				fmt.Println("fetching tx receipt error: ", err.Error())
+				logger.Info("fetching tx receipt error: ", err.Error())
 			}
 			continue
 		}
@@ -55,12 +63,17 @@ func TraceTx(tx *ethtypes.Transaction, rpcURL string) (string, error) {
 
 	var result interface{}
 	txHash := tx.Hash().Hex()
-	err = rpcClient.CallContext(context.Background(), &result, "debug_traceTransaction", txHash, map[string]interface{}{
-		"disableMemory":  true,
-		"disableStack":   false,
-		"disableStorage": false,
-		"fullStorage":    false,
-	})
+	err = rpcClient.CallContext(
+		context.Background(),
+		&result,
+		"debug_traceTransaction",
+		txHash,
+		map[string]interface{}{
+			"disableMemory":  true,
+			"disableStack":   false,
+			"disableStorage": false,
+			"fullStorage":    false,
+		})
 	if err != nil {
 		return "", err
 	}

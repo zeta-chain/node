@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/btcsuite/btcutil"
@@ -26,8 +25,8 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	for {
 		res, err = sm.ObserverClient.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 		if err != nil {
-			fmt.Printf("cctxClient.TSS error %s\n", err.Error())
-			fmt.Printf("TSS not ready yet, waiting for TSS to be appear in zetacore network...\n")
+			sm.Logger.Info("cctxClient.TSS error %s", err.Error())
+			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -108,11 +107,11 @@ func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
-	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("ZEVMSwapApp contract address: %s, tx hash: %s", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
 	sm.ZEVMSwapAppAddr = zevmSwapAppAddr
 	sm.ZEVMSwapApp = zevmSwapApp
 }
@@ -122,11 +121,11 @@ func (sm *SmokeTestRunner) SetupContextApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
-	fmt.Printf("ContextApp contract address: %s, tx hash: %s\n", contextAppAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("ContextApp contract address: %s, tx hash: %s", contextAppAddr.Hex(), tx.Hash().Hex())
 	sm.ContextAppAddr = contextAppAddr
 	sm.ContextApp = contextApp
 }

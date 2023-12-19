@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"time"
 
@@ -30,6 +29,7 @@ const (
 	flagContractsDeployed = "deployed"
 	flagWaitForHeight     = "wait-for"
 	flagConfigFile        = "config"
+	flagVerbose           = "verbose"
 )
 
 func NewLocalCmd() *cobra.Command {
@@ -53,22 +53,15 @@ func NewLocalCmd() *cobra.Command {
 		"",
 		"config file to use for the smoketest",
 	)
+	cmd.Flags().Bool(
+		flagVerbose,
+		false,
+		"set to true to enable verbose logging",
+	)
 	return cmd
 }
 
 func localSmokeTest(cmd *cobra.Command, _ []string) {
-	testStartTime := time.Now()
-	defer func() {
-		fmt.Println("Smoke test took", time.Since(testStartTime))
-	}()
-
-	// start timer
-	go func() {
-		time.Sleep(SmokeTestTimeout)
-		fmt.Println("Smoke test timed out after", SmokeTestTimeout)
-		os.Exit(1)
-	}()
-
 	// fetch flags
 	waitForHeight, err := cmd.Flags().GetInt64(flagWaitForHeight)
 	if err != nil {
@@ -78,6 +71,25 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
+	verbose, err := cmd.Flags().GetBool(flagVerbose)
+	if err != nil {
+		panic(err)
+	}
+	logger := runner.NewLogger(verbose)
+
+	testStartTime := time.Now()
+	defer func() {
+		logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
+	}()
+
+	logger.Print("starting smoke tests")
+
+	// start timer
+	go func() {
+		time.Sleep(SmokeTestTimeout)
+		logger.Error("Smoke test timed out after", SmokeTestTimeout)
+		os.Exit(1)
+	}()
 
 	// initialize smoke tests config
 	conf, err := getConfig(cmd)
@@ -87,7 +99,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		utils.WaitForBlockHeight(waitForHeight, conf.RPCs.ZetaCoreRPC)
+		utils.WaitForBlockHeight(waitForHeight, conf.RPCs.ZetaCoreRPC, logger)
 	}
 
 	// set account prefix to zeta
@@ -141,7 +153,9 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	observerClient := observertypes.NewQueryClient(grpcConn)
 
 	// wait for Genesis
-	time.Sleep(30 * time.Second)
+	waitGenesisTime := 30 * time.Second
+	logger.Print("⏳ wait %ds for genesis", waitGenesisTime.Seconds())
+	time.Sleep(waitGenesisTime)
 
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := txserver.NewZetaTxServer(
@@ -155,24 +169,26 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// wait for keygen to be completed. ~ height 30
+	keygenHeight := int64(60)
+	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
-			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
+			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue
 		}
-		if response.Height >= 60 {
+		if response.Height >= keygenHeight {
 			break
 		}
-		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
+		logger.Info("Last ZetaHeight: %d", response.Height)
 	}
 
 	// setup client and auth for zevm
 	var zevmClient *ethclient.Client
 	for {
 		time.Sleep(5 * time.Second)
-		fmt.Printf("dialing zevm client: %s\n", conf.RPCs.Zevm)
+		logger.Info("dialing zevm client: %s\n", conf.RPCs.Zevm)
 		zevmClient, err = ethclient.Dial(conf.RPCs.Zevm)
 		if err != nil {
 			continue
@@ -204,31 +220,38 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		goerliAuth,
 		zevmAuth,
 		btcRPCClient,
+		runner.NewLogger(false),
 	)
 
 	// setting up the networks
 	startTime := time.Now()
 
 	// setup TSS addresses
+	logger.Print("⚙️ setting up TSS address")
 	sm.SetTSSAddresses()
 
 	// setup the external network
+	logger.Print("⚙️ setting up Bitcoin network")
 	sm.SetupBitcoin()
+	logger.Print("⚙️ setting up Goerli network")
 	sm.SetupEVM(contractsDeployed)
 
 	// deploy and set zevm contract
+	logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
 	sm.SetZEVMContracts()
 
 	// deposit on ZetaChain
+	logger.Print("⚙️ depositing ZETA, ETH, and BTC into ZEVM")
 	sm.DepositEtherIntoZRC20()
 	sm.SendZetaIn()
 	sm.DepositBTC()
 
 	// deploy zevm swap and context apps
+	logger.Print("⚙️ setting up ZEVM swap and context apps")
 	sm.SetupZEVMSwapApp()
 	sm.SetupContextApp()
 
-	fmt.Printf("## Setup takes %s\n", time.Since(startTime))
+	logger.Print("✅ setup completed in %s", time.Since(startTime))
 
 	// run all smoke tests
 	sm.RunSmokeTests(smoketests.AllSmokeTests)

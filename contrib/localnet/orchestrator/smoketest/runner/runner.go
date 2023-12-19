@@ -2,6 +2,7 @@ package runner
 
 import (
 	"sync"
+	"time"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
@@ -85,12 +86,9 @@ type SmokeTestRunner struct {
 	SystemContract       *systemcontract.SystemContract
 
 	// other
-	WG sync.WaitGroup
+	WG     sync.WaitGroup
+	Logger *Logger
 }
-
-// SmokeTest is a function representing a smoke test
-// It takes a SmokeTestRunner as an argument
-type SmokeTest func(*SmokeTestRunner)
 
 func NewSmokeTestRunner(
 	deployerAddress ethcommon.Address,
@@ -107,6 +105,7 @@ func NewSmokeTestRunner(
 	goerliAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
+	logger *Logger,
 ) *SmokeTestRunner {
 	return &SmokeTestRunner{
 		DeployerAddress:       deployerAddress,
@@ -126,8 +125,20 @@ func NewSmokeTestRunner(
 		ZevmAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
 
-		WG: sync.WaitGroup{},
+		WG:     sync.WaitGroup{},
+		Logger: logger,
 	}
+}
+
+// SmokeTestFunc is a function representing a smoke test
+// It takes a SmokeTestRunner as an argument
+type SmokeTestFunc func(*SmokeTestRunner)
+
+// SmokeTest represents a smoke test with a name
+type SmokeTest struct {
+	Name        string
+	Description string
+	SmokeTest   SmokeTestFunc
 }
 
 // RunSmokeTests runs a list of smoke tests
@@ -138,9 +149,15 @@ func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
 }
 
 // RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTest SmokeTest) {
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
+	startTime := time.Now()
+	defer func() {
+		sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
+	}()
+	sm.Logger.Print("⏳running - %s", smokeTestWithName.Description)
+
 	// run smoke test
-	smokeTest(sm)
+	smokeTestWithName.SmokeTest(sm)
 
 	// check supplies
 	sm.CheckZRC20ReserveAndSupply()

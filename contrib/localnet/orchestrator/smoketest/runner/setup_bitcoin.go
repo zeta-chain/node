@@ -10,11 +10,10 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
 func (sm *SmokeTestRunner) SetupBitcoin() {
-	utils.LoudPrintf("Setup Bitcoin\n")
+	sm.Logger.InfoLoud("Setup Bitcoin\n")
 	startTime := time.Now()
 	defer func() {
 		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
@@ -48,7 +47,7 @@ func (sm *SmokeTestRunner) SetupBitcoin() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("BTCDeployerAddress: %s\n", sm.BTCDeployerAddress.EncodeAddress())
+	sm.Logger.Info("BTCDeployerAddress: %s", sm.BTCDeployerAddress.EncodeAddress())
 
 	err = btc.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
 	if err != nil {
@@ -70,24 +69,24 @@ func (sm *SmokeTestRunner) SetupBitcoin() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balance: %f\n", bal.ToBTC())
+	sm.Logger.Info("balance: %f", bal.ToBTC())
 
 	bals, err := btc.GetBalances()
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("balances: \n")
-	fmt.Printf("  mine (Deployer): %+v\n", bals.Mine)
+	sm.Logger.Info("balances: ")
+	sm.Logger.Info("  mine (Deployer): %+v\n", bals.Mine)
 	if bals.WatchOnly != nil {
-		fmt.Printf("  watchonly (TSSAddress): %+v\n", bals.WatchOnly)
+		sm.Logger.Info("  watchonly (TSSAddress): %+v", bals.WatchOnly)
 	}
-	fmt.Printf("  TSS Address: %s\n", sm.BTCTSSAddress.EncodeAddress())
+	sm.Logger.Info("  TSS Address: %s", sm.BTCTSSAddress.EncodeAddress())
 	go func() {
 		// keep bitcoin chain going
 		for {
 			_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
 			if err != nil {
-				fmt.Println(err)
+				sm.Logger.Info(err.Error())
 			}
 			time.Sleep(5 * time.Second)
 		}

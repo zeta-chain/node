@@ -21,7 +21,7 @@ type Response struct {
 }
 
 func (sm *SmokeTestRunner) CheckZRC20ReserveAndSupply() {
-	fmt.Println("Checking ZRC20 Reserve and Supply")
+	sm.Logger.Info("Checking ZRC20 Reserve and Supply")
 	sm.checkEthTSSBalance()
 	sm.checkBtcTSSBalance()
 	sm.checkUsdtTSSBalance()
@@ -40,7 +40,7 @@ func (sm *SmokeTestRunner) checkEthTSSBalance() {
 	if tssBal.Cmp(zrc20Supply) < 0 {
 		panic(fmt.Sprintf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply))
 	}
-	fmt.Printf("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", tssBal, zrc20Supply)
+	sm.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssBal, zrc20Supply)
 }
 
 func (sm *SmokeTestRunner) checkBtcTSSBalance() {
@@ -64,7 +64,7 @@ func (sm *SmokeTestRunner) checkBtcTSSBalance() {
 		panic(fmt.Sprintf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply))
 	}
 	// #nosec G701 smoketest - always in range
-	fmt.Printf("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)\n", int64(btcBalance*1e8), zrc20Supply)
+	sm.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply)
 }
 
 func (sm *SmokeTestRunner) checkUsdtTSSBalance() {
@@ -79,7 +79,7 @@ func (sm *SmokeTestRunner) checkUsdtTSSBalance() {
 	if usdtBal.Cmp(zrc20Supply) < 0 {
 		panic(fmt.Sprintf("USDT: TSS balance (%d) < ZRC20 TotalSupply (%d) ", usdtBal, zrc20Supply))
 	}
-	fmt.Printf("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", usdtBal, zrc20Supply)
+	sm.Logger.Info("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)", usdtBal, zrc20Supply)
 }
 
 func (sm *SmokeTestRunner) checkZetaTSSBalance() {
@@ -103,8 +103,8 @@ func (sm *SmokeTestRunner) checkZetaTSSBalance() {
 	}
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
-		fmt.Printf(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d) \n", zetaLocked, zetaSupply))
+		sm.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
 	} else {
-		fmt.Printf("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)\n", zetaLocked, zetaSupply)
+		sm.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}
 }

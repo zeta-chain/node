@@ -15,11 +15,6 @@ import (
 )
 
 func TestBitcoinWithdraw(sm *runner.SmokeTestRunner) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("Bitcoin withdraw took %s\n", time.Since(startTime))
-	}()
-	utils.LoudPrintf("Testing Bitcoin ZRC20 Withdraw...\n")
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
 	WithdrawBitcoin(sm)
@@ -33,7 +28,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
+	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -51,8 +46,8 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
-		fmt.Printf("approve receipt: status %d\n", receipt.Status)
+		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+		sm.Logger.Info("approve receipt: status %d", receipt.Status)
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("approve receipt status is not 1"))
 		}
@@ -72,13 +67,13 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("withdraw gas fee: %d\n", gasFee)
+		sm.Logger.Info("withdraw gas fee: %d", gasFee)
 		tx, err := BTCZRC20.Withdraw(sm.ZevmAuth, []byte(sm.BTCDeployerAddress.EncodeAddress()), amount)
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
-		fmt.Printf("withdraw receipt: status %d\n", receipt.Status)
+		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+		sm.Logger.Info("withdraw receipt: status %d", receipt.Status)
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("withdraw receipt status is not 1"))
 		}
@@ -86,7 +81,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 		if err != nil {
 			panic(err)
 		}
-		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient)
+		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
 		outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		hash, err := chainhash.NewHashFromStr(outTxHash)
 		if err != nil {
@@ -97,18 +92,18 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("raw tx:\n")
-		fmt.Printf("  TxIn: %d\n", len(rawTx.Vin))
+		sm.Logger.Info("raw tx:")
+		sm.Logger.Info("  TxIn: %d", len(rawTx.Vin))
 		for idx, txIn := range rawTx.Vin {
-			fmt.Printf("  TxIn %d:\n", idx)
-			fmt.Printf("    TxID:Vout:  %s:%d\n", txIn.Txid, txIn.Vout)
-			fmt.Printf("    ScriptSig: %s\n", txIn.ScriptSig.Hex)
+			sm.Logger.Info("  TxIn %d:", idx)
+			sm.Logger.Info("    TxID:Vout:  %s:%d", txIn.Txid, txIn.Vout)
+			sm.Logger.Info("    ScriptSig: %s", txIn.ScriptSig.Hex)
 		}
-		fmt.Printf("  TxOut: %d\n", len(rawTx.Vout))
+		sm.Logger.Info("  TxOut: %d", len(rawTx.Vout))
 		for _, txOut := range rawTx.Vout {
-			fmt.Printf("  TxOut %d:\n", txOut.N)
-			fmt.Printf("    Value: %.8f\n", txOut.Value)
-			fmt.Printf("    ScriptPubKey: %s\n", txOut.ScriptPubKey.Hex)
+			sm.Logger.Info("  TxOut %d:", txOut.N)
+			sm.Logger.Info("    Value: %.8f", txOut.Value)
+			sm.Logger.Info("    ScriptPubKey: %s", txOut.ScriptPubKey.Hex)
 		}
 	}
 }
@@ -127,7 +122,7 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
+	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -146,8 +141,8 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
-		fmt.Printf("approve receipt: status %d\n", receipt.Status)
+		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+		sm.Logger.Info("approve receipt: status %d", receipt.Status)
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("approve receipt status is not 1"))
 		}
@@ -167,13 +162,13 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("withdraw gas fee: %d\n", gasFee)
+		sm.Logger.Info("withdraw gas fee: %d", gasFee)
 		tx, err := BTCZRC20.Withdraw(sm.ZevmAuth, []byte(sm.BTCDeployerAddress.EncodeAddress()), amount)
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
-		fmt.Printf("withdraw receipt: status %d\n", receipt.Status)
+		receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+		sm.Logger.Info("withdraw receipt: status %d", receipt.Status)
 		if receipt.Status != 1 {
 			panic(fmt.Errorf("withdraw receipt status is not 1"))
 		}
@@ -181,7 +176,7 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 		if err != nil {
 			panic(err)
 		}
-		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient)
+		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
 		outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		hash, err := chainhash.NewHashFromStr(outTxHash)
 		if err != nil {
@@ -192,18 +187,18 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("raw tx:\n")
-		fmt.Printf("  TxIn: %d\n", len(rawTx.Vin))
+		sm.Logger.Info("raw tx:")
+		sm.Logger.Info("  TxIn: %d", len(rawTx.Vin))
 		for idx, txIn := range rawTx.Vin {
-			fmt.Printf("  TxIn %d:\n", idx)
-			fmt.Printf("    TxID:Vout:  %s:%d\n", txIn.Txid, txIn.Vout)
-			fmt.Printf("    ScriptSig: %s\n", txIn.ScriptSig.Hex)
+			sm.Logger.Info("  TxIn %d:", idx)
+			sm.Logger.Info("    TxID:Vout:  %s:%d", txIn.Txid, txIn.Vout)
+			sm.Logger.Info("    ScriptSig: %s", txIn.ScriptSig.Hex)
 		}
-		fmt.Printf("  TxOut: %d\n", len(rawTx.Vout))
+		sm.Logger.Info("  TxOut: %d", len(rawTx.Vout))
 		for _, txOut := range rawTx.Vout {
-			fmt.Printf("  TxOut %d:\n", txOut.N)
-			fmt.Printf("    Value: %.8f\n", txOut.Value)
-			fmt.Printf("    ScriptPubKey: %s\n", txOut.ScriptPubKey.Hex)
+			sm.Logger.Info("  TxOut %d:", txOut.N)
+			sm.Logger.Info("    Value: %.8f", txOut.Value)
+			sm.Logger.Info("    ScriptPubKey: %s", txOut.ScriptPubKey.Hex)
 		}
 	}
 }
@@ -212,7 +207,7 @@ func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
 // TODO: define smoke test
 // https://github.com/zeta-chain/node-private/issues/79
 func DepositBTCRefund(sm *runner.SmokeTestRunner) {
-	utils.LoudPrintf("Deposit BTC with invalid memo; should be refunded\n")
+	sm.Logger.InfoLoud("Deposit BTC with invalid memo; should be refunded")
 	btc := sm.BtcRPCClient
 	utxos, err := sm.BtcRPCClient.ListUnspent()
 	if err != nil {
@@ -226,10 +221,10 @@ func DepositBTCRefund(sm *runner.SmokeTestRunner) {
 			spendableUTXOs++
 		}
 	}
-	fmt.Printf("ListUnspent:\n")
-	fmt.Printf("  spendableAmount: %f\n", spendableAmount)
-	fmt.Printf("  spendableUTXOs: %d\n", spendableUTXOs)
-	fmt.Printf("Now sending two txs to TSS address...\n")
+	sm.Logger.Info("ListUnspent:")
+	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
+	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	sm.Logger.Info("Now sending two txs to TSS address...")
 	_, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, 1.1, utxos[:2], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -239,7 +234,7 @@ func DepositBTCRefund(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	fmt.Printf("testing if the deposit into BTC ZRC20 is successful...\n")
+	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
 	// check if the deposit is successful
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
@@ -247,7 +242,7 @@ func DepositBTCRefund(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.BTCZRC20Addr = BTCZRC20Addr
-	fmt.Printf("BTCZRC20Addr: %s\n", BTCZRC20Addr.Hex())
+	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
 	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -266,9 +261,9 @@ func DepositBTCRefund(sm *runner.SmokeTestRunner) {
 		diff := big.NewInt(0)
 		diff.Sub(balance, initialBalance)
 		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
-			fmt.Printf("waiting for BTC balance to show up in ZRC contract... current bal %d\n", balance)
+			sm.Logger.Info("waiting for BTC balance to show up in ZRC contract... current bal %d", balance)
 		} else {
-			fmt.Printf("BTC balance is in ZRC contract! Success\n")
+			sm.Logger.Info("BTC balance is in ZRC contract! Success")
 			break
 		}
 	}

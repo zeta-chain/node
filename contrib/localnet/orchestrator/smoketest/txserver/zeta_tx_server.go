@@ -184,7 +184,6 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
-	fmt.Println("System contracts deployed")
 
 	systemContractAddress, err := fetchAttribute(res, "system_contract")
 	if err != nil {

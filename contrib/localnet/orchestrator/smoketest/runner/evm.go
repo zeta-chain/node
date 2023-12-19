@@ -25,37 +25,37 @@ func (sm *SmokeTestRunner) DepositERC20(amount *big.Int, msg []byte) ethcommon.H
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	fmt.Printf("Mint receipt tx hash: %s\n", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = USDT.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	fmt.Printf("USDT Approve receipt tx hash: %s\n", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = sm.ERC20Custody.Deposit(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
-	fmt.Printf("Deposit receipt tx hash: %s, status %d\n", receipt.TxHash.Hex(), receipt.Status)
+	sm.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.ERC20Custody.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}
-		fmt.Printf("Deposited event: \n")
-		fmt.Printf("  Recipient address: %x, \n", event.Recipient)
-		fmt.Printf("  ERC20 address: %s, \n", event.Asset.Hex())
-		fmt.Printf("  Amount: %d, \n", event.Amount)
-		fmt.Printf("  Message: %x, \n", event.Message)
+		sm.Logger.Info("Deposited event:")
+		sm.Logger.Info("  Recipient address: %x", event.Recipient)
+		sm.Logger.Info("  ERC20 address: %s", event.Asset.Hex())
+		sm.Logger.Info("  Amount: %d", event.Amount)
+		sm.Logger.Info("  Message: %x", event.Message)
 	}
-	fmt.Printf("gas limit %d\n", sm.ZevmAuth.GasLimit)
+	sm.Logger.Info("gas limit %d", sm.ZevmAuth.GasLimit)
 	return tx.Hash()
 }
 
@@ -63,20 +63,20 @@ func (sm *SmokeTestRunner) DepositERC20(amount *big.Int, msg []byte) ethcommon.H
 func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Info("test finishes in %s", time.Since(startTime))
 	}()
 	goerliClient := sm.GoerliClient
-	utils.LoudPrintf("Deposit Ether into ZEVM\n")
+	sm.Logger.InfoLoud("Deposit Ether into ZEVM")
 	bn, err := goerliClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("GOERLI block number: %d\n", bn)
+	sm.Logger.Info("GOERLI block number: %d", bn)
 	bal, err := goerliClient.BalanceAt(context.Background(), sm.DeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("GOERLI deployer balance: %s\n", bal.String())
+	sm.Logger.Info("GOERLI deployer balance: %s", bal.String())
 
 	systemContract := sm.SystemContract
 	if err != nil {
@@ -90,7 +90,7 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 		panic("eth zrc20 not found")
 	}
 	sm.ETHZRC20Addr = ethZRC20Addr
-	fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
+	sm.Logger.Info("eth zrc20 address: %s", ethZRC20Addr.String())
 	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -107,16 +107,16 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 		panic(err)
 	}
 
-	fmt.Printf("GOERLI tx sent: %s; to %s, nonce %d\n", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx)
-	fmt.Printf("GOERLI tx receipt: %d\n", receipt.Status)
-	fmt.Printf("  tx hash: %s\n", receipt.TxHash.String())
-	fmt.Printf("  to: %s\n", signedTx.To().String())
-	fmt.Printf("  value: %d\n", signedTx.Value())
-	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
+	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
+	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
+	sm.Logger.Info("  to: %s", signedTx.To().String())
+	sm.Logger.Info("  value: %d", signedTx.Value())
+	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
 
 	{
-		utils.LoudPrintf("Merkle Proof\n")
+		sm.Logger.InfoLoud("Merkle Proof\n")
 		txHash := receipt.TxHash
 		blockHash := receipt.BlockHash
 
@@ -136,10 +136,10 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 				BlockHash: blockHash.Bytes(),
 			})
 			if err != nil {
-				fmt.Printf("WARN: block header not found; retrying... error: %s \n", err.Error())
+				sm.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
 				time.Sleep(5 * time.Second)
 			} else {
-				fmt.Printf("OK: block header found\n")
+				sm.Logger.Info("OK: block header found")
 				break
 			}
 			i++
@@ -175,7 +175,7 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 		if !res.Valid {
 			panic("txProof invalid") // FIXME: don't do this in production
 		}
-		fmt.Printf("OK: txProof verified\n")
+		sm.Logger.Info("OK: txProof verified")
 	}
 
 	{
@@ -183,15 +183,15 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-		fmt.Printf("GOERLI donation tx receipt: %d\n", receipt.Status)
+		receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+		sm.Logger.Info("GOERLI donation tx receipt: %d", receipt.Status)
 	}
 
 	c := make(chan any)
 	sm.WG.Add(1)
 	go func() {
 		defer sm.WG.Done()
-		cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient)
+		cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 		if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 			panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 				cctx.CctxStatus.Status.String(),
@@ -211,9 +211,9 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 		}
 		diff := big.NewInt(0)
 		diff.Sub(currentBalance, initialBalance)
-		fmt.Printf("eth zrc20 balance: %s\n", currentBalance.String())
+		sm.Logger.Info("eth zrc20 balance: %s", currentBalance.String())
 		if diff.Cmp(value) != 0 {
-			fmt.Printf("eth zrc20 bal wanted %d, got %d\n", value, diff)
+			sm.Logger.Info("eth zrc20 bal wanted %d, got %d", value, diff)
 			panic("bal mismatch")
 		}
 
@@ -221,6 +221,7 @@ func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
 	sm.WG.Wait()
 }
 
+// SendEther sends ethers to the TSS on Goerli
 func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	goerliClient := sm.GoerliClient
 
