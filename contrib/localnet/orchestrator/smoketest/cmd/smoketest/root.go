@@ -8,6 +8,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "Smoke Test CLI",
 	}
 	cmd.AddCommand(NewLocalCmd())
+	cmd.AddCommand(NewStressTestCmd())
 
 	return cmd
 }
