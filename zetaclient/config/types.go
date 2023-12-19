@@ -27,7 +27,8 @@ type ClientConfiguration struct {
 	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`
 	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
 	SignerName      string `json:"signer_name" mapstructure:"signer_name"`
-	SignerPasswd    string
+	SignerPasswd    string `json:"signer_passwd"`
+	HsmMode         bool   `json:"hsm_mode"`
 }
 
 type EVMConfig struct {
@@ -68,6 +69,8 @@ type Config struct {
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
 	CurrentTssPubkey    string         `json:"CurrentTssPubkey"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
+	HsmMode             bool           `json:"HsmMode"`
+	HsmHotKey           string         `json:"HsmHotKey"`
 
 	// chain specific fields are updatable at runtime and shared across threads
 	cfgLock         *sync.RWMutex        `json:"-"`
@@ -188,10 +191,12 @@ func (c *Config) UpdateCoreParams(
 	}
 	c.Keygen = *keygen
 	c.ChainsEnabled = newChains
-	if c.BitcoinConfig != nil && btcCoreParams != nil { // update core params for bitcoin if it has config in file
+	// update core params for bitcoin if it has config in file
+	if c.BitcoinConfig != nil && btcCoreParams != nil {
 		c.BitcoinConfig.CoreParams = *btcCoreParams
 	}
-	for _, params := range evmCoreParams { // update core params for evm chains we have configs in file
+	// update core params for evm chains we have configs in file
+	for _, params := range evmCoreParams {
 		curCfg, found := c.EVMChainConfigs[params.ChainId]
 		if found {
 			curCfg.CoreParams = *params

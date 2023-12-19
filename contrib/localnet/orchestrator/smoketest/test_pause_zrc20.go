@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -11,6 +8,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/vault"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -67,9 +65,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if !fcRes.GetForeignCoins().Paused {
 		panic("ETH should be paused")
-	} else {
-		fmt.Printf("ETH is paused\n")
 	}
+	fmt.Printf("ETH is paused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can no longer do operations on ETH ZRC20")
@@ -91,7 +88,7 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 
 	// Operation on a contract that interact with ETH ZRC20 should fail
-	fmt.Println("Vault contract can no longer interact with ETH ZRC20")
+	fmt.Printf("Vault contract can no longer interact with ETH ZRC20: %s\n", sm.ETHZRC20Addr.Hex())
 	tx, err = vaultContract.Deposit(sm.zevmAuth, sm.ETHZRC20Addr, big.NewInt(1e5))
 	if err != nil {
 		panic(err)
@@ -121,6 +118,21 @@ func (sm *SmokeTest) TestPauseZRC20() {
 		panic("BTC vault deposit should succeed")
 	}
 
+	// Check deposit revert when paused
+	signedTx, err := sm.SendEther(TSSAddress, big.NewInt(1e17), nil)
+	if err != nil {
+		panic(err)
+	}
+	receipt = MustWaitForTxReceipt(sm.goerliClient, signedTx)
+	if receipt.Status == 0 {
+		panic("deposit eth tx failed")
+	}
+	cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
+		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
+	}
+	fmt.Println("CCTX has been reverted")
+
 	// Unpause ETH ZRC20
 	fmt.Println("Unpausing ETH")
 	msg = fungibletypes.NewMsgUpdateZRC20PausedStatus(
@@ -143,9 +155,8 @@ func (sm *SmokeTest) TestPauseZRC20() {
 	}
 	if fcRes.GetForeignCoins().Paused {
 		panic("ETH should be unpaused")
-	} else {
-		fmt.Printf("ETH is unpaused\n")
 	}
+	fmt.Printf("ETH is unpaused\n")
 
 	// Try operations with ETH ZRC20
 	fmt.Println("Can do operations on ETH ZRC20 again")

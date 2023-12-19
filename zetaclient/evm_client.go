@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
+	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -232,12 +235,31 @@ func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNo
 	return FetchConnectorContract(addr, ob.evmClient)
 }
 
-func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
-	return zetaconnector.NewZetaConnectorNonEth(addr, client)
+func (ob *EVMChainClient) GetConnectorContractEth() (*zetaconnectoreth.ZetaConnectorEth, error) {
+	addr := ethcommon.HexToAddress(ob.GetCoreParams().ConnectorContractAddress)
+	return FetchConnectorContractEth(addr, ob.evmClient)
 }
+
+func (ob *EVMChainClient) GetZetaTokenNonEthContract() (*zeta.ZetaNonEth, error) {
+	addr := ethcommon.HexToAddress(ob.GetCoreParams().ZetaTokenContractAddress)
+	return FetchZetaZetaNonEthTokenContract(addr, ob.evmClient)
+}
+
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetCoreParams().Erc20CustodyContractAddress)
 	return FetchERC20CustodyContract(addr, ob.evmClient)
+}
+
+func FetchConnectorContract(addr ethcommon.Address, client EVMRPCClient) (*zetaconnector.ZetaConnectorNonEth, error) {
+	return zetaconnector.NewZetaConnectorNonEth(addr, client)
+}
+
+func FetchConnectorContractEth(addr ethcommon.Address, client EVMRPCClient) (*zetaconnectoreth.ZetaConnectorEth, error) {
+	return zetaconnectoreth.NewZetaConnectorEth(addr, client)
+}
+
+func FetchZetaZetaNonEthTokenContract(addr ethcommon.Address, client EVMRPCClient) (*zeta.ZetaNonEth, error) {
+	return zeta.NewZetaNonEth(addr, client)
 }
 
 func FetchERC20CustodyContract(addr ethcommon.Address, client EVMRPCClient) (*erc20custody.ERC20Custody, error) {
@@ -302,7 +324,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			common.CoinType_Cmd,
 		)
 		if err != nil {
-			logger.Error().Err(err).Msg("error posting confirmation to meta core")
+			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 		}
 		logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 		return true, true, nil
@@ -323,7 +345,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msg("error posting confirmation to meta core")
+				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
 			return true, true, nil
@@ -343,7 +365,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -388,7 +410,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -424,7 +446,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_Zeta,
 						)
 						if err != nil {
-							logger.Err(err).Msg("error posting confirmation to meta core")
+							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", metaHash, sendHash, nonce)
@@ -452,7 +474,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Zeta,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 			}
 			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			return true, true, nil
@@ -490,7 +512,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 							common.CoinType_ERC20,
 						)
 						if err != nil {
-							logger.Error().Err(err).Msg("error posting confirmation to meta core")
+							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
 							continue
 						}
 						logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d", zetaHash, sendHash, nonce)
@@ -529,9 +551,9 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 // The lowest nonce we observe outTx for each chain
 var lowestOutTxNonceToObserve = map[int64]uint64{
-	5:     70000,  // Goerli
-	97:    95000,  // BSC testnet
-	80001: 120000, // Mumbai
+	5:     113000, // Goerli
+	97:    102600, // BSC testnet
+	80001: 154500, // Mumbai
 }
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
@@ -548,7 +570,12 @@ func (ob *EVMChainClient) observeOutTx() {
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds, rpcRestTime %d ms", timeoutNonce, rpcRestTime)
 
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetCoreParams().OutTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetCoreParams().OutTxTicker)
+	if err != nil {
+		ob.logger.ObserveOutTx.Error().Err(err).Msg("failed to create ticker")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
@@ -566,21 +593,18 @@ func (ob *EVMChainClient) observeOutTx() {
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
 					continue
 				}
-			TXHASHLOOP:
+				ob.Mu.Lock()
+				_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
+				ob.Mu.Unlock()
+				if found { // Go to next tracker if this one has already been confirmed
+					continue
+				}
 				for _, txHash := range tracker.HashList {
-					//inTimeout := time.After(3000 * time.Millisecond)
 					select {
 					case <-outTimeout:
 						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
-						ob.Mu.Lock()
-						_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
-						ob.Mu.Unlock()
-						if found {
-							continue
-						}
-
 						receipt, transaction, err := ob.queryTxByHash(txHash.TxHash, nonceInt)
 						time.Sleep(time.Duration(rpcRestTime) * time.Millisecond)
 						if err == nil && receipt != nil { // confirmed
@@ -588,13 +612,13 @@ func (ob *EVMChainClient) observeOutTx() {
 							ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)] = receipt
 							ob.outTXConfirmedTransaction[ob.GetTxID(nonceInt)] = transaction
 							ob.Mu.Unlock()
+							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
 
-							break TXHASHLOOP
+							break
 						}
 						if err != nil {
 							ob.logger.ObserveOutTx.Debug().Err(err).Msgf("error queryTxByHash: chain %s hash %s", ob.chain.String(), txHash.TxHash)
 						}
-						//<-inTimeout
 					}
 				}
 			}
@@ -621,7 +645,7 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msg("TransactionReceipt/TransactionByHash error")
+			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
 		}
 		return nil, nil, err
 	}
@@ -694,7 +718,12 @@ func (ob *EVMChainClient) GetLastBlockHeight() int64 {
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
 	// At each tick, query the Connector contract
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
+		return
+	}
+
 	defer ticker.Stop()
 	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher started")
 	for {
@@ -981,12 +1010,18 @@ func (ob *EVMChainClient) WatchGasPrice() {
 			ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 		}
 	}
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
+
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
+	if err != nil {
+		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.PostGasPrice()
+			err = ob.PostGasPrice()
 			if err != nil {
 				height, err := ob.zetaClient.GetBlockHeight()
 				if err != nil {

@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package integrationtests
 
 import (
@@ -9,22 +6,24 @@ import (
 	"strconv"
 	"testing"
 
+	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
+
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
+
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
@@ -71,14 +70,95 @@ func GetTempDir(t testing.TB) string {
 	// this change's rationale.
 	tempdir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.RemoveAll(tempdir) })
+	t.Cleanup(func() {
+		err := os.RemoveAll(tempdir)
+		require.NoError(t, err)
+	})
 	return tempdir
+}
+
+func BuildSignedDeploySystemContract(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
+	cmd := fungiblecli.CmdDeploySystemContracts()
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(100))).String()),
+		// gas limit
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 4000000),
+	}
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, txArgs)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
+}
+
+func BuildSignedUpdateSystemContract(
+	t testing.TB,
+	val *network.Validator,
+	denom string,
+	account authtypes.AccountI,
+	systemContractAddress string,
+) *os.File {
+	cmd := fungiblecli.CmdUpdateSystemContract()
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(100))).String()),
+		// gas limit
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 4000000),
+	}
+	args := append([]string{systemContractAddress}, txArgs...)
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
+}
+
+func BuildSignedDeployETHZRC20(
+	t testing.TB,
+	val *network.Validator,
+	denom string,
+	account authtypes.AccountI,
+) *os.File {
+	cmd := fungiblecli.CmdDeployFungibleCoinZRC4()
+	txArgs := []string{
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(100))).String()),
+		// gas limit
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 10000000),
+	}
+	args := append([]string{
+		"",
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		"18",
+		"ETH",
+		"gETH",
+		strconv.FormatInt(int64(common.CoinType_Gas), 10),
+		"1000000",
+	}, txArgs...)
+	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
+	require.NoError(t, err)
+	unsignerdTx := WriteToNewTempFile(t, out.String())
+	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
+		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
+	require.NoError(t, err)
+	return WriteToNewTempFile(t, res.String())
 }
 
 func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
 	cmd := cli.CmdGasPriceVoter()
 	inboundVoterArgs := []string{
-		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
 		"10000000000",
 		"100",
 		"100",
@@ -103,7 +183,7 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	cmd := cli.CmdCreateTSSVoter()
 	inboundVoterArgs := []string{
 		"tsspubkey",
-		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
 		"0",
 	}
 	txArgs := []string{
@@ -122,8 +202,17 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, nonce uint64,
-	cctxIndex, outTxHash, valueReceived, status string) *os.File {
+func BuildSignedOutboundVote(
+	t testing.TB,
+	val *network.Validator,
+	denom string,
+	account authtypes.AccountI,
+	nonce uint64,
+	cctxIndex,
+	outTxHash,
+	valueReceived,
+	status string,
+) *os.File {
 	cmd := cli.CmdCCTXOutboundVoter()
 	outboundVoterArgs := []string{
 		cctxIndex,
@@ -134,7 +223,7 @@ func BuildSignedOutboundVote(t testing.TB, val *network.Validator, denom string,
 		"0",
 		valueReceived,
 		status,
-		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
 		strconv.FormatUint(nonce, 10),
 		"Zeta",
 	}
@@ -159,16 +248,17 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 	cmd := cli.CmdCCTXInboundVoter()
 	inboundVoterArgs := []string{
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
 		"0x3b9Fe88DE29efD13240829A0c18E9EC7A44C3CA7",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		strconv.FormatInt(common.GoerliChain().ChainId, 10),
+		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
 		"10000000000000000000",
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		"100",
 		"Zeta",
 		"",
+		"0",
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -190,10 +280,10 @@ func GetBallotIdentifier(message string) string {
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		common.GoerliChain().ChainId,
+		common.GoerliLocalnetChain().ChainId,
 		"0x3b9Fe88DE29efD13240829A0c18E9EC7A44C3CA7",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		common.GoerliChain().ChainId,
+		common.GoerliLocalnetChain().ChainId,
 		sdk.NewUint(10000000000000000000),
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
@@ -201,6 +291,7 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
+		0,
 	)
 	return msg.Digest()
 }
@@ -216,7 +307,7 @@ func GetBallotIdentifierOutBound(nonce uint64, cctxindex, outtxHash, valueReceiv
 		0,
 		math.NewUintFromString(valueReceived),
 		0,
-		common.GoerliChain().ChainId,
+		common.GoerliLocalnetChain().ChainId,
 		nonce,
 		common.CoinType_Zeta,
 	)

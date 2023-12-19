@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -160,7 +157,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	}
 	fmt.Printf("USDT ZRC20 Address: %s\n", zrc20addr)
 	if HexToAddress(zrc20addr) != HexToAddress(USDTZRC20Addr) {
-		panic("mismatch of foreign coin USDT ZRC20 and the USDTZRC20Addr constant in smoketest")
+		panic(fmt.Sprintf("mismatch of foreign coin USDT ZRC20 %s and the USDTZRC20Addr constant %s in smoketest", zrc20addr, USDTZRC20Addr))
 	}
 
 	sm.USDTZRC20Addr = ethcommon.HexToAddress(zrc20addr)
@@ -197,7 +194,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(ContractsConfigFile, b, 0666)
+	err = os.WriteFile(ContractsConfigFile, b, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +202,7 @@ func (sm *SmokeTest) TestSetupZetaTokenAndConnectorAndZEVMContracts() {
 
 // Set existing deployed contracts
 func (sm *SmokeTest) setContracts() {
-	err := error(nil)
+	var err error
 	var contracts Contracts
 
 	// Read contracts toml file
@@ -218,7 +215,7 @@ func (sm *SmokeTest) setContracts() {
 		panic(err)
 	}
 
-	//Set ZetaEthAddr
+	// Set ZetaEthAddr
 	sm.ZetaEthAddr = ethcommon.HexToAddress(contracts.ZetaEthAddress)
 	fmt.Println("Connector Eth address: ", contracts.ZetaEthAddress)
 	sm.ZetaEth, err = zetaeth.NewZetaEth(sm.ZetaEthAddr, sm.goerliClient)
@@ -226,42 +223,42 @@ func (sm *SmokeTest) setContracts() {
 		panic(err)
 	}
 
-	//Set ConnectorEthAddr
+	// Set ConnectorEthAddr
 	sm.ConnectorEthAddr = ethcommon.HexToAddress(contracts.ConnectorEthAddr)
 	sm.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(sm.ConnectorEthAddr, sm.goerliClient)
 	if err != nil {
 		panic(err)
 	}
 
-	//Set ERC20CustodyAddr
+	// Set ERC20CustodyAddr
 	sm.ERC20CustodyAddr = ethcommon.HexToAddress(ERC20CustodyAddr)
 	sm.ERC20Custody, err = erc20custody.NewERC20Custody(sm.ERC20CustodyAddr, sm.goerliClient)
 	if err != nil {
 		panic(err)
 	}
 
-	//Set USDTERC20Addr
+	// Set USDTERC20Addr
 	sm.USDTERC20Addr = ethcommon.HexToAddress(USDTERC20Addr)
 	sm.USDTERC20, err = erc20.NewUSDT(sm.USDTERC20Addr, sm.goerliClient)
 	if err != nil {
 		panic(err)
 	}
 
-	//Set USDTZRC20Addr
+	// Set USDTZRC20Addr
 	sm.USDTZRC20Addr = ethcommon.HexToAddress(USDTZRC20Addr)
 	sm.USDTZRC20, err = zrc20.NewZRC20(sm.USDTZRC20Addr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
 
-	//UniswapV2FactoryAddr
+	// UniswapV2FactoryAddr
 	sm.UniswapV2FactoryAddr = ethcommon.HexToAddress(UniswapV2FactoryAddr)
 	sm.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.zevmClient)
 	if err != nil {
 		panic(err)
 	}
 
-	//UniswapV2RouterAddr
+	// UniswapV2RouterAddr
 	sm.UniswapV2RouterAddr = ethcommon.HexToAddress(UniswapV2RouterAddr)
 	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.zevmClient)
 	if err != nil {

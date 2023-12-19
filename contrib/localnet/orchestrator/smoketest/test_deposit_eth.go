@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -48,9 +45,12 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	if err != nil {
 		panic(err)
 	}
-	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliChain().ChainId))
+	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
+	}
+	if (ethZRC20Addr == ethcommon.Address{}) {
+		panic("eth zrc20 not found")
 	}
 	sm.ETHZRC20Addr = ethZRC20Addr
 	fmt.Printf("eth zrc20 address: %s\n", ethZRC20Addr.String())
@@ -82,6 +82,8 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 		LoudPrintf("Merkle Proof\n")
 		txHash := receipt.TxHash
 		blockHash := receipt.BlockHash
+
+		// #nosec G701 smoketest - always in range
 		txIndex := int(receipt.TransactionIndex)
 
 		block, err := sm.goerliClient.BlockByHash(context.Background(), blockHash)
@@ -128,7 +130,7 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 			TxIndex:   int64(txIndex),
 			TxHash:    txHash.Hex(),
 			Proof:     common.NewEthereumProof(txProof),
-			ChainId:   common.GoerliChain().ChainId,
+			ChainId:   common.GoerliLocalnetChain().ChainId,
 		})
 		if err != nil {
 			panic(err)
@@ -152,7 +154,13 @@ func (sm *SmokeTest) TestDepositEtherIntoZRC20() {
 	sm.wg.Add(1)
 	go func() {
 		defer sm.wg.Done()
-		WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+		cctx := WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.cctxClient)
+		if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+			panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
+				cctx.CctxStatus.Status.String(),
+				cctx.CctxStatus.StatusMessage),
+			)
+		}
 		c <- 0
 	}()
 	sm.wg.Add(1)
@@ -505,7 +513,7 @@ func (sm *SmokeTest) TestDepositEtherLiquidityCap() {
 	fmt.Println("New deposit succeeded")
 }
 
-func (sm *SmokeTest) SendEther(to ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+func (sm *SmokeTest) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	goerliClient := sm.goerliClient
 
 	nonce, err := goerliClient.PendingNonceAt(context.Background(), DeployerAddress)

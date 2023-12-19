@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -26,7 +27,27 @@ import (
 
 const (
 	satoshiPerBitcoin = 1e8
+	bytesPerKB        = 1000
 )
+
+func PrettyPrintStruct(val interface{}) (string, error) {
+	prettyStruct, err := json.MarshalIndent(
+		val,
+		"",
+		" ",
+	)
+	if err != nil {
+		return "", err
+	}
+	return string(prettyStruct), nil
+}
+
+// feeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
+func feeRateToSatPerByte(rate float64) *big.Int {
+	// #nosec G701 always in range
+	satPerKB := new(big.Int).SetInt64(int64(rate * satoshiPerBitcoin))
+	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
+}
 
 func getSatoshis(btc float64) (int64, error) {
 	// The amount is only considered invalid if it cannot be represented
@@ -66,12 +87,16 @@ type DynamicTicker struct {
 	impl     *time.Ticker
 }
 
-func NewDynamicTicker(name string, interval uint64) *DynamicTicker {
+func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
+	if interval <= 0 {
+		return nil, fmt.Errorf("non-positive ticker interval %d for %s", interval, name)
+	}
+
 	return &DynamicTicker{
 		name:     name,
 		interval: interval,
 		impl:     time.NewTicker(time.Duration(interval) * time.Second),
-	}
+	}, nil
 }
 
 func (t *DynamicTicker) C() <-chan time.Time {
@@ -116,7 +141,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		ob.chain.ChainId,
 		"",
 		clienttypes.BytesToEthHex(event.Recipient),
-		common.ZetaChain().ChainId,
+		ob.zetaClient.ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(event.Amount),
 		hex.EncodeToString(event.Message),
 		event.Raw.TxHash.Hex(),
@@ -125,6 +150,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		common.CoinType_ERC20,
 		event.Asset.String(),
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		event.Raw.Index,
 	), nil
 }
 
@@ -136,7 +162,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not supported  %d", event.DestinationChainId.Int64())
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
-	if *destChain != common.ZetaChain() {
+	if !destChain.IsZetaChain() {
 		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 		if !found {
 			return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
@@ -160,6 +186,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		common.CoinType_Zeta,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		event.Raw.Index,
 	), nil
 }
 
@@ -176,7 +203,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Ha
 		ob.chain.ChainId,
 		from.Hex(),
 		from.Hex(),
-		common.ZetaChain().ChainId,
+		ob.zetaClient.ZetaChain().ChainId,
 		sdkmath.NewUintFromBigInt(value),
 		message,
 		txhash.Hex(),
@@ -185,5 +212,6 @@ func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Ha
 		common.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
+		0, // not a smart contract call
 	)
 }

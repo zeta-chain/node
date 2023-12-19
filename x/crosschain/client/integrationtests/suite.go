@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package integrationtests
 
 import (
@@ -59,7 +56,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	time.Sleep(3 * time.Second)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

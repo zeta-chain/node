@@ -1,7 +1,4 @@
-//go:build PRIVNET
-// +build PRIVNET
-
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -9,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -102,11 +100,11 @@ func TestKeeper_GetObserver(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			keeper, ctx := SetupKeeper(t)
+			k, ctx := keepertest.ObserverKeeper(t)
 			for _, mapper := range test.mapper {
-				keeper.SetObserverMapper(ctx, mapper)
+				k.SetObserverMapper(ctx, mapper)
 			}
-			mapper, found := keeper.GetObserverMapper(ctx, test.assertChain)
+			mapper, found := k.GetObserverMapper(ctx, test.assertChain)
 			assert.Equal(t, test.isFound, found)
 			if test.isFound {
 				assert.Equal(t, test.assertObsListLen, len(mapper.ObserverList))
@@ -139,14 +137,14 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 		{
 			name: "Filter out from multiple mappers",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
-				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
 			assertChain: common.ChainName_goerli_localnet,
 			isFound:     true,
 		},
 		{
 			name: "No Observers of expected Observation Chain",
 			mapper: append(append(types.CreateObserverMapperList(1, common.GoerliChain()),
-				types.CreateObserverMapperList(1, common.ZetaChain())...)),
+				types.CreateObserverMapperList(1, common.ZetaPrivnetChain())...)),
 			assertChain: common.ChainName_btc_regtest,
 			isFound:     false,
 		},
@@ -155,16 +153,17 @@ func TestKeeper_ObserversByChainAndType(t *testing.T) {
 	for _, test := range tt {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			keeper, ctx := SetupKeeper(t)
+			k, ctx := keepertest.ObserverKeeper(t)
+
 			for _, mapper := range test.mapper {
-				keeper.SetObserverMapper(ctx, mapper)
+				k.SetObserverMapper(ctx, mapper)
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
 			msg := &types.QueryObserversByChainRequest{
 				ObservationChain: test.assertChain.String(),
 			}
 
-			mapper, _ := keeper.ObserversByChain(goCtx, msg)
+			mapper, _ := k.ObserversByChain(goCtx, msg)
 			if test.isFound {
 				assert.NotEqual(t, "", mapper)
 			}
@@ -186,10 +185,10 @@ func TestKeeper_GetAllObserverAddresses(t *testing.T) {
 			ChainName: common.ChainName_bsc_mainnet,
 			ChainId:   5,
 		})...)
-	keeper, ctx := SetupKeeper(t)
+	k, ctx := keepertest.ObserverKeeper(t)
 	for _, mapper := range mappers {
-		keeper.SetObserverMapper(ctx, mapper)
+		k.SetObserverMapper(ctx, mapper)
 	}
-	addresses := keeper.GetAllObserverAddresses(ctx)
+	addresses := k.GetAllObserverAddresses(ctx)
 	assert.Equal(t, 4, len(addresses))
 }

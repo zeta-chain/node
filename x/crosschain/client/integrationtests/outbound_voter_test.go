@@ -1,15 +1,12 @@
-//go:build TESTNET
-// +build TESTNET
-
 package integrationtests
 
 import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	crosschainCli "github.com/zeta-chain/zetacore/x/crosschain/client/cli"
+	crosschaincli "github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -79,7 +76,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			},
 			correctBallotResult: observerTypes.BallotStatus_BallotInProgress,
 			cctxStatus:          crosschaintypes.CctxStatus_PendingOutbound,
-			valueReceived:       "7993442360774956232",
+			valueReceived:       "7990439496224753106",
 		},
 		{
 			name: "Fake ballot has more votes outbound gets finalized",
@@ -159,10 +156,10 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 
 			// Get the ballot
 			cctxIdentifier := GetBallotIdentifier(test.name)
-			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
+			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx := crosschaintypes.QueryGetCctxResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
-			s.Assert().Equal(crosschaintypes.CctxStatus_PendingOutbound, cctx.CrossChainTx.CctxStatus.Status)
+			s.Assert().Equal(crosschaintypes.CctxStatus_PendingOutbound.String(), cctx.CrossChainTx.CctxStatus.Status.String(), cctx.CrossChainTx.CctxStatus.StatusMessage)
 			nonce := cctx.CrossChainTx.GetCurrentOutTxParam().OutboundTxTssNonce
 			// Check the vote in the ballot and vote the outbound tx
 			fakeVotes := []string{}
@@ -201,27 +198,27 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 
 			// Get the cctx
-			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
+			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx = crosschaintypes.QueryGetCctxResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
-			s.Assert().Equal(test.cctxStatus, cctx.CrossChainTx.CctxStatus.Status)
+			s.Assert().Equal(test.cctxStatus.String(), cctx.CrossChainTx.CctxStatus.Status.String(), cctx.CrossChainTx.CctxStatus.StatusMessage)
 
 			outboundBallotIdentifier := GetBallotIdentifierOutBound(nonce, cctxIdentifier, test.name, test.valueReceived)
 
-			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{outboundBallotIdentifier, "--output", "json"})
+			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdBallotByIdentifier(), []string{outboundBallotIdentifier, "--output", "json"})
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
 
 			// Check the votes
-			s.Require().Equal(test.correctBallotResult, ballot.BallotStatus)
+			s.Require().Equal(test.correctBallotResult.String(), ballot.BallotStatus.String())
 			for _, vote := range test.votes {
 				for _, ballotvote := range ballot.Voters {
 					if vote.voterAddress == ballotvote.VoterAddress {
 						if !vote.isFakeVote {
-							s.Assert().Equal(vote.voteType, ballotvote.VoteType)
+							s.Assert().Equal(vote.voteType.String(), ballotvote.VoteType.String())
 						} else {
-							s.Assert().Equal(observerTypes.VoteType_NotYetVoted, ballotvote.VoteType)
+							s.Assert().Equal(observerTypes.VoteType_NotYetVoted.String(), ballotvote.VoteType.String())
 						}
 						break
 					}
@@ -229,7 +226,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			}
 			if len(fakeVotes) > 0 {
 				outboundFakeBallotIdentifier := GetBallotIdentifierOutBound(nonce, cctxIdentifier, test.name+"falseVote", test.valueReceived)
-				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{outboundFakeBallotIdentifier, "--output", "json"})
+				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdBallotByIdentifier(), []string{outboundFakeBallotIdentifier, "--output", "json"})
 				s.Require().NoError(err)
 				fakeBallot := observerTypes.QueryBallotByIdentifierResponse{}
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &fakeBallot))
@@ -237,7 +234,7 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 					if vote.isFakeVote {
 						for _, ballotVote := range fakeBallot.Voters {
 							if vote.voterAddress == ballotVote.VoterAddress {
-								s.Assert().Equal(vote.voteType, ballotVote.VoteType)
+								s.Assert().Equal(vote.voteType.String(), ballotVote.VoteType.String())
 								break
 							}
 						}

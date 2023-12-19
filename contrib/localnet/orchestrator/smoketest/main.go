@@ -1,6 +1,3 @@
-//go:build PRIVNET
-// +build PRIVNET
-
 package main
 
 import (
@@ -21,21 +18,23 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"google.golang.org/grpc"
 )
 
 var (
-	ZetaChainID          = "athens_101-1"
-	DeployerAddress      = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	ZetaChainID     = "athens_101-1"
+	DeployerAddress = ethcommon.HexToAddress("0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC")
+	// DeployerPrivateKey is the private key for the deployer account
+	// #nosec G101 - used for testing
 	DeployerPrivateKey   = "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 	TSSAddress           = ethcommon.HexToAddress("0x0Da38EA1B43758F55eB97590D41e244913A00b26")
-	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", config.BitconNetParams)
+	BTCTSSAddress, _     = btcutil.DecodeAddress("bcrt1q78nlhm7mr7t6z8a93z3y93k75ftppcukt5ayay", common.BitcoinRegnetParams)
 	BigZero              = big.NewInt(0)
 	SmokeTestTimeout     = 24 * time.Hour // smoke test fails if timeout is reached
 	USDTZRC20Addr        = "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
@@ -46,6 +45,9 @@ var (
 	HexToAddress         = ethcommon.HexToAddress
 	//SystemContractAddr = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 	//ZEVMSwapAppAddr    = "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
+
+	// RPC
+	zevmRPC = "http://zetacore0:8545"
 
 	// FungibleAdminMnemonic is the mnemonic for the admin account of the fungible module
 	//nolint:gosec - disable nosec because this is a test account
@@ -167,7 +169,13 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	//Wait for keygen to be completed. ~ height 30
+	// deploy system contracts and ZRC20 contracts on ZetaChain
+	err = DeploySystemContractsAndZRC20(zetaTxServer)
+	if err != nil {
+		panic(err)
+	}
+
+	// wait for keygen to be completed. ~ height 30
 	for {
 		time.Sleep(5 * time.Second)
 		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
@@ -185,8 +193,8 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	var zevmClient *ethclient.Client
 	for {
 		time.Sleep(5 * time.Second)
-		fmt.Printf("dialing zevm client: http://zetacore0:8545\n")
-		zevmClient, err = ethclient.Dial("http://zetacore0:8545")
+		fmt.Printf("dialing zevm client: %s\n", zevmRPC)
+		zevmClient, err = ethclient.Dial(zevmRPC)
 		if err != nil {
 			continue
 		}
@@ -231,12 +239,18 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
+
 	receipt := MustWaitForTxReceipt(zevmClient, tx)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
+
 	zevmSwapApp, err := zevmswap.NewZEVMSwapApp(zevmSwapAppAddr, zevmClient)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Printf("ZEVMSwapApp contract address: %s, tx hash: %s\n", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
+
 	smokeTest.ZEVMSwapAppAddr = zevmSwapAppAddr
 	smokeTest.ZEVMSwapApp = zevmSwapApp
 
@@ -266,7 +280,6 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	// temporarily to reduce dev/test cycle turnaround time
 
 	smokeTest.CheckZRC20ReserveAndSupply()
-
 	smokeTest.TestContextUpgrade()
 
 	smokeTest.TestDepositAndCallRefund()
@@ -276,7 +289,6 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestERC20Withdraw()
-	//smokeTest.WithdrawBitcoinMultipleTimes(5)
 	smokeTest.CheckZRC20ReserveAndSupply()
 
 	smokeTest.TestSendZetaOut()
@@ -318,9 +330,10 @@ func LocalSmokeTest(_ *cobra.Command, _ []string) {
 	smokeTest.TestDepositEtherLiquidityCap()
 	smokeTest.CheckZRC20ReserveAndSupply()
 
-	// add your dev test here
-	smokeTest.TestMyTest()
 	smokeTest.TestBlockHeaders()
+
+	//add your dev test here
+	smokeTest.TestMyTest()
 
 	smokeTest.wg.Wait()
 }

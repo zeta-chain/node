@@ -28,13 +28,9 @@ func getValidEthChainID(t *testing.T) int64 {
 }
 
 // get a valid eth chain independently of the build flag
-func getValidEthChain(t *testing.T) *zetacommon.Chain {
-	list := zetacommon.DefaultChainsList()
-	require.True(t, len(list) > 1)
-	require.NotNil(t, list[1])
-	require.False(t, zetacommon.IsBitcoinChain(list[1].ChainId))
-
-	return list[1]
+func getValidEthChain(_ *testing.T) *zetacommon.Chain {
+	goerli := zetacommon.GoerliLocalnetChain()
+	return &goerli
 }
 
 // assert that a contract has been deployed by checking stored code is non-empty.
@@ -250,7 +246,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -308,7 +304,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -348,7 +344,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -413,7 +409,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -476,7 +472,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -521,7 +517,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -576,7 +572,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -637,7 +633,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
-					ReceiverChainId: zetacommon.ZetaChain().ChainId,
+					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
 				},
 				{
 					ReceiverChainId: chainID,

@@ -48,28 +48,14 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	if len(tssList) < 2 {
 		return errorsmod.Wrap(types.ErrCannotMigrateTss, "only one TSS found")
 	}
+
 	// Sort tssList by FinalizedZetaHeight
 	sort.SliceStable(tssList, func(i, j int) bool {
 		return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
 	})
+
 	// Always migrate to the latest TSS if multiple TSS addresses have been generated
 	newTss := tssList[len(tssList)-1]
-	ethAddressOld, err := getTssAddrEVM(currentTss.TssPubkey)
-	if err != nil {
-		return err
-	}
-	btcAddressOld, err := getTssAddrBTC(currentTss.TssPubkey)
-	if err != nil {
-		return err
-	}
-	ethAddressNew, err := getTssAddrEVM(newTss.TssPubkey)
-	if err != nil {
-		return err
-	}
-	btcAddressNew, err := getTssAddrBTC(newTss.TssPubkey)
-	if err != nil {
-		return err
-	}
 
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
 	if !isFound {
@@ -119,22 +105,49 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
 
+	// Set the sender and receiver addresses for EVM chain
 	if common.IsEVMChain(chainID) {
+		ethAddressOld, err := common.GetTssAddrEVM(currentTss.TssPubkey)
+		if err != nil {
+			return err
+		}
+		ethAddressNew, err := common.GetTssAddrEVM(newTss.TssPubkey)
+		if err != nil {
+			return err
+		}
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
 	}
+
+	// Set the sender and receiver addresses for Bitcoin chain
 	if common.IsBitcoinChain(chainID) {
+		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+		if err != nil {
+			return err
+		}
+		btcAddressOld, err := common.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
+		if err != nil {
+			return err
+		}
+		btcAddressNew, err := common.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
+		if err != nil {
+			return err
+		}
 		cctx.InboundTxParams.Sender = btcAddressOld
 		cctx.GetCurrentOutTxParam().Receiver = btcAddressNew
 	}
+
 	if cctx.GetCurrentOutTxParam().Receiver == "" {
 		return errorsmod.Wrap(types.ErrCannotMigrateTss, fmt.Sprintf("chain %d is not supported", chainID))
 	}
-	err = k.UpdateNonce(ctx, chainID, &cctx)
+
+	err := k.UpdateNonce(ctx, chainID, &cctx)
 	if err != nil {
 		return err
 	}
+
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	EmitEventInboundFinalized(ctx, &cctx)
+
 	return nil
 }

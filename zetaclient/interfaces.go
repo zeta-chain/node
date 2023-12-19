@@ -87,12 +87,14 @@ type ZetaCoreBridger interface {
 	GetBtcTssAddress() (string, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
 	GetLogger() *zerolog.Logger
+	ZetaChain() common.Chain
 	Pause()
 	Unpause()
 }
 
 // BTCRPCClient is the interface for BTC RPC client
 type BTCRPCClient interface {
+	GetNetworkInfo() (*btcjson.GetNetworkInfoResult, error)
 	SendRawTransaction(tx *wire.MsgTx, allowHighFees bool) (*chainhash.Hash, error)
 	ListUnspentMinMaxAddresses(minConf int, maxConf int, addrs []btcutil.Address) ([]btcjson.ListUnspentResult, error)
 	EstimateSmartFee(confTarget int64, mode *btcjson.EstimateSmartFeeMode) (*btcjson.EstimateSmartFeeResult, error)

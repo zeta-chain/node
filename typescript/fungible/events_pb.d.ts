@@ -214,3 +214,101 @@ export declare class EventZRC20PausedStatusUpdated extends Message<EventZRC20Pau
   static equals(a: EventZRC20PausedStatusUpdated | PlainMessage<EventZRC20PausedStatusUpdated> | undefined, b: EventZRC20PausedStatusUpdated | PlainMessage<EventZRC20PausedStatusUpdated> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.fungible.EventSystemContractsDeployed
+ */
+export declare class EventSystemContractsDeployed extends Message<EventSystemContractsDeployed> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: string uniswap_v2_factory = 2;
+   */
+  uniswapV2Factory: string;
+
+  /**
+   * @generated from field: string wzeta = 3;
+   */
+  wzeta: string;
+
+  /**
+   * @generated from field: string uniswap_v2_router = 4;
+   */
+  uniswapV2Router: string;
+
+  /**
+   * @generated from field: string connector_zevm = 5;
+   */
+  connectorZevm: string;
+
+  /**
+   * @generated from field: string system_contract = 6;
+   */
+  systemContract: string;
+
+  /**
+   * @generated from field: string signer = 7;
+   */
+  signer: string;
+
+  constructor(data?: PartialMessage<EventSystemContractsDeployed>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.EventSystemContractsDeployed";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventSystemContractsDeployed;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventSystemContractsDeployed;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventSystemContractsDeployed;
+
+  static equals(a: EventSystemContractsDeployed | PlainMessage<EventSystemContractsDeployed> | undefined, b: EventSystemContractsDeployed | PlainMessage<EventSystemContractsDeployed> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.EventBytecodeUpdated
+ */
+export declare class EventBytecodeUpdated extends Message<EventBytecodeUpdated> {
+  /**
+   * @generated from field: string msg_type_url = 1;
+   */
+  msgTypeUrl: string;
+
+  /**
+   * @generated from field: string contract_address = 2;
+   */
+  contractAddress: string;
+
+  /**
+   * @generated from field: string new_bytecode_hash = 3;
+   */
+  newBytecodeHash: string;
+
+  /**
+   * @generated from field: string old_bytecode_hash = 4;
+   */
+  oldBytecodeHash: string;
+
+  /**
+   * @generated from field: string signer = 5;
+   */
+  signer: string;
+
+  constructor(data?: PartialMessage<EventBytecodeUpdated>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.EventBytecodeUpdated";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventBytecodeUpdated;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventBytecodeUpdated;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventBytecodeUpdated;
+
+  static equals(a: EventBytecodeUpdated | PlainMessage<EventBytecodeUpdated> | undefined, b: EventBytecodeUpdated | PlainMessage<EventBytecodeUpdated> | undefined): boolean;
+}
+

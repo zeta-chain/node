@@ -53,6 +53,10 @@ func AccAddress() string {
 	return sdk.AccAddress(addr).String()
 }
 
+func ConsAddress() sdk.ConsAddress {
+	return sdk.ConsAddress(PubKey(newRandFromSeed(1)).Address())
+}
+
 // ValAddress returns a sample validator operator address
 func ValAddress(r *rand.Rand) sdk.ValAddress {
 	return sdk.ValAddress(PubKey(r).Address())
@@ -94,6 +98,11 @@ func PrivKeyAddressPair() (*ed25519.PrivKey, sdk.AccAddress) {
 // EthAddress returns a sample ethereum address
 func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
+}
+
+// Hash returns a sample hash
+func Hash() ethcommon.Hash {
+	return EthAddress().Hash()
 }
 
 // Bytes returns a sample byte array

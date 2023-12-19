@@ -77,6 +77,7 @@ func AddObserverAccountsCmd() *cobra.Command {
 			var nodeAccounts []*types.NodeAccount
 			var keygenPubKeys []string
 			observersForChain := map[int64][]string{}
+
 			// DefaultChainsList is based on Build Flags
 			supportedChains := common.DefaultChainsList()
 			var balances []banktypes.Balance

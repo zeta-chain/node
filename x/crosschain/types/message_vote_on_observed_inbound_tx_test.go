@@ -37,6 +37,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				GasLimit:      42,
 				CoinType:      common.CoinType_Zeta,
 				Asset:         sample.String(),
+				EventIndex:    42,
 			},
 		},
 		{
@@ -55,6 +56,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				GasLimit:      42,
 				CoinType:      common.CoinType_Zeta,
 				Asset:         sample.String(),
+				EventIndex:    42,
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -74,6 +76,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				GasLimit:      42,
 				CoinType:      common.CoinType_Zeta,
 				Asset:         sample.String(),
+				EventIndex:    42,
 			},
 			err: types.ErrInvalidChainID,
 		},
@@ -93,6 +96,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				GasLimit:      42,
 				CoinType:      common.CoinType_Zeta,
 				Asset:         sample.String(),
+				EventIndex:    42,
 			},
 			err: types.ErrInvalidChainID,
 		},
@@ -112,6 +116,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				GasLimit:      42,
 				CoinType:      common.CoinType_Zeta,
 				Asset:         sample.String(),
+				EventIndex:    42,
 			},
 			err: sdkerrors.ErrInvalidRequest,
 		},
@@ -145,6 +150,7 @@ func TestMsgVoteOnObservedInboundTx_Digest(t *testing.T) {
 		GasLimit:      42,
 		CoinType:      common.CoinType_Zeta,
 		Asset:         sample.String(),
+		EventIndex:    42,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -226,4 +232,10 @@ func TestMsgVoteOnObservedInboundTx_Digest(t *testing.T) {
 	msg2.Asset = sample.StringRandom(r, 32)
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "asset should change hash")
+
+	// event index used
+	msg2 = msg
+	msg2.EventIndex = 43
+	hash2 = msg2.Digest()
+	require.NotEqual(t, hash, hash2, "event index should change hash")
 }

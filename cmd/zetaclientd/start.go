@@ -86,7 +86,10 @@ func start(_ *cobra.Command, _ []string) error {
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
 		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
-		zetaBridge.UpdateChainID(cfg.ChainID)
+		err := zetaBridge.UpdateChainID(cfg.ChainID)
+		if err != nil {
+			return err
+		}
 	}
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
@@ -106,6 +109,7 @@ func start(_ *cobra.Command, _ []string) error {
 	go zetaBridge.ConfigUpdater(cfg)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
+	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
 	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
@@ -203,15 +207,11 @@ func start(_ *cobra.Command, _ []string) error {
 	isNodeActive := false
 	for _, observer := range observerList {
 		if observer == zetaBridge.GetKeys().GetOperatorAddress().String() {
-			startLogger.Info().Msgf("Observer %s is active", zetaBridge.GetKeys().GetOperatorAddress().String())
 			isNodeActive = true
 			break
 		}
 	}
-	if !isNodeActive {
-		startLogger.Error().Msgf("Node %s is not an active observer", zetaBridge.GetKeys().GetOperatorAddress().String())
-		return errors.New("Node is not an active observer")
-	}
+
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
 	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
 	if err != nil {
@@ -232,13 +232,33 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
 	}
-	for _, v := range chainClientMap {
-		v.Start()
+
+	if !isNodeActive {
+		startLogger.Error().Msgf("Node %s is not an active observer external chain observers will not be started", zetaBridge.GetKeys().GetOperatorAddress().String())
+	} else {
+		startLogger.Debug().Msgf("Node %s is an active observer starting external chain observers", zetaBridge.GetKeys().GetOperatorAddress().String())
+		for _, v := range chainClientMap {
+			v.Start()
+		}
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
+
+	// start zeta supply checker
+	// TODO: enable
+	// https://github.com/zeta-chain/node/issues/1354
+	// NOTE: this is disabled for now because we need to determine the frequency on how to handle invalid check
+	// The method uses GRPC query to the node we might need to improve for performance
+	//zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
+	//if err != nil {
+	//	startLogger.Err(err).Msg("NewZetaSupplyChecker")
+	//}
+	//if err == nil {
+	//	zetaSupplyChecker.Start()
+	//	defer zetaSupplyChecker.Stop()
+	//}
 
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)

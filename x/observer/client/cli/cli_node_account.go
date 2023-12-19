@@ -44,7 +44,7 @@ func CmdListNodeAccount() *cobra.Command {
 
 func CmdShowNodeAccount() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-node-account [index]",
+		Use:   "show-node-account [operator_address]",
 		Short: "shows a NodeAccount",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cosmoserror "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -48,19 +47,9 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 		}
 	}
 
-	// fetch the account of the new bytecode
-	if !ethcommon.IsHexAddress(msg.NewBytecodeAddress) {
-		return nil, cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.NewBytecodeAddress)
-	}
-	newBytecodeAddress := ethcommon.HexToAddress(msg.NewBytecodeAddress)
-	newBytecodeAcct := k.evmKeeper.GetAccount(ctx, newBytecodeAddress)
-	if newBytecodeAcct == nil {
-		return nil, cosmoserror.Wrapf(types.ErrContractNotFound, "contract (%s) not found", newBytecodeAddress.Hex())
-	}
-
 	// set the new CodeHash to the account
-	previousCodeHash := acct.CodeHash
-	acct.CodeHash = newBytecodeAcct.CodeHash
+	oldCodeHash := acct.CodeHash
+	acct.CodeHash = ethcommon.HexToHash(msg.NewCodeHash).Bytes()
 	err := k.evmKeeper.SetAccount(ctx, contractAddress, *acct)
 	if err != nil {
 		return nil, cosmoserror.Wrapf(
@@ -70,14 +59,20 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 			err.Error(),
 		)
 	}
-	k.Logger(ctx).Info(
-		"updated contract bytecode",
-		"contract", contractAddress.Hex(),
-		"oldCodeHash", string(previousCodeHash),
-		"newCodeHash", string(acct.CodeHash),
-	)
 
-	return &types.MsgUpdateContractBytecodeResponse{
-		NewBytecodeHash: acct.CodeHash,
-	}, nil
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventBytecodeUpdated{
+			MsgTypeUrl:      sdk.MsgTypeURL(&types.MsgUpdateContractBytecode{}),
+			ContractAddress: msg.ContractAddress,
+			OldBytecodeHash: ethcommon.BytesToHash(oldCodeHash).Hex(),
+			NewBytecodeHash: msg.NewCodeHash,
+			Signer:          msg.Creator,
+		},
+	)
+	if err != nil {
+		k.Logger(ctx).Error("failed to emit event", "error", err.Error())
+		return nil, cosmoserror.Wrapf(types.ErrEmitEvent, "failed to emit event (%s)", err.Error())
+	}
+
+	return &types.MsgUpdateContractBytecodeResponse{}, nil
 }

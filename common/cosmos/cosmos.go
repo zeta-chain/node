@@ -38,6 +38,7 @@ var (
 	NewKVStoreKey           = sdk.NewKVStoreKey
 	NewTransientStoreKey    = sdk.NewTransientStoreKey
 	NewContext              = sdk.NewContext
+	Bech32ifyAddressBytes   = sdk.Bech32ifyAddressBytes
 	GetPubKeyFromBech32     = legacybech32.UnmarshalPubKey
 	Bech32ifyPubKey         = legacybech32.MarshalPubKey
 	Bech32PubKeyTypeConsPub = legacybech32.ConsPK

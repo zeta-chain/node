@@ -36,13 +36,14 @@ type ZetaCoreBridge struct {
 	keys                *Keys
 	broadcastLock       *sync.RWMutex
 	zetaChainID         string
+	zetaChain           common.Chain
 	lastOutTxReportTime map[string]time.Time
 	stop                chan struct{}
 	pause               chan struct{}
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string, hsmMode bool) (*ZetaCoreBridge, error) {
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
@@ -50,6 +51,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		SignerName:   signerName,
 		SignerPasswd: "password",
 		ChainRPC:     fmt.Sprintf("%s:26657", chainIP),
+		HsmMode:      hsmMode,
 	}
 
 	httpClient := retryablehttp.NewClient()
@@ -70,6 +72,11 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		seqMap[keyType] = 0
 	}
 
+	zetaChain, err := common.ZetaChainFromChainID(chainID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
+	}
+
 	return &ZetaCoreBridge{
 		logger:              logger,
 		grpcConn:            grpcConn,
@@ -83,6 +90,7 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		lastOutTxReportTime: map[string]time.Time{},
 		stop:                make(chan struct{}),
 		zetaChainID:         chainID,
+		zetaChain:           zetaChain,
 		pause:               make(chan struct{}),
 	}, nil
 }
@@ -101,10 +109,23 @@ func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {
 	return &b.logger
 }
 
-func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
+func (b *ZetaCoreBridge) UpdateChainID(chainID string) error {
 	if b.zetaChainID != chainID {
 		b.zetaChainID = chainID
+
+		zetaChain, err := common.ZetaChainFromChainID(chainID)
+		if err != nil {
+			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
+		}
+		b.zetaChain = zetaChain
 	}
+
+	return nil
+}
+
+// ZetaChain returns the ZetaChain chain object
+func (b *ZetaCoreBridge) ZetaChain() common.Chain {
+	return b.zetaChain
 }
 
 func (b *ZetaCoreBridge) Stop() {
