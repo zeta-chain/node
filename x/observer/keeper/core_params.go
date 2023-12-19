@@ -42,7 +42,6 @@ func (k Keeper) GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (*types.C
 
 // GetSupportedChainFromChainID returns the chain from the chain id
 // it returns nil if the chain doesn't exist or is not supported
-// TODO: test this function
 func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain {
 	cpl, found := k.GetCoreParamsList(ctx)
 	if !found {
@@ -58,7 +57,6 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *co
 }
 
 // GetSupportedChains returns the list of supported chains
-// TODO: test this function
 func (k Keeper) GetSupportedChains(ctx sdk.Context) []*common.Chain {
 	cpl, found := k.GetCoreParamsList(ctx)
 	if !found {

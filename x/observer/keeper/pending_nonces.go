@@ -81,7 +81,7 @@ func (k Keeper) RemoveFromPendingNonces(ctx sdk.Context, tssPubkey string, chain
 func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
 	k.SetTSS(ctx, tss)
 	// initialize the nonces and pending nonces of all enabled chains
-	supportedChains := k.GetParams(ctx).GetSupportedChains()
+	supportedChains := k.GetSupportedChains(ctx)
 	for _, chain := range supportedChains {
 		chainNonce := types.ChainNonces{
 			Index:   chain.ChainName.String(),

@@ -94,6 +94,7 @@ type ZetaObserverKeeper interface {
 	RemoveFromPendingNonces(ctx sdk.Context, tss string, chainID int64, nonce int64)
 	GetAllNonceToCctx(ctx sdk.Context) (list []observertypes.NonceToCctx)
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain
+	GetSupportedChains(ctx sdk.Context) []*common.Chain
 }
 
 type FungibleKeeper interface {
