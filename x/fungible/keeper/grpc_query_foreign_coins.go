@@ -39,7 +39,6 @@ func (k Keeper) ForeignCoinsAll(c context.Context, req *types.QueryAllForeignCoi
 	return &types.QueryAllForeignCoinsResponse{ForeignCoins: foreignCoinss, Pagination: pageRes}, nil
 }
 
-// Change this query to take Chain as well
 func (k Keeper) ForeignCoins(c context.Context, req *types.QueryGetForeignCoinsRequest) (*types.QueryGetForeignCoinsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

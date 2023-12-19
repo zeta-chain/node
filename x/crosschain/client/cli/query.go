@@ -5,9 +5,9 @@ import (
 
 	// "strings"
 
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -28,11 +28,9 @@ func GetQueryCmd(_ string) *cobra.Command {
 	cmd.AddCommand(
 		CmdListOutTxTracker(),
 		CmdShowOutTxTracker(),
-		CmdShowTSS(),
 		CmdListGasPrice(),
 		CmdShowGasPrice(),
-		CmdListChainNonces(),
-		CmdShowChainNonces(),
+
 		CmdListSend(),
 		CmdShowSend(),
 		CmdLastZetaHeight(),
@@ -40,12 +38,11 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdListInTxHashToCctx(),
 		CmdShowInTxHashToCctx(),
 		CmdQueryParams(),
-		CmdGetTssAddress(),
-		CmdListTssHistory(),
-		CmdListPendingNonces(),
+
 		CmdPendingCctx(),
 		CmdListInTxTrackerByChain(),
 		CmdListInTxTrackers(),
+		CmdGetZetaAccounting(),
 	)
 
 	return cmd

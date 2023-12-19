@@ -66,7 +66,7 @@ type TransactionSQLType struct {
 
 type LastBlockSQLType struct {
 	gorm.Model
-	Num int64
+	Num uint64
 }
 
 // Type translation functions:
@@ -154,7 +154,7 @@ func ToTransactionSQLType(transaction *ethtypes.Transaction, index string) (*Tra
 	}, nil
 }
 
-func ToLastBlockSQLType(lastBlock int64) *LastBlockSQLType {
+func ToLastBlockSQLType(lastBlock uint64) *LastBlockSQLType {
 	return &LastBlockSQLType{
 		Model: gorm.Model{ID: LastBlockNumID},
 		Num:   lastBlock,

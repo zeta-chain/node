@@ -13,22 +13,17 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
+		Params:         types.DefaultParams(),
+		ZetaAccounting: sample.ZetaAccounting(t, "sample"),
 		OutTxTrackerList: []types.OutTxTracker{
 			sample.OutTxTracker(t, "0"),
 			sample.OutTxTracker(t, "1"),
 			sample.OutTxTracker(t, "2"),
 		},
-		Tss: sample.Tss(),
 		GasPriceList: []*types.GasPrice{
 			sample.GasPrice(t, "0"),
 			sample.GasPrice(t, "1"),
 			sample.GasPrice(t, "2"),
-		},
-		ChainNoncesList: []*types.ChainNonces{
-			sample.ChainNonces(t, "0"),
-			sample.ChainNonces(t, "1"),
-			sample.ChainNonces(t, "2"),
 		},
 		CrossChainTxs: []*types.CrossChainTx{
 			sample.CrossChainTx(t, "0"),

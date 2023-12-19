@@ -18,15 +18,11 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=zetacore \
 	-X github.com/zeta-chain/zetacore/common.BuildTime=$(BUILDTIME) \
 	-X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 
-BUILD_FLAGS := -ldflags '$(ldflags)' -tags PRIVNET,pebbledb,ledger
-TESTNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags TESTNET,pebbledb,ledger
-MOCK_MAINNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags MOCK_MAINNET,pebbledb,ledger
-MAINNET_BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
+BUILD_FLAGS := -ldflags '$(ldflags)' -tags pebbledb,ledger
 
 TEST_DIR?="./..."
-TEST_BUILD_FLAGS := -tags TESTNET,pebbledb,ledger
-PRIV_BUILD_FLAGS := -tags PRIVNET,pebbledb,ledger
-HSM_BUILD_FLAGS := -tags TESTNET,pebbled,ledger,hsm_test
+TEST_BUILD_FLAGS := -tags pebbledb,ledger
+HSM_BUILD_FLAGS := -tags pebbledb,ledger,hsm_test
 
 clean: clean-binaries clean-dir clean-test-dir clean-coverage
 
@@ -39,6 +35,22 @@ clean-dir:
 	@rm -rf ~/.zetacore
 
 all: install
+
+go.sum: go.mod
+		@echo "--> Ensure dependencies have not been modified"
+		GO111MODULE=on go mod verify
+
+###############################################################################
+###                             Test commands                               ###
+###############################################################################
+
+run-test:
+	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
+
+test :clean-test-dir run-test
+
+test-hsm:
+	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
 
 test-coverage-exclude-core:
 	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out $(go list ./... | grep -v /x/zetacore/)
@@ -58,24 +70,9 @@ clean-test-dir:
 	@rm -rf x/crosschain/client/querytests/.zetacored
 	@rm -rf x/observer/client/querytests/.zetacored
 
-run-test:
-	@go test ${TEST_BUILD_FLAGS} ${TEST_DIR}
-
-test :clean-test-dir run-test
-
-test-priv:
-	@go test ${PRIV_BUILD_FLAGS} ${TEST_DIR}
-
-test-hsm:
-	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
-
-gosec:
-	gosec  -exclude-dir=localnet ./...
-
-install-testnet: go.sum
-		@echo "--> Installing zetacored & zetaclientd"
-		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
-		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetaclientd
+###############################################################################
+###                          Install commands                               ###
+###############################################################################
 
 build-testnet-ubuntu: go.sum
 		docker build -t zetacore-ubuntu --platform linux/amd64 -f ./Dockerfile-athens3-ubuntu .
@@ -89,44 +86,26 @@ install: go.sum
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
-install-mainnet: go.sum
-		@echo "--> Installing zetacored & zetaclientd"
-		@go install -mod=readonly $(MAINNET_BUILD_FLAGS) ./cmd/zetacored
-		@go install -mod=readonly $(MAINNET_BUILD_FLAGS) ./cmd/zetaclientd
-
-install-mock-mainnet: go.sum
-		@echo "--> Installing zetacored & zetaclientd"
-		@go install -mod=readonly $(MOCK_MAINNET_BUILD_FLAGS) ./cmd/zetacored
-		@go install -mod=readonly $(MOCK_MAINNET_BUILD_FLAGS) ./cmd/zetaclientd
-
-
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+
+install-zetacore: go.sum
+		@echo "--> Installing zetacored"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
 # running with race detector on will be slow
 install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
-install-zetacore: go.sum
-		@echo "--> Installing zetacored"
-		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
-
-install-zetacore-testnet: go.sum
-		@echo "--> Installing zetacored"
-		@go install -mod=readonly $(TESTNET_BUILD_FLAGS) ./cmd/zetacored
-
 install-smoketest: go.sum
 		@echo "--> Installing orchestrator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest
+		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
-go.sum: go.mod
-		@echo "--> Ensure dependencies have not been modified"
-		GO111MODULE=on go mod verify
-
-test-cctx:
-	./standalone-network/cctx-creator.sh
+###############################################################################
+###                             Local network                               ###
+###############################################################################
 
 init:
 	./standalone-network/init.sh
@@ -140,12 +119,12 @@ chain-stop:
 	@killall zetacored
 	@killall tail
 
+test-cctx:
+	./standalone-network/cctx-creator.sh
 
-chain-init-testnet: clean install-zetacore-testnet init
-chain-run-testnet: clean install-zetacore-testnet init run
-
-chain-init-mock-mainnet: clean install-mock-mainnet init
-chain-run-mock-mainnet: clean install-mock-mainnet init run
+###############################################################################
+###                                 Linting            	                    ###
+###############################################################################
 
 lint-pre:
 	@test -z $(gofmt -l .)
@@ -156,6 +135,13 @@ lint: lint-pre
 
 lint-cosmos-gosec:
 	@bash ./scripts/cosmos-gosec.sh
+
+gosec:
+	gosec  -exclude-dir=localnet ./...
+
+###############################################################################
+###                           Generation commands  		                    ###
+###############################################################################
 
 proto:
 	@echo "--> Removing old Go types "
@@ -197,7 +183,7 @@ generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
-###                                Docker Images                             ###
+###                            Smoke tests                                  ###
 ###############################################################################
 
 zetanode:
@@ -241,13 +227,19 @@ stateful-upgrade:
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
+stateful-upgrade-source:
+	@echo "--> Starting stateful smoketest"
+	$(DOCKER) build --build-arg old_version=v10.1.7 -t zetanode -f ./Dockerfile-versioned-source .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
+
 stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
-
 
 ###############################################################################
 ###                                GoReleaser  		                        ###
 ###############################################################################
+
 PACKAGE_NAME          := github.com/zeta-chain/node
 GOLANG_CROSS_VERSION  ?= v1.20
 GOPATH ?= '$(HOME)/go'

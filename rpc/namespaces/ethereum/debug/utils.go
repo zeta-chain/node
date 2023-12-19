@@ -59,7 +59,7 @@ func writeProfile(name, file string, log log.Logger) error {
 	if err != nil {
 		return err
 	}
-	/* #nosec */
+	// #nosec G304 variable value is controlled
 	f, err := os.Create(fp)
 	if err != nil {
 		return err

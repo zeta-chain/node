@@ -9,6 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k Keeper) VerifyProof(ctx sdk.Context, proof *common.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
@@ -86,7 +87,9 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 		}
 		return nil
 	case common.CoinType_Gas:
-		tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+		tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+			BitcoinChainId: msg.ChainId,
+		})
 		if err != nil {
 			return err
 		}

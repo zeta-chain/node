@@ -36,14 +36,11 @@ func (m CrossChainTx) OriginalDestinationChainID() int64 {
 // GetAllAuthzZetaclientTxTypes returns all the authz types for zetaclient
 func GetAllAuthzZetaclientTxTypes() []string {
 	return []string{
-		sdk.MsgTypeURL(&MsgNonceVoter{}),
 		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedInboundTx{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedOutboundTx{}),
-		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
-		sdk.MsgTypeURL(&MsgSetNodeKeys{}),
 		sdk.MsgTypeURL(&observertypes.MsgAddBlameVote{}),
 		sdk.MsgTypeURL(&observertypes.MsgAddBlockHeader{}),
 	}

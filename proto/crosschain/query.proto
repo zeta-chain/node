@@ -2,16 +2,13 @@ syntax = "proto3";
 package zetachain.zetacore.crosschain;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "crosschain/chain_nonces.proto";
 import "crosschain/cross_chain_tx.proto";
 import "crosschain/gas_price.proto";
 import "crosschain/in_tx_hash_to_cctx.proto";
 import "crosschain/in_tx_tracker.proto";
 import "crosschain/last_block_height.proto";
-import "crosschain/nonce_to_cctx.proto";
 import "crosschain/out_tx_tracker.proto";
 import "crosschain/params.proto";
-import "crosschain/tss.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -60,16 +57,6 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/inTxHashToCctx";
   }
 
-  // Queries a list of GetTssAddress items.
-  rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
-  }
-
-  // Queries a tSS by index.
-  rpc TSS(QueryGetTSSRequest) returns (QueryGetTSSResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/TSS";
-  }
-
   // Queries a gasPrice by index.
   rpc GasPrice(QueryGetGasPriceRequest) returns (QueryGetGasPriceResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/gasPrice/{index}";
@@ -86,24 +73,6 @@ service Query {
 
   rpc ProtocolFee(QueryMessagePassingProtocolFeeRequest) returns (QueryMessagePassingProtocolFeeResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/protocolFee";
-  }
-
-  // Queries a chainNonces by index.
-  rpc ChainNonces(QueryGetChainNoncesRequest) returns (QueryGetChainNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/chainNonces/{index}";
-  }
-
-  // Queries a list of chainNonces items.
-  rpc ChainNoncesAll(QueryAllChainNoncesRequest) returns (QueryAllChainNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/chainNonces";
-  }
-
-  rpc PendingNoncesAll(QueryAllPendingNoncesRequest) returns (QueryAllPendingNoncesResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces";
-  }
-
-  rpc PendingNoncesByChain(QueryPendingNoncesByChainRequest) returns (QueryPendingNoncesByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/pendingNonces/{chain_id}";
   }
 
   // Queries a lastBlockHeight by index.
@@ -130,36 +99,25 @@ service Query {
     option (google.api.http).get = "/zeta-chain/crosschain/cctx";
   }
 
-  // Queries a list of send items.
-  rpc CctxAllPending(QueryAllCctxPendingRequest) returns (QueryAllCctxPendingResponse) {
+  // Queries a list of pending cctxs.
+  rpc CctxListPending(QueryListCctxPendingRequest) returns (QueryListCctxPendingResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/cctxPending";
+  }
+
+  rpc ZetaAccounting(QueryZetaAccountingRequest) returns (QueryZetaAccountingResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/zetaAccounting";
   }
 
   // Queries a list of lastMetaHeight items.
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
-
-  rpc TssHistory(QueryTssHistoryRequest) returns (QueryTssHistoryResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/tssHistory";
-  }
-
-  rpc CctxByStatus(QueryCctxByStatusRequest) returns (QueryCctxByStatusResponse) {
-    option (google.api.http).get = "/zeta-chain/crosschain/cctxbyStatus/{status}";
-  }
 }
 
-message QueryCctxByStatusRequest {
-  CctxStatus status = 1;
-}
-message QueryCctxByStatusResponse {
-  repeated CrossChainTx CrossChainTx = 1 [(gogoproto.nullable) = false];
-}
+message QueryZetaAccountingRequest {}
 
-message QueryTssHistoryRequest {}
-
-message QueryTssHistoryResponse {
-  repeated TSS tss_list = 1 [(gogoproto.nullable) = false];
+message QueryZetaAccountingResponse {
+  string aborted_zeta_amount = 1;
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -209,10 +167,13 @@ message QueryAllInTxTrackerByChainResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllInTxTrackersRequest {}
+message QueryAllInTxTrackersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
 message QueryAllInTxTrackersResponse {
   repeated InTxTracker inTxTracker = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetInTxHashToCctxRequest {
@@ -240,21 +201,6 @@ message QueryAllInTxHashToCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetTssAddressRequest {
-  string tss_pub_key = 1;
-}
-
-message QueryGetTssAddressResponse {
-  string eth = 1;
-  string btc = 2;
-}
-
-message QueryGetTSSRequest {}
-
-message QueryGetTSSResponse {
-  TSS TSS = 1;
-}
-
 message QueryGetGasPriceRequest {
   string index = 1;
 }
@@ -270,36 +216,6 @@ message QueryAllGasPriceRequest {
 message QueryAllGasPriceResponse {
   repeated GasPrice GasPrice = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-message QueryGetChainNoncesRequest {
-  string index = 1;
-}
-
-message QueryGetChainNoncesResponse {
-  ChainNonces ChainNonces = 1;
-}
-
-message QueryAllChainNoncesRequest {
-  cosmos.base.query.v1beta1.PageRequest pagination = 1;
-}
-
-message QueryAllChainNoncesResponse {
-  repeated ChainNonces ChainNonces = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryAllPendingNoncesRequest {}
-
-message QueryAllPendingNoncesResponse {
-  repeated PendingNonces pending_nonces = 1;
-}
-
-message QueryPendingNoncesByChainRequest {
-  int64 chain_id = 1;
-}
-
-message QueryPendingNoncesByChainResponse {
-  PendingNonces pending_nonces = 1 [(gogoproto.nullable) = false];
 }
 
 message QueryGetLastBlockHeightRequest {
@@ -341,14 +257,14 @@ message QueryAllCctxResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryAllCctxPendingRequest {
+message QueryListCctxPendingRequest {
   int64 chain_id = 1;
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  uint32 limit = 2;
 }
 
-message QueryAllCctxPendingResponse {
+message QueryListCctxPendingResponse {
   repeated CrossChainTx CrossChainTx = 1;
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  uint64 totalPending = 2;
 }
 
 message QueryLastZetaHeightRequest {}
@@ -372,89 +288,4 @@ message QueryMessagePassingProtocolFeeRequest {}
 
 message QueryMessagePassingProtocolFeeResponse {
   string feeInZeta = 1;
-}
-
-message QueryZEVMGetTransactionReceiptRequest {
-  string hash = 1;
-}
-
-message QueryZEVMGetTransactionReceiptResponse {
-  string block_hash = 1 [(gogoproto.jsontag) = "blockHash"];
-  string block_number = 2 [(gogoproto.jsontag) = "blockNumber"];
-  string contract_address = 3 [(gogoproto.jsontag) = "contractAddress"];
-  string cumulative_gas_used = 4 [(gogoproto.jsontag) = "cumulativeGasUsed"];
-  string from = 5 [(gogoproto.jsontag) = "from"];
-  string gas_used = 6 [(gogoproto.jsontag) = "gasUsed"];
-  string logs_bloom = 7 [(gogoproto.jsontag) = "logsBloom"];
-  string status = 8 [(gogoproto.jsontag) = "status"];
-  string to = 9 [(gogoproto.jsontag) = "to"];
-  string transaction_hash = 10 [(gogoproto.jsontag) = "transactionHash"];
-  string transaction_index = 11 [(gogoproto.jsontag) = "transactionIndex"];
-  repeated Log logs = 12;
-}
-
-message Log {
-  string address = 1;
-  repeated string topics = 2;
-  string data = 3;
-
-  // sythetic fields
-  uint64 block_number = 4 [(gogoproto.jsontag) = "blockNumber"];
-  string transaction_hash = 5 [(gogoproto.jsontag) = "transactionHash"];
-  uint64 transaction_index = 6 [(gogoproto.jsontag) = "transactionIndex"];
-  string block_hash = 7 [(gogoproto.jsontag) = "blockHash"];
-  uint64 log_index = 8 [(gogoproto.jsontag) = "logIndex"];
-  bool removed = 9 [(gogoproto.jsontag) = "removed"];
-}
-
-message QueryZEVMGetTransactionRequest {
-  string hash = 1;
-}
-
-message QueryZEVMGetTransactionResponse {
-  string block_hash = 1 [(gogoproto.jsontag) = "blockHash"];
-  string block_number = 2 [(gogoproto.jsontag) = "blockNumber"];
-  string from = 3 [(gogoproto.jsontag) = "from"];
-  string gas = 4 [(gogoproto.jsontag) = "gas"];
-  string gas_price = 5 [(gogoproto.jsontag) = "gasPrice"];
-  string hash = 6 [(gogoproto.jsontag) = "hash"];
-  string input = 7 [(gogoproto.jsontag) = "input"];
-  string nonce = 8 [(gogoproto.jsontag) = "nonce"];
-  string to = 9 [(gogoproto.jsontag) = "to"];
-  string transaction_index = 10 [(gogoproto.jsontag) = "transactionIndex"];
-  string value = 11 [(gogoproto.jsontag) = "value"];
-  string type = 12 [(gogoproto.jsontag) = "type"];
-  repeated string access_list = 13 [(gogoproto.jsontag) = "accessList"];
-  string chain_id = 14 [(gogoproto.jsontag) = "chainId"];
-  string v = 15 [(gogoproto.jsontag) = "v"];
-  string r = 16 [(gogoproto.jsontag) = "r"];
-  string s = 17 [(gogoproto.jsontag) = "s"];
-}
-
-message QueryZEVMGetBlockByNumberRequest {
-  uint64 height = 1;
-}
-
-message QueryZEVMGetBlockByNumberResponse {
-  string number = 1 [(gogoproto.jsontag) = "number"];
-  string hash = 2 [(gogoproto.jsontag) = "hash"];
-  string parent_hash = 3 [(gogoproto.jsontag) = "parentHash"];
-  string nonce = 4 [(gogoproto.jsontag) = "nonce"];
-  string sha3_uncles = 5 [(gogoproto.jsontag) = "sha3Uncles"];
-  string logs_bloom = 6 [(gogoproto.jsontag) = "logsBloom"];
-  string transactions_root = 7 [(gogoproto.jsontag) = "transactionsRoot"];
-  string state_root = 8 [(gogoproto.jsontag) = "stateRoot"];
-  string receipts_root = 9 [(gogoproto.jsontag) = "receiptsRoot"];
-  string miner = 10 [(gogoproto.jsontag) = "miner"];
-  string difficulty = 11 [(gogoproto.jsontag) = "difficulty"];
-  string total_difficulty = 12 [(gogoproto.jsontag) = "totalDifficulty"];
-  string extra_data = 13 [(gogoproto.jsontag) = "extraData"];
-  string size = 14 [(gogoproto.jsontag) = "size"];
-  string gas_limit = 15 [(gogoproto.jsontag) = "gasLimit"];
-  string gas_used = 16 [(gogoproto.jsontag) = "gasUsed"];
-  string timestamp = 17 [(gogoproto.jsontag) = "timestamp"];
-  repeated string transactions = 18 [(gogoproto.jsontag) = "transactions"];
-  repeated string uncles = 19 [(gogoproto.jsontag) = "uncles"];
-  string base_fee_per_gas = 20 [(gogoproto.jsontag) = "baseFeePerGas"];
-  string mix_hash = 21 [(gogoproto.jsontag) = "mixHash"];
 }
