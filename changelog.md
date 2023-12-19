@@ -1,9 +1,11 @@
 # CHANGELOG
 
-## Unreleased
+## v11.0.0
 
 ### Features
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+* add a new tx to update an observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 ### Fixes
 * 1b8fdd3394c35afa47e830a5858b3c5c133fad8e - Added check for redeployment of gas and asset token contracts
@@ -26,9 +28,6 @@
 ### CI
 
 ## Version: v10.1.2
-### Unreleased:
-* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
-* add a new tx to update an observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 ### Features
 * [1137](https://github.com/zeta-chain/node/pull/1137) - external stress testing
