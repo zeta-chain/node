@@ -15,6 +15,7 @@
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
+* fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
 * 6582f6b42f4f0eb0358e6fdefe5278295c791166 - masked zetaclient config at startup
