@@ -10,6 +10,7 @@
 ### Features
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+* [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
 * add static chain data for Sepolia testnet
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
