@@ -107,9 +107,9 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("ERC20 CCTX successfully reverted")
-	sm.Logger.Info("\tbalance before refund: ", goerliBalance.String())
-	sm.Logger.Info("\tamount: ", amount.String())
-	sm.Logger.Info("\tbalance after refund: ", newGoerliBalance.String())
+	sm.Logger.Info("\tbalance before refund: %s", goerliBalance.String())
+	sm.Logger.Info("\tamount: %s", amount.String())
+	sm.Logger.Info("\tbalance after refund: %s", newGoerliBalance.String())
 }
 
 func createZetaERC20LiquidityPool(sm *runner.SmokeTestRunner) error {

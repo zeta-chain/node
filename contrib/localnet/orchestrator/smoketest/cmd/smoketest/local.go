@@ -87,7 +87,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	// start timer
 	go func() {
 		time.Sleep(SmokeTestTimeout)
-		logger.Error("Smoke test timed out after", SmokeTestTimeout)
+		logger.Error("Smoke test timed out after %s", SmokeTestTimeout.String())
 		os.Exit(1)
 	}()
 

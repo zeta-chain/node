@@ -2,13 +2,14 @@ package runner
 
 import (
 	"context"
-	"time"
-
+	"fmt"
 	"math/big"
+	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 // DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
@@ -29,6 +30,7 @@ func (sm *SmokeTestRunner) DepositZeta() {
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: status %d", receipt.Status)
+
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
@@ -43,6 +45,9 @@ func (sm *SmokeTestRunner) DepositZeta() {
 
 	sm.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
+	}
 	sm.Logger.Info("Send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -56,41 +61,27 @@ func (sm *SmokeTestRunner) DepositZeta() {
 		}
 	}
 
-	sm.WG.Add(1)
-	go func() {
-		bn, err := sm.ZevmClient.BlockNumber(context.Background())
-		if err != nil {
-			panic(err)
-		}
-		// #nosec G701 smoketest - always in range
-		initialBal, err := sm.ZevmClient.BalanceAt(context.Background(), sm.DeployerAddress, big.NewInt(int64(bn)))
-		if err != nil {
-			panic(err)
-		}
-		sm.Logger.Info("Zeta block %d, Initial Deployer Zeta balance: %d", bn, initialBal)
+	// wait for cctx to be mined and check balance
+	cctx := utils.WaitCctxMinedByInTxHash(tx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
 
-		defer sm.WG.Done()
-		for {
-			time.Sleep(5 * time.Second)
-			bn, err = sm.ZevmClient.BlockNumber(context.Background())
-			if err != nil {
-				panic(err)
-			}
-			// #nosec G701 smoketest - always in range
-			bal, err := sm.ZevmClient.BalanceAt(context.Background(), sm.DeployerAddress, big.NewInt(int64(bn)))
-			if err != nil {
-				panic(err)
-			}
-			sm.Logger.Info("Zeta block %d, Deployer %s Zeta balance: %d", bn, sm.DeployerAddress.Hex(), bal)
+	bn, err := sm.ZevmClient.BlockNumber(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	// #nosec G701 smoketest - always in range
+	bal, err := sm.ZevmClient.BalanceAt(context.Background(), sm.DeployerAddress, big.NewInt(int64(bn)))
+	if err != nil {
+		panic(err)
+	}
+	sm.Logger.Info("Zeta block %d, Deployer %s Zeta balance: %d", bn, sm.DeployerAddress.Hex(), bal)
 
-			diff := big.NewInt(0)
-			diff.Sub(bal, initialBal)
-
-			if diff.Cmp(amount) == 0 {
-				sm.Logger.Info("Expected zeta balance; success!")
-				break
-			}
-		}
-	}()
-	sm.WG.Wait()
+	if bal.Int64() == 0 {
+		panic("Deployer ZETA balance is 0 after deposit")
+	}
 }
