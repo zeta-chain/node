@@ -151,9 +151,6 @@ func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
 // RunSmokeTest runs a smoke test
 func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
-	}()
 	sm.Logger.Print("⏳running - %s", smokeTestWithName.Description)
 
 	// run smoke test
@@ -161,4 +158,6 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 
 	// check supplies
 	sm.CheckZRC20ReserveAndSupply()
+
+	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
 }

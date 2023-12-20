@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"time"
 
@@ -32,7 +33,9 @@ func (sm *SmokeTestRunner) DepositZeta() {
 	sm.Logger.Info("Approve tx receipt: status %d", receipt.Status)
 
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
+		// TODO: allow user to specify destination chain id
+		// https://github.com/zeta-chain/node-private/issues/41
+		DestinationChainId:  big.NewInt(common.ZetaPrivnetChain().ChainId),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
