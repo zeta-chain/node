@@ -27,7 +27,7 @@ func (ml *Logger) Print(message string, args ...interface{}) {
 // Info prints a message to the logger if verbose is true
 func (ml *Logger) Info(message string, args ...interface{}) {
 	if ml.verbose {
-		ml.logger.Printf("[INFO] %s\n", message, args)
+		ml.logger.Printf("[INFO]"+message+"\n", args)
 	}
 }
 
@@ -35,12 +35,12 @@ func (ml *Logger) Info(message string, args ...interface{}) {
 func (ml *Logger) InfoLoud(message string, args ...interface{}) {
 	if ml.verbose {
 		ml.logger.Printf("[INFO] =======================================")
-		ml.logger.Printf("[INFO] %s\n", message, args)
+		ml.logger.Printf("[INFO]"+message+"\n", message, args)
 		ml.logger.Printf("[INFO] =======================================")
 	}
 }
 
 // Error prints an error message to the logger
 func (ml *Logger) Error(message string, args ...interface{}) {
-	ml.logger.Printf("[ERROR] %s\n", message)
+	ml.logger.Printf("[ERROR]"+message+"\n", args)
 }
