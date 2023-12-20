@@ -16,7 +16,7 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		"erc20_multiple_deposit",
-		"deposit USDT ERC20 into ZEVM",
+		"deposit USDT ERC20 into ZEVM in multiple deposits",
 		TestMultipleERC20Deposit,
 	},
 	{

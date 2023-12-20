@@ -19,7 +19,7 @@ func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
 	}
 	txhash := MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(3))
 	cctxs := utils.WaitCctxsMinedByInTxHash(txhash.Hex(), sm.CctxClient, 3, sm.Logger)
-	if len(cctxs) != 10 {
+	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
