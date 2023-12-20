@@ -46,6 +46,8 @@
 
 ### Chores
 
+* [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
+
 ### Tests
 - Add unit tests for adding votes to a ballot 
 ### CI
