@@ -12,7 +12,6 @@ import (
 )
 
 func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
-	sm.Logger.InfoLoud("Same-transaction multiple deposit USDT ERC20 into ZEVM")
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)

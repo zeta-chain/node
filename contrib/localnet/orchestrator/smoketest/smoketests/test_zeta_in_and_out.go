@@ -44,8 +44,8 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	zauth.Value = big.NewInt(0)
-
 	sm.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(zevmClient, tx, sm.Logger)
 	sm.Logger.Info("Deposit tx receipt: status %d", receipt.Status)
 

@@ -13,8 +13,8 @@ import (
 )
 
 func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
-	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e9), []byte{})
-	utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
+	//txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e9), []byte{})
+	//utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
 
 	sm.ZevmAuth.GasLimit = 10000000
 
@@ -49,16 +49,6 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("BTC ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// Add 100 USDT liq and 0.001 BTC
-	bal, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
-	bal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 	tx, err = sm.UniswapV2Router.AddLiquidity(
 		sm.ZevmAuth,
 		sm.USDTZRC20Addr,
@@ -75,32 +65,25 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic(fmt.Errorf("add liq receipt status is not 1"))
+	}
 	sm.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	sm.Logger.Info("Funding contracts ZEVMSwapApp with gas ZRC20s; 1e7 ETH, 1e6 BTC")
 	// Fund ZEVMSwapApp with gas ZRC20s
+	sm.Logger.Info("Funding contracts ZEVMSwapApp with gas ZRC20s; 1e7 ETH, 1e6 BTC")
 	tx, err = sm.ETHZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e7))
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("  USDT ZRC20 transfer receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-	bal1, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("  ZEVMSwapApp ETHZRC20 balance %d", bal1)
 	tx, err = sm.BTCZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("  BTC ZRC20 transfer receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-	bal2, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.ZEVMSwapAppAddr)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("  ZEVMSwapApp BTCZRC20 balance %d", bal2)
 
 	// msg would be [ZEVMSwapAppAddr, memobytes]
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details
@@ -116,7 +99,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("***** First test: USDT -> BTC")
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
-	txHash = sm.DepositERC20WithAmountAndMessage(big.NewInt(8e7), msg)
+	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
 
 	// check the cctx status

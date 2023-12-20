@@ -3,7 +3,6 @@ package smoketests
 import (
 	"context"
 	"math/big"
-	"time"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -15,8 +14,6 @@ import (
 )
 
 func TestMessagePassing(sm *runner.SmokeTestRunner) {
-	// ==================== Interacting with contracts ====================
-	time.Sleep(10 * time.Second)
 	sm.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -25,6 +22,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
+
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
@@ -40,6 +38,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
+
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
@@ -53,6 +52,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
+
 	sm.WG.Add(1)
 	go func() {
 		defer sm.WG.Done()
@@ -143,13 +143,16 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
 	auth := sm.GoerliAuth
+
 	tx, err := sm.ZetaEth.Approve(auth, sm.TestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
+
 	sm.Logger.Info("Calling TestDApp.SendHello on contract address %s", sm.TestDAppAddr.Hex())
 	testDApp, err := testdapp.NewTestDApp(sm.TestDAppAddr, sm.GoerliClient)
 	if err != nil {

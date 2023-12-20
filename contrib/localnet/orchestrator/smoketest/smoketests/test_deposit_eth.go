@@ -129,24 +129,15 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 
 func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	goerliClient := sm.GoerliClient
-	bn, err := goerliClient.BlockNumber(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("GOERLI block number: %d", bn)
-	bal, err := goerliClient.BalanceAt(context.Background(), sm.DeployerAddress, nil)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("GOERLI deployer balance: %s", bal.String())
-	nonce, err := goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
 
 	// in wei (10 eth)
 	value := big.NewInt(1e18)
 	value = value.Mul(value, big.NewInt(10))
+
+	nonce, err := goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	gasLimit := uint64(23000) // in units
 	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())

@@ -16,7 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
 func (sm *SmokeTestRunner) DepositERC20() {
@@ -96,24 +95,7 @@ func (sm *SmokeTestRunner) DepositEther() {
 		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
 	}()
 
-	goerliClient := sm.GoerliClient
-	sm.Logger.InfoLoud("Deposit Ether into ZEVM")
-	bn, err := goerliClient.BlockNumber(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("GOERLI block number: %d", bn)
-	bal, err := goerliClient.BalanceAt(context.Background(), sm.DeployerAddress, nil)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("GOERLI deployer balance: %s", bal.String())
-
-	systemContract := sm.SystemContract
-	if err != nil {
-		panic(err)
-	}
-	ethZRC20Addr, err := systemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
+	ethZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
 	}
@@ -207,15 +189,6 @@ func (sm *SmokeTestRunner) DepositEther() {
 			panic("txProof invalid") // FIXME: don't do this in production
 		}
 		sm.Logger.Info("OK: txProof verified")
-	}
-
-	{
-		tx, err := sm.SendEther(sm.TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
-		if err != nil {
-			panic(err)
-		}
-		receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
-		sm.Logger.Info("GOERLI donation tx receipt: %d", receipt.Status)
 	}
 
 	c := make(chan any)

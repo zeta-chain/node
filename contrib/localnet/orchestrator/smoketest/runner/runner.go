@@ -146,6 +146,9 @@ func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
 	for _, smokeTest := range smokeTests {
 		sm.RunSmokeTest(smokeTest)
 	}
+
+	// check supplies
+	sm.CheckZRC20ReserveAndSupply()
 }
 
 // RunSmokeTest runs a smoke test
@@ -158,7 +161,4 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 
 	// run smoke test
 	smokeTestWithName.SmokeTest(sm)
-
-	// check supplies
-	sm.CheckZRC20ReserveAndSupply()
 }
