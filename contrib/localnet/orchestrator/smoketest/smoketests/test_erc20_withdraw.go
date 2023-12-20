@@ -3,13 +3,14 @@ package smoketests
 import (
 	"context"
 	"fmt"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/big"
 )
 
 func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
