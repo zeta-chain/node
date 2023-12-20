@@ -81,7 +81,7 @@ func (sm *SmokeTestRunner) DepositZeta() {
 			if err != nil {
 				panic(err)
 			}
-			sm.Logger.Info("Zeta block %d, Deployer Zeta balance: %d", bn, bal)
+			sm.Logger.Info("Zeta block %d, Deployer %s Zeta balance: %d", bn, sm.DeployerAddress.Hex(), bal)
 
 			diff := big.NewInt(0)
 			diff.Sub(bal, initialBal)

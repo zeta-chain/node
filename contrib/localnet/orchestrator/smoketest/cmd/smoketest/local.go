@@ -71,11 +71,11 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	verbose, err := cmd.Flags().GetBool(flagVerbose)
-	if err != nil {
-		panic(err)
-	}
-	logger := runner.NewLogger(verbose)
+	//verbose, err := cmd.Flags().GetBool(flagVerbose)
+	//if err != nil {
+	//	panic(err)
+	//}
+	logger := runner.NewLogger(true)
 
 	testStartTime := time.Now()
 	defer func() {
@@ -220,7 +220,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		goerliAuth,
 		zevmAuth,
 		btcRPCClient,
-		runner.NewLogger(false),
+		logger,
 	)
 
 	// setting up the networks
