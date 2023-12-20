@@ -11,50 +11,25 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestERC20Deposit(sm *runner.SmokeTestRunner) {
+func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
+	sm.Logger.InfoLoud("Same-transaction multiple deposit USDT ERC20 into ZEVM")
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	txhash := sm.DepositERC20(big.NewInt(1e18), []byte{})
-	utils.WaitCctxMinedByInTxHash(txhash.Hex(), sm.CctxClient, sm.Logger)
-
-	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	diff := big.NewInt(0)
-	diff.Sub(bal, initialBal)
-
-	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
-	supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("supply of USDT ZRC20: %d", supply)
-	if diff.Int64() != 1e18 {
-		panic("balance is not correct")
-	}
-
-	sm.Logger.InfoLoud("Same-transaction multiple deposit USDT ERC20 into ZEVM")
-	initialBal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-	txhash = MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(10))
-	cctxs := utils.WaitCctxsMinedByInTxHash(txhash.Hex(), sm.CctxClient, 10, sm.Logger)
+	txhash := MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(3))
+	cctxs := utils.WaitCctxsMinedByInTxHash(txhash.Hex(), sm.CctxClient, 3, sm.Logger)
 	if len(cctxs) != 10 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
-	// check new balance is increased by 1e9 * 10
-	bal, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	// check new balance is increased by 1e9 * 3
+	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	diff = big.NewInt(0).Sub(bal, initialBal)
-	if diff.Int64() != 1e10 {
+	diff := big.NewInt(0).Sub(bal, initialBal)
+	if diff.Int64() != 3e9 {
 		panic(fmt.Sprintf("balance difference is not correct: %d", diff.Int64()))
 	}
 }

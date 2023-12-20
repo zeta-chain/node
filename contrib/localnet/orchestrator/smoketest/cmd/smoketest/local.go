@@ -154,7 +154,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// wait for Genesis
 	waitGenesisTime := 30 * time.Second
-	logger.Print("⏳ wait %ds for genesis", waitGenesisTime.Seconds())
+	logger.Print("⏳ wait %s for genesis", waitGenesisTime.String())
 	time.Sleep(waitGenesisTime)
 
 	// initialize client to send messages to ZetaChain
@@ -240,11 +240,11 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
 	sm.SetZEVMContracts()
 
-	// deposit on ZetaChain
-	logger.Print("⚙️ depositing ZETA, ETH, and BTC into ZEVM")
-	sm.DepositEtherIntoZRC20()
-	sm.SendZetaIn()
+	// deposits on ZetaChain
+	sm.DepositEther()
+	sm.DepositZeta()
 	sm.DepositBTC()
+	sm.DepositERC20()
 
 	// deploy zevm swap and context apps
 	logger.Print("⚙️ setting up ZEVM swap and context apps")

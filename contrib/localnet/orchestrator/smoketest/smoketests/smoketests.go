@@ -15,14 +15,19 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestDepositAndCallRefund,
 	},
 	{
-		"erc20_deposit",
+		"erc20_multiple_deposit",
 		"deposit USDT ERC20 into ZEVM",
-		TestERC20Deposit,
+		TestMultipleERC20Deposit,
 	},
 	{
 		"erc20_withdraw",
 		"withdraw USDT ERC20 from ZEVM",
-		TestERC20Withdraw,
+		TestWithdrawERC20,
+	},
+	{
+		"erc20_multiple_withdraw",
+		"withdraw USDT ERC20 from ZEVM in multiple deposits",
+		TestMultipleWithdraws,
 	},
 	{
 		"send_zeta_out",

@@ -2,7 +2,6 @@ package runner
 
 import (
 	"encoding/hex"
-	"fmt"
 	"strings"
 	"time"
 
@@ -16,7 +15,7 @@ func (sm *SmokeTestRunner) SetupBitcoin() {
 	sm.Logger.InfoLoud("Setup Bitcoin\n")
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("Bitcoin setup took %s\n", time.Since(startTime))
+		sm.Logger.Info("Bitcoin setup took %s\n", time.Since(startTime))
 	}()
 
 	btc := sm.BtcRPCClient

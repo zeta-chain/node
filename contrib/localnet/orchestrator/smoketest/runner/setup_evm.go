@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -47,7 +46,7 @@ func (sm *SmokeTestRunner) SetEVMContractsFromConfig() {
 func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Info("EVM setup took %s\n", time.Since(startTime))
 	}()
 
 	// TODO: put this logic outside of this function

@@ -19,7 +19,36 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
-func (sm *SmokeTestRunner) DepositERC20(amount *big.Int, msg []byte) ethcommon.Hash {
+func (sm *SmokeTestRunner) DepositERC20() {
+	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
+	startTime := time.Now()
+	defer func() {
+		sm.Logger.Print("✅ ERC20 deposited in %s", time.Since(startTime))
+	}()
+
+	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
+	utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
+
+	// checking balance diff
+	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	diff := big.NewInt(0)
+	diff.Sub(bal, initialBal)
+	if diff.Int64() != 1e18 {
+		panic("balance is not correct")
+	}
+	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
+}
+
+func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
 	USDT := sm.USDTERC20
 	tx, err := USDT.Mint(sm.GoerliAuth, amount)
 	if err != nil {
@@ -59,12 +88,14 @@ func (sm *SmokeTestRunner) DepositERC20(amount *big.Int, msg []byte) ethcommon.H
 	return tx.Hash()
 }
 
-// DepositEtherIntoZRC20 sends Ethers into ZEVM
-func (sm *SmokeTestRunner) DepositEtherIntoZRC20() {
+// DepositEther sends Ethers into ZEVM
+func (sm *SmokeTestRunner) DepositEther() {
+	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
 	startTime := time.Now()
 	defer func() {
-		sm.Logger.Info("test finishes in %s", time.Since(startTime))
+		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
 	}()
+
 	goerliClient := sm.GoerliClient
 	sm.Logger.InfoLoud("Deposit Ether into ZEVM")
 	bn, err := goerliClient.BlockNumber(context.Background())

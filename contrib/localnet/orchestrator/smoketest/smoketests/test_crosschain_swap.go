@@ -13,8 +13,8 @@ import (
 )
 
 func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
-	txhash := sm.DepositERC20(big.NewInt(1e9), []byte{})
-	utils.WaitCctxMinedByInTxHash(txhash.Hex(), sm.CctxClient, sm.Logger)
+	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e9), []byte{})
+	utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
 
 	sm.ZevmAuth.GasLimit = 10000000
 
@@ -116,8 +116,8 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("***** First test: USDT -> BTC")
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
-	txhash = sm.DepositERC20(big.NewInt(8e7), msg)
-	cctx1 := utils.WaitCctxMinedByInTxHash(txhash.Hex(), sm.CctxClient, sm.Logger)
+	txHash = sm.DepositERC20WithAmountAndMessage(big.NewInt(8e7), msg)
+	cctx1 := utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
 
 	// check the cctx status
 	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {

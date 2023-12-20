@@ -25,6 +25,12 @@ import (
 
 // DepositBTC deposits BTC on ZetaChain
 func (sm *SmokeTestRunner) DepositBTC() {
+	sm.Logger.Print("⏳ depositing BTC into ZEVM")
+	startTime := time.Now()
+	defer func() {
+		sm.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
+	}()
+
 	btc := sm.BtcRPCClient
 	utxos, err := sm.BtcRPCClient.ListUnspent()
 	if err != nil {

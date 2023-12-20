@@ -2,7 +2,6 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"math/big"
@@ -12,15 +11,17 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func (sm *SmokeTestRunner) SendZetaIn() {
+// DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
+func (sm *SmokeTestRunner) DepositZeta() {
+	sm.Logger.Print("⏳ depositing ZETA into ZEVM")
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Print("✅ ZETA deposited in %s", time.Since(startTime))
 	}()
-	// ==================== Sending ZETA to ZetaChain ===================
+
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
-	sm.Logger.InfoLoud("Step 3: Sending ZETA to ZetaChain\n")
+	sm.Logger.InfoLoud("Sending ZETA to ZetaChain\n")
 	tx, err := sm.ZetaEth.Approve(sm.GoerliAuth, sm.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
