@@ -185,3 +185,72 @@ func findSmokeTest(name string, smokeTests []SmokeTest) (SmokeTest, bool) {
 	}
 	return SmokeTest{}, false
 }
+
+// CopyAddressesFrom copies addresses from another SmokeTestRunner that initialized the contracts
+func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error) {
+	// copy addresses
+	sm.ZetaEthAddr = other.ZetaEthAddr
+	sm.ConnectorEthAddr = other.ConnectorEthAddr
+	sm.ERC20CustodyAddr = other.ERC20CustodyAddr
+	sm.USDTERC20Addr = other.USDTERC20Addr
+	sm.USDTZRC20Addr = other.USDTZRC20Addr
+	sm.ETHZRC20Addr = other.ETHZRC20Addr
+	sm.BTCZRC20Addr = other.BTCZRC20Addr
+	sm.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
+	sm.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	sm.TestDAppAddr = other.TestDAppAddr
+	sm.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
+	sm.ContextAppAddr = other.ContextAppAddr
+	sm.SystemContractAddr = other.SystemContractAddr
+
+	// create instances of contracts
+	sm.ZetaEth, err = zetaeth.NewZetaEth(sm.ZetaEthAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(sm.ConnectorEthAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.ERC20Custody, err = erc20custody.NewERC20Custody(sm.ERC20CustodyAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.USDTERC20, err = erc20.NewUSDT(sm.USDTERC20Addr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.USDTZRC20, err = zrc20.NewZRC20(sm.USDTZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ETHZRC20, err = zrc20.NewZRC20(sm.ETHZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.BTCZRC20, err = zrc20.NewZRC20(sm.BTCZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(sm.ZEVMSwapAppAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ContextApp, err = contextapp.NewContextApp(sm.ContextAppAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.SystemContract, err = systemcontract.NewSystemContract(sm.SystemContractAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -20,6 +20,8 @@ import (
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
 func (sm *SmokeTestRunner) SetTSSAddresses() {
+	sm.Logger.Print("⚙️ setting up TSS address")
+
 	var err error
 	res := &observertypes.QueryGetTssAddressResponse{}
 	for {
@@ -45,6 +47,12 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 
 // SetZEVMContracts set contracts for the ZEVM
 func (sm *SmokeTestRunner) SetZEVMContracts() {
+	sm.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
+	startTime := time.Now()
+	defer func() {
+		sm.Logger.Info("System contract deployments took %s\n", time.Since(startTime))
+	}()
+
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	uniswapV2FactoryAddr, uniswapV2RouterAddr, usdtZRC20Addr, err := sm.ZetaTxServer.DeploySystemContractsAndZRC20(
 		utils.FungibleAdminName,

@@ -12,7 +12,7 @@ import (
 )
 
 func (sm *SmokeTestRunner) SetupBitcoin() {
-	sm.Logger.InfoLoud("Setup Bitcoin\n")
+	sm.Logger.Print("⚙️ setting up Bitcoin network")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Info("Bitcoin setup took %s\n", time.Since(startTime))

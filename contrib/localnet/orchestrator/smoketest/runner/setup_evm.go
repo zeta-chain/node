@@ -44,6 +44,7 @@ func (sm *SmokeTestRunner) SetEVMContractsFromConfig() {
 
 // SetupEVM setup contracts on EVM for smoke test
 func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
+	sm.Logger.Print("⚙️ setting up Goerli network")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Info("EVM setup took %s\n", time.Since(startTime))
