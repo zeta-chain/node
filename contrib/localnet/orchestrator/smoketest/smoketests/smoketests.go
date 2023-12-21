@@ -2,110 +2,134 @@ package smoketests
 
 import "github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 
+const (
+	TestContextUpgradeName              = "context_upgrade"
+	TestDepositAndCallRefundName        = "deposit_and_call_refund"
+	TestMultipleERC20DepositName        = "erc20_multiple_deposit"
+	TestWithdrawERC20Name               = "erc20_withdraw"
+	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
+	TestSendZetaOutName                 = "send_zeta_out"
+	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert"
+	TestMessagePassingName              = "message_passing"
+	TestZRC20SwapName                   = "zrc20_swap"
+	TestBitcoinWithdrawName             = "bitcoin_withdraw"
+	TestCrosschainSwapName              = "crosschain_swap"
+	TestMessagePassingRevertFailName    = "message_passing_revert_fail"
+	TestMessagePassingRevertSuccessName = "message_passing_revert_success"
+	TestPauseZRC20Name                  = "pause_zrc20"
+	TestERC20DepositAndCallRefundName   = "erc20_deposit_and_call_refund"
+	TestUpdateBytecodeName              = "update_bytecode"
+	TestEtherDepositAndCallName         = "eth_deposit_and_call"
+	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
+	TestBlockHeadersName                = "block_headers"
+	TestWhitelistERC20Name              = "whitelist_erc20"
+	TestMyTestName                      = "my_test"
+)
+
 // AllSmokeTests is an ordered list of all smoke tests
 var AllSmokeTests = []runner.SmokeTest{
 	{
-		"context_upgrade",
+		TestContextUpgradeName,
 		"tests sending ETH on ZEVM and check context data using ContextApp",
 		TestContextUpgrade,
 	},
 	{
-		"deposit_and_call_refund",
+		TestDepositAndCallRefundName,
 		"deposit ZRC20 into ZEVM and call a contract that reverts; should refund",
 		TestDepositAndCallRefund,
 	},
 	{
-		"erc20_multiple_deposit",
+		TestMultipleERC20DepositName,
 		"deposit USDT ERC20 into ZEVM in multiple deposits",
 		TestMultipleERC20Deposit,
 	},
 	{
-		"erc20_withdraw",
+		TestWithdrawERC20Name,
 		"withdraw USDT ERC20 from ZEVM",
 		TestWithdrawERC20,
 	},
 	{
-		"erc20_multiple_withdraw",
+		TestMultipleWithdrawsName,
 		"withdraw USDT ERC20 from ZEVM in multiple deposits",
 		TestMultipleWithdraws,
 	},
 	{
-		"send_zeta_out",
+		TestSendZetaOutName,
 		"sending ZETA from ZEVM to Ethereum",
 		TestSendZetaOut,
 	},
 	{
-		"send_zeta_out_btc_revert",
+		TestSendZetaOutBTCRevertName,
 		"sending ZETA from ZEVM to Bitcoin; should revert when ",
 		TestSendZetaOutBTCRevert,
 	},
 	{
-		"message_passing",
+		TestMessagePassingName,
 		"goerli->goerli message passing (sending ZETA only)",
 		TestMessagePassing,
 	},
 	{
-		"zrc20_swap",
+		TestZRC20SwapName,
 		"swap ZRC20 USDT for ZRC20 ETH",
 		TestZRC20Swap,
 	},
 	{
-		"bitcoin_withdraw",
+		TestBitcoinWithdrawName,
 		"withdraw BTC from ZEVM",
 		TestBitcoinWithdraw,
 	},
 	{
-		"crosschain_swap",
+		TestCrosschainSwapName,
 		"testing Bitcoin ERC20 cross-chain swap",
 		TestCrosschainSwap,
 	},
 	{
-		"message_passing_revert_fail",
+		TestMessagePassingRevertFailName,
 		"goerli->goerli message passing (revert fail)",
 		TestMessagePassingRevertFail,
 	},
 	{
-		"message_passing_revert_success",
+		TestMessagePassingRevertSuccessName,
 		"goerli->goerli message passing (revert success)",
 		TestMessagePassingRevertSuccess,
 	},
 	{
-		"pause_zrc20",
+		TestPauseZRC20Name,
 		"pausing ZRC20 on ZetaChain",
 		TestPauseZRC20,
 	},
 	{
-		"erc20_deposit_and_call_refund",
+		TestERC20DepositAndCallRefundName,
 		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts; should refund on ZetaChain if no liquidity pool, should refund on origin if liquidity pool",
 		TestERC20DepositAndCallRefund,
 	},
 	{
-		"update_bytecode",
+		TestUpdateBytecodeName,
 		"update ZRC20 bytecode swap",
 		TestUpdateBytecode,
 	},
 	{
-		"eth_deposit_and_call",
+		TestEtherDepositAndCallName,
 		"deposit ZRC20 into ZEVM and call a contract",
 		TestEtherDepositAndCall,
 	},
 	{
-		"deposit_eth_liquidity_cap",
+		TestDepositEtherLiquidityCapName,
 		"deposit Ethers into ZEVM with a liquidity cap",
 		TestDepositEtherLiquidityCap,
 	},
 	{
-		"block_headers",
+		TestBlockHeadersName,
 		"fetch block headers of EVM on ZetaChain",
 		TestBlockHeaders,
 	},
 	{
-		"whitelist_erc20",
+		TestWhitelistERC20Name,
 		"whitelist ERC20",
 		TestWhitelistERC20,
 	},
 	{
-		"my_test",
+		TestMyTestName,
 		"performing custom test",
 		TestMyTest,
 	},
