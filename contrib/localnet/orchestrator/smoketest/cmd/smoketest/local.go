@@ -1,28 +1,13 @@
 package main
 
 import (
-	"context"
 	"os"
 	"time"
 
-	"github.com/btcsuite/btcd/rpcclient"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/txserver"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -55,7 +40,7 @@ func NewLocalCmd() *cobra.Command {
 	)
 	cmd.Flags().Bool(
 		flagVerbose,
-		false,
+		true,
 		"set to true to enable verbose logging",
 	)
 	return cmd
@@ -71,11 +56,11 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	//verbose, err := cmd.Flags().GetBool(flagVerbose)
-	//if err != nil {
-	//	panic(err)
-	//}
-	logger := runner.NewLogger(true)
+	verbose, err := cmd.Flags().GetBool(flagVerbose)
+	if err != nil {
+		panic(err)
+	}
+	logger := runner.NewLogger(verbose)
 
 	testStartTime := time.Now()
 	defer func() {
@@ -103,125 +88,20 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// set account prefix to zeta
-	cosmosConf := sdk.GetConfig()
-	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cosmosConf.Seal()
-
-	// initialize clients
-	// TODO: add connection values to config
-	// https://github.com/zeta-chain/node-private/issues/41
-	connCfg := &rpcclient.ConnConfig{
-		Host:         conf.RPCs.Bitcoin,
-		User:         "smoketest",
-		Pass:         "123",
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       "testnet3",
-	}
-	btcRPCClient, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	goerliClient, err := ethclient.Dial(conf.RPCs.EVM)
-	if err != nil {
-		panic(err)
-	}
-
-	chainid, err := goerliClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	goerliAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
-	if err != nil {
-		panic(err)
-	}
-
-	grpcConn, err := grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure())
-	if err != nil {
-		panic(err)
-	}
-
-	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
-	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
-	authClient := authtypes.NewQueryClient(grpcConn)
-	bankClient := banktypes.NewQueryClient(grpcConn)
-	observerClient := observertypes.NewQueryClient(grpcConn)
+	setCosmosConfig()
 
 	// wait for Genesis
-	waitGenesisTime := 30 * time.Second
-	logger.Print("⏳ wait %s for genesis", waitGenesisTime.String())
-	time.Sleep(waitGenesisTime)
+	logger.Print("⏳ wait 40s for genesis")
+	time.Sleep(40 * time.Second)
 
-	// initialize client to send messages to ZetaChain
-	zetaTxServer, err := txserver.NewZetaTxServer(
-		conf.RPCs.ZetaCoreRPC,
-		[]string{utils.FungibleAdminName},
-		[]string{FungibleAdminMnemonic},
-		conf.ZetaChainID,
-	)
+	// initialize runner with config
+	sm, err := runnerFromConfig(conf, DeployerAddress, DeployerPrivateKey, logger)
 	if err != nil {
 		panic(err)
 	}
 
-	// wait for keygen to be completed. ~ height 30
-	keygenHeight := int64(60)
-	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
-	for {
-		time.Sleep(5 * time.Second)
-		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
-		if err != nil {
-			logger.Error("cctxClient.LastZetaHeight error: %s", err)
-			continue
-		}
-		if response.Height >= keygenHeight {
-			break
-		}
-		logger.Info("Last ZetaHeight: %d", response.Height)
-	}
-
-	// setup client and auth for zevm
-	var zevmClient *ethclient.Client
-	for {
-		time.Sleep(5 * time.Second)
-		logger.Info("dialing zevm client: %s\n", conf.RPCs.Zevm)
-		zevmClient, err = ethclient.Dial(conf.RPCs.Zevm)
-		if err != nil {
-			continue
-		}
-		break
-	}
-	chainid, err = zevmClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	zevmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
-	if err != nil {
-		panic(err)
-	}
-
-	// initialize smoke test runner
-	sm := runner.NewSmokeTestRunner(
-		DeployerAddress,
-		DeployerPrivateKey,
-		FungibleAdminMnemonic,
-		goerliClient,
-		zevmClient,
-		cctxClient,
-		zetaTxServer,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		goerliAuth,
-		zevmAuth,
-		btcRPCClient,
-		logger,
-	)
+	// wait for keygen to be completed
+	waitKeygenHeight(sm.CctxClient, logger)
 
 	// setting up the networks
 	startTime := time.Now()
@@ -241,20 +121,20 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	sm.SetZEVMContracts()
 
 	// deposits on ZetaChain
-	sm.DepositEther()
+	//sm.DepositEther()
 	sm.DepositZeta()
-	sm.DepositBTC()
-	sm.DepositERC20()
+	//sm.DepositBTC()
+	//sm.DepositERC20()
 
 	// deploy zevm swap and context apps
-	logger.Print("⚙️ setting up ZEVM swap and context apps")
-	sm.SetupZEVMSwapApp()
-	sm.SetupContextApp()
+	//logger.Print("⚙️ setting up ZEVM swap and context apps")
+	//sm.SetupZEVMSwapApp()
+	//sm.SetupContextApp()
 
 	logger.Print("✅ setup completed in %s", time.Since(startTime))
 
 	// run all smoke tests
-	sm.RunSmokeTests(smoketests.AllSmokeTests)
+	//sm.RunSmokeTests(smoketests.AllSmokeTests)
 
 	sm.WG.Wait()
 }

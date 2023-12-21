@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -141,6 +142,19 @@ type SmokeTest struct {
 	SmokeTest   SmokeTestFunc
 }
 
+// RunSmokeTestsFromNames runs a list of smoke tests by name in a list of smoke tests
+func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeTestNames ...string) error {
+	for _, smokeTestName := range smokeTestNames {
+		smokeTest, ok := findSmokeTest(smokeTestName, smokeTests)
+		if !ok {
+			return fmt.Errorf("smoke test %s not found", smokeTestName)
+		}
+		sm.RunSmokeTest(smokeTest)
+	}
+
+	return nil
+}
+
 // RunSmokeTests runs a list of smoke tests
 func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
 	for _, smokeTest := range smokeTests {
@@ -160,4 +174,14 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 	sm.CheckZRC20ReserveAndSupply()
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
+}
+
+// findSmokeTest finds a smoke test by name
+func findSmokeTest(name string, smokeTests []SmokeTest) (SmokeTest, bool) {
+	for _, test := range smokeTests {
+		if test.Name == name {
+			return test, true
+		}
+	}
+	return SmokeTest{}, false
 }

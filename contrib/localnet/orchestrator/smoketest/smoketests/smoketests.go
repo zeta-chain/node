@@ -110,13 +110,3 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestMyTest,
 	},
 }
-
-// FindSmokeTest finds a smoke test by name
-func FindSmokeTest(name string) (runner.SmokeTest, bool) {
-	for _, test := range AllSmokeTests {
-		if test.Name == name {
-			return test, true
-		}
-	}
-	return runner.SmokeTest{}, false
-}

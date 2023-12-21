@@ -56,6 +56,7 @@ func (sm *SmokeTestRunner) DepositZeta() {
 	for _, log := range receipt.Logs {
 		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
+			sm.Logger.Info("    Connector: %s", sm.ConnectorEthAddr.String())
 			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
 			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
 			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
