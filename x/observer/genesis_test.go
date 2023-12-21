@@ -13,9 +13,11 @@ import (
 
 func TestGenesis(t *testing.T) {
 	params := types.DefaultParams()
-
+	tss := sample.Tss()
 	genesisState := types.GenesisState{
-		Params: &params,
+		Params:    &params,
+		Tss:       &tss,
+		BlameList: sample.BlameRecordsList(t, 10),
 		Ballots: []*types.Ballot{
 			sample.Ballot(t, "0"),
 			sample.Ballot(t, "1"),
@@ -35,6 +37,14 @@ func TestGenesis(t *testing.T) {
 		Keygen:            sample.Keygen(t),
 		LastObserverCount: sample.LastObserverCount(1000),
 		CoreParamsList:    sample.CoreParamsList(),
+		TssFundMigrators:  []types.TssFundMigratorInfo{sample.TssFundsMigrator(1), sample.TssFundsMigrator(2)},
+		ChainNonces: []types.ChainNonces{
+			sample.ChainNonces(t, "0"),
+			sample.ChainNonces(t, "1"),
+			sample.ChainNonces(t, "2"),
+		},
+		PendingNonces: sample.PendingNoncesList(t, "sample", 20),
+		NonceToCctx:   sample.NonceToCctxList(t, "sample", 20),
 	}
 
 	// Init and export

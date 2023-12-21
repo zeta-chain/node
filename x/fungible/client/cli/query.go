@@ -27,6 +27,7 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdGasStabilityPoolBalance(),
 		CmdGasStabilityPoolBalances(),
 		CmdSystemContract(),
+		CmdQueryCodeHash(),
 	)
 
 	return cmd

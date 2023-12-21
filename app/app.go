@@ -96,17 +96,17 @@ import (
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 
-	zetaCoreModule "github.com/zeta-chain/zetacore/x/crosschain"
-	zetaCoreModuleKeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
-	zetaCoreModuleTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
 	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
-	zetaObserverModule "github.com/zeta-chain/zetacore/x/observer"
-	zetaObserverModuleKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	zetaObserverModuleTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observermodule "github.com/zeta-chain/zetacore/x/observer"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const Name = "zetacore"
@@ -174,8 +174,8 @@ var (
 		vesting.AppModuleBasic{},
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
-		zetaCoreModule.AppModuleBasic{},
-		zetaObserverModule.AppModuleBasic{},
+		crosschainmodule.AppModuleBasic{},
+		observermodule.AppModuleBasic{},
 		fungibleModule.AppModuleBasic{},
 		emissionsModule.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
@@ -189,7 +189,7 @@ var (
 		stakingtypes.BondedPoolName:                           {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:                        {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                                   {authtypes.Burner},
-		zetaCoreModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		crosschaintypes.ModuleName:                            {authtypes.Minter, authtypes.Burner},
 		evmtypes.ModuleName:                                   {authtypes.Minter, authtypes.Burner},
 		fungibleModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 		emissionsModuleTypes.ModuleName:                       nil,
@@ -227,8 +227,8 @@ type App struct {
 	UpgradeKeeper      upgradekeeper.Keeper
 	ParamsKeeper       paramskeeper.Keeper
 	EvidenceKeeper     evidencekeeper.Keeper
-	ZetaCoreKeeper     zetaCoreModuleKeeper.Keeper
-	ZetaObserverKeeper *zetaObserverModuleKeeper.Keeper
+	ZetaCoreKeeper     crosschainkeeper.Keeper
+	ZetaObserverKeeper *observerkeeper.Keeper
 	mm                 *module.Manager
 	sm                 *module.SimulationManager
 	configurator       module.Configurator
@@ -269,8 +269,8 @@ func New(
 		group.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
-		zetaCoreModuleTypes.StoreKey,
-		zetaObserverModuleTypes.StoreKey,
+		crosschaintypes.StoreKey,
+		observertypes.StoreKey,
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
 		fungibleModuleTypes.StoreKey,
 		emissionsModuleTypes.StoreKey,
@@ -326,11 +326,11 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.ZetaObserverKeeper = zetaObserverModuleKeeper.NewKeeper(
+	app.ZetaObserverKeeper = observerkeeper.NewKeeper(
 		appCodec,
-		keys[zetaObserverModuleTypes.StoreKey],
-		keys[zetaObserverModuleTypes.MemStoreKey],
-		app.GetSubspace(zetaObserverModuleTypes.ModuleName),
+		keys[observertypes.StoreKey],
+		keys[observertypes.MemStoreKey],
+		app.GetSubspace(observertypes.ModuleName),
 		&stakingKeeper,
 		app.SlashingKeeper,
 	)
@@ -384,12 +384,12 @@ func New(
 		app.ZetaObserverKeeper,
 	)
 
-	app.ZetaCoreKeeper = *zetaCoreModuleKeeper.NewKeeper(
+	app.ZetaCoreKeeper = *crosschainkeeper.NewKeeper(
 		appCodec,
-		keys[zetaCoreModuleTypes.StoreKey],
-		keys[zetaCoreModuleTypes.MemStoreKey],
+		keys[crosschaintypes.StoreKey],
+		keys[crosschaintypes.MemStoreKey],
 		&stakingKeeper,
-		app.GetSubspace(zetaCoreModuleTypes.ModuleName),
+		app.GetSubspace(crosschaintypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ZetaObserverKeeper,
@@ -464,8 +464,8 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
-		zetaCoreModule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper, app.AccountKeeper),
-		zetaObserverModule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
+		crosschainmodule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper, app.AccountKeeper),
+		observermodule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -492,8 +492,8 @@ func New(
 		group.ModuleName,
 		vestingtypes.ModuleName,
 		feemarkettypes.ModuleName,
-		zetaCoreModuleTypes.ModuleName,
-		zetaObserverModuleTypes.ModuleName,
+		crosschaintypes.ModuleName,
+		observertypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
 		authz.ModuleName,
@@ -514,8 +514,8 @@ func New(
 		crisistypes.ModuleName,
 		evmtypes.ModuleName,
 		feemarkettypes.ModuleName,
-		zetaCoreModuleTypes.ModuleName,
-		zetaObserverModuleTypes.ModuleName,
+		crosschaintypes.ModuleName,
+		observertypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
 		authz.ModuleName,
@@ -526,6 +526,7 @@ func New(
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
+	// NOTE: Cross-chain module must be initialized after observer module, as pending nonces in crosschain needs the tss pubkey from observer module
 	app.mm.SetOrderInitGenesis(
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -542,8 +543,8 @@ func New(
 		upgradetypes.ModuleName,
 		evidencetypes.ModuleName,
 		vestingtypes.ModuleName,
-		zetaCoreModuleTypes.ModuleName,
-		zetaObserverModuleTypes.ModuleName,
+		observertypes.ModuleName,
+		crosschaintypes.ModuleName,
 		fungibleModuleTypes.ModuleName,
 		emissionsModuleTypes.ModuleName,
 		authz.ModuleName,
@@ -753,8 +754,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
 	paramsKeeper.Subspace(group.ModuleName)
-	paramsKeeper.Subspace(zetaCoreModuleTypes.ModuleName)
-	paramsKeeper.Subspace(zetaObserverModuleTypes.ModuleName)
+	paramsKeeper.Subspace(crosschaintypes.ModuleName)
+	paramsKeeper.Subspace(observertypes.ModuleName)
 	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
 	paramsKeeper.Subspace(emissionsModuleTypes.ModuleName)
 	return paramsKeeper

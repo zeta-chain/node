@@ -100,6 +100,11 @@ func EthAddress() ethcommon.Address {
 	return ethcommon.BytesToAddress(sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address()).Bytes())
 }
 
+// Hash returns a sample hash
+func Hash() ethcommon.Hash {
+	return EthAddress().Hash()
+}
+
 // Bytes returns a sample byte array
 func Bytes() []byte {
 	return []byte("sample")

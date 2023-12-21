@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	// #nosec
+	// #nosec G101 - used for testing only
 	ZetaEthPriv           = "9D00E4D7A8A14384E01CD90B83745BCA847A66AD8797A9904A200C28C2648E64"
 	SystemContractAddress = "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
 )
@@ -86,12 +86,10 @@ func main() {
 	if resp.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", resp.Error.Message, resp.Error.Code)
 		panic(resp.Error.Message)
-	} else {
-		//fmt.Printf("Result: %s\n", string(resp.Result))
-		err = json.Unmarshal(resp.Result, &jsonObject)
-		if err != nil {
-			panic(err)
-		}
+	}
+	err = json.Unmarshal(resp.Result, &jsonObject)
+	if err != nil {
+		panic(err)
 	}
 
 	txs, ok := jsonObject["transactions"].([]interface{})
@@ -154,23 +152,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	fmt.Printf("Deploy EthZeta Contract Receipt: %+v\n", receipt)
 	receipt2 := client.EthGetTransactionReceipt(tx2.Hash().Hex())
 	if receipt2.Error != nil {
 		fmt.Printf("Error: %s (code %d)\n", receipt2.Error.Message, receipt2.Error.Code)
 		panic(tx.Error.Message)
-	} else {
-		jsonObject = make(map[string]interface{})
-		err = json.Unmarshal(receipt2.Result, &jsonObject)
-		if err != nil {
-			panic(err)
-		}
-		prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Result: %s\n", string(prettyJSON))
 	}
+	jsonObject = make(map[string]interface{})
+	err = json.Unmarshal(receipt2.Result, &jsonObject)
+	if err != nil {
+		panic(err)
+	}
+	prettyJSON, err := json.MarshalIndent(jsonObject, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Result: %s\n", string(prettyJSON))
+
 	fmt.Printf("ZetaEth Contract Address: %s\n", zetaContractAddress.Hex())
 	if zetaContractAddress != receipt.ContractAddress {
 		panic(fmt.Sprintf("Contract address mismatch: wanted %s, got %s", zetaContractAddress, receipt.ContractAddress))
@@ -285,7 +284,8 @@ func (c *EthClient) EthGetBlockByNumber(blockNum uint64, verbose bool) *Response
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close() //#nosec
+	// #nosec G107 - defer close
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -326,7 +326,8 @@ func (c *EthClient) EthGetTransactionReceipt(txhash string) *Response {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close() //#nosec
+	// #nosec G107 - defer close
+	defer resp.Body.Close()
 	// Decode the response from JSON
 	var rpcResp Response
 	err = json.NewDecoder(resp.Body).Decode(&rpcResp)
@@ -367,7 +368,8 @@ func (c *EthClient) EthGetLogs() {
 	//if err != nil {
 	//	panic(err)
 	//}
-	//defer resp.Body.Close() //#nosec
+	//// #nosec G107 - defer close
+	//defer resp.Body.Close()
 	//// Decode the response from JSON
 	//var rpcResp Response
 	//err = json.NewDecoder(resp.Body).Decode(&rpcResp)

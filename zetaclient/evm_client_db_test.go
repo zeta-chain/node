@@ -106,7 +106,7 @@ func (suite *EVMClientTestSuite) TestEVMTransactions() {
 }
 
 func (suite *EVMClientTestSuite) TestEVMLastBlock() {
-	lastBlockNum := int64(12345)
+	lastBlockNum := uint64(12345)
 	dbc := suite.db.Create(clienttypes.ToLastBlockSQLType(lastBlockNum))
 	suite.NoError(dbc.Error)
 

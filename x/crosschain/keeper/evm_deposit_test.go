@@ -253,6 +253,50 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
+	t.Run("should return error with reverted if deposit ERC20 fails with zrc20 paused", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChain(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		// expect DepositCoinZeta to be called
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrPausedZRC20)
+
+		// call HandleEVMDeposit
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			sample.CrossChainTx(t, "foo"),
+			types.MsgVoteOnObservedInboundTx{
+				Sender:   sample.EthAddress().String(),
+				Receiver: receiver.String(),
+				Amount:   math.NewUintFromBigInt(amount),
+				CoinType: common.CoinType_ERC20,
+				Message:  "",
+				Asset:    "",
+			},
+			senderChain,
+		)
+		require.ErrorIs(t, err, fungibletypes.ErrPausedZRC20)
+		require.True(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
 	t.Run("should return error with reverted if deposit ERC20 fails with calling a non-contract address", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,

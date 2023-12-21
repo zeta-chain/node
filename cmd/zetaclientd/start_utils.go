@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 	"time"
 
@@ -48,4 +49,45 @@ func validatePeer(seedPeer string) error {
 	}
 
 	return nil
+}
+
+// maskCfg sensitive fields are masked, currently only the EVM endpoints and bitcoin credentials,
+//
+//	other fields can be added.
+func maskCfg(cfg *config.Config) string {
+	maskedCfg := config.NewConfig()
+
+	// Deep copy since cfg contains some references
+	*maskedCfg = *cfg
+	maskedCfg.BitcoinConfig = &config.BTCConfig{
+		RPCUsername: cfg.BitcoinConfig.RPCUsername,
+		RPCPassword: cfg.BitcoinConfig.RPCPassword,
+		RPCHost:     cfg.BitcoinConfig.RPCHost,
+		RPCParams:   cfg.BitcoinConfig.RPCParams,
+	}
+	maskedCfg.EVMChainConfigs = map[int64]*config.EVMConfig{}
+	for key, val := range cfg.EVMChainConfigs {
+		maskedCfg.EVMChainConfigs[key] = &config.EVMConfig{
+			CoreParams: val.CoreParams,
+			Chain:      val.Chain,
+			Endpoint:   val.Endpoint,
+		}
+	}
+
+	// Mask Sensitive data
+	for _, chain := range maskedCfg.EVMChainConfigs {
+		if chain.Endpoint == "" {
+			continue
+		}
+		endpointURL, err := url.Parse(chain.Endpoint)
+		if err != nil {
+			continue
+		}
+		chain.Endpoint = endpointURL.Hostname()
+	}
+
+	maskedCfg.BitcoinConfig.RPCUsername = ""
+	maskedCfg.BitcoinConfig.RPCPassword = ""
+
+	return maskedCfg.String()
 }

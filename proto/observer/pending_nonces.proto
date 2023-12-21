@@ -1,0 +1,15 @@
+syntax = "proto3";
+package zetachain.zetacore.observer;
+
+import "common/common.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
+
+// store key is tss+chainid
+message PendingNonces {
+  int64 nonce_low = 1;
+  int64 nonce_high = 2;
+  int64 chain_id = 3;
+  string tss = 4;
+}

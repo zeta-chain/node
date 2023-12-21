@@ -9,11 +9,11 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
@@ -126,23 +126,26 @@ func (b *ZetaCoreBridge) GetObserverList(chain common.Chain) ([]string, error) {
 	return nil, err
 }
 
-func (b *ZetaCoreBridge) GetAllPendingCctx(chainID int64) ([]*types.CrossChainTx, error) {
+// ListPendingCctx returns a list of pending cctxs for a given chainID
+// the returned list has a limited size of crosschainkeeper.MaxPendingCctxs
+// the total number of pending cctxs is returned
+func (b *ZetaCoreBridge) ListPendingCctx(chainID int64) ([]*types.CrossChainTx, uint64, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	maxSizeOption := grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)
-	resp, err := client.CctxAllPending(context.Background(), &types.QueryAllCctxPendingRequest{ChainId: chainID}, maxSizeOption)
+	resp, err := client.CctxListPending(context.Background(), &types.QueryListCctxPendingRequest{ChainId: chainID}, maxSizeOption)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return resp.CrossChainTx, nil
+	return resp.CrossChainTx, resp.TotalPending, nil
 }
 
-func (b *ZetaCoreBridge) GetCctxByStatus(status types.CctxStatus) ([]types.CrossChainTx, error) {
+func (b *ZetaCoreBridge) GetAbortedZetaAmount() (string, error) {
 	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.CctxByStatus(context.Background(), &types.QueryCctxByStatusRequest{Status: status})
+	resp, err := client.ZetaAccounting(context.Background(), &types.QueryZetaAccountingRequest{})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return resp.CrossChainTx, nil
+	return resp.AbortedZetaAmount, nil
 }
 
 func (b *ZetaCoreBridge) GetGenesisSupply() (sdkmath.Int, error) {
@@ -182,13 +185,13 @@ func (b *ZetaCoreBridge) GetLastBlockHeight() ([]*types.LastBlockHeight, error) 
 	return resp.LastBlockHeight, nil
 }
 
-func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmtypes.Block, error) {
+func (b *ZetaCoreBridge) GetLatestZetaBlock() (*tmservice.Block, error) {
 	client := tmservice.NewServiceClient(b.grpcConn)
 	res, err := client.GetLatestBlock(context.Background(), &tmservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, err
 	}
-	return res.Block, nil
+	return res.SdkBlock, nil
 }
 
 func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
@@ -223,11 +226,30 @@ func (b *ZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 	return resp.Height, nil
 }
 
-func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (*types.ChainNonces, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.ChainNonces(context.Background(), &types.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
+func (b *ZetaCoreBridge) GetBaseGasPrice() (int64, error) {
+	client := feemarkettypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Params(context.Background(), &feemarkettypes.QueryParamsRequest{})
 	if err != nil {
-		return nil, err
+		return 0, err
+	}
+	if resp.Params.BaseFee.IsNil() {
+		return 0, fmt.Errorf("base fee is nil")
+	}
+	return resp.Params.BaseFee.Int64(), nil
+}
+
+func (b *ZetaCoreBridge) GetBallotByID(id string) (*observertypes.QueryBallotByIdentifierResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	return client.BallotByIdentifier(context.Background(), &observertypes.QueryBallotByIdentifierRequest{
+		BallotIdentifier: id,
+	})
+}
+
+func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (observertypes.ChainNonces, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.ChainNonces(context.Background(), &observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
+	if err != nil {
+		return observertypes.ChainNonces{}, err
 	}
 	return resp.ChainNonces, nil
 }
@@ -277,18 +299,18 @@ func (b *ZetaCoreBridge) GetInboundTrackersForChain(chainID int64) ([]types.InTx
 	return resp.InTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetCurrentTss() (*types.TSS, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.TSS(context.Background(), &types.QueryGetTSSRequest{})
+func (b *ZetaCoreBridge) GetCurrentTss() (observertypes.TSS, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.TSS(context.Background(), &observertypes.QueryGetTSSRequest{})
 	if err != nil {
-		return nil, err
+		return observertypes.TSS{}, err
 	}
 	return resp.TSS, nil
 }
 
 func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 	if err != nil {
 		return "", err
 	}
@@ -296,17 +318,17 @@ func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
 }
 
 func (b *ZetaCoreBridge) GetBtcTssAddress() (string, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.GetTssAddress(context.Background(), &types.QueryGetTssAddressRequest{})
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
 	if err != nil {
 		return "", err
 	}
 	return resp.Btc, nil
 }
 
-func (b *ZetaCoreBridge) GetTssHistory() ([]types.TSS, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.TssHistory(context.Background(), &types.QueryTssHistoryRequest{})
+func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.TssHistory(context.Background(), &observertypes.QueryTssHistoryRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -325,10 +347,10 @@ func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*typ
 	return &resp.OutTxTracker, nil
 }
 
-func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order Order) ([]types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTrackerAllByChain(context.Background(), &types.QueryAllOutTxTrackerByChainRequest{
-		Chain: chain.ChainId,
+		Chain: chainID,
 		Pagination: &query.PageRequest{
 			Key:        nil,
 			Offset:     0,
@@ -362,11 +384,11 @@ func (b *ZetaCoreBridge) GetClientParams(chainID int64) (observertypes.QueryGetC
 	return *resp, nil
 }
 
-func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (types.PendingNonces, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PendingNoncesByChain(context.Background(), &types.QueryPendingNoncesByChainRequest{ChainId: chainID})
+func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PendingNoncesByChain(context.Background(), &observertypes.QueryPendingNoncesByChainRequest{ChainId: chainID})
 	if err != nil {
-		return types.PendingNonces{}, err
+		return observertypes.PendingNonces{}, err
 	}
 	return resp.PendingNonces, nil
 }
@@ -389,9 +411,9 @@ func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
 	return resp.GetChains(), nil
 }
 
-func (b *ZetaCoreBridge) GetPendingNonces() (*types.QueryAllPendingNoncesResponse, error) {
-	client := types.NewQueryClient(b.grpcConn)
-	resp, err := client.PendingNoncesAll(context.Background(), &types.QueryAllPendingNoncesRequest{})
+func (b *ZetaCoreBridge) GetPendingNonces() (*observertypes.QueryAllPendingNoncesResponse, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.PendingNoncesAll(context.Background(), &observertypes.QueryAllPendingNoncesRequest{})
 	if err != nil {
 		return nil, err
 	}
@@ -411,4 +433,28 @@ func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, p
 		return false, err
 	}
 	return resp.Valid, nil
+}
+
+func (b *ZetaCoreBridge) HasVoted(ballotIndex string, voterAddress string) (bool, error) {
+	client := observertypes.NewQueryClient(b.grpcConn)
+	resp, err := client.HasVoted(context.Background(), &observertypes.QueryHasVotedRequest{
+		BallotIdentifier: ballotIndex,
+		VoterAddress:     voterAddress,
+	})
+	if err != nil {
+		return false, err
+	}
+	return resp.HasVoted, nil
+}
+
+func (b *ZetaCoreBridge) GetZetaHotKeyBalance() (sdkmath.Int, error) {
+	client := banktypes.NewQueryClient(b.grpcConn)
+	resp, err := client.Balance(context.Background(), &banktypes.QueryBalanceRequest{
+		Address: b.keys.GetAddress().String(),
+		Denom:   config.BaseDenom,
+	})
+	if err != nil {
+		return sdkmath.ZeroInt(), err
+	}
+	return resp.Balance.Amount, nil
 }

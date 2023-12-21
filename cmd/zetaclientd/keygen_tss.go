@@ -14,16 +14,40 @@ import (
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaCoreBridge, peers p2p.AddrList, priKey secp256k1.PrivKey, ts *mc.TelemetryServer, tssHistoricalList []types.TSS, metrics *metrics.Metrics) (*mc.TSS, error) {
+func GenerateTss(logger zerolog.Logger,
+	cfg *config.Config,
+	zetaBridge *mc.ZetaCoreBridge,
+	peers p2p.AddrList,
+	priKey secp256k1.PrivKey,
+	ts *mc.TelemetryServer,
+	tssHistoricalList []observertypes.TSS,
+	metrics *metrics.Metrics) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
-	tss, err := mc.NewTSS(peers, priKey, preParams, cfg, zetaBridge, tssHistoricalList, metrics)
+
+	// Bitcoin chain ID is currently used for using the correct signature format
+	// TODO: remove this once we have a better way to determine the signature format
+	// https://github.com/zeta-chain/node/issues/1397
+	bitcoinChainID := common.BtcRegtestChain().ChainId
+	if cfg.BitcoinConfig != nil {
+		bitcoinChainID = cfg.BitcoinConfig.ChainId
+	}
+
+	tss, err := mc.NewTSS(
+		peers,
+		priKey,
+		preParams,
+		cfg,
+		zetaBridge,
+		tssHistoricalList,
+		metrics,
+		bitcoinChainID,
+	)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")
 		return nil, err
@@ -45,16 +69,16 @@ func GenerateTss(logger zerolog.Logger, cfg *config.Config, zetaBridge *mc.ZetaC
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
 		keyGen := cfg.GetKeygen()
-		if keyGen.Status == observerTypes.KeygenStatus_KeyGenSuccess {
+		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
 		// Arrive at this stage only if keygen is unsuccessfully reported by every node . This will reset the flag and to try again at a new keygen block
-		if keyGen.Status == observerTypes.KeygenStatus_KeyGenFailed {
+		if keyGen.Status == observertypes.KeygenStatus_KeyGenFailed {
 			triedKeygenAtBlock = false
 			continue
 		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
-		if keyGen.Status == observerTypes.KeygenStatus_PendingKeygen {
+		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			// Return error if RPC is not working
 			currentBlock, err := zetaBridge.GetZetaBlockHeight()
 			if err != nil {
@@ -135,7 +159,7 @@ func keygenTss(cfg *config.Config, tss *mc.TSS, keygenLogger zerolog.Logger) err
 			return err
 		}
 		index := fmt.Sprintf("keygen-%s-%d", digest, keyGen.BlockNumber)
-		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, common.ZetaChain().ChainId, index)
+		zetaHash, err := tss.CoreBridge.PostBlameData(&res.Blame, tss.CoreBridge.ZetaChain().ChainId, index)
 		if err != nil {
 			keygenLogger.Error().Err(err).Msg("error sending blame data to core")
 			return err

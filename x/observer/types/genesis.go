@@ -18,6 +18,7 @@ func DefaultGenesis() *GenesisState {
 		CrosschainFlags:   &CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
 		Keygen:            nil,
 		LastObserverCount: nil,
+		ChainNonces:       []ChainNonces{},
 	}
 }
 
@@ -37,6 +38,21 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated index for nodeAccount")
 		}
 		nodeAccountIndexMap[elem.GetOperator()] = true
+	}
+
+	// check for invalid core params
+	if err := gs.CoreParamsList.Validate(); err != nil {
+		return err
+	}
+
+	// Check for duplicated index in chainNonces
+	chainNoncesIndexMap := make(map[string]bool)
+
+	for _, elem := range gs.ChainNonces {
+		if _, ok := chainNoncesIndexMap[elem.Index]; ok {
+			return fmt.Errorf("duplicated index for chainNonces")
+		}
+		chainNoncesIndexMap[elem.Index] = true
 	}
 
 	return VerifyObserverMapper(gs.Observers)

@@ -9,7 +9,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-/* #nosec */
 const (
 	// #nosec G101 not a hardcoded credential
 	opWeightMsgUpdateClientParams          = "op_weight_msg_update_client_params"
