@@ -16,6 +16,7 @@
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
+* [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
 * 6582f6b42f4f0eb0358e6fdefe5278295c791166 - masked zetaclient config at startup
