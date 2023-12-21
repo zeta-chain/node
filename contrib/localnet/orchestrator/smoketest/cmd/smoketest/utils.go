@@ -49,7 +49,7 @@ func runnerFromConfig(
 		observerClient,
 		zevmClient,
 		zevmAuth,
-		err := getClientsFromConfig(conf)
+		err := getClientsFromConfig(conf, userPrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func runnerFromConfig(
 }
 
 // getClientsFromConfig get clients from config
-func getClientsFromConfig(conf config.Config) (
+func getClientsFromConfig(conf config.Config, evmPrivKey string) (
 	*rpcclient.Client,
 	*ethclient.Client,
 	*bind.TransactOpts,
@@ -103,7 +103,7 @@ func getClientsFromConfig(conf config.Config) (
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
-	goerliClient, goerliAuth, err := getEVMClient(conf.RPCs.EVM)
+	goerliClient, goerliAuth, err := getEVMClient(conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
@@ -111,7 +111,7 @@ func getClientsFromConfig(conf config.Config) (
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
-	zevmClient, zevmAuth, err := getEVMClient(conf.RPCs.Zevm)
+	zevmClient, zevmAuth, err := getEVMClient(conf.RPCs.Zevm, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
@@ -142,7 +142,7 @@ func getBtcClient(rpc string) (*rpcclient.Client, error) {
 }
 
 // getEVMClient get goerli client
-func getEVMClient(rpc string) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, err
@@ -152,7 +152,7 @@ func getEVMClient(rpc string) (*ethclient.Client, *bind.TransactOpts, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	deployerPrivkey, err := crypto.HexToECDSA(DeployerPrivateKey)
+	deployerPrivkey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
 		return nil, nil, err
 	}

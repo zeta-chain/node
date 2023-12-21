@@ -11,8 +11,8 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-func (sm *SmokeTestRunner) SetupBitcoin() {
-	sm.Logger.Print("⚙️ setting up Bitcoin network")
+func (sm *SmokeTestRunner) SetupBitcoinAccount() {
+	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Info("Bitcoin setup took %s\n", time.Since(startTime))
@@ -26,27 +26,7 @@ func (sm *SmokeTestRunner) SetupBitcoin() {
 		}
 	}
 
-	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
-	if err != nil {
-		panic(err)
-	}
-	err = btc.ImportPrivKeyRescan(privkeyWIF, "deployer", true)
-	if err != nil {
-		panic(err)
-	}
-	sm.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
-		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
-		&chaincfg.RegressionNetParams,
-	)
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("BTCDeployerAddress: %s", sm.BTCDeployerAddress.EncodeAddress())
+	sm.setBtcAddress()
 
 	err = btc.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
 	if err != nil {
@@ -90,4 +70,35 @@ func (sm *SmokeTestRunner) SetupBitcoin() {
 			time.Sleep(5 * time.Second)
 		}
 	}()
+}
+
+// setBtcAddress
+func (sm *SmokeTestRunner) setBtcAddress() {
+	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO: support non regtest chain
+	// https://github.com/zeta-chain/node/issues/1482
+	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
+	if err != nil {
+		panic(err)
+	}
+
+	err = sm.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, "deployer", true)
+	if err != nil {
+		panic(err)
+	}
+
+	sm.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
+		&chaincfg.RegressionNetParams,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	sm.Logger.Info("BTCDeployerAddress: %s", sm.BTCDeployerAddress.EncodeAddress())
 }

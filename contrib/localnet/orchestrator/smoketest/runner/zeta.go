@@ -3,15 +3,33 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"math/big"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+// SendZetaOnEvm sends ZETA to an address on EVM
+// this allows the ZETA contract deployer to funds other accounts on EVM
+func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) {
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(zetaAmount))
+	tx, err := sm.ZetaEth.Transfer(sm.GoerliAuth, address, amount)
+	if err != nil {
+		panic(err)
+	}
+
+	sm.Logger.Info("Transfer tx hash: %s", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
+	}
+	sm.Logger.Info("Transfer tx receipt: status %d", receipt.Status)
+}
 
 // DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
 func (sm *SmokeTestRunner) DepositZeta() {

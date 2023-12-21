@@ -10,11 +10,38 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+// SendUSDTOnEvm sends USDT to an address on EVM
+// this allows the USDT contract deployer to funds other accounts on EVM
+// amountUSDT is a multiple of 1e18
+func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) {
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
+
+	// mint
+	tx, err := sm.USDTERC20.Mint(sm.GoerliAuth, amount)
+	if err != nil {
+		panic(err)
+	}
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status == 0 {
+		panic("mint failed")
+	}
+	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
+
+	// transfer
+	tx, err = sm.USDTERC20.Transfer(sm.GoerliAuth, address, amount)
+	if err != nil {
+		panic(err)
+	}
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
+	}
+	sm.Logger.Info("Transfer receipt tx hash: %s", tx.Hash().Hex())
+}
 
 func (sm *SmokeTestRunner) DepositERC20() {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
@@ -46,19 +73,14 @@ func (sm *SmokeTestRunner) DepositERC20() {
 }
 
 func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
-	USDT := sm.USDTERC20
-	tx, err := USDT.Mint(sm.GoerliAuth, amount)
+	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
-	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
-
-	tx, err = USDT.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
-	if err != nil {
-		panic(err)
+	if receipt.Status == 0 {
+		panic("approve failed")
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = sm.ERC20Custody.Deposit(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
@@ -93,21 +115,7 @@ func (sm *SmokeTestRunner) DepositEther() {
 		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
 	}()
 
-	ethZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
-	if err != nil {
-		panic(err)
-	}
-	if (ethZRC20Addr == ethcommon.Address{}) {
-		panic("eth zrc20 not found")
-	}
-	sm.ETHZRC20Addr = ethZRC20Addr
-	sm.Logger.Info("eth zrc20 address: %s", ethZRC20Addr.String())
-	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.ZevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.ETHZRC20 = ethZRC20
-	initialBalance, err := ethZRC20.BalanceOf(nil, sm.DeployerAddress)
+	initialBalance, err := sm.ETHZRC20.BalanceOf(nil, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -207,7 +215,7 @@ func (sm *SmokeTestRunner) DepositEther() {
 		defer sm.WG.Done()
 		<-c
 
-		currentBalance, err := ethZRC20.BalanceOf(nil, sm.DeployerAddress)
+		currentBalance, err := sm.ETHZRC20.BalanceOf(nil, sm.DeployerAddress)
 		if err != nil {
 			panic(err)
 		}
@@ -231,16 +239,19 @@ func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data [
 	if err != nil {
 		return nil, err
 	}
+
 	gasLimit := uint64(30000) // in units
 	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
 	tx := ethtypes.NewTransaction(nonce, sm.TSSAddress, value, gasLimit, gasPrice, data)
 	chainID, err := goerliClient.NetworkID(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
 	deployerPrivkey, err := crypto.HexToECDSA(sm.DeployerPrivateKey)
 	if err != nil {
 		return nil, err

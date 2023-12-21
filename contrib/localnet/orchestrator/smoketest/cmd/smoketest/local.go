@@ -103,10 +103,13 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	logger.Print("⚙️ setting up networks")
 	startTime := time.Now()
 	deployerRunner.SetTSSAddresses()
-	deployerRunner.SetupBitcoin()
 	deployerRunner.SetupEVM(contractsDeployed)
 	deployerRunner.SetZEVMContracts()
 	logger.Print("✅ setup completed in %s", time.Since(startTime))
+
+	// fund accounts
+	deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
+	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
 
 	// initialize runner for erc20 test
 	erc20Runner, err := runnerFromConfig(conf, UserERC20Address, UserERC20PrivateKey, logger)
@@ -116,12 +119,13 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	if err := erc20Runner.CopyAddressesFrom(deployerRunner); err != nil {
 		panic(err)
 	}
-	erc20Runner.DepositZeta()
 
-	// deposits on ZetaChain
-	//sm.DepositEther()
-	//sm.DepositBTC()
-	//sm.DepositERC20()
+	// run erc20 test
+	erc20Runner.DepositZeta()
+	erc20Runner.DepositEther()
+	erc20Runner.SetupBitcoinAccount()
+	erc20Runner.DepositBTC()
+	erc20Runner.DepositERC20()
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
@@ -130,9 +134,6 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// run all smoke tests
 	//sm.RunSmokeTests(smoketests.AllSmokeTests)
-
-	deployerRunner.WG.Wait()
-	erc20Runner.WG.Wait()
 
 	//// run erc20 test
 	//if err := sm.RunSmokeTestsFromNames(
@@ -143,6 +144,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	//	panic(err)
 	//}
 
+	deployerRunner.WG.Wait()
+	erc20Runner.WG.Wait()
 	logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
 }
 

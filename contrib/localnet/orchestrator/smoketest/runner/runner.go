@@ -188,6 +188,10 @@ func findSmokeTest(name string, smokeTests []SmokeTest) (SmokeTest, bool) {
 
 // CopyAddressesFrom copies addresses from another SmokeTestRunner that initialized the contracts
 func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error) {
+	// copy TSS address
+	sm.TSSAddress = other.TSSAddress
+	sm.BTCTSSAddress = other.BTCTSSAddress
+
 	// copy addresses
 	sm.ZetaEthAddr = other.ZetaEthAddr
 	sm.ConnectorEthAddr = other.ConnectorEthAddr
