@@ -884,29 +884,15 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		// query incoming gas asset
 		for bn := startBlock; bn <= toBlock; bn++ {
-			err = ob.postBlockHeader(toBlock)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+			if common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+				err = ob.postBlockHeader(toBlock)
+				if err != nil {
+					ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+				}
 			}
 			block, err := ob.GetBlockByNumberCached(bn)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
-				continue
-			}
-			headerRLP, err := rlp.EncodeToBytes(block.Header())
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
-				continue
-			}
-
-			_, err = ob.zetaClient.PostAddBlockHeader(
-				ob.chain.ChainId,
-				block.Hash().Bytes(),
-				block.Number().Int64(),
-				common.NewEthereumHeader(headerRLP),
-			)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 				continue
 			}
 
