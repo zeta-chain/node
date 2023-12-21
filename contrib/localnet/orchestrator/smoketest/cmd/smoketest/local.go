@@ -41,7 +41,7 @@ func NewLocalCmd() *cobra.Command {
 	)
 	cmd.Flags().Bool(
 		flagVerbose,
-		true,
+		false,
 		"set to true to enable verbose logging",
 	)
 	return cmd
@@ -122,29 +122,35 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// run erc20 test
-	erc20Runner.DepositZeta()
-	erc20Runner.DepositEther()
-	erc20Runner.SetupBitcoinAccount()
-	//erc20Runner.DepositBTC()
-	erc20Runner.DepositERC20()
-	erc20Runner.CheckZRC20ReserveAndSupply()
+	go func() {
+		erc20Runner.WG.Add(1)
+		erc20Runner.DepositZeta()
+		erc20Runner.DepositEther()
+		erc20Runner.SetupBitcoinAccount()
+		//erc20Runner.DepositBTC()
+		erc20Runner.DepositERC20()
+		erc20Runner.CheckZRC20ReserveAndSupply()
 
-	// run erc20 test
-	if err := erc20Runner.RunSmokeTestsFromNames(
-		smoketests.AllSmokeTests,
-		smoketests.TestMultipleERC20DepositName,
-		smoketests.TestWithdrawERC20Name,
-	); err != nil {
-		panic(err)
-	}
+		// run erc20 test
+		if err := erc20Runner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestDepositAndCallRefundName,
+			smoketests.TestMultipleERC20DepositName,
+			smoketests.TestWithdrawERC20Name,
+			smoketests.TestMultipleWithdrawsName,
+			smoketests.TestPauseZRC20Name,
+			smoketests.TestERC20DepositAndCallRefundName,
+			smoketests.TestWhitelistERC20Name,
+		); err != nil {
+			panic(err)
+		}
+		erc20Runner.WG.Done()
+	}()
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
 	//sm.SetupZEVMSwapApp()
 	//sm.SetupContextApp()
-
-	// run all smoke tests
-	//sm.RunSmokeTests(smoketests.AllSmokeTests)
 
 	deployerRunner.WG.Wait()
 	erc20Runner.WG.Wait()
