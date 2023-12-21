@@ -2,9 +2,10 @@ package runner
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"

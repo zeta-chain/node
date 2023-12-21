@@ -2,9 +2,10 @@ package runner
 
 import (
 	"context"
-	"github.com/zeta-chain/zetacore/zetaclient"
 	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
