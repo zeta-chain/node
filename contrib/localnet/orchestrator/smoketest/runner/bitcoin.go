@@ -16,7 +16,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -65,25 +64,13 @@ func (sm *SmokeTestRunner) DepositBTC() {
 
 	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	// check if the deposit is successful
-	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
-	if err != nil {
-		panic(err)
-	}
-	sm.BTCZRC20Addr = BTCZRC20Addr
-	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
-	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
-	if err != nil {
-		panic(err)
-	}
-	sm.BTCZRC20 = BTCZRC20
-	initialBalance, err := BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	initialBalance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	for {
 		time.Sleep(5 * time.Second)
-		balance, err := BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+		balance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 		if err != nil {
 			panic(err)
 		}

@@ -2,6 +2,8 @@ package runner
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"math/big"
 	"time"
 
 	"github.com/btcsuite/btcutil"
@@ -103,6 +105,9 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 
 	sm.SystemContract = SystemContract
 	sm.SystemContractAddr = systemContractAddr
+
+	sm.SetupETHZRC20()
+	sm.SetupBTCZRC20()
 }
 
 func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
@@ -136,4 +141,38 @@ func (sm *SmokeTestRunner) SetupContextApp() {
 	sm.Logger.Info("ContextApp contract address: %s, tx hash: %s", contextAppAddr.Hex(), tx.Hash().Hex())
 	sm.ContextAppAddr = contextAppAddr
 	sm.ContextApp = contextApp
+}
+
+func (sm *SmokeTestRunner) SetupETHZRC20() {
+	// TODO: support non testnet chain
+	// https://github.com/zeta-chain/node/issues/1482
+	ethZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
+	if err != nil {
+		panic(err)
+	}
+	if (ethZRC20Addr == ethcommon.Address{}) {
+		panic("eth zrc20 not found")
+	}
+	sm.ETHZRC20Addr = ethZRC20Addr
+	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.ETHZRC20 = ethZRC20
+}
+
+func (sm *SmokeTestRunner) SetupBTCZRC20() {
+	// TODO: support non testnet chain
+	// https://github.com/zeta-chain/node/issues/1482
+	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
+	if err != nil {
+		panic(err)
+	}
+	sm.BTCZRC20Addr = BTCZRC20Addr
+	sm.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+	sm.BTCZRC20 = BTCZRC20
 }

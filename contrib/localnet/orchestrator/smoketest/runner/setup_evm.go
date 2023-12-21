@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"github.com/zeta-chain/zetacore/zetaclient"
 	"math/big"
 	"time"
 
@@ -176,6 +177,17 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	// https://github.com/zeta-chain/node-private/issues/41
 	if err := config.WriteConfig(ContractsConfigFile, conf); err != nil {
 		panic(err)
+	}
+
+	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
+	// gas token on ZetaChain to initialize the pool
+	tx, err = sm.SendEther(sm.TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
+	if err != nil {
+		panic(err)
+	}
+	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("GOERLI donation tx failed")
 	}
 }
 

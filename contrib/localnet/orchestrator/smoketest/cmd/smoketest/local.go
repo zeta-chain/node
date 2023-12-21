@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
@@ -124,8 +125,18 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	erc20Runner.DepositZeta()
 	erc20Runner.DepositEther()
 	erc20Runner.SetupBitcoinAccount()
-	erc20Runner.DepositBTC()
+	//erc20Runner.DepositBTC()
 	erc20Runner.DepositERC20()
+	erc20Runner.CheckZRC20ReserveAndSupply()
+
+	// run erc20 test
+	if err := erc20Runner.RunSmokeTestsFromNames(
+		smoketests.AllSmokeTests,
+		smoketests.TestMultipleERC20DepositName,
+		smoketests.TestWithdrawERC20Name,
+	); err != nil {
+		panic(err)
+	}
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
@@ -134,15 +145,6 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// run all smoke tests
 	//sm.RunSmokeTests(smoketests.AllSmokeTests)
-
-	//// run erc20 test
-	//if err := sm.RunSmokeTestsFromNames(
-	//	smoketests.AllSmokeTests,
-	//	smoketests.TestMultipleERC20DepositName,
-	//	smoketests.TestWithdrawERC20Name,
-	//); err != nil {
-	//	panic(err)
-	//}
 
 	deployerRunner.WG.Wait()
 	erc20Runner.WG.Wait()

@@ -58,8 +58,11 @@ func (sm *SmokeTestRunner) checkBtcTSSBalance() {
 	if err != nil {
 		panic(err)
 	}
+
+	// check the balance in TSS is greater than the total supply on ZetaChain
+	// the amount minted to initialize the pool is subtracted from the total supply
 	// #nosec G701 smoketest - always in range
-	if int64(btcBalance*1e8) < zrc20Supply.Int64() {
+	if int64(btcBalance*1e8) < (zrc20Supply.Int64() - 10000000) {
 		// #nosec G701 smoketest - always in range
 		panic(fmt.Sprintf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply))
 	}

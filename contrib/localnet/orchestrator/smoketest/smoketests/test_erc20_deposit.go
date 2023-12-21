@@ -42,23 +42,12 @@ func MultipleDeposits(sm *runner.SmokeTestRunner, amount, count *big.Int) ethcom
 
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
-	// mint
-	tx, err := sm.USDTERC20.Mint(sm.GoerliAuth, fullAmount)
+	// approve
+	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
-	if receipt.Status == 0 {
-		panic("mint failed")
-	}
-	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
-
-	// approve
-	tx, err = sm.USDTERC20.Approve(sm.GoerliAuth, depositorAddr, fullAmount)
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
