@@ -2,12 +2,9 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-)
-
-const (
-	InitCmdId = "init"
 )
 
 var initConf = config.Config{}
@@ -15,7 +12,7 @@ var configFile = ""
 
 func NewInitCmd() *cobra.Command {
 	var InitCmd = &cobra.Command{
-		Use:   InitCmdId,
+		Use:   "init",
 		Short: "Run Local Stress Test",
 		Run:   initConfig,
 	}
