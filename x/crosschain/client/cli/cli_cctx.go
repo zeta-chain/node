@@ -51,9 +51,9 @@ func CmdListSend() *cobra.Command {
 
 func CmdPendingCctx() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-pending-cctx [chain-id]",
+		Use:   "list-pending-cctx [chain-id] [limit]",
 		Short: "shows pending CCTX",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -62,11 +62,19 @@ func CmdPendingCctx() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			params := &types.QueryAllCctxPendingRequest{
-				ChainId: chainID,
+
+			limit, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
 			}
 
-			res, err := queryClient.CctxAllPending(context.Background(), params)
+			params := &types.QueryListCctxPendingRequest{
+				ChainId: chainID,
+				// #nosec G701 bit size verified
+				Limit: uint32(limit),
+			}
+
+			res, err := queryClient.CctxListPending(context.Background(), params)
 			if err != nil {
 				return err
 			}

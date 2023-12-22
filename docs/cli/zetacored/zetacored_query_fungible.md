@@ -25,6 +25,7 @@ zetacored query fungible [flags]
 ### SEE ALSO
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
+* [zetacored query fungible code-hash](zetacored_query_fungible_code-hash.md)	 - shows the code hash of an account
 * [zetacored query fungible gas-stability-pool-address](zetacored_query_fungible_gas-stability-pool-address.md)	 - query the address of a gas stability pool
 * [zetacored query fungible gas-stability-pool-balance](zetacored_query_fungible_gas-stability-pool-balance.md)	 - query the balance of a gas stability pool for a chain
 * [zetacored query fungible gas-stability-pool-balances](zetacored_query_fungible_gas-stability-pool-balances.md)	 - query all gas stability pool balances

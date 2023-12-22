@@ -23,6 +23,74 @@ export declare enum UpdatePausedStatusAction {
 }
 
 /**
+ * @generated from message zetachain.zetacore.fungible.MsgDeploySystemContracts
+ */
+export declare class MsgDeploySystemContracts extends Message<MsgDeploySystemContracts> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  constructor(data?: PartialMessage<MsgDeploySystemContracts>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgDeploySystemContracts";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDeploySystemContracts;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDeploySystemContracts;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDeploySystemContracts;
+
+  static equals(a: MsgDeploySystemContracts | PlainMessage<MsgDeploySystemContracts> | undefined, b: MsgDeploySystemContracts | PlainMessage<MsgDeploySystemContracts> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.MsgDeploySystemContractsResponse
+ */
+export declare class MsgDeploySystemContractsResponse extends Message<MsgDeploySystemContractsResponse> {
+  /**
+   * @generated from field: string uniswapV2Factory = 1;
+   */
+  uniswapV2Factory: string;
+
+  /**
+   * @generated from field: string wzeta = 2;
+   */
+  wzeta: string;
+
+  /**
+   * @generated from field: string uniswapV2Router = 3;
+   */
+  uniswapV2Router: string;
+
+  /**
+   * @generated from field: string connectorZEVM = 4;
+   */
+  connectorZEVM: string;
+
+  /**
+   * @generated from field: string systemContract = 5;
+   */
+  systemContract: string;
+
+  constructor(data?: PartialMessage<MsgDeploySystemContractsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.MsgDeploySystemContractsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgDeploySystemContractsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgDeploySystemContractsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgDeploySystemContractsResponse;
+
+  static equals(a: MsgDeploySystemContractsResponse | PlainMessage<MsgDeploySystemContractsResponse> | undefined, b: MsgDeploySystemContractsResponse | PlainMessage<MsgDeploySystemContractsResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.fungible.MsgUpdateZRC20WithdrawFee
  */
 export declare class MsgUpdateZRC20WithdrawFee extends Message<MsgUpdateZRC20WithdrawFee> {
@@ -276,9 +344,9 @@ export declare class MsgUpdateContractBytecode extends Message<MsgUpdateContract
   contractAddress: string;
 
   /**
-   * @generated from field: string new_bytecode_address = 3;
+   * @generated from field: string new_code_hash = 3;
    */
-  newBytecodeAddress: string;
+  newCodeHash: string;
 
   constructor(data?: PartialMessage<MsgUpdateContractBytecode>);
 
@@ -299,11 +367,6 @@ export declare class MsgUpdateContractBytecode extends Message<MsgUpdateContract
  * @generated from message zetachain.zetacore.fungible.MsgUpdateContractBytecodeResponse
  */
 export declare class MsgUpdateContractBytecodeResponse extends Message<MsgUpdateContractBytecodeResponse> {
-  /**
-   * @generated from field: bytes new_bytecode_hash = 1;
-   */
-  newBytecodeHash: Uint8Array;
-
   constructor(data?: PartialMessage<MsgUpdateContractBytecodeResponse>);
 
   static readonly runtime: typeof proto3;

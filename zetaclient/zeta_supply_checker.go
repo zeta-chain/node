@@ -3,11 +3,10 @@ package zetaclient
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
-
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -27,9 +26,14 @@ type ZetaSupplyChecker struct {
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+	dynamicTicker, err := NewDynamicTicker("ZETASupplyTicker", 15)
+	if err != nil {
+		return ZetaSupplyChecker{}, err
+	}
+
 	zetaSupplyChecker := ZetaSupplyChecker{
 		stop:      make(chan struct{}),
-		ticker:    NewDynamicTicker(fmt.Sprintf("ZETASupplyTicker"), 15),
+		ticker:    dynamicTicker,
 		evmClient: make(map[int64]*ethclient.Client),
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
@@ -150,6 +154,27 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 	return nil
 }
 
+type ZetaSupplyCheckLogs struct {
+	Logger                   zerolog.Logger
+	AbortedTxAmounts         sdkmath.Int `json:"aborted_tx_amounts"`
+	ZetaInTransit            sdkmath.Int `json:"zeta_in_transit"`
+	ExternalChainTotalSupply sdkmath.Int `json:"external_chain_total_supply"`
+	ZetaTokenSupplyOnNode    sdkmath.Int `json:"zeta_token_supply_on_node"`
+	EthLockedAmount          sdkmath.Int `json:"eth_locked_amount"`
+	NodeAmounts              sdkmath.Int `json:"node_amounts"`
+	LHS                      sdkmath.Int `json:"LHS"`
+	RHS                      sdkmath.Int `json:"RHS"`
+	SupplyCheckSuccess       bool        `json:"supply_check_success"`
+}
+
+func (z ZetaSupplyCheckLogs) LogOutput() {
+	output, err := PrettyPrintStruct(z)
+	if err != nil {
+		z.Logger.Error().Err(err).Msgf("error pretty printing struct")
+	}
+	z.Logger.Info().Msgf(output)
+}
+
 func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, genesisAmounts, externalChainTotalSupply, zetaTokenSupplyOnNode, ethLockedAmount sdkmath.Int) bool {
 	lhs := ethLockedAmount.Sub(abortedTxAmounts)
 	rhs := zetaTokenSupplyOnNode.Add(zetaInTransit).Add(externalChainTotalSupply).Sub(genesisAmounts)
@@ -157,35 +182,34 @@ func ValidateZetaSupply(logger zerolog.Logger, abortedTxAmounts, zetaInTransit, 
 	copyZetaTokenSupplyOnNode := zetaTokenSupplyOnNode
 	copyGenesisAmounts := genesisAmounts
 	nodeAmounts := copyZetaTokenSupplyOnNode.Sub(copyGenesisAmounts)
-	logger.Info().Msgf("--------------------------------------------------------------------------------")
-	logger.Info().Msgf("aborted tx amounts : %s", abortedTxAmounts.String())
-	logger.Info().Msgf("zeta in transit : %s", zetaInTransit.String())
-	logger.Info().Msgf("external chain total supply : %s", externalChainTotalSupply.String())
-	logger.Info().Msgf("effective zeta supply on node : %s", nodeAmounts.String())
-	logger.Info().Msgf("zeta token supply on node : %s", zetaTokenSupplyOnNode.String())
-	logger.Info().Msgf("genesis amounts : %s", genesisAmounts.String())
-	logger.Info().Msgf("eth locked amount : %s", ethLockedAmount.String())
+	logs := ZetaSupplyCheckLogs{
+		Logger:                   logger,
+		AbortedTxAmounts:         abortedTxAmounts,
+		ZetaInTransit:            zetaInTransit,
+		ExternalChainTotalSupply: externalChainTotalSupply,
+		NodeAmounts:              nodeAmounts,
+		ZetaTokenSupplyOnNode:    zetaTokenSupplyOnNode,
+		EthLockedAmount:          ethLockedAmount,
+		LHS:                      lhs,
+		RHS:                      rhs,
+	}
+	defer logs.LogOutput()
 	if !lhs.Equal(rhs) {
-		logger.Error().Msgf("zeta supply mismatch, lhs : %s , rhs : %s", lhs.String(), rhs.String())
+		logs.SupplyCheckSuccess = false
 		return false
 	}
-	logger.Info().Msgf("zeta supply check passed, lhs : %s , rhs : %s", lhs.String(), rhs.String())
-	logger.Info().Msgf("--------------------------------------------------------------------------------")
+	logs.SupplyCheckSuccess = true
 	return true
 }
 
 func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
-	cctxList, err := zs.zetaClient.GetCctxByStatus(types.CctxStatus_Aborted)
+	amount, err := zs.zetaClient.GetAbortedZetaAmount()
 	if err != nil {
-		return sdkmath.ZeroInt(), err
+		return sdkmath.ZeroInt(), errors.Wrap(err, "error getting aborted zeta amount")
 	}
-	amount := sdkmath.ZeroUint()
-	for _, cctx := range cctxList {
-		amount = amount.Add(cctx.GetCurrentOutTxParam().Amount)
-	}
-	amountInt, ok := sdkmath.NewIntFromString(amount.String())
+	amountInt, ok := sdkmath.NewIntFromString(amount)
 	if !ok {
-		return sdkmath.ZeroInt(), errors.New("error parsing amount")
+		return sdkmath.ZeroInt(), errors.New("error parsing aborted zeta amount")
 	}
 	return amountInt, nil
 }
@@ -207,7 +231,7 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
 func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []common.Chain) []*types.CrossChainTx {
 	cctxInTransit := make([]*types.CrossChainTx, 0)
 	for _, chain := range receivingChains {
-		cctx, err := zs.zetaClient.GetAllPendingCctx(chain.ChainId)
+		cctx, _, err := zs.zetaClient.ListPendingCctx(chain.ChainId)
 		if err != nil {
 			continue
 		}
@@ -218,7 +242,7 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []common.Ch
 			}
 		}
 
-		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain, Ascending)
+		trackers, err := zs.zetaClient.GetAllOutTxTrackerByChain(chain.ChainId, Ascending)
 		if err != nil {
 			continue
 		}

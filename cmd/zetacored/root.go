@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cosmos/cosmos-sdk/client/snapshot"
+
 	appparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/evmos/ethermint/crypto/hd"
@@ -119,6 +121,10 @@ func initTmConfig() *tmcfg.Config {
 }
 
 func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig) {
+	ac := appCreator{
+		encCfg: encodingConfig,
+	}
+
 	rootCmd.AddCommand(
 		ethermintclient.ValidateChainID(
 			genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
@@ -136,11 +142,9 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig appparams.EncodingConfig
 
 		debug.Cmd(),
 		config.Cmd(),
+		snapshot.Cmd(ac.newApp),
 	)
 
-	ac := appCreator{
-		encCfg: encodingConfig,
-	}
 	zevmserver.AddCommands(rootCmd, zevmserver.NewDefaultStartOptions(ac.newApp, app.DefaultNodeHome), ac.appExport, addModuleInitFlags)
 
 	// the ethermintserver one supercedes the sdk one

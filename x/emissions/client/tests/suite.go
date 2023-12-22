@@ -53,7 +53,7 @@ func (s *CliTestSuite) SetupSuite() {
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList, false)
 	s.ballots = RandomBallotGenerator(20, observerList)
-	network.AddObserverData(s.T(), s.cfg.GenesisState, s.cfg.Codec, s.ballots)
+	network.AddObserverData(s.T(), 2, s.cfg.GenesisState, s.cfg.Codec, s.ballots)
 
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)

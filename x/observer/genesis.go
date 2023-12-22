@@ -2,6 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -82,6 +83,45 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	} else {
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
+
+	if genState.Tss != nil {
+		tss := *genState.Tss
+		k.SetTSS(ctx, tss)
+		for _, chain := range common.DefaultChainsList() {
+			k.SetPendingNonces(ctx, types.PendingNonces{
+				NonceLow:  0,
+				NonceHigh: 0,
+				ChainId:   chain.ChainId,
+				Tss:       tss.TssPubkey,
+			})
+		}
+	}
+
+	// Get all chain nonces
+
+	for _, elem := range genState.TssHistory {
+		k.SetTSSHistory(ctx, elem)
+	}
+
+	for _, elem := range genState.TssFundMigrators {
+		k.SetFundMigrator(ctx, elem)
+	}
+
+	for _, elem := range genState.BlameList {
+		k.SetBlame(ctx, elem)
+	}
+
+	// Set all the pending nonces
+	for _, pendingNonce := range genState.PendingNonces {
+		k.SetPendingNonces(ctx, pendingNonce)
+	}
+	for _, chainNonce := range genState.ChainNonces {
+		k.SetChainNonces(ctx, chainNonce)
+	}
+	for _, elem := range genState.NonceToCctx {
+		k.SetNonceToCctx(ctx, elem)
+	}
+
 }
 
 // ExportGenesis returns the observer module's exported genesis.
@@ -120,6 +160,18 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		oc = &observerCount
 	}
 
+	// Get tss
+	tss := &types.TSS{}
+	t, found := k.GetTSS(ctx)
+	if found {
+		tss = &t
+	}
+
+	var pendingNonces []types.PendingNonces
+	p, err := k.GetAllPendingNonces(ctx)
+	if err == nil {
+		pendingNonces = p
+	}
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
@@ -129,5 +181,12 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		CrosschainFlags:   cf,
 		Keygen:            kn,
 		LastObserverCount: oc,
+		Tss:               tss,
+		PendingNonces:     pendingNonces,
+		TssHistory:        k.GetAllTSS(ctx),
+		TssFundMigrators:  k.GetAllTssFundMigrators(ctx),
+		BlameList:         k.GetAllBlame(ctx),
+		ChainNonces:       k.GetAllChainNonces(ctx),
+		NonceToCctx:       k.GetAllNonceToCctx(ctx),
 	}
 }

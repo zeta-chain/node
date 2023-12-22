@@ -25,24 +25,30 @@ var _ ZetaCoreBridger = &ZetaCoreBridge{}
 
 // ZetaCoreBridge will be used to send tx to ZetaCore.
 type ZetaCoreBridge struct {
-	logger              zerolog.Logger
-	blockHeight         int64
-	accountNumber       map[common.KeyType]uint64
-	seqNumber           map[common.KeyType]uint64
-	grpcConn            *grpc.ClientConn
-	httpClient          *retryablehttp.Client
-	cfg                 config.ClientConfiguration
-	encodingCfg         params.EncodingConfig
-	keys                *Keys
-	broadcastLock       *sync.RWMutex
-	zetaChainID         string
-	lastOutTxReportTime map[string]time.Time
-	stop                chan struct{}
-	pause               chan struct{}
+	logger        zerolog.Logger
+	blockHeight   int64
+	accountNumber map[common.KeyType]uint64
+	seqNumber     map[common.KeyType]uint64
+	grpcConn      *grpc.ClientConn
+	httpClient    *retryablehttp.Client
+	cfg           config.ClientConfiguration
+	encodingCfg   params.EncodingConfig
+	keys          *Keys
+	broadcastLock *sync.RWMutex
+	zetaChainID   string
+	zetaChain     common.Chain
+	stop          chan struct{}
+	pause         chan struct{}
+	Telemetry     *TelemetryServer
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID string, hsmMode bool) (*ZetaCoreBridge, error) {
+func NewZetaCoreBridge(k *Keys, chainIP string,
+	signerName string,
+	chainID string,
+	hsmMode bool,
+	telemetry *TelemetryServer) (*ZetaCoreBridge, error) {
+
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
@@ -71,20 +77,26 @@ func NewZetaCoreBridge(k *Keys, chainIP string, signerName string, chainID strin
 		seqMap[keyType] = 0
 	}
 
+	zetaChain, err := common.ZetaChainFromChainID(chainID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
+	}
+
 	return &ZetaCoreBridge{
-		logger:              logger,
-		grpcConn:            grpcConn,
-		httpClient:          httpClient,
-		accountNumber:       accountsMap,
-		seqNumber:           seqMap,
-		cfg:                 cfg,
-		encodingCfg:         app.MakeEncodingConfig(),
-		keys:                k,
-		broadcastLock:       &sync.RWMutex{},
-		lastOutTxReportTime: map[string]time.Time{},
-		stop:                make(chan struct{}),
-		zetaChainID:         chainID,
-		pause:               make(chan struct{}),
+		logger:        logger,
+		grpcConn:      grpcConn,
+		httpClient:    httpClient,
+		accountNumber: accountsMap,
+		seqNumber:     seqMap,
+		cfg:           cfg,
+		encodingCfg:   app.MakeEncodingConfig(),
+		keys:          k,
+		broadcastLock: &sync.RWMutex{},
+		stop:          make(chan struct{}),
+		zetaChainID:   chainID,
+		zetaChain:     zetaChain,
+		pause:         make(chan struct{}),
+		Telemetry:     telemetry,
 	}, nil
 }
 
@@ -102,10 +114,23 @@ func (b *ZetaCoreBridge) GetLogger() *zerolog.Logger {
 	return &b.logger
 }
 
-func (b *ZetaCoreBridge) UpdateChainID(chainID string) {
+func (b *ZetaCoreBridge) UpdateChainID(chainID string) error {
 	if b.zetaChainID != chainID {
 		b.zetaChainID = chainID
+
+		zetaChain, err := common.ZetaChainFromChainID(chainID)
+		if err != nil {
+			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
+		}
+		b.zetaChain = zetaChain
 	}
+
+	return nil
+}
+
+// ZetaChain returns the ZetaChain chain object
+func (b *ZetaCoreBridge) ZetaChain() common.Chain {
+	return b.zetaChain
 }
 
 func (b *ZetaCoreBridge) Stop() {

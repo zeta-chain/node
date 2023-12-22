@@ -36,28 +36,19 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	TxinKey      = "Txin-value-"
-	TxinVoterKey = "TxinVoter-value-"
+	SendKey            = "Send-value-"
+	LastBlockHeightKey = "LastBlockHeight-value-"
 
-	TxoutKey             = "Txout-value-"
-	TxoutCountKey        = "Txout-count-"
-	TxoutConfirmationKey = "TxoutConfirmation-value-"
-	SendKey              = "Send-value-"
-	VoteCounterKey       = "VoteCounter-value-"
-	ReceiveKey           = "Receive-value-"
-	LastBlockHeightKey   = "LastBlockHeight-value-"
-	ChainNoncesKey       = "ChainNonces-value-"
-	GasPriceKey          = "GasPrice-value-"
+	GasPriceKey = "GasPrice-value-"
 
 	GasBalanceKey = "GasBalance-value-"
-	TSSKey        = "TSS-value-"
-	TSSHistoryKey = "TSS-History-value-"
 
 	OutTxTrackerKeyPrefix = "OutTxTracker-value-"
 	InTxTrackerKeyPrefix  = "InTxTracker-value-"
 
-	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
-	PendingNoncesKeyPrefix = "PendingNonces-value-"
+	// #nosec G101: Potential hardcoded credentials (gosec)
+	// ZetaAccountingKey value is used as prefix for storing ZetaAccountingKey
+	ZetaAccountingKey = "ZetaAccounting-value-"
 )
 
 // OutTxTrackerKey returns the store key to retrieve a OutTxTracker from the index fields
