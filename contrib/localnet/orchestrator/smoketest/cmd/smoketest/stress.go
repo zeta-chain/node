@@ -38,9 +38,6 @@ var (
 )
 
 type stressArguments struct {
-	ethURL             string
-	grpcURL            string
-	zevmURL            string
 	deployerAddress    string
 	deployerPrivateKey string
 	network            string
@@ -58,8 +55,6 @@ func NewStressTestCmd() *cobra.Command {
 		Run:   StressTest,
 	}
 
-	StressCmd.Flags().StringVar(&stressTestArgs.ethURL, "ethURL", "http://eth:8545", "--ethURL http://eth:8545")
-	StressCmd.Flags().StringVar(&stressTestArgs.grpcURL, "grpcURL", "zetacore0:9090", "--grpcURL zetacore0:9090")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "", "--network TESTNET")
@@ -95,7 +90,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Initialize clients ----------------------------------------------------------------
-	goerliClient, err := ethclient.Dial(stressTestArgs.ethURL)
+	goerliClient, err := ethclient.Dial(conf.RPCs.EVM)
 	if err != nil {
 		panic(err)
 	}
@@ -119,7 +114,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	grpcConn, err := grpc.Dial(stressTestArgs.grpcURL, grpc.WithInsecure())
+	grpcConn, err := grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
@@ -287,6 +282,7 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
+	chainID, _ := getChainID(sm.GoerliClient)
 
 	for {
 		select {
@@ -294,7 +290,7 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 			numTicks++
 			// Get all pending outbound transactions
 			cctxResp, err := sm.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
-				ChainId: getChainID(),
+				ChainId: chainID.Int64(),
 			})
 			if err != nil {
 				continue
@@ -353,16 +349,7 @@ func WithdrawETHZRC20(sm *runner.SmokeTestRunner) {
 	}
 }
 
-// Get ETH based chain ID - Build flags are conflicting with current lib, need to do this manually
-func getChainID() int64 {
-	switch stressTestArgs.network {
-	case "PRIVNET":
-		return 1337
-	case "TESTNET":
-		return 5
-	case "MAINNET":
-		return 1
-	default:
-		return 1337
-	}
+// Get ETH based chain ID
+func getChainID(client *ethclient.Client) (*big.Int, error) {
+	return client.ChainID(context.Background())
 }
