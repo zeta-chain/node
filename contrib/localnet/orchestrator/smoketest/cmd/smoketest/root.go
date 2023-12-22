@@ -9,6 +9,7 @@ func NewRootCmd() *cobra.Command {
 	}
 	cmd.AddCommand(NewLocalCmd())
 	cmd.AddCommand(NewStressTestCmd())
+	cmd.AddCommand(NewInitCmd())
 
 	return cmd
 }

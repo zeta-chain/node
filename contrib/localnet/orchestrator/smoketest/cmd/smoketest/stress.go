@@ -65,7 +65,7 @@ func NewStressTestCmd() *cobra.Command {
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "", "--network TESTNET")
 	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
-	StressCmd.Flags().StringVar(&stressTestArgs.network, flagConfigFile, "", "config file to use for the smoketest")
+	StressCmd.Flags().StringVar(&stressTestArgs.config, flagConfigFile, "", "config file to use for the smoketest")
 
 	DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
 
@@ -94,6 +94,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// Initialize clients ----------------------------------------------------------------
 	goerliClient, err := ethclient.Dial(stressTestArgs.ethURL)
 	if err != nil {
 		panic(err)
@@ -128,6 +129,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	bankClient := banktypes.NewQueryClient(grpcConn)
 	authClient := authtypes.NewQueryClient(grpcConn)
 	observerClient := observertypes.NewQueryClient(grpcConn)
+	// -----------------------------------------------------------------------------------
 
 	// Wait for Genesis and keygen to be completed. ~ height 30
 	time.Sleep(20 * time.Second)
