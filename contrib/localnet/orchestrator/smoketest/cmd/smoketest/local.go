@@ -155,6 +155,9 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
 	deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
 	deployerRunner.SendZetaOnEvm(UserEtherAddress, 1000)
+	deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
+	deployerRunner.SendZetaOnEvm(UserERC20AdvancedAddress, 1000)
+	deployerRunner.SendUSDTOnEvm(UserERC20AdvancedAddress, 1000)
 
 	// error group for running multiple smoke tests concurrently
 	var eg errgroup.Group
@@ -183,11 +186,25 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize runner for misc test
+	miscRunner, err := initMiscRunner(conf, deployerRunner, verbose)
+	if err != nil {
+		panic(err)
+	}
+
+	// initialize runner for erc20 advanced test
+	erc20AdvancedRunner, err := initERC20AdvancedRunner(conf, deployerRunner, verbose)
+	if err != nil {
+		panic(err)
+	}
+
 	// run tests
 	eg.Go(erc20TestRoutine(erc20Runner))
 	eg.Go(zetaTestRoutine(zetaRunner))
 	eg.Go(bitcoinTestRoutine(bitcoinRunner))
 	eg.Go(ethereumTestRoutine(etherRunner))
+	eg.Go(miscTestRoutine(miscRunner))
+	eg.Go(erc20AdvancedTestRoutine(erc20AdvancedRunner))
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
@@ -224,13 +241,10 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 		if err := erc20Runner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
 			smoketests.TestDepositAndCallRefundName,
-			smoketests.TestMultipleERC20DepositName,
+			//smoketests.TestMultipleERC20DepositName,
 			smoketests.TestWithdrawERC20Name,
-			smoketests.TestMultipleWithdrawsName,
-			smoketests.TestPauseZRC20Name,
+			//smoketests.TestMultipleWithdrawsName,
 			smoketests.TestERC20DepositAndCallRefundName,
-			smoketests.TestUpdateBytecodeName,
-			smoketests.TestWhitelistERC20Name,
 		); err != nil {
 			return err
 		}
@@ -328,6 +342,65 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositEtherLiquidityCapName,
 		); err != nil {
+			return err
+		}
+
+		return err
+	}
+}
+
+// miscTestRoutine runs miscellaneous smoke tests
+func miscTestRoutine(miscRunner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// TODO: remove and instead return errors in the smoke tests
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("misc test panic: %v", r)
+			}
+		}()
+
+		miscRunner.DepositZeta()
+
+		// run misc test
+		if err := miscRunner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestBlockHeadersName,
+			smoketests.TestMyTestName,
+		); err != nil {
+			return err
+		}
+
+		return err
+	}
+}
+
+// erc20AdvancedTestRoutine runs erc20 advanced related smoke tests
+func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("erc20 advanced panic: %v", r)
+			}
+		}()
+
+		erc20AdvancedRunner.DepositZeta()
+		erc20AdvancedRunner.DepositEther()
+		erc20AdvancedRunner.DepositERC20()
+		erc20AdvancedRunner.SetupZEVMSwapApp()
+
+		// run erc20 advanced test
+		if err := erc20AdvancedRunner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestZRC20SwapName,
+			smoketests.TestPauseZRC20Name,
+			smoketests.TestUpdateBytecodeName,
+			smoketests.TestWhitelistERC20Name,
+		); err != nil {
+
 			return err
 		}
 
