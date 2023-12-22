@@ -149,21 +149,34 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeT
 		if !ok {
 			return fmt.Errorf("smoke test %s not found", smokeTestName)
 		}
-		sm.RunSmokeTest(smokeTest)
+		if err := sm.RunSmokeTest(smokeTest); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 // RunSmokeTests runs a list of smoke tests
-func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
+func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
 	for _, smokeTest := range smokeTests {
-		sm.RunSmokeTest(smokeTest)
+		if err := sm.RunSmokeTest(smokeTest); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error) {
+	// return an error on panic
+	// https://github.com/zeta-chain/node/issues/1500
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("%s failed: %v", smokeTestWithName.Name, r)
+		}
+	}()
+
 	startTime := time.Now()
 	sm.Logger.Print("⏳running - %s", smokeTestWithName.Description)
 
@@ -174,6 +187,8 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 	//sm.CheckZRC20ReserveAndSupply()
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
+
+	return err
 }
 
 // findSmokeTest finds a smoke test by name

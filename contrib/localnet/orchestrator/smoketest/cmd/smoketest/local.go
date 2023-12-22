@@ -23,9 +23,6 @@ const (
 )
 
 var (
-	// TODO: make these variables configurable
-	// https://github.com/zeta-chain/node-private/issues/41
-
 	SmokeTestTimeout = 30 * time.Minute
 
 	// DeployerAddress is the address of the account for deploying networks
@@ -253,7 +250,7 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 			//smoketests.TestMultipleWithdrawsName,
 			smoketests.TestERC20DepositAndCallRefundName,
 		); err != nil {
-			return err
+			return fmt.Errorf("erc20 tests failed: %v", err)
 		}
 
 		erc20Runner.Logger.Print("🍾 erc20 tests completed in %s", time.Since(startTime).String())
@@ -290,7 +287,7 @@ func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
 			smoketests.TestMessagePassingRevertFailName,
 			smoketests.TestMessagePassingRevertSuccessName,
 		); err != nil {
-			return err
+			return fmt.Errorf("zeta tests failed: %v", err)
 		}
 
 		zetaRunner.Logger.Print("🍾 Zeta tests completed in %s", time.Since(startTime).String())
@@ -327,7 +324,7 @@ func bitcoinTestRoutine(bitcoinRunner *runner.SmokeTestRunner) func() error {
 			smoketests.TestSendZetaOutBTCRevertName,
 			smoketests.TestCrosschainSwapName,
 		); err != nil {
-			return err
+			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
 		bitcoinRunner.Logger.Print("🍾 Bitcoin tests completed in %s", time.Since(startTime).String())
@@ -366,7 +363,7 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositEtherLiquidityCapName,
 		); err != nil {
-			return err
+			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
 
 		return err
@@ -396,7 +393,7 @@ func miscTestRoutine(miscRunner *runner.SmokeTestRunner) func() error {
 			//smoketests.TestBlockHeadersName,
 			smoketests.TestMyTestName,
 		); err != nil {
-			return err
+			return fmt.Errorf("misc tests failed: %v", err)
 		}
 
 		miscRunner.Logger.Print("🍾 miscellaneous tests completed in %s", time.Since(startTime).String())
@@ -432,8 +429,7 @@ func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func(
 			smoketests.TestUpdateBytecodeName,
 			smoketests.TestWhitelistERC20Name,
 		); err != nil {
-
-			return err
+			return fmt.Errorf("erc20 advanced tests failed: %v", err)
 		}
 
 		erc20AdvancedRunner.Logger.Print("🍾 erc20 advanced tests completed in %s", time.Since(startTime).String())
