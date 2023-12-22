@@ -28,6 +28,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/common"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -559,6 +560,13 @@ var lowestOutTxNonceToObserve = map[int64]uint64{
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
+	// The garbage trackers associated with finalized cctxs
+	finalizedCctxTrackers := map[int64]map[uint64]bool{
+		5:     make(map[uint64]bool), // Goerli
+		97:    make(map[uint64]bool), // BSC testnet
+		80001: make(map[uint64]bool), // Mumbai
+	}
+
 	// read env variables if set
 	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
 	if err != nil || timeoutNonce <= 0 {
@@ -593,6 +601,21 @@ func (ob *EVMChainClient) observeOutTx() {
 				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
 					continue
 				}
+				if finalizedCctxTrackers[ob.chain.ChainId][nonceInt] {
+					continue
+				}
+				// Skip those problematic trackers whose associated cctxs are no longer pending (Reverted/Outboundminted/Aborted)
+				cctx, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonceInt)
+				if err != nil || cctx == nil {
+					ob.logger.ObserveOutTx.Error().Err(err).Msgf("garbage tracker, error GetCctxByNonce for chain %d nonce %d", ob.chain.ChainId, nonceInt)
+					continue
+				}
+				if !crosschainkeeper.IsPending(*cctx) {
+					finalizedCctxTrackers[ob.chain.ChainId][nonceInt] = true
+					ob.logger.ObserveOutTx.Info().Msgf("garbage tracker chain %s nonce %d is not pending", ob.chain.String(), nonceInt)
+					continue
+				}
+
 				ob.Mu.Lock()
 				_, found := ob.outTXConfirmedReceipts[ob.GetTxID(nonceInt)]
 				ob.Mu.Unlock()
@@ -645,11 +668,11 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 	receipt, err := ob.evmClient.TransactionReceipt(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		if err != ethereum.NotFound {
-			logger.Warn().Err(err).Msgf("TransactionReceipt/TransactionByHash error, txHash %s", txHash)
+			logger.Warn().Err(err).Msgf("queryTxByHash: TransactionReceipt/TransactionByHash error, txHash %s", txHash)
 		}
 		return nil, nil, err
 	}
-	transaction, _, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
+	transaction, isPending, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -657,14 +680,19 @@ func (ob *EVMChainClient) queryTxByHash(txHash string, nonce uint64) (*ethtypes.
 		return nil, nil, fmt.Errorf("queryTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
 	}
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
-	if confHeight < 0 || confHeight >= math.MaxInt64 {
-		return nil, nil, fmt.Errorf("confHeight is out of range")
+	if confHeight >= math.MaxInt64 {
+		return nil, nil, fmt.Errorf("queryTxByHash: confHeight is out of range")
 	}
 
 	// #nosec G701 checked in range
 	if int64(confHeight) > ob.GetLastBlockHeight() {
-		log.Warn().Msgf("included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
+		log.Warn().Msgf("queryTxByHash: included but not confirmed: receipt block %d, current block %d", receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, fmt.Errorf("included but not confirmed")
+	}
+	// transaction must NOT be pending
+	if isPending {
+		log.Error().Msgf("queryTxByHash: confirmed but still pending: txHash %s nonce %d receipt block %d", txHash, nonce, receipt.BlockNumber)
+		return nil, nil, fmt.Errorf("confirmed but still pending")
 	}
 	return receipt, transaction, nil
 }
@@ -921,7 +949,9 @@ func (ob *EVMChainClient) observeInTX() error {
 
 		// query incoming gas asset
 		for bn := startBlock; bn <= toBlock; bn++ {
-			if common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+			if crosschainFlags.BlockHeaderVerificationFlags != nil &&
+				crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
+				common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
 				err = ob.postBlockHeader(toBlock)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
@@ -930,22 +960,6 @@ func (ob *EVMChainClient) observeInTX() error {
 			block, err := ob.GetBlockByNumberCached(bn)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error getting block: %d", bn)
-				continue
-			}
-			headerRLP, err := rlp.EncodeToBytes(block.Header())
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error encoding block header: %d", bn)
-				continue
-			}
-
-			_, err = ob.zetaClient.PostAddBlockHeader(
-				ob.chain.ChainId,
-				block.Hash().Bytes(),
-				block.Number().Int64(),
-				common.NewEthereumHeader(headerRLP),
-			)
-			if err != nil {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("error posting block header: %d", bn)
 				continue
 			}
 
