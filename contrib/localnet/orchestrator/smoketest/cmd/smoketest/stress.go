@@ -283,7 +283,11 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
-	chainID, _ := getChainID(sm.GoerliClient)
+	chainID, err := getChainID(sm.GoerliClient)
+
+	if err != nil {
+		panic(err)
+	}
 
 	for {
 		select {
