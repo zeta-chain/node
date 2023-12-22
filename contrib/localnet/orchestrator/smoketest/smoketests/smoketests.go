@@ -9,7 +9,7 @@ const (
 	TestWithdrawERC20Name               = "erc20_withdraw"
 	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
 	TestSendZetaOutName                 = "send_zeta_out"
-	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert"
+	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert" // #nosec G101 - not a hardcoded password
 	TestMessagePassingName              = "message_passing"
 	TestZRC20SwapName                   = "zrc20_swap"
 	TestBitcoinWithdrawName             = "bitcoin_withdraw"
