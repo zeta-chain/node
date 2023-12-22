@@ -8,6 +8,7 @@
 - ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 ### Features
+* [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
