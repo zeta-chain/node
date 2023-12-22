@@ -6,6 +6,10 @@ import (
 	"github.com/fatih/color"
 )
 
+const (
+	loggerSeparator = " - "
+)
+
 // Logger is a wrapper around log.Logger that adds verbosity
 type Logger struct {
 	verbose bool
@@ -25,14 +29,14 @@ func NewLogger(verbose bool, printColor color.Attribute, prefix string) *Logger 
 // Print prints a message to the logger
 func (l *Logger) Print(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
-	l.logger.Printf(l.prefix + " - " + text + "\n")
+	l.logger.Printf(l.prefix + loggerSeparator + text + "\n")
 }
 
 // Info prints a message to the logger if verbose is true
 func (l *Logger) Info(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
-		l.logger.Printf(l.prefix + " - " + "[INFO]" + text + "\n")
+		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
 	}
 }
 
@@ -40,14 +44,14 @@ func (l *Logger) Info(message string, args ...interface{}) {
 func (l *Logger) InfoLoud(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
-		l.logger.Printf(l.prefix + " - " + "[INFO] =======================================")
-		l.logger.Printf(l.prefix + " - " + "[INFO]" + text + "\n")
-		l.logger.Printf(l.prefix + " - " + "[INFO] =======================================")
+		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
+		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
+		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
 	}
 }
 
 // Error prints an error message to the logger
 func (l *Logger) Error(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
-	l.logger.Printf(l.prefix + " - " + "[ERROR]" + text + "\n")
+	l.logger.Printf(l.prefix + loggerSeparator + "[ERROR]" + text + "\n")
 }
