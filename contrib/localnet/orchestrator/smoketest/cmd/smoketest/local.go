@@ -293,6 +293,8 @@ func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
 			return err
 		}
 
+		zetaRunner.Logger.Print("🍾 Zeta tests completed in %s", time.Since(startTime).String())
+
 		return err
 	}
 }
