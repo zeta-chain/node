@@ -9,10 +9,13 @@ sleep 6
 echo "funding deployer address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
-# unlock tester accounts
+# unlock erc20 tester accounts
 echo "funding deployer address 0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6 with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
+# unlock zeta tester accounts
+echo "funding deployer address 0x5cC2fBb200A929B372e3016F1925DcF988E081fd with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 # unlock the TSS account
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"

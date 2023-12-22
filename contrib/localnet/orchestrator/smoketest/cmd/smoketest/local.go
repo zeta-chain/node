@@ -33,13 +33,11 @@ var (
 	UserERC20Address    = ethcommon.HexToAddress("0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6")
 	UserERC20PrivateKey = "fda3be1b1517bdf48615bdadacc1e6463d2865868dc8077d2cdcfa4709a16894" // #nosec G101 - used for testing
 
+	UserZetaTestAddress    = ethcommon.HexToAddress("0x5cC2fBb200A929B372e3016F1925DcF988E081fd")
+	UserZetaTestPrivateKey = "729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7" // #nosec G101 - used for testing
+
 	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 )
-
-// 0x6F57D5E7c6DBb75e59F1524a3dE38Fc389ec5Fd6	fda3be1b1517bdf48615bdadacc1e6463d2865868dc8077d2cdcfa4709a16894
-// 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC   d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263
-
-// 0x5cC2fBb200A929B372e3016F1925DcF988E081fd   729a6cdc5c925242e7df92fdeeb94dadbf2d0b9950d4db8f034ab27a3b114ba7
 
 func NewLocalCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -134,6 +132,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	// fund accounts
 	deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
 	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
+	deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
 
 	// error group for running multiple smoke tests concurrently
 	var eg errgroup.Group
@@ -152,8 +151,23 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize runner for zeta test
+	zetaRunner, err := runnerFromConfig(
+		conf,
+		UserZetaTestAddress,
+		UserZetaTestPrivateKey,
+		runner.NewLogger(verbose, color.FgBlue, "zeta"),
+	)
+	if err != nil {
+		panic(err)
+	}
+	if err := zetaRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		panic(err)
+	}
+
 	// run tests
 	eg.Go(erc20TestRoutine(erc20Runner))
+	eg.Go(zetaTestRoutine(zetaRunner))
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
@@ -167,6 +181,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}
 }
 
+// erc20TestRoutine runs erc20 related smoke tests
 func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -190,11 +205,44 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 			smoketests.AllSmokeTests,
 			smoketests.TestDepositAndCallRefundName,
 			smoketests.TestMultipleERC20DepositName,
-			//smoketests.TestWithdrawERC20Name,
-			//smoketests.TestMultipleWithdrawsName,
-			//smoketests.TestPauseZRC20Name,
-			//smoketests.TestERC20DepositAndCallRefundName,
-			//smoketests.TestWhitelistERC20Name,
+			smoketests.TestWithdrawERC20Name,
+			smoketests.TestMultipleWithdrawsName,
+			smoketests.TestPauseZRC20Name,
+			smoketests.TestERC20DepositAndCallRefundName,
+			smoketests.TestUpdateBytecodeName,
+			smoketests.TestWhitelistERC20Name,
+		); err != nil {
+			return err
+		}
+
+		return err
+	}
+}
+
+// zetaTestRoutine runs Zeta transfer and message passing related smoke tests
+func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// TODO: remove and instead return errors in the smoke tests
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
+		zetaRunner.DepositZeta()
+		zetaRunner.SetupBitcoinAccount()
+		zetaRunner.CheckZRC20ReserveAndSupply()
+
+		// run erc20 test
+		if err := zetaRunner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestSendZetaOutName,
+			smoketests.TestSendZetaOutBTCRevertName,
+			smoketests.TestMessagePassingName,
+			smoketests.TestMessagePassingRevertFailName,
+			smoketests.TestMessagePassingRevertSuccessName,
 		); err != nil {
 			return err
 		}
