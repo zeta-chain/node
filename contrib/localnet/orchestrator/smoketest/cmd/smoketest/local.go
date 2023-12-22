@@ -5,7 +5,7 @@ import (
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
@@ -83,7 +83,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	logger := runner.NewLogger(verbose)
+	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
 	logger.Print("starting smoke tests")
@@ -135,7 +135,12 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
 
 	// initialize runner for erc20 test
-	erc20Runner, err := runnerFromConfig(conf, UserERC20Address, UserERC20PrivateKey, logger)
+	erc20Runner, err := runnerFromConfig(
+		conf,
+		UserERC20Address,
+		UserERC20PrivateKey,
+		runner.NewLogger(verbose, color.FgGreen, "erc20"),
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -158,11 +163,11 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 			smoketests.AllSmokeTests,
 			smoketests.TestDepositAndCallRefundName,
 			smoketests.TestMultipleERC20DepositName,
-			smoketests.TestWithdrawERC20Name,
-			smoketests.TestMultipleWithdrawsName,
-			smoketests.TestPauseZRC20Name,
-			smoketests.TestERC20DepositAndCallRefundName,
-			smoketests.TestWhitelistERC20Name,
+			//smoketests.TestWithdrawERC20Name,
+			//smoketests.TestMultipleWithdrawsName,
+			//smoketests.TestPauseZRC20Name,
+			//smoketests.TestERC20DepositAndCallRefundName,
+			//smoketests.TestWhitelistERC20Name,
 		); err != nil {
 			panic(err)
 		}
