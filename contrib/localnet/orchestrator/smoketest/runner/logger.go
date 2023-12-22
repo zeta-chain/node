@@ -29,14 +29,16 @@ func NewLogger(verbose bool, printColor color.Attribute, prefix string) *Logger 
 // Print prints a message to the logger
 func (l *Logger) Print(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
-	l.logger.Printf(l.prefix + loggerSeparator + text + "\n")
+	// #nosec G104 - we are not using user input
+	_, _ = l.logger.Printf(l.prefix + loggerSeparator + text + "\n")
 }
 
 // Info prints a message to the logger if verbose is true
 func (l *Logger) Info(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
+		// #nosec G104 - we are not using user input
+		_, _ = l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
 	}
 }
 
@@ -44,14 +46,18 @@ func (l *Logger) Info(message string, args ...interface{}) {
 func (l *Logger) InfoLoud(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
+		// #nosec G104 - we are not using user input
+		_, _ = l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
+		// #nosec G104 - we are not using user input
+		_, _ = l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
+		// #nosec G104 - we are not using user input
+		_, _ = l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
 	}
 }
 
 // Error prints an error message to the logger
 func (l *Logger) Error(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
-	l.logger.Printf(l.prefix + loggerSeparator + "[ERROR]" + text + "\n")
+	// #nosec G104 - we are not using user input
+	_, _ = l.logger.Printf(l.prefix + loggerSeparator + "[ERROR]" + text + "\n")
 }
