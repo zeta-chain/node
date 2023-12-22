@@ -7,7 +7,7 @@
       "subspace": "gov",
       "key": "votingparams",
       "value": {
-        "voting_period": "604800"
+        "voting_period": "3600"
       }
     },
     {
@@ -20,7 +20,7 @@
             "amount": "1000000"
           }
         ],
-        "max_deposit_period": "604800"
+        "max_deposit_period": "3600"
       }
     }
   ],

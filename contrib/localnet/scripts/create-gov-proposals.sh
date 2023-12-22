@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SCRIPT_DIR=$(dirname "$0")
+cd "$SCRIPT_DIR" || exit
+
 ## Create localnet_gov_admin on host system
 
 LOCALNET_GOV_ADMIN_MNEMONIC="mercy oblige six giant absorb crunch derive tornado sleep friend blame border avocado fine script dilemma vacant dad buddy occur trigger energy today minimum"
