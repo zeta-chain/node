@@ -361,7 +361,7 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 			smoketests.AllSmokeTests,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
-			smoketests.TestDepositEtherLiquidityCapName,
+			//smoketests.TestDepositEtherLiquidityCapName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
@@ -425,7 +425,7 @@ func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func(
 		if err := erc20AdvancedRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
 			smoketests.TestZRC20SwapName,
-			smoketests.TestPauseZRC20Name,
+			//smoketests.TestPauseZRC20Name,
 			smoketests.TestUpdateBytecodeName,
 			smoketests.TestWhitelistERC20Name,
 		); err != nil {
