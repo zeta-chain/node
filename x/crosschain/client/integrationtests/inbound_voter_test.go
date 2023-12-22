@@ -1,19 +1,117 @@
-//go:build TESTNET
-// +build TESTNET
-
 package integrationtests
 
 import (
+	"encoding/json"
+	"fmt"
+	"strings"
+
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	crosschainCli "github.com/zeta-chain/zetacore/x/crosschain/client/cli"
+	crosschaincli "github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerCli "github.com/zeta-chain/zetacore/x/observer/client/cli"
+	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+type messageLog struct {
+	Events []event `json:"events"`
+}
+
+type event struct {
+	Type       string      `json:"type"`
+	Attributes []attribute `json:"attributes"`
+}
+
+type attribute struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+// fetchAttribute fetches the attribute from the tx response
+func fetchAttribute(rawLog string, key string) (string, error) {
+	var logs []messageLog
+	err := json.Unmarshal([]byte(rawLog), &logs)
+	if err != nil {
+		return "", err
+	}
+
+	var attributes []string
+	for _, log := range logs {
+		for _, event := range log.Events {
+			for _, attr := range event.Attributes {
+				attributes = append(attributes, attr.Key)
+				if strings.EqualFold(attr.Key, key) {
+					address := attr.Value
+
+					// trim the quotes
+					address = address[1 : len(address)-1]
+
+					return address, nil
+				}
+
+			}
+		}
+	}
+
+	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
+}
+
+type txRes struct {
+	RawLog string `json:"raw_log"`
+}
+
+func ExtractRawLog(str string) (string, error) {
+	var data txRes
+
+	err := json.Unmarshal([]byte(str), &data)
+	if err != nil {
+		return "", err
+	}
+
+	return data.RawLog, nil
+}
+
 func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
+	broadcaster := s.network.Validators[0]
+
+	var systemContractAddr string
+	// Initialize system contract
+	{
+		out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{broadcaster.Address.String(), "--output", "json"})
+		s.Require().NoError(err)
+		var account authtypes.AccountI
+		s.NoError(broadcaster.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
+		signedTx := BuildSignedDeploySystemContract(s.T(), broadcaster, s.cfg.BondDenom, account)
+		res, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "block"})
+		s.Require().NoError(err)
+
+		rawLog, err := ExtractRawLog(res.String())
+		s.Require().NoError(err)
+
+		systemContractAddr, err = fetchAttribute(rawLog, "system_contract")
+		s.Require().NoError(err)
+
+		// update system contract
+		out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{broadcaster.Address.String(), "--output", "json"})
+		s.Require().NoError(err)
+		s.NoError(broadcaster.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
+		signedTx = BuildSignedUpdateSystemContract(s.T(), broadcaster, s.cfg.BondDenom, account, systemContractAddr)
+		res, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "block"})
+		s.Require().NoError(err)
+	}
+
+	// Deploy ETH ZRC20
+	{
+		out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{broadcaster.Address.String(), "--output", "json"})
+		s.Require().NoError(err)
+		var account authtypes.AccountI
+		s.NoError(broadcaster.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
+		signedTx := BuildSignedDeployETHZRC20(s.T(), broadcaster, s.cfg.BondDenom, account)
+		_, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "block"})
+		s.Require().NoError(err)
+	}
+
 	tt := []struct {
 		name                  string
 		votes                 map[string]observerTypes.VoteType
@@ -128,8 +226,6 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 	for _, test := range tt {
 		test := test
 		s.Run(test.name, func() {
-			broadcaster := s.network.Validators[0]
-
 			// Vote the gas price
 			for _, val := range s.network.Validators {
 				out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{val.Address.String(), "--output", "json"})
@@ -178,7 +274,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 
 			// Get the ballot
 			ballotIdentifier := GetBallotIdentifier(test.name)
-			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observerCli.CmdBallotByIdentifier(), []string{ballotIdentifier, "--output", "json"})
+			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdBallotByIdentifier(), []string{ballotIdentifier, "--output", "json"})
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
@@ -187,25 +283,25 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.Assert().Equal(len(test.votes), len(ballot.Voters))
 			for _, vote := range ballot.Voters {
 				if test.votes[vote.VoterAddress] == observerTypes.VoteType_FailureObservation {
-					s.Assert().Equal(observerTypes.VoteType_NotYetVoted, vote.VoteType)
+					s.Assert().Equal(observerTypes.VoteType_NotYetVoted.String(), vote.VoteType.String())
 					continue
 				}
-				s.Assert().Equal(test.votes[vote.VoterAddress], vote.VoteType)
+				s.Assert().Equal(test.votes[vote.VoterAddress].String(), vote.VoteType.String())
 			}
-			s.Assert().Equal(test.ballotResult, ballot.BallotStatus)
+			s.Assert().Equal(test.ballotResult.String(), ballot.BallotStatus.String())
 
 			// Get the cctx and check its status
 			cctxIdentifier := ballotIdentifier
 			if test.falseBallotIdentifier != "" {
 				cctxIdentifier = test.falseBallotIdentifier
 			}
-			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschainCli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
+			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx := crosschaintypes.QueryGetCctxResponse{}
 			if test.cctxStatus == crosschaintypes.CctxStatus_PendingRevert {
 				s.Require().Contains(out.String(), "not found")
 			} else {
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
-				s.Assert().Equal(test.cctxStatus, cctx.CrossChainTx.CctxStatus.Status)
+				s.Assert().Equal(test.cctxStatus.String(), cctx.CrossChainTx.CctxStatus.Status.String(), cctx.CrossChainTx.CctxStatus.StatusMessage)
 			}
 		})
 	}

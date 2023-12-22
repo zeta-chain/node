@@ -40,7 +40,7 @@ func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, grantee
 }
 
 func GetGranteeKeyName(signerName string) string {
-	return fmt.Sprintf("%s", signerName)
+	return signerName
 }
 
 // GetKeyringKeybase return keyring and key info

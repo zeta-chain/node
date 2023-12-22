@@ -19,6 +19,7 @@ import (
 
 // PayGasAndUpdateCctx updates the outbound tx with the new amount after paying the gas fee
 // **Caller should feed temporary ctx into this function**
+// chainID is the outbound chain chain id , this can be receiver chain for regular transactions and sender-chain to reverted transactions
 func (k Keeper) PayGasAndUpdateCctx(
 	ctx sdk.Context,
 	chainID int64,
@@ -271,7 +272,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	if err != nil {
-		return cosmoserrors.Wrap(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin")
+		return cosmoserrors.Wrapf(err, "PayGasInZetaAndUpdateCctx: unable to get system contract gas coin, chaind ID %d", chainID)
 	}
 
 	// get the gas price

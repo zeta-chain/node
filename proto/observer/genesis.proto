@@ -3,11 +3,17 @@ package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
 import "observer/ballot.proto";
+import "observer/blame.proto";
+import "observer/chain_nonces.proto";
 import "observer/crosschain_flags.proto";
 import "observer/keygen.proto";
 import "observer/node_account.proto";
+import "observer/nonce_to_cctx.proto";
 import "observer/observer.proto";
 import "observer/params.proto";
+import "observer/pending_nonces.proto";
+import "observer/tss.proto";
+import "observer/tss_funds_migrator.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -20,4 +26,11 @@ message GenesisState {
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
   CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
+  TSS tss = 9;
+  repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
+  repeated TssFundMigratorInfo tss_fund_migrators = 11 [(gogoproto.nullable) = false];
+  repeated Blame blame_list = 12 [(gogoproto.nullable) = false];
+  repeated PendingNonces pending_nonces = 13 [(gogoproto.nullable) = false];
+  repeated ChainNonces chain_nonces = 14 [(gogoproto.nullable) = false];
+  repeated NonceToCctx nonce_to_cctx = 15 [(gogoproto.nullable) = false];
 }

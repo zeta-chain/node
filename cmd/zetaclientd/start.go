@@ -19,7 +19,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -67,9 +66,18 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
+	telemetryServer := mc.NewTelemetryServer()
+	go func() {
+		err := telemetryServer.Start()
+		if err != nil {
+			startLogger.Error().Err(err).Msg("telemetryServer error")
+			panic("telemetryServer error")
+		}
+	}()
+
 	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetaBridge, err := CreateZetaBridge(cfg)
+	zetaBridge, err := CreateZetaBridge(cfg, telemetryServer)
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +85,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("ZetaBridge is ready")
 	zetaBridge.SetAccountNumber(common.ZetaClientGranteeKey)
 
-	// cross check chainid
+	// cross-check chainid
 	res, err := zetaBridge.GetNodeInfo()
 	if err != nil {
 		panic(err)
@@ -86,7 +94,10 @@ func start(_ *cobra.Command, _ []string) error {
 	if strings.Compare(res.GetDefaultNodeInfo().Network, cfg.ChainID) != 0 {
 		startLogger.Warn().Msgf("chain id mismatch, zeta-core chain id %s, zeta client chain id %s; reset zeta client chain id", res.GetDefaultNodeInfo().Network, cfg.ChainID)
 		cfg.ChainID = res.GetDefaultNodeInfo().Network
-		zetaBridge.UpdateChainID(cfg.ChainID)
+		err := zetaBridge.UpdateChainID(cfg.ChainID)
+		if err != nil {
+			return err
+		}
 	}
 
 	// CreateAuthzSigner : which is used to sign all authz messages . All votes broadcast to zetacore are wrapped in authz exec .
@@ -100,7 +111,7 @@ func start(_ *cobra.Command, _ []string) error {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
-	startLogger.Info().Msgf("Config is updated from ZetaCore %s", cfg.String())
+	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
 	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
 	go zetaBridge.ConfigUpdater(cfg)
@@ -135,15 +146,6 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	telemetryServer := mc.NewTelemetryServer()
-	go func() {
-		err := telemetryServer.Start()
-		if err != nil {
-			startLogger.Error().Err(err).Msg("telemetryServer error")
-			panic("telemetryServer error")
-		}
-	}()
-
 	metrics, err := metrics2.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
@@ -151,7 +153,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	metrics.Start()
 
-	var tssHistoricalList []types.TSS
+	var tssHistoricalList []observerTypes.TSS
 	tssHistoricalList, err = zetaBridge.GetTssHistory()
 	if err != nil {
 		startLogger.Error().Err(err).Msg("GetTssHistory error")
@@ -243,14 +245,20 @@ func start(_ *cobra.Command, _ []string) error {
 	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
-	zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
-	if err != nil {
-		startLogger.Err(err).Msg("NewZetaSupplyChecker")
-	}
-	if err == nil {
-		zetaSupplyChecker.Start()
-		defer zetaSupplyChecker.Stop()
-	}
+	// start zeta supply checker
+	// TODO: enable
+	// https://github.com/zeta-chain/node/issues/1354
+	// NOTE: this is disabled for now because we need to determine the frequency on how to handle invalid check
+	// The method uses GRPC query to the node we might need to improve for performance
+	//zetaSupplyChecker, err := mc.NewZetaSupplyChecker(cfg, zetaBridge, masterLogger)
+	//if err != nil {
+	//	startLogger.Err(err).Msg("NewZetaSupplyChecker")
+	//}
+	//if err == nil {
+	//	zetaSupplyChecker.Start()
+	//	defer zetaSupplyChecker.Stop()
+	//}
+
 	startLogger.Info().Msgf("awaiting the os.Interrupt, syscall.SIGTERM signals...")
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)

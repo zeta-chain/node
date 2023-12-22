@@ -34,12 +34,18 @@ func (m Ballot) GetVoterIndex(address string) int {
 	return index
 }
 
-func (m Ballot) IsBallotFinalized() (Ballot, bool) {
+// Is finalzing vote checks sets the ballot to a final status if enough votes have been added
+// If it has already been finalized it returns false
+// It enough votes have not been added it returns false
+func (m Ballot) IsFinalizingVote() (Ballot, bool) {
 	if m.BallotStatus != BallotStatus_BallotInProgress {
 		return m, false
 	}
 	success, failure := sdk.ZeroDec(), sdk.ZeroDec()
 	total := sdk.NewDec(int64(len(m.VoterList)))
+	if total.IsZero() {
+		return m, false
+	}
 	for _, vote := range m.Votes {
 		if vote == VoteType_SuccessObservation {
 			success = success.Add(sdk.OneDec())
@@ -55,6 +61,7 @@ func (m Ballot) IsBallotFinalized() (Ballot, bool) {
 			return m, true
 		}
 	}
+
 	if success.IsPositive() {
 		if success.Quo(total).GTE(m.BallotThreshold) {
 			m.BallotStatus = BallotStatus_BallotFinalized_SuccessObservation

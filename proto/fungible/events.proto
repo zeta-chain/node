@@ -44,3 +44,21 @@ message EventZRC20PausedStatusUpdated {
   UpdatePausedStatusAction action = 3;
   string signer = 4;
 }
+
+message EventSystemContractsDeployed {
+  string msg_type_url = 1;
+  string uniswap_v2_factory = 2;
+  string wzeta = 3;
+  string uniswap_v2_router = 4;
+  string connector_zevm = 5;
+  string system_contract = 6;
+  string signer = 7;
+}
+
+message EventBytecodeUpdated {
+  string msg_type_url = 1;
+  string contract_address = 2;
+  string new_bytecode_hash = 3;
+  string old_bytecode_hash = 4;
+  string signer = 5;
+}

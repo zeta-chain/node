@@ -4,19 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/testutil/keeper"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name  string
-		msg   types.MsgUpdateTssAddress
+		msg   crosschaintypes.MsgUpdateTssAddress
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.MsgUpdateTssAddress{
+			msg: crosschaintypes.MsgUpdateTssAddress{
 				Creator:   "invalid_address",
 				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
 			},
@@ -24,7 +24,7 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid pubkey",
-			msg: types.MsgUpdateTssAddress{
+			msg: crosschaintypes.MsgUpdateTssAddress{
 				Creator:   "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
 				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
 			},
@@ -32,7 +32,7 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid msg",
-			msg: types.MsgUpdateTssAddress{
+			msg: crosschaintypes.MsgUpdateTssAddress{
 				Creator:   "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
 				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
 			},
@@ -42,7 +42,7 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			observerTypes.SetConfig(false)
+			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

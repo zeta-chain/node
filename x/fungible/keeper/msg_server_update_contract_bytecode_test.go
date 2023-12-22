@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"testing"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/evmos/ethermint/x/evm/statedb"
@@ -27,6 +29,14 @@ func setAdminPolicies(ctx sdk.Context, zk keepertest.ZetaKeepers, admin string, 
 			},
 		},
 	})
+}
+
+func codeHashFromAddress(t *testing.T, ctx sdk.Context, k *keeper.Keeper, contractAddr string) string {
+	res, err := k.CodeHash(ctx, &types.QueryCodeHashRequest{
+		Address: contractAddr,
+	})
+	require.NoError(t, err)
+	return res.CodeHash
 }
 
 func TestKeeper_UpdateContractBytecode(t *testing.T) {
@@ -92,18 +102,19 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			big.NewInt(90_000),
 		)
 		require.NoError(t, err)
+		codeHash := codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 
 		// update the bytecode
-		res, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
+		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			zrc20,
-			newCodeAddress,
+			zrc20.Hex(),
+			codeHash,
 		))
 		require.NoError(t, err)
 
 		// check the returned new bytecode hash matches the one in the account
 		acct := sdkk.EvmKeeper.GetAccount(ctx, zrc20)
-		require.Equal(t, acct.CodeHash, res.NewBytecodeHash)
+		require.Equal(t, acct.CodeHash, ethcommon.HexToHash(codeHash).Bytes())
 
 		// check the state
 		// balances and total supply should remain
@@ -134,11 +145,12 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			"gamma",
 			big.NewInt(90_000),
 		)
+		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 		require.NoError(t, err)
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			zrc20,
-			newCodeAddress,
+			zrc20.Hex(),
+			codeHash,
 		))
 		require.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
@@ -161,6 +173,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// deploy a connector
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		wzeta, _, _, oldConnector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		codeHash := codeHashFromAddress(t, ctx, k, oldConnector.Hex())
 
 		// deploy a new connector that will become official connector
 		newConnector, err := k.DeployConnectorZEVM(ctx, wzeta)
@@ -171,8 +184,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can update the bytecode of the new connector with the old connector contract
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			newConnector,
-			oldConnector,
+			newConnector.Hex(),
+			codeHash,
 		))
 		require.NoError(t, err)
 	})
@@ -183,8 +196,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			sample.AccAddress(),
-			sample.EthAddress(),
-			sample.EthAddress(),
+			sample.EthAddress().Hex(),
+			sample.Hash().Hex(),
 		))
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
@@ -197,9 +210,9 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
-			Creator:            admin,
-			ContractAddress:    "invalid",
-			NewBytecodeAddress: sample.EthAddress().Hex(),
+			Creator:         admin,
+			ContractAddress: "invalid",
+			NewCodeHash:     sample.Hash().Hex(),
 		})
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
@@ -222,8 +235,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			contractAddr,
-			sample.EthAddress(),
+			contractAddr.Hex(),
+			sample.Hash().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrContractNotFound)
 
@@ -242,8 +255,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can't update the bytecode of the wzeta contract
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			wzeta,
-			sample.EthAddress(),
+			wzeta.Hex(),
+			sample.Hash().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrInvalidContract)
 	})
@@ -263,80 +276,10 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		// can't update the bytecode of the wzeta contract
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			connector,
-			sample.EthAddress(),
+			connector.Hex(),
+			sample.Hash().Hex(),
 		))
 		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
-	})
-
-	t.Run("should fail if invalid bytecode address", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseEVMMock: true,
-		})
-		msgServer := keeper.NewMsgServerImpl(*k)
-		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
-
-		// set the contract as the connector
-		contract := sample.EthAddress()
-		k.SetSystemContract(ctx, types.SystemContract{
-			ConnectorZevm: contract.Hex(),
-		})
-
-		mockEVMKeeper.On(
-			"GetAccount",
-			mock.Anything,
-			mock.Anything,
-		).Return(&statedb.Account{})
-
-		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
-			Creator:            admin,
-			ContractAddress:    contract.Hex(),
-			NewBytecodeAddress: "invalid",
-		})
-
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
-
-		mockEVMKeeper.AssertExpectations(t)
-	})
-
-	t.Run("should fail if can't get new bytecode account", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseEVMMock: true,
-		})
-		msgServer := keeper.NewMsgServerImpl(*k)
-		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
-		contractAddr := sample.EthAddress()
-		newBytecodeAddr := sample.EthAddress()
-
-		// set the contract as the connector
-		k.SetSystemContract(ctx, types.SystemContract{
-			ConnectorZevm: contractAddr.String(),
-		})
-
-		mockEVMKeeper.On(
-			"GetAccount",
-			mock.Anything,
-			contractAddr,
-		).Return(&statedb.Account{})
-
-		mockEVMKeeper.On(
-			"GetAccount",
-			mock.Anything,
-			newBytecodeAddr,
-		).Return(nil)
-
-		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			admin,
-			contractAddr,
-			newBytecodeAddr,
-		))
-		require.ErrorIs(t, err, types.ErrContractNotFound)
-
-		mockEVMKeeper.AssertExpectations(t)
 	})
 
 	t.Run("should fail if can't set account with new bytecode", func(t *testing.T) {
@@ -348,7 +291,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		contractAddr := sample.EthAddress()
-		newBytecodeAddr := sample.EthAddress()
+		newCodeHash := sample.Hash().Hex()
 
 		// set the contract as the connector
 		k.SetSystemContract(ctx, types.SystemContract{
@@ -362,12 +305,6 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		).Return(&statedb.Account{})
 
 		mockEVMKeeper.On(
-			"GetAccount",
-			mock.Anything,
-			newBytecodeAddr,
-		).Return(&statedb.Account{})
-
-		mockEVMKeeper.On(
 			"SetAccount",
 			mock.Anything,
 			mock.Anything,
@@ -376,8 +313,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
-			contractAddr,
-			newBytecodeAddr,
+			contractAddr.Hex(),
+			newCodeHash,
 		))
 		require.ErrorIs(t, err, types.ErrSetBytecode)
 

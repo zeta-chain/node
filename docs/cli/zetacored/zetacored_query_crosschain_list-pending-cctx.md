@@ -3,7 +3,7 @@
 shows pending CCTX
 
 ```
-zetacored query crosschain list-pending-cctx [chain-id] [flags]
+zetacored query crosschain list-pending-cctx [chain-id] [limit] [flags]
 ```
 
 ### Options

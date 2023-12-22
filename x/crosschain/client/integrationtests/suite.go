@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package integrationtests
 
 import (
@@ -53,13 +50,13 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList, true)
 	network.AddCrosschainData(s.T(), 0, s.cfg.GenesisState, s.cfg.Codec)
+	network.AddObserverData(s.T(), 0, s.cfg.GenesisState, s.cfg.Codec, nil)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
 	s.Assert().NoError(err)
 	s.network = net
 	time.Sleep(3 * time.Second)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
-
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {

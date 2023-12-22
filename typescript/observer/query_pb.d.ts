@@ -5,16 +5,428 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { ChainNonces } from "./chain_nonces_pb.js";
+import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
+import type { PendingNonces } from "./pending_nonces_pb.js";
+import type { TSS } from "./tss_pb.js";
 import type { BlockHeader, Chain, Proof } from "../common/common_pb.js";
 import type { CoreParams, CoreParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType, ObserverMapper } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
-import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { BlockHeaderState } from "./block_header_pb.js";
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetChainNoncesRequest
+ */
+export declare class QueryGetChainNoncesRequest extends Message<QueryGetChainNoncesRequest> {
+  /**
+   * @generated from field: string index = 1;
+   */
+  index: string;
+
+  constructor(data?: PartialMessage<QueryGetChainNoncesRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetChainNoncesRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainNoncesRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainNoncesRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainNoncesRequest;
+
+  static equals(a: QueryGetChainNoncesRequest | PlainMessage<QueryGetChainNoncesRequest> | undefined, b: QueryGetChainNoncesRequest | PlainMessage<QueryGetChainNoncesRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetChainNoncesResponse
+ */
+export declare class QueryGetChainNoncesResponse extends Message<QueryGetChainNoncesResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.ChainNonces ChainNonces = 1;
+   */
+  ChainNonces?: ChainNonces;
+
+  constructor(data?: PartialMessage<QueryGetChainNoncesResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetChainNoncesResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainNoncesResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainNoncesResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainNoncesResponse;
+
+  static equals(a: QueryGetChainNoncesResponse | PlainMessage<QueryGetChainNoncesResponse> | undefined, b: QueryGetChainNoncesResponse | PlainMessage<QueryGetChainNoncesResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllChainNoncesRequest
+ */
+export declare class QueryAllChainNoncesRequest extends Message<QueryAllChainNoncesRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryAllChainNoncesRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllChainNoncesRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllChainNoncesRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllChainNoncesRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllChainNoncesRequest;
+
+  static equals(a: QueryAllChainNoncesRequest | PlainMessage<QueryAllChainNoncesRequest> | undefined, b: QueryAllChainNoncesRequest | PlainMessage<QueryAllChainNoncesRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllChainNoncesResponse
+ */
+export declare class QueryAllChainNoncesResponse extends Message<QueryAllChainNoncesResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.ChainNonces ChainNonces = 1;
+   */
+  ChainNonces: ChainNonces[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryAllChainNoncesResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllChainNoncesResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllChainNoncesResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllChainNoncesResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllChainNoncesResponse;
+
+  static equals(a: QueryAllChainNoncesResponse | PlainMessage<QueryAllChainNoncesResponse> | undefined, b: QueryAllChainNoncesResponse | PlainMessage<QueryAllChainNoncesResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllPendingNoncesRequest
+ */
+export declare class QueryAllPendingNoncesRequest extends Message<QueryAllPendingNoncesRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryAllPendingNoncesRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllPendingNoncesRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllPendingNoncesRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllPendingNoncesRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllPendingNoncesRequest;
+
+  static equals(a: QueryAllPendingNoncesRequest | PlainMessage<QueryAllPendingNoncesRequest> | undefined, b: QueryAllPendingNoncesRequest | PlainMessage<QueryAllPendingNoncesRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryAllPendingNoncesResponse
+ */
+export declare class QueryAllPendingNoncesResponse extends Message<QueryAllPendingNoncesResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.PendingNonces pending_nonces = 1;
+   */
+  pendingNonces: PendingNonces[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryAllPendingNoncesResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryAllPendingNoncesResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllPendingNoncesResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllPendingNoncesResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllPendingNoncesResponse;
+
+  static equals(a: QueryAllPendingNoncesResponse | PlainMessage<QueryAllPendingNoncesResponse> | undefined, b: QueryAllPendingNoncesResponse | PlainMessage<QueryAllPendingNoncesResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryPendingNoncesByChainRequest
+ */
+export declare class QueryPendingNoncesByChainRequest extends Message<QueryPendingNoncesByChainRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  constructor(data?: PartialMessage<QueryPendingNoncesByChainRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryPendingNoncesByChainRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryPendingNoncesByChainRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryPendingNoncesByChainRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryPendingNoncesByChainRequest;
+
+  static equals(a: QueryPendingNoncesByChainRequest | PlainMessage<QueryPendingNoncesByChainRequest> | undefined, b: QueryPendingNoncesByChainRequest | PlainMessage<QueryPendingNoncesByChainRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryPendingNoncesByChainResponse
+ */
+export declare class QueryPendingNoncesByChainResponse extends Message<QueryPendingNoncesByChainResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.PendingNonces pending_nonces = 1;
+   */
+  pendingNonces?: PendingNonces;
+
+  constructor(data?: PartialMessage<QueryPendingNoncesByChainResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryPendingNoncesByChainResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryPendingNoncesByChainResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryPendingNoncesByChainResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryPendingNoncesByChainResponse;
+
+  static equals(a: QueryPendingNoncesByChainResponse | PlainMessage<QueryPendingNoncesByChainResponse> | undefined, b: QueryPendingNoncesByChainResponse | PlainMessage<QueryPendingNoncesByChainResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTSSRequest
+ */
+export declare class QueryGetTSSRequest extends Message<QueryGetTSSRequest> {
+  constructor(data?: PartialMessage<QueryGetTSSRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTSSRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTSSRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTSSRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTSSRequest;
+
+  static equals(a: QueryGetTSSRequest | PlainMessage<QueryGetTSSRequest> | undefined, b: QueryGetTSSRequest | PlainMessage<QueryGetTSSRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTSSResponse
+ */
+export declare class QueryGetTSSResponse extends Message<QueryGetTSSResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.observer.TSS TSS = 1;
+   */
+  TSS?: TSS;
+
+  constructor(data?: PartialMessage<QueryGetTSSResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTSSResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTSSResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTSSResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTSSResponse;
+
+  static equals(a: QueryGetTSSResponse | PlainMessage<QueryGetTSSResponse> | undefined, b: QueryGetTSSResponse | PlainMessage<QueryGetTSSResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressRequest
+ */
+export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddressRequest> {
+  /**
+   * @generated from field: int64 bitcoin_chain_id = 2;
+   */
+  bitcoinChainId: bigint;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
+
+  static equals(a: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined, b: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressResponse
+ */
+export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddressResponse> {
+  /**
+   * @generated from field: string eth = 1;
+   */
+  eth: string;
+
+  /**
+   * @generated from field: string btc = 2;
+   */
+  btc: string;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
+
+  static equals(a: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined, b: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightRequest
+ */
+export declare class QueryGetTssAddressByFinalizedHeightRequest extends Message<QueryGetTssAddressByFinalizedHeightRequest> {
+  /**
+   * @generated from field: int64 finalized_zeta_height = 1;
+   */
+  finalizedZetaHeight: bigint;
+
+  /**
+   * @generated from field: int64 bitcoin_chain_id = 2;
+   */
+  bitcoinChainId: bigint;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressByFinalizedHeightRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightRequest;
+
+  static equals(a: QueryGetTssAddressByFinalizedHeightRequest | PlainMessage<QueryGetTssAddressByFinalizedHeightRequest> | undefined, b: QueryGetTssAddressByFinalizedHeightRequest | PlainMessage<QueryGetTssAddressByFinalizedHeightRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse
+ */
+export declare class QueryGetTssAddressByFinalizedHeightResponse extends Message<QueryGetTssAddressByFinalizedHeightResponse> {
+  /**
+   * @generated from field: string eth = 1;
+   */
+  eth: string;
+
+  /**
+   * @generated from field: string btc = 2;
+   */
+  btc: string;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressByFinalizedHeightResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryGetTssAddressByFinalizedHeightResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressByFinalizedHeightResponse;
+
+  static equals(a: QueryGetTssAddressByFinalizedHeightResponse | PlainMessage<QueryGetTssAddressByFinalizedHeightResponse> | undefined, b: QueryGetTssAddressByFinalizedHeightResponse | PlainMessage<QueryGetTssAddressByFinalizedHeightResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssHistoryRequest
+ */
+export declare class QueryTssHistoryRequest extends Message<QueryTssHistoryRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryTssHistoryRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssHistoryRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssHistoryRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssHistoryRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssHistoryRequest;
+
+  static equals(a: QueryTssHistoryRequest | PlainMessage<QueryTssHistoryRequest> | undefined, b: QueryTssHistoryRequest | PlainMessage<QueryTssHistoryRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryTssHistoryResponse
+ */
+export declare class QueryTssHistoryResponse extends Message<QueryTssHistoryResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.observer.TSS tss_list = 1;
+   */
+  tssList: TSS[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryTssHistoryResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryTssHistoryResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryTssHistoryResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryTssHistoryResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryTssHistoryResponse;
+
+  static equals(a: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined, b: QueryTssHistoryResponse | PlainMessage<QueryTssHistoryResponse> | undefined): boolean;
+}
 
 /**
  * @generated from message zetachain.zetacore.observer.QueryProveRequest
@@ -129,6 +541,59 @@ export declare class QueryParamsResponse extends Message<QueryParamsResponse> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryParamsResponse;
 
   static equals(a: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined, b: QueryParamsResponse | PlainMessage<QueryParamsResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryHasVotedRequest
+ */
+export declare class QueryHasVotedRequest extends Message<QueryHasVotedRequest> {
+  /**
+   * @generated from field: string ballot_identifier = 1;
+   */
+  ballotIdentifier: string;
+
+  /**
+   * @generated from field: string voter_address = 2;
+   */
+  voterAddress: string;
+
+  constructor(data?: PartialMessage<QueryHasVotedRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryHasVotedRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHasVotedRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHasVotedRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHasVotedRequest;
+
+  static equals(a: QueryHasVotedRequest | PlainMessage<QueryHasVotedRequest> | undefined, b: QueryHasVotedRequest | PlainMessage<QueryHasVotedRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.QueryHasVotedResponse
+ */
+export declare class QueryHasVotedResponse extends Message<QueryHasVotedResponse> {
+  /**
+   * @generated from field: bool has_voted = 1;
+   */
+  hasVoted: boolean;
+
+  constructor(data?: PartialMessage<QueryHasVotedResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.QueryHasVotedResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryHasVotedResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryHasVotedResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryHasVotedResponse;
+
+  static equals(a: QueryHasVotedResponse | PlainMessage<QueryHasVotedResponse> | undefined, b: QueryHasVotedResponse | PlainMessage<QueryHasVotedResponse> | undefined): boolean;
 }
 
 /**
@@ -730,6 +1195,11 @@ export declare class QueryBlameByIdentifierResponse extends Message<QueryBlameBy
  * @generated from message zetachain.zetacore.observer.QueryAllBlameRecordsRequest
  */
 export declare class QueryAllBlameRecordsRequest extends Message<QueryAllBlameRecordsRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
   constructor(data?: PartialMessage<QueryAllBlameRecordsRequest>);
 
   static readonly runtime: typeof proto3;
@@ -753,6 +1223,11 @@ export declare class QueryAllBlameRecordsResponse extends Message<QueryAllBlameR
    * @generated from field: repeated zetachain.zetacore.observer.Blame blame_info = 1;
    */
   blameInfo: Blame[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
 
   constructor(data?: PartialMessage<QueryAllBlameRecordsResponse>);
 

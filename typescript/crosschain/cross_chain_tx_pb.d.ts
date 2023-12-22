@@ -130,6 +130,32 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.crosschain.ZetaAccounting
+ */
+export declare class ZetaAccounting extends Message<ZetaAccounting> {
+  /**
+   * aborted_zeta_amount stores the total aborted amount for cctx of coin-type ZETA
+   *
+   * @generated from field: string aborted_zeta_amount = 1;
+   */
+  abortedZetaAmount: string;
+
+  constructor(data?: PartialMessage<ZetaAccounting>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.ZetaAccounting";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ZetaAccounting;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ZetaAccounting;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ZetaAccounting;
+
+  static equals(a: ZetaAccounting | PlainMessage<ZetaAccounting> | undefined, b: ZetaAccounting | PlainMessage<ZetaAccounting> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.OutboundTxParams
  */
 export declare class OutboundTxParams extends Message<OutboundTxParams> {

@@ -16,6 +16,7 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zeta-chain/fungible/params";
   }
+
   // Queries a ForeignCoins by index.
   rpc ForeignCoins(QueryGetForeignCoinsRequest) returns (QueryGetForeignCoinsResponse) {
     option (google.api.http).get = "/zeta-chain/fungible/foreign_coins/{index}";
@@ -44,6 +45,11 @@ service Query {
   // Queries all gas stability pool balances.
   rpc GasStabilityPoolBalanceAll(QueryAllGasStabilityPoolBalance) returns (QueryAllGasStabilityPoolBalanceResponse) {
     option (google.api.http).get = "/zeta-chain/zetacore/fungible/gas_stability_pool_balance";
+  }
+
+  // Code hash query the code hash of a contract.
+  rpc CodeHash(QueryCodeHashRequest) returns (QueryCodeHashResponse) {
+    option (google.api.http).get = "/zeta-chain/fungible/code_hash/{address}";
   }
 }
 
@@ -102,4 +108,12 @@ message QueryAllGasStabilityPoolBalanceResponse {
     string balance = 2;
   }
   repeated Balance balances = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryCodeHashRequest {
+  string address = 1;
+}
+
+message QueryCodeHashResponse {
+  string code_hash = 1;
 }
