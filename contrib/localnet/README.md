@@ -92,12 +92,14 @@ orchestrator/smoketest directory. The orchestrator is a Go program.
 
 ## LocalNet Governance Proposals
 
-Localnet can be used for testing the creation and execution of governance propoosals. A prefunded wallet address has been added and can be used to submit governance proposals to the localnet environment. 
+Localnet can be used for testing the creation and execution of governance propoosals. 
 
-LOCALNET_GOV_ADMIN_MNEMONIC="mercy oblige six giant absorb crunch derive tornado sleep friend blame border avocado fine script dilemma vacant dad buddy occur trigger energy today minimum"
-LOCALNET_GOV_ADMIN_ADDRESS=zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh
+Exec into the zetacored0 docker container and run the script to automatically generate proposals in a variety of states and then extends the voting window to one hour, allowing you time to view a proposal in a pending state. 
+```
+docker exec zetacored
 
-You can run the `contrib/localnet/scripts/create-gov-proposals.sh` to automatically generate proposals in a variety of states and then extends the voting window to one hour, allowing you time to view a proposal in a pending state. 
+/root/gov-proposals-testing.sh
+```
 
 ## References
 [Setup testnet reference](https://www.notion.so/zetachain/Set-up-athens-1-like-testnet-to-test-your-PRs-ac523eb5dd5d4e73902072ab7d85fa2f)
