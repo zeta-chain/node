@@ -73,7 +73,7 @@ jobs:
         with:
           version: v1.54
           skip-cache: true
-          args: --timeout=20m
+          args: --timeout=20m --out-format=json
 
   nosec_alert:
     runs-on: ubuntu-latest
