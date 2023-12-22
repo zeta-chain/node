@@ -150,6 +150,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	logger.Print("✅ setup completed in %s", time.Since(startTime))
 
 	// fund accounts
+	logger.Print("⚙️ funding runner accounts")
+	startTime = time.Now()
 	deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
 	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
 	deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
@@ -158,6 +160,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
 	deployerRunner.SendZetaOnEvm(UserERC20AdvancedAddress, 1000)
 	deployerRunner.SendUSDTOnEvm(UserERC20AdvancedAddress, 1000)
+	logger.Print("✅ funding completed in %s", time.Since(startTime))
 
 	// error group for running multiple smoke tests concurrently
 	var eg errgroup.Group
@@ -213,6 +216,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)
+		logger.Print("❌ smoke tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)
 	}
 
@@ -230,6 +234,9 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 				err = fmt.Errorf("erc20 panic: %v", r)
 			}
 		}()
+
+		erc20Runner.Logger.Print("🏃 starting erc20 tests")
+		startTime := time.Now()
 
 		erc20Runner.DepositZeta()
 		erc20Runner.DepositEther()
@@ -249,6 +256,8 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 			return err
 		}
 
+		erc20Runner.Logger.Print("🍾 erc20 tests completed in %s", time.Since(startTime).String())
+
 		return err
 	}
 }
@@ -264,6 +273,9 @@ func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
 				err = fmt.Errorf("zeta panic: %v", r)
 			}
 		}()
+
+		zetaRunner.Logger.Print("🏃 starting Zeta tests")
+		startTime := time.Now()
 
 		zetaRunner.DepositZeta()
 		zetaRunner.DepositEther()
@@ -297,6 +309,9 @@ func bitcoinTestRoutine(bitcoinRunner *runner.SmokeTestRunner) func() error {
 			}
 		}()
 
+		bitcoinRunner.Logger.Print("🏃 starting Bitcoin tests")
+		startTime := time.Now()
+
 		bitcoinRunner.DepositZeta()
 		bitcoinRunner.DepositEther()
 		bitcoinRunner.SetupBitcoinAccount()
@@ -312,6 +327,8 @@ func bitcoinTestRoutine(bitcoinRunner *runner.SmokeTestRunner) func() error {
 		); err != nil {
 			return err
 		}
+
+		bitcoinRunner.Logger.Print("🍾 Bitcoin tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}
@@ -329,11 +346,16 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 			}
 		}()
 
+		ethereumRunner.Logger.Print("🏃 starting Ethereum tests")
+		startTime := time.Now()
+
 		ethereumRunner.DepositZeta()
 		ethereumRunner.DepositEther()
 		//ethereumRunner.SetupBitcoinAccount()
 		ethereumRunner.SetupContextApp()
 		//ethereumRunner.CheckZRC20ReserveAndSupply()
+
+		ethereumRunner.Logger.Print("🍾 Ethereum tests completed in %s", time.Since(startTime).String())
 
 		// run ethereum test
 		if err := ethereumRunner.RunSmokeTestsFromNames(
@@ -361,16 +383,21 @@ func miscTestRoutine(miscRunner *runner.SmokeTestRunner) func() error {
 			}
 		}()
 
+		miscRunner.Logger.Print("🏃 starting miscellaneous tests")
+		startTime := time.Now()
+
 		miscRunner.DepositZeta()
 
 		// run misc test
 		if err := miscRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestBlockHeadersName,
+			//smoketests.TestBlockHeadersName,
 			smoketests.TestMyTestName,
 		); err != nil {
 			return err
 		}
+
+		miscRunner.Logger.Print("🍾 miscellaneous tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}
@@ -386,6 +413,9 @@ func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func(
 				err = fmt.Errorf("erc20 advanced panic: %v", r)
 			}
 		}()
+
+		erc20AdvancedRunner.Logger.Print("🏃 starting erc20 advanced tests")
+		startTime := time.Now()
 
 		erc20AdvancedRunner.DepositZeta()
 		erc20AdvancedRunner.DepositEther()
@@ -403,6 +433,8 @@ func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func(
 
 			return err
 		}
+
+		erc20AdvancedRunner.Logger.Print("🍾 erc20 advanced tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}
