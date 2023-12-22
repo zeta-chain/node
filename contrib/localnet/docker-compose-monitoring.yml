@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    hostname: grafana
+    volumes:
+      - ./grafana/datasource.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - ./grafana/dashboards/:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.30
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    hostname: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.31
+
+  ethbalance:
+    image: peterlee0808/ethbalance
+    container_name: ethbalance
+    hostname: ethbalance
+    volumes:
+      - ./grafana/addresses.txt:/app/addresses.txt
+    ports:
+      - "9015:9015"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.32
+    environment:
+      - GETH=http://eth:8545
+
+networks:
+  mynetwork:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
