@@ -101,6 +101,12 @@ func (k Keeper) DeployZRC20Contract(
 	if chain == nil {
 		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %s not found", chainStr)
 	}
+	// Check if Contract has already been deployed for Asset
+	_, found := k.GetForeignCoinFromAsset(ctx, erc20Contract, chainID)
+	if found {
+		return common.Address{}, types.ErrForeignCoinAlreadyExist
+	}
+
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrSystemContractNotFound, "system contract not found")
@@ -118,7 +124,6 @@ func (k Keeper) DeployZRC20Contract(
 	if err != nil {
 		return common.Address{}, cosmoserrors.Wrapf(types.ErrABIPack, "failed to deploy ZRC20 contract: %s, %s", name, err.Error())
 	}
-
 	coin, _ := k.GetForeignCoins(ctx, contractAddr.Hex())
 	coin.CoinType = coinType
 	coin.Name = name
@@ -571,7 +576,7 @@ func (k Keeper) CallEVM(
 	k.Logger(ctx).Debug("calling EVM", "from", from, "contract", contract, "value", value, "method", method)
 	resp, err := k.CallEVMWithData(ctx, from, &contract, data, commit, noEthereumTxEvent, value, gasLimit)
 	if err != nil {
-		errMes := fmt.Sprintf("contract call failed: method '%s', contract '%s'", method, contract.Hex())
+		errMes := fmt.Sprintf("contract call failed: method '%s', contract '%s', args: %v", method, contract.Hex(), args)
 
 		// if it is a revert error then add the revert reason to the error message
 		revertErr, ok := err.(*evmtypes.RevertError)

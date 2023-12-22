@@ -133,6 +133,11 @@ export declare enum ChainName {
   btc_testnet = 12,
 
   /**
+   * @generated from enum value: sepolia_testnet = 13;
+   */
+  sepolia_testnet = 13,
+
+  /**
    *  LocalNet
    *  zeta_localnet = 13;
    *

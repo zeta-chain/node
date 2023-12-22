@@ -1,9 +1,9 @@
 # tx fungible update-contract-bytecode
 
-Broadcast message MsgUpdateContractBytecode
+Broadcast message UpdateContractBytecode
 
 ```
-zetacored tx fungible update-contract-bytecode [contractAddress] [newBytecodeAddress] [flags]
+zetacored tx fungible update-contract-bytecode [contract-address] [new-code-hash] [flags]
 ```
 
 ### Options
@@ -40,7 +40,7 @@ zetacored tx fungible update-contract-bytecode [contractAddress] [newBytecodeAdd
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/jjvincent/.zetacored")
+      --home string         directory for config and data
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors
@@ -49,3 +49,4 @@ zetacored tx fungible update-contract-bytecode [contractAddress] [newBytecodeAdd
 ### SEE ALSO
 
 * [zetacored tx fungible](zetacored_tx_fungible.md)	 - fungible transactions subcommands
+

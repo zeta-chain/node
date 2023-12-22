@@ -23,16 +23,16 @@ import (
 
 const numHeadersToTest = 100
 
-func TestGetEthereumHeader(t *testing.T) {
+func generateHeader() {
 	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
 	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
-	fmt.Printf("Header: %v\n", header)
 	file, _ := os.Create("test_data/eth_header_18495266.json")
 	b, _ := header.MarshalJSON()
 	file.Write(b)
 }
 
 func TestTrueEthereumHeader(t *testing.T) {
+	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./test_data/eth_header_18495266.json")
@@ -41,7 +41,6 @@ func TestTrueEthereumHeader(t *testing.T) {
 	headerBytes := make([]byte, 4096)
 	n, err := file.Read(headerBytes)
 	require.NoError(t, err)
-	fmt.Printf("Header bytes: %s\n", string(headerBytes[:n]))
 	err = header.UnmarshalJSON(headerBytes[:n])
 	require.NoError(t, err)
 	var buffer bytes.Buffer
@@ -54,6 +53,7 @@ func TestTrueEthereumHeader(t *testing.T) {
 }
 
 func TestFalseEthereumHeader(t *testing.T) {
+	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./test_data/eth_header_18495266.json")
@@ -62,7 +62,6 @@ func TestFalseEthereumHeader(t *testing.T) {
 	headerBytes := make([]byte, 4096)
 	n, err := file.Read(headerBytes)
 	require.NoError(t, err)
-	fmt.Printf("Header bytes: %s\n", string(headerBytes[:n]))
 	err = header.UnmarshalJSON(headerBytes[:n])
 	require.NoError(t, err)
 	hash := header.Hash()

@@ -8,6 +8,10 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
+	invalidCoreParamsGen := types.DefaultGenesis()
+	coreParams := types.GetCoreParams().CoreParams
+	invalidCoreParamsGen.CoreParamsList.CoreParams = append(coreParams, coreParams[0])
+
 	for _, tc := range []struct {
 		desc     string
 		genState *types.GenesisState
@@ -23,6 +27,11 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{},
 			valid:    true,
 		},
+		{
+			desc:     "invalid core params",
+			genState: invalidCoreParamsGen,
+			valid:    false,
+		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := tc.genState.Validate()
@@ -33,4 +42,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 		})
 	}
+
+	list := types.GetCoreParams()
+	list.CoreParams = append(list.CoreParams, list.CoreParams[0])
 }

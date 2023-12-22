@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/wire"
@@ -59,7 +61,7 @@ type ZetaCoreBridger interface {
 		chain common.Chain,
 		nonce uint64,
 		coinType common.CoinType,
-	) (string, error)
+	) (string, string, error)
 	PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
 	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error)
 	GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error)
@@ -77,18 +79,20 @@ type ZetaCoreBridger interface {
 	GetBlockHeight() (int64, error)
 	GetZetaBlockHeight() (int64, error)
 	GetLastBlockHeightByChain(chain common.Chain) (*crosschaintypes.LastBlockHeight, error)
-	GetAllPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, error)
-	GetPendingNoncesByChain(chainID int64) (crosschaintypes.PendingNonces, error)
+	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
+	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetAllOutTxTrackerByChain(chain common.Chain, order Order) ([]crosschaintypes.OutTxTracker, error)
+	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList(chain common.Chain) ([]string, error)
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBtcTssAddress() (string, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
 	GetLogger() *zerolog.Logger
+	ZetaChain() common.Chain
 	Pause()
 	Unpause()
+	GetZetaHotKeyBalance() (sdkmath.Int, error)
 }
 
 // BTCRPCClient is the interface for BTC RPC client

@@ -105,7 +105,7 @@ func BitcoinMerkleProofLiveTest(t *testing.T) {
 	}
 }
 
-func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
+func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte, blockVerbose *btcjson.GetBlockVerboseTxResult, outTxid string, tssAddress string, nonce uint64) {
 	// Deserialization should work for each transaction in the block
 	txns := []*btcutil.Tx{}
 	txBodies := [][]byte{}
@@ -118,7 +118,7 @@ func validateBitcoinBlock(t *testing.T, header *wire.BlockHeader, headerBytes []
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
 			msg := &crosschaintypes.MsgAddToOutTxTracker{
-				ChainId: common.BtcChainID(),
+				ChainId: common.BtcTestNetChain().ChainId,
 				Nonce:   nonce,
 				TxHash:  outTxid,
 			}

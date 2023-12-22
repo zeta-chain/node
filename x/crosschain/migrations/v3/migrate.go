@@ -9,11 +9,10 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// MigrateStore migrates the x/crosschain module state from the consensus version 1 to 2
-// This migration moves some data from the cross chain store to the observer store.
-// The data moved is the node accounts, permission flags and keygen.
+// MigrateStore adds a new TSSHistory store to crosschain module
 func MigrateStore(
 	ctx sdk.Context,
 	crossChainStoreKey storetypes.StoreKey,
@@ -21,8 +20,8 @@ func MigrateStore(
 ) error {
 
 	// Fetch existing TSS
-	existingTss := types.TSS{}
-	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(types.TSSKey))
+	existingTss := observertypes.TSS{}
+	store := prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSKey))
 	b := store.Get([]byte{0})
 	if b == nil {
 		return errors.New("TSS not found")
@@ -30,7 +29,7 @@ func MigrateStore(
 
 	// Add existing TSS to TSSHistory store
 	cdc.MustUnmarshal(b, &existingTss)
-	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(types.TSSHistoryKey))
+	store = prefix.NewStore(ctx.KVStore(crossChainStoreKey), types.KeyPrefix(observertypes.TSSHistoryKey))
 	b = cdc.MustMarshal(&existingTss)
 	store.Set(types.KeyPrefix(fmt.Sprintf("%d", existingTss.FinalizedZetaHeight)), b)
 

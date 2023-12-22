@@ -34,6 +34,12 @@ func (k Keeper) SetupChainGasCoinAndPool(
 
 	transferGasLimit := gasLimit
 
+	// Check if gas coin already exists
+	_, found := k.GetGasCoinForForeignCoin(ctx, chainID)
+	if found {
+		return ethcommon.Address{}, types.ErrForeignCoinAlreadyExist
+	}
+
 	// default values
 	if transferGasLimit == nil {
 		transferGasLimit = big.NewInt(21_000)

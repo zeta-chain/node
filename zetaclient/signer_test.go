@@ -7,7 +7,6 @@ import (
 )
 
 type SignerSuite struct {
-	signer *TestSigner
 }
 
 var _ = Suite(&SignerSuite{})
@@ -18,6 +17,7 @@ func (s *SignerSuite) SetUpTest(c *C) {
 	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
+	c.Assert(err, IsNil)
 	pkBytes := crypto.FromECDSAPub(&privateKey.PublicKey)
 	pk, err := btcec.ParsePubKey(pkBytes, btcec.S256())
 	c.Assert(err, IsNil)

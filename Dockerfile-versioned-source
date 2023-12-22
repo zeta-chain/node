@@ -1,0 +1,72 @@
+FROM golang:1.19-alpine
+
+ENV GOPATH /go
+ENV GOOS=linux
+ENV CGO_ENABLED=1
+
+ARG old_version
+
+RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux
+RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
+
+WORKDIR /go/delivery/zeta-node
+
+RUN mkdir -p  $GOPATH/bin/old
+RUN mkdir -p  $GOPATH/bin/new
+
+ENV NEW_VERSION=v42.0.0
+
+# Build new release from the current source
+COPY go.mod /go/delivery/zeta-node/
+COPY go.sum /go/delivery/zeta-node/
+RUN cd /go/delivery/zeta-node/ && go mod download
+COPY . /go/delivery/zeta-node/
+RUN cd /go/delivery/zeta-node/ && make install
+RUN cd /go/delivery/zeta-node/ && make install-smoketest
+RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/
+RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/new/
+RUN cp $GOPATH/bin/smoketest $GOPATH/bin/new/
+
+# Checkout and build old binary
+RUN git clone https://github.com/zeta-chain/node.git
+RUN cd node && git fetch
+
+RUN cd node && git checkout ${old_version}
+RUN cd node && make install
+RUN cd node && make install-smoketest
+RUN cp $GOPATH/bin/zetacored $GOPATH/bin/old/
+RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/old/
+RUN cp $GOPATH/bin/smoketest $GOPATH/bin/old/
+
+RUN git clone https://github.com/zeta-chain/cosmos-sdk.git
+RUN cd cosmos-sdk && git checkout zetavisor-v0.1.5
+RUN cd cosmos-sdk/cosmovisor && make zetavisor
+#
+#FROM golang:1.19-alpine
+
+#RUN apk --no-cache add openssh jq tmux vim curl bash
+RUN ssh-keygen -A
+WORKDIR /root
+
+RUN cp /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
+
+RUN cp /go/bin/zetaclientd /usr/local/bin
+RUN cp /go/bin/zetacored /usr/local/bin
+RUN cp /go/bin/smoketest /usr/local/bin
+RUN cp /go/bin/zetavisor /usr/local/bin
+
+COPY contrib/localnet/scripts /root
+COPY contrib/localnet/preparams /root/preparams
+COPY contrib/localnet/ssh_config /root/.ssh/config
+COPY contrib/localnet/zetacored /root/zetacored
+COPY contrib/localnet/tss /root/tss
+
+RUN chmod 755 /root/*.sh
+RUN chmod 700 /root/.ssh
+RUN chmod 600 /root/.ssh/*
+
+WORKDIR /usr/local/bin
+ENV SHELL /bin/sh
+EXPOSE 22
+
+ENTRYPOINT ["/usr/sbin/sshd", "-D"]

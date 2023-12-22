@@ -40,16 +40,31 @@ func (k Keeper) RemoveInTxTrackerIfExists(ctx sdk.Context, chainID int64, txHash
 		store.Delete(types.KeyPrefix(key))
 	}
 }
-func (k Keeper) GetAllInTxTracker(ctx sdk.Context) (list []types.InTxTracker) {
+func (k Keeper) GetAllInTxTrackerPaginated(ctx sdk.Context, pagination *query.PageRequest) (inTxTrackers []types.InTxTracker, pageRes *query.PageResponse, err error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	defer iterator.Close()
+	pageRes, err = query.Paginate(store, pagination, func(key []byte, value []byte) error {
+		var inTxTracker types.InTxTracker
+		if err := k.cdc.Unmarshal(value, &inTxTracker); err != nil {
+			return err
+		}
+		inTxTrackers = append(inTxTrackers, inTxTracker)
+		return nil
+	})
+	return
+}
+
+func (k Keeper) GetAllInTxTracker(ctx sdk.Context) (inTxTrackers []types.InTxTracker) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.InTxTrackerKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.InTxTracker
 		k.cdc.MustUnmarshal(iterator.Value(), &val)
-		list = append(list, val)
+		inTxTrackers = append(inTxTrackers, val)
 	}
-	return list
+	return
 }
 
 func (k Keeper) GetAllInTxTrackerForChain(ctx sdk.Context, chainID int64) (list []types.InTxTracker) {

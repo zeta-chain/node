@@ -371,3 +371,51 @@ export declare class QueryAllGasStabilityPoolBalanceResponse_Balance extends Mes
   static equals(a: QueryAllGasStabilityPoolBalanceResponse_Balance | PlainMessage<QueryAllGasStabilityPoolBalanceResponse_Balance> | undefined, b: QueryAllGasStabilityPoolBalanceResponse_Balance | PlainMessage<QueryAllGasStabilityPoolBalanceResponse_Balance> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryCodeHashRequest
+ */
+export declare class QueryCodeHashRequest extends Message<QueryCodeHashRequest> {
+  /**
+   * @generated from field: string address = 1;
+   */
+  address: string;
+
+  constructor(data?: PartialMessage<QueryCodeHashRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryCodeHashRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCodeHashRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCodeHashRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCodeHashRequest;
+
+  static equals(a: QueryCodeHashRequest | PlainMessage<QueryCodeHashRequest> | undefined, b: QueryCodeHashRequest | PlainMessage<QueryCodeHashRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.fungible.QueryCodeHashResponse
+ */
+export declare class QueryCodeHashResponse extends Message<QueryCodeHashResponse> {
+  /**
+   * @generated from field: string code_hash = 1;
+   */
+  codeHash: string;
+
+  constructor(data?: PartialMessage<QueryCodeHashResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.fungible.QueryCodeHashResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryCodeHashResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryCodeHashResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryCodeHashResponse;
+
+  static equals(a: QueryCodeHashResponse | PlainMessage<QueryCodeHashResponse> | undefined, b: QueryCodeHashResponse | PlainMessage<QueryCodeHashResponse> | undefined): boolean;
+}
+

@@ -20,6 +20,7 @@ message MsgAddToOutTxTracker {
 
 ## MsgAddToInTxTracker
 
+AddToInTxTracker adds a new record to the inbound transaction tracker.
 TODO https://github.com/zeta-chain/node/issues/1269
 
 ```proto
@@ -47,31 +48,9 @@ message MsgRemoveFromOutTxTracker {
 }
 ```
 
-## MsgCreateTSSVoter
-
-CreateTSSVoter votes on creating a TSS key and recording the information about it (public
-key, participant and operator addresses, finalized and keygen heights).
-
-If the vote passes, the information about the TSS key is recorded on chain
-and the status of the keygen is set to "success".
-
-Fails if the keygen does not exist, the keygen has been already
-completed, or the keygen has failed.
-
-Only node accounts are authorized to broadcast this message.
-
-```proto
-message MsgCreateTSSVoter {
-	string creator = 1;
-	string tss_pubkey = 2;
-	int64 keyGenZetaHeight = 3;
-	common.ReceiveStatus status = 4;
-}
-```
-
 ## MsgGasPriceVoter
 
-Submit information about the connected chain's gas price at a specific block
+GasPriceVoter submits information about the connected chain's gas price at a specific block
 height. Gas price submitted by each validator is recorded separately and a
 median index is updated.
 
@@ -84,18 +63,6 @@ message MsgGasPriceVoter {
 	uint64 price = 3;
 	uint64 block_number = 4;
 	string supply = 5;
-}
-```
-
-## MsgNonceVoter
-
-Deprecated.
-
-```proto
-message MsgNonceVoter {
-	string creator = 1;
-	int64 chain_id = 2;
-	uint64 nonce = 3;
 }
 ```
 
@@ -256,6 +223,28 @@ message MsgMigrateTssFunds {
 	string creator = 1;
 	int64 chain_id = 2;
 	string amount = 3;
+}
+```
+
+## MsgCreateTSSVoter
+
+CreateTSSVoter votes on creating a TSS key and recording the information about it (public
+key, participant and operator addresses, finalized and keygen heights).
+
+If the vote passes, the information about the TSS key is recorded on chain
+and the status of the keygen is set to "success".
+
+Fails if the keygen does not exist, the keygen has been already
+completed, or the keygen has failed.
+
+Only node accounts are authorized to broadcast this message.
+
+```proto
+message MsgCreateTSSVoter {
+	string creator = 1;
+	string tss_pubkey = 2;
+	int64 keyGenZetaHeight = 3;
+	common.ReceiveStatus status = 4;
 }
 ```
 

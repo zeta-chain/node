@@ -16,6 +16,9 @@ var DefaultGasPriceIncreaseFlags = GasPriceIncreaseFlags{
 	// Maximum gas price increase in percent of the median gas price
 	// 500 means the gas price can be increased by 5 times the median gas price at most
 	GasPriceIncreaseMax: 500,
+
+	// Maximum pending CCTXs to iterate for gas price increase
+	MaxPendingCctxs: 500,
 }
 
 var DefaultBlockHeaderVerificationFlags = BlockHeaderVerificationFlags{

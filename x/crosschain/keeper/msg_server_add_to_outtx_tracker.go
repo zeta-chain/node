@@ -15,7 +15,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 // AddToOutTxTracker adds a new record to the outbound transaction tracker.
@@ -76,6 +75,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			Nonce:    msg.Nonce,
 			HashList: []*types.TxHashList{&hash},
 		})
+		ctx.Logger().Info(fmt.Sprintf("Add tracker %s: , Block Height : %d ", getOutTrackerIndex(chain.ChainId, msg.Nonce), ctx.BlockHeight()))
 		return &types.MsgAddToOutTxTrackerResponse{}, nil
 	}
 
@@ -107,7 +107,13 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 func (k Keeper) VerifyOutTxBody(ctx sdk.Context, msg *types.MsgAddToOutTxTracker, txBytes []byte) error {
 	// get tss address
-	tss, err := k.GetTssAddress(ctx, &types.QueryGetTssAddressRequest{})
+	var bitcoinChainID int64
+	if common.IsBitcoinChain(msg.ChainId) {
+		bitcoinChainID = msg.ChainId
+	}
+	tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
+		BitcoinChainId: bitcoinChainID,
+	})
 	if err != nil {
 		return err
 	}
@@ -158,6 +164,9 @@ func VerifyEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEth 
 // VerifyBTCOutTxBody validates the SegWit sender address, nonce and chain id and tx hash
 // Note: 'msg' may contain fabricated information
 func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
+	if !common.IsBitcoinChain(msg.ChainId) {
+		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
+	}
 	tx, err := btcutil.NewTxFromBytes(txBytes)
 	if err != nil {
 		return err
@@ -170,16 +179,20 @@ func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc 
 		if err != nil {
 			return fmt.Errorf("failed to parse public key")
 		}
-		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(btcutil.Hash160(pubKey.SerializeCompressed()), config.BitconNetParams)
+		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(msg.ChainId)
+		if err != nil {
+			return fmt.Errorf("failed to get Bitcoin net params, error %s", err.Error())
+		}
+		addrP2WPKH, err := btcutil.NewAddressWitnessPubKeyHash(
+			btcutil.Hash160(pubKey.SerializeCompressed()),
+			bitcoinNetParams,
+		)
 		if err != nil {
 			return fmt.Errorf("failed to create P2WPKH address")
 		}
 		if addrP2WPKH.EncodeAddress() != tssBtc {
 			return fmt.Errorf("sender %s is not tss address", addrP2WPKH.EncodeAddress())
 		}
-	}
-	if common.BtcChainID() != msg.ChainId {
-		return fmt.Errorf("want btc chain id %d, got %d", common.BtcChainID(), msg.ChainId)
 	}
 	if len(tx.MsgTx().TxOut) < 1 {
 		return fmt.Errorf("outTx should have at least one output")

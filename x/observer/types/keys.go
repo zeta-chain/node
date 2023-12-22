@@ -49,7 +49,14 @@ const (
 	BlockHeaderKey            = "BlockHeader-value-"
 	BlockHeaderStateKey       = "BlockHeaderState-value-"
 
-	BallotListKey = "BallotList-value-"
+	BallotListKey      = "BallotList-value-"
+	TSSKey             = "TSS-value-"
+	TSSHistoryKey      = "TSS-History-value-"
+	TssFundMigratorKey = "FundsMigrator-value-"
+
+	PendingNoncesKeyPrefix = "PendingNonces-value-"
+	ChainNoncesKey         = "ChainNonces-value-"
+	NonceToCctxKeyPrefix   = "NonceToCctx-value-"
 )
 
 func GetBlameIndex(chainID int64, nonce uint64, digest string, height uint64) string {

@@ -16,7 +16,6 @@ func DefaultGenesis() *GenesisState {
 		OutTxTrackerList:   []OutTxTracker{},
 		InTxHashToCctxList: []InTxHashToCctx{},
 		GasPriceList:       []*GasPrice{},
-		ChainNoncesList:    []*ChainNonces{},
 		//CCTX:            []*Send{},
 
 	}
@@ -55,15 +54,6 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("duplicated index for gasPrice")
 		}
 		gasPriceIndexMap[elem.Index] = true
-	}
-	// Check for duplicated index in chainNonces
-	chainNoncesIndexMap := make(map[string]bool)
-
-	for _, elem := range gs.ChainNoncesList {
-		if _, ok := chainNoncesIndexMap[elem.Index]; ok {
-			return fmt.Errorf("duplicated index for chainNonces")
-		}
-		chainNoncesIndexMap[elem.Index] = true
 	}
 
 	// Check for duplicated index in send

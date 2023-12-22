@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -20,14 +19,6 @@ func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 	}
 }
 
-func Tss() *types.TSS {
-	return &types.TSS{
-		TssPubkey:           ed25519.GenPrivKey().PubKey().String(),
-		FinalizedZetaHeight: 1000,
-		KeyGenZetaHeight:    1000,
-	}
-}
-
 func GasPrice(t *testing.T, index string) *types.GasPrice {
 	r := newRandFromStringSeed(t, index)
 
@@ -39,19 +30,6 @@ func GasPrice(t *testing.T, index string) *types.GasPrice {
 		BlockNums:   []uint64{r.Uint64(), r.Uint64()},
 		Prices:      []uint64{r.Uint64(), r.Uint64()},
 		MedianIndex: 0,
-	}
-}
-
-func ChainNonces(t *testing.T, index string) *types.ChainNonces {
-	r := newRandFromStringSeed(t, index)
-
-	return &types.ChainNonces{
-		Creator:         AccAddress(),
-		Index:           index,
-		ChainId:         r.Int63(),
-		Nonce:           r.Uint64(),
-		Signers:         []string{AccAddress(), AccAddress()},
-		FinalizedHeight: r.Uint64(),
 	}
 }
 
@@ -129,5 +107,12 @@ func InTxHashToCctx(t *testing.T, inTxHash string) types.InTxHashToCctx {
 	return types.InTxHashToCctx{
 		InTxHash:  inTxHash,
 		CctxIndex: []string{StringRandom(r, 32), StringRandom(r, 32)},
+	}
+}
+
+func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
+	r := newRandFromStringSeed(t, index)
+	return types.ZetaAccounting{
+		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
 	}
 }

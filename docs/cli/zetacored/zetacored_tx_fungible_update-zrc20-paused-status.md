@@ -46,7 +46,7 @@ zetacored tx fungible update-zrc20-paused-status "address1,address2" 0
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data (default "/Users/jjvincent/.zetacored")
+      --home string         directory for config and data
       --log_format string   The logging format (json|plain) (default "plain")
       --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
       --trace               print out full stack trace on errors
