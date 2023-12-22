@@ -96,8 +96,7 @@ Localnet can be used for testing the creation and execution of governance propoo
 
 Exec into the zetacored0 docker container and run the script to automatically generate proposals in a variety of states and then extends the voting window to one hour, allowing you time to view a proposal in a pending state. 
 ```
-docker exec zetacored
-
+docker exec  -it zetacore0 bash
 /root/gov-proposals-testing.sh
 ```
 
