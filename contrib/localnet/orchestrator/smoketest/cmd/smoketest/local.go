@@ -315,6 +315,7 @@ func bitcoinTestRoutine(bitcoinRunner *runner.SmokeTestRunner) func() error {
 		bitcoinRunner.DepositEther()
 		bitcoinRunner.SetupBitcoinAccount()
 		bitcoinRunner.DepositBTC()
+		bitcoinRunner.SetupZEVMSwapApp()
 		//bitcoinRunner.CheckZRC20ReserveAndSupply()
 
 		// run bitcoin test
@@ -354,8 +355,6 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 		ethereumRunner.SetupContextApp()
 		//ethereumRunner.CheckZRC20ReserveAndSupply()
 
-		ethereumRunner.Logger.Print("🍾 Ethereum tests completed in %s", time.Since(startTime).String())
-
 		// run ethereum test
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
@@ -365,6 +364,8 @@ func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
+
+		ethereumRunner.Logger.Print("🍾 Ethereum tests completed in %s", time.Since(startTime).String())
 
 		return err
 	}
@@ -419,7 +420,6 @@ func erc20AdvancedTestRoutine(erc20AdvancedRunner *runner.SmokeTestRunner) func(
 		erc20AdvancedRunner.DepositZeta()
 		erc20AdvancedRunner.DepositEther()
 		erc20AdvancedRunner.DepositERC20()
-		erc20AdvancedRunner.SetupZEVMSwapApp()
 
 		// run erc20 advanced test
 		if err := erc20AdvancedRunner.RunSmokeTestsFromNames(
