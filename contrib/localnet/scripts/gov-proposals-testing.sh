@@ -21,6 +21,9 @@ zetacored tx gov vote 4 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend te
 
 # Create a few long lived proposals for variety of testing
 
+echo "Sleeping for 3 minutes to allow the voting period to end and the voting period will be increased to 1 week on future proposals"
+sleep 180
+
 zetacored tx gov submit-proposal proposals/proposal_voting_period.json --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
 zetacored tx gov vote 5 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12 
 
