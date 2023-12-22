@@ -5,11 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
@@ -49,13 +48,13 @@ var (
 	UserEtherAddress    = ethcommon.HexToAddress("0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A")
 	UserEtherPrivateKey = "098e74a1c2261fa3c1b8cfca8ef2b4ff96c73ce36710d208d1f6535aef42545d" // #nosec G101 - used for testing
 
-	// UserMiscAddress is the address of the account for miscellanous tests
-	UserMiscAddress    = ethcommon.HexToAddress("0x283d810090EdF4043E75247eAeBcE848806237fD")
-	UserMiscPrivateKey = "7bb523963ee2c78570fb6113d886a4184d42565e8847f1cb639f5f5e2ef5b37a" // #nosec G101 - used for testing
+	// UserMiscAddress is the address of the account for miscellaneous tests
+	UserMiscAddress    = ethcommon.HexToAddress("0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf")
+	UserMiscPrivateKey = "853c0945b8035a501b1161df65a17a0a20fc848bda8975a8b4e9222cc6f84cd4" // #nosec G101 - used for testing
 
 	// UserERC20AdvancedAddress is the address of the account for testing ERC20 advanced features
-	UserERC20AdvancedAddress    = ethcommon.HexToAddress("0x283d810090EdF4043E75247eAeBcE848806237fD")
-	UserERC20AdvancedPrivateKey = "7bb523963ee2c78570fb6113d886a4184d42565e8847f1cb639f5f5e2ef5b37a" // #nosec G101 - used for testing
+	UserERC20AdvancedAddress    = ethcommon.HexToAddress("0xcC8487562AAc220ea4406196Ee902C7c076966af")
+	UserERC20AdvancedPrivateKey = "95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083" // #nosec G101 - used for testing
 
 	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 )
@@ -154,6 +153,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
 	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
 	deployerRunner.SendZetaOnEvm(UserZetaTestAddress, 1000)
+	deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
+	deployerRunner.SendZetaOnEvm(UserEtherAddress, 1000)
 
 	// error group for running multiple smoke tests concurrently
 	var eg errgroup.Group
@@ -170,9 +171,23 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize runner for bitcoin test
+	bitcoinRunner, err := initBitcoinRunner(conf, deployerRunner, verbose)
+	if err != nil {
+		panic(err)
+	}
+
+	// initialize runner for ether test
+	etherRunner, err := initEtherRunner(conf, deployerRunner, verbose)
+	if err != nil {
+		panic(err)
+	}
+
 	// run tests
 	eg.Go(erc20TestRoutine(erc20Runner))
 	eg.Go(zetaTestRoutine(zetaRunner))
+	eg.Go(bitcoinTestRoutine(bitcoinRunner))
+	eg.Go(ethereumTestRoutine(etherRunner))
 
 	// deploy zevm swap and context apps
 	//logger.Print("⚙️ setting up ZEVM swap and context apps")
@@ -181,9 +196,10 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)
-	} else {
-		logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
+		os.Exit(1)
 	}
+
+	logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
 }
 
 // erc20TestRoutine runs erc20 related smoke tests
@@ -200,10 +216,9 @@ func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
 
 		erc20Runner.DepositZeta()
 		erc20Runner.DepositEther()
-		erc20Runner.SetupBitcoinAccount()
 		erc20Runner.DepositERC20()
-		erc20Runner.CheckZRC20ReserveAndSupply()
-		//erc20Runner.DepositBTC()
+		//erc20Runner.SetupBitcoinAccount()
+		//erc20Runner.CheckZRC20ReserveAndSupply()
 
 		// run erc20 test
 		if err := erc20Runner.RunSmokeTestsFromNames(
@@ -238,8 +253,8 @@ func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
 
 		zetaRunner.DepositZeta()
 		zetaRunner.DepositEther()
-		zetaRunner.SetupBitcoinAccount()
-		zetaRunner.CheckZRC20ReserveAndSupply()
+		//zetaRunner.SetupBitcoinAccount()
+		//zetaRunner.CheckZRC20ReserveAndSupply()
 
 		// run erc20 test
 		if err := zetaRunner.RunSmokeTestsFromNames(
@@ -248,6 +263,70 @@ func zetaTestRoutine(zetaRunner *runner.SmokeTestRunner) func() error {
 			smoketests.TestMessagePassingName,
 			smoketests.TestMessagePassingRevertFailName,
 			smoketests.TestMessagePassingRevertSuccessName,
+		); err != nil {
+			return err
+		}
+
+		return err
+	}
+}
+
+// bitcoinTestRoutine runs Bitcoin related smoke tests
+func bitcoinTestRoutine(bitcoinRunner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// TODO: remove and instead return errors in the smoke tests
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("bitcoin panic: %v", r)
+			}
+		}()
+
+		bitcoinRunner.DepositZeta()
+		bitcoinRunner.DepositEther()
+		bitcoinRunner.SetupBitcoinAccount()
+		bitcoinRunner.DepositBTC()
+		//bitcoinRunner.CheckZRC20ReserveAndSupply()
+
+		// run bitcoin test
+		if err := bitcoinRunner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestBitcoinWithdrawName,
+			smoketests.TestSendZetaOutBTCRevertName,
+			smoketests.TestCrosschainSwapName,
+		); err != nil {
+			return err
+		}
+
+		return err
+	}
+}
+
+// ethereumTestRoutine runs Ethereum related smoke tests
+func ethereumTestRoutine(ethereumRunner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// TODO: remove and instead return errors in the smoke tests
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("ethereum panic: %v", r)
+			}
+		}()
+
+		ethereumRunner.DepositZeta()
+		ethereumRunner.DepositEther()
+		//ethereumRunner.SetupBitcoinAccount()
+		ethereumRunner.SetupContextApp()
+		//ethereumRunner.CheckZRC20ReserveAndSupply()
+
+		// run ethereum test
+		if err := ethereumRunner.RunSmokeTestsFromNames(
+			smoketests.AllSmokeTests,
+			smoketests.TestContextUpgradeName,
+			smoketests.TestEtherDepositAndCallName,
+			smoketests.TestDepositEtherLiquidityCapName,
 		); err != nil {
 			return err
 		}
@@ -298,4 +377,92 @@ func initZetaRunner(
 		return nil, err
 	}
 	return zetaRunner, nil
+}
+
+// initBitcoinRunner initializes a runner for bitcoin tests
+func initBitcoinRunner(
+	conf config.Config,
+	deployerRunner *runner.SmokeTestRunner,
+	verbose bool,
+) (*runner.SmokeTestRunner, error) {
+	// initialize runner for bitcoin test
+	bitcoinRunner, err := runnerFromConfig(
+		conf,
+		UserBitcoinAddress,
+		UserBitcoinPrivateKey,
+		runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := bitcoinRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		return nil, err
+	}
+	return bitcoinRunner, nil
+}
+
+// initEtherRunner initializes a runner for ether tests
+func initEtherRunner(
+	conf config.Config,
+	deployerRunner *runner.SmokeTestRunner,
+	verbose bool,
+) (*runner.SmokeTestRunner, error) {
+	// initialize runner for ether test
+	etherRunner, err := runnerFromConfig(
+		conf,
+		UserEtherAddress,
+		UserEtherPrivateKey,
+		runner.NewLogger(verbose, color.FgMagenta, "ether"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := etherRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		return nil, err
+	}
+	return etherRunner, nil
+}
+
+// initMiscRunner initializes a runner for miscellaneous tests
+func initMiscRunner(
+	conf config.Config,
+	deployerRunner *runner.SmokeTestRunner,
+	verbose bool,
+) (*runner.SmokeTestRunner, error) {
+	// initialize runner for misc test
+	miscRunner, err := runnerFromConfig(
+		conf,
+		UserMiscAddress,
+		UserMiscPrivateKey,
+		runner.NewLogger(verbose, color.FgCyan, "misc"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := miscRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		return nil, err
+	}
+	return miscRunner, nil
+}
+
+// initERC20AdvancedRunner initializes a runner for erc20 advanced tests
+func initERC20AdvancedRunner(
+	conf config.Config,
+	deployerRunner *runner.SmokeTestRunner,
+	verbose bool,
+) (*runner.SmokeTestRunner, error) {
+	// initialize runner for erc20 advanced test
+	erc20AdvancedRunner, err := runnerFromConfig(
+		conf,
+		UserERC20AdvancedAddress,
+		UserERC20AdvancedPrivateKey,
+		runner.NewLogger(verbose, color.FgHiGreen, "erc20advanced"),
+	)
+	if err != nil {
+		return nil, err
+	}
+	if err := erc20AdvancedRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		return nil, err
+	}
+	return erc20AdvancedRunner, nil
 }

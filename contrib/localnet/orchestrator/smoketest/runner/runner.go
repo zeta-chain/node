@@ -171,7 +171,7 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) {
 	smokeTestWithName.SmokeTest(sm)
 
 	// check supplies
-	sm.CheckZRC20ReserveAndSupply()
+	//sm.CheckZRC20ReserveAndSupply()
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
 }

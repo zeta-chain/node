@@ -17,6 +17,23 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x6F57D5E7c6DBb75e59F
 echo "funding deployer address 0x5cC2fBb200A929B372e3016F1925DcF988E081fd with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x5cC2fBb200A929B372e3016F1925DcF988E081fd", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
+# unlock bitcoin tester accounts
+echo "funding deployer address 0x283d810090EdF4043E75247eAeBcE848806237fD with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x283d810090EdF4043E75247eAeBcE848806237fD", value: web3.toWei(100,"ether")})' attach http://eth:8545
+
+# unlock ethers tester accounts
+echo "funding deployer address 0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8D47Db7390AC4D3D449Cc20D799ce4748F97619A", value: web3.toWei(100,"ether")})' attach http://eth:8545
+
+# unlock miscellaneous tests accounts
+echo "funding deployer address 0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf", value: web3.toWei(100,"ether")})' attach http://eth:8545
+
+# unlock advanced erc20 tests accounts
+echo "funding deployer address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth:8545
+
+
 # unlock the TSS account
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
