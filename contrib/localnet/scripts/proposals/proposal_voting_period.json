@@ -1,0 +1,28 @@
+{
+  "title": "Gov Param Change",
+  "description": "Update voting period",
+  "metadata": "ipfs://QmYMEcLNY7yAfur8KtH2rcJTJutPNuGEJLaPrWEM6iAcpP",
+  "changes": [
+    {
+      "subspace": "gov",
+      "key": "votingparams",
+      "value": {
+        "voting_period": "604800"
+      }
+    },
+    {
+      "subspace": "gov",
+      "key": "depositparams",
+      "value": {
+        "min_deposit": [
+          {
+            "denom": "azeta",
+            "amount": "1000000"
+          }
+        ],
+        "max_deposit_period": "604800"
+      }
+    }
+  ],
+  "deposit": "10000000azeta"
+}
