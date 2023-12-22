@@ -1,16 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -134,6 +135,9 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
 	deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
 
+	// error group for running multiple smoke tests concurrently
+	var eg errgroup.Group
+
 	// initialize runner for erc20 test
 	erc20Runner, err := runnerFromConfig(
 		conf,
@@ -148,15 +152,38 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// run erc20 test
-	erc20Runner.WG.Add(1)
-	go func() {
+	// run tests
+	eg.Go(erc20TestRoutine(erc20Runner))
+
+	// deploy zevm swap and context apps
+	//logger.Print("⚙️ setting up ZEVM swap and context apps")
+	//sm.SetupZEVMSwapApp()
+	//sm.SetupContextApp()
+
+	if err := eg.Wait(); err != nil {
+		logger.Print("❌ %v", err)
+	} else {
+		logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
+	}
+}
+
+func erc20TestRoutine(erc20Runner *runner.SmokeTestRunner) func() error {
+	return func() (err error) {
+		// return an error on panic
+		// TODO: remove and instead return errors in the smoke tests
+		// https://github.com/zeta-chain/node/issues/1500
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+		}()
+
 		erc20Runner.DepositZeta()
 		erc20Runner.DepositEther()
 		erc20Runner.SetupBitcoinAccount()
-		//erc20Runner.DepositBTC()
 		erc20Runner.DepositERC20()
 		erc20Runner.CheckZRC20ReserveAndSupply()
+		//erc20Runner.DepositBTC()
 
 		// run erc20 test
 		if err := erc20Runner.RunSmokeTestsFromNames(
@@ -169,31 +196,9 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 			//smoketests.TestERC20DepositAndCallRefundName,
 			//smoketests.TestWhitelistERC20Name,
 		); err != nil {
-			panic(err)
+			return err
 		}
-		erc20Runner.WG.Done()
-	}()
 
-	// deploy zevm swap and context apps
-	//logger.Print("⚙️ setting up ZEVM swap and context apps")
-	//sm.SetupZEVMSwapApp()
-	//sm.SetupContextApp()
-
-	deployerRunner.WG.Wait()
-	erc20Runner.WG.Wait()
-	logger.Print("✅ smoke tests completed in %s", time.Since(testStartTime).String())
-}
-
-func getConfig(cmd *cobra.Command) (config.Config, error) {
-	configFile, err := cmd.Flags().GetString(flagConfigFile)
-	if err != nil {
-		return config.Config{}, err
+		return err
 	}
-
-	// use default config if no config file is specified
-	if configFile == "" {
-		return config.DefaultConfig(), nil
-	}
-
-	return config.ReadConfig(configFile)
 }

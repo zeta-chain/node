@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"google.golang.org/grpc"
 
 	"github.com/btcsuite/btcd/rpcclient"
@@ -23,6 +25,21 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// getConfig returns config from file from the command line flag
+func getConfig(cmd *cobra.Command) (config.Config, error) {
+	configFile, err := cmd.Flags().GetString(flagConfigFile)
+	if err != nil {
+		return config.Config{}, err
+	}
+
+	// use default config if no config file is specified
+	if configFile == "" {
+		return config.DefaultConfig(), nil
+	}
+
+	return config.ReadConfig(configFile)
+}
 
 // setCosmosConfig set account prefix to zeta
 func setCosmosConfig() {
