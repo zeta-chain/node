@@ -69,7 +69,7 @@ func (sm *SmokeTestRunner) DepositBTC() {
 		panic(err)
 	}
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 		balance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 		if err != nil {
 			panic(err)

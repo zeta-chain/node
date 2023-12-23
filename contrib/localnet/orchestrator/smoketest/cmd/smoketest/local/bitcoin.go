@@ -37,10 +37,12 @@ func bitcoinTestRoutine(
 
 		// funding the account
 		deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
+		deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
 
 		// depositing the necessary tokens on ZetaChain
 		bitcoinRunner.DepositZeta()
 		bitcoinRunner.DepositEther()
+		bitcoinRunner.DepositERC20()
 		bitcoinRunner.SetupBitcoinAccount()
 		bitcoinRunner.DepositBTC()
 		bitcoinRunner.SetupZEVMSwapApp()
@@ -50,7 +52,7 @@ func bitcoinTestRoutine(
 			smoketests.AllSmokeTests,
 			smoketests.TestBitcoinWithdrawName,
 			smoketests.TestSendZetaOutBTCRevertName,
-			//smoketests.TestCrosschainSwapName,
+			smoketests.TestCrosschainSwapName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}

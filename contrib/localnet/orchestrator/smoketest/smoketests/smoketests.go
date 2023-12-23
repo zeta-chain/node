@@ -22,7 +22,6 @@ const (
 	TestEtherDepositAndCallName         = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestBlockHeadersName                = "block_headers"
-	TestWhitelistERC20Name              = "whitelist_erc20"
 	TestMyTestName                      = "my_test"
 )
 
@@ -122,11 +121,6 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestBlockHeadersName,
 		"fetch block headers of EVM on ZetaChain",
 		TestBlockHeaders,
-	},
-	{
-		TestWhitelistERC20Name,
-		"whitelist ERC20",
-		TestWhitelistERC20,
 	},
 	{
 		TestMyTestName,

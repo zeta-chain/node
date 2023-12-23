@@ -100,7 +100,6 @@ func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
-	sm.Logger.Info("Withdraws receipt: status %d", receipt.Status)
 
 	cctxs := utils.WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.CctxClient, 3, sm.Logger)
 	if len(cctxs) != 3 {

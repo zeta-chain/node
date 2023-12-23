@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 	"time"
 
@@ -175,7 +176,11 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error)
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("%s failed: %v", smokeTestWithName.Name, r)
+
+			stack := make([]byte, 4096)
+			n := runtime.Stack(stack, false)
+
+			err = fmt.Errorf("%s failed: %v, stack trace %s", smokeTestWithName.Name, r, stack[:n])
 		}
 	}()
 

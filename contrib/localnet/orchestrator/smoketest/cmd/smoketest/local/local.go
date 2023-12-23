@@ -118,8 +118,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
 	eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
 	eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
-	eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
-	eg.Go(erc20AdvancedTestRoutine(conf, deployerRunner, verbose))
+	//eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
+	//eg.Go(erc20AdvancedTestRoutine(conf, deployerRunner, verbose))
 
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)

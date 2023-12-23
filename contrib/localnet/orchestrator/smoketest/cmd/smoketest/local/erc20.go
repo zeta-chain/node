@@ -48,10 +48,11 @@ func erc20TestRoutine(
 		if err := erc20Runner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
 			smoketests.TestDepositAndCallRefundName,
-			//smoketests.TestMultipleERC20DepositName,
+			smoketests.TestMultipleERC20DepositName,
 			smoketests.TestWithdrawERC20Name,
-			//smoketests.TestMultipleWithdrawsName,
-			//smoketests.TestERC20DepositAndCallRefundName,
+			smoketests.TestMultipleWithdrawsName,
+			smoketests.TestERC20DepositAndCallRefundName,
+			smoketests.TestZRC20SwapName,
 		); err != nil {
 			return fmt.Errorf("erc20 tests failed: %v", err)
 		}
@@ -98,10 +99,8 @@ func erc20AdvancedTestRoutine(
 		// run erc20 advanced test
 		if err := erc20AdvancedRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestZRC20SwapName,
 			//smoketests.TestPauseZRC20Name,
 			//smoketests.TestUpdateBytecodeName,
-			//smoketests.TestWhitelistERC20Name,
 		); err != nil {
 			return fmt.Errorf("erc20 advanced tests failed: %v", err)
 		}

@@ -48,12 +48,7 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("CCTX has been aborted and the erc20 has been refunded on ZetaChain")
 
-	amount = big.NewInt(1e7)
-	goerliBalance, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-
+	// test refund when there is a liquidity pool
 	sm.Logger.Info("Sending a deposit that should revert with a liquidity pool")
 
 	sm.Logger.Info("Creating the liquidity pool USTD/ZETA")
@@ -63,11 +58,18 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("Liquidity pool created")
 
+	goerliBalance, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
 	// send the deposit
+	amount = big.NewInt(1e7)
 	inTxHash, err = sendInvalidUSDTDeposit(sm, amount)
 	if err != nil {
 		panic(err)
 	}
+	goerliBalanceAfterSend := big.NewInt(0).Sub(goerliBalance, amount)
 
 	// there is a liquidity pool, therefore the cctx should revert
 	cctx = utils.WaitCctxMinedByInTxHash(inTxHash, sm.CctxClient, sm.Logger)
@@ -79,10 +81,6 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 
 	// get revert tx
 	revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-	_, _, err = sm.GoerliClient.TransactionByHash(context.Background(), ethcommon.HexToHash(revertTxHash))
-	if err != nil {
-		panic(err)
-	}
 	receipt, err := sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(revertTxHash))
 	if err != nil {
 		panic(err)
@@ -92,24 +90,31 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	}
 
 	// check that the erc20 in the reverted cctx was refunded on Goerli
-	newGoerliBalance, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	goerliBalanceAfterRefund, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	// the new balance must be higher than the previous one because of the revert refund
-	if goerliBalance.Cmp(newGoerliBalance) != -1 {
-		panic(fmt.Sprintf("expected balance to be higher than %s after refund; got %s", goerliBalance.String(), newGoerliBalance.String()))
+	if goerliBalanceAfterSend.Cmp(goerliBalanceAfterRefund) != -1 {
+		panic(fmt.Sprintf(
+			"expected balance to be higher after refund than after send %s < %s",
+			goerliBalanceAfterSend.String(),
+			goerliBalanceAfterRefund.String(),
+		))
 	}
 	// it must also be lower than the previous balance + the amount because of the gas fee for the revert tx
-	balancePlusAmount := goerliBalance.Add(goerliBalance, amount)
-	if newGoerliBalance.Cmp(balancePlusAmount) != -1 {
-		panic(fmt.Sprintf("expected balance to be lower than %s after refund; got %s", balancePlusAmount.String(), newGoerliBalance.String()))
+	if goerliBalanceAfterRefund.Cmp(goerliBalance) != -1 {
+		panic(fmt.Sprintf(
+			"expected balance to be lower after refund than before send %s < %s",
+			goerliBalanceAfterRefund.String(),
+			goerliBalance.String()),
+		)
 	}
 
 	sm.Logger.Info("ERC20 CCTX successfully reverted")
 	sm.Logger.Info("\tbalance before refund: %s", goerliBalance.String())
 	sm.Logger.Info("\tamount: %s", amount.String())
-	sm.Logger.Info("\tbalance after refund: %s", newGoerliBalance.String())
+	sm.Logger.Info("\tbalance after refund: %s", goerliBalanceAfterRefund.String())
 }
 
 func createZetaERC20LiquidityPool(sm *runner.SmokeTestRunner) error {
@@ -150,20 +155,12 @@ func createZetaERC20LiquidityPool(sm *runner.SmokeTestRunner) error {
 }
 
 func sendInvalidUSDTDeposit(sm *runner.SmokeTestRunner, amount *big.Int) (string, error) {
-	// send the tx
 	USDT := sm.USDTERC20
-	tx, err := USDT.Mint(sm.GoerliAuth, amount)
+	tx, err := USDT.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {
 		return "", err
 	}
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
-	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
-
-	tx, err = USDT.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
-	if err != nil {
-		return "", err
-	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = sm.ERC20Custody.Deposit(

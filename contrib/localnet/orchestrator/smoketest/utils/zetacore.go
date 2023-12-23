@@ -31,9 +31,10 @@ func WaitCctxsMinedByInTxHash(
 	cctxsCount int,
 	logger infoLogger,
 ) []*crosschaintypes.CrossChainTx {
+	// wait for cctx to be mined
 	var cctxIndexes []string
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(1 * time.Second)
 		logger.Info("Waiting for cctx to be mined by inTxHash: %s", inTxHash)
 		res, err := cctxClient.InTxHashToCctx(context.Background(), &crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
 		if err != nil {
@@ -48,19 +49,25 @@ func WaitCctxsMinedByInTxHash(
 		logger.Info("Deposit receipt cctx index: %v", cctxIndexes)
 		break
 	}
+
+	// retrieve all cctxs data
 	var wg sync.WaitGroup
 	var cctxs []*crosschaintypes.CrossChainTx
+	var cctxsMutex sync.Mutex
+
 	for _, cctxIndex := range cctxIndexes {
 		cctxIndex := cctxIndex
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for {
-				time.Sleep(3 * time.Second)
+				time.Sleep(1 * time.Second)
 				res, err := cctxClient.Cctx(context.Background(), &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
 				if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
 					logger.Info("Deposit receipt cctx status: %+v; The cctx is processed", res.CrossChainTx.CctxStatus.Status.String())
+					cctxsMutex.Lock()
 					cctxs = append(cctxs, res.CrossChainTx)
+					cctxsMutex.Unlock()
 					break
 				} else if err != nil {
 					logger.Info("Error getting cctx by index: ", err.Error())
@@ -102,7 +109,7 @@ func WaitForBlockHeight(
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(time.Second * 5)
+		time.Sleep(1 * time.Second)
 		logger.Info("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
 	}
 }
