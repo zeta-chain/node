@@ -1,12 +1,8 @@
-package main
+package local
 
 import (
 	"context"
 	"time"
-
-	"github.com/spf13/cobra"
-
-	"google.golang.org/grpc"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,6 +12,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
@@ -24,6 +21,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"google.golang.org/grpc"
 )
 
 // getConfig returns config from file from the command line flag
