@@ -18,6 +18,12 @@ import (
 // this allows the USDT contract deployer to funds other accounts on EVM
 // amountUSDT is a multiple of 1e18
 func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) {
+	// the deployer might be sending USDT in different goroutines
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
 
 	// mint

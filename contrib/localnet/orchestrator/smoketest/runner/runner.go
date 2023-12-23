@@ -87,8 +87,9 @@ type SmokeTestRunner struct {
 	SystemContract       *systemcontract.SystemContract
 
 	// other
-	WG     sync.WaitGroup
 	Logger *Logger
+	WG     sync.WaitGroup
+	mutex  sync.Mutex
 }
 
 func NewSmokeTestRunner(
@@ -126,8 +127,9 @@ func NewSmokeTestRunner(
 		ZevmAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
 
-		WG:     sync.WaitGroup{},
 		Logger: logger,
+
+		WG: sync.WaitGroup{},
 	}
 }
 
@@ -272,4 +274,14 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 		return err
 	}
 	return nil
+}
+
+// Lock locks the mutex
+func (sm *SmokeTestRunner) Lock() {
+	sm.mutex.Lock()
+}
+
+// Unlock unlocks the mutex
+func (sm *SmokeTestRunner) Unlock() {
+	sm.mutex.Unlock()
 }

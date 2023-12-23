@@ -16,6 +16,12 @@ import (
 // SendZetaOnEvm sends ZETA to an address on EVM
 // this allows the ZETA contract deployer to funds other accounts on EVM
 func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) {
+	// the deployer might be sending ZETA in different goroutines
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(zetaAmount))
 	tx, err := sm.ZetaEth.Transfer(sm.GoerliAuth, address, amount)
