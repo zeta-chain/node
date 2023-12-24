@@ -3,11 +3,14 @@ package zetaclient
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
+	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -557,28 +560,6 @@ var lowestOutTxNonceToObserve = map[int64]uint64{
 	80001: 154500, // Mumbai
 }
 
-// Some suggested true outTx hashes for Goerli
-var goerliOutTxHashes = map[uint64]string{
-	213887: "0xd4dfbe9998448303b60964d6f9fc914ae6573ceb603544443768b6fd574d0575",
-	213888: "0xa548d191023b73067bb171bda2dc0059d1b211a8cc334b0674a5ba51d0ba6f97",
-	213889: "0x8dff2ac41ae24216a275ca0e0012163f33476f3813662382d1371878867b0f68",
-	213890: "0x73d3c987ae63a635169dd7f7a05f10e1202f90517ba173c9ce90271e0ef3cbf3",
-	213891: "0xbd8adc3934cbcb46c49b5237cc4d3190bbf9e2c47fb5308c3fdc7b96aa9082dc",
-	213892: "0x87dac623fbf5ed02aebb772a07177dd9be43e409191eed94bfddc9fff7e6869d",
-	213893: "0xf4c8839850ed2efad9a5bd82d6a049a57c19a11a3fab569768e472ae832d5200",
-	213894: "0x224453da2f76876104aabdb78c6fbda03d8b562a5ba760eccf4c5fb97bcf3e1f",
-	213895: "0x377e3c67255d72db8bd0899e185b8f66e9c1c0e07874500a1b81ad97e66b590e",
-	213896: "0x7578426e68b950aa84b92dd2f5ae96118437cfefdc730c5f9ce13bc9c924b126",
-	213897: "0x7cd61c55a5f12b1188ed5dc7a4fc978390a17972a9b89a3f8bbab74a51ebb8e9",
-	213965: "0x3f5f73e04f4d10de7dae2f8c56534367ba93aecd604156fe0d6d3f9c6ae8d2bc",
-	213966: "0x1cfd94546906d66126b3f8f1eacd075642bd6fb7fbb1ca206ac5df42b5031bf0",
-	213967: "0x0d84ab57300c36cdaee63ebdefbf09611abbfd731796149cbabf335061ae4629",
-	213972: "0x57e36c8195902cfdd76d6b0aa7f7f89f251d06af63402791d8342b0f1414a69d",
-	213973: "0xf1da0ec12abf3c7c169c055e16ae92b2c65fc1a3a5fe57e9769b8e8de10c24f9",
-	213975: "0xb6f7e2c72206c04b7722ed4441a12cd14ad249a7199bfc8f43722c7cf6099359",
-	213978: "0xd7830c671efdeecb309bc3fa948fc3f28c6466c6a2ad248ec0b2ccec87c3f49d",
-}
-
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -638,15 +619,27 @@ func (ob *EVMChainClient) observeOutTx() {
 					continue
 				}
 
-				// hotfix: append some suggested true outTx hashes for Goerli
+				// hotfix: add a suggested outTx hash from 3rd party API
 				if ob.chain.ChainId == 5 {
-					txHash, found := goerliOutTxHashes[nonceInt]
-					if found {
-						ob.logger.ObserveOutTx.Info().Msgf("appending suggested outTx hash %s for chain %d nonce %d", txHash, ob.chain.ChainId, nonceInt)
-						suggested := types.TxHashList{
-							TxHash: txHash,
+					txHash, err := GetTxHashByNonce(ob.chain.ChainId, nonceInt)
+					if err == nil {
+						var isDup = false // duplicate or not
+						for _, hash := range tracker.HashList {
+							if strings.EqualFold(hash.TxHash, txHash) {
+								isDup = true
+								break
+							}
 						}
-						tracker.HashList = append(tracker.HashList, &suggested)
+						if !isDup { // append the suggested hash
+							ob.logger.ObserveOutTx.Info().Msgf("appending suggested outTx hash %s for chain %d nonce %d HashList length %d",
+								txHash, ob.chain.ChainId, nonceInt, len(tracker.HashList))
+							suggested := types.TxHashList{
+								TxHash: txHash,
+							}
+							tracker.HashList = append(tracker.HashList, &suggested)
+						}
+					} else {
+						ob.logger.ObserveOutTx.Error().Err(err).Msg("error GetTxHashByNonce")
 					}
 				}
 
@@ -685,6 +678,37 @@ func (ob *EVMChainClient) observeOutTx() {
 			return
 		}
 	}
+}
+
+type TxHashByNonceResponse struct {
+	TxHash string `json:"tx_hash"`
+}
+
+// GetTxHashByNonce get a suggested txHash by chainID and nonce from a REST API
+func GetTxHashByNonce(chainID int64, nonce uint64) (string, error) {
+	URL := fmt.Sprintf("https://instance-1.tail78431.ts.net/api/outtx_by_nonce/%d/%d", chainID, nonce)
+	resp, err := http.Get(URL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// read the response body
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("GetTxHashByNonce: status code %d for chain %d nonce %d", resp.StatusCode, chainID, nonce)
+	}
+
+	// decode the JSON response
+	var apiResp TxHashByNonceResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	if err != nil {
+		return "", fmt.Errorf("GetTxHashByNonce: error decoding JSON: %v for chain %d nonce %d", err, chainID, nonce)
+	}
+	if apiResp.TxHash == "" {
+		return "", fmt.Errorf("GetTxHashByNonce: empty txHash for chain %d nonce %d", chainID, nonce)
+	}
+
+	return apiResp.TxHash, nil
 }
 
 // return the status of txHash

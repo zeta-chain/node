@@ -623,7 +623,12 @@ func (signer *EVMSigner) ReportToOutTxTracker(zetaBridge ZetaCoreBridger, chainI
 				continue
 			}
 			if receipt != nil {
-				logger.Info().Msgf("ReportToOutTxTracker: receipt available for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+				_, isPending, err := signer.client.TransactionByHash(context.TODO(), ethcommon.HexToHash(outTxHash))
+				if err != nil || isPending {
+					logger.Info().Err(err).Msgf("ReportToOutTxTracker: error getting tx or tx is pending for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					time.Sleep(10 * time.Second)
+					continue
+				}
 				break
 			}
 		}
