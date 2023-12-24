@@ -79,7 +79,7 @@ jobs:
 
   smoke-test:
     runs-on: ["zeta-runners"] # 25 minutes
-    timeout-minutes: 35
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
 
@@ -125,7 +125,6 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
-          sleep 10
 
       - name: Stop Private Network
         if: always()
