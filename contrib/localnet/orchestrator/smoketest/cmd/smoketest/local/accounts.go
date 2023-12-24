@@ -29,9 +29,9 @@ var (
 	UserMiscAddress    = ethcommon.HexToAddress("0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf")
 	UserMiscPrivateKey = "853c0945b8035a501b1161df65a17a0a20fc848bda8975a8b4e9222cc6f84cd4" // #nosec G101 - used for testing
 
-	// UserERC20AdvancedAddress is the address of the account for testing ERC20 advanced features
-	UserERC20AdvancedAddress    = ethcommon.HexToAddress("0xcC8487562AAc220ea4406196Ee902C7c076966af")
-	UserERC20AdvancedPrivateKey = "95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083" // #nosec G101 - used for testing
+	// UserAdminAddress is the address of the account for testing admin function features
+	UserAdminAddress    = ethcommon.HexToAddress("0xcC8487562AAc220ea4406196Ee902C7c076966af")
+	UserAdminPrivateKey = "95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083" // #nosec G101 - used for testing
 
 	FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 )

@@ -46,6 +46,29 @@ func setCosmosConfig() {
 	cosmosConf.Seal()
 }
 
+// initTestRunner initializes a runner for smoke tests
+// it creates a runner with an account and copy contracts from deployer runner
+func initTestRunner(
+	conf config.Config,
+	deployerRunner *runner.SmokeTestRunner,
+	userAddress ethcommon.Address,
+	userPrivKey string,
+	logger *runner.Logger,
+) (*runner.SmokeTestRunner, error) {
+	// initialize runner for smoke test
+	testRunner, err := runnerFromConfig(conf, userAddress, userPrivKey, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	// copy contracts from deployer runner
+	if err := testRunner.CopyAddressesFrom(deployerRunner); err != nil {
+		return nil, err
+	}
+
+	return testRunner, nil
+}
+
 // runnerFromConfig create test runner from config
 func runnerFromConfig(
 	conf config.Config,

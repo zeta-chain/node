@@ -36,13 +36,20 @@ func WaitCctxsMinedByInTxHash(
 	for {
 		time.Sleep(1 * time.Second)
 		logger.Info("Waiting for cctx to be mined by inTxHash: %s", inTxHash)
-		res, err := cctxClient.InTxHashToCctx(context.Background(), &crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
+		res, err := cctxClient.InTxHashToCctx(
+			context.Background(),
+			&crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash},
+		)
 		if err != nil {
 			logger.Info("Error getting cctx by inTxHash: %s", err.Error())
 			continue
 		}
 		if len(res.InTxHashToCctx.CctxIndex) < cctxsCount {
-			logger.Info("Waiting for %d cctxs to be mined; %d cctxs are mined", cctxsCount, len(res.InTxHashToCctx.CctxIndex))
+			logger.Info(
+				"Waiting for %d cctxs to be mined; %d cctxs are mined",
+				cctxsCount,
+				len(res.InTxHashToCctx.CctxIndex),
+			)
 			continue
 		}
 		cctxIndexes = res.InTxHashToCctx.CctxIndex

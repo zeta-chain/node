@@ -3,7 +3,7 @@
 SMOKETEST_CMD=$1
 
 echo "waiting for geth RPC to start..."
-sleep 6
+sleep 2
 
 # unlock the deployer account
 echo "funding deployer address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 100 Ether"
@@ -38,9 +38,9 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea44
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
-# wait for the transaction to be mined
-echo "waiting for 6s for the transaction to be mined"
-sleep 6
+## wait for the transaction to be mined
+#echo "waiting for 6s for the transaction to be mined"
+#sleep 6
 
 # note: uncomment the following lines to print the balance of the deployer address if debugging is needed
 #echo "the new balance of the deployer address:"

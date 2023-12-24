@@ -13,13 +13,6 @@ import (
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
 func TestContextUpgrade(sm *runner.SmokeTestRunner) {
-	goerliClient := sm.GoerliClient
-	bn, err := goerliClient.BlockNumber(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("GOERLI block number: %d", bn)
-
 	value := big.NewInt(1000000000000000) // in wei (1 eth)
 	data := make([]byte, 0, 32)
 	data = append(data, sm.ContextAppAddr.Bytes()...)
@@ -32,6 +25,9 @@ func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
 	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	sm.Logger.Info("  to: %s", signedTx.To().String())

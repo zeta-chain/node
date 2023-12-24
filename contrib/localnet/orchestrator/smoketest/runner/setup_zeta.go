@@ -32,7 +32,7 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 		if err != nil {
 			sm.Logger.Info("cctxClient.TSS error %s", err.Error())
 			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
-			time.Sleep(5 * time.Second)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		break

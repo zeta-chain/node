@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -22,24 +23,35 @@ func miscTestRoutine(
 		// https://github.com/zeta-chain/node/issues/1500
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("misc test panic: %v", r)
+				// print stack trace
+				stack := make([]byte, 4096)
+				n := runtime.Stack(stack, false)
+				err = fmt.Errorf("misc panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
 
 		// initialize runner for misc test
-		miscRunner, err := initMiscRunner(conf, deployerRunner, verbose)
+		miscRunner, err := initTestRunner(
+			conf,
+			deployerRunner,
+			UserMiscAddress,
+			UserMiscPrivateKey,
+			runner.NewLogger(verbose, color.FgCyan, "misc"),
+		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		miscRunner.Logger.Print("🏃 starting miscellaneous tests")
 		startTime := time.Now()
 
 		// funding the account
-		deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(UserMiscAddress, 1000)
+		miscRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
-		miscRunner.DepositZeta()
+		txZetaDeposit := miscRunner.DepositZeta()
+		miscRunner.WaitForMinedCCTX(txZetaDeposit)
 
 		// run misc test
 		if err := miscRunner.RunSmokeTestsFromNames(
@@ -54,26 +66,4 @@ func miscTestRoutine(
 
 		return err
 	}
-}
-
-// initMiscRunner initializes a runner for miscellaneous tests
-func initMiscRunner(
-	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
-	verbose bool,
-) (*runner.SmokeTestRunner, error) {
-	// initialize runner for misc test
-	miscRunner, err := runnerFromConfig(
-		conf,
-		UserMiscAddress,
-		UserMiscPrivateKey,
-		runner.NewLogger(verbose, color.FgCyan, "misc"),
-	)
-	if err != nil {
-		return nil, err
-	}
-	if err := miscRunner.CopyAddressesFrom(deployerRunner); err != nil {
-		return nil, err
-	}
-	return miscRunner, nil
 }

@@ -176,10 +176,9 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error)
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
 		if r := recover(); r != nil {
-
+			// print stack trace
 			stack := make([]byte, 4096)
 			n := runtime.Stack(stack, false)
-
 			err = fmt.Errorf("%s failed: %v, stack trace %s", smokeTestWithName.Name, r, stack[:n])
 		}
 	}()

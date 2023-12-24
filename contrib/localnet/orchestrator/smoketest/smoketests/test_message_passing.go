@@ -53,30 +53,25 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 		}
 	}
 
-	sm.WG.Add(1)
-	go func() {
-		defer sm.WG.Done()
-		sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
-		sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
-		receipt, err := sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
-		if err != nil {
-			panic(err)
-		}
-		for _, log := range receipt.Logs {
-			event, err := sm.ConnectorEth.ParseZetaReceived(*log)
-			if err == nil {
-				sm.Logger.Info("Received ZetaSent event:")
-				sm.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
-				sm.Logger.Info("  Zeta Value: %d", event.ZetaValue)
-				sm.Logger.Info("  src chainid: %d", event.SourceChainId)
-				if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
-					panic("Zeta value mismatch")
-				}
+	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
+	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
+	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	receipt, err = sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	if err != nil {
+		panic(err)
+	}
+	for _, log := range receipt.Logs {
+		event, err := sm.ConnectorEth.ParseZetaReceived(*log)
+		if err == nil {
+			sm.Logger.Info("Received ZetaSent event:")
+			sm.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
+			sm.Logger.Info("  Zeta Value: %d", event.ZetaValue)
+			sm.Logger.Info("  src chainid: %d", event.SourceChainId)
+			if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
+				panic("Zeta value mismatch")
 			}
 		}
-	}()
-	sm.WG.Wait()
+	}
 }
 
 func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
@@ -117,24 +112,20 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
-	sm.WG.Add(1)
-	go func() {
-		defer sm.WG.Done()
-		sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
-		cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
-		receipt, err := sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
-		if err != nil {
-			panic(err)
-		}
-		// expect revert tx to fail as well
-		if receipt.Status != 0 {
-			panic("expected revert tx to fail")
-		}
-		if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
-			panic("expected cctx to be aborted")
-		}
-	}()
-	sm.WG.Wait()
+
+	// expect revert tx to fail
+	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	receipt, err = sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	if err != nil {
+		panic(err)
+	}
+	// expect revert tx to fail as well
+	if receipt.Status != 0 {
+		panic("expected revert tx to fail")
+	}
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
+		panic("expected cctx to be aborted")
+	}
 }
 
 func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {

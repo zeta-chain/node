@@ -34,7 +34,7 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		TestDepositAndCallRefundName,
-		"deposit ZRC20 into ZEVM and call a contract that reverts; should refund",
+		"deposit ETH into ZEVM and call a contract that reverts; should refund",
 		TestDepositAndCallRefund,
 	},
 	{

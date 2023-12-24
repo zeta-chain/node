@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -22,25 +23,38 @@ func ethereumTestRoutine(
 		// https://github.com/zeta-chain/node/issues/1500
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("ethereum panic: %v", r)
+				// print stack trace
+				stack := make([]byte, 4096)
+				n := runtime.Stack(stack, false)
+				err = fmt.Errorf("ethereum panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
 
 		// initialize runner for ether test
-		ethereumRunner, err := initEtherRunner(conf, deployerRunner, verbose)
+		ethereumRunner, err := initTestRunner(
+			conf,
+			deployerRunner,
+			UserEtherAddress,
+			UserEtherPrivateKey,
+			runner.NewLogger(verbose, color.FgMagenta, "ether"),
+		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		ethereumRunner.Logger.Print("🏃 starting Ethereum tests")
 		startTime := time.Now()
 
 		// funding the account
-		deployerRunner.SendZetaOnEvm(UserEtherAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(UserEtherAddress, 1000)
+		ethereumRunner.WaitForTxReceiptOnEvm(txZetaSend)
 
 		// depositing the necessary tokens on ZetaChain
-		ethereumRunner.DepositZeta()
-		ethereumRunner.DepositEther()
+		txZetaDeposit := ethereumRunner.DepositZeta()
+		txEtherDeposit := ethereumRunner.DepositEther()
+		ethereumRunner.WaitForMinedCCTX(txZetaDeposit)
+		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
+
 		ethereumRunner.SetupContextApp()
 
 		// run ethereum test
@@ -48,7 +62,7 @@ func ethereumTestRoutine(
 			smoketests.AllSmokeTests,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
-			//smoketests.TestDepositEtherLiquidityCapName,
+			smoketests.TestDepositAndCallRefundName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
@@ -57,26 +71,4 @@ func ethereumTestRoutine(
 
 		return err
 	}
-}
-
-// initEtherRunner initializes a runner for ether tests
-func initEtherRunner(
-	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
-	verbose bool,
-) (*runner.SmokeTestRunner, error) {
-	// initialize runner for ether test
-	etherRunner, err := runnerFromConfig(
-		conf,
-		UserEtherAddress,
-		UserEtherPrivateKey,
-		runner.NewLogger(verbose, color.FgMagenta, "ether"),
-	)
-	if err != nil {
-		return nil, err
-	}
-	if err := etherRunner.CopyAddressesFrom(deployerRunner); err != nil {
-		return nil, err
-	}
-	return etherRunner, nil
 }

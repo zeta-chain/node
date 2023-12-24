@@ -46,7 +46,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((7*NUMOFNODES))
+  sleep 10
   echo "genesis.json created"
 fi
 
@@ -122,7 +122,6 @@ then
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
-   sleep 2
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
    sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml

@@ -13,43 +13,53 @@ import (
 )
 
 func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
-	//txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e9), []byte{})
-	//utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
-
 	sm.ZevmAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	tx, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
+	txCreatePair, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	txUSDTApprove, err := sm.USDTZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	txBTCApprove, err := sm.BTCZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
 
-	usdtBtcPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
+	// Fund ZEVMSwapApp with gas ZRC20s
+	txTransferETH, err := sm.ETHZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e7))
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("USDT-BTC pair addr %s", usdtBtcPair.Hex())
+	txTransferBTC, err := sm.BTCZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
+	if err != nil {
+		panic(err)
+	}
 
-	tx, err = sm.USDTZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txCreatePair, sm.Logger); receipt.Status != 1 {
+		panic("create pair failed")
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
-	sm.Logger.Info("USDT ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-
-	tx, err = sm.BTCZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
-	if err != nil {
-		panic(err)
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txUSDTApprove, sm.Logger); receipt.Status != 1 {
+		panic("usdt approve failed")
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
-	sm.Logger.Info("BTC ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txBTCApprove, sm.Logger); receipt.Status != 1 {
+		panic("btc approve failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txTransferETH, sm.Logger); receipt.Status != 1 {
+		panic("ETH ZRC20 transfer failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txTransferBTC, sm.Logger); receipt.Status != 1 {
+		panic("BTC ZRC20 transfer failed")
+	}
 
 	// Add 100 USDT liq and 0.001 BTC
-	tx, err = sm.UniswapV2Router.AddLiquidity(
+	txAddLiquidity, err := sm.UniswapV2Router.AddLiquidity(
 		sm.ZevmAuth,
 		sm.USDTZRC20Addr,
 		sm.BTCZRC20Addr,
@@ -61,29 +71,12 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	if err != nil {
-		sm.Logger.Info("Error liq %s", err.Error())
-		panic(err)
+		panic(fmt.Sprintf("Error liq %s", err.Error()))
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
-	if receipt.Status != 1 {
-		panic(fmt.Errorf("add liq receipt status is not 1"))
-	}
-	sm.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	// Fund ZEVMSwapApp with gas ZRC20s
-	sm.Logger.Info("Funding contracts ZEVMSwapApp with gas ZRC20s; 1e7 ETH, 1e6 BTC")
-	tx, err = sm.ETHZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e7))
-	if err != nil {
-		panic(err)
+	if receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, txAddLiquidity, sm.Logger); receipt.Status != 1 {
+		panic("add liq receipt status is not 1")
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
-	sm.Logger.Info("  USDT ZRC20 transfer receipt txhash %s status %d", receipt.TxHash, receipt.Status)
-	tx, err = sm.BTCZRC20.Transfer(sm.ZevmAuth, sm.ZEVMSwapAppAddr, big.NewInt(1e6))
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
-	sm.Logger.Info("  BTC ZRC20 transfer receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// msg would be [ZEVMSwapAppAddr, memobytes]
 	// memobytes is dApp specific; see the contracts/ZEVMSwapApp.sol for details

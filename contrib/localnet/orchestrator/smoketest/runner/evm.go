@@ -2,23 +2,31 @@ package runner
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// SendUSDTOnEvm sends USDT to an address on EVM
-// this allows the USDT contract deployer to funds other accounts on EVM
+// WaitForTxReceiptOnEvm waits for a tx receipt on EVM
+func (sm *SmokeTestRunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
+	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
+}
+
+// MintUSDTOnEvm mints USDT on EVM
 // amountUSDT is a multiple of 1e18
-func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) {
-	// the deployer might be sending USDT in different goroutines
+func (sm *SmokeTestRunner) MintUSDTOnEvm(amountUSDT int64) {
 	defer func() {
 		sm.Unlock()
 	}()
@@ -26,7 +34,6 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
 
-	// mint
 	tx, err := sm.USDTERC20.Mint(sm.GoerliAuth, amount)
 	if err != nil {
 		panic(err)
@@ -36,46 +43,36 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 		panic("mint failed")
 	}
 	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
+}
+
+// SendUSDTOnEvm sends USDT to an address on EVM
+// this allows the USDT contract deployer to funds other accounts on EVM
+// amountUSDT is a multiple of 1e18
+func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
+	// the deployer might be sending USDT in different goroutines
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
 
 	// transfer
-	tx, err = sm.USDTERC20.Transfer(sm.GoerliAuth, address, amount)
+	tx, err := sm.USDTERC20.Transfer(sm.GoerliAuth, address, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
-	if receipt.Status != 1 {
-		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
-	}
-	sm.Logger.Info("Transfer receipt tx hash: %s", tx.Hash().Hex())
+	return tx
 }
 
-func (sm *SmokeTestRunner) DepositERC20() {
+func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Print("✅ ERC20 deposited in %s", time.Since(startTime))
 	}()
 
-	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
-	utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
-
-	// checking balance diff
-	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
-
-	diff := big.NewInt(0)
-	diff.Sub(bal, initialBal)
-	if diff.Int64() != 1e18 {
-		panic("balance is not correct")
-	}
-	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
+	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
 
 func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
@@ -114,17 +111,12 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 }
 
 // DepositEther sends Ethers into ZEVM
-func (sm *SmokeTestRunner) DepositEther() {
+func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
 	}()
-
-	initialBalance, err := sm.ETHZRC20.BalanceOf(nil, sm.DeployerAddress)
-	if err != nil {
-		panic(err)
-	}
 
 	value := big.NewInt(1000000000000000000) // in wei (1 eth)
 	signedTx, err := sm.SendEther(sm.TSSAddress, value, nil)
@@ -139,6 +131,8 @@ func (sm *SmokeTestRunner) DepositEther() {
 	sm.Logger.Info("  to: %s", signedTx.To().String())
 	sm.Logger.Info("  value: %d", signedTx.Value())
 	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
+
+	return signedTx.Hash()
 
 	//{
 	//	sm.Logger.InfoLoud("Merkle Proof\n")
@@ -202,39 +196,6 @@ func (sm *SmokeTestRunner) DepositEther() {
 	//	}
 	//	sm.Logger.Info("OK: txProof verified")
 	//}
-
-	c := make(chan any)
-	sm.WG.Add(1)
-	go func() {
-		defer sm.WG.Done()
-		cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
-		if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
-			panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
-				cctx.CctxStatus.Status.String(),
-				cctx.CctxStatus.StatusMessage),
-			)
-		}
-		c <- 0
-	}()
-	sm.WG.Add(1)
-	go func() {
-		defer sm.WG.Done()
-		<-c
-
-		currentBalance, err := sm.ETHZRC20.BalanceOf(nil, sm.DeployerAddress)
-		if err != nil {
-			panic(err)
-		}
-		diff := big.NewInt(0)
-		diff.Sub(currentBalance, initialBalance)
-		sm.Logger.Info("eth zrc20 balance: %s", currentBalance.String())
-		if diff.Cmp(value) != 0 {
-			sm.Logger.Info("eth zrc20 bal wanted %d, got %d", value, diff)
-			panic("bal mismatch")
-		}
-
-	}()
-	sm.WG.Wait()
 }
 
 // SendEther sends ethers to the TSS on Goerli

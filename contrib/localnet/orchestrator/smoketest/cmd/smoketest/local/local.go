@@ -110,6 +110,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	deployerRunner.SetTSSAddresses()
 	deployerRunner.SetupEVM(contractsDeployed)
 	deployerRunner.SetZEVMContracts()
+	deployerRunner.MintUSDTOnEvm(10000)
 	logger.Print("✅ setup completed in %s", time.Since(startTime))
 
 	// run tests
@@ -119,7 +120,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
 	eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	//eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
-	//eg.Go(erc20AdvancedTestRoutine(conf, deployerRunner, verbose))
+	//eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
 
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)

@@ -40,12 +40,12 @@ func MustWaitForTxReceipt(
 		if time.Since(start) > 30*time.Second {
 			panic("waiting tx receipt timeout")
 		}
-		time.Sleep(1 * time.Second)
 		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
 		if err != nil {
 			if !errors.Is(err, ethereum.NotFound) {
 				logger.Info("fetching tx receipt error: ", err.Error())
 			}
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		if receipt != nil {

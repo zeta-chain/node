@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/fatih/color"
@@ -22,30 +23,45 @@ func bitcoinTestRoutine(
 		// https://github.com/zeta-chain/node/issues/1500
 		defer func() {
 			if r := recover(); r != nil {
-				err = fmt.Errorf("bitcoin panic: %v", r)
+				// print stack trace
+				stack := make([]byte, 4096)
+				n := runtime.Stack(stack, false)
+				err = fmt.Errorf("bitcoin panic: %v, stack trace %s", r, stack[:n])
 			}
 		}()
 
 		// initialize runner for bitcoin test
-		bitcoinRunner, err := initBitcoinRunner(conf, deployerRunner, verbose)
+		bitcoinRunner, err := initTestRunner(
+			conf,
+			deployerRunner,
+			UserBitcoinAddress,
+			UserBitcoinPrivateKey,
+			runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
+		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		bitcoinRunner.Logger.Print("🏃 starting Bitcoin tests")
 		startTime := time.Now()
 
 		// funding the account
-		deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
-		deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
+		txZetaSend := deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
+		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
+
+		bitcoinRunner.WaitForTxReceiptOnEvm(txZetaSend)
+		bitcoinRunner.WaitForTxReceiptOnEvm(txUSDTSend)
 
 		// depositing the necessary tokens on ZetaChain
-		bitcoinRunner.DepositZeta()
-		bitcoinRunner.DepositEther()
-		bitcoinRunner.DepositERC20()
+		txZetaDeposit := bitcoinRunner.DepositZeta()
+		txEtherDeposit := bitcoinRunner.DepositEther()
+		txERC20Deposit := bitcoinRunner.DepositERC20()
 		bitcoinRunner.SetupBitcoinAccount()
 		bitcoinRunner.DepositBTC()
 		bitcoinRunner.SetupZEVMSwapApp()
+		bitcoinRunner.WaitForMinedCCTX(txZetaDeposit)
+		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
+		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		// run bitcoin test
 		if err := bitcoinRunner.RunSmokeTestsFromNames(
@@ -61,26 +77,4 @@ func bitcoinTestRoutine(
 
 		return err
 	}
-}
-
-// initBitcoinRunner initializes a runner for bitcoin tests
-func initBitcoinRunner(
-	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
-	verbose bool,
-) (*runner.SmokeTestRunner, error) {
-	// initialize runner for bitcoin test
-	bitcoinRunner, err := runnerFromConfig(
-		conf,
-		UserBitcoinAddress,
-		UserBitcoinPrivateKey,
-		runner.NewLogger(verbose, color.FgYellow, "bitcoin"),
-	)
-	if err != nil {
-		return nil, err
-	}
-	if err := bitcoinRunner.CopyAddressesFrom(deployerRunner); err != nil {
-		return nil, err
-	}
-	return bitcoinRunner, nil
 }
