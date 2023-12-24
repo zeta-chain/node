@@ -16,6 +16,9 @@ const (
 	flagWaitForHeight     = "wait-for"
 	flagConfigFile        = "config"
 	flagVerbose           = "verbose"
+	flagTestAdmin         = "test-admin"
+	flagTestCustom        = "test-custom"
+	flagSkipRegular       = "skip-regular"
 )
 
 var (
@@ -48,6 +51,22 @@ func NewLocalCmd() *cobra.Command {
 		false,
 		"set to true to enable verbose logging",
 	)
+	cmd.Flags().Bool(
+		flagTestAdmin,
+		false,
+		"set to true to run admin tests",
+	)
+	cmd.Flags().Bool(
+		flagTestCustom,
+		false,
+		"set to true to run custom tests",
+	)
+	cmd.Flags().Bool(
+		flagSkipRegular,
+		false,
+		"set to true to skip regular tests",
+	)
+
 	return cmd
 }
 
@@ -66,6 +85,18 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
+	testAdmin, err := cmd.Flags().GetBool(flagTestAdmin)
+	if err != nil {
+		panic(err)
+	}
+	testCustom, err := cmd.Flags().GetBool(flagTestCustom)
+	if err != nil {
+		panic(err)
+	}
+	skipRegular, err := cmd.Flags().GetBool(flagSkipRegular)
+	if err != nil {
+		panic(err)
+	}
 
 	testStartTime := time.Now()
 	logger.Print("starting smoke tests")
@@ -115,12 +146,18 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// run tests
 	var eg errgroup.Group
-	eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-	eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-	eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
-	eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
-	//eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
-	//eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
+	if !skipRegular {
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
+	}
+	if testAdmin {
+		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
+	}
+	if testCustom {
+		eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
+	}
 
 	if err := eg.Wait(); err != nil {
 		logger.Print("❌ %v", err)
