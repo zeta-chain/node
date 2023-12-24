@@ -123,8 +123,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	setCosmosConfig()
 
 	// wait for Genesis
-	logger.Print("⏳ wait 35s for genesis")
-	time.Sleep(40 * time.Second)
+	logger.Print("⏳ wait 60s for genesis")
+	time.Sleep(60 * time.Second)
 
 	// initialize deployer runner with config
 	deployerRunner, err := runnerFromConfig(conf, DeployerAddress, DeployerPrivateKey, logger)
