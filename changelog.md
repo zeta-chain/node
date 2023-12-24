@@ -26,7 +26,6 @@
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
 
-
 ### Refactoring
 
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
