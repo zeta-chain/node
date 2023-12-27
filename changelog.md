@@ -25,6 +25,7 @@
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* fix smoke-test build issue with docker buildkit.
 
 ### Refactoring
 
