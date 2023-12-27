@@ -39,7 +39,7 @@
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
 
 ### Chores
-* renamed file `zetaclientd/aux.go` to `zetaclientd/aux_.go` to avoid complaints from go package resolver. 
+* renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
 
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 
