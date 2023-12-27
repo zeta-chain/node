@@ -78,7 +78,7 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: ["gcp-runners-athens"] # 25 minutes
+    runs-on: buildjet-4vcpu-ubuntu-2004 # 25 minutes
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v3
