@@ -15,11 +15,11 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
-		sm.Logger.Info("Bitcoin setup took %s\n", time.Since(startTime))
+		sm.Logger.Info("Bitcoin account setup took %s\n", time.Since(startTime))
 	}()
 
 	btc := sm.BtcRPCClient
-	_, err := btc.CreateWallet("smoketest", rpcclient.WithCreateWalletBlank())
+	_, err := btc.CreateWallet(sm.Name, rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		if !strings.Contains(err.Error(), "Database already exists") {
 			panic(err)
@@ -32,44 +32,47 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 	if err != nil {
 		panic(err)
 	}
+
+	// mine some blocks to get some BTC into the deployer address
 	_, err = btc.GenerateToAddress(101, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	bal, err := btc.GetBalance("*")
-	if err != nil {
-		panic(err)
-	}
+
+	//bal, err := btc.GetBalance("*")
+	//if err != nil {
+	//	panic(err)
+	//}
 	_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	bal, err = btc.GetBalance("*")
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("balance: %f", bal.ToBTC())
-
-	bals, err := btc.GetBalances()
-	if err != nil {
-		panic(err)
-	}
-	sm.Logger.Info("balances: ")
-	sm.Logger.Info("  mine (Deployer): %+v\n", bals.Mine)
-	if bals.WatchOnly != nil {
-		sm.Logger.Info("  watchonly (TSSAddress): %+v", bals.WatchOnly)
-	}
-	sm.Logger.Info("  TSS Address: %s", sm.BTCTSSAddress.EncodeAddress())
-	go func() {
-		// keep bitcoin chain going
-		for {
-			_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
-			if err != nil {
-				sm.Logger.Info(err.Error())
-			}
-			time.Sleep(5 * time.Second)
-		}
-	}()
+	//bal, err = btc.GetBalance("*")
+	//if err != nil {
+	//	panic(err)
+	//}
+	//sm.Logger.Info("balance: %f", bal.ToBTC())
+	//
+	//bals, err := btc.GetBalances()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//sm.Logger.Info("balances: ")
+	//sm.Logger.Info("  mine (Deployer): %+v\n", bals.Mine)
+	//if bals.WatchOnly != nil {
+	//	sm.Logger.Info("  watchonly (TSSAddress): %+v", bals.WatchOnly)
+	//}
+	//sm.Logger.Info("  TSS Address: %s", sm.BTCTSSAddress.EncodeAddress())
+	//go func() {
+	//	// keep bitcoin chain going
+	//	for {
+	//		_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
+	//		if err != nil {
+	//			sm.Logger.Info(err.Error())
+	//		}
+	//		time.Sleep(5 * time.Second)
+	//	}
+	//}()
 }
 
 // setBtcAddress
@@ -87,7 +90,7 @@ func (sm *SmokeTestRunner) setBtcAddress() {
 		panic(err)
 	}
 
-	err = sm.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, "deployer", true)
+	err = sm.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, sm.Name, true)
 	if err != nil {
 		panic(err)
 	}

@@ -100,10 +100,13 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(fmt.Sprintf("expected outbound mined status; got %s, message: %s", cctx1.CctxStatus.Status.String(), cctx1.CctxStatus.StatusMessage))
 	}
 
+	// mine 10 blocks to confirm the outbound tx
 	_, err = sm.BtcRPCClient.GenerateToAddress(10, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
+	stop := sm.MineBlocks()
+
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
 	cctx2 := utils.WaitCctxMinedByInTxHash(cctx1.Index, sm.CctxClient, sm.Logger)
 
@@ -132,7 +135,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 	sm.Logger.Info("memo length %d", len(memo))
 
-	txid, err := sm.SendToTSSFromDeployerWithMemo(
+	txId, err := sm.SendToTSSFromDeployerWithMemo(
 		sm.BTCTSSAddress,
 		0.01,
 		utxos[0:2],
@@ -140,15 +143,18 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		memo,
 		sm.BTCDeployerAddress,
 	)
-	sm.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txid)
+	if err != nil {
+		panic(err)
+	}
+	sm.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txId)
 	_, err = sm.BtcRPCClient.GenerateToAddress(10, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	cctx3 := utils.WaitCctxMinedByInTxHash(txid.String(), sm.CctxClient, sm.Logger)
+	cctx3 := utils.WaitCctxMinedByInTxHash(txId.String(), sm.CctxClient, sm.Logger)
 	sm.Logger.Info("cctx3 index %s", cctx3.Index)
-	sm.Logger.Info("  inboudn tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
+	sm.Logger.Info("  inbound tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
 	sm.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())
 	sm.Logger.Info("  status msg: %s", cctx3.CctxStatus.StatusMessage)
 
@@ -216,4 +222,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 			sm.Logger.Info("  p2wpkh address: %s", utils.ScriptPKToAddress(vout.ScriptPubKey.Hex))
 		}
 	}
+
+	// stop mining
+	stop <- struct{}{}
 }

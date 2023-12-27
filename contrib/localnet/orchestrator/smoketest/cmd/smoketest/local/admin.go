@@ -31,6 +31,7 @@ func adminTestRoutine(
 
 		// initialize runner for erc20 advanced test
 		adminRunner, err := initTestRunner(
+			"admin",
 			conf,
 			deployerRunner,
 			UserAdminAddress,

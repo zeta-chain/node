@@ -49,6 +49,7 @@ func setCosmosConfig() {
 // initTestRunner initializes a runner for smoke tests
 // it creates a runner with an account and copy contracts from deployer runner
 func initTestRunner(
+	name string,
 	conf config.Config,
 	deployerRunner *runner.SmokeTestRunner,
 	userAddress ethcommon.Address,
@@ -56,7 +57,7 @@ func initTestRunner(
 	logger *runner.Logger,
 ) (*runner.SmokeTestRunner, error) {
 	// initialize runner for smoke test
-	testRunner, err := runnerFromConfig(conf, userAddress, userPrivKey, logger)
+	testRunner, err := runnerFromConfig(name, conf, userAddress, userPrivKey, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +72,7 @@ func initTestRunner(
 
 // runnerFromConfig create test runner from config
 func runnerFromConfig(
+	name string,
 	conf config.Config,
 	userAddr ethcommon.Address,
 	userPrivKey string,
@@ -104,6 +106,7 @@ func runnerFromConfig(
 
 	// initialize smoke test runner
 	sm := runner.NewSmokeTestRunner(
+		name,
 		userAddr,
 		userPrivKey,
 		FungibleAdminMnemonic,

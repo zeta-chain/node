@@ -12,6 +12,8 @@ import (
 
 const (
 	FungibleAdminName = "fungibleadmin"
+
+	CctxTimeout = 60 * time.Second
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -31,9 +33,24 @@ func WaitCctxsMinedByInTxHash(
 	cctxsCount int,
 	logger infoLogger,
 ) []*crosschaintypes.CrossChainTx {
+	// start a go routine that will send a signal to the channel when the timeout is reached
+	// this is to prevent the go routine from leaking
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(CctxTimeout)
+		timeout <- true
+	}()
+
 	// wait for cctx to be mined
 	var cctxIndexes []string
 	for {
+		// check if timeout is reached
+		select {
+		case <-timeout:
+			panic("waiting cctx timeout")
+		default:
+		}
+
 		time.Sleep(1 * time.Second)
 		logger.Info("Waiting for cctx to be mined by inTxHash: %s", inTxHash)
 		res, err := cctxClient.InTxHashToCctx(
@@ -57,7 +74,7 @@ func WaitCctxsMinedByInTxHash(
 		break
 	}
 
-	// retrieve all cctxs data
+	// cctxs have been mined, retrieve all data
 	var wg sync.WaitGroup
 	var cctxs []*crosschaintypes.CrossChainTx
 	var cctxsMutex sync.Mutex
@@ -89,7 +106,22 @@ func WaitCctxsMinedByInTxHash(
 			}
 		}()
 	}
-	wg.Wait()
+
+	// go routine to wait for all go routines to finish
+	allMined := make(chan bool, 1)
+	go func() {
+		wg.Wait()
+		allMined <- true
+	}()
+
+	// wait for all cctxs to be mined
+	select {
+	case <-allMined:
+		logger.Info("All cctxs are mined")
+	case <-timeout:
+		panic("waiting cctx timeout")
+	}
+
 	return cctxs
 }
 

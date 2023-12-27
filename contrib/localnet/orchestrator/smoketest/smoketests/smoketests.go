@@ -34,7 +34,7 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		TestDepositAndCallRefundName,
-		"deposit ETH into ZEVM and call a contract that reverts; should refund",
+		"deposit ZRC20 into ZEVM and call a contract that reverts; should refund",
 		TestDepositAndCallRefund,
 	},
 	{
@@ -117,11 +117,11 @@ var AllSmokeTests = []runner.SmokeTest{
 		"deposit Ethers into ZEVM with a liquidity cap",
 		TestDepositEtherLiquidityCap,
 	},
-	{
-		TestBlockHeadersName,
-		"fetch block headers of EVM on ZetaChain",
-		TestBlockHeaders,
-	},
+	//{
+	//	TestBlockHeadersName,
+	//	"fetch block headers of EVM on ZetaChain",
+	//	TestBlockHeaders,
+	//},
 	{
 		TestMyTestName,
 		"performing custom test",

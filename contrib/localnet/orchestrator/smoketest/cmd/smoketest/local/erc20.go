@@ -32,6 +32,7 @@ func erc20TestRoutine(
 
 		// initialize runner for erc20 test
 		erc20Runner, err := initTestRunner(
+			"erc20",
 			conf,
 			deployerRunner,
 			UserERC20Address,
@@ -59,6 +60,9 @@ func erc20TestRoutine(
 		erc20Runner.WaitForMinedCCTX(txZetaDeposit)
 		erc20Runner.WaitForMinedCCTX(txEtherDeposit)
 		erc20Runner.WaitForMinedCCTX(txERC20Deposit)
+
+		//erc20Runner.SetupBitcoinAccount()
+		//erc20Runner.DepositBTC()
 
 		// run erc20 test
 		if err := erc20Runner.RunSmokeTestsFromNames(

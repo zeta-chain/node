@@ -32,6 +32,7 @@ func bitcoinTestRoutine(
 
 		// initialize runner for bitcoin test
 		bitcoinRunner, err := initTestRunner(
+			"bitcoin",
 			conf,
 			deployerRunner,
 			UserBitcoinAddress,

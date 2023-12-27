@@ -32,6 +32,7 @@ func zetaTestRoutine(
 
 		// initialize runner for zeta test
 		zetaRunner, err := initTestRunner(
+			"zeta",
 			conf,
 			deployerRunner,
 			UserZetaTestAddress,

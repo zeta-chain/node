@@ -88,12 +88,14 @@ type SmokeTestRunner struct {
 	SystemContract       *systemcontract.SystemContract
 
 	// other
+	Name   string
 	Logger *Logger
 	WG     sync.WaitGroup
 	mutex  sync.Mutex
 }
 
 func NewSmokeTestRunner(
+	name string,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
 	fungibleAdminMnemonic string,
@@ -111,6 +113,7 @@ func NewSmokeTestRunner(
 	logger *Logger,
 ) *SmokeTestRunner {
 	return &SmokeTestRunner{
+		Name:                  name,
 		DeployerAddress:       deployerAddress,
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,

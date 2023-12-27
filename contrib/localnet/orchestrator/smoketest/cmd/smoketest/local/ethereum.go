@@ -32,6 +32,7 @@ func ethereumTestRoutine(
 
 		// initialize runner for ether test
 		ethereumRunner, err := initTestRunner(
+			"ether",
 			conf,
 			deployerRunner,
 			UserEtherAddress,

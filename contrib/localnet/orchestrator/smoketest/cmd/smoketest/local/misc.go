@@ -32,6 +32,7 @@ func miscTestRoutine(
 
 		// initialize runner for misc test
 		miscRunner, err := initTestRunner(
+			"misc",
 			conf,
 			deployerRunner,
 			UserMiscAddress,
