@@ -39,40 +39,10 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 		panic(err)
 	}
 
-	//bal, err := btc.GetBalance("*")
-	//if err != nil {
-	//	panic(err)
-	//}
 	_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	//bal, err = btc.GetBalance("*")
-	//if err != nil {
-	//	panic(err)
-	//}
-	//sm.Logger.Info("balance: %f", bal.ToBTC())
-	//
-	//bals, err := btc.GetBalances()
-	//if err != nil {
-	//	panic(err)
-	//}
-	//sm.Logger.Info("balances: ")
-	//sm.Logger.Info("  mine (Deployer): %+v\n", bals.Mine)
-	//if bals.WatchOnly != nil {
-	//	sm.Logger.Info("  watchonly (TSSAddress): %+v", bals.WatchOnly)
-	//}
-	//sm.Logger.Info("  TSS Address: %s", sm.BTCTSSAddress.EncodeAddress())
-	//go func() {
-	//	// keep bitcoin chain going
-	//	for {
-	//		_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
-	//		if err != nil {
-	//			sm.Logger.Info(err.Error())
-	//		}
-	//		time.Sleep(5 * time.Second)
-	//	}
-	//}()
 }
 
 // setBtcAddress

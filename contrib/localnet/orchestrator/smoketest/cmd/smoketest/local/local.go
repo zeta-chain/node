@@ -48,7 +48,7 @@ func NewLocalCmd() *cobra.Command {
 	)
 	cmd.Flags().Bool(
 		flagVerbose,
-		true,
+		false,
 		"set to true to enable verbose logging",
 	)
 	cmd.Flags().Bool(
@@ -124,7 +124,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// wait for Genesis
 	logger.Print("⏳ wait 60s for genesis")
-	time.Sleep(60 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	// initialize deployer runner with config
 	deployerRunner, err := runnerFromConfig("deployer", conf, DeployerAddress, DeployerPrivateKey, logger)
@@ -147,7 +147,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
 		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
 		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
