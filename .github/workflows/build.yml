@@ -107,17 +107,23 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         if: github.event.repository.full_name == 'zetachain-chain/node'
+        env:
+          DOCKER_BUILDKIT: 1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
 
       - name: Start Private Network
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
           make zetanode
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
       - name: Run Smoke Test
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
           cd contrib/localnet
           docker-compose up orchestrator --exit-code-from orchestrator
