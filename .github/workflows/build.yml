@@ -22,7 +22,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
       group: "build-and-test"
