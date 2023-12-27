@@ -127,7 +127,7 @@ jobs:
         run: |
           cd contrib/localnet
           docker ps
-          docker-compose up orchestrator --exit-code-from orchestrator || echo "error"
+          docker-compose up --exit-code-from orchestrator orchestrator || echo "error"
           if [ $? -ne 0 ]; then
             echo "Smoke Test Failed"
             docker ps
