@@ -83,8 +83,8 @@ build-testnet-ubuntu: go.sum
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
-		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
-		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
@@ -94,9 +94,11 @@ install-zetacore: go.sum
 		@echo "--> Installing zetacored"
 		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 
+
 # running with race detector on will be slow
-install-zetaclient-race-test-only-build: go.sum
+install-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
+		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 install-smoketest: go.sum
