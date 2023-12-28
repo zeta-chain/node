@@ -55,10 +55,10 @@ func bitcoinTestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := bitcoinRunner.DepositZeta()
-		txEtherDeposit := bitcoinRunner.DepositEther()
+		txEtherDeposit := bitcoinRunner.DepositEther(false)
 		txERC20Deposit := bitcoinRunner.DepositERC20()
 		bitcoinRunner.SetupBitcoinAccount()
-		bitcoinRunner.DepositBTC()
+		bitcoinRunner.DepositBTC(true)
 		bitcoinRunner.SetupZEVMSwapApp()
 		bitcoinRunner.WaitForMinedCCTX(txZetaDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
@@ -69,7 +69,6 @@ func bitcoinTestRoutine(
 		// to make it faster to catch up with the latest block header
 		if err := bitcoinRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestBlockHeaderBitcoinName,
 			smoketests.TestBitcoinWithdrawName,
 			smoketests.TestSendZetaOutBTCRevertName,
 			smoketests.TestCrosschainSwapName,

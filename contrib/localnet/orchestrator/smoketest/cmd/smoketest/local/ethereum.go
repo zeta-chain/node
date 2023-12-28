@@ -52,7 +52,7 @@ func ethereumTestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := ethereumRunner.DepositZeta()
-		txEtherDeposit := ethereumRunner.DepositEther()
+		txEtherDeposit := ethereumRunner.DepositEther(true)
 		ethereumRunner.WaitForMinedCCTX(txZetaDeposit)
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
 
@@ -63,7 +63,6 @@ func ethereumTestRoutine(
 		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestBlockHeaderEthereumName,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositAndCallRefundName,

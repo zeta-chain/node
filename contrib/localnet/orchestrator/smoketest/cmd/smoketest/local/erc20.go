@@ -55,7 +55,7 @@ func erc20TestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := erc20Runner.DepositZeta()
-		txEtherDeposit := erc20Runner.DepositEther()
+		txEtherDeposit := erc20Runner.DepositEther(false)
 		txERC20Deposit := erc20Runner.DepositERC20()
 		erc20Runner.WaitForMinedCCTX(txZetaDeposit)
 		erc20Runner.WaitForMinedCCTX(txEtherDeposit)

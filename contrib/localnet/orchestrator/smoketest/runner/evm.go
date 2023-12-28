@@ -7,8 +7,13 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
 func (sm *SmokeTestRunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
@@ -110,7 +115,7 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 }
 
 // DepositEther sends Ethers into ZEVM
-func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
+func (sm *SmokeTestRunner) DepositEther(testHeader bool) ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -133,6 +138,12 @@ func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 	sm.Logger.Info("  to: %s", signedTx.To().String())
 	sm.Logger.Info("  value: %d", signedTx.Value())
 	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
+
+	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
+	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
+	if testHeader {
+		sm.ProveEthTransaction(receipt)
+	}
 
 	return signedTx.Hash()
 }
@@ -173,4 +184,70 @@ func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data [
 	}
 
 	return signedTx, nil
+}
+
+// ProveEthTransaction proves an ETH transaction on ZetaChain
+func (sm *SmokeTestRunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
+	startTime := time.Now()
+
+	txHash := receipt.TxHash
+	blockHash := receipt.BlockHash
+
+	// #nosec G701 smoketest - always in range
+	txIndex := int(receipt.TransactionIndex)
+
+	block, err := sm.GoerliClient.BlockByHash(sm.Ctx, blockHash)
+	if err != nil {
+		panic(err)
+	}
+	for {
+		// check timeout
+		if time.Since(startTime) > blockHeaderETHTimeout {
+			panic("timeout waiting for block header")
+		}
+
+		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+			BlockHash: blockHash.Bytes(),
+		})
+		if err != nil {
+			sm.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
+		} else {
+			sm.Logger.Info("OK: block header found")
+			break
+		}
+
+		time.Sleep(2 * time.Second)
+	}
+
+	trie := ethereum.NewTrie(block.Transactions())
+	if trie.Hash() != block.Header().TxHash {
+		panic("tx root hash & block tx root mismatch")
+	}
+	txProof, err := trie.GenerateProof(txIndex)
+	if err != nil {
+		panic("error generating txProof")
+	}
+	val, err := txProof.Verify(block.TxHash(), txIndex)
+	if err != nil {
+		panic("error verifying txProof")
+	}
+	var txx ethtypes.Transaction
+	err = txx.UnmarshalBinary(val)
+	if err != nil {
+		panic("error unmarshalling txProof'd tx")
+	}
+	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
+		BlockHash: blockHash.Hex(),
+		TxIndex:   int64(txIndex),
+		TxHash:    txHash.Hex(),
+		Proof:     common.NewEthereumProof(txProof),
+		ChainId:   common.GoerliLocalnetChain().ChainId,
+	})
+	if err != nil {
+		panic(err)
+	}
+	if !res.Valid {
+		panic("txProof invalid") // FIXME: don't do this in production
+	}
+	sm.Logger.Info("OK: txProof verified")
 }

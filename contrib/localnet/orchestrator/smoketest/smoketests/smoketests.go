@@ -21,8 +21,6 @@ const (
 	TestUpdateBytecodeName              = "update_bytecode"
 	TestEtherDepositAndCallName         = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
-	TestBlockHeaderEthereumName         = "block_headers_eth"
-	TestBlockHeaderBitcoinName          = "block_headers_bitcoin"
 	TestMyTestName                      = "my_test"
 )
 
@@ -117,16 +115,6 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestDepositEtherLiquidityCapName,
 		"deposit Ethers into ZEVM with a liquidity cap",
 		TestDepositEtherLiquidityCap,
-	},
-	{
-		TestBlockHeaderEthereumName,
-		"test Ethereum tx can be proven on ZetaChain",
-		TestEthereumMerkelProof,
-	},
-	{
-		TestBlockHeaderBitcoinName,
-		"test Bitcoin tx can be proven on ZetaChain",
-		TestBTCMerkelProof,
 	},
 	{
 		TestMyTestName,

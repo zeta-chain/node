@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"time"
@@ -15,11 +16,15 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/bitcoin"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
+var blockHeaderBTCTimeout = 5 * time.Minute
+
 // DepositBTC deposits BTC on ZetaChain
-func (sm *SmokeTestRunner) DepositBTC() {
+func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	sm.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -60,7 +65,7 @@ func (sm *SmokeTestRunner) DepositBTC() {
 		panic(err)
 	}
 	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
-	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
+	_, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -101,10 +106,12 @@ func (sm *SmokeTestRunner) DepositBTC() {
 			break
 		}
 	}
-	_ = txHash1
-	_ = txHash2
-	//sm.ProveBTCTransaction(txHash1)
-	//sm.ProveBTCTransaction(txHash2)
+
+	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
+	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
+	if testHeader {
+		sm.ProveBTCTransaction(txHash1)
+	}
 }
 
 func (sm *SmokeTestRunner) SendToTSSFromDeployerToDeposit(
@@ -257,4 +264,101 @@ func (sm *SmokeTestRunner) MineBlocks() chan struct{} {
 		}
 	}()
 	return stop
+}
+
+// ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain
+func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
+	// get tx result
+	btc := sm.BtcRPCClient
+	txResult, err := btc.GetTransaction(txHash)
+	if err != nil {
+		panic("should get outTx result")
+	}
+	if txResult.Confirmations <= 0 {
+		panic("outTx should have already confirmed")
+	}
+	txBytes, err := hex.DecodeString(txResult.Hex)
+	if err != nil {
+		panic(err)
+	}
+
+	// get the block with verbose transactions
+	blockHash, err := chainhash.NewHashFromStr(txResult.BlockHash)
+	if err != nil {
+		panic(err)
+	}
+	blockVerbose, err := btc.GetBlockVerboseTx(blockHash)
+	if err != nil {
+		panic("should get block verbose tx")
+	}
+
+	// get the block header
+	header, err := btc.GetBlockHeader(blockHash)
+	if err != nil {
+		panic("should get block header")
+	}
+
+	// collect all the txs in the block
+	txns := []*btcutil.Tx{}
+	for _, res := range blockVerbose.Tx {
+		txBytes, err := hex.DecodeString(res.Hex)
+		if err != nil {
+			panic(err)
+		}
+		tx, err := btcutil.NewTxFromBytes(txBytes)
+		if err != nil {
+			panic(err)
+		}
+		txns = append(txns, tx)
+	}
+
+	// build merkle proof
+	mk := bitcoin.NewMerkle(txns)
+	path, index, err := mk.BuildMerkleProof(int(txResult.BlockIndex))
+	if err != nil {
+		panic("should build merkle proof")
+	}
+
+	// verify merkle proof statically
+	pass := bitcoin.Prove(*txHash, header.MerkleRoot, path, index)
+	if !pass {
+		panic("should verify merkle proof")
+	}
+
+	// wait for block header to show up in ZetaChain
+	startTime := time.Now()
+	hash := header.BlockHash()
+	for {
+		// timeout
+		if time.Since(startTime) > blockHeaderBTCTimeout {
+			panic("timed out waiting for block header to show up in observer")
+		}
+
+		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+			BlockHash: hash.CloneBytes(),
+		})
+		if err != nil {
+			sm.Logger.Info("waiting for block header to show up in observer... current hash %s; err %s", hash.String(), err.Error())
+		}
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	// verify merkle proof through RPC
+	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
+		ChainId:   common.BtcRegtestChain().ChainId,
+		TxHash:    txHash.String(),
+		BlockHash: blockHash.String(),
+		Proof:     common.NewBitcoinProof(txBytes, path, index),
+		TxIndex:   0, // bitcoin doesn't use txIndex
+	})
+	if err != nil {
+		panic(err)
+	}
+	if !res.Valid {
+		panic("txProof should be valid")
+	}
+	sm.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
