@@ -113,7 +113,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
 
-      - name: Start Private Network
+      - name: Start Private Network.
         env:
           DOCKER_BUILDKIT: 1
         run: |
