@@ -15,7 +15,7 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
-		sm.Logger.Info("Bitcoin account setup took %s\n", time.Since(startTime))
+		sm.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
 	}()
 
 	btc := sm.BtcRPCClient

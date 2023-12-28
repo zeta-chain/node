@@ -256,7 +256,7 @@ func (sm *SmokeTestRunner) MineBlocks() chan struct{} {
 				if err != nil {
 					panic(err)
 				}
-				time.Sleep(5 * time.Second)
+				time.Sleep(3 * time.Second)
 			}
 		}
 	}()

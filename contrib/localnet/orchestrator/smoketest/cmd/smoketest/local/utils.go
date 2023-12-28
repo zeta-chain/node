@@ -234,7 +234,7 @@ func waitKeygenHeight(
 	logger *runner.Logger,
 ) {
 	// wait for keygen to be completed. ~ height 30
-	keygenHeight := int64(45)
+	keygenHeight := int64(60)
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)

@@ -123,8 +123,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	setCosmosConfig()
 
 	// wait for Genesis
-	logger.Print("⏳ wait 60s for genesis")
-	time.Sleep(30 * time.Second)
+	logger.Print("⏳ wait 70s for genesis")
+	time.Sleep(70 * time.Second)
 
 	// initialize deployer runner with config
 	deployerRunner, err := runnerFromConfig("deployer", conf, DeployerAddress, DeployerPrivateKey, logger)
@@ -148,9 +148,9 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
 		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
-		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))

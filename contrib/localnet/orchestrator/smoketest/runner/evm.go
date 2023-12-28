@@ -126,6 +126,9 @@ func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	if receipt.Status == 0 {
+		panic("deposit failed")
+	}
 	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
 	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	sm.Logger.Info("  to: %s", signedTx.To().String())
@@ -133,69 +136,6 @@ func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
 
 	return signedTx.Hash()
-
-	//{
-	//	sm.Logger.InfoLoud("Merkle Proof\n")
-	//	txHash := receipt.TxHash
-	//	blockHash := receipt.BlockHash
-	//
-	//	// #nosec G701 smoketest - always in range
-	//	txIndex := int(receipt.TransactionIndex)
-	//
-	//	block, err := sm.GoerliClient.BlockByHash(context.Background(), blockHash)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	i := 0
-	//	for {
-	//		if i > 20 {
-	//			panic("block header not found")
-	//		}
-	//		_, err := sm.ObserverClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
-	//			BlockHash: blockHash.Bytes(),
-	//		})
-	//		if err != nil {
-	//			sm.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
-	//			time.Sleep(5 * time.Second)
-	//		} else {
-	//			sm.Logger.Info("OK: block header found")
-	//			break
-	//		}
-	//		i++
-	//	}
-	//
-	//	trie := ethereum.NewTrie(block.Transactions())
-	//	if trie.Hash() != block.Header().TxHash {
-	//		panic("tx root hash & block tx root mismatch")
-	//	}
-	//	txProof, err := trie.GenerateProof(txIndex)
-	//	if err != nil {
-	//		panic("error generating txProof")
-	//	}
-	//	val, err := txProof.Verify(block.TxHash(), txIndex)
-	//	if err != nil {
-	//		panic("error verifying txProof")
-	//	}
-	//	var txx ethtypes.Transaction
-	//	err = txx.UnmarshalBinary(val)
-	//	if err != nil {
-	//		panic("error unmarshalling txProof'd tx")
-	//	}
-	//	res, err := sm.ObserverClient.Prove(context.Background(), &observertypes.QueryProveRequest{
-	//		BlockHash: blockHash.Hex(),
-	//		TxIndex:   int64(txIndex),
-	//		TxHash:    txHash.Hex(),
-	//		Proof:     common.NewEthereumProof(txProof),
-	//		ChainId:   common.GoerliLocalnetChain().ChainId,
-	//	})
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	if !res.Valid {
-	//		panic("txProof invalid") // FIXME: don't do this in production
-	//	}
-	//	sm.Logger.Info("OK: txProof verified")
-	//}
 }
 
 // SendEther sends ethers to the TSS on Goerli
