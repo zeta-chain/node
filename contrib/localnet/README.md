@@ -87,7 +87,9 @@ which does the following docker compose command:
 # in zeta-node/contrib/localnet/
 $ docker compose -f docker-compose-monitoring.yml up -d
 ```
-To spin down the monitoring setup:
+### Grafana credentials and dashboards
+The Grafana default credentials are admin:admin. The dashboards are located at http://localhost:3000.
+### Stop monitoring setup
 ```bash
 # in zeta-node/
 make stop-monitoring
@@ -96,26 +98,6 @@ which does the following docker compose command:
 ```bash
 # in zeta-node/contrib/localnet/
 $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
-```
-### Run blockscout for localnet
-```bash
-# in zeta-node/
-make start-blockscout
-```
-which does the following docker compose command:
-```bash
-# in zeta-node/contrib/localnet/blockscout
-$ docker compose -f compose -f docker-compose.yml up -d
-```
-To spin down the blockscout setup:
-```bash
-# in zeta-node/
-make stop-blockscout
-```
-which does the following docker compose command:
-```bash
-# in zeta-node/contrib/localnet/blockscout
-$ docker compose -f docker-compose.yml down --remove-orphans
 ```
 
 ## Useful data
