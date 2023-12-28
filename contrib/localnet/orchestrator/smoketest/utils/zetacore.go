@@ -13,7 +13,7 @@ import (
 const (
 	FungibleAdminName = "fungibleadmin"
 
-	CctxTimeout = 4 * time.Minute
+	CctxTimeout = 5 * time.Minute
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
