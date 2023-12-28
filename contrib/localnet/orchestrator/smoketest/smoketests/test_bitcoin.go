@@ -2,11 +2,12 @@ package smoketests
 
 import (
 	"fmt"
+	"math/big"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	"math/big"
 )
 
 func TestBitcoinWithdraw(sm *runner.SmokeTestRunner) {
