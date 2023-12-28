@@ -126,12 +126,9 @@ jobs:
           DOCKER_BUILDKIT: 1
         run: |
           cd contrib/localnet
-          docker ps
-          docker-compose up --exit-code-from orchestrator orchestrator || echo "error"
+          docker-compose up --exit-code-from orchestrator orchestrator
           if [ $? -ne 0 ]; then
             echo "Smoke Test Failed"
-            docker ps
-            cat docker-compose.yml
             exit 1
           fi
           sleep 10
