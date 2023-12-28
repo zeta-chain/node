@@ -101,10 +101,6 @@ func (sm *SmokeTestRunner) DepositBTC() {
 			break
 		}
 	}
-
-	// prove the two transactions of the deposit
-	sm.Logger.InfoLoud("Bitcoin Merkle Proof\n")
-
 	_ = txHash1
 	_ = txHash2
 	//sm.ProveBTCTransaction(txHash1)

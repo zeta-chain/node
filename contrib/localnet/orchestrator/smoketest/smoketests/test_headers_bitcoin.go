@@ -3,19 +3,67 @@ package smoketests
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
+	"time"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"time"
+	"github.com/zeta-chain/zetacore/zetaclient"
 )
 
-var blockHeaderTimeout = 30 * time.Second
+var blockHeaderBTCTimeout = 5 * time.Minute
 
 func TestBTCMerkelProof(sm *runner.SmokeTestRunner) {
+	// mine blocks
+	stop := sm.MineBlocks()
 
+	utxos, err := sm.BtcRPCClient.ListUnspent()
+	if err != nil {
+		panic(err)
+	}
+	spendableAmount := 0.0
+	spendableUTXOs := 0
+	for _, utxo := range utxos {
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
+	}
+
+	if spendableAmount < 1.1 {
+		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
+	}
+	if spendableUTXOs < 2 {
+		panic(fmt.Errorf("not enough spendable BTC UTXOs to run the test; have %d", spendableUTXOs))
+	}
+
+	sm.Logger.Info("ListUnspent:")
+	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
+	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	sm.Logger.Info("Now sending two txs to TSS address...")
+
+	// send two transactions to the TSS address
+	txHash, err := sm.SendToTSSFromDeployerToDeposit(
+		sm.BTCTSSAddress,
+		1.1+zetaclient.BtcDepositorFeeMin,
+		utxos[:2],
+		sm.BtcRPCClient,
+		sm.BTCDeployerAddress,
+	)
+	if err != nil {
+		panic(err)
+	}
+	sm.Logger.Info("BTC tx sent: %s", txHash.String())
+
+	// check that the tx is in the block header
+	proveBTCTransaction(sm, txHash)
+
+	// stop mining
+	stop <- struct{}{}
 }
 
 func proveBTCTransaction(sm *runner.SmokeTestRunner, txHash *chainhash.Hash) {
@@ -81,7 +129,7 @@ func proveBTCTransaction(sm *runner.SmokeTestRunner, txHash *chainhash.Hash) {
 	hash := header.BlockHash()
 	for {
 		// timeout
-		if time.Since(startTime) > blockHeaderTimeout {
+		if time.Since(startTime) > blockHeaderBTCTimeout {
 			panic("timed out waiting for block header to show up in observer")
 		}
 

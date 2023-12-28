@@ -65,8 +65,11 @@ func bitcoinTestRoutine(
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		// run bitcoin test
+		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
+		// to make it faster to catch up with the latest block header
 		if err := bitcoinRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
+			smoketests.TestBlockHeaderBitcoinName,
 			smoketests.TestBitcoinWithdrawName,
 			smoketests.TestSendZetaOutBTCRevertName,
 			smoketests.TestCrosschainSwapName,

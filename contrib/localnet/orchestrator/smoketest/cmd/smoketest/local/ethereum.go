@@ -59,8 +59,11 @@ func ethereumTestRoutine(
 		ethereumRunner.SetupContextApp()
 
 		// run ethereum test
+		// Note: due to the extensive block generation in Ethereum localnet, block header test is run first
+		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
+			smoketests.TestBlockHeaderEthereumName,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositAndCallRefundName,
