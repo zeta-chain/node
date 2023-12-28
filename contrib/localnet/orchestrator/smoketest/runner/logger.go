@@ -7,7 +7,8 @@ import (
 )
 
 const (
-	loggerSeparator = " - "
+	loggerSeparator = " | "
+	padding         = 10
 )
 
 // Logger is a wrapper around log.Logger that adds verbosity
@@ -19,6 +20,11 @@ type Logger struct {
 
 // NewLogger creates a new Logger
 func NewLogger(verbose bool, printColor color.Attribute, prefix string) *Logger {
+	// trim prefix to padding
+	if len(prefix) > padding {
+		prefix = prefix[:padding]
+	}
+
 	return &Logger{
 		verbose: verbose,
 		logger:  color.New(printColor),
@@ -30,7 +36,7 @@ func NewLogger(verbose bool, printColor color.Attribute, prefix string) *Logger 
 func (l *Logger) Print(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
-	l.logger.Printf(l.prefix + loggerSeparator + text + "\n")
+	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + text + "\n")
 }
 
 // Info prints a message to the logger if verbose is true
@@ -38,7 +44,7 @@ func (l *Logger) Info(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
+		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
 	}
 }
 
@@ -47,11 +53,11 @@ func (l *Logger) InfoLoud(message string, args ...interface{}) {
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
+		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO]" + text + "\n")
+		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO]" + text + "\n")
 		// #nosec G104 - we are not using user input
-		l.logger.Printf(l.prefix + loggerSeparator + "[INFO] =======================================")
+		l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[INFO] =======================================")
 	}
 }
 
@@ -59,5 +65,14 @@ func (l *Logger) InfoLoud(message string, args ...interface{}) {
 func (l *Logger) Error(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
-	l.logger.Printf(l.prefix + loggerSeparator + "[ERROR]" + text + "\n")
+	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[ERROR]" + text + "\n")
+}
+
+func (l *Logger) getPrefixWithPadding() string {
+	// add padding to prefix
+	prefix := l.prefix
+	for i := len(l.prefix); i < padding; i++ {
+		prefix += " "
+	}
+	return prefix
 }
