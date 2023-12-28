@@ -57,7 +57,7 @@ func initTestRunner(
 	logger *runner.Logger,
 ) (*runner.SmokeTestRunner, error) {
 	// initialize runner for test
-	testRunner, err := runnerFromConfig(
+	testRunner, err := localRunnerFromConfig(
 		deployerRunner.Ctx,
 		name,
 		deployerRunner.CtxCancel,
@@ -78,8 +78,8 @@ func initTestRunner(
 	return testRunner, nil
 }
 
-// runnerFromConfig create test runner from config
-func runnerFromConfig(
+// localRunnerFromConfig create test runner from config for local test
+func localRunnerFromConfig(
 	ctx context.Context,
 	name string,
 	ctxCancel context.CancelFunc,

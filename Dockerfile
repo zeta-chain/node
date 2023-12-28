@@ -10,14 +10,17 @@ RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
+#RUN --mount=type=cache,target=/root/.cache/go-build \
+#    go mod download
+RUN go mod download
 COPY . .
 
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    make install
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    make install-zetae2e
+#RUN --mount=type=cache,target=/root/.cache/go-build \
+#    make install
+#RUN --mount=type=cache,target=/root/.cache/go-build \
+#    make install-zetae2e
+RUN make install
+RUN make install-zetae2e
 #
 #FROM golang:1.20-alpine
 

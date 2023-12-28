@@ -133,7 +133,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	time.Sleep(70 * time.Second)
 
 	// initialize deployer runner with config
-	deployerRunner, err := runnerFromConfig(
+	deployerRunner, err := localRunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
