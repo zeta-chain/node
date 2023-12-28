@@ -179,12 +179,23 @@ generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
+###                            E2E tests                                    ###
+###############################################################################
+
+install-zetae2e: go.sum
+	@echo "--> Installing orchestrator"
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
+.PHONY: install-zetae2e
+
+###############################################################################
 ###                            Smoke tests                                  ###
 ###############################################################################
 
+# Note: smoke tests are deprecated and will be removed in the future, replaced with e2e tests
+
 install-smoketest: go.sum
-		@echo "--> Installing orchestrator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
+	@echo "--> Installing orchestrator"
+	@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 zetanode:
 	@echo "Building zetanode"
