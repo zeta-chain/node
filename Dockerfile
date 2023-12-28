@@ -17,7 +17,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/go-build \
     make install
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    make install-smoketest
+    make install-zetae2e
 #
 #FROM golang:1.20-alpine
 
@@ -29,7 +29,7 @@ RUN cp /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
 
 RUN cp /go/bin/zetaclientd /usr/local/bin
 RUN cp /go/bin/zetacored /usr/local/bin
-RUN cp /go/bin/smoketest /usr/local/bin
+RUN cp /go/bin/zetae2e /usr/local/bin
 
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams

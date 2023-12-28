@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SMOKETEST_CMD=$1
+ZETAE2E_CMD=$1
 
 echo "waiting for geth RPC to start..."
 sleep 2
@@ -49,16 +49,16 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 #  -H "Content-Type: application/json" \
 #  --data '{"method":"eth_getBalance","params":["0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "latest"],"id":1,"jsonrpc":"2.0"}'
 
-# run smoketest
-echo "running smoketest..."
-smoketest "$SMOKETEST_CMD"
-SMOKETEST_EXIT_CODE=$?
+# run e2e tests
+echo "running e2e tests..."
+zetae2e "$ZETAE2E_CMD"
+ZETAE2E_EXIT_CODE=$?
 
-# if smoketest passed, exit with 0, otherwise exit with 1
-if [ $SMOKETEST_EXIT_CODE -eq 0 ]; then
-  echo "smoketest passed"
+# if e2e passed, exit with 0, otherwise exit with 1
+if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+  echo "e2e passed"
   exit 0
 else
-  echo "smoketest failed"
+  echo "e2e failed"
   exit 1
 fi
