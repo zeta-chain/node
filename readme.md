@@ -1,18 +1,3 @@
-# ⚠️ Important Notice: Code Freeze for Security Audit ⚠️
-
-Dear Contributors and Users,
-We are committed to ensuring the highest standards of security and reliability in our project. To uphold this commitment, we are currently undergoing a thorough security audit conducted by Code4rena. More info: https://code4rena.com/contests/2023-11-zetachain.
-
-During this period, we have instituted a code freeze on our public repository. This means there will be no new commits, merges, or major changes to the codebase until the audit is complete. This process is crucial to maintain the integrity and consistency of the code being audited.
-
-The audit is scheduled from 20 Nov 9:00 PM GMT+1 to 18 Dec 9:00 PM GMT+1. We appreciate your patience and understanding during this vital phase of our project's development.
-
-During this time, we encourage our community to review the current codebase and documentation. While we won't be merging new changes, we welcome your feedback, which we will address post-audit.
-
-For any questions or concerns, feel free to reach out to us on our [Discord](https://discord.com/invite/zetachain).
-
-Thank you for your cooperation and support!
-
 # ZetaChain
 
 ZetaChain is an EVM-compatible L1 blockchain that enables omnichain, generic
