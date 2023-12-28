@@ -121,7 +121,31 @@ jobs:
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
           echo "Sleep for 1 minute longer to let network start"
-          sleep 60
+          # Cosmos SDK RPC endpoint
+          rpc_endpoint="http://127.0.0.1:26657/status"
+          
+          # Initial block height
+          initial_height=$(curl -s $rpc_endpoint | jq -r '.result.sync_info.latest_block_height')
+          
+          # Loop until the network processes blocks
+          while true; do
+              # Get the current block height
+              current_height=$(curl -s $rpc_endpoint | jq -r '.result.sync_info.latest_block_height')
+          
+              # Check if the block height has increased
+              if [[ "$current_height" -gt "$initial_height" ]]; then
+                  echo "The network is processing blocks. Current block height: $current_height"
+                  break
+              else
+                  echo "Waiting for the network to process blocks..."
+              fi
+          
+              # Sleep for 1 second
+              sleep 1
+          
+              # Update initial height for next iteration
+              initial_height=$current_height
+          done
 
       - name: Run Smoke Test
         env:
