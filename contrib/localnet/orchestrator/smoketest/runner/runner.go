@@ -98,8 +98,8 @@ type SmokeTestRunner struct {
 }
 
 func NewSmokeTestRunner(
-	name string,
 	ctx context.Context,
+	name string,
 	ctxCancel context.CancelFunc,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,

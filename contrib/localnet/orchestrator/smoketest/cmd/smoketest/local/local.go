@@ -134,8 +134,8 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 
 	// initialize deployer runner with config
 	deployerRunner, err := runnerFromConfig(
-		"deployer",
 		ctx,
+		"deployer",
 		cancel,
 		conf,
 		DeployerAddress,

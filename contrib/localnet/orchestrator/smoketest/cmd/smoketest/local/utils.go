@@ -58,8 +58,8 @@ func initTestRunner(
 ) (*runner.SmokeTestRunner, error) {
 	// initialize runner for smoke test
 	testRunner, err := runnerFromConfig(
-		name,
 		deployerRunner.Ctx,
+		name,
 		deployerRunner.CtxCancel,
 		conf,
 		userAddress,
@@ -80,8 +80,8 @@ func initTestRunner(
 
 // runnerFromConfig create test runner from config
 func runnerFromConfig(
-	name string,
 	ctx context.Context,
+	name string,
 	ctxCancel context.CancelFunc,
 	conf config.Config,
 	userAddr ethcommon.Address,
@@ -116,8 +116,8 @@ func runnerFromConfig(
 
 	// initialize smoke test runner
 	sm := runner.NewSmokeTestRunner(
-		name,
 		ctx,
+		name,
 		ctxCancel,
 		userAddr,
 		userPrivKey,

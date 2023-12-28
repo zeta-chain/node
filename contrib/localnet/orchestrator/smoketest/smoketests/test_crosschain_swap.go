@@ -135,7 +135,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	memo = append(sm.ZEVMSwapAppAddr.Bytes(), memo...)
 	sm.Logger.Info("memo length %d", len(memo))
 
-	txId, err := sm.SendToTSSFromDeployerWithMemo(
+	txID, err := sm.SendToTSSFromDeployerWithMemo(
 		sm.BTCTSSAddress,
 		0.01,
 		utxos[0:2],
@@ -146,13 +146,13 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txId)
+	sm.Logger.Info("Sent BTC to TSS txid %s; now mining 10 blocks for confirmation", txID)
 	_, err = sm.BtcRPCClient.GenerateToAddress(10, sm.BTCDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	cctx3 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txId.String(), sm.CctxClient, sm.Logger)
+	cctx3 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txID.String(), sm.CctxClient, sm.Logger)
 	sm.Logger.Info("cctx3 index %s", cctx3.Index)
 	sm.Logger.Info("  inbound tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
 	sm.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())

@@ -99,10 +99,6 @@ install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
-install-smoketest: go.sum
-		@echo "--> Installing orchestrator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
-
 ###############################################################################
 ###                             Local network                               ###
 ###############################################################################
@@ -185,6 +181,10 @@ generate: proto openapi specs typescript docs-zetacored
 ###############################################################################
 ###                            Smoke tests                                  ###
 ###############################################################################
+
+install-smoketest: go.sum
+		@echo "--> Installing orchestrator"
+		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 zetanode:
 	@echo "Building zetanode"
