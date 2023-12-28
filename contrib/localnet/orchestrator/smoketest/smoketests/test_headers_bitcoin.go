@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -133,7 +132,7 @@ func proveBTCTransaction(sm *runner.SmokeTestRunner, txHash *chainhash.Hash) {
 			panic("timed out waiting for block header to show up in observer")
 		}
 
-		_, err := sm.ObserverClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
 			BlockHash: hash.CloneBytes(),
 		})
 		if err != nil {
@@ -146,7 +145,7 @@ func proveBTCTransaction(sm *runner.SmokeTestRunner, txHash *chainhash.Hash) {
 	}
 
 	// verify merkle proof through RPC
-	res, err := sm.ObserverClient.Prove(context.Background(), &observertypes.QueryProveRequest{
+	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
 		ChainId:   common.BtcRegtestChain().ChainId,
 		TxHash:    txHash.String(),
 		BlockHash: blockHash.String(),

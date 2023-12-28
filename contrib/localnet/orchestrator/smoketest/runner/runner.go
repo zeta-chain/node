@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"context"
 	"fmt"
 	"runtime"
 	"sync"
@@ -88,14 +89,18 @@ type SmokeTestRunner struct {
 	SystemContract       *systemcontract.SystemContract
 
 	// other
-	Name   string
-	Logger *Logger
-	WG     sync.WaitGroup
-	mutex  sync.Mutex
+	Name      string
+	Ctx       context.Context
+	CtxCancel context.CancelFunc
+	Logger    *Logger
+	WG        sync.WaitGroup
+	mutex     sync.Mutex
 }
 
 func NewSmokeTestRunner(
 	name string,
+	ctx context.Context,
+	ctxCancel context.CancelFunc,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
 	fungibleAdminMnemonic string,
@@ -113,7 +118,10 @@ func NewSmokeTestRunner(
 	logger *Logger,
 ) *SmokeTestRunner {
 	return &SmokeTestRunner{
-		Name:                  name,
+		Name:      name,
+		Ctx:       ctx,
+		CtxCancel: ctxCancel,
+
 		DeployerAddress:       deployerAddress,
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,

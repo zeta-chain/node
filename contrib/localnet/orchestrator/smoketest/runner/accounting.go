@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,7 +28,7 @@ func (sm *SmokeTestRunner) CheckZRC20ReserveAndSupply() {
 }
 
 func (sm *SmokeTestRunner) checkEthTSSBalance() {
-	tssBal, err := sm.GoerliClient.BalanceAt(context.Background(), sm.TSSAddress, nil)
+	tssBal, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.TSSAddress, nil)
 	if err != nil {
 		panic(err)
 	}

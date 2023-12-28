@@ -57,7 +57,15 @@ func initTestRunner(
 	logger *runner.Logger,
 ) (*runner.SmokeTestRunner, error) {
 	// initialize runner for smoke test
-	testRunner, err := runnerFromConfig(name, conf, userAddress, userPrivKey, logger)
+	testRunner, err := runnerFromConfig(
+		name,
+		deployerRunner.Ctx,
+		deployerRunner.CtxCancel,
+		conf,
+		userAddress,
+		userPrivKey,
+		logger,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +81,8 @@ func initTestRunner(
 // runnerFromConfig create test runner from config
 func runnerFromConfig(
 	name string,
+	ctx context.Context,
+	ctxCancel context.CancelFunc,
 	conf config.Config,
 	userAddr ethcommon.Address,
 	userPrivKey string,
@@ -89,7 +99,7 @@ func runnerFromConfig(
 		observerClient,
 		zevmClient,
 		zevmAuth,
-		err := getClientsFromConfig(conf, userPrivKey)
+		err := getClientsFromConfig(ctx, conf, userPrivKey)
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +117,8 @@ func runnerFromConfig(
 	// initialize smoke test runner
 	sm := runner.NewSmokeTestRunner(
 		name,
+		ctx,
+		ctxCancel,
 		userAddr,
 		userPrivKey,
 		FungibleAdminMnemonic,
@@ -127,7 +139,7 @@ func runnerFromConfig(
 }
 
 // getClientsFromConfig get clients from config
-func getClientsFromConfig(conf config.Config, evmPrivKey string) (
+func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey string) (
 	*rpcclient.Client,
 	*ethclient.Client,
 	*bind.TransactOpts,
@@ -144,7 +156,7 @@ func getClientsFromConfig(conf config.Config, evmPrivKey string) (
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
-	goerliClient, goerliAuth, err := getEVMClient(conf.RPCs.EVM, evmPrivKey)
+	goerliClient, goerliAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
@@ -152,7 +164,7 @@ func getClientsFromConfig(conf config.Config, evmPrivKey string) (
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
-	zevmClient, zevmAuth, err := getEVMClient(conf.RPCs.Zevm, evmPrivKey)
+	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
@@ -183,13 +195,13 @@ func getBtcClient(rpc string) (*rpcclient.Client, error) {
 }
 
 // getEVMClient get goerli client
-func getEVMClient(rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
+func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	chainid, err := evmClient.ChainID(context.Background())
+	chainid, err := evmClient.ChainID(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -230,6 +242,7 @@ func getZetaClients(rpc string) (
 
 // waitKeygenHeight waits for keygen height
 func waitKeygenHeight(
+	ctx context.Context,
 	cctxClient crosschaintypes.QueryClient,
 	logger *runner.Logger,
 ) {
@@ -238,7 +251,7 @@ func waitKeygenHeight(
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
 		time.Sleep(2 * time.Second)
-		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
+		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
 			logger.Error("cctxClient.LastZetaHeight error: %s", err)
 			continue

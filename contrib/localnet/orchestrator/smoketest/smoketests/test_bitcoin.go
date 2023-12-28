@@ -24,7 +24,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
@@ -37,7 +37,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("withdraw receipt status is not 1"))
 	}
@@ -48,7 +48,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
 	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 	hash, err := chainhash.NewHashFromStr(outTxHash)
 	if err != nil {

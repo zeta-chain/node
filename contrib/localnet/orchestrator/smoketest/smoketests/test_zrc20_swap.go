@@ -19,7 +19,7 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	//sm.Logger.Info("USDT-ETH pair receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
@@ -32,14 +32,14 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("USDT ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	tx, err = sm.ETHZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("ETH ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// temporarily increase gas limit to 400000
@@ -63,7 +63,7 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	balETHBefore, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
@@ -82,7 +82,7 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("Swap USDT for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
 	balETHAfter, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)

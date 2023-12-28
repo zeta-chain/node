@@ -18,16 +18,18 @@ const (
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxMinedByInTxHash(
+	ctx context.Context,
 	inTxHash string,
 	cctxClient crosschaintypes.QueryClient,
 	logger infoLogger,
 ) *crosschaintypes.CrossChainTx {
-	cctxs := WaitCctxsMinedByInTxHash(inTxHash, cctxClient, 1, logger)
+	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger)
 	return cctxs[len(cctxs)-1]
 }
 
 // WaitCctxsMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
 func WaitCctxsMinedByInTxHash(
+	ctx context.Context,
 	inTxHash string,
 	cctxClient crosschaintypes.QueryClient,
 	cctxsCount int,
@@ -54,7 +56,7 @@ func WaitCctxsMinedByInTxHash(
 		time.Sleep(1 * time.Second)
 		logger.Info("Waiting for cctx to be mined by inTxHash: %s", inTxHash)
 		res, err := cctxClient.InTxHashToCctx(
-			context.Background(),
+			ctx,
 			&crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash},
 		)
 		if err != nil {
@@ -86,7 +88,7 @@ func WaitCctxsMinedByInTxHash(
 			defer wg.Done()
 			for {
 				time.Sleep(1 * time.Second)
-				res, err := cctxClient.Cctx(context.Background(), &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
+				res, err := cctxClient.Cctx(ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
 				if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
 					logger.Info("Deposit receipt cctx status: %+v; The cctx is processed", res.CrossChainTx.CctxStatus.Status.String())
 					cctxsMutex.Lock()
@@ -133,6 +135,7 @@ func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
 
 // WaitForBlockHeight waits until the block height reaches the given height
 func WaitForBlockHeight(
+	ctx context.Context,
 	height int64,
 	rpcURL string,
 	logger infoLogger,
@@ -144,7 +147,7 @@ func WaitForBlockHeight(
 	}
 	status := &coretypes.ResultStatus{}
 	for status.SyncInfo.LatestBlockHeight < height {
-		status, err = rpc.Status(context.Background())
+		status, err = rpc.Status(ctx)
 		if err != nil {
 			panic(err)
 		}

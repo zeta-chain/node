@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -21,7 +20,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
@@ -40,13 +39,13 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
 
 	// Get the code hash of the new contract
-	codeHashRes, err := sm.FungibleClient.CodeHash(context.Background(), &fungibletypes.QueryCodeHashRequest{
+	codeHashRes, err := sm.FungibleClient.CodeHash(sm.Ctx, &fungibletypes.QueryCodeHashRequest{
 		Address: newZRC20Address.String(),
 	})
 	if err != nil {
@@ -146,7 +145,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -163,7 +162,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -188,7 +187,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}

@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 
@@ -19,7 +18,7 @@ func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -30,7 +29,7 @@ func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.USDTZRC20.ParseWithdrawal(*log)
@@ -41,7 +40,7 @@ func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
 	}
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger)
 	verifyTransferAmountFromCCTX(sm, cctx, 100)
 }
 
@@ -57,7 +56,7 @@ func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -68,7 +67,7 @@ func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve gas token failed")
 	}
@@ -96,12 +95,12 @@ func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
 
-	cctxs := utils.WaitCctxsMinedByInTxHash(tx.Hash().Hex(), sm.CctxClient, 3, sm.Logger)
+	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, 3, sm.Logger)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -117,7 +116,7 @@ func verifyTransferAmountFromCCTX(sm *runner.SmokeTestRunner, cctx *crosschainty
 	sm.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
 	receipt, err := sm.GoerliClient.TransactionReceipt(
-		context.Background(),
+		sm.Ctx,
 		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
 	)
 	if err != nil {

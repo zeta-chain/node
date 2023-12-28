@@ -2,7 +2,6 @@ package smoketests
 
 import (
 	"bytes"
-	"context"
 	"math/big"
 	"time"
 
@@ -24,7 +23,7 @@ func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -55,7 +54,7 @@ func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 			if bytes.Compare(eventIter.Event.Origin, sm.DeployerAddress.Bytes()) != 0 {
 				panic("origin mismatch")
 			}
-			chainID, err := sm.GoerliClient.ChainID(context.Background())
+			chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
 			if err != nil {
 				panic(err)
 			}

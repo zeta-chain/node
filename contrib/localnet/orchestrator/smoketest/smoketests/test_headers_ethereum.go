@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"math/big"
 	"time"
 
@@ -24,7 +23,7 @@ func TestEthereumMerkelProof(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
@@ -42,7 +41,7 @@ func proveEthTransaction(sm *runner.SmokeTestRunner, receipt *ethtypes.Receipt) 
 	// #nosec G701 smoketest - always in range
 	txIndex := int(receipt.TransactionIndex)
 
-	block, err := sm.GoerliClient.BlockByHash(context.Background(), blockHash)
+	block, err := sm.GoerliClient.BlockByHash(sm.Ctx, blockHash)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +51,7 @@ func proveEthTransaction(sm *runner.SmokeTestRunner, receipt *ethtypes.Receipt) 
 			panic("timeout waiting for block header")
 		}
 
-		_, err := sm.ObserverClient.GetBlockHeaderByHash(context.Background(), &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
 			BlockHash: blockHash.Bytes(),
 		})
 		if err != nil {
@@ -82,7 +81,7 @@ func proveEthTransaction(sm *runner.SmokeTestRunner, receipt *ethtypes.Receipt) 
 	if err != nil {
 		panic("error unmarshalling txProof'd tx")
 	}
-	res, err := sm.ObserverClient.Prove(context.Background(), &observertypes.QueryProveRequest{
+	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),

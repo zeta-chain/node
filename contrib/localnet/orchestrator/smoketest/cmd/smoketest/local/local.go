@@ -1,6 +1,7 @@
 package local
 
 import (
+	"context"
 	"os"
 	"time"
 
@@ -25,6 +26,8 @@ var (
 	SmokeTestTimeout = 30 * time.Minute
 )
 
+// NewLocalCmd returns the local command
+// which runs the smoketest locally on the machine with localnet for each blockchain
 func NewLocalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",
@@ -114,9 +117,12 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize context
+	ctx, cancel := context.WithCancel(context.Background())
+
 	// wait for a specific height on ZetaChain
 	if waitForHeight != 0 {
-		utils.WaitForBlockHeight(waitForHeight, conf.RPCs.ZetaCoreRPC, logger)
+		utils.WaitForBlockHeight(ctx, waitForHeight, conf.RPCs.ZetaCoreRPC, logger)
 	}
 
 	// set account prefix to zeta
@@ -127,13 +133,21 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	time.Sleep(70 * time.Second)
 
 	// initialize deployer runner with config
-	deployerRunner, err := runnerFromConfig("deployer", conf, DeployerAddress, DeployerPrivateKey, logger)
+	deployerRunner, err := runnerFromConfig(
+		"deployer",
+		ctx,
+		cancel,
+		conf,
+		DeployerAddress,
+		DeployerPrivateKey,
+		logger,
+	)
 	if err != nil {
 		panic(err)
 	}
 
 	// wait for keygen to be completed
-	waitKeygenHeight(deployerRunner.CctxClient, logger)
+	waitKeygenHeight(ctx, deployerRunner.CctxClient, logger)
 
 	// setting up the networks
 	logger.Print("⚙️ setting up networks")
@@ -160,6 +174,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}
 
 	if err := eg.Wait(); err != nil {
+		deployerRunner.CtxCancel()
 		logger.Print("❌ %v", err)
 		logger.Print("❌ smoke tests failed after %s", time.Since(testStartTime).String())
 		os.Exit(1)

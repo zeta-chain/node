@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"math/big"
 	"time"
 
@@ -28,7 +27,7 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	var err error
 	res := &observertypes.QueryGetTssAddressResponse{}
 	for {
-		res, err = sm.ObserverClient.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
+		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{})
 		if err != nil {
 			sm.Logger.Info("cctxClient.TSS error %s", err.Error())
 			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
@@ -88,7 +87,7 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 
 	// query system contract address from the chain
 	systemContractRes, err := sm.FungibleClient.SystemContract(
-		context.Background(),
+		sm.Ctx,
 		&fungibletypes.QueryGetSystemContractRequest{},
 	)
 	if err != nil {
@@ -121,7 +120,7 @@ func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
@@ -135,7 +134,7 @@ func (sm *SmokeTestRunner) SetupContextApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}

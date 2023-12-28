@@ -14,11 +14,12 @@ import (
 )
 
 func CheckNonce(
+	ctx context.Context,
 	client *ethclient.Client,
 	addr ethcommon.Address,
 	expectedNonce uint64,
 ) error {
-	nonce, err := client.PendingNonceAt(context.Background(), addr)
+	nonce, err := client.PendingNonceAt(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -31,6 +32,7 @@ func CheckNonce(
 // MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
 // timeout and panic after 30s.
 func MustWaitForTxReceipt(
+	ctx context.Context,
 	client *ethclient.Client,
 	tx *ethtypes.Transaction,
 	logger infoLogger,
@@ -40,7 +42,7 @@ func MustWaitForTxReceipt(
 		if time.Since(start) > 30*time.Second {
 			panic("waiting tx receipt timeout")
 		}
-		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+		receipt, err := client.TransactionReceipt(ctx, tx.Hash())
 		if err != nil {
 			if !errors.Is(err, ethereum.NotFound) {
 				logger.Info("fetching tx receipt error: ", err.Error())
@@ -55,7 +57,7 @@ func MustWaitForTxReceipt(
 }
 
 // TraceTx traces the tx and returns the trace result
-func TraceTx(tx *ethtypes.Transaction, rpcURL string) (string, error) {
+func TraceTx(ctx context.Context, tx *ethtypes.Transaction, rpcURL string) (string, error) {
 	rpcClient, err := rpc.Dial(rpcURL)
 	if err != nil {
 		return "", err
@@ -64,7 +66,7 @@ func TraceTx(tx *ethtypes.Transaction, rpcURL string) (string, error) {
 	var result interface{}
 	txHash := tx.Hash().Hex()
 	err = rpcClient.CallContext(
-		context.Background(),
+		ctx,
 		&result,
 		"debug_traceTransaction",
 		txHash,

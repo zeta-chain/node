@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 
@@ -25,7 +24,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
@@ -33,7 +32,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
@@ -52,7 +51,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("pause zrc20 tx hash: %s", res.TxHash)
 
 	// Fetch and check pause status
-	fcRes, err := sm.FungibleClient.ForeignCoins(context.Background(), &fungibletypes.QueryGetForeignCoinsRequest{
+	fcRes, err := sm.FungibleClient.ForeignCoins(sm.Ctx, &fungibletypes.QueryGetForeignCoinsRequest{
 		Index: sm.ETHZRC20Addr.Hex(),
 	})
 	if err != nil {
@@ -69,7 +68,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 1 {
 		panic("transfer should fail")
 	}
@@ -77,7 +76,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 1 {
 		panic("burn should fail")
 	}
@@ -88,7 +87,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 1 {
 		panic("deposit should fail")
 	}
@@ -100,7 +99,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("BTC transfer should succeed")
 	}
@@ -108,7 +107,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("BTC vault deposit should succeed")
 	}
@@ -118,11 +117,11 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -142,7 +141,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("unpause zrc20 tx hash: %s", res.TxHash)
 
 	// Fetch and check pause status
-	fcRes, err = sm.FungibleClient.ForeignCoins(context.Background(), &fungibletypes.QueryGetForeignCoinsRequest{
+	fcRes, err = sm.FungibleClient.ForeignCoins(sm.Ctx, &fungibletypes.QueryGetForeignCoinsRequest{
 		Index: sm.ETHZRC20Addr.Hex(),
 	})
 	if err != nil {
@@ -159,7 +158,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("transfer should succeed")
 	}
@@ -167,7 +166,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("burn should succeed")
 	}
@@ -177,7 +176,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit should succeed")
 	}

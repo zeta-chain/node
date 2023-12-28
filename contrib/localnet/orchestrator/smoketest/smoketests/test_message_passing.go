@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"math/big"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -24,7 +23,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
@@ -40,7 +39,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -55,8 +54,8 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
-	receipt, err = sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +84,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
@@ -100,7 +99,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -114,8 +113,8 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	}
 
 	// expect revert tx to fail
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
-	receipt, err = sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +140,7 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	sm.Logger.Info("Calling TestDApp.SendHello on contract address %s", sm.TestDAppAddr.Hex())
@@ -150,7 +149,7 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	res2, err := sm.BankClient.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{
+	res2, err := sm.BankClient.SupplyOf(sm.Ctx, &banktypes.QuerySupplyOfRequest{
 		Denom: "azeta",
 	})
 	if err != nil {
@@ -163,15 +162,15 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	sm.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils.WaitCctxMinedByInTxHash(receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
 	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-	receipt, err = sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(outTxHash))
+	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(outTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -185,7 +184,7 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 			sm.Logger.Info("  Message: %x", event.Message)
 		}
 	}
-	res3, err := sm.BankClient.SupplyOf(context.Background(), &banktypes.QuerySupplyOfRequest{
+	res3, err := sm.BankClient.SupplyOf(sm.Ctx, &banktypes.QuerySupplyOfRequest{
 		Denom: "azeta",
 	})
 	if err != nil {

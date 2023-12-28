@@ -136,22 +136,22 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	sm.Logger.Info("TestDApp contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
 
 	// check contract deployment receipt
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txDonation, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txDonation, sm.Logger); receipt.Status != 1 {
 		panic("GOERLI donation tx failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txZetaEth, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txZetaEth, sm.Logger); receipt.Status != 1 {
 		panic("ZetaEth deployment failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txConnector, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txConnector, sm.Logger); receipt.Status != 1 {
 		panic("ZetaConnectorEth deployment failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txCustody, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txCustody, sm.Logger); receipt.Status != 1 {
 		panic("ERC20Custody deployment failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txUSDT, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txUSDT, sm.Logger); receipt.Status != 1 {
 		panic("USDT deployment failed")
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txApp, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txApp, sm.Logger)
 	if receipt.Status != 1 {
 		panic("TestDApp deployment failed")
 	}
@@ -162,7 +162,7 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	if err != nil {
 		panic(err)
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txWhitelist, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txWhitelist, sm.Logger); receipt.Status != 1 {
 		panic("USDT whitelist failed")
 	}
 
@@ -171,7 +171,7 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	if err != nil {
 		panic(err)
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, txCustody, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txCustody, sm.Logger); receipt.Status != 1 {
 		panic("USDT update TSS address failed")
 	}
 	sm.Logger.Info("TSS set receipt tx hash: %s", txCustody.Hash().Hex())

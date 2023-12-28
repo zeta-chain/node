@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"context"
 	"math/big"
 	"time"
 
@@ -18,7 +17,7 @@ func (sm *SmokeTestRunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 	}()
 	sm.Lock()
 
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -38,7 +37,7 @@ func (sm *SmokeTestRunner) MintUSDTOnEvm(amountUSDT int64) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("mint failed")
 	}
@@ -80,7 +79,7 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -90,7 +89,7 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
@@ -125,7 +124,7 @@ func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 	}
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
@@ -142,19 +141,19 @@ func (sm *SmokeTestRunner) DepositEther() ethcommon.Hash {
 func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	goerliClient := sm.GoerliClient
 
-	nonce, err := goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	nonce, err := goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	gasLimit := uint64(30000) // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
+	gasPrice, err := goerliClient.SuggestGasPrice(sm.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := ethtypes.NewTransaction(nonce, sm.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(context.Background())
+	chainID, err := goerliClient.NetworkID(sm.Ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +167,7 @@ func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data [
 	if err != nil {
 		return nil, err
 	}
-	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	err = goerliClient.SendTransaction(sm.Ctx, signedTx)
 	if err != nil {
 		return nil, err
 	}

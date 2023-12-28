@@ -20,7 +20,7 @@ func (sm *SmokeTestRunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	}()
 	sm.Lock()
 
-	cctx := utils.WaitCctxMinedByInTxHash(txHash.Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 			cctx.CctxStatus.Status.String(),
@@ -62,7 +62,7 @@ func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic("approve tx failed")
 	}
@@ -83,7 +83,7 @@ func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
 	}
 
 	sm.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
 	if receipt.Status != 1 {
 		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
 	}

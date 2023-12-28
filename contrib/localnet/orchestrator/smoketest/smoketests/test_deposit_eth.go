@@ -1,7 +1,6 @@
 package smoketests
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"strings"
@@ -32,18 +31,18 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	goerliClient := sm.GoerliClient
 	value := big.NewInt(1e18)
 	gasLimit := uint64(23000)
-	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
+	gasPrice, err := goerliClient.SuggestGasPrice(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
-	nonce, err := goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	nonce, err := goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	data := append(exampleAddr.Bytes(), []byte("hello sailors")...)
 	tx := ethtypes.NewTransaction(nonce, sm.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(context.Background())
+	chainID, err := goerliClient.NetworkID(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -57,15 +56,15 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("Sending a cross-chain call to example contract")
-	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	err = goerliClient.SendTransaction(sm.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
-	cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
 	}
@@ -88,11 +87,11 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Example reverter deployed")
 
 	// preparing tx for reverter
-	gasPrice, err = goerliClient.SuggestGasPrice(context.Background())
+	gasPrice, err = goerliClient.SuggestGasPrice(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
-	nonce, err = goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	nonce, err = goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -105,16 +104,16 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("Sending a cross-chain call to reverter contract")
-	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	err = goerliClient.SendTransaction(sm.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
 
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
-	cctx = utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	cctx = utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -134,20 +133,20 @@ func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	value := big.NewInt(1e18)
 	value = value.Mul(value, big.NewInt(10))
 
-	nonce, err := goerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	nonce, err := goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	gasLimit := uint64(23000) // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(context.Background())
+	gasPrice, err := goerliClient.SuggestGasPrice(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	data := append(sm.BTCZRC20Addr.Bytes(), []byte("hello sailors")...) // this data
 	tx := ethtypes.NewTransaction(nonce, sm.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(context.Background())
+	chainID, err := goerliClient.NetworkID(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -160,12 +159,12 @@ func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	err = goerliClient.SendTransaction(context.Background(), signedTx)
+	err = goerliClient.SendTransaction(sm.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
 	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	sm.Logger.Info("  to: %s", signedTx.To().String())
@@ -173,16 +172,16 @@ func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
 
 	func() {
-		cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 		sm.Logger.Info("cctx status message: %s", cctx.CctxStatus.StatusMessage)
 		revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		sm.Logger.Info("GOERLI revert tx receipt: status %d", receipt.Status)
 
-		tx, _, err := sm.GoerliClient.TransactionByHash(context.Background(), ethcommon.HexToHash(revertTxHash))
+		tx, _, err := sm.GoerliClient.TransactionByHash(sm.Ctx, ethcommon.HexToHash(revertTxHash))
 		if err != nil {
 			panic(err)
 		}
-		receipt, err := sm.GoerliClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(revertTxHash))
+		receipt, err := sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(revertTxHash))
 		if err != nil {
 			panic(err)
 		}
@@ -250,11 +249,11 @@ func TestDepositEtherLiquidityCap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	cctx := utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -269,11 +268,11 @@ func TestDepositEtherLiquidityCap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	expectedBalance := big.NewInt(0).Add(initialBal, big.NewInt(1e15))
 
 	bal, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
@@ -304,11 +303,11 @@ func TestDepositEtherLiquidityCap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	utils.WaitCctxMinedByInTxHash(signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
+	utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger)
 	expectedBalance = big.NewInt(0).Add(initialBal, big.NewInt(1e17))
 
 	bal, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
