@@ -120,6 +120,8 @@ jobs:
           make zetanode
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+          echo "Sleep for 1 minute longer to let network start"
+          sleep 60
 
       - name: Run Smoke Test
         env:
