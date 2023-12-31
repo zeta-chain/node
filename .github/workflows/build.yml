@@ -118,8 +118,10 @@ jobs:
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
-          docker-compose up --exit-code-from orchestrator zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin orchestrator
-          if [ $? -ne 0 ]; then
+          docker-compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin orchestrator
+          docker-compose logs -f orchestrator &
+          ORCHESTRATOR_EXIT_CODE=$(docker wait $(docker-compose ps -q orchestrator))
+          if [ $ORCHESTRATOR_EXIT_CODE -ne 0 ]; then
             echo "Smoke Test Failed"
             exit 1
           fi

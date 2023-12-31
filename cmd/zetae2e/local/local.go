@@ -7,6 +7,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"golang.org/x/sync/errgroup"
@@ -133,13 +134,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	time.Sleep(70 * time.Second)
 
 	// initialize deployer runner with config
-	deployerRunner, err := localRunnerFromConfig(
+	deployerRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
 		conf,
 		DeployerAddress,
 		DeployerPrivateKey,
+		utils.FungibleAdminName,
+		FungibleAdminMnemonic,
 		logger,
 	)
 	if err != nil {

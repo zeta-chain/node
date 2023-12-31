@@ -34,7 +34,18 @@ type Contracts struct {
 type EVM struct {
 	ZetaEthAddress   string `yaml:"zeta_eth"`
 	ConnectorEthAddr string `yaml:"connector_eth"`
+	CustodyAddr      string `yaml:"custody"`
 	USDT             string `yaml:"usdt"`
+}
+
+// ZEVM contains the addresses of predeployed contracts on the zEVM chain
+type ZEVM struct {
+	SystemContractAddr string `yaml:"system_contract"`
+	ETHZRC20Addr       string `yaml:"eth_zrc20"`
+	USDTZRC20Addr      string `yaml:"usdt_zrc20"`
+	BTCZRC20Addr       string `yaml:"btc_zrc20"`
+	UniswapFactoryAddr string `yaml:"uniswap_factory"`
+	UniswapRouterAddr  string `yaml:"uniswap_router"`
 }
 
 func DefaultConfig() Config {
