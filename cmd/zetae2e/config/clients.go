@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+
 	"google.golang.org/grpc"
 
 	"github.com/btcsuite/btcd/rpcclient"
