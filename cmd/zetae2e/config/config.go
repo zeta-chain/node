@@ -68,5 +68,9 @@ func RunnerFromConfig(
 		btcRPCClient,
 		logger,
 	)
-	return sm, nil
+
+	// set contracts
+	err = setContractsFromConfig(sm, conf)
+
+	return sm, err
 }

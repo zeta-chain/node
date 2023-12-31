@@ -11,9 +11,17 @@ import (
 
 // Config contains the configuration for the smoke test
 type Config struct {
+	Accounts    Accounts  `yaml:"accounts"`
 	RPCs        RPCs      `yaml:"rpcs"`
 	Contracts   Contracts `yaml:"contracts"`
 	ZetaChainID string    `yaml:"zeta_chain_id"`
+	TestList    []string  `yaml:"test_list"`
+}
+
+// Accounts contains the configuration for the accounts
+type Accounts struct {
+	EVMAddress string `yaml:"evm_address"`
+	EVMPrivKey string `yaml:"evm_priv_key"`
 }
 
 // RPCs contains the configuration for the RPC endpoints
@@ -27,7 +35,8 @@ type RPCs struct {
 
 // Contracts contains the addresses of predeployed contracts
 type Contracts struct {
-	EVM EVM `yaml:"evm"`
+	EVM  EVM  `yaml:"evm"`
+	ZEVM ZEVM `yaml:"zevm"`
 }
 
 // EVM contains the addresses of predeployed contracts on the EVM chain
