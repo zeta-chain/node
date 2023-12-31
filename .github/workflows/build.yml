@@ -22,7 +22,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 15
     concurrency:
       group: "build-and-test"
@@ -78,7 +78,7 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ["zeta-runners"]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
@@ -115,13 +115,16 @@ jobs:
         run: |
           make zetanode
 
+      - name: Start Private Network
+        run: |
+          cd contrib/localnet/ 
+          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
-          docker-compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin orchestrator
-          docker-compose logs -f orchestrator &
-          ORCHESTRATOR_EXIT_CODE=$(docker wait $(docker-compose ps -q orchestrator))
-          if [ $ORCHESTRATOR_EXIT_CODE -ne 0 ]; then
+          docker-compose up orchestrator --exit-code-from orchestrator
+          if [ $? -ne 0 ]; then
             echo "Smoke Test Failed"
             exit 1
           fi
