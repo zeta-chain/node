@@ -123,7 +123,7 @@ jobs:
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
-          docker-compose up orchestrator --exit-code-from orchestrator
+          docker-compose up --exit-code-from orchestrator orchestratorg
           if [ $? -ne 0 ]; then
             echo "Smoke Test Failed"
             exit 1
