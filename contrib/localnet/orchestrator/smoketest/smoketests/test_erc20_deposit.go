@@ -11,6 +11,10 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
+func TestERC20Deposit(sm *runner.SmokeTestRunner) {
+	sm.DepositERC20()
+}
+
 func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
