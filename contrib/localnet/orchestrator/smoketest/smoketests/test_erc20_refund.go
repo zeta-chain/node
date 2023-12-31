@@ -75,7 +75,11 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 
 	// the revert tx creation will fail because the sender, used as the recipient, is not defined in the cctx
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
-		panic(fmt.Sprintf("expected cctx status to be PendingRevert; got %s", cctx.CctxStatus.Status))
+		panic(fmt.Sprintf(
+			"expected cctx status to be PendingRevert; got %s, aborted message: %s",
+			cctx.CctxStatus.Status,
+			cctx.CctxStatus.StatusMessage,
+		))
 	}
 
 	// get revert tx

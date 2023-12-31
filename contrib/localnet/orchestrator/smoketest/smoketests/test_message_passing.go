@@ -1,6 +1,7 @@
 package smoketests
 
 import (
+	"fmt"
 	"math/big"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -24,6 +25,9 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
@@ -40,6 +44,9 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -55,9 +62,20 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected cctx status to be %s; got %s, message %s",
+			cctxtypes.CctxStatus_OutboundMined,
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage,
+		))
+	}
 	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
+	}
+	if receipt.Status != 1 {
+		panic("tx failed")
 	}
 	for _, log := range receipt.Logs {
 		event, err := sm.ConnectorEth.ParseZetaReceived(*log)
@@ -85,6 +103,9 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
@@ -100,6 +121,9 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -141,6 +165,9 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	sm.Logger.Info("Calling TestDApp.SendHello on contract address %s", sm.TestDAppAddr.Hex())

@@ -153,12 +153,26 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	}
 
 	cctx3 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txID.String(), sm.CctxClient, sm.Logger)
+	if cctx3.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected outbound mined status; got %s, message: %s",
+			cctx3.CctxStatus.Status.String(),
+			cctx3.CctxStatus.StatusMessage),
+		)
+	}
 	sm.Logger.Info("cctx3 index %s", cctx3.Index)
 	sm.Logger.Info("  inbound tx hash %s", cctx3.InboundTxParams.InboundTxObservedHash)
 	sm.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())
 	sm.Logger.Info("  status msg: %s", cctx3.CctxStatus.StatusMessage)
 
 	cctx4 := utils.WaitCctxMinedByInTxHash(sm.Ctx, cctx3.Index, sm.CctxClient, sm.Logger)
+	if cctx4.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected outbound mined status; got %s, message: %s",
+			cctx3.CctxStatus.Status.String(),
+			cctx3.CctxStatus.StatusMessage),
+		)
+	}
 	sm.Logger.Info("cctx4 index %s", cctx4.Index)
 	sm.Logger.Info("  outbound tx hash %s", cctx4.GetCurrentOutTxParam().OutboundTxHash)
 	sm.Logger.Info("  status %s", cctx4.CctxStatus.Status.String())

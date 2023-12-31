@@ -13,7 +13,7 @@ import (
 const (
 	FungibleAdminName = "fungibleadmin"
 
-	CctxTimeout = 5 * time.Minute
+	CctxTimeout = 2 * time.Minute
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -49,7 +49,7 @@ func WaitCctxsMinedByInTxHash(
 		// check if timeout is reached
 		select {
 		case <-timeout:
-			panic("waiting cctx timeout")
+			panic("waiting cctx timeout, cctx can't be found from inTxHash")
 		default:
 		}
 
@@ -121,7 +121,7 @@ func WaitCctxsMinedByInTxHash(
 	case <-allMined:
 		logger.Info("All cctxs are mined")
 	case <-timeout:
-		panic("waiting cctx timeout")
+		panic("waiting cctx timeout, cctx not mined")
 	}
 
 	return cctxs
