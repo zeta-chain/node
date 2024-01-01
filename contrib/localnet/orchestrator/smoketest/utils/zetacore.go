@@ -49,10 +49,6 @@ func WaitCctxsMinedByInTxHash(
 
 	// fetch cctxs by inTxHash
 	for {
-		if time.Since(startTime) > timeout {
-			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s", inTxHash))
-		}
-
 		time.Sleep(1 * time.Second)
 		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
 			InTxHash: inTxHash,
@@ -88,6 +84,13 @@ func WaitCctxsMinedByInTxHash(
 			cctxs = append(cctxs, &cctx)
 		}
 		if !allFound {
+			if time.Since(startTime) > timeout {
+				panic(fmt.Sprintf(
+					"waiting cctx timeout, cctx not mined, inTxHash: %s, current cctxs: %v",
+					inTxHash,
+					cctxs,
+				))
+			}
 			continue
 		}
 		return cctxs
