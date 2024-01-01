@@ -2,7 +2,7 @@ package utils
 
 import (
 	"context"
-	"sync"
+	"fmt"
 	"time"
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -13,7 +13,7 @@ import (
 const (
 	FungibleAdminName = "fungibleadmin"
 
-	CctxTimeout = 2 * time.Minute
+	CctxTimeout = 3 * time.Minute
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -24,6 +24,9 @@ func WaitCctxMinedByInTxHash(
 	logger infoLogger,
 ) *crosschaintypes.CrossChainTx {
 	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger)
+	if len(cctxs) == 0 {
+		panic(fmt.Sprintf("cctx not found, inTxHash: %s", inTxHash))
+	}
 	return cctxs[len(cctxs)-1]
 }
 
@@ -35,96 +38,53 @@ func WaitCctxsMinedByInTxHash(
 	cctxsCount int,
 	logger infoLogger,
 ) []*crosschaintypes.CrossChainTx {
-	// start a go routine that will send a signal to the channel when the timeout is reached
-	// this is to prevent the go routine from leaking
-	timeout := make(chan bool, 1)
-	go func() {
-		time.Sleep(CctxTimeout)
-		timeout <- true
-	}()
+	startTime := time.Now()
 
-	// wait for cctx to be mined
-	var cctxIndexes []string
+	// fetch cctxs by inTxHash
 	for {
-		// check if timeout is reached
-		select {
-		case <-timeout:
-			panic("waiting cctx timeout, cctx can't be found from inTxHash")
-		default:
+		if time.Since(startTime) > CctxTimeout {
+			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s", inTxHash))
 		}
 
 		time.Sleep(1 * time.Second)
-		logger.Info("Waiting for cctx to be mined by inTxHash: %s", inTxHash)
-		res, err := cctxClient.InTxHashToCctx(
-			ctx,
-			&crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash},
-		)
+		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
+			InTxHash: inTxHash,
+		})
 		if err != nil {
 			logger.Info("Error getting cctx by inTxHash: %s", err.Error())
 			continue
 		}
-		if len(res.InTxHashToCctx.CctxIndex) < cctxsCount {
+		if len(res.CrossChainTxs) < cctxsCount {
 			logger.Info(
-				"Waiting for %d cctxs to be mined; %d cctxs are mined",
+				"not enough cctxs found by inTxHash: %s, expected: %d, found: %d",
+				inTxHash,
 				cctxsCount,
-				len(res.InTxHashToCctx.CctxIndex),
+				len(res.CrossChainTxs),
 			)
 			continue
 		}
-		cctxIndexes = res.InTxHashToCctx.CctxIndex
-		logger.Info("Deposit receipt cctx index: %v", cctxIndexes)
-		break
-	}
-
-	// cctxs have been mined, retrieve all data
-	var wg sync.WaitGroup
-	var cctxs []*crosschaintypes.CrossChainTx
-	var cctxsMutex sync.Mutex
-
-	for _, cctxIndex := range cctxIndexes {
-		cctxIndex := cctxIndex
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for {
-				time.Sleep(1 * time.Second)
-				res, err := cctxClient.Cctx(ctx, &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
-				if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
-					logger.Info("Deposit receipt cctx status: %+v; The cctx is processed", res.CrossChainTx.CctxStatus.Status.String())
-					cctxsMutex.Lock()
-					cctxs = append(cctxs, res.CrossChainTx)
-					cctxsMutex.Unlock()
-					break
-				} else if err != nil {
-					logger.Info("Error getting cctx by index: ", err.Error())
-				} else {
-					cctxStatus := res.CrossChainTx.CctxStatus
-					logger.Info(
-						"Deposit receipt cctx status: %s; Message: %s; Waiting for the cctx to be processed",
-						cctxStatus.Status.String(),
-						cctxStatus.StatusMessage,
-					)
-				}
+		cctxs := make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
+		allFound := true
+		for i, cctx := range res.CrossChainTxs {
+			cctx := cctx
+			if !IsTerminalStatus(cctx.CctxStatus.Status) {
+				logger.Info(
+					"waiting for cctx index %d to be mined by inTxHash: %s, cctx status: %s, message: %s",
+					i,
+					inTxHash,
+					cctx.CctxStatus.Status.String(),
+					cctx.CctxStatus.StatusMessage,
+				)
+				allFound = false
+				break
 			}
-		}()
+			cctxs = append(cctxs, &cctx)
+		}
+		if !allFound {
+			continue
+		}
+		return cctxs
 	}
-
-	// go routine to wait for all go routines to finish
-	allMined := make(chan bool, 1)
-	go func() {
-		wg.Wait()
-		allMined <- true
-	}()
-
-	// wait for all cctxs to be mined
-	select {
-	case <-allMined:
-		logger.Info("All cctxs are mined")
-	case <-timeout:
-		panic("waiting cctx timeout, cctx not mined")
-	}
-
-	return cctxs
 }
 
 func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
