@@ -33,7 +33,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
-		DestinationGasLimit: big.NewInt(250_000),
+		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
@@ -111,7 +111,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
-		DestinationGasLimit: big.NewInt(250_000),
+		DestinationGasLimit: big.NewInt(400_000),
 		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,

@@ -1,6 +1,8 @@
 package smoketests
 
 import (
+	"fmt"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -58,7 +60,7 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
-		DestinationGasLimit: big.NewInt(250_000),
+		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
 		ZetaParams:          nil,
@@ -81,27 +83,33 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("waiting for cctx status to change to final...")
 
-	sm.WG.Add(1)
-	go func() {
-		defer sm.WG.Done()
-		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), cctxClient, sm.Logger)
-		receipt, err := sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
-		if err != nil {
-			panic(err)
-		}
-		for _, log := range receipt.Logs {
-			event, err := sm.ConnectorEth.ParseZetaReceived(*log)
-			if err == nil {
-				sm.Logger.Info("    Dest Addr: %s", event.DestinationAddress.Hex())
-				sm.Logger.Info("    sender addr: %x", event.ZetaTxSenderAddress)
-				sm.Logger.Info("    Zeta Value: %d", event.ZetaValue)
-				if event.ZetaValue.Cmp(amount) != -1 {
-					panic("wrong zeta value, gas should be paid in the amount")
-				}
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), cctxClient, sm.Logger)
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
+		panic(fmt.Errorf(
+			"expected cctx status to be %s; got %s, message %s",
+			cctxtypes.CctxStatus_OutboundMined,
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage,
+		))
+	}
+	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	if err != nil {
+		panic(err)
+	}
+	if receipt.Status != 1 {
+		panic(fmt.Errorf("tx failed"))
+	}
+	for _, log := range receipt.Logs {
+		event, err := sm.ConnectorEth.ParseZetaReceived(*log)
+		if err == nil {
+			sm.Logger.Info("    Dest Addr: %s", event.DestinationAddress.Hex())
+			sm.Logger.Info("    sender addr: %x", event.ZetaTxSenderAddress)
+			sm.Logger.Info("    Zeta Value: %d", event.ZetaValue)
+			if event.ZetaValue.Cmp(amount) != -1 {
+				panic("wrong zeta value, gas should be paid in the amount")
 			}
 		}
-	}()
-	sm.WG.Wait()
+	}
 }
 
 func TestSendZetaOutBTCRevert(sm *runner.SmokeTestRunner) {
@@ -146,7 +154,7 @@ func TestSendZetaOutBTCRevert(sm *runner.SmokeTestRunner) {
 	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
-		DestinationGasLimit: big.NewInt(250_000),
+		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     big.NewInt(1e17),
 		ZetaParams:          nil,

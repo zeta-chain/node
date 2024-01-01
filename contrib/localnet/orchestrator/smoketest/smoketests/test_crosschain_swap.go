@@ -213,7 +213,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 
 		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txid.String(), sm.CctxClient, sm.Logger)
 		sm.Logger.Info("cctx3 index %s", cctx.Index)
-		sm.Logger.Info("  inboudn tx hash %s", cctx.InboundTxParams.InboundTxObservedHash)
+		sm.Logger.Info("  inbound tx hash %s", cctx.InboundTxParams.InboundTxObservedHash)
 		sm.Logger.Info("  status %s", cctx.CctxStatus.Status.String())
 		sm.Logger.Info("  status msg: %s", cctx.CctxStatus.StatusMessage)
 

@@ -215,7 +215,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		"ETH",
 		"gETH",
 		common.CoinType_Gas,
-		21000,
+		100000,
 	))
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
@@ -230,7 +230,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		"BTC",
 		"tBTC",
 		common.CoinType_Gas,
-		21000,
+		100000,
 	))
 	if err != nil {
 		return "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
