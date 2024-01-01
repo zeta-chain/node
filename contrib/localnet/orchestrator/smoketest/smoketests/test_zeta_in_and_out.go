@@ -2,8 +2,9 @@ package smoketests
 
 import (
 	"fmt"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
+
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
