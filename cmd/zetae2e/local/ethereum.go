@@ -52,7 +52,7 @@ func ethereumTestRoutine(
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := ethereumRunner.DepositZeta()
-		txEtherDeposit := ethereumRunner.DepositEther(false)
+		txEtherDeposit := ethereumRunner.DepositEther(true)
 		ethereumRunner.WaitForMinedCCTX(txZetaDeposit)
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
 
