@@ -10,7 +10,10 @@ func NewRootCmd() *cobra.Command {
 		Use:   "zetae2e",
 		Short: "E2E tests CLI",
 	}
-	cmd.AddCommand(local.NewLocalCmd())
+	cmd.AddCommand(
+		NewRunCmd(),
+		local.NewLocalCmd(),
+	)
 
 	return cmd
 }

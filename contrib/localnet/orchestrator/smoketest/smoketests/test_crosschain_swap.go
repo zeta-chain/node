@@ -42,19 +42,19 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txCreatePair, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txCreatePair, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("create pair failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txUSDTApprove, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txUSDTApprove, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("usdt approve failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txBTCApprove, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txBTCApprove, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("btc approve failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txTransferETH, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txTransferETH, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("ETH ZRC20 transfer failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txTransferBTC, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txTransferBTC, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("BTC ZRC20 transfer failed")
 	}
 
@@ -74,7 +74,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(fmt.Sprintf("Error liq %s", err.Error()))
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txAddLiquidity, sm.Logger); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txAddLiquidity, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("add liq receipt status is not 1")
 	}
 
@@ -93,7 +93,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("***** First test: USDT -> BTC")
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
 	txHash := sm.DepositERC20WithAmountAndMessage(big.NewInt(8e7), msg)
-	cctx1 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger)
+	cctx1 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 
 	// check the cctx status
 	if cctx1.CctxStatus.Status != types.CctxStatus_OutboundMined {
@@ -108,7 +108,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	stop := sm.MineBlocks()
 
 	// cctx1 index acts like the inTxHash for the second cctx (the one that withdraws BTC)
-	cctx2 := utils.WaitCctxMinedByInTxHash(sm.Ctx, cctx1.Index, sm.CctxClient, sm.Logger)
+	cctx2 := utils.WaitCctxMinedByInTxHash(sm.Ctx, cctx1.Index, sm.CctxClient, sm.Logger, sm.CctxTimeout)
 
 	// check the cctx status
 	if cctx2.CctxStatus.Status != types.CctxStatus_OutboundMined {
@@ -152,7 +152,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	cctx3 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txID.String(), sm.CctxClient, sm.Logger)
+	cctx3 := utils.WaitCctxMinedByInTxHash(sm.Ctx, txID.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx3.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected outbound mined status; got %s, message: %s",
@@ -165,7 +165,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("  status %s", cctx3.CctxStatus.Status.String())
 	sm.Logger.Info("  status msg: %s", cctx3.CctxStatus.StatusMessage)
 
-	cctx4 := utils.WaitCctxMinedByInTxHash(sm.Ctx, cctx3.Index, sm.CctxClient, sm.Logger)
+	cctx4 := utils.WaitCctxMinedByInTxHash(sm.Ctx, cctx3.Index, sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx4.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected outbound mined status; got %s, message: %s",
@@ -211,7 +211,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 			panic(err)
 		}
 
-		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txid.String(), sm.CctxClient, sm.Logger)
+		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txid.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 		sm.Logger.Info("cctx3 index %s", cctx.Index)
 		sm.Logger.Info("  inbound tx hash %s", cctx.InboundTxParams.InboundTxObservedHash)
 		sm.Logger.Info("  status %s", cctx.CctxStatus.Status.String())

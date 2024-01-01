@@ -120,7 +120,7 @@ func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
@@ -134,7 +134,7 @@ func (sm *SmokeTestRunner) SetupContextApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}

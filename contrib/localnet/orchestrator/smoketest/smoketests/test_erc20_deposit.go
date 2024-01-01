@@ -21,7 +21,7 @@ func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	txhash := MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(3))
-	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, txhash.Hex(), sm.CctxClient, 3, sm.Logger)
+	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, txhash.Hex(), sm.CctxClient, 3, sm.Logger, sm.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -51,7 +51,7 @@ func MultipleDeposits(sm *runner.SmokeTestRunner, amount, count *big.Int) ethcom
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -62,7 +62,7 @@ func MultipleDeposits(sm *runner.SmokeTestRunner, amount, count *big.Int) ethcom
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposits failed")
 	}

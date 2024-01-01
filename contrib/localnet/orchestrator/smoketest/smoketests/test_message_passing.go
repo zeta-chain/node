@@ -24,7 +24,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -43,7 +43,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	}
 
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -61,7 +61,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 
 	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -102,7 +102,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -120,7 +120,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -137,7 +137,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	}
 
 	// expect revert tx to fail
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
@@ -164,7 +164,7 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -189,10 +189,10 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}

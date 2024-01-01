@@ -88,6 +88,10 @@ type SmokeTestRunner struct {
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
 
+	// config
+	CctxTimeout    time.Duration
+	ReceiptTimeout time.Duration
+
 	// other
 	Name      string
 	Ctx       context.Context

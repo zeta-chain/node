@@ -13,7 +13,7 @@ import (
 const (
 	FungibleAdminName = "fungibleadmin"
 
-	CctxTimeout = 3 * time.Minute
+	DefaultCctxTimeout = 3 * time.Minute
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
@@ -22,8 +22,9 @@ func WaitCctxMinedByInTxHash(
 	inTxHash string,
 	cctxClient crosschaintypes.QueryClient,
 	logger infoLogger,
+	cctxTimeout time.Duration,
 ) *crosschaintypes.CrossChainTx {
-	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger)
+	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger, cctxTimeout)
 	if len(cctxs) == 0 {
 		panic(fmt.Sprintf("cctx not found, inTxHash: %s", inTxHash))
 	}
@@ -37,12 +38,18 @@ func WaitCctxsMinedByInTxHash(
 	cctxClient crosschaintypes.QueryClient,
 	cctxsCount int,
 	logger infoLogger,
+	cctxTimeout time.Duration,
 ) []*crosschaintypes.CrossChainTx {
 	startTime := time.Now()
 
+	timeout := DefaultCctxTimeout
+	if cctxTimeout != 0 {
+		timeout = cctxTimeout
+	}
+
 	// fetch cctxs by inTxHash
 	for {
-		if time.Since(startTime) > CctxTimeout {
+		if time.Since(startTime) > timeout {
 			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s", inTxHash))
 		}
 

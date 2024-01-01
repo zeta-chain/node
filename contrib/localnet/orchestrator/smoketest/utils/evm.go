@@ -13,6 +13,10 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
+const (
+	DefaultReceiptTimeout = 30 * time.Second
+)
+
 func CheckNonce(
 	ctx context.Context,
 	client *ethclient.Client,
@@ -36,10 +40,16 @@ func MustWaitForTxReceipt(
 	client *ethclient.Client,
 	tx *ethtypes.Transaction,
 	logger infoLogger,
+	receiptTimeout time.Duration,
 ) *ethtypes.Receipt {
+	timeout := DefaultReceiptTimeout
+	if receiptTimeout != 0 {
+		timeout = receiptTimeout
+	}
+
 	start := time.Now()
 	for {
-		if time.Since(start) > 30*time.Second {
+		if time.Since(start) > timeout {
 			panic("waiting tx receipt timeout")
 		}
 		receipt, err := client.TransactionReceipt(ctx, tx.Hash())

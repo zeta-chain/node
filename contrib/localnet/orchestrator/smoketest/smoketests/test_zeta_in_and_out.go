@@ -48,7 +48,7 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 	zauth.Value = big.NewInt(0)
 	sm.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("Deposit tx receipt: status %d", receipt.Status)
 
 	tx, err = wZeta.Approve(zauth, ConnectorZEVMAddr, amount)
@@ -56,7 +56,7 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("approve tx receipt: status %d", receipt.Status)
 	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(1337),
@@ -70,7 +70,7 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("send tx receipt: status %d", receipt.Status)
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
@@ -84,7 +84,7 @@ func TestSendZetaOut(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("waiting for cctx status to change to final...")
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), cctxClient, sm.Logger)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), cctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -142,7 +142,7 @@ func TestSendZetaOutBTCRevert(sm *runner.SmokeTestRunner) {
 	zauth.Value = big.NewInt(0)
 
 	sm.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("Deposit tx receipt: status %d", receipt.Status)
 
 	tx, err = wZeta.Approve(zauth, ConnectorZEVMAddr, big.NewInt(1e18))
@@ -150,7 +150,7 @@ func TestSendZetaOutBTCRevert(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("approve tx receipt: status %d", receipt.Status)
 	tx, err = ConnectorZEVM.Send(zauth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
@@ -164,7 +164,7 @@ func TestSendZetaOutBTCRevert(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, zevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("send tx receipt: status %d", receipt.Status)
 	if receipt.Status != 0 {
 		panic("Was able to send ZETA to BTC")

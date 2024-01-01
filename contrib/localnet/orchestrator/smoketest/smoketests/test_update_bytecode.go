@@ -20,7 +20,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
@@ -39,7 +39,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
@@ -145,7 +145,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -162,7 +162,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -187,7 +187,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}
