@@ -104,7 +104,7 @@ func GetCoreParams() CoreParamsList {
 			},
 			{
 				ChainId:                     common.BtcRegtestChain().ChainId,
-				ConfirmationCount:           2,
+				ConfirmationCount:           1,
 				ZetaTokenContractAddress:    "",
 				ConnectorContractAddress:    "",
 				Erc20CustodyContractAddress: "",
@@ -117,7 +117,7 @@ func GetCoreParams() CoreParamsList {
 			},
 			{
 				ChainId:                     common.GoerliLocalnetChain().ChainId,
-				ConfirmationCount:           2,
+				ConfirmationCount:           1,
 				ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 				ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
 				Erc20CustodyContractAddress: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
