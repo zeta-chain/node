@@ -19,8 +19,8 @@ contract Withdrawer {
     ) external {
         // transfer gas for the transactions and approve it in the zrc20
         (address gas, uint256 gasFee) = asset.withdrawGasFee();
-        IZRC20(gas).transferFrom(msg.sender, address(this), gasFee * 10);
-        IZRC20(gas).approve(address(asset), gasFee * 10);
+        IZRC20(gas).transferFrom(msg.sender, address(this), gasFee * (count+1));
+        IZRC20(gas).approve(address(asset), gasFee * (count+1));
 
         // perform the withdraws
         asset.transferFrom(msg.sender, address(this), amount * count);

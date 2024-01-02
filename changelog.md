@@ -37,6 +37,7 @@
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
+* Add logger to smoke tests
 
 ### Chores
 
