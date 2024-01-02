@@ -76,6 +76,10 @@ func bitcoinTestRoutine(
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 
+		if err := bitcoinRunner.CheckBtcTSSBalance(); err != nil {
+			return err
+		}
+
 		bitcoinRunner.Logger.Print("🍾 Bitcoin tests completed in %s", time.Since(startTime).String())
 
 		return err

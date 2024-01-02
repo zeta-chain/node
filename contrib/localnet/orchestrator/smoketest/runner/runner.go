@@ -204,8 +204,10 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error)
 	// run smoke test
 	smokeTestWithName.SmokeTest(sm)
 
-	// check supplies
-	//sm.CheckZRC20ReserveAndSupply()
+	//check supplies
+	if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
+		return err
+	}
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
 
