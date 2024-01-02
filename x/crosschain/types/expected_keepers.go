@@ -93,6 +93,16 @@ type ZetaObserverKeeper interface {
 	SetTssAndUpdateNonce(ctx sdk.Context, tss observertypes.TSS)
 	RemoveFromPendingNonces(ctx sdk.Context, tss string, chainID int64, nonce int64)
 	GetAllNonceToCctx(ctx sdk.Context) (list []observertypes.NonceToCctx)
+
+	VoteOnInboundBallot(
+		ctx sdk.Context,
+		senderChainID int64,
+		receiverChainID int64,
+		coinType common.CoinType,
+		voter string,
+		ballotIndex string,
+		inTxHash string,
+	) (bool, error)
 }
 
 type FungibleKeeper interface {
@@ -123,7 +133,7 @@ type FungibleKeeper interface {
 		from []byte,
 		to eth.Address,
 		amount *big.Int,
-		senderChain *common.Chain,
+		senderChainID int64,
 		data []byte,
 		coinType common.CoinType,
 		asset string,

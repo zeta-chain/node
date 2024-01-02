@@ -78,12 +78,17 @@ func (chain Chain) BTCAddressFromWitnessProgram(witnessProgram []byte) (string, 
 
 // DecodeAddress decode the address string to bytes
 func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
-	if IsEVMChain(chain.ChainId) {
+	return DecodeAddressFromChainID(chain.ChainId, addr)
+}
+
+// DecodeAddressFromChainID decode the address string to bytes
+func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
+	if IsEVMChain(chainID) {
 		return ethcommon.HexToAddress(addr).Bytes(), nil
-	} else if IsBitcoinChain(chain.ChainId) {
+	} else if IsBitcoinChain(chainID) {
 		return []byte(addr), nil
 	}
-	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
+	return nil, fmt.Errorf("chain (%d) not supported", chainID)
 }
 
 func IsZetaChain(chainID int64) bool {

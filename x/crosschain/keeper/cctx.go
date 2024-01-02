@@ -99,13 +99,21 @@ func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
 	store.Delete(types.KeyPrefix(index))
 }
 
-func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx, index string, tssPubkey string, s types.CctxStatus, senderChain, receiverChain *common.Chain) types.CrossChainTx {
+func (k Keeper) CreateNewCCTX(
+	ctx sdk.Context,
+	msg *types.MsgVoteOnObservedInboundTx,
+	index string,
+	tssPubkey string,
+	s types.CctxStatus,
+	senderChainID,
+	receiverChainID int64,
+) types.CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
 	inboundParams := &types.InboundTxParams{
 		Sender:                          msg.Sender,
-		SenderChainId:                   senderChain.ChainId,
+		SenderChainId:                   senderChainID,
 		TxOrigin:                        msg.TxOrigin,
 		Asset:                           msg.Asset,
 		Amount:                          msg.Amount,
@@ -118,7 +126,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 
 	outBoundParams := &types.OutboundTxParams{
 		Receiver:                         msg.Receiver,
-		ReceiverChainId:                  receiverChain.ChainId,
+		ReceiverChainId:                  receiverChainID,
 		OutboundTxHash:                   "",
 		OutboundTxTssNonce:               0,
 		OutboundTxGasLimit:               msg.GasLimit,

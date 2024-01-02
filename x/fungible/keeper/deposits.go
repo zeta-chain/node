@@ -26,7 +26,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	from []byte,
 	to eth.Address,
 	amount *big.Int,
-	senderChain *common.Chain,
+	senderChainID int64,
 	data []byte,
 	coinType common.CoinType,
 	asset string,
@@ -37,12 +37,12 @@ func (k Keeper) ZRC20DepositAndCallContract(
 
 	// get foreign coin
 	if coinType == common.CoinType_Gas {
-		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChain.ChainId)
+		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrGasCoinNotFound
 		}
 	} else {
-		coin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChain.ChainId)
+		coin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrForeignCoinNotFound
 		}
@@ -75,7 +75,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 		context := systemcontract.ZContext{
 			Origin:  from,
 			Sender:  eth.Address{},
-			ChainID: big.NewInt(senderChain.ChainId),
+			ChainID: big.NewInt(senderChainID),
 		}
 		res, err := k.DepositZRC20AndCallContract(ctx, context, ZRC20Contract, to, amount, data)
 		return res, true, err

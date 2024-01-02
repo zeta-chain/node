@@ -22,7 +22,7 @@ func (k Keeper) HandleEVMDeposit(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	msg types.MsgVoteOnObservedInboundTx,
-	senderChain *common.Chain,
+	senderChainID int64,
 ) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	var ethTxHash ethcommon.Hash
@@ -51,7 +51,7 @@ func (k Keeper) HandleEVMDeposit(
 			to = parsedAddress
 		}
 
-		from, err := senderChain.DecodeAddress(msg.Sender)
+		from, err := common.DecodeAddressFromChainID(senderChainID, msg.Sender)
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}
@@ -61,7 +61,7 @@ func (k Keeper) HandleEVMDeposit(
 			from,
 			to,
 			msg.Amount.BigInt(),
-			senderChain,
+			msg.SenderChainId,
 			data,
 			msg.CoinType,
 			msg.Asset,
