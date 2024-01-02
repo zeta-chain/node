@@ -22,11 +22,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		// deposit
 		to := sample.EthAddress()
@@ -53,12 +53,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", assetAddress, "foobar")
+		zrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", assetAddress, "foobar")
 
 		// deposit
 		to := sample.EthAddress()
@@ -85,12 +85,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", assetAddress, "foobar")
+		deployZRC20(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", assetAddress, "foobar")
 
 		// deposit
 		to := sample.EthAddress()
@@ -113,11 +113,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		// there is an initial total supply minted during gas pool setup
 		initialTotalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
@@ -159,11 +159,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		// pause the coin
 		coin, found := k.GetForeignCoins(ctx, zrc20.String())
@@ -191,11 +191,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		// there is an initial total supply minted during gas pool setup
 		initialTotalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
@@ -232,7 +232,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -257,7 +257,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
 		// deploy the system contracts
@@ -284,11 +284,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
 		require.NoError(t, err)
@@ -322,11 +322,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 		chainList := common.DefaultChainsList()
-		chain := chainList[0]
+		chain := chainList[0].ChainId
 
 		// deploy the system contracts
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
-		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
+		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain, "foobar", "foobar")
 
 		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
 		require.NoError(t, err)

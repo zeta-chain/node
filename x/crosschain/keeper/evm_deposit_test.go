@@ -39,7 +39,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Amount:   math.NewUintFromBigInt(amount),
 				CoinType: common.CoinType_Zeta,
 			},
-			nil,
+			0,
 		)
 		require.NoError(t, err)
 		require.False(t, reverted)
@@ -68,7 +68,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Amount:   math.NewUintFromBigInt(amount),
 				CoinType: common.CoinType_Zeta,
 			},
-			nil,
+			0,
 		)
 		require.ErrorIs(t, err, errDeposit)
 		require.False(t, reverted)
@@ -80,7 +80,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -124,7 +124,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -169,7 +169,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -214,7 +214,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -258,7 +258,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -302,7 +302,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -343,7 +343,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
 		})
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		_, err := k.HandleEVMDeposit(
 			ctx,
@@ -366,7 +366,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()
@@ -409,7 +409,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			UseFungibleMock: true,
 		})
 
-		senderChain := getValidEthChain(t)
+		senderChain := getValidEthChainID(t)
 
 		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
 		receiver := sample.EthAddress()

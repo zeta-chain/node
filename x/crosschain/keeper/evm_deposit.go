@@ -61,7 +61,7 @@ func (k Keeper) HandleEVMDeposit(
 			from,
 			to,
 			msg.Amount.BigInt(),
-			msg.SenderChainId,
+			senderChainID,
 			data,
 			msg.CoinType,
 			msg.Asset,
