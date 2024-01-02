@@ -1,35 +1,77 @@
 package runner
 
 import (
-	"context"
 	"fmt"
+	"math/big"
 	"time"
 
-	"math/big"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func (sm *SmokeTestRunner) SendZetaIn() {
+// WaitForMinedCCTX waits for a cctx to be mined from a tx
+func (sm *SmokeTestRunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
+}
+
+// SendZetaOnEvm sends ZETA to an address on EVM
+// this allows the ZETA contract deployer to funds other accounts on EVM
+func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+	// the deployer might be sending ZETA in different goroutines
+	defer func() {
+		sm.Unlock()
+	}()
+	sm.Lock()
+
+	amount := big.NewInt(1e18)
+	amount = amount.Mul(amount, big.NewInt(zetaAmount))
+	tx, err := sm.ZetaEth.Transfer(sm.GoerliAuth, address, amount)
+	if err != nil {
+		panic(err)
+	}
+	return tx
+}
+
+// DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
+func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
+	sm.Logger.Print("⏳ depositing ZETA into ZEVM")
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Print("✅ ZETA deposited in %s", time.Since(startTime))
 	}()
-	// ==================== Sending ZETA to ZetaChain ===================
+
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
-	utils.LoudPrintf("Step 3: Sending ZETA to ZetaChain\n")
 	tx, err := sm.ZetaEth.Approve(sm.GoerliAuth, sm.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Approve tx hash: %s\n", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	fmt.Printf("Approve tx receipt: status %d\n", receipt.Status)
+	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("approve tx failed")
+	}
+	sm.Logger.Info("Approve tx receipt: status %d", receipt.Status)
+
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(101), // in dev mode, 101 is the  zEVM ChainID
+		// TODO: allow user to specify destination chain id
+		// https://github.com/zeta-chain/node-private/issues/41
+		DestinationChainId:  big.NewInt(common.ZetaPrivnetChain().ChainId),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
@@ -40,56 +82,24 @@ func (sm *SmokeTestRunner) SendZetaIn() {
 		panic(err)
 	}
 
-	fmt.Printf("Send tx hash: %s\n", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	fmt.Printf("Send tx receipt: status %d\n", receipt.Status)
-	fmt.Printf("  Logs:\n")
+	sm.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
+	}
+	sm.Logger.Info("Send tx receipt: status %d", receipt.Status)
+	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
 		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			fmt.Printf("    Dest Addr: %s\n", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			fmt.Printf("    Dest Chain: %d\n", sentLog.DestinationChainId)
-			fmt.Printf("    Dest Gas: %d\n", sentLog.DestinationGasLimit)
-			fmt.Printf("    Zeta Value: %d\n", sentLog.ZetaValueAndGas)
-			fmt.Printf("    Block Num: %d\n", log.BlockNumber)
+			sm.Logger.Info("    Connector: %s", sm.ConnectorEthAddr.String())
+			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			sm.Logger.Info("    Block Num: %d", log.BlockNumber)
 		}
 	}
 
-	sm.WG.Add(1)
-	go func() {
-		bn, err := sm.ZevmClient.BlockNumber(context.Background())
-		if err != nil {
-			panic(err)
-		}
-		// #nosec G701 smoketest - always in range
-		initialBal, err := sm.ZevmClient.BalanceAt(context.Background(), sm.DeployerAddress, big.NewInt(int64(bn)))
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("Zeta block %d, Initial Deployer Zeta balance: %d\n", bn, initialBal)
-
-		defer sm.WG.Done()
-		for {
-			time.Sleep(5 * time.Second)
-			bn, err = sm.ZevmClient.BlockNumber(context.Background())
-			if err != nil {
-				panic(err)
-			}
-			// #nosec G701 smoketest - always in range
-			bal, err := sm.ZevmClient.BalanceAt(context.Background(), sm.DeployerAddress, big.NewInt(int64(bn)))
-			if err != nil {
-				panic(err)
-			}
-			fmt.Printf("Zeta block %d, Deployer Zeta balance: %d\n", bn, bal)
-
-			diff := big.NewInt(0)
-			diff.Sub(bal, initialBal)
-
-			if diff.Cmp(amount) == 0 {
-				fmt.Printf("Expected zeta balance; success!\n")
-				break
-			}
-		}
-	}()
-	sm.WG.Wait()
+	return tx.Hash()
 }
