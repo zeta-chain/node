@@ -848,6 +848,34 @@ func (_m *CrosschainObserverKeeper) SetTssAndUpdateNonce(ctx types.Context, tss 
 	_m.Called(ctx, tss)
 }
 
+// VoteOnInboundBallot provides a mock function with given fields: ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash
+func (_m *CrosschainObserverKeeper) VoteOnInboundBallot(ctx types.Context, senderChainID int64, receiverChainID int64, coinType common.CoinType, voter string, ballotIndex string, inTxHash string) (bool, error) {
+	ret := _m.Called(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VoteOnInboundBallot")
+	}
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, common.CoinType, string, string, string) (bool, error)); ok {
+		return rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, common.CoinType, string, string, string) bool); ok {
+		r0 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, int64, int64, common.CoinType, string, string, string) error); ok {
+		r1 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewCrosschainObserverKeeper creates a new instance of CrosschainObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewCrosschainObserverKeeper(t interface {
