@@ -103,6 +103,13 @@ type ZetaObserverKeeper interface {
 		ballotIndex string,
 		inTxHash string,
 	) (bool, error)
+	VoteOnOutboundBallot(
+		ctx sdk.Context,
+		ballotIndex string,
+		outTxChainID int64,
+		receiveStatus common.ReceiveStatus,
+		voter string,
+	) (bool, bool, observertypes.Ballot, string, error)
 }
 
 type FungibleKeeper interface {

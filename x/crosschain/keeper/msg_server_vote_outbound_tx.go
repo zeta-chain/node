@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // VoteOnObservedOutboundTx casts a vote on an outbound transaction observed on a connected chain (after
@@ -60,59 +60,45 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	observationType := observerTypes.ObservationType_OutBoundTx
-	// Observer Chain already checked then inbound is created
-	/* EDGE CASE : Params updated in during the finalization process
-	   i.e Inbound has been finalized but outbound is still pending
-	*/
-	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
-	if observationChain == nil {
-		return nil, observerTypes.ErrSupportedChains
-	}
-	err := observerTypes.CheckReceiveStatus(msg.Status)
-	if err != nil {
-		return nil, err
-	}
-	//Check is msg.Creator is authorized to vote
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
-		return nil, observerTypes.ErrNotAuthorizedPolicy
-	}
 
-	// Check if CCTX exists
+	// check if CCTX exists and if the nonce matches
 	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
 	if !found {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
 	}
-
 	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
 		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
 	}
 
+	// get ballot index
 	ballotIndex := msg.Digest()
-	// Add votes and Set Ballot
-	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, ballotIndex, observationChain, observationType)
-	if err != nil {
-		return nil, err
-	}
-	if isNew {
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain.String())
-		// Set this the first time when the ballot is created
-		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
-		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
-		//k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
-	}
-	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.ConvertReceiveStatusToVoteType(msg.Status))
+
+	// vote on outbound ballot
+	isFinalized, isNew, ballot, observationChain, err := k.zetaObserverKeeper.VoteOnOutboundBallot(
+		ctx,
+		ballotIndex,
+		msg.OutTxChain,
+		msg.Status,
+		msg.Creator)
 	if err != nil {
 		return nil, err
 	}
 
-	ballot, isFinalizedInThisBlock := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
-	if !isFinalizedInThisBlock {
-		// Return nil here to add vote to ballot and commit state
+	// if the ballot is new, set the index to the CCTX
+	if isNew {
+		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain)
+		// Set this the first time when the ballot is created
+		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
+		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
+	}
+
+	// if not finalized commit state here
+	if !isFinalized {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	if ballot.BallotStatus != observerTypes.BallotStatus_BallotFinalized_FailureObservation {
+
+	// if ballot successful, the value received should be the out tx amount
+	if ballot.BallotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ValueReceived.Equal(cctx.GetCurrentOutTxParam().Amount) {
 			log.Error().Msgf("VoteOnObservedOutboundTx: Mint mismatch: %s value received vs %s cctx amount",
 				msg.ValueReceived,
@@ -140,15 +126,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, types.ErrCannotFindTSSKeys
 	}
 
-	// FinalizeOutbound sets final status for a successful vote
-	// FinalizeOutbound updates CCTX Prices and Nonce for a revert
-
 	tmpCtx, commit := ctx.CacheContext()
 	err = func() error { //err = FinalizeOutbound(k, ctx, &cctx, msg, ballot.BallotStatus)
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 		oldStatus := cctx.CctxStatus.Status
 		switch ballot.BallotStatus {
-		case observerTypes.BallotStatus_BallotFinalized_SuccessObservation:
+		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
 			switch oldStatus {
 			case types.CctxStatus_PendingRevert:
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Reverted, "")
@@ -157,7 +140,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			}
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
-		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
+		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
 			if msg.CoinType == common.CoinType_Cmd || common.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
 				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
