@@ -52,7 +52,7 @@ func NewLocalCmd() *cobra.Command {
 	)
 	cmd.Flags().Bool(
 		flagVerbose,
-		true,
+		false,
 		"set to true to enable verbose logging",
 	)
 	cmd.Flags().Bool(
@@ -166,9 +166,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		//eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
-		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))

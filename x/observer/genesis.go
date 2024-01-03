@@ -28,10 +28,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		btcCoreParams.IsSupported = true
 		goerliCoreParams := types.GetDefaultGoerliLocalnetCoreParams()
 		goerliCoreParams.IsSupported = true
+		zetaPrivnetCoreParams := types.GetDefaultZetaPrivnetCoreParams()
+		zetaPrivnetCoreParams.IsSupported = true
 		k.SetCoreParamsList(ctx, types.CoreParamsList{
 			CoreParams: []*types.CoreParams{
 				btcCoreParams,
 				goerliCoreParams,
+				zetaPrivnetCoreParams,
 			},
 		})
 	}

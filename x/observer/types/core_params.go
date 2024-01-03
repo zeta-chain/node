@@ -133,6 +133,7 @@ func GetDefaultCoreParams() CoreParamsList {
 			GetDefaultBtcTestnetCoreParams(),
 			GetDefaultBtcRegtestCoreParams(),
 			GetDefaultGoerliLocalnetCoreParams(),
+			GetDefaultZetaPrivnetCoreParams(),
 		},
 	}
 }
@@ -295,6 +296,24 @@ func GetDefaultGoerliLocalnetCoreParams() *CoreParams {
 		GasPriceTicker:              5,
 		OutboundTxScheduleInterval:  2,
 		OutboundTxScheduleLookahead: 5,
+		BallotThreshold:             DefaultBallotThreshold,
+		MinObserverDelegation:       DefaultMinObserverDelegation,
+		IsSupported:                 false,
+	}
+}
+func GetDefaultZetaPrivnetCoreParams() *CoreParams {
+	return &CoreParams{
+		ChainId:                     common.ZetaPrivnetChain().ChainId,
+		ConfirmationCount:           1,
+		ZetaTokenContractAddress:    zeroAddress,
+		ConnectorContractAddress:    zeroAddress,
+		Erc20CustodyContractAddress: zeroAddress,
+		InTxTicker:                  2,
+		OutTxTicker:                 2,
+		WatchUtxoTicker:             0,
+		GasPriceTicker:              5,
+		OutboundTxScheduleInterval:  0,
+		OutboundTxScheduleLookahead: 0,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
 		IsSupported:                 false,
