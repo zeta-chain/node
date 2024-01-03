@@ -2,7 +2,6 @@ package crosschain
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -13,6 +12,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// Params
 	k.SetParams(ctx, genState.Params)
 
+	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
 		k.SetOutTxTracker(ctx, elem)
@@ -36,11 +36,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the chain nonces
-	for _, elem := range genState.ChainNoncesList {
-		if elem != nil {
-			k.SetChainNonces(ctx, *elem)
-		}
-	}
 
 	// Set all the last block heights
 	for _, elem := range genState.LastBlockHeightList {
@@ -56,20 +51,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	if genState.Tss != nil {
-		k.SetTSS(ctx, *genState.Tss)
-		for _, chain := range common.DefaultChainsList() {
-			k.SetPendingNonces(ctx, types.PendingNonces{
-				NonceLow:  0,
-				NonceHigh: 0,
-				ChainId:   chain.ChainId,
-				Tss:       genState.Tss.TssPubkey,
-			})
-		}
-		for _, elem := range genState.TssHistory {
-			k.SetTSSHistory(ctx, elem)
-		}
-	}
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -81,24 +62,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
 	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)
 
-	// Get tss
-	tss, found := k.GetTSS(ctx)
-	if found {
-		genesis.Tss = &tss
-	}
-
 	// Get all gas prices
 	gasPriceList := k.GetAllGasPrice(ctx)
 	for _, elem := range gasPriceList {
 		elem := elem
 		genesis.GasPriceList = append(genesis.GasPriceList, &elem)
-	}
-
-	// Get all chain nonces
-	chainNoncesList := k.GetAllChainNonces(ctx)
-	for _, elem := range chainNoncesList {
-		elem := elem
-		genesis.ChainNoncesList = append(genesis.ChainNoncesList, &elem)
 	}
 
 	// Get all last block heights
@@ -115,7 +83,10 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		genesis.CrossChainTxs = append(genesis.CrossChainTxs, &elem)
 	}
 
-	genesis.TssHistory = k.GetAllTSS(ctx)
+	amount, found := k.GetZetaAccounting(ctx)
+	if found {
+		genesis.ZetaAccounting = amount
+	}
 
 	return &genesis
 }

@@ -274,7 +274,7 @@
         "elasticity_multiplier": 2,
         "enable_height": "0",
         "base_fee": "1000000000",
-        "min_gas_price": "0.000000000000000000",
+        "min_gas_price": "10000000000.0",
         "min_gas_multiplier": "0.500000000000000000"
       },
       "block_gas": "0"

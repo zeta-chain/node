@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	"github.com/pkg/errors"
 
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/common"
@@ -20,9 +21,9 @@ const (
 	PostGasPriceGasLimit            = 1_500_000
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 1_500_000 // likely emit a lot of logs, so costly
+	PostSendEVMGasLimit             = 4_000_000 // likely emit a lot of logs, so costly
 	PostSendNonEVMGasLimit          = 1_000_000
-	PostReceiveConfirmationGasLimit = 200_000
+	PostReceiveConfirmationGasLimit = 400_000
 	PostBlameDataGasLimit           = 200_000
 	DefaultGasLimit                 = 200_000
 	PostProveOutboundTxGasLimit     = 400_000
@@ -124,21 +125,31 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, error) {
+func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+
+	// don't post send if has already voted before
+	ballotIndex := msg.Digest()
+	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
+	if err != nil {
+		return "", ballotIndex, errors.Wrapf(err, "PostSend: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+	}
+	if hasVoted {
+		return "", ballotIndex, nil
 	}
 
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
 		if err == nil {
-			return zetaTxHash, nil
+			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
+	return "", ballotIndex, fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
 func (b *ZetaCoreBridge) PostReceiveConfirmation(
@@ -153,16 +164,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	chain common.Chain,
 	nonce uint64,
 	coinType common.CoinType,
-) (string, error) {
-	lastReport, found := b.lastOutTxReportTime[outTxHash]
-	if found && time.Since(lastReport) < 10*time.Minute {
-		return "", fmt.Errorf(
-			"PostReceiveConfirmation: outTxHash %s already reported in last 10min; last report %s",
-			outTxHash,
-			lastReport,
-		)
-	}
-
+) (string, string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
 		signerAddress,
@@ -181,7 +183,17 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+
+	// don't post confirmation if has already voted before
+	ballotIndex := msg.Digest()
+	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
+	if err != nil {
+		return "", ballotIndex, errors.Wrapf(err, "PostReceiveConfirmation: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+	}
+	if hasVoted {
+		return "", ballotIndex, nil
 	}
 
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
@@ -193,13 +205,12 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
 		if err == nil {
-			b.lastOutTxReportTime[outTxHash] = time.Now() // update last report time when bcast succeeds
-			return zetaTxHash, nil
+			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return "", fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
+	return "", ballotIndex, fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
 }
 
 func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
@@ -244,7 +255,7 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 
 func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
-	zetaBlame := &observerTypes.Blame{
+	zetaBlame := observerTypes.Blame{
 		Index:         index,
 		FailureReason: blame.FailReason,
 		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),

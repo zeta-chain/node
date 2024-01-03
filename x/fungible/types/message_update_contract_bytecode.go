@@ -13,12 +13,14 @@ const TypeMsgUpdateContractBytecode = "update_contract_bytecode"
 var _ sdk.Msg = &MsgUpdateContractBytecode{}
 
 func NewMsgUpdateContractBytecode(
-	creator string, contractAddress ethcommon.Address, newBytecodeAddress ethcommon.Address,
+	creator string,
+	contractAddress string,
+	newCodeHash string,
 ) *MsgUpdateContractBytecode {
 	return &MsgUpdateContractBytecode{
-		Creator:            creator,
-		ContractAddress:    contractAddress.Hex(),
-		NewBytecodeAddress: newBytecodeAddress.Hex(),
+		Creator:         creator,
+		ContractAddress: contractAddress,
+		NewCodeHash:     newCodeHash,
 	}
 }
 
@@ -53,9 +55,10 @@ func (msg *MsgUpdateContractBytecode) ValidateBasic() error {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
 	}
 
-	// check if the bytecode contract address is valid
-	if !ethcommon.IsHexAddress(msg.NewBytecodeAddress) {
-		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)
+	// check if the new code hash is valid, it should be 32 bytes
+	// 32 bytes = 64 hex characters + 0x prefix
+	if len(msg.NewCodeHash) != 66 {
+		return cosmoserror.Wrapf(sdkerrors.ErrInvalidRequest, "invalid new code hash length (%d)", len(msg.NewCodeHash))
 	}
 
 	return nil

@@ -49,6 +49,11 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	}
 	ZRC20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
 
+	// check if foreign coin is paused
+	if coin.Paused {
+		return nil, false, types.ErrPausedZRC20
+	}
+
 	// check foreign coins cap if it has a cap
 	if !coin.LiquidityCap.IsNil() && !coin.LiquidityCap.IsZero() {
 		liquidityCap := coin.LiquidityCap.BigInt()

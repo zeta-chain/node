@@ -100,9 +100,7 @@ func CmdGasPriceVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgGasPriceVoter(clientCtx.GetFromAddress().String(), argsChain, argsPrice, argsSupply, argsBlockNumber)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

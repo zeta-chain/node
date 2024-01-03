@@ -43,6 +43,7 @@ func Test_LoadTssFilesFromDirectory(t *testing.T) {
 				CurrentPubkey: "",
 			}
 			err = tss.LoadTssFilesFromDirectory(tempdir)
+			assert.NoError(t, err)
 			assert.Equal(t, tc.n, len(tss.Keys))
 		})
 	}
@@ -70,6 +71,9 @@ func GenerateKeyshareFiles(n int, dir string) error {
 			return err
 		}
 		err = os.WriteFile(filename, b, 0644)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

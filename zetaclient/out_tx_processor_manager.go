@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -59,4 +60,9 @@ func (outTxMan *OutTxProcessorManager) TimeInTryProcess(outTxID string) time.Dur
 		return time.Since(outTxMan.outTxStartTime[outTxID])
 	}
 	return 0
+}
+
+// ToOutTxID returns the outTxID for OutTxProcessorManager to track
+func ToOutTxID(index string, receiverChainID int64, nonce uint64) string {
+	return fmt.Sprintf("%s-%d-%d", index, receiverChainID, nonce)
 }

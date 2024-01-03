@@ -9,12 +9,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-var (
-	SigningAlgoSecp256k1 = SigninAlgo("secp256k1")
-	SigningAlgoEd25519   = SigninAlgo("ed25519")
-)
-
-// return the ChainName from a string
+// ParseChainName returns the ChainName from a string
 // if no such name exists, returns the empty chain name: ChainName_empty
 func ParseChainName(chain string) ChainName {
 	c := ChainName_value[chain]
@@ -23,28 +18,25 @@ func ParseChainName(chain string) ChainName {
 
 type SigninAlgo string
 
-// Chain is an alias of string , represent a block chain
-//type Chain string
-
 // Chains represent a slice of Chain
 type Chains []Chain
 
-// Equals compare two chain to see whether they represent the same chain
+// IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
-	if chain.ChainName == c.ChainName && chain.ChainId == c.ChainId {
+	if chain.ChainId == c.ChainId {
 		return true
 	}
 	return false
 }
 
 func (chain Chain) IsZetaChain() bool {
-	return chain.IsEqual(ZetaChain())
+	return chain.InChainList(ZetaChainList())
 }
 func (chain Chain) IsExternalChain() bool {
-	return !chain.IsEqual(ZetaChain())
+	return !chain.InChainList(ZetaChainList())
 }
 
-// bytes representations of address
+// EncodeAddress bytes representations of address
 // on EVM chain, it is 20Bytes
 // on Bitcoin chain, it is P2WPKH address, []byte(bech32 encoded string)
 func (chain Chain) EncodeAddress(b []byte) (string, error) {
@@ -94,8 +86,16 @@ func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
 	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
 }
 
+func IsZetaChain(chainID int64) bool {
+	return ChainIDInChainList(chainID, ZetaChainList())
+}
+
+// IsEVMChain returns true if the chain is an EVM chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsEVMChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 80001 || // Polygon mumbai
 		chainID == 97 || // BSC testnet
 		chainID == 1001 || // klaytn baobab
@@ -105,8 +105,12 @@ func IsEVMChain(chainID int64) bool {
 		chainID == 137 // polygon mainnet
 }
 
+// IsHeaderSupportedEvmChain returns true if the chain is an EVM chain supporting block header-based verification
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsHeaderSupportedEvmChain(chainID int64) bool {
 	return chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 97 || // BSC testnet
 		chainID == 1337 || // eth privnet
 		chainID == 1 || // eth mainnet
@@ -122,15 +126,22 @@ func (chain Chain) SupportMerkleProof() bool {
 	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
 }
 
+// IsBitcoinChain returns true if the chain is a Bitcoin chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsBitcoinChain(chainID int64) bool {
 	return chainID == 18444 || // regtest
 		chainID == 18332 || //testnet
 		chainID == 8332 // mainnet
 }
 
+// IsEthereumChain returns true if the chain is an Ethereum chain
+// TODO: put this information directly in chain object
+// https://github.com/zeta-chain/node-private/issues/63
 func IsEthereumChain(chainID int64) bool {
 	return chainID == 1 || // eth mainnet
 		chainID == 5 || // Goerli
+		chainID == SepoliaChain().ChainId || // Sepolia
 		chainID == 1337 // eth privnet
 }
 
@@ -161,21 +172,11 @@ func (chains Chains) Distinct() Chains {
 }
 
 func (chains Chains) Strings() []string {
-	strings := make([]string, len(chains))
+	str := make([]string, len(chains))
 	for i, c := range chains {
-		strings[i] = c.String()
+		str[i] = c.String()
 	}
-	return strings
-}
-
-func GetChainFromChainName(chainName ChainName) *Chain {
-	chains := DefaultChainsList()
-	for _, chain := range chains {
-		if chainName == chain.ChainName {
-			return chain
-		}
-	}
-	return nil
+	return str
 }
 
 func GetChainFromChainID(chainID int64) *Chain {
@@ -207,4 +208,19 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
 	}
+}
+
+// InChainList checks whether the chain is in the chain list
+func (chain Chain) InChainList(chainList []*Chain) bool {
+	return ChainIDInChainList(chain.ChainId, chainList)
+}
+
+// ChainIDInChainList checks whether the chainID is in the chain list
+func ChainIDInChainList(chainID int64, chainList []*Chain) bool {
+	for _, c := range chainList {
+		if chainID == c.ChainId {
+			return true
+		}
+	}
+	return false
 }

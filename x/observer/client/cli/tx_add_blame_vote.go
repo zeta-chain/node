@@ -48,16 +48,14 @@ func CmdAddBlameVote() *cobra.Command {
 				return err
 			}
 			blameNodes := types.ConvertNodes(nodes)
-			blameInfo := &types.Blame{
+			blameInfo := types.Blame{
 				Index:         index,
 				FailureReason: failureReason,
 				Nodes:         blameNodes,
 			}
 
 			msg := types.NewMsgAddBlameVoteMsg(clientCtx.GetFromAddress().String(), int64(chainID), blameInfo)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			println("about to broadcast")
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -32,6 +32,7 @@ Zetacore Daemon (server)
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
 * [zetacored rollback](zetacored_rollback.md)	 - rollback cosmos-sdk and tendermint state by one height
 * [zetacored rosetta](zetacored_rosetta.md)	 - spin up a rosetta server
+* [zetacored snapshots](zetacored_snapshots.md)	 - Manage local snapshots
 * [zetacored start](zetacored_start.md)	 - Run the full node
 * [zetacored status](zetacored_status.md)	 - Query remote node for status
 * [zetacored tendermint](zetacored_tendermint.md)	 - Tendermint subcommands

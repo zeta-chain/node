@@ -96,7 +96,13 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2", &log.Logger)
+	inTxs := FilterAndParseIncomingTx(
+		block.Tx,
+		uint64(block.Height),
+		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
+		&log.Logger,
+		common.BtcRegtestChain().ChainId,
+	)
 
 	suite.Require().Equal(1, len(inTxs))
 	suite.Require().Equal(inTxs[0].Value, 0.0001)
@@ -126,7 +132,13 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.T().Logf("block height %d", block.Height)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs := FilterAndParseIncomingTx(block.Tx, uint64(block.Height), "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2", &log.Logger)
+	inTxs := FilterAndParseIncomingTx(
+		block.Tx,
+		uint64(block.Height),
+		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
+		&log.Logger,
+		common.BtcRegtestChain().ChainId,
+	)
 
 	suite.Require().Equal(0, len(inTxs))
 }

@@ -1,74 +1,18 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/spf13/cast"
-	"github.com/zeta-chain/zetacore/common"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
-
-func CmdShowTSS() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "show-tss",
-		Short: "shows a TSS",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			params := &types.QueryGetTSSRequest{}
-
-			res, err := queryClient.TSS(context.Background(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-func CmdListTssHistory() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "list-tss-history",
-		Short: "show historical list of TSS",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			clientCtx := client.GetClientContextFromCmd(cmd)
-
-			queryClient := types.NewQueryClient(clientCtx)
-
-			params := &types.QueryTssHistoryRequest{}
-
-			res, err := queryClient.TssHistory(context.Background(), params)
-			if err != nil {
-				return err
-			}
-
-			return clientCtx.PrintProto(res)
-		},
-	}
-
-	flags.AddQueryFlagsToCmd(cmd)
-
-	return cmd
-}
-
-// Transaction CLI /////////////////////////
 
 func CmdCreateTSSVoter() *cobra.Command {
 	cmd := &cobra.Command{
@@ -99,9 +43,7 @@ func CmdCreateTSSVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgCreateTSSVoter(clientCtx.GetFromAddress().String(), argsPubkey, keygenBlock, status)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -128,9 +70,7 @@ func CmdUpdateTss() *cobra.Command {
 			}
 
 			msg := types.NewMsgUpdateTssAddress(clientCtx.GetFromAddress().String(), argsPubkey)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -157,9 +97,7 @@ func CmdMigrateTssFunds() *cobra.Command {
 			}
 
 			msg := types.NewMsgMigrateTssFunds(clientCtx.GetFromAddress().String(), argsChainID, argsAmount)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

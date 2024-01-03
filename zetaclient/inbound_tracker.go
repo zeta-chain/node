@@ -16,7 +16,12 @@ import (
 // ExternalChainWatcherForNewInboundTrackerSuggestions At each tick, gets a list of Inbound tracker suggestions from zeta-core and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
 func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Err(err).Msg("error creating ticker")
+		return
+	}
+
 	defer ticker.Stop()
 	ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher for inboundTrackerSuggestions started")
 	for {
@@ -35,7 +40,12 @@ func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 }
 
 func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetCoreParams().InTxTicker)
+	if err != nil {
+		ob.logger.WatchInTx.Err(err).Msg("error creating ticker")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
@@ -90,7 +100,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 		return "", err
 	}
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx)
+	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx, ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
@@ -101,12 +111,13 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 	if !vote {
 		return msg.Digest(), nil
 	}
-	zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 	if err != nil {
 		ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
+	} else if ballot == "" {
+		ob.logger.WatchInTx.Info().Msgf("BTC deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 	}
-	ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 	return msg.Digest(), nil
 }
 
@@ -166,12 +177,13 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 		return msg.Digest(), nil
 	}
 
-	zetaHash, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
+	} else if zetaHash != "" {
+		ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 
 	return msg.Digest(), nil
 }
@@ -200,12 +212,13 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool)
 		return msg.Digest(), nil
 	}
 
-	zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
+	} else if zetaHash != "" {
+		ob.logger.ExternalChainWatcher.Info().Msgf("ERC20 Deposit event detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 
 	return msg.Digest(), nil
 }
@@ -249,12 +262,13 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string, vote bool) (
 		return msg.Digest(), nil
 	}
 
-	zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
+	} else if zetaHash != "" {
+		ob.logger.ExternalChainWatcher.Info().Msgf("Gas deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 	}
-	ob.logger.ExternalChainWatcher.Info().Msgf("Gas Deposit detected and reported: PostSend zeta tx: %s", zetaHash)
 
 	return msg.Digest(), nil
 }

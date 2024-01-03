@@ -7,10 +7,8 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Params } from "./params_pb.js";
 import type { OutTxTracker } from "./out_tx_tracker_pb.js";
-import type { TSS } from "./tss_pb.js";
 import type { GasPrice } from "./gas_price_pb.js";
-import type { ChainNonces } from "./chain_nonces_pb.js";
-import type { CrossChainTx } from "./cross_chain_tx_pb.js";
+import type { CrossChainTx, ZetaAccounting } from "./cross_chain_tx_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 import type { InTxHashToCctx } from "./in_tx_hash_to_cctx_pb.js";
 import type { InTxTracker } from "./in_tx_tracker_pb.js";
@@ -32,19 +30,9 @@ export declare class GenesisState extends Message<GenesisState> {
   outTxTrackerList: OutTxTracker[];
 
   /**
-   * @generated from field: zetachain.zetacore.crosschain.TSS tss = 4;
-   */
-  tss?: TSS;
-
-  /**
    * @generated from field: repeated zetachain.zetacore.crosschain.GasPrice gasPriceList = 5;
    */
   gasPriceList: GasPrice[];
-
-  /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.ChainNonces chainNoncesList = 6;
-   */
-  chainNoncesList: ChainNonces[];
 
   /**
    * @generated from field: repeated zetachain.zetacore.crosschain.CrossChainTx CrossChainTxs = 7;
@@ -62,14 +50,14 @@ export declare class GenesisState extends Message<GenesisState> {
   inTxHashToCctxList: InTxHashToCctx[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.crosschain.TSS tss_history = 10;
-   */
-  tssHistory: TSS[];
-
-  /**
    * @generated from field: repeated zetachain.zetacore.crosschain.InTxTracker in_tx_tracker_list = 11;
    */
   inTxTrackerList: InTxTracker[];
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.ZetaAccounting zeta_accounting = 12;
+   */
+  zetaAccounting?: ZetaAccounting;
 
   constructor(data?: PartialMessage<GenesisState>);
 

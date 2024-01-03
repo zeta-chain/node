@@ -32,7 +32,6 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain gas-price-voter](zetacored_tx_crosschain_gas-price-voter.md)	 - Broadcast message gasPriceVoter
 * [zetacored tx crosschain inbound-voter](zetacored_tx_crosschain_inbound-voter.md)	 - Broadcast message sendVoter
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address
-* [zetacored tx crosschain nonce-voter](zetacored_tx_crosschain_nonce-voter.md)	 - Broadcast message nonceVoter
 * [zetacored tx crosschain outbound-voter](zetacored_tx_crosschain_outbound-voter.md)	 - Broadcast message receiveConfirmation
 * [zetacored tx crosschain remove-from-out-tx-tracker](zetacored_tx_crosschain_remove-from-out-tx-tracker.md)	 - Remove a out-tx-tracker
 * [zetacored tx crosschain update-tss-address](zetacored_tx_crosschain_update-tss-address.md)	 - Create a new TSSVoter

@@ -34,8 +34,9 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 	// iterate all chains' pending cctx
 	chains := common.DefaultChainsList()
 	for _, chain := range chains {
-		res, err := k.CctxAllPending(sdk.UnwrapSDKContext(ctx), &types.QueryAllCctxPendingRequest{
+		res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
 			ChainId: chain.ChainId,
+			Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
 		})
 		if err != nil {
 			return err

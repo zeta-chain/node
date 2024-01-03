@@ -7,11 +7,6 @@ import (
 )
 
 func TestChain_EncodeAddress(t *testing.T) {
-	type fields struct {
-		ChainName ChainName
-		ChainId   int32
-	}
-
 	tests := []struct {
 		name    string
 		chain   Chain
@@ -52,4 +47,12 @@ func TestChain_EncodeAddress(t *testing.T) {
 			require.Equal(t, tc.want, s)
 		})
 	}
+}
+
+func TestChain_InChainList(t *testing.T) {
+	require.True(t, ZetaChainMainnet().InChainList(ZetaChainList()))
+	require.True(t, ZetaMocknetChain().InChainList(ZetaChainList()))
+	require.True(t, ZetaPrivnetChain().InChainList(ZetaChainList()))
+	require.True(t, ZetaTestnetChain().InChainList(ZetaChainList()))
+	require.False(t, EthChain().InChainList(ZetaChainList()))
 }

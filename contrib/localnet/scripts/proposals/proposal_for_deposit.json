@@ -1,0 +1,13 @@
+{
+  "title": "Proposal-That-Is-Stuck-At-Deposit",
+  "description": "This proposal is for internal testing only. It is stuck at deposit.",
+  "metadata": "ipfs://QmYMEcLNY7yAfur8KtH2rcJTJutPNuGEJLaPrWEM6iAcpP",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "UnbondingTime",
+      "value": "8000"
+    }
+  ],
+  "deposit": "0azeta"
+}

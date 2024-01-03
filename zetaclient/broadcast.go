@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+
+	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,9 +20,13 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )
 
+const (
+	// DefaultBaseGasPrice is the default base gas price
+	DefaultBaseGasPrice = 1_000_000
+)
+
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner AuthZSigner) (string, error) {
-	gaslimit = gaslimit * 3
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error
@@ -27,6 +34,13 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	blockHeight, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return "", err
+	}
+	baseGasPrice, err := b.GetBaseGasPrice()
+	if err != nil {
+		return "", err
+	}
+	if baseGasPrice == 0 {
+		baseGasPrice = DefaultBaseGasPrice // shoudn't happen, but just in case
 	}
 
 	if blockHeight > b.blockHeight {
@@ -57,14 +71,15 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 		return "", err
 	}
 	builder.SetGasLimit(gaslimit)
-	fee := sdktypes.NewCoins(sdktypes.NewCoin("azeta", sdktypes.NewInt(40000)))
+	// #nosec G701 always in range
+	fee := sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom,
+		cosmos.NewInt(int64(gaslimit)).Mul(cosmos.NewInt(baseGasPrice))))
 	builder.SetFeeAmount(fee)
 	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {
 		return "", err
 	}
-
 	txBytes, err := ctx.TxConfig.TxEncoder()(builder.GetTx())
 	if err != nil {
 		return "", err
@@ -106,7 +121,6 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	//seq := b.seqNumber[authzSigner.KeyType]
 	//atomic.AddUint64(&seq, 1)
 	b.seqNumber[authzSigner.KeyType] = b.seqNumber[authzSigner.KeyType] + 1
-	//b.logger.Debug().Msgf("b.sequence number increased to %d", b.seqNumber)
 
 	return commit.TxHash, nil
 }

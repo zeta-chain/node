@@ -305,7 +305,7 @@ func startInProcess(ctx *server.Context, clientCtx client.Context, opts StartOpt
 			ctx.Logger.Debug("failed to get filepath for the CPU profile file", "error", err.Error())
 			return err
 		}
-		/* #nosec */
+		// #nosec G304 - users can't control the filepath
 		f, err := os.Create(fp)
 		if err != nil {
 			return err

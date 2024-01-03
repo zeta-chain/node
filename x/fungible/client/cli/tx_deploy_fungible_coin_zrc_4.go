@@ -17,7 +17,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy-fungible-coin-zrc-4 [erc-20] [foreign-chain] [decimals] [name] [symbol] [coin-type] [gas-limit]",
 		Short: "Broadcast message DeployFungibleCoinZRC20",
-		Args:  cobra.ExactArgs(6),
+		Args:  cobra.ExactArgs(7),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argERC20 := args[0]
 			argForeignChain, err := strconv.ParseInt(args[1], 10, 32)
@@ -55,9 +55,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				common.CoinType(argCoinType),
 				argGasLimit,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

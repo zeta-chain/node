@@ -207,14 +207,11 @@ func (ob *BitcoinChainClient) Stop() {
 	ob.logger.ChainLogger.Info().Msgf("%s observer stopped", ob.chain.String())
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeight(block int64) {
-	if block < 0 {
+func (ob *BitcoinChainClient) SetLastBlockHeight(height int64) {
+	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if block >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
-	atomic.StoreInt64(&ob.lastBlock, block)
+	atomic.StoreInt64(&ob.lastBlock, height)
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
@@ -222,30 +219,22 @@ func (ob *BitcoinChainClient) GetLastBlockHeight() int64 {
 	if height < 0 {
 		panic("lastBlock is negative")
 	}
-	if height >= math.MaxInt64 {
-		panic("lastBlock is too large")
-	}
 	return height
 }
 
-func (ob *BitcoinChainClient) SetLastBlockHeightScanned(block int64) {
-	if block < 0 {
+func (ob *BitcoinChainClient) SetLastBlockHeightScanned(height int64) {
+	if height < 0 {
 		panic("lastBlockScanned is negative")
 	}
-	if block >= math.MaxInt64 {
-		panic("lastBlockScanned is too large")
-	}
-	atomic.StoreInt64(&ob.lastBlockScanned, block)
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), (block))
+	atomic.StoreInt64(&ob.lastBlockScanned, height)
+	// #nosec G701 checked as positive
+	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), uint64(height))
 }
 
 func (ob *BitcoinChainClient) GetLastBlockHeightScanned() int64 {
 	height := atomic.LoadInt64(&ob.lastBlockScanned)
 	if height < 0 {
 		panic("lastBlockScanned is negative")
-	}
-	if height >= math.MaxInt64 {
-		panic("lastBlockScanned is too large")
 	}
 	return height
 }
@@ -264,14 +253,19 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ticker := NewDynamicTicker("Bitcoin_WatchInTx", ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx", ob.GetCoreParams().InTxTicker)
+	if err != nil {
+		ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
 			err := ob.observeInTx()
 			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")
+				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
 		case <-ob.stop:
@@ -316,24 +310,8 @@ func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
 	return err
 }
 
-// TODO
 func (ob *BitcoinChainClient) observeInTx() error {
-	cnt, err := ob.rpcClient.GetBlockCount()
-	if err != nil {
-		return fmt.Errorf("error getting block count: %s", err)
-	}
-	if cnt < 0 || cnt >= math.MaxInt64 {
-		return fmt.Errorf("block count is out of range: %d", cnt)
-	}
-
-	// "confirmed" current block number
-	// #nosec G701 always in range
-	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
-	if confirmedBlockNum < 0 || confirmedBlockNum > math.MaxInt64 {
-		return fmt.Errorf("skipping observer , confirmedBlockNum is negative or too large ")
-	}
-	ob.SetLastBlockHeight(confirmedBlockNum)
-
+	// make sure inbound TXS / Send is enabled by the protocol
 	flags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
@@ -342,17 +320,39 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
-	lastBN := ob.GetLastBlockHeightScanned()
+	// get and update latest block height
+	cnt, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+	}
+	if cnt < 0 {
+		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+	}
+	ob.SetLastBlockHeight(cnt)
 
-	// query incoming gas asset
-	if confirmedBlockNum > lastBN {
-		bn := lastBN + 1
+	// skip if current height is too low
+	// #nosec G701 always in range
+	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
+	if confirmedBlockNum < 0 {
+		return fmt.Errorf("observeInTxBTC: skipping observer, current block number %d is too low", cnt)
+	}
+
+	// skip if no new block is confirmed
+	lastScanned := ob.GetLastBlockHeightScanned()
+	if lastScanned >= confirmedBlockNum {
+		return nil
+	}
+
+	// query incoming gas asset to TSS address
+	{
+		bn := lastScanned + 1
 		res, err := ob.GetBlockByNumberCached(bn)
 		if err != nil {
-			ob.logger.WatchInTx.Error().Err(err).Msgf("error getting bitcoin block %d", bn)
+			ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error getting bitcoin block %d", bn)
 			return err
 		}
-		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs, current block %d, last block %d", bn, len(res.Block.Tx), cnt, lastBN)
+		ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: block %d has %d txs, current block %d, last block %d",
+			bn, len(res.Block.Tx), cnt, lastScanned)
 
 		// print some debug information
 		if len(res.Block.Tx) > 1 {
@@ -365,30 +365,38 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// add block header to zetacore
-		// #nosec G701 always positive
 		err = ob.postBlockHeader(bn)
 		if err != nil {
-			ob.logger.WatchInTx.Warn().Err(err).Msgf("error posting block header %d", bn)
+			ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
 		// #nosec G701 always positive
-		inTxs := FilterAndParseIncomingTx(res.Block.Tx, uint64(res.Block.Height), tssAddress, &ob.logger.WatchInTx)
+		inTxs := FilterAndParseIncomingTx(
+			res.Block.Tx,
+			uint64(res.Block.Height),
+			tssAddress,
+			&ob.logger.WatchInTx,
+			ob.chain.ChainId,
+		)
 
+		// post inbound vote message to zetacore
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
-				continue
+				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+				return err // we have to re-scan this block next time
+			} else if zetaHash != "" {
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 			}
-			ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
 		// Save LastBlockHeight
 		ob.SetLastBlockHeightScanned(bn)
-		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(ob.GetLastBlockHeightScanned())).Error; err != nil {
-			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
+		// #nosec G701 always positive
+		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(uint64(bn))).Error; err != nil {
+			ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error writing last scanned block %d to db", bn)
 		}
 	}
 
@@ -414,21 +422,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	ob.Mu.Unlock()
 
 	// Get original cctx parameters
-	params, err := ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
-
-	// Get original cctx parameters
-	params, err = ob.GetPendingCctxParams(nonce)
+	params, err := ob.GetCctxParams(nonce)
 	if err != nil {
 		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
 		return false, false, err
@@ -475,7 +469,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, err := ob.zetaClient.PostReceiveConfirmation(
+	zetaHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
@@ -490,15 +484,20 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		common.CoinType_Gas,
 	)
 	if err != nil {
-		logger.Error().Err(err).Msgf("error posting to zeta core")
-	} else {
-		logger.Info().Msgf("Bitcoin outTx %s confirmed: PostReceiveConfirmation zeta tx: %s", res.TxID, zetaHash)
+		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
+	} else if zetaHash != "" {
+		logger.Info().Msgf("IsSendOutTxProcessed: confirmed Bitcoin outTx %s, zeta tx hash %s nonce %d ballot %s", res.TxID, zetaHash, nonce, ballot)
 	}
 	return true, true, nil
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	ticker := NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetCoreParams().GasPriceTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetCoreParams().GasPriceTicker)
+	if err != nil {
+		ob.logger.WatchGasPrice.Error().Err(err).Msg("WatchGasPrice error")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
@@ -542,7 +541,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 	if *feeResult.FeeRate > math.MaxInt64 {
 		return fmt.Errorf("gas price is too large: %f", *feeResult.FeeRate)
 	}
-	feeRatePerByte := feeRateToSatPerByte(*feeResult.FeeRate)
+	feeRatePerByte := FeeRateToSatPerByte(*feeResult.FeeRate)
 	bn, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
 		return err
@@ -570,13 +569,19 @@ type BTCInTxEvnet struct {
 // relevant tx must have the following vouts as the first two vouts:
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
-func FilterAndParseIncomingTx(txs []btcjson.TxRawResult, blockNumber uint64, targetAddress string, logger *zerolog.Logger) []*BTCInTxEvnet {
+func FilterAndParseIncomingTx(
+	txs []btcjson.TxRawResult,
+	blockNumber uint64,
+	targetAddress string,
+	logger *zerolog.Logger,
+	chainID int64,
+) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
-		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger)
+		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
 		if err != nil {
 			logger.Error().Err(err).Msg("error getting btc event")
 			continue
@@ -599,7 +604,7 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 		ob.chain.ChainId,
 		inTx.FromAddress,
 		inTx.FromAddress,
-		common.ZetaChain().ChainId,
+		ob.zetaClient.ZetaChain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountInt),
 		message,
 		inTx.TxHash,
@@ -612,7 +617,13 @@ func (ob *BitcoinChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvn
 	)
 }
 
-func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint64, logger *zerolog.Logger) (*BTCInTxEvnet, error) {
+func GetBtcEvent(
+	tx btcjson.TxRawResult,
+	targetAddress string,
+	blockNumber uint64,
+	logger *zerolog.Logger,
+	chainID int64,
+) (*BTCInTxEvnet, error) {
 	found := false
 	var value float64
 	var memo []byte
@@ -625,14 +636,24 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 			if err != nil {
 				return nil, err
 			}
-			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+
+			bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+			if err != nil {
+				return nil, fmt.Errorf("btc: error getting bitcoin net params : %v", err)
+			}
+			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, bitcoinNetParams)
 			if err != nil {
 				return nil, err
 			}
 			if wpkhAddress.EncodeAddress() != targetAddress {
 				return nil, err
 			}
-			value = out.Value
+			// deposit amount has to be no less than the minimum depositor fee
+			if out.Value < BtcDepositorFeeMin {
+				return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than minimum depositor fee %v", value, tx.Txid, BtcDepositorFeeMin)
+			}
+			value = out.Value - BtcDepositorFeeMin
+
 			out = tx.Vout[1]
 			script = out.ScriptPubKey.Hex
 			if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
@@ -648,7 +669,7 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
 					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
-				if bytes.Compare(memoBytes, []byte(DonationMessage)) == 0 {
+				if bytes.Equal(memoBytes, []byte(DonationMessage)) {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
@@ -656,10 +677,9 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 				found = true
 			}
 		}
-
 	}
 	if found {
-		fmt.Println("found tx: ", tx.Txid)
+		logger.Info().Msgf("found bitcoin intx: %s", tx.Txid)
 		var fromAddress string
 		if len(tx.Vin) > 0 {
 			vin := tx.Vin[0]
@@ -671,7 +691,13 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 					return nil, errors.Wrapf(err, "error decoding pubkey")
 				}
 				hash := btcutil.Hash160(pkBytes)
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, config.BitconNetParams)
+
+				bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+				if err != nil {
+					return nil, fmt.Errorf("btc: error getting bitcoin net params : %v", err)
+				}
+
+				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, bitcoinNetParams)
 				if err != nil {
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
@@ -691,7 +717,12 @@ func GetBtcEvent(tx btcjson.TxRawResult, targetAddress string, blockNumber uint6
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	ticker := NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetCoreParams().WatchUtxoTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetCoreParams().WatchUtxoTicker)
+	if err != nil {
+		ob.logger.WatchUTXOS.Error().Err(err).Msg("WatchUTXOS error")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
@@ -727,7 +758,11 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := btcutil.DecodeAddress(tssAddr, config.BitconNetParams)
+	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(ob.chain.ChainId)
+	if err != nil {
+		return fmt.Errorf("btc: error getting bitcoin net params : %v", err)
+	}
+	address, err := btcutil.DecodeAddress(tssAddr, bitcoinNetParams)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
@@ -738,7 +773,6 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	if err != nil {
 		return err
 	}
-	//ob.logger.WatchUTXOS.Debug().Msgf("btc: fetched %d utxos in confirmation range [0, %d]", len(unspents), maxConfirmations)
 
 	// rigid sort to make utxo list deterministic
 	sort.SliceStable(utxos, func(i, j int) bool {
@@ -751,9 +785,17 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
+	// filter UTXOs big enough to cover the cost of spending themselves
+	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
+	for _, utxo := range utxos {
+		if utxo.Amount >= BtcDepositorFeeMin {
+			utxosFiltered = append(utxosFiltered, utxo)
+		}
+	}
+
 	ob.Mu.Lock()
-	ob.ts.SetNumberOfUTXOs(len(utxos))
-	ob.utxos = utxos
+	ob.ts.SetNumberOfUTXOs(len(utxosFiltered))
+	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil
 }
@@ -828,7 +870,7 @@ func (ob *BitcoinChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int,
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 	amount := common.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
-		sats, err := getSatoshis(utxo.Amount)
+		sats, err := GetSatoshis(utxo.Amount)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
@@ -935,11 +977,12 @@ func (ob *BitcoinChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 
 	broadcastEntry := clienttypes.ToOutTxHashSQLType(txHash, outTxID)
 	if err := ob.db.Save(&broadcastEntry).Error; err != nil {
-		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error saving broadcasted tx")
+		ob.logger.ObserveOutTx.Error().Err(err).Msgf("SaveBroadcastedTx: error saving broadcasted txHash %s for outTx %s", txHash, outTxID)
 	}
+	ob.logger.ObserveOutTx.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outTx %s", txHash, outTxID)
 }
 
-func (ob *BitcoinChainClient) GetPendingCctxParams(nonce uint64) (types.OutboundTxParams, error) {
+func (ob *BitcoinChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParams, error) {
 	send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
 	if err != nil {
 		return types.OutboundTxParams{}, err
@@ -947,19 +990,21 @@ func (ob *BitcoinChainClient) GetPendingCctxParams(nonce uint64) (types.Outbound
 	if send.GetCurrentOutTxParam() == nil { // never happen
 		return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: nil outbound tx params")
 	}
-	if send.CctxStatus.Status == types.CctxStatus_PendingOutbound || send.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		return *send.GetCurrentOutTxParam(), nil
-	}
-	return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: not a pending cctx")
+	return *send.GetCurrentOutTxParam(), nil
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
-	ticker := NewDynamicTicker("Bitcoin_observeOutTx", ob.GetCoreParams().OutTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_observeOutTx", ob.GetCoreParams().OutTxTicker)
+	if err != nil {
+		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error creating ticker")
+		return
+	}
+
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C():
-			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain, Ascending)
+			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, Ascending)
 			if err != nil {
 				ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error GetAllOutTxTrackerByChain")
 				continue
@@ -967,9 +1012,9 @@ func (ob *BitcoinChainClient) observeOutTx() {
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				params, err := ob.GetPendingCctxParams(tracker.Nonce)
+				params, err := ob.GetCctxParams(tracker.Nonce)
 				if err != nil {
-					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find pending cctx for nonce %d", tracker.Nonce)
+					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find cctx for nonce %d", tracker.Nonce)
 					break
 				}
 				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check
@@ -1096,9 +1141,10 @@ func (ob *BitcoinChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: invalid outTx with invalid block index, TxID %s, BlockIndex %d", res.TxID, res.BlockIndex)
 		}
 		return block.Tx[res.BlockIndex], nil
-	} else { // res.Confirmations < 0 (meaning not included)
-		return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 	}
+
+	// res.Confirmations < 0 (meaning not included)
+	return btcjson.TxRawResult{}, fmt.Errorf("getRawTxResult: tx %s not included yet", hash)
 }
 
 // checkTSSVin checks vin is valid if:
@@ -1145,7 +1191,7 @@ func (ob *BitcoinChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Ou
 
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		amount, err := getSatoshis(vout.Value)
+		amount, err := GetSatoshis(vout.Value)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVout: error getting satoshis")
 		}
@@ -1221,10 +1267,12 @@ func (ob *BitcoinChainClient) LoadLastBlock() error {
 		ob.logger.ChainLogger.Info().Msg("LastBlockNum not found in DB, scan from latest")
 		ob.SetLastBlockHeightScanned(bn)
 	} else {
-		ob.SetLastBlockHeightScanned(lastBlockNum.Num)
+		// #nosec G701 always in range
+		lastBN := int64(lastBlockNum.Num)
+		ob.SetLastBlockHeightScanned(lastBN)
 
 		//If persisted block number is too low, use the latest height
-		if (bn - lastBlockNum.Num) > maxHeightDiff {
+		if (bn - lastBN) > maxHeightDiff {
 			ob.logger.ChainLogger.Info().Msgf("LastBlockNum too low: %d, scan from latest", lastBlockNum.Num)
 			ob.SetLastBlockHeightScanned(bn)
 		}
