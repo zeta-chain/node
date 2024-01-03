@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
@@ -20,8 +19,10 @@ func ScriptPKToAddress(scriptPKHex string) string {
 	return ""
 }
 
-func LoudPrintf(format string, a ...any) {
-	fmt.Println("=======================================")
-	fmt.Printf(format, a...)
-	fmt.Println("=======================================")
+type infoLogger interface {
+	Info(message string, args ...interface{})
 }
+
+type NoopLogger struct{}
+
+func (nl NoopLogger) Info(_ string, _ ...interface{}) {}
