@@ -37,6 +37,7 @@
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
 * Add logger to smoke tests
+* [1521](https://github.com/zeta-chain/node/pull/1521) - use a revised go-tss library that fails unit tests
 
 ### Chores
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
