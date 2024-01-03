@@ -24,12 +24,12 @@ var (
 // Validate checks all core params correspond to a chain and there is no duplicate chain id
 func (cpl CoreParamsList) Validate() error {
 	// check all core params correspond to a chain
-	externalChainMap := make(map[int64]struct{})
+	chainMap := make(map[int64]struct{})
 	existingChainMap := make(map[int64]struct{})
 
-	externalChainList := common.ExternalChainList()
+	externalChainList := common.DefaultChainsList()
 	for _, chain := range externalChainList {
-		externalChainMap[chain.ChainId] = struct{}{}
+		chainMap[chain.ChainId] = struct{}{}
 	}
 
 	// validate the core params and check for duplicates
@@ -38,7 +38,7 @@ func (cpl CoreParamsList) Validate() error {
 			return err
 		}
 
-		if _, ok := externalChainMap[coreParam.ChainId]; !ok {
+		if _, ok := chainMap[coreParam.ChainId]; !ok {
 			return fmt.Errorf("chain id %d not found in chain list", coreParam.ChainId)
 		}
 		if _, ok := existingChainMap[coreParam.ChainId]; ok {
