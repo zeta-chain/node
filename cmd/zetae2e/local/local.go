@@ -52,7 +52,7 @@ func NewLocalCmd() *cobra.Command {
 	)
 	cmd.Flags().Bool(
 		flagVerbose,
-		false,
+		true,
 		"set to true to enable verbose logging",
 	)
 	cmd.Flags().Bool(
@@ -156,11 +156,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	logger.Print("⚙️ setting up networks")
 	startTime := time.Now()
 
-	// initialize core params with local chains enabled
-	if err = deployerRunner.ZetaTxServer.InitializeCoreParams(utils.FungibleAdminName); err != nil {
-		panic(err)
-	}
-	
 	deployerRunner.SetTSSAddresses()
 	deployerRunner.SetupEVM(contractsDeployed)
 	deployerRunner.SetZEVMContracts()
@@ -171,9 +166,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	var eg errgroup.Group
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
+		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
+		//eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
+		//eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))

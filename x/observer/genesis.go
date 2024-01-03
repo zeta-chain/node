@@ -19,9 +19,21 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	// If core params are defined set them, otherwise set default
+	// if core params are defined set them
 	if len(genState.CoreParamsList.CoreParams) > 0 {
 		k.SetCoreParamsList(ctx, genState.CoreParamsList)
+	} else {
+		// if no core params are defined, set localnet chains for test purposes
+		btcCoreParams := types.GetDefaultBtcRegtestCoreParams()
+		btcCoreParams.IsSupported = true
+		goerliCoreParams := types.GetDefaultGoerliLocalnetCoreParams()
+		goerliCoreParams.IsSupported = true
+		k.SetCoreParamsList(ctx, types.CoreParamsList{
+			CoreParams: []*types.CoreParams{
+				btcCoreParams,
+				goerliCoreParams,
+			},
+		})
 	}
 
 	// Set all the nodeAccount
