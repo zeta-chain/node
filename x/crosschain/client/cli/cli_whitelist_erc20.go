@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func CmdWhiteListERC20() *cobra.Command {
+func CmdWhitelistERC20() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit]",
 		Short: "Add a new erc20 address to whitelist",

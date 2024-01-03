@@ -30,7 +30,7 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
 		CmdAddToInTxTracker(),
-		CmdWhiteListERC20(),
+		CmdWhitelistERC20(),
 	)
 
 	return cmd
