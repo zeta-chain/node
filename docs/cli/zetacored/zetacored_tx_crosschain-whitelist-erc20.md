@@ -3,7 +3,7 @@
 Add a new ERC20 address to whitelist
 
 ```
-zetacored tx crosschain add-whitelist-erc20 [erc20Address] [chainId] [name] [symbol] [decimals] [gasLimit] [flags]
+zetacored tx crosschain whitelist-erc20 [erc20Address] [chainId] [name] [symbol] [decimals] [gasLimit] [flags]
 ```
 
 ### Options
