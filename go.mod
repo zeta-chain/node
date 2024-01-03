@@ -42,7 +42,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/tendermint/crypto v0.0.0-20191022145703-50d29ede1e15
-	github.com/zeta-chain/go-tss v0.1.1-0.20240103070217-6a938a829ab3
+	github.com/zeta-chain/go-tss v0.1.1-0.20240103170132-35850edf5dbd
 	github.com/zeta-chain/keystone/keys v0.0.0-20231105174229-903bc9405da2
 	github.com/zeta-chain/protocol-contracts v1.0.2-athens3.0.20230816152528-db7d2bf9144b
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
