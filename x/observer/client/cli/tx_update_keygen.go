@@ -30,9 +30,7 @@ func CmdUpdateKeygen() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argBlock,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

@@ -13,8 +13,17 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce uint64) error {
-	nonce, err := client.PendingNonceAt(context.Background(), addr)
+const (
+	DefaultReceiptTimeout = 30 * time.Second
+)
+
+func CheckNonce(
+	ctx context.Context,
+	client *ethclient.Client,
+	addr ethcommon.Address,
+	expectedNonce uint64,
+) error {
+	nonce, err := client.PendingNonceAt(ctx, addr)
 	if err != nil {
 		return err
 	}
@@ -26,18 +35,29 @@ func CheckNonce(client *ethclient.Client, addr ethcommon.Address, expectedNonce 
 
 // MustWaitForTxReceipt waits until a broadcasted tx to be mined and return its receipt
 // timeout and panic after 30s.
-func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *ethtypes.Receipt {
+func MustWaitForTxReceipt(
+	ctx context.Context,
+	client *ethclient.Client,
+	tx *ethtypes.Transaction,
+	logger infoLogger,
+	receiptTimeout time.Duration,
+) *ethtypes.Receipt {
+	timeout := DefaultReceiptTimeout
+	if receiptTimeout != 0 {
+		timeout = receiptTimeout
+	}
+
 	start := time.Now()
 	for {
-		if time.Since(start) > 30*time.Second {
+		if time.Since(start) > timeout {
 			panic("waiting tx receipt timeout")
 		}
-		time.Sleep(1 * time.Second)
-		receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
+		receipt, err := client.TransactionReceipt(ctx, tx.Hash())
 		if err != nil {
 			if !errors.Is(err, ethereum.NotFound) {
-				fmt.Println("fetching tx receipt error: ", err.Error())
+				logger.Info("fetching tx receipt error: ", err.Error())
 			}
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		if receipt != nil {
@@ -47,7 +67,7 @@ func MustWaitForTxReceipt(client *ethclient.Client, tx *ethtypes.Transaction) *e
 }
 
 // TraceTx traces the tx and returns the trace result
-func TraceTx(tx *ethtypes.Transaction, rpcURL string) (string, error) {
+func TraceTx(ctx context.Context, tx *ethtypes.Transaction, rpcURL string) (string, error) {
 	rpcClient, err := rpc.Dial(rpcURL)
 	if err != nil {
 		return "", err
@@ -55,12 +75,17 @@ func TraceTx(tx *ethtypes.Transaction, rpcURL string) (string, error) {
 
 	var result interface{}
 	txHash := tx.Hash().Hex()
-	err = rpcClient.CallContext(context.Background(), &result, "debug_traceTransaction", txHash, map[string]interface{}{
-		"disableMemory":  true,
-		"disableStack":   false,
-		"disableStorage": false,
-		"fullStorage":    false,
-	})
+	err = rpcClient.CallContext(
+		ctx,
+		&result,
+		"debug_traceTransaction",
+		txHash,
+		map[string]interface{}{
+			"disableMemory":  true,
+			"disableStack":   false,
+			"disableStorage": false,
+			"fullStorage":    false,
+		})
 	if err != nil {
 		return "", err
 	}

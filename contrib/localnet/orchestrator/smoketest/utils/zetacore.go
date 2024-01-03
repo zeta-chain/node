@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"sync"
 	"time"
 
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
@@ -13,70 +12,104 @@ import (
 
 const (
 	FungibleAdminName = "fungibleadmin"
+
+	DefaultCctxTimeout = 4 * time.Minute
 )
 
 // WaitCctxMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
-func WaitCctxMinedByInTxHash(inTxHash string, cctxClient crosschaintypes.QueryClient) *crosschaintypes.CrossChainTx {
-	cctxs := WaitCctxsMinedByInTxHash(inTxHash, cctxClient, 1)
+func WaitCctxMinedByInTxHash(
+	ctx context.Context,
+	inTxHash string,
+	cctxClient crosschaintypes.QueryClient,
+	logger infoLogger,
+	cctxTimeout time.Duration,
+) *crosschaintypes.CrossChainTx {
+	cctxs := WaitCctxsMinedByInTxHash(ctx, inTxHash, cctxClient, 1, logger, cctxTimeout)
+	if len(cctxs) == 0 {
+		panic(fmt.Sprintf("cctx not found, inTxHash: %s", inTxHash))
+	}
 	return cctxs[len(cctxs)-1]
 }
 
 // WaitCctxsMinedByInTxHash waits until cctx is mined; returns the cctxIndex (the last one)
-func WaitCctxsMinedByInTxHash(inTxHash string, cctxClient crosschaintypes.QueryClient, cctxsCount int) []*crosschaintypes.CrossChainTx {
-	var cctxIndexes []string
+func WaitCctxsMinedByInTxHash(
+	ctx context.Context,
+	inTxHash string,
+	cctxClient crosschaintypes.QueryClient,
+	cctxsCount int,
+	logger infoLogger,
+	cctxTimeout time.Duration,
+) []*crosschaintypes.CrossChainTx {
+	startTime := time.Now()
+
+	timeout := DefaultCctxTimeout
+	if cctxTimeout != 0 {
+		timeout = cctxTimeout
+	}
+
+	// fetch cctxs by inTxHash
 	for {
-		time.Sleep(5 * time.Second)
-		fmt.Printf("Waiting for cctx to be mined by inTxHash: %s\n", inTxHash)
-		res, err := cctxClient.InTxHashToCctx(context.Background(), &crosschaintypes.QueryGetInTxHashToCctxRequest{InTxHash: inTxHash})
+		time.Sleep(1 * time.Second)
+		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
+			InTxHash: inTxHash,
+		})
 		if err != nil {
-			fmt.Println("Error getting cctx by inTxHash: ", err.Error())
+			logger.Info("Error getting cctx by inTxHash: %s", err.Error())
 			continue
 		}
-		if len(res.InTxHashToCctx.CctxIndex) < cctxsCount {
-			fmt.Printf("Waiting for %d cctxs to be mined; %d cctxs are mined\n", cctxsCount, len(res.InTxHashToCctx.CctxIndex))
+		if len(res.CrossChainTxs) < cctxsCount {
+			logger.Info(
+				"not enough cctxs found by inTxHash: %s, expected: %d, found: %d",
+				inTxHash,
+				cctxsCount,
+				len(res.CrossChainTxs),
+			)
 			continue
 		}
-		cctxIndexes = res.InTxHashToCctx.CctxIndex
-		fmt.Printf("Deposit receipt cctx index: %v\n", cctxIndexes)
-		break
-	}
-	var wg sync.WaitGroup
-	var cctxs []*crosschaintypes.CrossChainTx
-	for _, cctxIndex := range cctxIndexes {
-		cctxIndex := cctxIndex
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for {
-				time.Sleep(3 * time.Second)
-				res, err := cctxClient.Cctx(context.Background(), &crosschaintypes.QueryGetCctxRequest{Index: cctxIndex})
-				if err == nil && IsTerminalStatus(res.CrossChainTx.CctxStatus.Status) {
-					fmt.Printf("Deposit receipt cctx status: %+v; The cctx is processed\n", res.CrossChainTx.CctxStatus.Status.String())
-					cctxs = append(cctxs, res.CrossChainTx)
-					break
-				} else if err != nil {
-					fmt.Println("Error getting cctx by index: ", err.Error())
-				} else {
-					cctxStatus := res.CrossChainTx.CctxStatus
-					fmt.Printf(
-						"Deposit receipt cctx status: %s; Message: %s; Waiting for the cctx to be processed\n",
-						cctxStatus.Status.String(),
-						cctxStatus.StatusMessage,
-					)
-				}
+		cctxs := make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
+		allFound := true
+		for i, cctx := range res.CrossChainTxs {
+			cctx := cctx
+			if !IsTerminalStatus(cctx.CctxStatus.Status) {
+				logger.Info(
+					"waiting for cctx index %d to be mined by inTxHash: %s, cctx status: %s, message: %s",
+					i,
+					inTxHash,
+					cctx.CctxStatus.Status.String(),
+					cctx.CctxStatus.StatusMessage,
+				)
+				allFound = false
+				break
 			}
-		}()
+			cctxs = append(cctxs, &cctx)
+		}
+		if !allFound {
+			if time.Since(startTime) > timeout {
+				panic(fmt.Sprintf(
+					"waiting cctx timeout, cctx not mined, inTxHash: %s, current cctxs: %v",
+					inTxHash,
+					cctxs,
+				))
+			}
+			continue
+		}
+		return cctxs
 	}
-	wg.Wait()
-	return cctxs
 }
 
 func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
-	return status == crosschaintypes.CctxStatus_OutboundMined || status == crosschaintypes.CctxStatus_Aborted || status == crosschaintypes.CctxStatus_Reverted
+	return status == crosschaintypes.CctxStatus_OutboundMined ||
+		status == crosschaintypes.CctxStatus_Aborted ||
+		status == crosschaintypes.CctxStatus_Reverted
 }
 
 // WaitForBlockHeight waits until the block height reaches the given height
-func WaitForBlockHeight(height int64, rpcURL string) {
+func WaitForBlockHeight(
+	ctx context.Context,
+	height int64,
+	rpcURL string,
+	logger infoLogger,
+) {
 	// initialize rpc and check status
 	rpc, err := rpchttp.New(rpcURL, "/websocket")
 	if err != nil {
@@ -84,11 +117,11 @@ func WaitForBlockHeight(height int64, rpcURL string) {
 	}
 	status := &coretypes.ResultStatus{}
 	for status.SyncInfo.LatestBlockHeight < height {
-		status, err = rpc.Status(context.Background())
+		status, err = rpc.Status(ctx)
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(time.Second * 5)
-		fmt.Printf("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+		time.Sleep(1 * time.Second)
+		logger.Info("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
 	}
 }
