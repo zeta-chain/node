@@ -1,10 +1,7 @@
 package smoketests
 
 import (
-	"context"
-	"fmt"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/zeta-chain/zetacore/common"
@@ -17,25 +14,19 @@ import (
 
 // TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
 func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
-	}()
-	utils.LoudPrintf("Testing updating ZRC20 bytecode swap...\n")
-
 	// Random approval
 	approved := sample.EthAddress()
 	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, approved, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
 
 	// Deploy the TestZRC20 contract
-	fmt.Println("Deploying contract with new bytecode")
+	sm.Logger.Info("Deploying contract with new bytecode")
 	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(
 		sm.ZevmAuth,
 		sm.ZevmClient,
@@ -48,19 +39,19 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
 
 	// Get the code hash of the new contract
-	codeHashRes, err := sm.FungibleClient.CodeHash(context.Background(), &fungibletypes.QueryCodeHashRequest{
+	codeHashRes, err := sm.FungibleClient.CodeHash(sm.Ctx, &fungibletypes.QueryCodeHashRequest{
 		Address: newZRC20Address.String(),
 	})
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("New contract code hash: %s\n", codeHashRes.CodeHash)
+	sm.Logger.Info("New contract code hash: %s", codeHashRes.CodeHash)
 
 	// Get current info of the ZRC20
 	name, err := sm.ETHZRC20.Name(&bind.CallOpts{})
@@ -88,7 +79,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	fmt.Println("Updating the bytecode of the ZRC20")
+	sm.Logger.Info("Updating the bytecode of the ZRC20")
 	msg := fungibletypes.NewMsgUpdateContractBytecode(
 		sm.ZetaTxServer.GetAccountAddress(0),
 		sm.ETHZRC20Addr.Hex(),
@@ -98,10 +89,10 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Update zrc20 bytecode tx hash: %s\n", res.TxHash)
+	sm.Logger.Info("Update zrc20 bytecode tx hash: %s", res.TxHash)
 
 	// Get new info of the ZRC20
-	fmt.Println("Checking the state of the ZRC20 remains the same")
+	sm.Logger.Info("Checking the state of the ZRC20 remains the same")
 	newName, err := sm.ETHZRC20.Name(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
@@ -145,7 +136,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 		panic("approval shouldn't change upon bytecode update")
 	}
 
-	fmt.Println("Can interact with the new code of the contract")
+	sm.Logger.Info("Can interact with the new code of the contract")
 	testZRC20Contract, err := testzrc20.NewTestZRC20(sm.ETHZRC20Addr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
@@ -154,7 +145,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -166,12 +157,12 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 		panic("new field value mismatch")
 	}
 
-	fmt.Println("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
+	sm.Logger.Info("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
 	tx, err = newZRC20Contract.UpdateNewField(sm.ZevmAuth, big.NewInt(1e5))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -191,12 +182,12 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 	}
 
 	// can continue to operate the ZRC20
-	fmt.Println("Checking the ZRC20 can continue to operate after state change")
+	sm.Logger.Info("Checking the ZRC20 can continue to operate after state change")
 	tx, err = sm.ETHZRC20.Transfer(sm.ZevmAuth, approved, big.NewInt(1e14))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.ZevmClient, tx)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}
