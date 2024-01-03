@@ -14,6 +14,7 @@
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
 * add static chain data for Sepolia testnet
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
 
 ### Fixes
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
