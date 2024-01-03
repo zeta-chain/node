@@ -37,6 +37,7 @@ require (
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/emicklei/proto v1.11.1
 	github.com/evmos/ethermint v0.22.0
+	github.com/fatih/color v1.13.0
 	github.com/frumioj/crypto11 v1.2.5-0.20210823151709-946ce662cc0e
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7

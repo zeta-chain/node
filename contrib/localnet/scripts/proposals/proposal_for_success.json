@@ -1,0 +1,13 @@
+{
+  "title": "Proposal-That-Succeeds",
+  "description": "This proposal is for internal testing only. It should pass.",
+  "metadata": "ipfs://QmYMEcLNY7yAfur8KtH2rcJTJutPNuGEJLaPrWEM6iAcpP",
+  "changes": [
+    {
+      "subspace": "staking",
+      "key": "UnbondingTime",
+      "value": "3600"
+    }
+  ],
+  "deposit": "10000000azeta"
+}

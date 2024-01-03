@@ -15,7 +15,7 @@ COPY contrib/localnet/orchestrator/start.sh /work/
 RUN chmod +x /work/start.sh
 
 
-COPY --from=zeta /usr/local/bin/smoketest /usr/local/bin/
-RUN chmod +x /usr/local/bin/smoketest
+COPY --from=zeta /usr/local/bin/zetae2e /usr/local/bin/
+RUN chmod +x /usr/local/bin/zetae2e
 
 WORKDIR /work

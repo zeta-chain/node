@@ -113,6 +113,15 @@ $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
 The smoke test (integration tests) are located in the
 orchestrator/smoketest directory. The orchestrator is a Go program.
 
+## LocalNet Governance Proposals
+
+Localnet can be used for testing the creation and execution of governance propoosals. 
+
+Exec into the zetacored0 docker container and run the script to automatically generate proposals in a variety of states and then extends the voting window to one hour, allowing you time to view a proposal in a pending state. 
+```
+docker exec  -it zetacore0 bash
+/root/gov-proposals-testing.sh
+```
 
 ## References
 [Setup testnet reference](https://www.notion.so/zetachain/Set-up-athens-1-like-testnet-to-test-your-PRs-ac523eb5dd5d4e73902072ab7d85fa2f)

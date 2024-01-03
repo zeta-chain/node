@@ -116,6 +116,7 @@ services:
 
   orchestrator:
     image: orchestrator:latest
+    tty: true
     container_name: orchestrator
     build:
       context: ../../.
