@@ -78,8 +78,8 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: ["zeta-runners"] # 25 minutes
-    timeout-minutes: 35
+    runs-on: ["zeta-runners"]
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
 
@@ -104,16 +104,19 @@ jobs:
           skip_aws_cli: "true"
           skip_docker_compose: "false"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        if: github.event.repository.full_name == 'zetachain-chain/node'
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+#      - name: Login to Docker Hub
+#        uses: docker/login-action@v2
+#        if: github.event.repository.full_name == 'zetachain-chain/node'
+#        with:
+#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Build zetanode
+        run: |
+          make zetanode
 
       - name: Start Private Network
         run: |
-          make zetanode
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
@@ -125,7 +128,6 @@ jobs:
             echo "Smoke Test Failed"
             exit 1
           fi
-          sleep 10
 
       - name: Stop Private Network
         if: always()
