@@ -267,7 +267,7 @@ func GetDefaultBtcTestnetCoreParams() *CoreParams {
 func GetDefaultBtcRegtestCoreParams() *CoreParams {
 	return &CoreParams{
 		ChainId:                     common.BtcRegtestChain().ChainId,
-		ConfirmationCount:           2,
+		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
 		Erc20CustodyContractAddress: zeroAddress,
@@ -285,10 +285,10 @@ func GetDefaultBtcRegtestCoreParams() *CoreParams {
 func GetDefaultGoerliLocalnetCoreParams() *CoreParams {
 	return &CoreParams{
 		ChainId:                     common.GoerliLocalnetChain().ChainId,
-		ConfirmationCount:           2,
-		ZetaTokenContractAddress:    "0xA8D5060feb6B456e886F023709A2795373691E63",
-		ConnectorContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
-		Erc20CustodyContractAddress: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
+		ConfirmationCount:           1,
+		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
+		Erc20CustodyContractAddress: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
 		InTxTicker:                  2,
 		OutTxTicker:                 2,
 		WatchUtxoTicker:             0,

@@ -1,12 +1,11 @@
 package runner
 
 import (
-	"context"
-	"fmt"
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/zetaclient"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
@@ -45,9 +44,10 @@ func (sm *SmokeTestRunner) SetEVMContractsFromConfig() {
 
 // SetupEVM setup contracts on EVM for smoke test
 func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
+	sm.Logger.Print("⚙️ setting up Goerli network")
 	startTime := time.Now()
 	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
+		sm.Logger.Info("EVM setup took %s\n", time.Since(startTime))
 	}()
 
 	// TODO: put this logic outside of this function
@@ -59,33 +59,32 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	}
 	conf := config.DefaultConfig()
 
-	utils.LoudPrintf("Deploy ZetaETH ConnectorETH ERC20Custody USDT\n")
+	sm.Logger.InfoLoud("Deploy ZetaETH ConnectorETH ERC20Custody USDT\n")
 
-	// fetch initial nonce to check if it get incremented correctly
-	initialNonce, err := sm.GoerliClient.PendingNonceAt(context.Background(), sm.DeployerAddress)
+	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
+	// gas token on ZetaChain to initialize the pool
+	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Printf("Deploying ZetaEth contract\n")
-	zetaEthAddr, tx, ZetaEth, err := zetaeth.DeployZetaEth(sm.GoerliAuth, sm.GoerliClient, sm.DeployerAddress, big.NewInt(21_000_000_000))
+	sm.Logger.Info("Deploying ZetaEth contract")
+	zetaEthAddr, txZetaEth, ZetaEth, err := zetaeth.DeployZetaEth(
+		sm.GoerliAuth,
+		sm.GoerliClient,
+		sm.DeployerAddress,
+		big.NewInt(21_000_000_000),
+	)
 	if err != nil {
 		panic(err)
-	}
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
-		panic("ZetaEth deployment failed")
 	}
 	sm.ZetaEth = ZetaEth
 	sm.ZetaEthAddr = zetaEthAddr
 	conf.Contracts.EVM.ZetaEthAddress = zetaEthAddr.String()
-	if err := utils.CheckNonce(sm.GoerliClient, sm.DeployerAddress, initialNonce+1); err != nil {
-		panic(err)
-	}
-	fmt.Printf("ZetaEth contract address: %s, tx hash: %s\n", zetaEthAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("ZetaEth contract address: %s, tx hash: %s", zetaEthAddr.Hex(), zetaEthAddr.Hash().Hex())
 
-	fmt.Printf("Deploying ZetaConnectorEth contract\n")
-	connectorEthAddr, tx, ConnectorEth, err := zetaconnectoreth.DeployZetaConnectorEth(
+	sm.Logger.Info("Deploying ZetaConnectorEth contract")
+	connectorEthAddr, txConnector, ConnectorEth, err := zetaconnectoreth.DeployZetaConnectorEth(
 		sm.GoerliAuth,
 		sm.GoerliClient,
 		zetaEthAddr,
@@ -96,21 +95,14 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
-		panic("ZetaConnectorEth deployment failed")
-	}
 	sm.ConnectorEth = ConnectorEth
 	sm.ConnectorEthAddr = connectorEthAddr
 	conf.Contracts.EVM.ConnectorEthAddr = connectorEthAddr.String()
 
-	if err := utils.CheckNonce(sm.GoerliClient, sm.DeployerAddress, initialNonce+2); err != nil {
-		panic(err)
-	}
-	fmt.Printf("ZetaConnectorEth contract address: %s, tx hash: %s\n", connectorEthAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("ZetaConnectorEth contract address: %s, tx hash: %s", connectorEthAddr.Hex(), txConnector.Hash().Hex())
 
-	fmt.Printf("Deploying ERC20Custody contract\n")
-	erc20CustodyAddr, tx, ERC20Custody, err := erc20custody.DeployERC20Custody(
+	sm.Logger.Info("Deploying ERC20Custody contract")
+	erc20CustodyAddr, txCustody, ERC20Custody, err := erc20custody.DeployERC20Custody(
 		sm.GoerliAuth,
 		sm.GoerliClient,
 		sm.DeployerAddress,
@@ -122,53 +114,67 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
-		panic("ERC20Custody deployment failed")
-	}
 	sm.ERC20CustodyAddr = erc20CustodyAddr
 	sm.ERC20Custody = ERC20Custody
-	if err := utils.CheckNonce(sm.GoerliClient, sm.DeployerAddress, initialNonce+3); err != nil {
-		panic(err)
-	}
-	fmt.Printf("ERC20Custody contract address: %s, tx hash: %s\n", erc20CustodyAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("ERC20Custody contract address: %s, tx hash: %s", erc20CustodyAddr.Hex(), txCustody.Hash().Hex())
 
-	fmt.Printf("Deploying USDT contract\n")
-	usdtAddr, tx, usdt, err := erc20.DeployUSDT(sm.GoerliAuth, sm.GoerliClient, "USDT", "USDT", 6)
+	sm.Logger.Info("Deploying USDT contract")
+	usdtAddr, txUSDT, usdt, err := erc20.DeployUSDT(sm.GoerliAuth, sm.GoerliClient, "USDT", "USDT", 6)
 	if err != nil {
 		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
-		panic("USDT deployment failed")
 	}
 	sm.USDTERC20 = usdt
 	sm.USDTERC20Addr = usdtAddr
-	fmt.Printf("USDT contract address: %s, tx hash: %s\n", usdtAddr.Hex(), tx.Hash().Hex())
+	sm.Logger.Info("USDT contract address: %s, tx hash: %s", usdtAddr.Hex(), txUSDT.Hash().Hex())
 
-	fmt.Printf("Whitelist USDT\n")
-	tx, err = ERC20Custody.Whitelist(sm.GoerliAuth, usdtAddr)
+	// deploy TestDApp contract
+	appAddr, txApp, _, err := testdapp.DeployTestDApp(sm.GoerliAuth, sm.GoerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
+	sm.TestDAppAddr = appAddr
+	sm.Logger.Info("TestDApp contract address: %s, tx hash: %s", appAddr.Hex(), txApp.Hash().Hex())
+
+	// check contract deployment receipt
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txDonation, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
+		panic("GOERLI donation tx failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txZetaEth, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
+		panic("ZetaEth deployment failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txConnector, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
+		panic("ZetaConnectorEth deployment failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txCustody, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
+		panic("ERC20Custody deployment failed")
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txUSDT, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
+		panic("USDT deployment failed")
+	}
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txApp, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
+		panic("TestDApp deployment failed")
+	}
+
+	// initialize custody contract
+	sm.Logger.Info("Whitelist USDT")
+	txWhitelist, err := ERC20Custody.Whitelist(sm.GoerliAuth, usdtAddr)
+	if err != nil {
+		panic(err)
+	}
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txWhitelist, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("USDT whitelist failed")
 	}
 
-	fmt.Printf("Set TSS address\n")
-	tx, err = ERC20Custody.UpdateTSSAddress(sm.GoerliAuth, sm.TSSAddress)
+	sm.Logger.Info("Set TSS address")
+	txCustody, err = ERC20Custody.UpdateTSSAddress(sm.GoerliAuth, sm.TSSAddress)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txCustody, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("USDT update TSS address failed")
 	}
-	fmt.Printf("TSS set receipt tx hash: %s\n", tx.Hash().Hex())
-
-	// deploy TestDApp contract
-	sm.setupTestDapp()
+	sm.Logger.Info("TSS set receipt tx hash: %s", txCustody.Hash().Hex())
 
 	// save config containing contract addresses
 	// TODO: put this logic outside of this function in a general config
@@ -177,45 +183,4 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 	if err := config.WriteConfig(ContractsConfigFile, conf); err != nil {
 		panic(err)
 	}
-}
-
-// setupTestDapp deploys TestDApp contract
-func (sm *SmokeTestRunner) setupTestDapp() {
-	// deploy TestDApp contract
-	appAddr, tx, _, err := testdapp.DeployTestDApp(sm.GoerliAuth, sm.GoerliClient, sm.ConnectorEthAddr, sm.ZetaEthAddr)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("TestDApp contract address: %s, tx hash: %s\n", appAddr.Hex(), tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, tx)
-	if receipt.Status != 1 {
-		panic("TestDApp deployment failed")
-	}
-
-	dapp, err := testdapp.NewTestDApp(receipt.ContractAddress, sm.GoerliClient)
-	if err != nil {
-		panic(err)
-	}
-
-	// check contract code
-	code, err := sm.GoerliClient.CodeAt(context.Background(), receipt.ContractAddress, nil)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("TestDApp contract code: len %d\n", len(code))
-	if len(code) == 0 {
-		panic("TestDApp contract code is empty")
-	}
-
-	// check connector deployed
-	res, err := dapp.Connector(&bind.CallOpts{})
-	if err != nil {
-		panic(err)
-	}
-	if res != sm.ConnectorEthAddr {
-		panic("mismatch of TestDApp connector address")
-	}
-
-	sm.TestDAppAddr = receipt.ContractAddress
 }
