@@ -51,11 +51,11 @@ func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	if err != nil {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	// check if the contract address is valid
+	// check if the system address is valid
 	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
 		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
 	}
-	if msg.Decimals > 77 {
+	if msg.Decimals > 128 {
 		return sdkerrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d), decimals must be less than 78", msg.Decimals)
 	}
 	if msg.GasLimit <= 0 {
