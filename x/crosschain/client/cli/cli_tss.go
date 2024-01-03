@@ -43,9 +43,7 @@ func CmdCreateTSSVoter() *cobra.Command {
 			}
 
 			msg := types.NewMsgCreateTSSVoter(clientCtx.GetFromAddress().String(), argsPubkey, keygenBlock, status)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -72,9 +70,7 @@ func CmdUpdateTss() *cobra.Command {
 			}
 
 			msg := types.NewMsgUpdateTssAddress(clientCtx.GetFromAddress().String(), argsPubkey)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -101,9 +97,7 @@ func CmdMigrateTssFunds() *cobra.Command {
 			}
 
 			msg := types.NewMsgMigrateTssFunds(clientCtx.GetFromAddress().String(), argsChainID, argsAmount)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

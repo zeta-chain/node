@@ -33,9 +33,7 @@ func CmdAddObserver() *cobra.Command {
 				args[1],
 				addNodeAccountOnly,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
