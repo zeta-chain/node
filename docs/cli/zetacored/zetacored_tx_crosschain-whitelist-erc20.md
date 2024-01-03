@@ -1,4 +1,4 @@
-# tx crosschain add-whitelist-erc20
+# tx crosschain whitelist-erc20
 
 Add a new ERC20 address to whitelist
 
