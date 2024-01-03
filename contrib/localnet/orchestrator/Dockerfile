@@ -24,8 +24,8 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY . .
-RUN make install-smoketest
-RUN mv /go/bin/smoketest /usr/local/bin/smoketest
-RUN chmod +x /usr/local/bin/smoketest
+RUN make install-zetae2e
+RUN mv /go/bin/zetae2e /usr/local/bin/zetae2e
+RUN chmod +x /usr/local/bin/zetae2e
 
 WORKDIR /work

@@ -265,7 +265,7 @@ func (ob *BitcoinChainClient) WatchInTx() {
 		case <-ticker.C():
 			err := ob.observeInTx()
 			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")
+				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
 			}
 			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
 		case <-ob.stop:
@@ -311,22 +311,7 @@ func (ob *BitcoinChainClient) postBlockHeader(tip int64) error {
 }
 
 func (ob *BitcoinChainClient) observeInTx() error {
-	cnt, err := ob.rpcClient.GetBlockCount()
-	if err != nil {
-		return fmt.Errorf("error getting block count: %s", err)
-	}
-	if cnt < 0 {
-		return fmt.Errorf("block count is negative: %d", cnt)
-	}
-
-	// "confirmed" current block number
-	// #nosec G701 always in range
-	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
-	if confirmedBlockNum < 0 {
-		return fmt.Errorf("skipping observer , current block number %d is too small", cnt)
-	}
-	ob.SetLastBlockHeight(confirmedBlockNum)
-
+	// make sure inbound TXS / Send is enabled by the protocol
 	flags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
 		return err
@@ -335,16 +320,39 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
 
-	// query incoming gas asset
-	lastBN := ob.GetLastBlockHeightScanned()
-	if confirmedBlockNum > lastBN {
-		bn := lastBN + 1
+	// get and update latest block height
+	cnt, err := ob.rpcClient.GetBlockCount()
+	if err != nil {
+		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+	}
+	if cnt < 0 {
+		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+	}
+	ob.SetLastBlockHeight(cnt)
+
+	// skip if current height is too low
+	// #nosec G701 always in range
+	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
+	if confirmedBlockNum < 0 {
+		return fmt.Errorf("observeInTxBTC: skipping observer, current block number %d is too low", cnt)
+	}
+
+	// skip if no new block is confirmed
+	lastScanned := ob.GetLastBlockHeightScanned()
+	if lastScanned >= confirmedBlockNum {
+		return nil
+	}
+
+	// query incoming gas asset to TSS address
+	{
+		bn := lastScanned + 1
 		res, err := ob.GetBlockByNumberCached(bn)
 		if err != nil {
-			ob.logger.WatchInTx.Error().Err(err).Msgf("error getting bitcoin block %d", bn)
+			ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error getting bitcoin block %d", bn)
 			return err
 		}
-		ob.logger.WatchInTx.Info().Msgf("block %d has %d txs, current block %d, last block %d", bn, len(res.Block.Tx), cnt, lastBN)
+		ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: block %d has %d txs, current block %d, last block %d",
+			bn, len(res.Block.Tx), cnt, lastScanned)
 
 		// print some debug information
 		if len(res.Block.Tx) > 1 {
@@ -357,10 +365,9 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// add block header to zetacore
-		// #nosec G701 always positive
 		err = ob.postBlockHeader(bn)
 		if err != nil {
-			ob.logger.WatchInTx.Warn().Err(err).Msgf("error posting block header %d", bn)
+			ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
@@ -373,21 +380,23 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			ob.chain.ChainId,
 		)
 
+		// post inbound vote message to zetacore
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
 			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
-				continue
+				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+				return err // we have to re-scan this block next time
+			} else if zetaHash != "" {
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
 			}
-			ob.logger.WatchInTx.Info().Msgf("ZetaSent event detected and reported: PostSend zeta tx: %s", zetaHash)
 		}
 
 		// Save LastBlockHeight
 		ob.SetLastBlockHeightScanned(bn)
 		// #nosec G701 always positive
-		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(uint64(ob.GetLastBlockHeightScanned()))).Error; err != nil {
-			ob.logger.WatchInTx.Error().Err(err).Msg("error writing Block to db")
+		if err := ob.db.Save(clienttypes.ToLastBlockSQLType(uint64(bn))).Error; err != nil {
+			ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error writing last scanned block %d to db", bn)
 		}
 	}
 

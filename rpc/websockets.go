@@ -221,11 +221,11 @@ func (s *websocketsServer) readLoop(wsConn *wsConn) {
 	for {
 		_, mb, err := wsConn.ReadMessage()
 		if err != nil {
+			s.logger.Error("read message error, breaking read loop", "error", err.Error())
 			err = wsConn.Close()
 			if err != nil {
 				s.logger.Debug("error closing websocket connection", "error", err.Error())
 			}
-			s.logger.Error("read message error, breaking read loop", "error", err.Error())
 			return
 		}
 

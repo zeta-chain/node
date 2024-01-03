@@ -48,7 +48,7 @@ type ChainSigner interface {
 
 // ZetaCoreBridger is the interface to interact with ZetaCore
 type ZetaCoreBridger interface {
-	PostSend(zetaGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, error)
+	PostSend(zetaGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
 	PostReceiveConfirmation(
 		sendHash string,
 		outTxHash string,
