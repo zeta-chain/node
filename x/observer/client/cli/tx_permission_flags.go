@@ -30,9 +30,7 @@ func CmdUpdateCrosschainFlags() *cobra.Command {
 				return err
 			}
 			msg := types.NewMsgUpdateCrosschainFlags(clientCtx.GetFromAddress().String(), argIsInboundEnabled, arsIsOutboundEnabled)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
