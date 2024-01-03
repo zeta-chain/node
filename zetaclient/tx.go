@@ -125,21 +125,31 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, error) {
+func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
-		return "", err
+		return "", "", err
+	}
+
+	// don't post send if has already voted before
+	ballotIndex := msg.Digest()
+	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
+	if err != nil {
+		return "", ballotIndex, errors.Wrapf(err, "PostSend: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+	}
+	if hasVoted {
+		return "", ballotIndex, nil
 	}
 
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
 		if err == nil {
-			return zetaTxHash, nil
+			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return "", fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
+	return "", ballotIndex, fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
 func (b *ZetaCoreBridge) PostReceiveConfirmation(
