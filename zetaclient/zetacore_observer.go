@@ -250,17 +250,6 @@ func (co *CoreObserver) scheduleCctxEVM(
 			break
 		}
 
-		// try confirming the outtx
-		included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
-		if err != nil {
-			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: IsSendOutTxProcessed faild for chain %d", chainID)
-			continue
-		}
-		if included {
-			co.logger.ZetaChainWatcher.Info().Msgf("scheduleCctxEVM: outtx %s already included; do not schedule keysign", outTxID)
-			continue
-		}
-
 		// #nosec G701 positive
 		interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
 		lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
