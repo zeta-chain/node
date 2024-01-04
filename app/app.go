@@ -199,7 +199,11 @@ var (
 
 	// module accounts that are NOT allowed to receive tokens
 	blockedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
+		distrtypes.ModuleName:          true,
+		authtypes.FeeCollectorName:     true,
+		stakingtypes.BondedPoolName:    true,
+		stakingtypes.NotBondedPoolName: true,
+		govtypes.ModuleName:            true,
 	}
 )
 
