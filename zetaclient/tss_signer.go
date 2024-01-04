@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -24,7 +25,6 @@ import (
 	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
-	"github.com/zeta-chain/tss-lib/ecdsa/keygen"
 	"github.com/zeta-chain/zetacore/common"
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
