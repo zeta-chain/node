@@ -30,7 +30,7 @@ import (
 // * ZRC20 contract for the coin is deployed
 // * The coin is added to the list of foreign coins in the module's state
 //
-// Only the admin policy account is authorized to broadcast this message.
+// Authorized: admin policy group 2.
 func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.MsgDeployFungibleCoinZRC20) (*types.MsgDeployFungibleCoinZRC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

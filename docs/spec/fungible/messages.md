@@ -4,6 +4,8 @@
 
 DeploySystemContracts deploy new instances of the system contracts
 
+Authorized: admin policy group 2.
+
 ```proto
 message MsgDeploySystemContracts {
 	string creator = 1;
@@ -29,7 +31,7 @@ If this is a non-gas coin, the following happens:
 * ZRC20 contract for the coin is deployed
 * The coin is added to the list of foreign coins in the module's state
 
-Only the admin policy account is authorized to broadcast this message.
+Authorized: admin policy group 2.
 
 ```proto
 message MsgDeployFungibleCoinZRC20 {
@@ -46,9 +48,10 @@ message MsgDeployFungibleCoinZRC20 {
 
 ## MsgRemoveForeignCoin
 
-RemoveForeignCoin removes a coin from the list of foreign coins in the module's state.
+RemoveForeignCoin removes a coin from the list of foreign coins in the
+module's state.
 
-Only the admin policy account is authorized to broadcast this message.
+Authorized: admin policy group 2.
 
 ```proto
 message MsgRemoveForeignCoin {
@@ -59,6 +62,8 @@ message MsgRemoveForeignCoin {
 
 ## MsgUpdateSystemContract
 
+Authorized: admin policy group 2.
+
 ```proto
 message MsgUpdateSystemContract {
 	string creator = 1;
@@ -68,10 +73,13 @@ message MsgUpdateSystemContract {
 
 ## MsgUpdateContractBytecode
 
-UpdateContractBytecode updates the bytecode of a contract from the bytecode of an existing contract
-Only a ZRC20 contract or the WZeta connector contract can be updated
-IMPORTANT: the new contract bytecode must have the same storage layout as the old contract bytecode
-the new contract can add new variable but cannot remove any existing variable
+UpdateContractBytecode updates the bytecode of a contract from the bytecode
+of an existing contract Only a ZRC20 contract or the WZeta connector contract
+can be updated IMPORTANT: the new contract bytecode must have the same
+storage layout as the old contract bytecode the new contract can add new
+variable but cannot remove any existing variable
+
+Authozied: admin policy group 2
 
 ```proto
 message MsgUpdateContractBytecode {
@@ -82,6 +90,8 @@ message MsgUpdateContractBytecode {
 ```
 
 ## MsgUpdateZRC20WithdrawFee
+
+Authorized: admin policy group 2.
 
 ```proto
 message MsgUpdateZRC20WithdrawFee {
@@ -97,6 +107,8 @@ message MsgUpdateZRC20WithdrawFee {
 UpdateZRC20PausedStatus updates the paused status of a ZRC20
 The list of ZRC20s are either paused or unpaused
 
+Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
+
 ```proto
 message MsgUpdateZRC20PausedStatus {
 	string creator = 1;
@@ -108,6 +120,8 @@ message MsgUpdateZRC20PausedStatus {
 ## MsgUpdateZRC20LiquidityCap
 
 UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
+
+Authorized: admin policy group 2.
 
 ```proto
 message MsgUpdateZRC20LiquidityCap {
