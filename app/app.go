@@ -196,7 +196,7 @@ var (
 		emissionsModuleTypes.UndistributedObserverRewardsPool: nil,
 		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
 	}
-disa
+
 	// module accounts that are allowed to receive tokens
 	blockedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName: true,
