@@ -21,6 +21,8 @@ import (
 
 // WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
 // and emit a crosschain tx to whitelist the ERC20 on the external chain
+//
+// Authorized: admin policy group 1.
 func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC20) (*types.MsgWhitelistERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group1) {
