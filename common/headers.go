@@ -101,7 +101,7 @@ func (h HeaderData) Validate(blockHash []byte, chainID int64, height int64) erro
 // validateEthereumHeader performs a basic validation of the Ethereum header
 func validateEthereumHeader(headerBytes []byte, blockHash []byte, height int64) error {
 	// on ethereum the block header is ~538 bytes in RLP encoding
-	if len(headerBytes) > 1024 {
+	if len(headerBytes) > 4096 {
 		return fmt.Errorf("header too long (%d)", len(headerBytes))
 	}
 
