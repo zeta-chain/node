@@ -38,6 +38,9 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	}
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
+	if common.BitcoinRegnetParams == nil {
+		return
+	}
 	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
 	if err != nil {
 		panic(err)

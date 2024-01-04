@@ -292,6 +292,9 @@ func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*z
 		if err != nil {
 			return nil, err
 		}
+		if btcChainParams == nil {
+			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: chain params not found")
+		}
 		addr, err := btcutil.DecodeAddress(string(event.To), btcChainParams)
 		if err != nil {
 			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)

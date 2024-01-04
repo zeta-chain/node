@@ -52,6 +52,9 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		if chainParams == nil {
+			return "", fmt.Errorf("chain params not found")
+		}
 		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
 		if err != nil {
 			return "", err

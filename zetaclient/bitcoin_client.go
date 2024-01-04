@@ -762,6 +762,9 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	if err != nil {
 		return fmt.Errorf("btc: error getting bitcoin net params : %v", err)
 	}
+	if bitcoinNetParams == nil {
+		return fmt.Errorf("btc: error getting bitcoin net params : %v", err)
+	}
 	address, err := btcutil.DecodeAddress(tssAddr, bitcoinNetParams)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
