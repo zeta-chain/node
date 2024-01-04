@@ -11,6 +11,8 @@ import (
 )
 
 // UpdateZRC20LiquidityCap updates the liquidity cap for a ZRC20 token.
+//
+// Authorized: admin policy group 2.
 func (k msgServer) UpdateZRC20LiquidityCap(goCtx context.Context, msg *types.MsgUpdateZRC20LiquidityCap) (*types.MsgUpdateZRC20LiquidityCapResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -40,6 +40,7 @@
 * Add logger to smoke tests
 
 ### Chores
+* [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand

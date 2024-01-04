@@ -2,6 +2,8 @@
 
 ## MsgAddObserver
 
+Authorized: admin policy group 2.
+
 ```proto
 message MsgAddObserver {
 	string creator = 1;
@@ -12,6 +14,9 @@ message MsgAddObserver {
 ```
 
 ## MsgUpdateObserver
+
+Authorized: admin policy group 2 (admin update), old observer address (if the
+reason is that the observer was tombstoned).
 
 ```proto
 message MsgUpdateObserver {
@@ -52,7 +57,9 @@ message MsgAddBlameVote {
 ## MsgUpdateCrosschainFlags
 
 UpdateCrosschainFlags updates the crosschain related flags.
-Only the admin policy account is authorized to broadcast this message.
+
+Aurthorized: admin policy group 1 (except enabling/disabled
+inbounds/outbounds and gas price increase), admin policy group 2 (all).
 
 ```proto
 message MsgUpdateCrosschainFlags {
@@ -66,9 +73,10 @@ message MsgUpdateCrosschainFlags {
 
 ## MsgUpdateKeygen
 
-UpdateKeygen updates the block height of the keygen and sets the status to "pending keygen".
+UpdateKeygen updates the block height of the keygen and sets the status to
+"pending keygen".
 
-Only the admin policy account is authorized to broadcast this message.
+Authorized: admin policy group 1.
 
 ```proto
 message MsgUpdateKeygen {
