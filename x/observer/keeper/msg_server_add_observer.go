@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Authorized: admin policy group 2.
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
