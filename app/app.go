@@ -196,6 +196,11 @@ var (
 		emissionsModuleTypes.UndistributedObserverRewardsPool: nil,
 		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
 	}
+disa
+	// module accounts that are allowed to receive tokens
+	blockedReceivingModAcc = map[string]bool{
+		distrtypes.ModuleName: true,
+	}
 )
 
 var _ simapp.App = (*App)(nil)
@@ -306,8 +311,9 @@ func New(
 		maccPerms,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 	)
+	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), nil,
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -779,4 +785,13 @@ func VerifyAddressFormat(bz []byte) error {
 // SimulationManager implements the SimulationApp interface
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func (app *App) BlockedAddrs() map[string]bool {
+	blockList := make(map[string]bool)
+	for k, v := range blockedReceivingModAcc {
+		addr := authtypes.NewModuleAddress(k)
+		blockList[addr.String()] = v
+	}
+	return blockList
 }
