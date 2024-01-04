@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Authorized: admin policy group 2 (admin update), old observer address (if the
+// reason is that the observer was tombstoned).
 func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

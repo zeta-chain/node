@@ -13,6 +13,8 @@ import (
 
 // UpdateZRC20PausedStatus updates the paused status of a ZRC20
 // The list of ZRC20s are either paused or unpaused
+//
+// Authorized: admin policy group 1 (pausing), group 2 (pausing & unpausing)
 func (k msgServer) UpdateZRC20PausedStatus(
 	goCtx context.Context,
 	msg *types.MsgUpdateZRC20PausedStatus,

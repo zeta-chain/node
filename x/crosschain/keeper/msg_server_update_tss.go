@@ -10,6 +10,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Authorized: admin policy group 2.
 func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateTssAddress) (*types.MsgUpdateTssAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO : Add a new policy type for updating the TSS address
