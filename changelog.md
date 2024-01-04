@@ -16,6 +16,8 @@
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
+
+* [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
