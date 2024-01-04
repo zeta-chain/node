@@ -12,7 +12,8 @@ import (
 )
 
 // AddToInTxTracker adds a new record to the inbound transaction tracker.
-// TODO https://github.com/zeta-chain/node/issues/1269
+//
+// Authorized: admin policy group 1, observer.
 func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)

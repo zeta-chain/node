@@ -12,6 +12,7 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Authorized: admin policy group 2.
 func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
