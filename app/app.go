@@ -197,7 +197,7 @@ var (
 		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
 	}
 
-	// module accounts that are allowed to receive tokens
+	// module accounts that are NOT allowed to receive tokens
 	blockedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName: true,
 	}
