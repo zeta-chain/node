@@ -72,5 +72,9 @@ func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Addre
 		return nil, fmt.Errorf("chain params not found")
 	}
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
+	ok := address.IsForNet(chainParams)
+	if !ok {
+		return nil, fmt.Errorf("address is not for network %s", chainParams.Name)
+	}
 	return
 }
