@@ -48,7 +48,7 @@ jobs:
           cpu_architecture: ${{ env.CPU_ARCH }}
           skip_python: "true"
           skip_aws_cli: "true"
-          skip_docker_compose: "true"
+          skip_docker_compose: "false"
       
       - name: Test
         uses: nick-fields/retry@v2
