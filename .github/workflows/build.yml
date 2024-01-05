@@ -21,61 +21,61 @@ env:
   GITHUB_REF_NAME: "$(echo ${{ github.ref_name }} | tr '//' '-')"
 
 jobs:
-  # build-and-test:
-  #   runs-on: buildjet-4vcpu-ubuntu-2004
-  #   timeout-minutes: 15
-  #   concurrency:
-  #     group: "build-and-test"
-  #   steps:
-  #     - uses: actions/checkout@v3
+  build-and-test:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 15
+    concurrency:
+      group: "build-and-test"
+    steps:
+      - uses: actions/checkout@v3
 
-  #     - name: Set CPU Architecture
-  #       shell: bash
-  #       run: |
-  #         if [ "$(uname -m)" == "aarch64" ]; then
-  #           echo "CPU_ARCH=arm64" >> $GITHUB_ENV
-  #         elif [ "$(uname -m)" == "x86_64" ]; then
-  #           echo "CPU_ARCH=amd64" >> $GITHUB_ENV
-  #         else
-  #           echo "Unsupported architecture" >&2
-  #           exit 1
-  #         fi
+      - name: Set CPU Architecture
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
 
-  #     - name: Install Pipeline Dependencies
-  #       uses: ./.github/actions/install-dependencies
-  #       timeout-minutes: 8
-  #       with:
-  #         cpu_architecture: ${{ env.CPU_ARCH }}
-  #         skip_python: "true"
-  #         skip_aws_cli: "true"
-  #         skip_docker_compose: "false"
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
       
-  #     - name: Test
-  #       uses: nick-fields/retry@v2
-  #       with:
-  #         timeout_minutes: 20
-  #         max_attempts: 2
-  #         retry_on: error
-  #         command: |
-  #           echo "Running Build Tests"
-  #           make clean
-  #           make test
+      - name: Test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
 
-  #     - name: Build zetacored and zetaclientd
-  #       env:
-  #         CGO_ENABLED: 1
-  #         GOOS: linux
-  #         GOARCH: ${{ env.CPU_ARCH }}
-  #       run: |
-  #         make install
-  #         cp "$HOME"/go/bin/* ./
-  #         chmod a+x ./zetacored
-  #         ./zetacored version
+      - name: Build zetacored and zetaclientd
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
 
-  #     - name: Clean Up Workspace
-  #       if: always()
-  #       shell: bash
-  #       run: rm -rf *
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
 
   smoke-test:
     runs-on: buildjet-4vcpu-ubuntu-2204 # buildjet-4vcpu-ubuntu-2004 #["ubuntu-latest"]
