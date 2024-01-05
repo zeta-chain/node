@@ -71,18 +71,6 @@ func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Addre
 	if chainParams == nil {
 		return nil, fmt.Errorf("chain params not found")
 	}
-	oneIndex := strings.LastIndexByte(inputAddress, '1')
-	if oneIndex > 1 {
-		prefix := inputAddress[:oneIndex]
-		ok := IsValidPrefix(prefix, chainId)
-		if !ok {
-			return nil, fmt.Errorf("invalid prefix:%s,chain-id:%d", prefix, chainId)
-		}
-		addressString := inputAddress[oneIndex+1:]
-		if len(addressString) != 39 {
-			return nil, fmt.Errorf("invalid address length:%d,inputaddress:%s", len(addressString), inputAddress)
-		}
-	}
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	return
 }

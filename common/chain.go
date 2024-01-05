@@ -210,19 +210,6 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	}
 }
 
-func IsValidPrefix(prefix string, chainID int64) bool {
-	switch chainID {
-	case 18444:
-		return prefix == "bcrt"
-	case 18332:
-		return prefix == "tb"
-	case 8332:
-		return prefix == "bc"
-	default:
-		return false
-	}
-}
-
 // InChainList checks whether the chain is in the chain list
 func (chain Chain) InChainList(chainList []*Chain) bool {
 	return ChainIDInChainList(chain.ChainId, chainList)

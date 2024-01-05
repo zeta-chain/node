@@ -1,7 +1,6 @@
 package common
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,18 +32,9 @@ func TestDecodeBtcAddress(t *testing.T) {
 		_, err := DecodeBtcAddress("14CEjTd5ci3228J45GdnGeUKLSSeCWUQxK", 0)
 		require.ErrorContains(t, err, "is not a Bitcoin chain")
 	})
-	t.Run("invalid prefix", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18332)
-		require.ErrorContains(t, err, "invalid prefix")
-	})
 	t.Run("invalid checksum", func(t *testing.T) {
 		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18332)
 		require.ErrorContains(t, err, "invalid checksum")
-		fmt.Println(err)
-	})
-	t.Run("valid address", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt22", 18444)
-		require.ErrorContains(t, err, "invalid address length")
 	})
 	t.Run("valid address", func(t *testing.T) {
 		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18444)
