@@ -111,14 +111,14 @@ jobs:
 #          username: ${{ secrets.DOCKER_HUB_USERNAME }}
 #          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
 
-      - name: Build zetanode
-        run: |
-          make zetanode
+      # - name: Build zetanode
+      #   run: |
+      #     make zetanode
 
-      - name: Start Private Network
-        run: |
-          cd contrib/localnet/ 
-          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+      # - name: Start Private Network
+      #   run: |
+      #     cd contrib/localnet/ 
+      #     docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
       - name: Run Smoke Test
         run: |
