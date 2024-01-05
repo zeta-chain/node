@@ -1,11 +1,130 @@
-package keeper
+package keeper_test
 
 import (
+	"encoding/hex"
+	"fmt"
 	"testing"
 
+	//"github.com/zeta-chain/zetacore/common"
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+/*
+Potential Double Event Submission
+*/
+func TestNoDoubleEventProtections(t *testing.T) {
+	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+	// MsgServer for the crosschain keeper
+	msgServer := keeper.NewMsgServerImpl(*k)
+
+	// Set the chain ids we want to use to be valid
+	params := observertypes.DefaultParams()
+	zk.ObserverKeeper.SetParams(
+		ctx, params,
+	)
+
+	// Convert the validator address into a user address.
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	validatorAddress := validators[0].OperatorAddress
+	valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
+	addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
+	validatorAddr := addresstmp.String()
+
+	// Add validator to the observer list for voting
+	chains := zk.ObserverKeeper.GetParams(ctx).GetSupportedChains()
+	for _, chain := range chains {
+		zk.ObserverKeeper.SetObserverMapper(ctx, &observertypes.ObserverMapper{
+			ObserverChain: chain,
+			ObserverList:  []string{validatorAddr},
+		})
+	}
+
+	// Vote on the FIRST message.
+	msg := &types.MsgVoteOnObservedInboundTx{
+		Creator:       validatorAddr,
+		Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
+		SenderChainId: 1337, // ETH
+		Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
+		ReceiverChain: 101, // zetachain
+		Amount:        sdkmath.NewUintFromString("10000000"),
+		Message:       "",
+		InBlockHeight: 1,
+		GasLimit:      1000000000,
+		InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+		CoinType:      0, // zeta
+		TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
+		Asset:         "",
+		EventIndex:    1,
+	}
+	_, err := msgServer.VoteOnObservedInboundTx(
+		ctx,
+		msg,
+	)
+	assert.NoError(t, err)
+
+	// Check that the vote passed
+	ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
+	if ballot.BallotStatus == observerTypes.BallotStatus_BallotFinalized_SuccessObservation {
+		fmt.Println("First ballot passed!")
+	} else {
+		fmt.Println("First ballot failed!")
+	}
+
+	//Perform the SAME event. Except, this time, we resubmit the event.
+	msg2 := &types.MsgVoteOnObservedInboundTx{
+		Creator:       validatorAddr,
+		Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
+		SenderChainId: 1337,
+		Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
+		ReceiverChain: 101,
+		Amount:        sdkmath.NewUintFromString("10000000"),
+		Message:       "",
+		InBlockHeight: 1,
+		GasLimit:      1000000001, // <---- Change here
+		InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+		CoinType:      0,
+		TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
+		Asset:         "",
+		EventIndex:    1,
+	}
+
+	fmt.Println("Vote again with the same TxHash")
+	_, err = msgServer.VoteOnObservedInboundTx(
+		ctx,
+		msg2,
+	)
+
+	assert.NoError(t, err)
+
+	fmt.Println("Treated as a separate event.")
+	fmt.Println("In many years, things may change... GasLimit, message, asset... If any of these change, a double spend is possible. Since thesea are not guarenteed to stay the same, this is worrisome.")
+	fmt.Println("With the InTrackerTx being possible via a proof, this allows arbitrary users to do this as well.")
+
+	// Get all cross chain TXs
+	cctxs := k.GetAllCrossChainTx(ctx)
+	_ = cctxs
+
+	cctx1 := cctxs[0]
+	cctx2 := cctxs[1]
+
+	// Ensure that the status's have completed.
+	assert.Equal(t, cctx1.CctxStatus.Status, types.CctxStatus_OutboundMined)
+	assert.Equal(t, cctx1.CctxStatus.Status, cctx2.CctxStatus.Status)
+
+	fmt.Println("Msg Digest Difference: ", msg.Digest(), msg2.Digest())
+	assert.NotEqual(t, msg.Digest(), msg2.Digest())
+
+	// Checking that the two hashes are the same
+	assert.Equal(t, cctx1.InboundTxParams.InboundTxObservedHash, cctx2.InboundTxParams.InboundTxObservedHash)
+}
 
 // FIMXE: make it work
 //func Test_CalculateGasFee(t *testing.T) {
@@ -95,7 +214,6 @@ func TestStatus_StatusTransition(t *testing.T) {
 			IsErr:        false,
 		},
 	}
-	_, _ = setupKeeper(t)
 	for _, test := range tt {
 		test := test
 		t.Run(test.Name, func(t *testing.T) {

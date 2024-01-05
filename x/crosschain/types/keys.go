@@ -36,8 +36,9 @@ func KeyPrefix(p string) []byte {
 }
 
 const (
-	SendKey            = "Send-value-"
-	LastBlockHeightKey = "LastBlockHeight-value-"
+	SendKey              = "Send-value-"
+	LastBlockHeightKey   = "LastBlockHeight-value-"
+	FinalizedInboundsKey = "FinalizedInbounds-value-"
 
 	GasPriceKey = "GasPrice-value-"
 

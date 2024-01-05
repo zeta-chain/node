@@ -82,6 +82,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	index := msg.Digest()
+	fmt.Println("observation chain", observationChain)
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
 	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, index, observationChain, observationType)
