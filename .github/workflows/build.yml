@@ -78,7 +78,7 @@ jobs:
   #       run: rm -rf *
 
   smoke-test:
-    runs-on: buildjet-4vcpu-ubuntu-2004 #["ubuntu-latest"]
+    runs-on: ubuntu-20.04 # buildjet-4vcpu-ubuntu-2004 #["ubuntu-latest"]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
