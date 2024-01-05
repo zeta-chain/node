@@ -123,16 +123,6 @@ jobs:
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
-          
-          # pip uninstall docker-compose
-          # sudo apt-get install docker-compose-plugin docker-compose
-          # DESTINATION=/usr/local/bin/docker-compose
-          # VERSION=v2.23.3
-          # sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
-          # sudo chmod 755 $DESTINATION
-
-          which docker-compose
-          docker-compose  version
           docker-compose up orchestrator --exit-code-from orchestrator
           if [ $? -ne 0 ]; then
             echo "Smoke Test Failed"
