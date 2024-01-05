@@ -123,6 +123,8 @@ jobs:
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
+          sudo apt-get remove docker-compose
+          sudo apt-get install docker-compose-plugin docker-compose
           which docker-compose
           docker-compose  version
           docker-compose up orchestrator --exit-code-from orchestrator
