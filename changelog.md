@@ -9,7 +9,6 @@
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 ### Features
-
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
@@ -18,6 +17,8 @@
 
 ### Fixes
 
+* [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
+* fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
 * masked zetaclient config at startup
@@ -25,6 +26,7 @@
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 
 ### Refactoring
 
@@ -38,10 +40,14 @@
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
+* Add logger to smoke tests
+* [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
 
 ### Chores
-
+* [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
+* [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
+* [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
 
 ### Tests
 

@@ -10,14 +10,11 @@ RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
+
 RUN go mod download
-
 COPY . .
-
 RUN make install
-
-RUN make install-smoketest
-
+RUN make install-zetae2e
 #
 #FROM golang:1.20-alpine
 
@@ -29,7 +26,7 @@ RUN cp /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
 
 RUN cp /go/bin/zetaclientd /usr/local/bin
 RUN cp /go/bin/zetacored /usr/local/bin
-RUN cp /go/bin/smoketest /usr/local/bin
+RUN cp /go/bin/zetae2e /usr/local/bin
 
 COPY contrib/localnet/scripts /root
 COPY contrib/localnet/preparams /root/preparams

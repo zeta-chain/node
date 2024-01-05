@@ -2,8 +2,6 @@ package smoketests
 
 import (
 	"bytes"
-	"context"
-	"fmt"
 	"math/big"
 	"time"
 
@@ -12,20 +10,8 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-// TestContextUpgrade tests sending ZETA out of ZetaChain to Ethereum
+// TestContextUpgrade tests sending ETH on ZetaChain and check context data
 func TestContextUpgrade(sm *runner.SmokeTestRunner) {
-	startTime := time.Now()
-	defer func() {
-		fmt.Printf("test finishes in %s\n", time.Since(startTime))
-	}()
-	goerliClient := sm.GoerliClient
-	utils.LoudPrintf("Test ContextApp\n")
-	bn, err := goerliClient.BlockNumber(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("GOERLI block number: %d\n", bn)
-
 	value := big.NewInt(1000000000000000) // in wei (1 eth)
 	data := make([]byte, 0, 32)
 	data = append(data, sm.ContextAppAddr.Bytes()...)
@@ -36,14 +22,17 @@ func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	fmt.Printf("GOERLI tx sent: %s; to %s, nonce %d\n", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(sm.GoerliClient, signedTx)
-	fmt.Printf("GOERLI tx receipt: %d\n", receipt.Status)
-	fmt.Printf("  tx hash: %s\n", receipt.TxHash.String())
-	fmt.Printf("  to: %s\n", signedTx.To().String())
-	fmt.Printf("  value: %d\n", signedTx.Value())
-	fmt.Printf("  block num: %d\n", receipt.BlockNumber)
-	fmt.Printf("  data: %x\n", signedTx.Data())
+	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
+	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
+	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
+	sm.Logger.Info("  to: %s", signedTx.To().String())
+	sm.Logger.Info("  value: %d", signedTx.Value())
+	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
+	sm.Logger.Info("  data: %x", signedTx.Data())
 
 	found := false
 	for i := 0; i < 10; i++ {
@@ -52,20 +41,20 @@ func TestContextUpgrade(sm *runner.SmokeTestRunner) {
 			End:   nil,
 		})
 		if err != nil {
-			fmt.Printf("filter error: %s\n", err.Error())
+			sm.Logger.Info("filter error: %s", err.Error())
 			continue
 		}
 		for eventIter.Next() {
-			fmt.Printf("event: ContextData\n")
-			fmt.Printf("  origin: %x\n", eventIter.Event.Origin)
-			fmt.Printf("  sender: %s\n", eventIter.Event.Sender.Hex())
-			fmt.Printf("  chainid: %d\n", eventIter.Event.ChainID)
-			fmt.Printf("  msgsender: %s\n", eventIter.Event.MsgSender.Hex())
+			sm.Logger.Info("event: ContextData")
+			sm.Logger.Info("  origin: %x", eventIter.Event.Origin)
+			sm.Logger.Info("  sender: %s", eventIter.Event.Sender.Hex())
+			sm.Logger.Info("  chainid: %d", eventIter.Event.ChainID)
+			sm.Logger.Info("  msgsender: %s", eventIter.Event.MsgSender.Hex())
 			found = true
 			if bytes.Compare(eventIter.Event.Origin, sm.DeployerAddress.Bytes()) != 0 {
 				panic("origin mismatch")
 			}
-			chainID, err := sm.GoerliClient.ChainID(context.Background())
+			chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
 			if err != nil {
 				panic(err)
 			}
