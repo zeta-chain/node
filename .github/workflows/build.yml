@@ -78,7 +78,7 @@ jobs:
         run: rm -rf *
 
   smoke-test:
-    runs-on: ["gcp-athens-runners"]
+    runs-on: ["ubuntu-latest"]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
