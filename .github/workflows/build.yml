@@ -123,6 +123,8 @@ jobs:
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
+          pip install docker-compose
+
           docker-compose  version
           docker-compose up orchestrator --exit-code-from orchestrator
           if [ $? -ne 0 ]; then
