@@ -22,8 +22,6 @@ func TestAddress(t *testing.T) {
 }
 
 func TestDecodeBtcAddress(t *testing.T) {
-	// �U�ڷ���i߭����꿚�l
-	// 14CEjTd5ci3228J45GdnGeUKLSSeCWUQxK
 	t.Run("invalid string", func(t *testing.T) {
 		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", 18332)
 		require.ErrorContains(t, err, "runtime error: index out of range")
