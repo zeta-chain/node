@@ -125,9 +125,7 @@ jobs:
           cd contrib/localnet
           
           # pip uninstall docker-compose
-
           # sudo apt-get install docker-compose-plugin docker-compose
-
           # DESTINATION=/usr/local/bin/docker-compose
           # VERSION=v2.23.3
           # sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
