@@ -78,7 +78,7 @@ jobs:
   #       run: rm -rf *
 
   smoke-test:
-    runs-on: ubuntu-20.04 # buildjet-4vcpu-ubuntu-2004 #["ubuntu-latest"]
+    runs-on: buildjet-4vcpu-ubuntu-2204 # buildjet-4vcpu-ubuntu-2004 #["ubuntu-latest"]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
@@ -111,27 +111,27 @@ jobs:
 #          username: ${{ secrets.DOCKER_HUB_USERNAME }}
 #          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
 
-      # - name: Build zetanode
-      #   run: |
-      #     make zetanode
+      - name: Build zetanode
+        run: |
+          make zetanode
 
-      # - name: Start Private Network
-      #   run: |
-      #     cd contrib/localnet/ 
-      #     docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+      - name: Start Private Network
+        run: |
+          cd contrib/localnet/ 
+          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
       - name: Run Smoke Test
         run: |
           cd contrib/localnet
           
-          pip uninstall docker-compose
+          # pip uninstall docker-compose
 
           # sudo apt-get install docker-compose-plugin docker-compose
 
-          DESTINATION=/usr/local/bin/docker-compose
-          VERSION=v2.23.3
-          sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
-          sudo chmod 755 $DESTINATION
+          # DESTINATION=/usr/local/bin/docker-compose
+          # VERSION=v2.23.3
+          # sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+          # sudo chmod 755 $DESTINATION
 
           which docker-compose
           docker-compose  version
