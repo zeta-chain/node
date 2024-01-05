@@ -9,7 +9,8 @@ import (
 )
 
 // RemoveFromOutTxTracker removes a record from the outbound transaction tracker by chain ID and nonce.
-// only the admin policy account is authorized to broadcast this message.
+//
+// Authorized: admin policy group 1.
 func (k msgServer) RemoveFromOutTxTracker(goCtx context.Context, msg *types.MsgRemoveFromOutTxTracker) (*types.MsgRemoveFromOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1) {

@@ -16,6 +16,8 @@
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
+
+* [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
@@ -24,6 +26,7 @@
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 
 ### Refactoring
 
@@ -37,6 +40,7 @@
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
 * Add logger to smoke tests
+* [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
 
 ### Chores
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
