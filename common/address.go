@@ -1,8 +1,11 @@
 package common
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
@@ -40,4 +43,46 @@ func (addr Address) IsEmpty() bool {
 
 func (addr Address) String() string {
 	return string(addr)
+}
+
+func ConvertRecoverToError(r interface{}) error {
+	switch x := r.(type) {
+	case string:
+		return errors.New(x)
+	case error:
+		return x
+	default:
+		return errors.New(fmt.Sprint(x))
+	}
+}
+
+func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Address, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = ConvertRecoverToError(r)
+			err = fmt.Errorf("input address:%s,chainId:%d,err:%s", inputAddress, chainId, err.Error())
+			return
+		}
+	}()
+	chainParams, err := GetBTCChainParams(chainId)
+	if err != nil {
+		return nil, err
+	}
+	if chainParams == nil {
+		return nil, fmt.Errorf("chain params not found")
+	}
+	oneIndex := strings.LastIndexByte(inputAddress, '1')
+	if oneIndex > 1 {
+		prefix := inputAddress[:oneIndex]
+		ok := IsValidPrefix(prefix, chainId)
+		if !ok {
+			return nil, fmt.Errorf("invalid prefix:%s,chain-id:%d", prefix, chainId)
+		}
+		addressString := inputAddress[oneIndex+1:]
+		if len(addressString) != 39 {
+			return nil, fmt.Errorf("invalid address length:%d,inputaddress:%s", len(addressString), inputAddress)
+		}
+	}
+	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
+	return
 }

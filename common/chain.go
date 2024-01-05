@@ -52,10 +52,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if chainParams == nil {
-			return "", fmt.Errorf("chain params not found")
-		}
-		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := DecodeBtcAddress(addrStr, chain.ChainId)
 		if err != nil {
 			return "", err
 		}
@@ -210,6 +207,19 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 		return &chaincfg.MainNetParams, nil
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+	}
+}
+
+func IsValidPrefix(prefix string, chainID int64) bool {
+	switch chainID {
+	case 18444:
+		return prefix == "bcrt"
+	case 18332:
+		return prefix == "tb"
+	case 8332:
+		return prefix == "bc"
+	default:
+		return false
 	}
 }
 

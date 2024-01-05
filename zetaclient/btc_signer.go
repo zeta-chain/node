@@ -301,12 +301,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot get bitcoin net params%v", err)
 		return
 	}
-	if bitcoinNetParams == nil {
-		logger.Error().Msgf("cannot get bitcoin net params")
-		return
-	}
-
-	addr, err := btcutil.DecodeAddress(params.Receiver, bitcoinNetParams)
+	addr, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
