@@ -130,45 +130,6 @@ jobs:
           touch .release-env
           make release
 
-  announce-release:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs:
-      - publish-release
-    steps:
-      - uses: actions/checkout@v3
-      - name: Get Version
-        run: |
-          VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-          echo "BINARY_VERSION=${VERSION}" >> ${GITHUB_ENV}
-
-      - name: Determine Release Type
-        id: determine_release_type
-        run: |
-          if [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.0\.0+$ ]]; then
-            echo "RELEASE_TYPE=major" >> ${GITHUB_ENV}
-          elif [[ "${{ env.BINARY_VERSION }}" =~ ^v[0-9]+\.[0-9]+\.[1-9]+$ ]]; then
-            echo "RELEASE_TYPE=minor" >> ${GITHUB_ENV}
-          else
-            echo "RELEASE_TYPE=unknown" >> ${GITHUB_ENV}
-          fi
-
-      - name: "SEND:DISCORD:MESSAGE"
-        if: steps.determine_release_type.outputs.RELEASE_TYPE == 'major'
-        uses: gzukel/CosmosComposites/send_discord_message@main
-        with:
-          discord_token: "${{ secrets.DISCORD_TOKEN }}"
-          discord_channel_id: "${{ secrets.DISCORD_CHANNEL_ID }}"
-          discord_message: |
-            Hey <@&1122981184255840306>! A new version of the ZetaChain software has been released.
-
-            Major Version Upgrade (e.g. v5.x.x to V6.x.x) must be completed through a governance proposal.
-            We will submit a governance proposal in the next few days.
-            More specific information including block height will be shared as part of the governance proposal.
-
-            See the release notes for more details. https://github.com/zeta-chain/node/releases/tag/${{ env.BINARY_VERSION }}
-
       - name: Clean Up Workspace
         if: always()
         shell: bash
