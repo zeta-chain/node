@@ -45,7 +45,6 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	SetObservers(ctx sdk.Context, om observertypes.ObserverSet)
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)

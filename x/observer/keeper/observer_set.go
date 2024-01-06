@@ -6,7 +6,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) SetObservers(ctx sdk.Context, om types.ObserverSet) {
+func (k Keeper) SetObserverSet(ctx sdk.Context, om types.ObserverSet) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ObserverSetKey))
 	b := k.cdc.MustMarshal(&om)
 	store.Set([]byte{0}, b)
@@ -39,7 +39,7 @@ func (k Keeper) IsAddressPartOfObserverSet(ctx sdk.Context, address string) bool
 func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) {
 	observerSet, found := k.GetObserverSet(ctx)
 	if !found {
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{address},
 		})
 		return
@@ -50,7 +50,7 @@ func (k Keeper) AddObserverToSet(ctx sdk.Context, address string) {
 		}
 	}
 	observerSet.ObserverList = append(observerSet.ObserverList, address)
-	k.SetObservers(ctx, observerSet)
+	k.SetObserverSet(ctx, observerSet)
 }
 
 func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
@@ -61,7 +61,7 @@ func (k Keeper) RemoveObserverFromSet(ctx sdk.Context, address string) {
 	for i, addr := range observerSet.ObserverList {
 		if addr == address {
 			observerSet.ObserverList = append(observerSet.ObserverList[:i], observerSet.ObserverList[i+1:]...)
-			k.SetObservers(ctx, observerSet)
+			k.SetObserverSet(ctx, observerSet)
 			return
 		}
 	}
@@ -75,7 +75,7 @@ func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newOb
 	for i, addr := range observerSet.ObserverList {
 		if addr == oldObserverAddress {
 			observerSet.ObserverList[i] = newObserverAddress
-			k.SetObservers(ctx, observerSet)
+			k.SetObserverSet(ctx, observerSet)
 			return nil
 		}
 	}

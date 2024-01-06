@@ -136,7 +136,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx := keepertest.ObserverKeeper(t)
 			srv := keeper.NewMsgServerImpl(*k)
-			k.SetObservers(ctx, types.ObserverSet{
+			k.SetObserverSet(ctx, types.ObserverSet{
 				ObserverList: []string{observerAddress.String()},
 			})
 			k.GetStakingKeeper().SetValidator(ctx, tc.validator)

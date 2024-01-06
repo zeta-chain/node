@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	observerCount := uint64(0)
 	if genState.Observers.Len() > 0 {
-		k.SetObservers(ctx, genState.Observers)
+		k.SetObserverSet(ctx, genState.Observers)
 		observerCount = uint64(len(genState.Observers.ObserverList))
 	}
 	// If core params are defined set them, otherwise set default

@@ -15,7 +15,6 @@ type AccountKeeper interface {
 
 type ObserverKeeper interface {
 	GetMaturedBallotList(ctx sdk.Context) []string
-	SetObservers(ctx sdk.Context, om observertypes.ObserverSet)
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)

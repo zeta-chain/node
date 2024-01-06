@@ -46,7 +46,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 
 		count := uint64(0)
 
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count = 1
@@ -99,7 +99,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		assert.NoError(t, err)
 
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count = 1
@@ -147,7 +147,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		assert.NoError(t, err)
 		count := uint64(0)
 
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1
@@ -197,7 +197,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1
@@ -247,7 +247,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1
@@ -293,7 +293,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1
@@ -341,7 +341,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1
@@ -394,7 +394,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		count += 1

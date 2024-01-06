@@ -32,7 +32,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 		assert.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
@@ -57,7 +57,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
@@ -83,7 +83,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-		k.SetObservers(ctx, types.ObserverSet{
+		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
