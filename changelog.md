@@ -52,6 +52,7 @@
 ### Tests
 
 ### CI
+* Removed private runners and unused GitHub Action
 
 ## Version: v11.0.0
 
