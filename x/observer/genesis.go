@@ -19,22 +19,22 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	// if core params are defined set them
-	if len(genState.CoreParamsList.CoreParams) > 0 {
-		k.SetCoreParamsList(ctx, genState.CoreParamsList)
+	// if chian params are defined set them
+	if len(genState.ChainParamsList.ChainParams) > 0 {
+		k.SetChainParamsList(ctx, genState.ChainParamsList)
 	} else {
-		// if no core params are defined, set localnet chains for test purposes
-		btcCoreParams := types.GetDefaultBtcRegtestCoreParams()
-		btcCoreParams.IsSupported = true
-		goerliCoreParams := types.GetDefaultGoerliLocalnetCoreParams()
-		goerliCoreParams.IsSupported = true
-		zetaPrivnetCoreParams := types.GetDefaultZetaPrivnetCoreParams()
-		zetaPrivnetCoreParams.IsSupported = true
-		k.SetCoreParamsList(ctx, types.CoreParamsList{
-			CoreParams: []*types.CoreParams{
-				btcCoreParams,
-				goerliCoreParams,
-				zetaPrivnetCoreParams,
+		// if no chain params are defined, set localnet chains for test purposes
+		btcChainParams := types.GetDefaultBtcRegtestChainParams()
+		btcChainParams.IsSupported = true
+		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
+		goerliChainParams.IsSupported = true
+		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
+		zetaPrivnetChainParams.IsSupported = true
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				btcChainParams,
+				goerliChainParams,
+				zetaPrivnetChainParams,
 			},
 		})
 	}
@@ -141,9 +141,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	coreParams, found := k.GetCoreParamsList(ctx)
+	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {
-		coreParams = types.CoreParamsList{}
+		chainParams = types.ChainParamsList{}
 	}
 
 	// Get all node accounts
@@ -188,7 +188,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
 		Observers:         k.GetAllObserverMappers(ctx),
-		CoreParamsList:    coreParams,
+		ChainParamsList:   chainParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
 		CrosschainFlags:   cf,

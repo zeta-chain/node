@@ -36,7 +36,7 @@ func TestGenesis(t *testing.T) {
 		CrosschainFlags:   types.DefaultCrosschainFlags(),
 		Keygen:            sample.Keygen(t),
 		LastObserverCount: sample.LastObserverCount(1000),
-		CoreParamsList:    sample.CoreParamsList(),
+		ChainParamsList:   sample.ChainParamsList(),
 		TssFundMigrators:  []types.TssFundMigratorInfo{sample.TssFundsMigrator(1), sample.TssFundsMigrator(2)},
 		ChainNonces: []types.ChainNonces{
 			sample.ChainNonces(t, "0"),

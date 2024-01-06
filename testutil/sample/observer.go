@@ -75,7 +75,7 @@ func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 	}
 }
 
-func CoreParams(chainID int64) *types.CoreParams {
+func ChainParams(chainID int64) *types.ChainParams {
 	r := newRandFromSeed(chainID)
 
 	fiftyPercent, err := sdk.NewDecFromStr("0.5")
@@ -83,7 +83,7 @@ func CoreParams(chainID int64) *types.CoreParams {
 		return nil
 	}
 
-	return &types.CoreParams{
+	return &types.ChainParams{
 		ChainId:           chainID,
 		ConfirmationCount: r.Uint64(),
 
@@ -102,17 +102,17 @@ func CoreParams(chainID int64) *types.CoreParams {
 	}
 }
 
-func CoreParamsSupported(chainID int64) *types.CoreParams {
-	cp := CoreParams(chainID)
+func ChainParamsSupported(chainID int64) *types.ChainParams {
+	cp := ChainParams(chainID)
 	cp.IsSupported = true
 	return cp
 }
 
-func CoreParamsList() (cpl types.CoreParamsList) {
+func ChainParamsList() (cpl types.ChainParamsList) {
 	chainList := common.PrivnetChainList()
 
 	for _, chain := range chainList {
-		cpl.CoreParams = append(cpl.CoreParams, CoreParams(chain.ChainId))
+		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
 	}
 	return
 }

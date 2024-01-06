@@ -106,11 +106,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
 	if receiverChain.IsExternalChain() {
-		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 		if !found {
-			return nil, types.ErrNotFoundCoreParams
+			return nil, types.ErrNotFoundChainParams
 		}
-		if coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
+		if chainParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
 			return nil, types.ErrUnableToSendCoinType
 		}
 	}

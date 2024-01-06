@@ -68,7 +68,7 @@ func (k Keeper) FindBallot(
 	if !found {
 		observerMapper, _ := k.GetObserverMapper(ctx, chain)
 
-		cp, found := k.GetCoreParamsByChainID(ctx, chain.ChainId)
+		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
 		if !found || cp == nil || !cp.IsSupported {
 			err = types.ErrSupportedChains
 			return
@@ -142,7 +142,7 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 		return types.ErrSelfDelegation
 	}
 
-	cp, found := k.GetCoreParamsByChainID(ctx, chain.ChainId)
+	cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
 	if !found || cp == nil || !cp.IsSupported {
 		return types.ErrSupportedChains
 	}

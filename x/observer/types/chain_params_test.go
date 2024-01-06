@@ -9,43 +9,43 @@ import (
 	. "gopkg.in/check.v1"
 )
 
-func TestCoreParamsList_Validate(t *testing.T) {
+func TestChainParamsList_Validate(t *testing.T) {
 	t.Run("should return no error for default list", func(t *testing.T) {
-		list := types.GetDefaultCoreParams()
+		list := types.GetDefaultChainParams()
 		err := list.Validate()
 		require.NoError(t, err)
 	})
 
 	t.Run("should return error for invalid chain id", func(t *testing.T) {
-		list := types.GetDefaultCoreParams()
-		list.CoreParams[0].ChainId = 999
+		list := types.GetDefaultChainParams()
+		list.ChainParams[0].ChainId = 999
 		err := list.Validate()
 		require.Error(t, err)
 	})
 
 	t.Run("should return error for duplicated chain ID", func(t *testing.T) {
-		list := types.GetDefaultCoreParams()
-		list.CoreParams = append(list.CoreParams, list.CoreParams[0])
+		list := types.GetDefaultChainParams()
+		list.ChainParams = append(list.ChainParams, list.ChainParams[0])
 		err := list.Validate()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "duplicated chain id")
 	})
 }
 
-type UpdateCoreParamsSuite struct {
+type UpdateChainParamsSuite struct {
 	suite.Suite
-	evmParams *types.CoreParams
-	btcParams *types.CoreParams
+	evmParams *types.ChainParams
+	btcParams *types.ChainParams
 }
 
-var _ = Suite(&UpdateCoreParamsSuite{})
+var _ = Suite(&UpdateChainParamsSuite{})
 
-func TestUpdateCoreParamsSuiteSuite(t *testing.T) {
-	suite.Run(t, new(UpdateCoreParamsSuite))
+func TestUpdateChainParamsSuiteSuite(t *testing.T) {
+	suite.Run(t, new(UpdateChainParamsSuite))
 }
 
-func (s *UpdateCoreParamsSuite) SetupTest() {
-	s.evmParams = &types.CoreParams{
+func (s *UpdateChainParamsSuite) SetupTest() {
+	s.evmParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
 		InTxTicker:                  1,
@@ -61,7 +61,7 @@ func (s *UpdateCoreParamsSuite) SetupTest() {
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
 		IsSupported:                 false,
 	}
-	s.btcParams = &types.CoreParams{
+	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
 		GasPriceTicker:              1,
 		InTxTicker:                  1,
@@ -79,115 +79,115 @@ func (s *UpdateCoreParamsSuite) SetupTest() {
 	}
 }
 
-func (s *UpdateCoreParamsSuite) TestValidParams() {
-	err := types.ValidateCoreParams(s.evmParams)
+func (s *UpdateChainParamsSuite) TestValidParams() {
+	err := types.ValidateChainParams(s.evmParams)
 	require.Nil(s.T(), err)
-	err = types.ValidateCoreParams(s.btcParams)
+	err = types.ValidateChainParams(s.btcParams)
 	require.Nil(s.T(), err)
 }
 
-func (s *UpdateCoreParamsSuite) TestCommonParams() {
+func (s *UpdateChainParamsSuite) TestCommonParams() {
 	s.Validate(s.evmParams)
 	s.Validate(s.btcParams)
 }
 
-func (s *UpdateCoreParamsSuite) TestBTCParams() {
+func (s *UpdateChainParamsSuite) TestBTCParams() {
 	copy := *s.btcParams
 	copy.WatchUtxoTicker = 0
-	err := types.ValidateCoreParams(&copy)
+	err := types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 }
 
-func (s *UpdateCoreParamsSuite) TestCoreContractAddresses() {
+func (s *UpdateChainParamsSuite) TestCoreContractAddresses() {
 	copy := *s.evmParams
 	copy.ZetaTokenContractAddress = "0x123"
-	err := types.ValidateCoreParams(&copy)
+	err := types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *s.evmParams
 	copy.ZetaTokenContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *s.evmParams
 	copy.ConnectorContractAddress = "0x123"
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *s.evmParams
 	copy.ConnectorContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *s.evmParams
 	copy.Erc20CustodyContractAddress = "0x123"
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *s.evmParams
 	copy.Erc20CustodyContractAddress = "733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 }
 
-func (s *UpdateCoreParamsSuite) Validate(params *types.CoreParams) {
+func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	copy := *params
 	copy.ConfirmationCount = 0
-	err := types.ValidateCoreParams(&copy)
+	err := types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
 	copy.GasPriceTicker = 0
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.GasPriceTicker = 300
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 	copy.GasPriceTicker = 301
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
 	copy.InTxTicker = 0
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.InTxTicker = 300
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 	copy.InTxTicker = 301
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
 	copy.OutTxTicker = 0
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.OutTxTicker = 300
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 	copy.OutTxTicker = 301
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
 	copy.OutboundTxScheduleInterval = 0
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.OutboundTxScheduleInterval = 100
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 	copy.OutboundTxScheduleInterval = 101
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 
 	copy = *params
 	copy.OutboundTxScheduleLookahead = 0
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 	copy.OutboundTxScheduleLookahead = 500
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.Nil(s.T(), err)
 	copy.OutboundTxScheduleLookahead = 501
-	err = types.ValidateCoreParams(&copy)
+	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
 }

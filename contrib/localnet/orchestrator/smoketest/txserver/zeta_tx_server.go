@@ -262,45 +262,6 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 	return uniswapV2FactoryAddr, uniswapV2RouterAddr, usdtZRC20Addr, nil
 }
 
-// InitializeCoreParams sets the core params with local Goerli and BtcRegtest chains enabled
-func (zts ZetaTxServer) InitializeCoreParams(account string) error {
-	// set btc regtest  core params
-	btcCoreParams := observertypes.GetDefaultBtcRegtestCoreParams()
-	btcCoreParams.IsSupported = true
-	if err := zts.UpdateCoreParams(account, btcCoreParams); err != nil {
-		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
-	}
-
-	// set goerli localnet core params
-	goerliCoreParams := observertypes.GetDefaultGoerliLocalnetCoreParams()
-	goerliCoreParams.IsSupported = true
-	if err := zts.UpdateCoreParams(account, goerliCoreParams); err != nil {
-		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
-	}
-
-	return nil
-}
-
-// UpdateCoreParams updates the core params
-func (zts ZetaTxServer) UpdateCoreParams(account string, cp *observertypes.CoreParams) error {
-	// retrieve account
-	acc, err := zts.clientCtx.Keyring.Key(account)
-	if err != nil {
-		return err
-	}
-	addr, err := acc.GetAddress()
-	if err != nil {
-		return err
-	}
-
-	_, err = zts.BroadcastTx(account, observertypes.NewMsgUpdateCoreParams(addr.String(), cp))
-	if err != nil {
-		return fmt.Errorf("failed to set core params for bitcoin: %s", err.Error())
-	}
-
-	return nil
-}
-
 // newCodec returns the codec for msg server
 func newCodec() (*codec.ProtoCodec, codectypes.InterfaceRegistry) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()

@@ -30,8 +30,8 @@ zetacored query observer [flags]
 * [zetacored query observer list-blame](zetacored_query_observer_list-blame.md)	 - Query AllBlameRecords
 * [zetacored query observer list-blame-by-msg](zetacored_query_observer_list-blame-by-msg.md)	 - Query AllBlameRecords
 * [zetacored query observer list-chain-nonces](zetacored_query_observer_list-chain-nonces.md)	 - list all chainNonces
+* [zetacored query observer list-chain-params](zetacored_query_observer_list-chain-params.md)	 - Query GetChainParams
 * [zetacored query observer list-chains](zetacored_query_observer_list-chains.md)	 - list all SupportedChains
-* [zetacored query observer list-core-params](zetacored_query_observer_list-core-params.md)	 - Query GetCoreParams
 * [zetacored query observer list-node-account](zetacored_query_observer_list-node-account.md)	 - list all NodeAccount
 * [zetacored query observer list-observer](zetacored_query_observer_list-observer.md)	 - Query All Observer Mappers
 * [zetacored query observer list-pending-nonces](zetacored_query_observer_list-pending-nonces.md)	 - shows a chainNonces
@@ -40,7 +40,7 @@ zetacored query observer [flags]
 * [zetacored query observer show-ballot](zetacored_query_observer_show-ballot.md)	 - Query BallotByIdentifier
 * [zetacored query observer show-blame](zetacored_query_observer_show-blame.md)	 - Query BlameByIdentifier
 * [zetacored query observer show-chain-nonces](zetacored_query_observer_show-chain-nonces.md)	 - shows a chainNonces
-* [zetacored query observer show-core-params](zetacored_query_observer_show-core-params.md)	 - Query GetCoreParamsForChain
+* [zetacored query observer show-chain-params](zetacored_query_observer_show-chain-params.md)	 - Query GetChainParamsForChain
 * [zetacored query observer show-crosschain-flags](zetacored_query_observer_show-crosschain-flags.md)	 - shows the crosschain flags
 * [zetacored query observer show-keygen](zetacored_query_observer_show-keygen.md)	 - shows keygen
 * [zetacored query observer show-node-account](zetacored_query_observer_show-node-account.md)	 - shows a NodeAccount

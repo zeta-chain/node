@@ -158,8 +158,8 @@ func setupTssMigrationParams(
 		IsOutboundEnabled: true,
 	})
 
-	zk.ObserverKeeper.SetCoreParamsList(ctx, observertypes.CoreParamsList{
-		CoreParams: []*observertypes.CoreParams{
+	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{
+		ChainParams: []*observertypes.ChainParams{
 			{
 				ChainId:               chain.ChainId,
 				BallotThreshold:       sdk.NewDec(0),

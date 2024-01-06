@@ -27,26 +27,26 @@ message MsgUpdateObserver {
 }
 ```
 
-## MsgUpdateCoreParams
+## MsgUpdateChainParams
 
-UpdateCoreParams updates core parameters for a specific chain, or add a new one.
-Core parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
+UpdateChainParams updates chain parameters for a specific chain, or add a new one.
+Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
 connector and ERC20 custody contract addresses, etc.
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
-message MsgUpdateCoreParams {
+message MsgUpdateChainParams {
 	string creator = 1;
-	CoreParams coreParams = 2;
+	ChainParams chainParams = 2;
 }
 ```
 
-## MsgRemoveCoreParams
+## MsgRemoveChainParams
 
-RemoveCoreParams removes core parameters for a specific chain.
+RemoveChainParams removes chain parameters for a specific chain.
 
 ```proto
-message MsgRemoveCoreParams {
+message MsgRemoveChainParams {
 	string creator = 1;
 	int64 chain_id = 2;
 }

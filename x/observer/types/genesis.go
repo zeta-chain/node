@@ -40,8 +40,8 @@ func (gs GenesisState) Validate() error {
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
-	// check for invalid core params
-	if err := gs.CoreParamsList.Validate(); err != nil {
+	// check for invalid chain params
+	if err := gs.ChainParamsList.Validate(); err != nil {
 		return err
 	}
 

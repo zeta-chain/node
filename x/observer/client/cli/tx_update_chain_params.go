@@ -1,7 +1,9 @@
 package cli
 
 import (
-	"strconv"
+	"encoding/json"
+	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -10,30 +12,39 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdRemoveCoreParams() *cobra.Command {
+func CmdUpdateChainParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove-core-params [chain-id]",
-		Short: "Broadcast message to remove core params",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-chain-params [chain-id] [client-params.json]",
+		Short: "Broadcast message updateChainParams",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+
+			argChainParams := args[0]
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-
-			// get chainID as int64
-			chainID, err := strconv.ParseInt(args[0], 10, 64)
+			var clientParams types.ChainParams
+			file, err := filepath.Abs(argChainParams)
+			if err != nil {
+				return err
+			}
+			file = filepath.Clean(file)
+			input, err := os.ReadFile(file) // #nosec G304
+			if err != nil {
+				return err
+			}
+			err = json.Unmarshal(input, &clientParams)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgRemoveCoreParams(
+			msg := types.NewMsgUpdateChainParams(
 				clientCtx.GetFromAddress().String(),
-				chainID,
+				&clientParams,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

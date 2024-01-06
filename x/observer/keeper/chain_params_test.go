@@ -21,11 +21,11 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 		setSupportedChain(ctx, *k, getValidEthChainIDWithIndex(t, 0))
 		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 1)))
 
-		// core params list but chain not supported
-		coreParams := sample.CoreParams(getValidEthChainIDWithIndex(t, 0))
-		coreParams.IsSupported = false
-		k.SetCoreParamsList(ctx, types.CoreParamsList{
-			CoreParams: []*types.CoreParams{coreParams},
+		// chain params list but chain not supported
+		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
+		chainParams.IsSupported = false
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{chainParams},
 		})
 		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0)))
 	})
@@ -56,15 +56,15 @@ func TestKeeper_GetSupportedChains(t *testing.T) {
 		supported3 := common.ExternalChainList()[3]
 		supported4 := common.ExternalChainList()[4]
 
-		var coreParamsList []*types.CoreParams
-		coreParamsList = append(coreParamsList, sample.CoreParamsSupported(supported1.ChainId))
-		coreParamsList = append(coreParamsList, sample.CoreParamsSupported(supported2.ChainId))
-		coreParamsList = append(coreParamsList, sample.CoreParams(unsupported.ChainId))
-		coreParamsList = append(coreParamsList, sample.CoreParamsSupported(supported3.ChainId))
-		coreParamsList = append(coreParamsList, sample.CoreParamsSupported(supported4.ChainId))
+		var chainParamsList []*types.ChainParams
+		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported1.ChainId))
+		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported2.ChainId))
+		chainParamsList = append(chainParamsList, sample.ChainParams(unsupported.ChainId))
+		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported3.ChainId))
+		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported4.ChainId))
 
-		k.SetCoreParamsList(ctx, types.CoreParamsList{
-			CoreParams: coreParamsList,
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: chainParamsList,
 		})
 
 		supportedChains := k.GetSupportedChains(ctx)

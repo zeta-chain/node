@@ -32,13 +32,13 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	observertypes.CoreParams
+	observertypes.ChainParams
 	Chain    common.Chain
 	Endpoint string
 }
 
 type BTCConfig struct {
-	observertypes.CoreParams
+	observertypes.ChainParams
 
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
@@ -157,13 +157,13 @@ func (c *Config) GetKeyringBackend() KeyringBackend {
 	return c.KeyringBackend
 }
 
-// UpdateCoreParams updates core params for all chains
+// UpdateChainParams updates core params for all chains
 // this must be the ONLY function that writes to core params
-func (c *Config) UpdateCoreParams(
+func (c *Config) UpdateChainParams(
 	keygen *observertypes.Keygen,
 	newChains []common.Chain,
-	evmCoreParams map[int64]*observertypes.CoreParams,
-	btcCoreParams *observertypes.CoreParams,
+	evmChainParams map[int64]*observertypes.ChainParams,
+	btcChainParams *observertypes.ChainParams,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -175,37 +175,45 @@ func (c *Config) UpdateCoreParams(
 		return newChains[i].ChainId < newChains[j].ChainId
 	})
 	if len(newChains) == 0 {
-		logger.Warn().Msg("UpdateCoreParams: No chains enabled in ZeroCore")
+		logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
 	}
 
 	// Add some warnings if chain list changes at runtime
 	if !init {
 		if len(c.ChainsEnabled) != len(newChains) {
-			logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
+			logger.Warn().Msgf(
+				"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
+				c.ChainsEnabled,
+				newChains,
+			)
 		} else {
 			for i, chain := range newChains {
 				if chain != c.ChainsEnabled[i] {
-					logger.Warn().Msgf("UpdateCoreParams: ChainsEnabled changed at runtime!! current: %v, new: %v", c.ChainsEnabled, newChains)
+					logger.Warn().Msgf(
+						"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
+						c.ChainsEnabled,
+						newChains,
+					)
 				}
 			}
 		}
 	}
 	c.Keygen = *keygen
 	c.ChainsEnabled = newChains
-	// update core params for bitcoin if it has config in file
-	if c.BitcoinConfig != nil && btcCoreParams != nil {
-		c.BitcoinConfig.CoreParams = *btcCoreParams
+	// update chain params for bitcoin if it has config in file
+	if c.BitcoinConfig != nil && btcChainParams != nil {
+		c.BitcoinConfig.ChainParams = *btcChainParams
 	}
 	// update core params for evm chains we have configs in file
-	for _, params := range evmCoreParams {
+	for _, params := range evmChainParams {
 		curCfg, found := c.EVMChainConfigs[params.ChainId]
 		if found {
-			curCfg.CoreParams = *params
+			curCfg.ChainParams = *params
 		}
 	}
 }
 
-// Make a separate (deep) copy of the config
+// Clone makes a separate (deep) copy of the config
 func (c *Config) Clone() *Config {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
@@ -246,17 +254,17 @@ func (c *Config) Clone() *Config {
 	return copied
 }
 
-// ValidateCoreParams performs some basic checks on core params
-func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
-	if coreParams == nil {
-		return fmt.Errorf("invalid core params: nil")
+// ValidateChainParams performs some basic checks on core params
+func ValidateChainParams(chainParams *observertypes.ChainParams) error {
+	if chainParams == nil {
+		return fmt.Errorf("invalid chain params: nil")
 	}
-	chain := common.GetChainFromChainID(coreParams.ChainId)
+	chain := common.GetChainFromChainID(chainParams.ChainId)
 	if chain == nil {
-		return fmt.Errorf("invalid core params: chain %d not supported", coreParams.ChainId)
+		return fmt.Errorf("invalid chain params: chain %d not supported", chainParams.ChainId)
 	}
-	if coreParams.ConfirmationCount < 1 {
-		return fmt.Errorf("invalid core params: ConfirmationCount %d", coreParams.ConfirmationCount)
+	if chainParams.ConfirmationCount < 1 {
+		return fmt.Errorf("invalid chain params: ConfirmationCount %d", chainParams.ConfirmationCount)
 	}
 	// zeta chain skips the rest of the checks for now
 	if chain.IsZetaChain() {
@@ -264,35 +272,35 @@ func ValidateCoreParams(coreParams *observertypes.CoreParams) error {
 	}
 
 	// check tickers
-	if coreParams.GasPriceTicker < 1 {
-		return fmt.Errorf("invalid core params: GasPriceTicker %d", coreParams.GasPriceTicker)
+	if chainParams.GasPriceTicker < 1 {
+		return fmt.Errorf("invalid chain params: GasPriceTicker %d", chainParams.GasPriceTicker)
 	}
-	if coreParams.InTxTicker < 1 {
-		return fmt.Errorf("invalid core params: InTxTicker %d", coreParams.InTxTicker)
+	if chainParams.InTxTicker < 1 {
+		return fmt.Errorf("invalid chain params: InTxTicker %d", chainParams.InTxTicker)
 	}
-	if coreParams.OutTxTicker < 1 {
-		return fmt.Errorf("invalid core params: OutTxTicker %d", coreParams.OutTxTicker)
+	if chainParams.OutTxTicker < 1 {
+		return fmt.Errorf("invalid chain params: OutTxTicker %d", chainParams.OutTxTicker)
 	}
-	if coreParams.OutboundTxScheduleInterval < 1 {
-		return fmt.Errorf("invalid core params: OutboundTxScheduleInterval %d", coreParams.OutboundTxScheduleInterval)
+	if chainParams.OutboundTxScheduleInterval < 1 {
+		return fmt.Errorf("invalid chain params: OutboundTxScheduleInterval %d", chainParams.OutboundTxScheduleInterval)
 	}
-	if coreParams.OutboundTxScheduleLookahead < 1 {
-		return fmt.Errorf("invalid core params: OutboundTxScheduleLookahead %d", coreParams.OutboundTxScheduleLookahead)
+	if chainParams.OutboundTxScheduleLookahead < 1 {
+		return fmt.Errorf("invalid chain params: OutboundTxScheduleLookahead %d", chainParams.OutboundTxScheduleLookahead)
 	}
 
 	// chain type specific checks
-	if common.IsBitcoinChain(coreParams.ChainId) && coreParams.WatchUtxoTicker < 1 {
-		return fmt.Errorf("invalid core params: watchUtxo ticker %d", coreParams.WatchUtxoTicker)
+	if common.IsBitcoinChain(chainParams.ChainId) && chainParams.WatchUtxoTicker < 1 {
+		return fmt.Errorf("invalid chain params: watchUtxo ticker %d", chainParams.WatchUtxoTicker)
 	}
-	if common.IsEVMChain(coreParams.ChainId) {
-		if !validCoreContractAddress(coreParams.ZetaTokenContractAddress) {
-			return fmt.Errorf("invalid core params: zeta token contract address %s", coreParams.ZetaTokenContractAddress)
+	if common.IsEVMChain(chainParams.ChainId) {
+		if !validCoreContractAddress(chainParams.ZetaTokenContractAddress) {
+			return fmt.Errorf("invalid chain params: zeta token contract address %s", chainParams.ZetaTokenContractAddress)
 		}
-		if !validCoreContractAddress(coreParams.ConnectorContractAddress) {
-			return fmt.Errorf("invalid core params: connector contract address %s", coreParams.ConnectorContractAddress)
+		if !validCoreContractAddress(chainParams.ConnectorContractAddress) {
+			return fmt.Errorf("invalid chain params: connector contract address %s", chainParams.ConnectorContractAddress)
 		}
-		if !validCoreContractAddress(coreParams.Erc20CustodyContractAddress) {
-			return fmt.Errorf("invalid core params: erc20 custody contract address %s", coreParams.Erc20CustodyContractAddress)
+		if !validCoreContractAddress(chainParams.Erc20CustodyContractAddress) {
+			return fmt.Errorf("invalid chain params: erc20 custody contract address %s", chainParams.Erc20CustodyContractAddress)
 		}
 	}
 	return nil

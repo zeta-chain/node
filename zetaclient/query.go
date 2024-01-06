@@ -39,28 +39,28 @@ func (b *ZetaCoreBridge) GetCrosschainFlags() (observertypes.CrosschainFlags, er
 	return resp.CrosschainFlags, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParamsForChainID(externalChainID int64) (*observertypes.CoreParams, error) {
+func (b *ZetaCoreBridge) GetChainParamsForChainID(externalChainID int64) (*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{ChainId: externalChainID})
+	resp, err := client.GetChainParamsForChain(context.Background(), &observertypes.QueryGetChainParamsForChainRequest{ChainId: externalChainID})
 	if err != nil {
-		return &observertypes.CoreParams{}, err
+		return &observertypes.ChainParams{}, err
 	}
-	return resp.CoreParams, nil
+	return resp.ChainParams, nil
 }
 
-func (b *ZetaCoreBridge) GetCoreParams() ([]*observertypes.CoreParams, error) {
+func (b *ZetaCoreBridge) GetChainParams() ([]*observertypes.ChainParams, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	var err error
 
-	resp := &observertypes.QueryGetCoreParamsResponse{}
+	resp := &observertypes.QueryGetChainParamsResponse{}
 	for i := 0; i <= DefaultRetryCount; i++ {
-		resp, err = client.GetCoreParams(context.Background(), &observertypes.QueryGetCoreParamsRequest{})
+		resp, err = client.GetChainParams(context.Background(), &observertypes.QueryGetChainParamsRequest{})
 		if err == nil {
-			return resp.CoreParams.CoreParams, nil
+			return resp.ChainParams.ChainParams, nil
 		}
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
-	return nil, fmt.Errorf("failed to get core params | err %s", err.Error())
+	return nil, fmt.Errorf("failed to get chain params | err %s", err.Error())
 }
 
 func (b *ZetaCoreBridge) GetUpgradePlan() (*upgradetypes.Plan, error) {
@@ -367,15 +367,6 @@ func (b *ZetaCoreBridge) GetAllOutTxTrackerByChain(chainID int64, order Order) (
 		})
 	}
 	return resp.OutTxTracker, nil
-}
-
-func (b *ZetaCoreBridge) GetClientParams(chainID int64) (observertypes.QueryGetCoreParamsForChainResponse, error) {
-	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetCoreParamsForChain(context.Background(), &observertypes.QueryGetCoreParamsForChainRequest{ChainId: chainID})
-	if err != nil {
-		return observertypes.QueryGetCoreParamsForChainResponse{}, err
-	}
-	return *resp, nil
 }
 
 func (b *ZetaCoreBridge) GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error) {

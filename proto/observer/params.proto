@@ -7,10 +7,10 @@ import "observer/observer.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
-message CoreParamsList {
-  repeated CoreParams core_params = 1;
+message ChainParamsList {
+  repeated ChainParams chain_params = 1;
 }
-message CoreParams {
+message ChainParams {
   int64 chain_id = 11;
   uint64 confirmation_count = 1;
   uint64 gas_price_ticker = 2;
@@ -33,8 +33,7 @@ message CoreParams {
   bool is_supported = 16;
 }
 
-// Deprecated: Use CoreParamsList
-// TODO: Remove in v12
+// Deprecated: Use ChainParamsList
 message ObserverParams {
   common.Chain chain = 1;
   string ballot_threshold = 3 [
@@ -63,8 +62,7 @@ message Admin_Policy {
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // Deprecated: Use CoreParamsList
-  // TODO: Remove in v12
+  // Deprecated: Use ChainParamsList
   repeated ObserverParams observer_params = 1;
 
   repeated Admin_Policy admin_policy = 2;

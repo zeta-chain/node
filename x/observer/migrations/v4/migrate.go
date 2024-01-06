@@ -12,8 +12,8 @@ import (
 type observerKeeper interface {
 	GetParams(ctx sdk.Context) types.Params
 	SetParams(ctx sdk.Context, params types.Params)
-	GetCoreParamsList(ctx sdk.Context) (params types.CoreParamsList, found bool)
-	SetCoreParamsList(ctx sdk.Context, params types.CoreParamsList)
+	GetChainParamsList(ctx sdk.Context) (params types.ChainParamsList, found bool)
+	SetChainParamsList(ctx sdk.Context, params types.ChainParamsList)
 	StoreKey() storetypes.StoreKey
 	Codec() codec.BinaryCodec
 }
@@ -46,30 +46,30 @@ func MigrateCrosschainFlags(ctx sdk.Context, observerStoreKey storetypes.StoreKe
 	return nil
 }
 
-// MigrateObserverParams migrates the observer params to the core params
-// the function assumes that each oberver params entry has a corresponding core params entry
+// MigrateObserverParams migrates the observer params to the chain params
+// the function assumes that each oberver params entry has a corresponding chain params entry
 // if the chain is not found, the observer params entry is ignored because it is considered as not supported
 func MigrateObserverParams(ctx sdk.Context, observerKeeper observerKeeper) error {
-	coreParamsList, found := observerKeeper.GetCoreParamsList(ctx)
+	chainParamsList, found := observerKeeper.GetChainParamsList(ctx)
 	if !found {
-		// no core params found, nothing to migrate
+		// no chain params found, nothing to migrate
 		return nil
 	}
 
-	// search for the observer params with core params entry
+	// search for the observer params with chain params entry
 	observerParams := observerKeeper.GetParams(ctx).ObserverParams
 	for _, observerParam := range observerParams {
-		for i := range coreParamsList.CoreParams {
-			// if the chain is found, update the core params with the observer params
-			if coreParamsList.CoreParams[i].ChainId == observerParam.Chain.ChainId {
-				coreParamsList.CoreParams[i].MinObserverDelegation = observerParam.MinObserverDelegation
-				coreParamsList.CoreParams[i].BallotThreshold = observerParam.BallotThreshold
-				coreParamsList.CoreParams[i].IsSupported = observerParam.IsSupported
+		for i := range chainParamsList.ChainParams {
+			// if the chain is found, update the chain params with the observer params
+			if chainParamsList.ChainParams[i].ChainId == observerParam.Chain.ChainId {
+				chainParamsList.ChainParams[i].MinObserverDelegation = observerParam.MinObserverDelegation
+				chainParamsList.ChainParams[i].BallotThreshold = observerParam.BallotThreshold
+				chainParamsList.ChainParams[i].IsSupported = observerParam.IsSupported
 				break
 			}
 		}
 	}
 
-	observerKeeper.SetCoreParamsList(ctx, coreParamsList)
+	observerKeeper.SetChainParamsList(ctx, chainParamsList)
 	return nil
 }

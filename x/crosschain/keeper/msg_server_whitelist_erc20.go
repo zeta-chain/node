@@ -90,9 +90,9 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	}
 
 	// get necessary parameters to create the cctx
-	param, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+	param, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "core params not found for chain id (%d)", msg.ChainId)
+		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
 	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
 	if !isFound {

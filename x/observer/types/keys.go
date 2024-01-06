@@ -32,8 +32,12 @@ func BallotListKeyPrefix(p int64) []byte {
 const (
 	BlameKey = "Blame-"
 	// TODO change identifier for VoterKey to something more descriptive
-	VoterKey                      = "Voter-value-"
-	AllCoreParams                 = "CoreParams"
+	VoterKey = "Voter-value-"
+
+	// AllChainParamsKey is the ke prefix for all chain params
+	// NOTE: CoreParams is old name for AllChainParams we keep it as key value for backward compatibility
+	AllChainParamsKey = "CoreParams"
+
 	ObserverMapperKey             = "Observer-value-"
 	ObserverParamsKey             = "ObserverParams"
 	AdminPolicyParamsKey          = "AdminParams"

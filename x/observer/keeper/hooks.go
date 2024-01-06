@@ -86,7 +86,7 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
 	for _, mapper := range mappers {
 
-		cp, found := k.GetCoreParamsByChainID(ctx, mapper.ObserverChain.ChainId)
+		cp, found := k.GetChainParamsByChainID(ctx, mapper.ObserverChain.ChainId)
 		if !found || cp == nil || !cp.IsSupported {
 			return types.ErrSupportedChains
 		}

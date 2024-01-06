@@ -8,26 +8,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-const TypeMsgRemoveCoreParams = "remove_core_params"
+const TypeMsgRemoveChainParams = "remove_chain_params"
 
-var _ sdk.Msg = &MsgRemoveCoreParams{}
+var _ sdk.Msg = &MsgRemoveChainParams{}
 
-func NewMsgRemoveCoreParams(creator string, chainID int64) *MsgRemoveCoreParams {
-	return &MsgRemoveCoreParams{
+func NewMsgRemoveChainParams(creator string, chainID int64) *MsgRemoveChainParams {
+	return &MsgRemoveChainParams{
 		Creator: creator,
 		ChainId: chainID,
 	}
 }
 
-func (msg *MsgRemoveCoreParams) Route() string {
+func (msg *MsgRemoveChainParams) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgRemoveCoreParams) Type() string {
-	return TypeMsgRemoveCoreParams
+func (msg *MsgRemoveChainParams) Type() string {
+	return TypeMsgRemoveChainParams
 }
 
-func (msg *MsgRemoveCoreParams) GetSigners() []sdk.AccAddress {
+func (msg *MsgRemoveChainParams) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -35,12 +35,12 @@ func (msg *MsgRemoveCoreParams) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgRemoveCoreParams) GetSignBytes() []byte {
+func (msg *MsgRemoveChainParams) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgRemoveCoreParams) ValidateBasic() error {
+func (msg *MsgRemoveChainParams) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)

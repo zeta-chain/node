@@ -18,14 +18,14 @@ import (
 
 // setSupportedChain sets the supported chains for the observer module
 func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs ...int64) {
-	coreParamsList := make([]*types.CoreParams, len(chainIDs))
+	chainParamsList := make([]*types.ChainParams, len(chainIDs))
 	for i, chainID := range chainIDs {
-		coreParams := sample.CoreParams(chainID)
-		coreParams.IsSupported = true
-		coreParamsList[i] = coreParams
+		chainParams := sample.ChainParams(chainID)
+		chainParams.IsSupported = true
+		chainParamsList[i] = chainParams
 	}
-	observerKeeper.SetCoreParamsList(ctx, types.CoreParamsList{
-		CoreParams: coreParamsList,
+	observerKeeper.SetChainParamsList(ctx, types.ChainParamsList{
+		ChainParams: chainParamsList,
 	})
 }
 

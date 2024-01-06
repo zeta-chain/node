@@ -7,7 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { ObserverUpdateReason } from "./observer_pb.js";
 import type { HeaderData } from "../common/common_pb.js";
-import type { CoreParams } from "./params_pb.js";
+import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
 
@@ -133,57 +133,57 @@ export declare class MsgAddBlockHeaderResponse extends Message<MsgAddBlockHeader
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgUpdateCoreParams
+ * @generated from message zetachain.zetacore.observer.MsgUpdateChainParams
  */
-export declare class MsgUpdateCoreParams extends Message<MsgUpdateCoreParams> {
+export declare class MsgUpdateChainParams extends Message<MsgUpdateChainParams> {
   /**
    * @generated from field: string creator = 1;
    */
   creator: string;
 
   /**
-   * @generated from field: zetachain.zetacore.observer.CoreParams coreParams = 2;
+   * @generated from field: zetachain.zetacore.observer.ChainParams chainParams = 2;
    */
-  coreParams?: CoreParams;
+  chainParams?: ChainParams;
 
-  constructor(data?: PartialMessage<MsgUpdateCoreParams>);
+  constructor(data?: PartialMessage<MsgUpdateChainParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateCoreParams";
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateChainParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateCoreParams;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateChainParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateCoreParams;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateChainParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateCoreParams;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateChainParams;
 
-  static equals(a: MsgUpdateCoreParams | PlainMessage<MsgUpdateCoreParams> | undefined, b: MsgUpdateCoreParams | PlainMessage<MsgUpdateCoreParams> | undefined): boolean;
+  static equals(a: MsgUpdateChainParams | PlainMessage<MsgUpdateChainParams> | undefined, b: MsgUpdateChainParams | PlainMessage<MsgUpdateChainParams> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgUpdateCoreParamsResponse
+ * @generated from message zetachain.zetacore.observer.MsgUpdateChainParamsResponse
  */
-export declare class MsgUpdateCoreParamsResponse extends Message<MsgUpdateCoreParamsResponse> {
-  constructor(data?: PartialMessage<MsgUpdateCoreParamsResponse>);
+export declare class MsgUpdateChainParamsResponse extends Message<MsgUpdateChainParamsResponse> {
+  constructor(data?: PartialMessage<MsgUpdateChainParamsResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateCoreParamsResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgUpdateChainParamsResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateCoreParamsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgUpdateChainParamsResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateCoreParamsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgUpdateChainParamsResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateCoreParamsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgUpdateChainParamsResponse;
 
-  static equals(a: MsgUpdateCoreParamsResponse | PlainMessage<MsgUpdateCoreParamsResponse> | undefined, b: MsgUpdateCoreParamsResponse | PlainMessage<MsgUpdateCoreParamsResponse> | undefined): boolean;
+  static equals(a: MsgUpdateChainParamsResponse | PlainMessage<MsgUpdateChainParamsResponse> | undefined, b: MsgUpdateChainParamsResponse | PlainMessage<MsgUpdateChainParamsResponse> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgRemoveCoreParams
+ * @generated from message zetachain.zetacore.observer.MsgRemoveChainParams
  */
-export declare class MsgRemoveCoreParams extends Message<MsgRemoveCoreParams> {
+export declare class MsgRemoveChainParams extends Message<MsgRemoveChainParams> {
   /**
    * @generated from field: string creator = 1;
    */
@@ -194,38 +194,38 @@ export declare class MsgRemoveCoreParams extends Message<MsgRemoveCoreParams> {
    */
   chainId: bigint;
 
-  constructor(data?: PartialMessage<MsgRemoveCoreParams>);
+  constructor(data?: PartialMessage<MsgRemoveChainParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveCoreParams";
+  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveChainParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveCoreParams;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveChainParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveCoreParams;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveChainParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveCoreParams;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveChainParams;
 
-  static equals(a: MsgRemoveCoreParams | PlainMessage<MsgRemoveCoreParams> | undefined, b: MsgRemoveCoreParams | PlainMessage<MsgRemoveCoreParams> | undefined): boolean;
+  static equals(a: MsgRemoveChainParams | PlainMessage<MsgRemoveChainParams> | undefined, b: MsgRemoveChainParams | PlainMessage<MsgRemoveChainParams> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.MsgRemoveCoreParamsResponse
+ * @generated from message zetachain.zetacore.observer.MsgRemoveChainParamsResponse
  */
-export declare class MsgRemoveCoreParamsResponse extends Message<MsgRemoveCoreParamsResponse> {
-  constructor(data?: PartialMessage<MsgRemoveCoreParamsResponse>);
+export declare class MsgRemoveChainParamsResponse extends Message<MsgRemoveChainParamsResponse> {
+  constructor(data?: PartialMessage<MsgRemoveChainParamsResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveCoreParamsResponse";
+  static readonly typeName = "zetachain.zetacore.observer.MsgRemoveChainParamsResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveCoreParamsResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRemoveChainParamsResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveCoreParamsResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRemoveChainParamsResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveCoreParamsResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRemoveChainParamsResponse;
 
-  static equals(a: MsgRemoveCoreParamsResponse | PlainMessage<MsgRemoveCoreParamsResponse> | undefined, b: MsgRemoveCoreParamsResponse | PlainMessage<MsgRemoveCoreParamsResponse> | undefined): boolean;
+  static equals(a: MsgRemoveChainParamsResponse | PlainMessage<MsgRemoveChainParamsResponse> | undefined, b: MsgRemoveChainParamsResponse | PlainMessage<MsgRemoveChainParamsResponse> | undefined): boolean;
 }
 
 /**

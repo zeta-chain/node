@@ -21,9 +21,9 @@ var (
 	DefaultBallotThreshold       = sdk.MustNewDecFromStr("0.66")
 )
 
-// Validate checks all core params correspond to a chain and there is no duplicate chain id
-func (cpl CoreParamsList) Validate() error {
-	// check all core params correspond to a chain
+// Validate checks all chain params correspond to a chain and there is no duplicate chain id
+func (cpl ChainParamsList) Validate() error {
+	// check all chain params correspond to a chain
 	chainMap := make(map[int64]struct{})
 	existingChainMap := make(map[int64]struct{})
 
@@ -32,27 +32,27 @@ func (cpl CoreParamsList) Validate() error {
 		chainMap[chain.ChainId] = struct{}{}
 	}
 
-	// validate the core params and check for duplicates
-	for _, coreParam := range cpl.CoreParams {
-		if err := ValidateCoreParams(coreParam); err != nil {
+	// validate the chain params and check for duplicates
+	for _, chainParam := range cpl.ChainParams {
+		if err := ValidateChainParams(chainParam); err != nil {
 			return err
 		}
 
-		if _, ok := chainMap[coreParam.ChainId]; !ok {
-			return fmt.Errorf("chain id %d not found in chain list", coreParam.ChainId)
+		if _, ok := chainMap[chainParam.ChainId]; !ok {
+			return fmt.Errorf("chain id %d not found in chain list", chainParam.ChainId)
 		}
-		if _, ok := existingChainMap[coreParam.ChainId]; ok {
-			return fmt.Errorf("duplicated chain id %d found", coreParam.ChainId)
+		if _, ok := existingChainMap[chainParam.ChainId]; ok {
+			return fmt.Errorf("duplicated chain id %d found", chainParam.ChainId)
 		}
-		existingChainMap[coreParam.ChainId] = struct{}{}
+		existingChainMap[chainParam.ChainId] = struct{}{}
 	}
 	return nil
 }
 
-// ValidateCoreParams performs some basic checks on core params
-func ValidateCoreParams(params *CoreParams) error {
+// ValidateChainParams performs some basic checks on chain params
+func ValidateChainParams(params *ChainParams) error {
 	if params == nil {
-		return fmt.Errorf("core params cannot be nil")
+		return fmt.Errorf("chain params cannot be nil")
 	}
 	chain := common.GetChainFromChainID(params.ChainId)
 	if chain == nil {
@@ -89,13 +89,13 @@ func ValidateCoreParams(params *CoreParams) error {
 		}
 	}
 	if common.IsEVMChain(params.ChainId) {
-		if !validCoreContractAddress(params.ZetaTokenContractAddress) {
+		if !validChainContractAddress(params.ZetaTokenContractAddress) {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
 		}
-		if !validCoreContractAddress(params.ConnectorContractAddress) {
+		if !validChainContractAddress(params.ConnectorContractAddress) {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ConnectorContractAddress %s", params.ConnectorContractAddress)
 		}
-		if !validCoreContractAddress(params.Erc20CustodyContractAddress) {
+		if !validChainContractAddress(params.Erc20CustodyContractAddress) {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid Erc20CustodyContractAddress %s", params.Erc20CustodyContractAddress)
 		}
 	}
@@ -111,35 +111,35 @@ func ValidateCoreParams(params *CoreParams) error {
 	return nil
 }
 
-func validCoreContractAddress(address string) bool {
+func validChainContractAddress(address string) bool {
 	if !strings.HasPrefix(address, "0x") {
 		return false
 	}
 	return ethcommon.IsHexAddress(address)
 }
 
-// GetDefaultCoreParams returns a list of default core params
+// GetDefaultChainParams returns a list of default chain params
 // TODO: remove this function
 // https://github.com/zeta-chain/node-private/issues/100
-func GetDefaultCoreParams() CoreParamsList {
-	return CoreParamsList{
-		CoreParams: []*CoreParams{
-			GetDefaultEthMainnetCoreParams(),
-			GetDefaultBscMainnetCoreParams(),
-			GetDefaultBtcMainnetCoreParams(),
-			GetDefaultGoerliTestnetCoreParams(),
-			GetDefaultBscTestnetCoreParams(),
-			GetDefaultMumbaiTestnetCoreParams(),
-			GetDefaultBtcTestnetCoreParams(),
-			GetDefaultBtcRegtestCoreParams(),
-			GetDefaultGoerliLocalnetCoreParams(),
-			GetDefaultZetaPrivnetCoreParams(),
+func GetDefaultChainParams() ChainParamsList {
+	return ChainParamsList{
+		ChainParams: []*ChainParams{
+			GetDefaultEthMainnetChainParams(),
+			GetDefaultBscMainnetChainParams(),
+			GetDefaultBtcMainnetChainParams(),
+			GetDefaultGoerliTestnetChainParams(),
+			GetDefaultBscTestnetChainParams(),
+			GetDefaultMumbaiTestnetChainParams(),
+			GetDefaultBtcTestnetChainParams(),
+			GetDefaultBtcRegtestChainParams(),
+			GetDefaultGoerliLocalnetChainParams(),
+			GetDefaultZetaPrivnetChainParams(),
 		},
 	}
 }
 
-func GetDefaultEthMainnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultEthMainnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.EthChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -156,8 +156,8 @@ func GetDefaultEthMainnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultBscMainnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultBscMainnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.BscMainnetChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -174,8 +174,8 @@ func GetDefaultBscMainnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultBtcMainnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultBtcMainnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.BtcMainnetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -192,8 +192,8 @@ func GetDefaultBtcMainnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultGoerliTestnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultGoerliTestnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:           common.GoerliChain().ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
@@ -211,8 +211,8 @@ func GetDefaultGoerliTestnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultBscTestnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultBscTestnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.BscTestnetChain().ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -229,8 +229,8 @@ func GetDefaultBscTestnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultMumbaiTestnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultMumbaiTestnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.MumbaiChain().ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -247,8 +247,8 @@ func GetDefaultMumbaiTestnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultBtcTestnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultBtcTestnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.BtcTestNetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -265,8 +265,8 @@ func GetDefaultBtcTestnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultBtcRegtestCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultBtcRegtestChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.BtcRegtestChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
@@ -283,8 +283,8 @@ func GetDefaultBtcRegtestCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultGoerliLocalnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultGoerliLocalnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.GoerliLocalnetChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
@@ -301,8 +301,8 @@ func GetDefaultGoerliLocalnetCoreParams() *CoreParams {
 		IsSupported:                 false,
 	}
 }
-func GetDefaultZetaPrivnetCoreParams() *CoreParams {
-	return &CoreParams{
+func GetDefaultZetaPrivnetChainParams() *ChainParams {
+	return &ChainParams{
 		ChainId:                     common.ZetaPrivnetChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,

@@ -224,13 +224,13 @@ func setAdminPolicies(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) 
 
 // setSupportedChain sets the supported chains for the observer module
 func setSupportedChain(ctx sdk.Context, zk testkeeper.ZetaKeepers, chainIDs ...int64) {
-	coreParamsList := make([]*observertypes.CoreParams, len(chainIDs))
+	chainParamsList := make([]*observertypes.ChainParams, len(chainIDs))
 	for i, chainID := range chainIDs {
-		coreParams := sample.CoreParams(chainID)
-		coreParams.IsSupported = true
-		coreParamsList[i] = coreParams
+		chainParams := sample.ChainParams(chainID)
+		chainParams.IsSupported = true
+		chainParamsList[i] = chainParams
 	}
-	zk.ObserverKeeper.SetCoreParamsList(ctx, observertypes.CoreParamsList{
-		CoreParams: coreParamsList,
+	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{
+		ChainParams: chainParamsList,
 	})
 }

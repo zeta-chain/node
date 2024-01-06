@@ -10,22 +10,22 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgRemoveCoreParams_ValidateBasic(t *testing.T) {
+func TestMsgRemoveChainParams_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgRemoveCoreParams
+		msg  types.MsgRemoveChainParams
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgRemoveCoreParams{
+			msg: types.MsgRemoveChainParams{
 				Creator: sample.AccAddress(),
 				ChainId: common.ExternalChainList()[0].ChainId,
 			},
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgRemoveCoreParams{
+			msg: types.MsgRemoveChainParams{
 				Creator: "invalid_address",
 				ChainId: common.ExternalChainList()[0].ChainId,
 			},
@@ -34,7 +34,7 @@ func TestMsgRemoveCoreParams_ValidateBasic(t *testing.T) {
 
 		{
 			name: "invalid chain ID",
-			msg: types.MsgRemoveCoreParams{
+			msg: types.MsgRemoveChainParams{
 				Creator: sample.AccAddress(),
 				ChainId: 999,
 			},

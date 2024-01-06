@@ -8,17 +8,17 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) SetCoreParamsList(ctx sdk.Context, coreParams types.CoreParamsList) {
+func (k Keeper) SetChainParamsList(ctx sdk.Context, chainParams types.ChainParamsList) {
 	store := ctx.KVStore(k.storeKey)
-	b := k.cdc.MustMarshal(&coreParams)
-	key := types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams))
+	b := k.cdc.MustMarshal(&chainParams)
+	key := types.KeyPrefix(fmt.Sprintf("%s", types.AllChainParamsKey))
 	store.Set(key, b)
 }
 
-func (k Keeper) GetCoreParamsList(ctx sdk.Context) (val types.CoreParamsList, found bool) {
+func (k Keeper) GetChainParamsList(ctx sdk.Context) (val types.ChainParamsList, found bool) {
 	found = false
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s", types.AllCoreParams)))
+	b := store.Get(types.KeyPrefix(fmt.Sprintf("%s", types.AllChainParamsKey)))
 	if b == nil {
 		return
 	}
@@ -27,28 +27,28 @@ func (k Keeper) GetCoreParamsList(ctx sdk.Context) (val types.CoreParamsList, fo
 	return
 }
 
-func (k Keeper) GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (*types.CoreParams, bool) {
-	allCoreParams, found := k.GetCoreParamsList(ctx)
+func (k Keeper) GetChainParamsByChainID(ctx sdk.Context, chainID int64) (*types.ChainParams, bool) {
+	allChainParams, found := k.GetChainParamsList(ctx)
 	if !found {
-		return &types.CoreParams{}, false
+		return &types.ChainParams{}, false
 	}
-	for _, coreParams := range allCoreParams.CoreParams {
-		if coreParams.ChainId == chainID {
-			return coreParams, true
+	for _, chainParams := range allChainParams.ChainParams {
+		if chainParams.ChainId == chainID {
+			return chainParams, true
 		}
 	}
-	return &types.CoreParams{}, false
+	return &types.ChainParams{}, false
 }
 
 // GetSupportedChainFromChainID returns the chain from the chain id
 // it returns nil if the chain doesn't exist or is not supported
 func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain {
-	cpl, found := k.GetCoreParamsList(ctx)
+	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
 		return nil
 	}
 
-	for _, cp := range cpl.CoreParams {
+	for _, cp := range cpl.ChainParams {
 		if cp.ChainId == chainID && cp.IsSupported {
 			return common.GetChainFromChainID(chainID)
 		}
@@ -58,13 +58,13 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *co
 
 // GetSupportedChains returns the list of supported chains
 func (k Keeper) GetSupportedChains(ctx sdk.Context) []*common.Chain {
-	cpl, found := k.GetCoreParamsList(ctx)
+	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
 		return []*common.Chain{}
 	}
 
 	var chains []*common.Chain
-	for _, cp := range cpl.CoreParams {
+	for _, cp := range cpl.ChainParams {
 		if cp.IsSupported {
 			chains = append(chains, common.GetChainFromChainID(cp.ChainId))
 		}

@@ -37,16 +37,16 @@ func TestMigrateCrosschainFlags(t *testing.T) {
 func TestMigrateObserverParams(t *testing.T) {
 	k, ctx := keepertest.ObserverKeeper(t)
 
-	// set core params
-	previousCoreParamsList := types.CoreParamsList{
-		CoreParams: []*types.CoreParams{
-			sample.CoreParams(1),
-			sample.CoreParams(2),
-			sample.CoreParams(3),
-			sample.CoreParams(4),
+	// set chain params
+	previousChainParamsList := types.ChainParamsList{
+		ChainParams: []*types.ChainParams{
+			sample.ChainParams(1),
+			sample.ChainParams(2),
+			sample.ChainParams(3),
+			sample.ChainParams(4),
 		},
 	}
-	k.SetCoreParamsList(ctx, previousCoreParamsList)
+	k.SetChainParamsList(ctx, previousChainParamsList)
 
 	// set observer params
 	dec42, err := sdk.NewDecFromStr("0.42")
@@ -79,29 +79,29 @@ func TestMigrateObserverParams(t *testing.T) {
 	err = v4.MigrateObserverParams(ctx, *k)
 	require.NoError(t, err)
 
-	// check core params
-	newCoreParamsList, found := k.GetCoreParamsList(ctx)
+	// check chain params
+	newChainParamsList, found := k.GetChainParamsList(ctx)
 	require.True(t, found)
 
 	// unchanged values
-	require.EqualValues(t, previousCoreParamsList.CoreParams[0], newCoreParamsList.CoreParams[0])
-	require.EqualValues(t, previousCoreParamsList.CoreParams[3], newCoreParamsList.CoreParams[3])
+	require.EqualValues(t, previousChainParamsList.ChainParams[0], newChainParamsList.ChainParams[0])
+	require.EqualValues(t, previousChainParamsList.ChainParams[3], newChainParamsList.ChainParams[3])
 
 	// changed values
-	require.EqualValues(t, dec42, newCoreParamsList.CoreParams[1].BallotThreshold)
-	require.EqualValues(t, dec1000, newCoreParamsList.CoreParams[1].MinObserverDelegation)
-	require.EqualValues(t, dec43, newCoreParamsList.CoreParams[2].BallotThreshold)
-	require.EqualValues(t, dec1001, newCoreParamsList.CoreParams[2].MinObserverDelegation)
-	require.True(t, newCoreParamsList.CoreParams[1].IsSupported)
-	require.True(t, newCoreParamsList.CoreParams[2].IsSupported)
+	require.EqualValues(t, dec42, newChainParamsList.ChainParams[1].BallotThreshold)
+	require.EqualValues(t, dec1000, newChainParamsList.ChainParams[1].MinObserverDelegation)
+	require.EqualValues(t, dec43, newChainParamsList.ChainParams[2].BallotThreshold)
+	require.EqualValues(t, dec1001, newChainParamsList.ChainParams[2].MinObserverDelegation)
+	require.True(t, newChainParamsList.ChainParams[1].IsSupported)
+	require.True(t, newChainParamsList.ChainParams[2].IsSupported)
 
 	// check remaining values are unchanged
-	previousCoreParamsList.CoreParams[1].BallotThreshold = dec42
-	previousCoreParamsList.CoreParams[2].BallotThreshold = dec43
-	previousCoreParamsList.CoreParams[1].MinObserverDelegation = dec1000
-	previousCoreParamsList.CoreParams[2].MinObserverDelegation = dec1001
-	previousCoreParamsList.CoreParams[1].IsSupported = true
-	previousCoreParamsList.CoreParams[2].IsSupported = true
-	require.EqualValues(t, previousCoreParamsList.CoreParams[1], newCoreParamsList.CoreParams[1])
-	require.EqualValues(t, previousCoreParamsList.CoreParams[2], newCoreParamsList.CoreParams[2])
+	previousChainParamsList.ChainParams[1].BallotThreshold = dec42
+	previousChainParamsList.ChainParams[2].BallotThreshold = dec43
+	previousChainParamsList.ChainParams[1].MinObserverDelegation = dec1000
+	previousChainParamsList.ChainParams[2].MinObserverDelegation = dec1001
+	previousChainParamsList.ChainParams[1].IsSupported = true
+	previousChainParamsList.ChainParams[2].IsSupported = true
+	require.EqualValues(t, previousChainParamsList.ChainParams[1], newChainParamsList.ChainParams[1])
+	require.EqualValues(t, previousChainParamsList.ChainParams[2], newChainParamsList.ChainParams[2])
 }
