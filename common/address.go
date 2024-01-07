@@ -60,7 +60,7 @@ func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Addre
 	defer func() {
 		if r := recover(); r != nil {
 			err = ConvertRecoverToError(r)
-			err = fmt.Errorf("input address:%s,chainId:%d,err:%s", inputAddress, chainId, err.Error())
+			err = fmt.Errorf("input address:%s, chainId:%d, err:%s", inputAddress, chainId, err.Error())
 			return
 		}
 	}()
