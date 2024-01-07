@@ -56,7 +56,7 @@ func ConvertRecoverToError(r interface{}) error {
 	}
 }
 
-func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Address, err error) {
+func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Address, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = ConvertRecoverToError(r)
