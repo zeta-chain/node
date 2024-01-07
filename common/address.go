@@ -52,7 +52,7 @@ func ConvertRecoverToError(r interface{}) error {
 	case error:
 		return x
 	default:
-		return errors.New(fmt.Sprint(x))
+		return errors.New(fmt.Sprint("%v", x))
 	}
 }
 
