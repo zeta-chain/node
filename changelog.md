@@ -17,7 +17,7 @@
 
 ### Fixes
 
-* [45](https://github.com/zeta-chain/security/issues/45) - Outbound tx confirmation/inclusion enhancement
+* [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient

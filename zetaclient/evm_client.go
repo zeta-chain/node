@@ -589,6 +589,10 @@ func (ob *EVMChainClient) observeOutTx() {
 							receipt = recpt
 							transaction = tx
 							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+							if txCount > 1 {
+								ob.logger.ObserveOutTx.Error().Msgf(
+									"observeOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, receipt, transaction)
+							}
 						}
 					}
 				}
