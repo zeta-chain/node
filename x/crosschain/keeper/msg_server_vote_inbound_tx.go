@@ -58,6 +58,10 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		return nil, sdkerrors.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash %s, SenderChainID %d, EventIndex %d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+	}
+
 	observationType := observerTypes.ObservationType_InBoundTx
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
@@ -208,6 +212,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		// successful HandleEVMDeposit;
 		commit()
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
+		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 
@@ -229,9 +234,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 	commit()
 	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+	k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
