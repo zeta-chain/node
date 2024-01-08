@@ -34,4 +34,6 @@ var (
 	ErrLastObserverCountNotFound       = errorsmod.Register(ModuleName, 1123, "last observer count not found")
 	ErrUpdateObserver                  = errorsmod.Register(ModuleName, 1124, "unable to update observer")
 	ErrNodeAccountNotFound             = errorsmod.Register(ModuleName, 1125, "node account not found")
+	ErrMinDelegationNotFound           = errorsmod.Register(ModuleName, 1126, "min delegation not found")
+	ErrObserverSetNotFound             = errorsmod.Register(ModuleName, 1127, "observer set not found")
 )

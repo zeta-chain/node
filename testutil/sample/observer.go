@@ -27,13 +27,14 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 	}
 }
 
-func ObserverMapper(t *testing.T, index string) *types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
+func ObserverSet(n int) types.ObserverSet {
+	observerList := make([]string, n)
+	for i := 0; i < n; i++ {
+		observerList[i] = AccAddress()
+	}
 
-	return &types.ObserverMapper{
-		Index:         index,
-		ObserverChain: Chain(r.Int63()),
-		ObserverList:  []string{AccAddress(), AccAddress()},
+	return types.ObserverSet{
+		ObserverList: observerList,
 	}
 }
 
@@ -199,4 +200,24 @@ func NonceToCctxList(t *testing.T, index string, count int) []types.NonceToCctx 
 		}
 	}
 	return list
+}
+
+func LegacyObserverMapper(t *testing.T, index string, observerList []string) *types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+
+	return &types.ObserverMapper{
+		Index:         index,
+		ObserverChain: Chain(r.Int63()),
+		ObserverList:  observerList,
+	}
+}
+
+func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+	observerList := []string{AccAddress(), AccAddress()}
+	observerMapperList := make([]*types.ObserverMapper, n)
+	for i := 0; i < n; i++ {
+		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
+	}
+	return observerMapperList
 }
