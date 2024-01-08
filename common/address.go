@@ -56,15 +56,15 @@ func ConvertRecoverToError(r interface{}) error {
 	}
 }
 
-func DecodeBtcAddress(inputAddress string, chainId int64) (address btcutil.Address, err error) {
+func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Address, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = ConvertRecoverToError(r)
-			err = fmt.Errorf("input address:%s,chainId:%d,err:%s", inputAddress, chainId, err.Error())
+			err = fmt.Errorf("input address:%s,chainId:%d,err:%s", inputAddress, chainID, err.Error())
 			return
 		}
 	}()
-	chainParams, err := GetBTCChainParams(chainId)
+	chainParams, err := GetBTCChainParams(chainID)
 	if err != nil {
 		return nil, err
 	}
