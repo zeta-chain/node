@@ -76,6 +76,10 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 
 }
 
+func FinalizedInboundKey(intxHash string, chainID int64, eventIndex uint64) string {
+	return fmt.Sprintf("%s-%d-%d", intxHash, chainID, eventIndex)
+}
+
 var (
 	ModuleAddress = authtypes.NewModuleAddress(ModuleName)
 	//ModuleAddressEVM common.EVMAddress
