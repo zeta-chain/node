@@ -27,6 +27,7 @@
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
+* [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 
 ### Refactoring
 
