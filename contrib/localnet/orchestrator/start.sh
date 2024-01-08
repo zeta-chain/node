@@ -33,29 +33,21 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x90126d02E41c9eB2a10
 echo "funding deployer address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
-
 # unlock the TSS account
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
-## wait for the transaction to be mined
-#echo "waiting for 6s for the transaction to be mined"
-#sleep 6
-
-# note: uncomment the following lines to print the balance of the deployer address if debugging is needed
-#echo "the new balance of the deployer address:"
-#curl -sS http://eth:8545 \
-#  -X POST \
-#  -H "Content-Type: application/json" \
-#  --data '{"method":"eth_getBalance","params":["0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "latest"],"id":1,"jsonrpc":"2.0"}'
-
 # run e2e tests
 echo "running e2e tests..."
-zetae2e "$ZETAE2E_CMD"
+zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml
 ZETAE2E_EXIT_CODE=$?
 
 # if e2e passed, exit with 0, otherwise exit with 1
 if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
+  echo "starting tests with skip setup..."
+
+  zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
+
   echo "e2e passed"
   exit 0
 else

@@ -58,7 +58,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((7*NUMOFNODES))
+  sleep 10
   echo "genesis.json created"
 fi
 
@@ -151,36 +151,36 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-mkdir -p $DAEMON_HOME/zetavisor/genesis/bin
-mkdir -p $DAEMON_HOME/zetavisor/upgrades/"$UpgradeName"/bin
+mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
+mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
 
-# Setup zetavisor
+# Setup cosmovisor
 # Genesis
-cp $GOPATH/bin/old/zetacored $DAEMON_HOME/zetavisor/genesis/bin
-cp $GOPATH/bin/zetaclientd $DAEMON_HOME/zetavisor/genesis/bin
+cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
+cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
 
 #Upgrades
-cp $GOPATH/bin/new/zetacored $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/
+cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
 
 #Permissions
-chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetacored
-chmod +x $DAEMON_HOME/zetavisor/genesis/bin/zetaclientd
-chmod +x $DAEMON_HOME/zetavisor/upgrades/$UpgradeName/bin/zetacored
+chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
+chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
+chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
 
 
 # 7 Start the nodes
-zetavisor start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
+cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
 sleep 20
 echo
 
 if [ $HOSTNAME = "zetacore0" ]
 then
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 400 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+/root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 180 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
 fi
 
 sleep 8
-/root/.zetacored/zetavisor/current/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+/root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
 sleep 7
-/root/.zetacored/zetavisor/current/bin/zetacored query gov proposal 1
+/root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
 
 tail -f zetanode.log
