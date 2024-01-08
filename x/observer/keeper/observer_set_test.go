@@ -12,7 +12,7 @@ func TestKeeper_GetObserverSet(t *testing.T) {
 	t.Run("get observer set", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
-		k.SetObservers(ctx, os)
+		k.SetObserverSet(ctx, os)
 		tfm, found := k.GetObserverSet(ctx)
 		assert.True(t, found)
 		assert.Equal(t, os, tfm)
@@ -23,7 +23,7 @@ func TestKeeper_IsAddressPartOfObserverSet(t *testing.T) {
 	t.Run("address is part of observer set", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
-		k.SetObservers(ctx, os)
+		k.SetObserverSet(ctx, os)
 		assert.True(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
 		assert.False(t, k.IsAddressPartOfObserverSet(ctx, sample.AccAddress()))
 	})
@@ -48,7 +48,7 @@ func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 	t.Run("remove observer from set", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
-		k.SetObservers(ctx, os)
+		k.SetObserverSet(ctx, os)
 		k.RemoveObserverFromSet(ctx, os.ObserverList[0])
 		assert.False(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
 		osNew, found := k.GetObserverSet(ctx)
