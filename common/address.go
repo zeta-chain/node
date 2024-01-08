@@ -52,7 +52,7 @@ func ConvertRecoverToError(r interface{}) error {
 	case error:
 		return x
 	default:
-		return errors.New(fmt.Sprint(x))
+		return errors.New(fmt.Sprint("%v", x))
 	}
 }
 
@@ -60,7 +60,7 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	defer func() {
 		if r := recover(); r != nil {
 			err = ConvertRecoverToError(r)
-			err = fmt.Errorf("input address:%s,chainId:%d,err:%s", inputAddress, chainID, err.Error())
+			err = fmt.Errorf("input address:%s, chainId:%d, err:%s", inputAddress, chainID, err.Error())
 			return
 		}
 	}()
