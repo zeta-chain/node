@@ -12,7 +12,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 )
 
@@ -132,6 +134,32 @@ func setContractsFromConfig(r *runner.SmokeTestRunner, conf config.Config) error
 		if err != nil {
 			return err
 		}
+	}
+	if c := conf.Contracts.ZEVM.ZEVMSwapAppAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ZEVMSwapAppAddr: %s", c)
+		}
+		r.ZEVMSwapAppAddr = ethcommon.HexToAddress(c)
+		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.ContextAppAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ContextAppAddr: %s", c)
+		}
+		r.ContextAppAddr = ethcommon.HexToAddress(c)
+		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid TestDappAddr: %s", c)
+		}
+		r.TestDAppAddr = ethcommon.HexToAddress(c)
 	}
 
 	return nil

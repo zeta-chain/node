@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,11 @@ func getConfig(cmd *cobra.Command) (config.Config, error) {
 	// use default config if no config file is specified
 	if configFile == "" {
 		return config.DefaultConfig(), nil
+	}
+
+	configFile, err = filepath.Abs(configFile)
+	if err != nil {
+		return config.Config{}, err
 	}
 
 	return config.ReadConfig(configFile)

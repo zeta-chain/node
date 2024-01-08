@@ -3,11 +3,13 @@ package local
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"golang.org/x/sync/errgroup"
@@ -21,6 +23,9 @@ const (
 	flagTestAdmin         = "test-admin"
 	flagTestCustom        = "test-custom"
 	flagSkipRegular       = "skip-regular"
+	flagSetupOnly         = "setup-only"
+	flagConfigOut         = "config-out"
+	flagSkipSetup         = "skip-setup"
 )
 
 var (
@@ -70,6 +75,21 @@ func NewLocalCmd() *cobra.Command {
 		false,
 		"set to true to skip regular tests",
 	)
+	cmd.Flags().Bool(
+		flagSetupOnly,
+		false,
+		"set to true to only setup the networks",
+	)
+	cmd.Flags().String(
+		flagConfigOut,
+		"",
+		"config file to write the deployed contracts from the setup",
+	)
+	cmd.Flags().Bool(
+		flagSkipSetup,
+		false,
+		"set to true to skip setup",
+	)
 
 	return cmd
 }
@@ -98,6 +118,18 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 	skipRegular, err := cmd.Flags().GetBool(flagSkipRegular)
+	if err != nil {
+		panic(err)
+	}
+	setupOnly, err := cmd.Flags().GetBool(flagSetupOnly)
+	if err != nil {
+		panic(err)
+	}
+	configOut, err := cmd.Flags().GetString(flagConfigOut)
+	if err != nil {
+		panic(err)
+	}
+	skipSetup, err := cmd.Flags().GetBool(flagSkipSetup)
 	if err != nil {
 		panic(err)
 	}
@@ -130,8 +162,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	setCosmosConfig()
 
 	// wait for Genesis
-	logger.Print("⏳ wait 70s for genesis")
-	time.Sleep(70 * time.Second)
+	// if setup is skipp, we assume that the genesis is already created
+	if !skipSetup {
+		logger.Print("⏳ wait 70s for genesis")
+		time.Sleep(70 * time.Second)
+	}
 
 	// initialize deployer runner with config
 	deployerRunner, err := zetae2econfig.RunnerFromConfig(
@@ -150,16 +185,45 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// wait for keygen to be completed
-	waitKeygenHeight(ctx, deployerRunner.CctxClient, logger)
+	// if setup is skipped, we assume that the keygen is already completed
+	if !skipSetup {
+		waitKeygenHeight(ctx, deployerRunner.CctxClient, logger)
+	}
+
+	// query and set the TSS
+	deployerRunner.SetTSSAddresses()
 
 	// setting up the networks
-	logger.Print("⚙️ setting up networks")
-	startTime := time.Now()
-	deployerRunner.SetTSSAddresses()
-	deployerRunner.SetupEVM(contractsDeployed)
-	deployerRunner.SetZEVMContracts()
-	deployerRunner.MintUSDTOnEvm(10000)
-	logger.Print("✅ setup completed in %s", time.Since(startTime))
+	if !skipSetup {
+		logger.Print("⚙️ setting up networks")
+		startTime := time.Now()
+		deployerRunner.SetupEVM(contractsDeployed)
+		deployerRunner.SetZEVMContracts()
+		deployerRunner.MintUSDTOnEvm(10000)
+		logger.Print("✅ setup completed in %s", time.Since(startTime))
+		deployerRunner.PrintContractAddresses()
+	}
+
+	// if a config output is specified, write the config
+	if configOut != "" {
+		newConfig := zetae2econfig.ExportContractsFromRunner(deployerRunner, conf)
+		configOut, err := filepath.Abs(configOut)
+		if err != nil {
+			panic(err)
+		}
+
+		// write config into stdout
+		if err := config.WriteConfig(configOut, newConfig); err != nil {
+			panic(err)
+		}
+
+		logger.Print("✅ config file written in %s", configOut)
+	}
+
+	// if setup only, quit
+	if setupOnly {
+		os.Exit(0)
+	}
 
 	// run tests
 	var eg errgroup.Group
