@@ -39,15 +39,12 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 
 # run e2e tests
 echo "running e2e tests..."
-zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml
+zetae2e "$ZETAE2E_CMD"
 ZETAE2E_EXIT_CODE=$?
 
 # if e2e passed, exit with 0, otherwise exit with 1
 if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
-  echo "starting tests with skip setup..."
-
-  zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
-
+  cat /work/deployed.yml
   echo "e2e passed"
   exit 0
 else
