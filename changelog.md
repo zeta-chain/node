@@ -26,6 +26,7 @@
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 
 ### Refactoring
 
@@ -51,6 +52,7 @@
 ### Tests
 
 ### CI
+* Removed private runners and unused GitHub Action
 
 ## Version: v11.0.0
 
