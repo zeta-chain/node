@@ -72,12 +72,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 
 	// Check that the vote passed
 	ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
-	if ballot.BallotStatus == observerTypes.BallotStatus_BallotFinalized_SuccessObservation {
-		fmt.Println("First ballot passed!")
-	} else {
-		fmt.Println("First ballot failed!")
-	}
-
+	assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
 		Creator:       validatorAddr,
@@ -102,28 +97,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		msg2,
 	)
 
-	assert.NoError(t, err)
-
-	fmt.Println("Treated as a separate event.")
-	fmt.Println("In many years, things may change... GasLimit, message, asset... If any of these change, a double spend is possible. Since thesea are not guarenteed to stay the same, this is worrisome.")
-	fmt.Println("With the InTrackerTx being possible via a proof, this allows arbitrary users to do this as well.")
-
-	// Get all cross chain TXs
-	cctxs := k.GetAllCrossChainTx(ctx)
-	_ = cctxs
-
-	cctx1 := cctxs[0]
-	cctx2 := cctxs[1]
-
-	// Ensure that the status's have completed.
-	assert.Equal(t, cctx1.CctxStatus.Status, types.CctxStatus_OutboundMined)
-	assert.Equal(t, cctx1.CctxStatus.Status, cctx2.CctxStatus.Status)
-
-	fmt.Println("Msg Digest Difference: ", msg.Digest(), msg2.Digest())
-	assert.NotEqual(t, msg.Digest(), msg2.Digest())
-
-	// Checking that the two hashes are the same
-	assert.Equal(t, cctx1.InboundTxParams.InboundTxObservedHash, cctx2.InboundTxParams.InboundTxObservedHash)
+	assert.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
 }
 
 // FIMXE: make it work

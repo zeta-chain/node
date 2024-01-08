@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -58,10 +59,6 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-		return nil, sdkerrors.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash %s, SenderChainID %d, EventIndex %d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
-	}
-
 	observationType := observerTypes.ObservationType_InBoundTx
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
@@ -102,10 +99,14 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 
-	_, isFinalized := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
-	if !isFinalized {
+	_, isFinalizedInThisBlock := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
+	if !isFinalizedInThisBlock {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+	}
+
+	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash %s, SenderChainID %d, EventIndex %d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
 	}
 
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.

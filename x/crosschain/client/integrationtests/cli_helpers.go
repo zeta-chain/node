@@ -244,7 +244,7 @@ func BuildSignedOutboundVote(
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string) *os.File {
+func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string, eventIndex int) *os.File {
 	cmd := cli.CmdCCTXInboundVoter()
 	inboundVoterArgs := []string{
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
@@ -258,7 +258,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		"100",
 		"Zeta",
 		"",
-		"0",
+		strconv.Itoa(eventIndex),
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
@@ -276,7 +276,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 	return WriteToNewTempFile(t, res.String())
 }
 
-func GetBallotIdentifier(message string) string {
+func GetBallotIdentifier(message string, eventIndex int) string {
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
@@ -291,7 +291,7 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
-		0,
+		uint(eventIndex),
 	)
 	return msg.Digest()
 }
