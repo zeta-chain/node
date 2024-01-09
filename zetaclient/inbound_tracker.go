@@ -16,7 +16,10 @@ import (
 // ExternalChainWatcherForNewInboundTrackerSuggestions At each tick, gets a list of Inbound tracker suggestions from zeta-core and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
 func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker(
+		fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId),
+		ob.GetChainParams().InTxTicker,
+	)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Err(err).Msg("error creating ticker")
 		return
@@ -31,7 +34,7 @@ func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Err(err).Msg("ObserveTrackerSuggestions error")
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.ExternalChainWatcher)
+			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.ExternalChainWatcher)
 		case <-ob.stop:
 			ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher for inboundTrackerSuggestions stopped")
 			return
@@ -40,7 +43,7 @@ func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 }
 
 func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Err(err).Msg("error creating ticker")
 		return
@@ -54,7 +57,7 @@ func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestion
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
+			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.WatchInTx)
 		case <-ob.stop:
 			ob.logger.WatchInTx.Info().Msg("ExternalChainWatcher for BTC inboundTrackerSuggestions stopped")
 			return

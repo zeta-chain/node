@@ -18,6 +18,7 @@
 ### Fixes
 
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
+* [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
 * [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
@@ -27,7 +28,9 @@
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
+* [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 
 ### Refactoring
 
@@ -40,6 +43,8 @@
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
+* Move observer params into core params
+* Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
 

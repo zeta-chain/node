@@ -192,7 +192,7 @@ func (ob *EVMChainClient) CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommo
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
 func (ob *EVMChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
-	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
+	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
 	return lastHeight >= confHeight
 }
 

@@ -69,20 +69,20 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 	}
 	switch msg.CoinType {
 	case common.CoinType_Zeta:
-		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 		if !found {
-			return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
+			return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
 		}
-		if txx.To().Hex() != coreParams.ConnectorContractAddress {
+		if txx.To().Hex() != chainParams.ConnectorContractAddress {
 			return fmt.Errorf("receiver is not connector contract for coin type %s", msg.CoinType)
 		}
 		return nil
 	case common.CoinType_ERC20:
-		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 		if !found {
-			return types.ErrUnsupportedChain.Wrapf("core params not found for chain %d", msg.ChainId)
+			return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
 		}
-		if txx.To().Hex() != coreParams.Erc20CustodyContractAddress {
+		if txx.To().Hex() != chainParams.Erc20CustodyContractAddress {
 			return fmt.Errorf("receiver is not erc20Custory contract for coin type %s", msg.CoinType)
 		}
 		return nil

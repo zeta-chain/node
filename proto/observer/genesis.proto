@@ -19,13 +19,13 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
 message GenesisState {
   repeated Ballot ballots = 1;
-  repeated ObserverMapper observers = 2;
+  ObserverSet observers = 2 [(gogoproto.nullable) = false];
   repeated NodeAccount nodeAccountList = 3;
   CrosschainFlags crosschain_flags = 4;
   Params params = 5;
   Keygen keygen = 6;
   LastObserverCount last_observer_count = 7;
-  CoreParamsList core_params_list = 8 [(gogoproto.nullable) = false];
+  ChainParamsList chain_params_list = 8 [(gogoproto.nullable) = false];
   TSS tss = 9;
   repeated TSS tss_history = 10 [(gogoproto.nullable) = false];
   repeated TssFundMigratorInfo tss_fund_migrators = 11 [(gogoproto.nullable) = false];

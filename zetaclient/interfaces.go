@@ -26,8 +26,8 @@ type ChainClient interface {
 	Start()
 	Stop()
 	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
-	SetCoreParams(observertypes.CoreParams)
-	GetCoreParams() observertypes.CoreParams
+	SetChainParams(observertypes.ChainParams)
+	GetChainParams() observertypes.ChainParams
 	GetPromGauge(name string) (prometheus.Gauge, error)
 	GetPromCounter(name string) (prometheus.Counter, error)
 	GetTxID(nonce uint64) string
@@ -84,7 +84,7 @@ type ZetaCoreBridger interface {
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
 	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
-	GetObserverList(chain common.Chain) ([]string, error)
+	GetObserverList() ([]string, error)
 	GetKeyGen() (*observertypes.Keygen, error)
 	GetBtcTssAddress() (string, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)

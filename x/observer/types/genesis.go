@@ -13,7 +13,7 @@ func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		Params:            &params,
 		Ballots:           nil,
-		Observers:         nil,
+		Observers:         ObserverSet{},
 		NodeAccountList:   []*NodeAccount{},
 		CrosschainFlags:   &CrosschainFlags{IsInboundEnabled: true, IsOutboundEnabled: true},
 		Keygen:            nil,
@@ -40,8 +40,8 @@ func (gs GenesisState) Validate() error {
 		nodeAccountIndexMap[elem.GetOperator()] = true
 	}
 
-	// check for invalid core params
-	if err := gs.CoreParamsList.Validate(); err != nil {
+	// check for invalid chain params
+	if err := gs.ChainParamsList.Validate(); err != nil {
 		return err
 	}
 
@@ -55,7 +55,7 @@ func (gs GenesisState) Validate() error {
 		chainNoncesIndexMap[elem.Index] = true
 	}
 
-	return VerifyObserverMapper(gs.Observers)
+	return gs.Observers.Validate()
 }
 
 func GetGenesisStateFromAppState(marshaler codec.JSONCodec, appState map[string]json.RawMessage) GenesisState {

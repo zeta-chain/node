@@ -61,7 +61,7 @@ type BitcoinChainClient struct {
 	includedTxResults map[string]btcjson.GetTransactionResult // key: chain-tss-nonce
 	broadcastedTx     map[string]string                       // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
-	params            observertypes.CoreParams
+	params            observertypes.ChainParams
 
 	db     *gorm.DB
 	stop   chan struct{}
@@ -106,13 +106,13 @@ func (ob *BitcoinChainClient) WithChain(chain common.Chain) {
 	ob.chain = chain
 }
 
-func (ob *BitcoinChainClient) SetCoreParams(params observertypes.CoreParams) {
+func (ob *BitcoinChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
-func (ob *BitcoinChainClient) GetCoreParams() observertypes.CoreParams {
+func (ob *BitcoinChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.params
@@ -150,7 +150,7 @@ func NewBitcoinClient(
 	ob.includedTxHashes = make(map[string]uint64)
 	ob.includedTxResults = make(map[string]btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-	ob.params = btcCfg.CoreParams
+	ob.params = btcCfg.ChainParams
 
 	// initialize the Client
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
@@ -253,7 +253,7 @@ func (ob *BitcoinChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *BitcoinChainClient) WatchInTx() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx", ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error")
 		return
@@ -267,7 +267,7 @@ func (ob *BitcoinChainClient) WatchInTx() {
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.WatchInTx)
+			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.WatchInTx)
 		case <-ob.stop:
 			ob.logger.WatchInTx.Info().Msg("WatchInTx stopped")
 			return
@@ -332,7 +332,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 	// skip if current height is too low
 	// #nosec G701 always in range
-	confirmedBlockNum := cnt - int64(ob.GetCoreParams().ConfirmationCount)
+	confirmedBlockNum := cnt - int64(ob.GetChainParams().ConfirmationCount)
 	if confirmedBlockNum < 0 {
 		return fmt.Errorf("observeInTxBTC: skipping observer, current block number %d is too low", cnt)
 	}
@@ -492,7 +492,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 }
 
 func (ob *BitcoinChainClient) WatchGasPrice() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetCoreParams().GasPriceTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("WatchGasPrice error")
 		return
@@ -506,7 +506,7 @@ func (ob *BitcoinChainClient) WatchGasPrice() {
 			if err != nil {
 				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return
@@ -717,7 +717,7 @@ func GetBtcEvent(
 }
 
 func (ob *BitcoinChainClient) WatchUTXOS() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetCoreParams().WatchUtxoTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.WatchUTXOS.Error().Err(err).Msg("WatchUTXOS error")
 		return
@@ -731,7 +731,7 @@ func (ob *BitcoinChainClient) WatchUTXOS() {
 			if err != nil {
 				ob.logger.WatchUTXOS.Error().Err(err).Msg("error fetching btc utxos")
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().WatchUtxoTicker, ob.logger.WatchUTXOS)
+			ticker.UpdateInterval(ob.GetChainParams().WatchUtxoTicker, ob.logger.WatchUTXOS)
 		case <-ob.stop:
 			ob.logger.WatchUTXOS.Info().Msg("WatchUTXOS stopped")
 			return
@@ -758,11 +758,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(ob.chain.ChainId)
-	if err != nil {
-		return fmt.Errorf("btc: error getting bitcoin net params : %v", err)
-	}
-	address, err := btcutil.DecodeAddress(tssAddr, bitcoinNetParams)
+	address, err := common.DecodeBtcAddress(tssAddr, ob.chain.ChainId)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
@@ -994,7 +990,7 @@ func (ob *BitcoinChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParam
 }
 
 func (ob *BitcoinChainClient) observeOutTx() {
-	ticker, err := NewDynamicTicker("Bitcoin_observeOutTx", ob.GetCoreParams().OutTxTicker)
+	ticker, err := NewDynamicTicker("Bitcoin_observeOutTx", ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error creating ticker")
 		return
@@ -1032,7 +1028,7 @@ func (ob *BitcoinChainClient) observeOutTx() {
 					}
 				}
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().OutTxTicker, ob.logger.ObserveOutTx)
+			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.ObserveOutTx)
 		case <-ob.stop:
 			ob.logger.ObserveOutTx.Info().Msg("observeOutTx stopped")
 			return
