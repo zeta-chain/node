@@ -43,14 +43,14 @@ service Query {
     option (google.api.http).get = "/zeta-chain/observer/supportedChains";
   }
 
-  // Queries a list of GetClientParamsForChain items.
-  rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chain_id}";
+  // Queries a list of GetChainParamsForChain items.
+  rpc GetChainParamsForChain(QueryGetChainParamsForChainRequest) returns (QueryGetChainParamsForChainResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_chain_params_for_chain/{chain_id}";
   }
 
-  // Queries a list of GetCoreParams items.
-  rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_core_params";
+  // Queries a list of GetChainParams items.
+  rpc GetChainParams(QueryGetChainParamsRequest) returns (QueryGetChainParamsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_chain_params";
   }
 
   // Queries a nodeAccount by index.
@@ -270,18 +270,18 @@ message QuerySupportedChainsResponse {
   repeated common.Chain chains = 1;
 }
 
-message QueryGetCoreParamsForChainRequest {
+message QueryGetChainParamsForChainRequest {
   int64 chain_id = 1;
 }
 
-message QueryGetCoreParamsForChainResponse {
-  CoreParams core_params = 1;
+message QueryGetChainParamsForChainResponse {
+  ChainParams chain_params = 1;
 }
 
-message QueryGetCoreParamsRequest {}
+message QueryGetChainParamsRequest {}
 
-message QueryGetCoreParamsResponse {
-  CoreParamsList core_params = 1;
+message QueryGetChainParamsResponse {
+  ChainParamsList chain_params = 1;
 }
 
 message QueryGetNodeAccountRequest {

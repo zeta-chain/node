@@ -10,17 +10,30 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-
 	observerCount := uint64(0)
 	if genState.Observers.Len() > 0 {
 		k.SetObserverSet(ctx, genState.Observers)
 		observerCount = uint64(len(genState.Observers.ObserverList))
 	}
-	// If core params are defined set them, otherwise set default
-	if len(genState.CoreParamsList.CoreParams) > 0 {
-		k.SetCoreParams(ctx, genState.CoreParamsList)
+
+	// if chian params are defined set them
+	if len(genState.ChainParamsList.ChainParams) > 0 {
+		k.SetChainParamsList(ctx, genState.ChainParamsList)
 	} else {
-		k.SetCoreParams(ctx, types.GetCoreParams())
+		// if no chain params are defined, set localnet chains for test purposes
+		btcChainParams := types.GetDefaultBtcRegtestChainParams()
+		btcChainParams.IsSupported = true
+		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
+		goerliChainParams.IsSupported = true
+		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
+		zetaPrivnetChainParams.IsSupported = true
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				btcChainParams,
+				goerliChainParams,
+				zetaPrivnetChainParams,
+			},
+		})
 	}
 
 	// Set all the nodeAccount
@@ -125,9 +138,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	coreParams, found := k.GetAllCoreParams(ctx)
+	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {
-		coreParams = types.CoreParamsList{}
+		chainParams = types.ChainParamsList{}
 	}
 
 	// Get all node accounts
@@ -178,8 +191,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
+		ChainParamsList:   chainParams,
 		Observers:         os,
-		CoreParamsList:    coreParams,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
 		CrosschainFlags:   cf,

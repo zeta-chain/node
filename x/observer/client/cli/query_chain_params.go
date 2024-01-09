@@ -9,10 +9,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdGetCoreParamsForChain() *cobra.Command {
+func CmdGetChainParamsForChain() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-core-params [chain-id]",
-		Short: "Query GetCoreParamsForChain",
+		Use:   "show-chain-params [chain-id]",
+		Short: "Query GetChainParamsForChain",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqChainID, err := strconv.ParseInt(args[0], 10, 64)
@@ -25,10 +25,10 @@ func CmdGetCoreParamsForChain() *cobra.Command {
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetCoreParamsForChainRequest{
+			params := &types.QueryGetChainParamsForChainRequest{
 				ChainId: reqChainID,
 			}
-			res, err := queryClient.GetCoreParamsForChain(cmd.Context(), params)
+			res, err := queryClient.GetChainParamsForChain(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
@@ -41,10 +41,10 @@ func CmdGetCoreParamsForChain() *cobra.Command {
 	return cmd
 }
 
-func CmdGetCoreParams() *cobra.Command {
+func CmdGetChainParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-core-params",
-		Short: "Query GetCoreParams",
+		Use:   "list-chain-params",
+		Short: "Query GetChainParams",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
@@ -55,8 +55,8 @@ func CmdGetCoreParams() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetCoreParamsRequest{}
-			res, err := queryClient.GetCoreParams(cmd.Context(), params)
+			params := &types.QueryGetChainParamsRequest{}
+			res, err := queryClient.GetChainParams(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -22,6 +22,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 

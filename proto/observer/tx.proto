@@ -16,7 +16,8 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 service Msg {
   rpc AddObserver(MsgAddObserver) returns (MsgAddObserverResponse);
   rpc UpdateObserver(MsgUpdateObserver) returns (MsgUpdateObserverResponse);
-  rpc UpdateCoreParams(MsgUpdateCoreParams) returns (MsgUpdateCoreParamsResponse);
+  rpc UpdateChainParams(MsgUpdateChainParams) returns (MsgUpdateChainParamsResponse);
+  rpc RemoveChainParams(MsgRemoveChainParams) returns (MsgRemoveChainParamsResponse);
   rpc AddBlameVote(MsgAddBlameVote) returns (MsgAddBlameVoteResponse);
   rpc UpdateCrosschainFlags(MsgUpdateCrosschainFlags) returns (MsgUpdateCrosschainFlagsResponse);
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
@@ -41,12 +42,19 @@ message MsgAddBlockHeader {
 
 message MsgAddBlockHeaderResponse {}
 
-message MsgUpdateCoreParams {
+message MsgUpdateChainParams {
   string creator = 1;
-  CoreParams coreParams = 2;
+  ChainParams chainParams = 2;
 }
 
-message MsgUpdateCoreParamsResponse {}
+message MsgUpdateChainParamsResponse {}
+
+message MsgRemoveChainParams {
+  string creator = 1;
+  int64 chain_id = 2;
+}
+
+message MsgRemoveChainParamsResponse {}
 
 message MsgAddObserver {
   string creator = 1;
