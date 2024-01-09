@@ -85,7 +85,7 @@ type EVMChainClient struct {
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     EVMLog
 	cfg                        *config.Config
-	params                     observertypes.CoreParams
+	params                     observertypes.ChainParams
 	ts                         *TelemetryServer
 
 	BlockCache *lru.Cache
@@ -116,7 +116,7 @@ func NewEVMChainClient(
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
 	ob.cfg = cfg
-	ob.params = evmCfg.CoreParams
+	ob.params = evmCfg.ChainParams
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
@@ -209,7 +209,7 @@ func (ob *EVMChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
 	ob.zetaClient = bridge
 }
 
-func (ob *EVMChainClient) WithParams(params observertypes.CoreParams) {
+func (ob *EVMChainClient) WithParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
@@ -221,35 +221,35 @@ func (ob *EVMChainClient) SetConfig(cfg *config.Config) {
 	ob.cfg = cfg
 }
 
-func (ob *EVMChainClient) SetCoreParams(params observertypes.CoreParams) {
+func (ob *EVMChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
-func (ob *EVMChainClient) GetCoreParams() observertypes.CoreParams {
+func (ob *EVMChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.params
 }
 
 func (ob *EVMChainClient) GetConnectorContract() (*zetaconnector.ZetaConnectorNonEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetCoreParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	return FetchConnectorContract(addr, ob.evmClient)
 }
 
 func (ob *EVMChainClient) GetConnectorContractEth() (*zetaconnectoreth.ZetaConnectorEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetCoreParams().ConnectorContractAddress)
+	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	return FetchConnectorContractEth(addr, ob.evmClient)
 }
 
 func (ob *EVMChainClient) GetZetaTokenNonEthContract() (*zeta.ZetaNonEth, error) {
-	addr := ethcommon.HexToAddress(ob.GetCoreParams().ZetaTokenContractAddress)
+	addr := ethcommon.HexToAddress(ob.GetChainParams().ZetaTokenContractAddress)
 	return FetchZetaZetaNonEthTokenContract(addr, ob.evmClient)
 }
 
 func (ob *EVMChainClient) GetERC20CustodyContract() (*erc20custody.ERC20Custody, error) {
-	addr := ethcommon.HexToAddress(ob.GetCoreParams().Erc20CustodyContractAddress)
+	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	return FetchERC20CustodyContract(addr, ob.evmClient)
 }
 
@@ -296,7 +296,7 @@ func (ob *EVMChainClient) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
-	params := ob.GetCoreParams()
+	params := ob.GetChainParams()
 	receipt, transaction := ob.GetTxNReceipt(nonce)
 	if receipt == nil || transaction == nil { // not confirmed yet
 		return false, false, nil
@@ -553,7 +553,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: using timeoutNonce %d seconds", timeoutNonce)
 
-	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetCoreParams().OutTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("failed to create ticker")
 		return
@@ -602,7 +602,7 @@ func (ob *EVMChainClient) observeOutTx() {
 					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().OutTxTicker, ob.logger.ObserveOutTx)
+			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.ObserveOutTx)
 		case <-ob.stop:
 			ob.logger.ObserveOutTx.Info().Msg("observeOutTx: stopped")
 			return
@@ -649,7 +649,7 @@ func (ob *EVMChainClient) isTxConfirmed(nonce uint64) bool {
 	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
-// checkConfirmedTx checks if a txHash is confirmed and saves transaction and receipt in memory
+// checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
 func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -703,7 +703,7 @@ func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtyp
 	}
 
 	// check confirmations
-	confHeight := receipt.BlockNumber.Uint64() + ob.GetCoreParams().ConfirmationCount
+	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
 	if confHeight >= math.MaxInt64 {
 		log.Error().Msgf("confirmTxByHash: confHeight is too large for txHash %s nonce %d", txHash, nonce)
 		return nil, nil, false
@@ -747,7 +747,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
 }
 
 func (ob *EVMChainClient) ExternalChainWatcher() {
-	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetCoreParams().InTxTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
 		return
@@ -763,7 +763,7 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Err(err).Msg("observeInTX error")
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().InTxTicker, ob.logger.ExternalChainWatcher)
+			ticker.UpdateInterval(ob.GetChainParams().InTxTicker, ob.logger.ExternalChainWatcher)
 		case <-ob.stop:
 			ob.logger.ExternalChainWatcher.Info().Msg("ExternalChainWatcher stopped")
 			return
@@ -843,10 +843,10 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	counter.Inc()
 
 	// skip if current height is too low
-	if header.Number.Uint64() < ob.GetCoreParams().ConfirmationCount {
+	if header.Number.Uint64() < ob.GetChainParams().ConfirmationCount {
 		return fmt.Errorf("observeInTX: skipping observer, current block number %d is too low", header.Number.Uint64())
 	}
-	confirmedBlockNum := header.Number.Uint64() - ob.GetCoreParams().ConfirmationCount
+	confirmedBlockNum := header.Number.Uint64() - ob.GetChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.GetLastBlockHeightScanned()
@@ -1057,9 +1057,11 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64) uint64 {
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
-		err := ob.postBlockHeader(toBlock)
-		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+		if common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+			err := ob.postBlockHeader(toBlock)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+			}
 		}
 
 		// TODO: we can track the total number of 'getBlockByNumber' RPC calls made
@@ -1135,7 +1137,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		}
 	}
 
-	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetCoreParams().GasPriceTicker)
+	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
@@ -1154,7 +1156,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 					ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error at zeta block : %d  ", height)
 				}
 			}
-			ticker.UpdateInterval(ob.GetCoreParams().GasPriceTicker, ob.logger.WatchGasPrice)
+			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
 			ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice stopped")
 			return

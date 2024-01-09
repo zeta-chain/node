@@ -155,6 +155,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// setting up the networks
 	logger.Print("⚙️ setting up networks")
 	startTime := time.Now()
+
 	deployerRunner.SetTSSAddresses()
 	deployerRunner.SetupEVM(contractsDeployed)
 	deployerRunner.SetZEVMContracts()

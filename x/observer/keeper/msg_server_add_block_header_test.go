@@ -26,7 +26,6 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 	header3RLP, err := rlp.EncodeToBytes(header3)
 	assert.NoError(t, err)
 
-	observerChain := common.GoerliLocalnetChain()
 	r := rand.New(rand.NewSource(9))
 	validator := sample.Validator(t, r)
 	observerAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
@@ -132,14 +131,29 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 				require.Error(t, err)
 			},
 		},
+		{
+			name: "should fail if chain is not supported",
+			msg: &types.MsgAddBlockHeader{
+				Creator:   observerAddress.String(),
+				ChainId:   9999,
+				BlockHash: header3.Hash().Bytes(),
+				Height:    3,
+				Header:    common.NewEthereumHeader(header3RLP),
+			},
+			IsEthTypeChainEnabled: true,
+			IsBtcTypeChainEnabled: true,
+			validator:             validator,
+			wantErr: func(t require.TestingT, err error, i ...interface{}) {
+				require.ErrorIs(t, err, types.ErrSupportedChains)
+			},
+		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx := keepertest.ObserverKeeper(t)
 			srv := keeper.NewMsgServerImpl(*k)
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: &observerChain,
-				ObserverList:  []string{observerAddress.String()},
+			k.SetObserverSet(ctx, types.ObserverSet{
+				ObserverList: []string{observerAddress.String()},
 			})
 			k.GetStakingKeeper().SetValidator(ctx, tc.validator)
 			k.SetCrosschainFlags(ctx, types.CrosschainFlags{
@@ -151,6 +165,9 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 					IsBtcTypeChainEnabled: tc.IsBtcTypeChainEnabled,
 				},
 			})
+
+			setSupportedChain(ctx, *k, common.GoerliLocalnetChain().ChainId)
+
 			_, err := srv.AddBlockHeader(ctx, tc.msg)
 			tc.wantErr(t, err)
 			if err == nil {

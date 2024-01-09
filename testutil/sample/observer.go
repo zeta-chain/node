@@ -27,13 +27,14 @@ func Ballot(t *testing.T, index string) *types.Ballot {
 	}
 }
 
-func ObserverMapper(t *testing.T, index string) *types.ObserverMapper {
-	r := newRandFromStringSeed(t, index)
+func ObserverSet(n int) types.ObserverSet {
+	observerList := make([]string, n)
+	for i := 0; i < n; i++ {
+		observerList[i] = AccAddress()
+	}
 
-	return &types.ObserverMapper{
-		Index:         index,
-		ObserverChain: Chain(r.Int63()),
-		ObserverList:  []string{AccAddress(), AccAddress()},
+	return types.ObserverSet{
+		ObserverList: observerList,
 	}
 }
 
@@ -75,29 +76,44 @@ func LastObserverCount(lastChangeHeight int64) *types.LastObserverCount {
 	}
 }
 
-func CoreParams(chainID int64) *types.CoreParams {
+func ChainParams(chainID int64) *types.ChainParams {
 	r := newRandFromSeed(chainID)
 
-	return &types.CoreParams{
-		ChainId:                     chainID,
-		ConfirmationCount:           r.Uint64(),
-		GasPriceTicker:              r.Uint64(),
-		InTxTicker:                  r.Uint64(),
-		OutTxTicker:                 r.Uint64(),
-		WatchUtxoTicker:             r.Uint64(),
+	fiftyPercent, err := sdk.NewDecFromStr("0.5")
+	if err != nil {
+		return nil
+	}
+
+	return &types.ChainParams{
+		ChainId:           chainID,
+		ConfirmationCount: r.Uint64(),
+
+		GasPriceTicker:              Uint64InRange(r, 1, 300),
+		InTxTicker:                  Uint64InRange(r, 1, 300),
+		OutTxTicker:                 Uint64InRange(r, 1, 300),
+		WatchUtxoTicker:             Uint64InRange(r, 1, 300),
 		ZetaTokenContractAddress:    EthAddress().String(),
 		ConnectorContractAddress:    EthAddress().String(),
 		Erc20CustodyContractAddress: EthAddress().String(),
-		OutboundTxScheduleInterval:  r.Int63(),
-		OutboundTxScheduleLookahead: r.Int63(),
+		OutboundTxScheduleInterval:  Int64InRange(r, 1, 100),
+		OutboundTxScheduleLookahead: Int64InRange(r, 1, 500),
+		BallotThreshold:             fiftyPercent,
+		MinObserverDelegation:       sdk.NewDec(r.Int63()),
+		IsSupported:                 false,
 	}
 }
 
-func CoreParamsList() (cpl types.CoreParamsList) {
+func ChainParamsSupported(chainID int64) *types.ChainParams {
+	cp := ChainParams(chainID)
+	cp.IsSupported = true
+	return cp
+}
+
+func ChainParamsList() (cpl types.ChainParamsList) {
 	chainList := common.PrivnetChainList()
 
 	for _, chain := range chainList {
-		cpl.CoreParams = append(cpl.CoreParams, CoreParams(chain.ChainId))
+		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
 	}
 	return
 }
@@ -199,4 +215,24 @@ func NonceToCctxList(t *testing.T, index string, count int) []types.NonceToCctx 
 		}
 	}
 	return list
+}
+
+func LegacyObserverMapper(t *testing.T, index string, observerList []string) *types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+
+	return &types.ObserverMapper{
+		Index:         index,
+		ObserverChain: Chain(r.Int63()),
+		ObserverList:  observerList,
+	}
+}
+
+func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.ObserverMapper {
+	r := newRandFromStringSeed(t, index)
+	observerList := []string{AccAddress(), AccAddress()}
+	observerMapperList := make([]*types.ObserverMapper, n)
+	for i := 0; i < n; i++ {
+		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
+	}
+	return observerMapperList
 }

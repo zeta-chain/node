@@ -55,8 +55,8 @@ func CreateSignerMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		mpiAddress := ethcommon.HexToAddress(evmConfig.CoreParams.ConnectorContractAddress)
-		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.CoreParams.Erc20CustodyContractAddress)
+		mpiAddress := ethcommon.HexToAddress(evmConfig.ChainParams.ConnectorContractAddress)
+		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.ChainParams.Erc20CustodyContractAddress)
 		signer, err := zetaclient.NewEVMSigner(evmConfig.Chain, evmConfig.Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
