@@ -66,6 +66,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		assert.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
 		assert.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
+	// TODO : https://github.com/zeta-chain/node/issues/1542
 }
 
 /*
