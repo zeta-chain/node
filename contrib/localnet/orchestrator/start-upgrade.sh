@@ -36,7 +36,7 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea44
 
 echo "running E2E command to setup the networks and populate the state..."
 
-zetae2e "$ZETAE2E_CMD" --config-out deployed.yml --verbose
+zetae2e "$ZETAE2E_CMD" --config-out deployed.yml
 
 ZETAE2E_EXIT_CODE=$?
 if [ $ZETAE2E_EXIT_CODE -ne 0 ]; then
@@ -49,9 +49,13 @@ echo "E2E setup passed, waiting for upgrade height..."
 # Restart zetaclients at upgrade height
 /work/restart-zetaclientd.sh -u 180 -n 2
 
+echo "waiting 10 seconds for node to restart..."
+
+sleep 10
+
 echo "running E2E command to test the network after upgrade..."
 
-zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --wait-for 185
+zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
 
 ZETAE2E_EXIT_CODE=$?
 if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
