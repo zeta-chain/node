@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"

@@ -15,6 +15,60 @@ import type { GasPrice } from "./gas_price_pb.js";
 import type { LastBlockHeight } from "./last_block_height_pb.js";
 
 /**
+ * Deprecated: Moved to observer
+ * TODO: remove after v12 once upgrade testing is no longer needed with v11
+ *
+ * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressRequest
+ */
+export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddressRequest> {
+  constructor(data?: PartialMessage<QueryGetTssAddressRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTssAddressRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressRequest;
+
+  static equals(a: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined, b: QueryGetTssAddressRequest | PlainMessage<QueryGetTssAddressRequest> | undefined): boolean;
+}
+
+/**
+ * Deprecated: Moved to observer
+ * TODO: remove after v12 once upgrade testing is no longer needed with v11
+ *
+ * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressResponse
+ */
+export declare class QueryGetTssAddressResponse extends Message<QueryGetTssAddressResponse> {
+  /**
+   * @generated from field: string eth = 1;
+   */
+  eth: string;
+
+  /**
+   * @generated from field: string btc = 2;
+   */
+  btc: string;
+
+  constructor(data?: PartialMessage<QueryGetTssAddressResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.QueryGetTssAddressResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetTssAddressResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetTssAddressResponse;
+
+  static equals(a: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined, b: QueryGetTssAddressResponse | PlainMessage<QueryGetTssAddressResponse> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.QueryZetaAccountingRequest
  */
 export declare class QueryZetaAccountingRequest extends Message<QueryZetaAccountingRequest> {

@@ -26696,6 +26696,24 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/crosschain/get_tss_address:
+    get:
+      summary: |-
+        GetTssAddress queries the tss address of the module.
+        Deprecated: Moved to observer
+        TODO: remove after v12 once upgrade testing is no longer needed with v11
+      operationId: Query_GetTssAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorecrosschainQueryGetTssAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
     get:
       summary: Queries a InTxHashToCctx data by index.
@@ -27820,7 +27838,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetTssAddressResponse'
+            $ref: '#/definitions/zetacoreobserverQueryGetTssAddressResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -51651,13 +51669,6 @@ definitions:
         type: string
       btc:
         type: string
-  observerQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
   observerQueryHasVotedResponse:
     type: object
     properties:
@@ -51817,6 +51828,16 @@ definitions:
       enabled:
         type: boolean
     description: Params defines the parameters for the module.
+  zetacorecrosschainQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
+    title: |-
+      Deprecated: Moved to observer
+      TODO: remove after v12 once upgrade testing is no longer needed with v11
   zetacorecrosschainQueryParamsResponse:
     type: object
     properties:
@@ -51890,6 +51911,13 @@ definitions:
         type: string
         format: int64
     description: Params defines the parameters for the module.
+  zetacoreobserverQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:
