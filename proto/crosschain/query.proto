@@ -19,6 +19,7 @@ service Query {
   // GetTssAddress queries the tss address of the module.
   // Deprecated: Moved to observer
   // TODO: remove after v12 once upgrade testing is no longer needed with v11
+  // https://github.com/zeta-chain/node/issues/1547
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
   }
@@ -123,10 +124,12 @@ service Query {
 
 // Deprecated: Moved to observer
 // TODO: remove after v12 once upgrade testing is no longer needed with v11
+// https://github.com/zeta-chain/node/issues/1547
 message QueryGetTssAddressRequest {}
 
 // Deprecated: Moved to observer
 // TODO: remove after v12 once upgrade testing is no longer needed with v11
+// https://github.com/zeta-chain/node/issues/1547
 message QueryGetTssAddressResponse {
   string eth = 1;
   string btc = 2;
