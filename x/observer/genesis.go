@@ -10,13 +10,10 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	genesisObservers := genState.Observers
 	observerCount := uint64(0)
-	for _, mapper := range genesisObservers {
-		if mapper != nil {
-			k.SetObserverMapper(ctx, mapper)
-			observerCount += uint64(len(mapper.ObserverList))
-		}
+	if genState.Observers.Len() > 0 {
+		k.SetObserverSet(ctx, genState.Observers)
+		observerCount = uint64(len(genState.Observers.ObserverList))
 	}
 
 	// if chian params are defined set them
@@ -185,10 +182,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err == nil {
 		pendingNonces = p
 	}
+
+	os := types.ObserverSet{}
+	observers, found := k.GetObserverSet(ctx)
+	if found {
+		os = observers
+	}
+
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
-		Observers:         k.GetAllObserverMappers(ctx),
 		ChainParamsList:   chainParams,
+		Observers:         os,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
 		CrosschainFlags:   cf,

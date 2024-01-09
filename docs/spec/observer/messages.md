@@ -15,6 +15,7 @@ message MsgAddObserver {
 
 ## MsgUpdateObserver
 
+UpdateObserver handles updating an observer address
 Authorized: admin policy group 2 (admin update), old observer address (if the
 reason is that the observer was tombstoned).
 

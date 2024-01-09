@@ -34,4 +34,6 @@ var (
 	ErrInvalidChainParams              = errorsmod.Register(ModuleName, 1126, "invalid chain params")
 	ErrChainParamsNotFound             = errorsmod.Register(ModuleName, 1127, "chain params not found")
 	ErrParamsMinObserverDelegation     = errorsmod.Register(ModuleName, 1128, "min observer delegation cannot be nil")
+	ErrMinDelegationNotFound           = errorsmod.Register(ModuleName, 1129, "min delegation not found")
+	ErrObserverSetNotFound             = errorsmod.Register(ModuleName, 1130, "observer set not found")
 )

@@ -12,7 +12,7 @@ import type { TSS } from "./tss_pb.js";
 import type { BlockHeader, Chain, Proof } from "../common/common_pb.js";
 import type { ChainParams, ChainParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
-import type { LastObserverCount, ObservationType, ObserverMapper } from "./observer_pb.js";
+import type { LastObserverCount, ObservationType } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
@@ -689,94 +689,46 @@ export declare class QueryBallotByIdentifierResponse extends Message<QueryBallot
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.QueryObserversByChainRequest
+ * @generated from message zetachain.zetacore.observer.QueryObserverSet
  */
-export declare class QueryObserversByChainRequest extends Message<QueryObserversByChainRequest> {
-  /**
-   * @generated from field: int64 chain_id = 2;
-   */
-  chainId: bigint;
-
-  constructor(data?: PartialMessage<QueryObserversByChainRequest>);
+export declare class QueryObserverSet extends Message<QueryObserverSet> {
+  constructor(data?: PartialMessage<QueryObserverSet>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryObserversByChainRequest";
+  static readonly typeName = "zetachain.zetacore.observer.QueryObserverSet";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryObserversByChainRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryObserverSet;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryObserversByChainRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryObserverSet;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryObserversByChainRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryObserverSet;
 
-  static equals(a: QueryObserversByChainRequest | PlainMessage<QueryObserversByChainRequest> | undefined, b: QueryObserversByChainRequest | PlainMessage<QueryObserversByChainRequest> | undefined): boolean;
+  static equals(a: QueryObserverSet | PlainMessage<QueryObserverSet> | undefined, b: QueryObserverSet | PlainMessage<QueryObserverSet> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.QueryObserversByChainResponse
+ * @generated from message zetachain.zetacore.observer.QueryObserverSetResponse
  */
-export declare class QueryObserversByChainResponse extends Message<QueryObserversByChainResponse> {
+export declare class QueryObserverSetResponse extends Message<QueryObserverSetResponse> {
   /**
    * @generated from field: repeated string observers = 1;
    */
   observers: string[];
 
-  constructor(data?: PartialMessage<QueryObserversByChainResponse>);
+  constructor(data?: PartialMessage<QueryObserverSetResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryObserversByChainResponse";
+  static readonly typeName = "zetachain.zetacore.observer.QueryObserverSetResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryObserversByChainResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryObserverSetResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryObserversByChainResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryObserverSetResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryObserversByChainResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryObserverSetResponse;
 
-  static equals(a: QueryObserversByChainResponse | PlainMessage<QueryObserversByChainResponse> | undefined, b: QueryObserversByChainResponse | PlainMessage<QueryObserversByChainResponse> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.QueryAllObserverMappersRequest
- */
-export declare class QueryAllObserverMappersRequest extends Message<QueryAllObserverMappersRequest> {
-  constructor(data?: PartialMessage<QueryAllObserverMappersRequest>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryAllObserverMappersRequest";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllObserverMappersRequest;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllObserverMappersRequest;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllObserverMappersRequest;
-
-  static equals(a: QueryAllObserverMappersRequest | PlainMessage<QueryAllObserverMappersRequest> | undefined, b: QueryAllObserverMappersRequest | PlainMessage<QueryAllObserverMappersRequest> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.observer.QueryAllObserverMappersResponse
- */
-export declare class QueryAllObserverMappersResponse extends Message<QueryAllObserverMappersResponse> {
-  /**
-   * @generated from field: repeated zetachain.zetacore.observer.ObserverMapper observer_mappers = 1;
-   */
-  observerMappers: ObserverMapper[];
-
-  constructor(data?: PartialMessage<QueryAllObserverMappersResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.QueryAllObserverMappersResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllObserverMappersResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllObserverMappersResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllObserverMappersResponse;
-
-  static equals(a: QueryAllObserverMappersResponse | PlainMessage<QueryAllObserverMappersResponse> | undefined, b: QueryAllObserverMappersResponse | PlainMessage<QueryAllObserverMappersResponse> | undefined): boolean;
+  static equals(a: QueryObserverSetResponse | PlainMessage<QueryObserverSetResponse> | undefined, b: QueryObserverSetResponse | PlainMessage<QueryObserverSetResponse> | undefined): boolean;
 }
 
 /**

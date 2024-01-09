@@ -223,26 +223,6 @@ func (_m *CrosschainObserverKeeper) GetAllNonceToCctx(ctx types.Context) []obser
 	return r0
 }
 
-// GetAllObserverMappers provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetAllObserverMappers(ctx types.Context) []*observertypes.ObserverMapper {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllObserverMappers")
-	}
-
-	var r0 []*observertypes.ObserverMapper
-	if rf, ok := ret.Get(0).(func(types.Context) []*observertypes.ObserverMapper); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*observertypes.ObserverMapper)
-		}
-	}
-
-	return r0
-}
-
 // GetAllPendingNonces provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetAllPendingNonces(ctx types.Context) ([]observertypes.PendingNonces, error) {
 	ret := _m.Called(ctx)
@@ -567,27 +547,27 @@ func (_m *CrosschainObserverKeeper) GetNonceToCctx(ctx types.Context, tss string
 	return r0, r1
 }
 
-// GetObserverMapper provides a mock function with given fields: ctx, chain
-func (_m *CrosschainObserverKeeper) GetObserverMapper(ctx types.Context, chain *common.Chain) (observertypes.ObserverMapper, bool) {
-	ret := _m.Called(ctx, chain)
+// GetObserverSet provides a mock function with given fields: ctx
+func (_m *CrosschainObserverKeeper) GetObserverSet(ctx types.Context) (observertypes.ObserverSet, bool) {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetObserverMapper")
+		panic("no return value specified for GetObserverSet")
 	}
 
-	var r0 observertypes.ObserverMapper
+	var r0 observertypes.ObserverSet
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, *common.Chain) (observertypes.ObserverMapper, bool)); ok {
-		return rf(ctx, chain)
+	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.ObserverSet, bool)); ok {
+		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, *common.Chain) observertypes.ObserverMapper); ok {
-		r0 = rf(ctx, chain)
+	if rf, ok := ret.Get(0).(func(types.Context) observertypes.ObserverSet); ok {
+		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(observertypes.ObserverMapper)
+		r0 = ret.Get(0).(observertypes.ObserverSet)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *common.Chain) bool); ok {
-		r1 = rf(ctx, chain)
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -767,17 +747,17 @@ func (_m *CrosschainObserverKeeper) GetTssAddress(goCtx context.Context, req *ob
 	return r0, r1
 }
 
-// IsAuthorized provides a mock function with given fields: ctx, address, chain
-func (_m *CrosschainObserverKeeper) IsAuthorized(ctx types.Context, address string, chain *common.Chain) bool {
-	ret := _m.Called(ctx, address, chain)
+// IsAuthorized provides a mock function with given fields: ctx, address
+func (_m *CrosschainObserverKeeper) IsAuthorized(ctx types.Context, address string) bool {
+	ret := _m.Called(ctx, address)
 
 	if len(ret) == 0 {
 		panic("no return value specified for IsAuthorized")
 	}
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string, *common.Chain) bool); ok {
-		r0 = rf(ctx, address, chain)
+	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
+		r0 = rf(ctx, address)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
@@ -863,8 +843,8 @@ func (_m *CrosschainObserverKeeper) SetNonceToCctx(ctx types.Context, nonceToCct
 	_m.Called(ctx, nonceToCctx)
 }
 
-// SetObserverMapper provides a mock function with given fields: ctx, om
-func (_m *CrosschainObserverKeeper) SetObserverMapper(ctx types.Context, om *observertypes.ObserverMapper) {
+// SetObservers provides a mock function with given fields: ctx, om
+func (_m *CrosschainObserverKeeper) SetObservers(ctx types.Context, om observertypes.ObserverSet) {
 	_m.Called(ctx, om)
 }
 

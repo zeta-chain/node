@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Ballot } from "./ballot_pb.js";
-import type { LastObserverCount, ObserverMapper } from "./observer_pb.js";
+import type { LastObserverCount, ObserverSet } from "./observer_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { ChainParamsList, Params } from "./params_pb.js";
@@ -28,9 +28,9 @@ export declare class GenesisState extends Message<GenesisState> {
   ballots: Ballot[];
 
   /**
-   * @generated from field: repeated zetachain.zetacore.observer.ObserverMapper observers = 2;
+   * @generated from field: zetachain.zetacore.observer.ObserverSet observers = 2;
    */
-  observers: ObserverMapper[];
+  observers?: ObserverSet;
 
   /**
    * @generated from field: repeated zetachain.zetacore.observer.NodeAccount nodeAccountList = 3;

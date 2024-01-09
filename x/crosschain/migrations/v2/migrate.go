@@ -14,7 +14,7 @@ import (
 // The data moved is the node accounts, permission flags and keygen.
 func MigrateStore(
 	ctx sdk.Context,
-	observerKeeper types.ZetaObserverKeeper,
+	observerKeeper types.ObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
 	cdc codec.BinaryCodec,
 ) error {
@@ -63,14 +63,15 @@ func MigrateStore(
 		observerKeeper.SetCrosschainFlags(ctx, crosschainFlags)
 	}
 
-	allObservers := observerKeeper.GetAllObserverMappers(ctx)
-	totalObserverCountCurrentBlock := 0
-	for _, observer := range allObservers {
-		totalObserverCountCurrentBlock += len(observer.ObserverList)
+	allObservers, found := observerKeeper.GetObserverSet(ctx)
+	if !found {
+		return observerTypes.ErrObserverSetNotFound
 	}
+	totalObserverCountCurrentBlock := allObservers.LenUint()
+
 	observerKeeper.SetLastObserverCount(ctx, &observerTypes.LastObserverCount{
 		// #nosec G701 always positive
-		Count:            uint64(totalObserverCountCurrentBlock),
+		Count:            totalObserverCountCurrentBlock,
 		LastChangeHeight: ctx.BlockHeight(),
 	})
 

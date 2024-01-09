@@ -19,7 +19,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 		return nil, sdkerrors.Wrap(crosschainTypes.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId))
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	if ok := k.IsAuthorized(ctx, vote.Creator, observationChain); !ok {
+	if ok := k.IsAuthorized(ctx, vote.Creator); !ok {
 		return nil, types.ErrNotAuthorizedPolicy
 	}
 

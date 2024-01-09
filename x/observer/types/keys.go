@@ -1,6 +1,11 @@
 package types
 
-import "fmt"
+import (
+	"fmt"
+
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 const (
 	// ModuleName defines the module name
@@ -19,7 +24,18 @@ const (
 	MemStoreKey = "mem_observer"
 
 	GroupID1Address = "zeta1afk9zr2hn2jsac63h4hm60vl9z3e5u69gndzf7c99cqge3vzwjzsxn0x73"
+
+	MinObserverDelegation = "1000000000000000000"
 )
+
+func GetMinObserverDelegation() (sdkmath.Int, bool) {
+	return sdkmath.NewIntFromString(MinObserverDelegation)
+}
+
+func GetMinObserverDelegationDec() (sdk.Dec, error) {
+	return sdk.NewDecFromStr(MinObserverDelegation)
+
+}
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
@@ -39,6 +55,7 @@ const (
 	AllChainParamsKey = "CoreParams"
 
 	ObserverMapperKey             = "Observer-value-"
+	ObserverSetKey                = "ObserverSet-value-"
 	ObserverParamsKey             = "ObserverParams"
 	AdminPolicyParamsKey          = "AdminParams"
 	BallotMaturityBlocksParamsKey = "BallotMaturityBlocksParams"

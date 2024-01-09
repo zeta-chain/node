@@ -546,7 +546,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 
-	_, err = zetaBridge.GetObserverList(*toChain)
+	_, err = zetaBridge.GetObserverList()
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 

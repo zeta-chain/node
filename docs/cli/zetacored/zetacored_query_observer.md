@@ -33,7 +33,7 @@ zetacored query observer [flags]
 * [zetacored query observer list-chain-params](zetacored_query_observer_list-chain-params.md)	 - Query GetChainParams
 * [zetacored query observer list-chains](zetacored_query_observer_list-chains.md)	 - list all SupportedChains
 * [zetacored query observer list-node-account](zetacored_query_observer_list-node-account.md)	 - list all NodeAccount
-* [zetacored query observer list-observer](zetacored_query_observer_list-observer.md)	 - Query All Observer Mappers
+* [zetacored query observer list-observer-set](zetacored_query_observer_list-observer-set.md)	 - Query observer set
 * [zetacored query observer list-pending-nonces](zetacored_query_observer_list-pending-nonces.md)	 - shows a chainNonces
 * [zetacored query observer list-tss-history](zetacored_query_observer_list-tss-history.md)	 - show historical list of TSS
 * [zetacored query observer params](zetacored_query_observer_params.md)	 - shows the parameters of the module
@@ -44,7 +44,6 @@ zetacored query observer [flags]
 * [zetacored query observer show-crosschain-flags](zetacored_query_observer_show-crosschain-flags.md)	 - shows the crosschain flags
 * [zetacored query observer show-keygen](zetacored_query_observer_show-keygen.md)	 - shows keygen
 * [zetacored query observer show-node-account](zetacored_query_observer_show-node-account.md)	 - shows a NodeAccount
-* [zetacored query observer show-observer](zetacored_query_observer_show-observer.md)	 - Query ObserversByChainAndType , Use common.chain for querying
 * [zetacored query observer show-observer-count](zetacored_query_observer_show-observer-count.md)	 - Query show-observer-count
 * [zetacored query observer show-tss](zetacored_query_observer_show-tss.md)	 - shows a TSS
 

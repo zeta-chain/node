@@ -1045,9 +1045,11 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64) uint64 {
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
-		err := ob.postBlockHeader(toBlock)
-		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+		if common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+			err := ob.postBlockHeader(toBlock)
+			if err != nil {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
+			}
 		}
 
 		// TODO: we can track the total number of 'getBlockByNumber' RPC calls made

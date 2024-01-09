@@ -12,7 +12,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -41,15 +40,14 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	SetObserverMapper(ctx sdk.Context, om *observertypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val observertypes.ObserverMapper, found bool)
-	GetAllObserverMappers(ctx sdk.Context) (mappers []*observertypes.ObserverMapper)
+	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetChainParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.ChainParams, found bool)
 	GetSupportedChains(ctx sdk.Context) []*common.Chain
+	GetMaturedBallotList(ctx sdk.Context) []string
 }
 
 type EVMKeeper interface {
