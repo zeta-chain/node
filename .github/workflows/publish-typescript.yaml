@@ -28,7 +28,7 @@ jobs:
       - name: Set Version
         working-directory: typescript
         run: |
-          version=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          version=$(cat ../app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
           npm version ${version}
           sed -i 's/@zetachain\/blockchain-types/@zetachain\/node-types/' package.json
           
