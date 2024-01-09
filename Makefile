@@ -248,20 +248,13 @@ stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
 
 ###############################################################################
-###                        Monitoring and Blockscout                        ###
+###                              Monitoring                                 ###
 ###############################################################################
-
-start-blockscout:
-	@echo "Starting blockscout"
-	cd contrib/localnet/blockscout && $(DOCKER) compose -f docker-compose.yml up -d
-
-stop-blockscout:
-	@echo "Stopping blockscout"
-	cd contrib/localnet/blockscout && $(DOCKER) compose -f docker-compose.yml down --remove-orphans
 
 start-monitoring:
 	@echo "Starting monitoring services"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
+	cd contrib/localnet/ && ./grafana/get-tss-address.sh
+	$(DOCKER) compose -f docker-compose-monitoring.yml up -d
 
 stop-monitoring:
 	@echo "Stopping monitoring services"

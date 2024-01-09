@@ -77,7 +77,8 @@ which does the following docker compose command:
 $ docker compose down --remove-orphans
 ```
 ### Run monitoring setup
-Before starting the monitoring setup, make sure you have added the eth addresses of interest to the grafana/addresses.txt file
+Before starting the monitoring setup, make sure the Zetacore API is up at http://localhost:1317.
+You can also add any additional ETH addresses to monitor in zeta-node/contrib/localnet/grafana/addresses.txt file
 ```bash
 # in zeta-node/
 make start-monitoring
