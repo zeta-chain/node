@@ -1,0 +1,34 @@
+name: Publish Typescript to NPM
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set Version
+        working-directory: typescript
+        run: |
+          version=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          npm version ${version}
+          sed -i 's/@zetachain\/blockchain-types/@zetachain\/node-types/' package.json
+
+      - name: Install dependencies and build 🔧
+        working-directory: typescript
+        run: npm ci && npm run build
+
+      - name: Publish package on NPM 📦
+        run: npm publish
+        working-directory: typescript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

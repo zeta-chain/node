@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* ci: adding typescript publishing pipeline.
+
 ### Breaking Changes
 
 * PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
@@ -9,6 +11,7 @@
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 ### Features
+
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
