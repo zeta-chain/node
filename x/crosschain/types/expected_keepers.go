@@ -44,10 +44,8 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
-type ZetaObserverKeeper interface {
-	SetObserverMapper(ctx sdk.Context, om *observertypes.ObserverMapper)
-	GetObserverMapper(ctx sdk.Context, chain *common.Chain) (val observertypes.ObserverMapper, found bool)
-	GetAllObserverMappers(ctx sdk.Context) (mappers []*observertypes.ObserverMapper)
+type ObserverKeeper interface {
+	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
@@ -64,7 +62,7 @@ type ZetaObserverKeeper interface {
 	SetLastObserverCount(ctx sdk.Context, lbc *observertypes.LastObserverCount)
 	AddVoteToBallot(ctx sdk.Context, ballot observertypes.Ballot, address string, observationType observertypes.VoteType) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
-	IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool
+	IsAuthorized(ctx sdk.Context, address string) bool
 	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)

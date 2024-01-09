@@ -15,25 +15,28 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 		return
 	}
 
-	allObservers := k.GetAllObserverMappers(ctx)
-	totalObserverCountCurrentBlock := 0
-	for _, observer := range allObservers {
-		totalObserverCountCurrentBlock += len(observer.ObserverList)
+	allObservers, found := k.GetObserverSet(ctx)
+	if !found {
+		ctx.Logger().Error("ObserverSet not found at height", ctx.BlockHeight())
+		return
 	}
+	totalObserverCountCurrentBlock := allObservers.LenUint()
 	if totalObserverCountCurrentBlock < 0 {
 		ctx.Logger().Error("TotalObserverCount is negative at height", ctx.BlockHeight())
 		return
 	}
 	// #nosec G701 always in range
-	if totalObserverCountCurrentBlock == int(lastBlockObserverCount.Count) {
+	if totalObserverCountCurrentBlock == lastBlockObserverCount.Count {
 		return
 	}
 	ctx.Logger().Error("LastBlockObserverCount does not match the number of observers found at current height", ctx.BlockHeight())
-	for _, observer := range allObservers {
-		ctx.Logger().Error("Observes for | ", observer.ObserverChain.ChainName, ":", observer.ObserverList)
+	for _, observer := range allObservers.ObserverList {
+		ctx.Logger().Error("Observer :  ", observer)
 	}
+	// #nosec G701 always in range
+
 	k.DisableInboundOnly(ctx)
 	k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 	// #nosec G701 always positive
-	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: uint64(totalObserverCountCurrentBlock), LastChangeHeight: ctx.BlockHeight()})
+	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: totalObserverCountCurrentBlock, LastChangeHeight: ctx.BlockHeight()})
 }

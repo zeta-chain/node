@@ -72,7 +72,7 @@ func CrosschainKeeperWithMocks(
 		ObserverKeeper: observerKeeperTmp,
 		FungibleKeeper: fungiblekeeperTmp,
 	}
-	var observerKeeper types.ZetaObserverKeeper = observerKeeperTmp
+	var observerKeeper types.ObserverKeeper = observerKeeperTmp
 	var fungibleKeeper types.FungibleKeeper = fungiblekeeperTmp
 
 	// Create the fungible keeper

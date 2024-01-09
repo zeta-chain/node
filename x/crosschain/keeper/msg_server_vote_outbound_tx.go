@@ -74,7 +74,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
 		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 

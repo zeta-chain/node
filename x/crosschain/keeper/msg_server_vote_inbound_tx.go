@@ -77,7 +77,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tssPub = tss.TssPubkey
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
 		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 

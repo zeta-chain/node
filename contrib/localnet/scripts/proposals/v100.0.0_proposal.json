@@ -1,0 +1,17 @@
+{
+  "messages": [
+    {
+      "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr",
+      "plan": {
+        "name": "v100.0.0",
+        "height": "2886900",
+        "time": "0001-01-01T00:00:00Z",
+        "info": "",
+        "upgraded_client_state": null
+      }
+    }
+  ],
+  "metadata": "ipfs://QmRJHjPhe1MDV9ruN7ip8AXfKHfedfYBGtGjh1Z2a5croP",
+  "deposit": "1000000000000000000azeta"
+}
