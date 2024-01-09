@@ -63,12 +63,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, types.ErrNotEnoughPermissions
 	}
+
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
-	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId)
+	observationChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
 	if observationChain == nil {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.SenderChainId, observationType.String()))
 	}
-	receiverChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ReceiverChain)
+	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ReceiverChain)
 	if receiverChain == nil {
 		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
 	}
@@ -78,7 +79,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		tssPub = tss.TssPubkey
 	}
 	// IsAuthorized does various checks against the list of observer mappers
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
 		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 
@@ -110,11 +111,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
 	if receiverChain.IsExternalChain() {
-		coreParams, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 		if !found {
-			return nil, types.ErrNotFoundCoreParams
+			return nil, types.ErrNotFoundChainParams
 		}
-		if coreParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
+		if chainParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
 			return nil, types.ErrUnableToSendCoinType
 		}
 	}
@@ -145,7 +146,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
 			revertMessage := err.Error()
-			chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
+			chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil

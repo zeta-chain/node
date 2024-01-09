@@ -131,11 +131,6 @@ func Coins() sdk.Coins {
 	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }
 
-func UintInRange(low, high uint64) sdkmath.Uint {
-	u := Uint64InRange(low, high)
-	return sdkmath.NewUintFromString(strconv.FormatUint(u, 10))
-}
-
 // Uint64InRange returns a sample uint64 in the given ranges
 func Uint64InRange(low, high uint64) uint64 {
 	r := newRandFromSeed(int64(low))
@@ -144,6 +139,11 @@ func Uint64InRange(low, high uint64) uint64 {
 
 // Int64InRange returns a sample int64 in the given ranges
 func Int64InRange(low, high int64) int64 {
-	r := newRandFromSeed(int64(low))
+	r := newRandFromSeed(low)
 	return r.Int63()%(high-low) + low
+}
+
+func UintInRange(low, high uint64) sdkmath.Uint {
+	u := Uint64InRange(low, high)
+	return sdkmath.NewUint(u)
 }

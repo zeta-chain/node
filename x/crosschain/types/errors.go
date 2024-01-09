@@ -21,7 +21,7 @@ var (
 	ErrCannotFindPendingNonces = errorsmod.Register(ModuleName, 1121, "cannot find pending nonces")
 	ErrCannotFindTSSKeys       = errorsmod.Register(ModuleName, 1122, "cannot find TSS keys")
 	ErrNonceMismatch           = errorsmod.Register(ModuleName, 1123, "nonce mismatch")
-	ErrNotFoundCoreParams      = errorsmod.Register(ModuleName, 1126, "not found chain core params")
+	ErrNotFoundChainParams     = errorsmod.Register(ModuleName, 1126, "not found chain chain params")
 	ErrUnableToSendCoinType    = errorsmod.Register(ModuleName, 1127, "unable to send this coin type to a receiver chain")
 
 	ErrInvalidAddress    = errorsmod.Register(ModuleName, 1128, "invalid address")

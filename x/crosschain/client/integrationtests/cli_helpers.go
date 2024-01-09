@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
-
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -19,11 +17,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
 )
 
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {

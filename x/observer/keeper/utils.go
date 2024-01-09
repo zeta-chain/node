@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -31,10 +30,11 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
-// IsAuthorized checks whether a signer is authorized to sign , by checking their address against the observer mapper which contains the observer list for the chain and type
-// It also checks if the signer is a validator and if they are not tombstoned
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chain) bool {
-	isPresentInMapper := k.IsObserverPresentInMappers(ctx, address, chain)
+// IsAuthorized checks whether a signer is authorized to sign
+// This function checks if the signer is present in the observer set
+// and also checks if the signer is not tombstoned
+func (k Keeper) IsAuthorized(ctx sdk.Context, address string) bool {
+	isPresentInMapper := k.IsAddressPartOfObserverSet(ctx, address)
 	if !isPresentInMapper {
 		return false
 	}
@@ -45,36 +45,30 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, chain *common.Chai
 	return true
 }
 
-func (k Keeper) IsObserverPresentInMappers(ctx sdk.Context, address string, chain *common.Chain) bool {
-	observerMapper, found := k.GetObserverMapper(ctx, chain)
-	if !found {
-		return false
-	}
-	for _, obs := range observerMapper.ObserverList {
-		if obs == address {
-			return true
-		}
-	}
-	return false
-}
-
-func (k Keeper) FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType types.ObservationType) (ballot types.Ballot, isNew bool, err error) {
+func (k Keeper) FindBallot(
+	ctx sdk.Context,
+	index string,
+	chain *common.Chain,
+	observationType types.ObservationType,
+) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.GetBallot(ctx, index)
 	if !found {
-		observerMapper, _ := k.GetObserverMapper(ctx, chain)
-		obsParams := k.GetParams(ctx).GetParamsForChain(chain)
-		if !obsParams.IsSupported {
-			err = errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
+		observerSet, _ := k.GetObserverSet(ctx)
+
+		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
+		if !found || cp == nil || !cp.IsSupported {
+			err = types.ErrSupportedChains
 			return
 		}
+
 		ballot = types.Ballot{
 			Index:                "",
 			BallotIdentifier:     index,
-			VoterList:            observerMapper.ObserverList,
-			Votes:                types.CreateVotes(len(observerMapper.ObserverList)),
+			VoterList:            observerSet.ObserverList,
+			Votes:                types.CreateVotes(len(observerSet.ObserverList)),
 			ObservationType:      observationType,
-			BallotThreshold:      obsParams.BallotThreshold,
+			BallotThreshold:      cp.BallotThreshold,
 			BallotStatus:         types.BallotStatus_BallotInProgress,
 			BallotCreationHeight: ctx.BlockHeight(),
 		}
@@ -117,7 +111,7 @@ func (k Keeper) IsOperatorTombstoned(ctx sdk.Context, creator string) (bool, err
 	return k.slashingKeeper.IsTombstoned(ctx, consAddress), nil
 }
 
-func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chain *common.Chain) error {
+func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) error {
 	selfdelAddr, err := sdk.AccAddressFromBech32(accAddress)
 	if err != nil {
 		return err
@@ -135,14 +129,15 @@ func (k Keeper) CheckObserverDelegation(ctx sdk.Context, accAddress string, chai
 	if !found {
 		return types.ErrSelfDelegation
 	}
-	obsParams := k.GetParams(ctx).GetParamsForChain(chain)
-	if !obsParams.IsSupported {
-		return errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Chain not suported %s ", chain.String()))
-	}
 
+	minDelegation, err := types.GetMinObserverDelegationDec()
+	if err != nil {
+		return err
+	}
 	tokens := validator.TokensFromShares(delegation.Shares)
-	if tokens.LT(obsParams.MinObserverDelegation) {
-		return types.ErrCheckObserverDelegation
+
+	if tokens.LT(minDelegation) {
+		k.RemoveObserverFromSet(ctx, accAddress)
 	}
 	return nil
 }

@@ -36,13 +36,9 @@ func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest
 	}
 
 	// Add validator to the observer list for voting
-	chains := zk.ObserverKeeper.GetParams(ctx).GetSupportedChains()
-	for _, chain := range chains {
-		zk.ObserverKeeper.SetObserverMapper(ctx, &observertypes.ObserverMapper{
-			ObserverChain: chain,
-			ObserverList:  validatorAddressListFormated,
-		})
-	}
+	zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
+		ObserverList: validatorAddressListFormated,
+	})
 	return validatorAddressListFormated
 }
 func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
@@ -59,7 +55,7 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 			)
 			assert.NoError(t, err)
 		}
-		ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
+		ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
 		assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
 		assert.True(t, found)
@@ -92,13 +88,9 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	validatorAddr := addresstmp.String()
 
 	// Add validator to the observer list for voting
-	chains := zk.ObserverKeeper.GetParams(ctx).GetSupportedChains()
-	for _, chain := range chains {
-		zk.ObserverKeeper.SetObserverMapper(ctx, &observertypes.ObserverMapper{
-			ObserverChain: chain,
-			ObserverList:  []string{validatorAddr},
-		})
-	}
+	zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
+		ObserverList: []string{validatorAddr},
+	})
 
 	// Vote on the FIRST message.
 	msg := &types.MsgVoteOnObservedInboundTx{
@@ -124,7 +116,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the vote passed
-	ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
+	ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
 	assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
