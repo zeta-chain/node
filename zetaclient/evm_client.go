@@ -58,11 +58,11 @@ type EVMLog struct {
 
 const (
 	DonationMessage    = "I am rich!"
-	TopicsZetaSent     = 3 // https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L34
-	TopicsZetaReceived = 4 // https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L45
-	TopicsZetaReverted = 3 // https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L54
-	TopicsWithdrawn    = 3 // https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L43
-	TopicsDeposited    = 2 // https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42C1-L42C1
+	TopicsZetaSent     = 3 // [signature, zetaTxSenderAddress, destinationChainId] https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L34
+	TopicsZetaReceived = 4 // [signature, sourceChainId, destinationAddress]       https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L45
+	TopicsZetaReverted = 3 // [signature, destinationChainId, internalSendHash]    https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L54
+	TopicsWithdrawn    = 3 // [signature, recipient, asset] https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L43
+	TopicsDeposited    = 2 // [signature, asset]            https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42
 )
 
 // EVMChainClient represents the chain configuration for an EVM chain
@@ -925,7 +925,7 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
+		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -1004,7 +1004,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
+		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
