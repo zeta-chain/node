@@ -36,7 +36,7 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea44
 
 echo "running E2E command to setup the networks and populate the state..."
 
-zetae2e "$ZETAE2E_CMD" --config-out deployed.yml
+zetae2e "$ZETAE2E_CMD" --config-out deployed.yml --verbose
 
 ZETAE2E_EXIT_CODE=$?
 if [ $ZETAE2E_EXIT_CODE -ne 0 ]; then

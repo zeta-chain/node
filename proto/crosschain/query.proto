@@ -16,6 +16,13 @@ option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  // GetTssAddress queries the tss address of the module.
+  // Deprecated: Moved to observer
+  // TODO: remove after v12 once upgrade testing is no longer needed with v11
+  rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
+    option (google.api.http).get = "/zeta-chain/crosschain/get_tss_address";
+  }
+
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/params";
@@ -112,6 +119,17 @@ service Query {
   rpc LastZetaHeight(QueryLastZetaHeightRequest) returns (QueryLastZetaHeightResponse) {
     option (google.api.http).get = "/zeta-chain/crosschain/lastZetaHeight";
   }
+}
+
+// Deprecated: Moved to observer
+// TODO: remove after v12 once upgrade testing is no longer needed with v11
+message QueryGetTssAddressRequest {}
+
+// Deprecated: Moved to observer
+// TODO: remove after v12 once upgrade testing is no longer needed with v11
+message QueryGetTssAddressResponse {
+  string eth = 1;
+  string btc = 2;
 }
 
 message QueryZetaAccountingRequest {}
