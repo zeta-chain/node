@@ -289,7 +289,7 @@ func GetBallotIdentifier(message string, eventIndex int) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
-		uint(eventIndex),
+		uint(eventIndex), // #nosec G701 always positive
 	)
 	return msg.Digest()
 }

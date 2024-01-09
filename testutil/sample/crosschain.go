@@ -121,9 +121,9 @@ func InboundVote(coinType common.CoinType, from, to int64) types.MsgVoteOnObserv
 	return types.MsgVoteOnObservedInboundTx{
 		Creator:       "",
 		Sender:        EthAddress().String(),
-		SenderChainId: Chain(from).GetChainId(), // ETH
+		SenderChainId: Chain(from).GetChainId(),
 		Receiver:      EthAddress().String(),
-		ReceiverChain: Chain(to).GetChainId(), // zetachain
+		ReceiverChain: Chain(to).GetChainId(),
 		Amount:        UintInRange(10000000, 1000000000),
 		Message:       String(),
 		InBlockHeight: Uint64InRange(1, 10000),

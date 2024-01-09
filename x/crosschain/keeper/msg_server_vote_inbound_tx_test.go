@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -17,36 +18,39 @@ import (
 )
 
 func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest.ZetaKeepers) []string {
-	params := observertypes.DefaultParams()
-	zk.ObserverKeeper.SetParams(
-		ctx, params,
-	)
-
-	// Convert the validator address into a user address.
 	validators := k.StakingKeeper.GetAllValidators(ctx)
-	validatorAddressList := make([]string, len(validators))
-	validatorAddressListFormated := make([]string, len(validators))
+
+	validatorAddressListFormatted := make([]string, len(validators))
 	for i, validator := range validators {
-		validatorAddressList[i] = validator.OperatorAddress
-		valAddr, err := sdk.ValAddressFromBech32(validatorAddressList[i])
+		valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 		assert.NoError(t, err)
-		addresstmp, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
+		addressTmp, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
 		assert.NoError(t, err)
-		validatorAddressListFormated[i] = addresstmp.String()
+		validatorAddressListFormatted[i] = addressTmp.String()
 	}
 
 	// Add validator to the observer list for voting
 	zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
-		ObserverList: validatorAddressListFormated,
+		ObserverList: validatorAddressListFormatted,
 	})
-	return validatorAddressListFormated
+	return validatorAddressListFormatted
 }
 func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 	t.Run("successfully vote on evm deposit", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
-		msg := sample.InboundVote(0, 1337, 101)
+		to, from := int64(1337), int64(101)
+		chains := zk.ObserverKeeper.GetSupportedChains(ctx)
+		for _, chain := range chains {
+			if common.IsEVMChain(chain.ChainId) {
+				from = chain.ChainId
+			}
+			if common.IsZetaChain(chain.ChainId) {
+				to = chain.ChainId
+			}
+		}
+		msg := sample.InboundVote(0, from, to)
 		for _, validatorAddr := range validatorList {
 			msg.Creator = validatorAddr
 			_, err := msgServer.VoteOnObservedInboundTx(
