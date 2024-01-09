@@ -208,7 +208,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 			commit()
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-
 		}
 		// successful HandleEVMDeposit;
 		commit()
