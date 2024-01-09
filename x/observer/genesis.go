@@ -94,16 +94,29 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
 
+	tss := types.TSS{}
+	genStateTss := false
 	if genState.Tss != nil {
-		tss := *genState.Tss
+		tss = *genState.Tss
+		genStateTss = true
 		k.SetTSS(ctx, tss)
+	}
+
+	// Set all the pending nonces
+	if genState.PendingNonces != nil {
+		for _, pendingNonce := range genState.PendingNonces {
+			k.SetPendingNonces(ctx, pendingNonce)
+		}
+	} else {
 		for _, chain := range common.DefaultChainsList() {
-			k.SetPendingNonces(ctx, types.PendingNonces{
-				NonceLow:  0,
-				NonceHigh: 0,
-				ChainId:   chain.ChainId,
-				Tss:       tss.TssPubkey,
-			})
+			if genStateTss {
+				k.SetPendingNonces(ctx, types.PendingNonces{
+					NonceLow:  0,
+					NonceHigh: 0,
+					ChainId:   chain.ChainId,
+					Tss:       tss.TssPubkey,
+				})
+			}
 		}
 	}
 
@@ -121,10 +134,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetBlame(ctx, elem)
 	}
 
-	// Set all the pending nonces
-	for _, pendingNonce := range genState.PendingNonces {
-		k.SetPendingNonces(ctx, pendingNonce)
-	}
 	for _, chainNonce := range genState.ChainNonces {
 		k.SetChainNonces(ctx, chainNonce)
 	}

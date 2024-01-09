@@ -91,7 +91,6 @@ func (k Keeper) SetTssAndUpdateNonce(ctx sdk.Context, tss types.TSS) {
 			FinalizedHeight: uint64(ctx.BlockHeight()),
 		}
 		k.SetChainNonces(ctx, chainNonce)
-
 		p := types.PendingNonces{
 			NonceLow:  0,
 			NonceHigh: 0,

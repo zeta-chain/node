@@ -181,7 +181,7 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	cmd := cli.CmdCreateTSSVoter()
 	inboundVoterArgs := []string{
 		"tsspubkey",
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		"1",
 		"0",
 	}
 	txArgs := []string{
