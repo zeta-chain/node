@@ -6,7 +6,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -38,7 +37,8 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	}
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
-	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
+
+	btcTSSAddress, err := common.DecodeBtcAddress(res.Btc, common.BtcRegtestChain().ChainId)
 	if err != nil {
 		panic(err)
 	}

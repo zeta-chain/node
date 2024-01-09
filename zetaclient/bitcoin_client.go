@@ -758,11 +758,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 
 	// List unspent.
 	tssAddr := ob.Tss.BTCAddress()
-	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(ob.chain.ChainId)
-	if err != nil {
-		return fmt.Errorf("btc: error getting bitcoin net params : %v", err)
-	}
-	address, err := btcutil.DecodeAddress(tssAddr, bitcoinNetParams)
+	address, err := common.DecodeBtcAddress(tssAddr, ob.chain.ChainId)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
