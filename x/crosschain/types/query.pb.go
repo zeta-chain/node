@@ -33,6 +33,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Deprecated: Moved to observer
 // TODO: remove after v12 once upgrade testing is no longer needed with v11
+// https://github.com/zeta-chain/node/issues/1547
 type QueryGetTssAddressRequest struct {
 }
 
@@ -71,6 +72,7 @@ var xxx_messageInfo_QueryGetTssAddressRequest proto.InternalMessageInfo
 
 // Deprecated: Moved to observer
 // TODO: remove after v12 once upgrade testing is no longer needed with v11
+// https://github.com/zeta-chain/node/issues/1547
 type QueryGetTssAddressResponse struct {
 	Eth string `protobuf:"bytes,1,opt,name=eth,proto3" json:"eth,omitempty"`
 	Btc string `protobuf:"bytes,2,opt,name=btc,proto3" json:"btc,omitempty"`
@@ -2220,6 +2222,7 @@ type QueryClient interface {
 	// GetTssAddress queries the tss address of the module.
 	// Deprecated: Moved to observer
 	// TODO: remove after v12 once upgrade testing is no longer needed with v11
+	// https://github.com/zeta-chain/node/issues/1547
 	GetTssAddress(ctx context.Context, in *QueryGetTssAddressRequest, opts ...grpc.CallOption) (*QueryGetTssAddressResponse, error)
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
@@ -2470,6 +2473,7 @@ type QueryServer interface {
 	// GetTssAddress queries the tss address of the module.
 	// Deprecated: Moved to observer
 	// TODO: remove after v12 once upgrade testing is no longer needed with v11
+	// https://github.com/zeta-chain/node/issues/1547
 	GetTssAddress(context.Context, *QueryGetTssAddressRequest) (*QueryGetTssAddressResponse, error)
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)

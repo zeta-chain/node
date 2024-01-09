@@ -17,6 +17,7 @@ import type { LastBlockHeight } from "./last_block_height_pb.js";
 /**
  * Deprecated: Moved to observer
  * TODO: remove after v12 once upgrade testing is no longer needed with v11
+ * https://github.com/zeta-chain/node/issues/1547
  *
  * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressRequest
  */
@@ -39,6 +40,7 @@ export declare class QueryGetTssAddressRequest extends Message<QueryGetTssAddres
 /**
  * Deprecated: Moved to observer
  * TODO: remove after v12 once upgrade testing is no longer needed with v11
+ * https://github.com/zeta-chain/node/issues/1547
  *
  * @generated from message zetachain.zetacore.crosschain.QueryGetTssAddressResponse
  */

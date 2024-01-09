@@ -26702,6 +26702,7 @@ paths:
         GetTssAddress queries the tss address of the module.
         Deprecated: Moved to observer
         TODO: remove after v12 once upgrade testing is no longer needed with v11
+        https://github.com/zeta-chain/node/issues/1547
       operationId: Query_GetTssAddress
       responses:
         "200":
@@ -51809,6 +51810,7 @@ definitions:
     title: |-
       Deprecated: Moved to observer
       TODO: remove after v12 once upgrade testing is no longer needed with v11
+      https://github.com/zeta-chain/node/issues/1547
   zetacorecrosschainQueryParamsResponse:
     type: object
     properties:
