@@ -9,6 +9,7 @@
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 ### Features
+* [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
