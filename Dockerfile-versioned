@@ -24,7 +24,7 @@ RUN cd node && git checkout ${new_version}
 RUN cd node && make install
 RUN cd node && make install-smoketest
 RUN cp $GOPATH/bin/zetacored $GOPATH/bin/new/
-RUN cp $GOPATH/sbin/zetaclientd $GOPATH/bin/new/
+RUN cp $GOPATH/bin/zetaclientd $GOPATH/bin/new/
 RUN cp $GOPATH/bin/smoketest $GOPATH/bin/new/
 
 # Checkout and build old binary
