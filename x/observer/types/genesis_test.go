@@ -8,9 +8,9 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
-	invalidCoreParamsGen := types.DefaultGenesis()
-	coreParams := types.GetCoreParams().CoreParams
-	invalidCoreParamsGen.CoreParamsList.CoreParams = append(coreParams, coreParams[0])
+	invalidChainParamsGen := types.DefaultGenesis()
+	chainParams := types.GetDefaultChainParams().ChainParams
+	invalidChainParamsGen.ChainParamsList.ChainParams = append(chainParams, chainParams[0])
 
 	for _, tc := range []struct {
 		desc     string
@@ -28,8 +28,8 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid:    true,
 		},
 		{
-			desc:     "invalid core params",
-			genState: invalidCoreParamsGen,
+			desc:     "invalid chain params",
+			genState: invalidChainParamsGen,
 			valid:    false,
 		},
 	} {
@@ -42,7 +42,4 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 		})
 	}
-
-	list := types.GetCoreParams()
-	list.CoreParams = append(list.CoreParams, list.CoreParams[0])
 }

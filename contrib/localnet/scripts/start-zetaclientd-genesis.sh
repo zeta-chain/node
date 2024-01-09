@@ -15,7 +15,7 @@ num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
 
 echo "Wait for zetacore to exchange genesis file"
-sleep 30
+sleep 40
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"

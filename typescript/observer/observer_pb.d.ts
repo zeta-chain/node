@@ -92,6 +92,30 @@ export declare class ObserverMapper extends Message<ObserverMapper> {
 }
 
 /**
+ * @generated from message zetachain.zetacore.observer.ObserverSet
+ */
+export declare class ObserverSet extends Message<ObserverSet> {
+  /**
+   * @generated from field: repeated string observer_list = 1;
+   */
+  observerList: string[];
+
+  constructor(data?: PartialMessage<ObserverSet>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.ObserverSet";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ObserverSet;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ObserverSet;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ObserverSet;
+
+  static equals(a: ObserverSet | PlainMessage<ObserverSet> | undefined, b: ObserverSet | PlainMessage<ObserverSet> | undefined): boolean;
+}
+
+/**
  * @generated from message zetachain.zetacore.observer.LastObserverCount
  */
 export declare class LastObserverCount extends Message<LastObserverCount> {
