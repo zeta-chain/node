@@ -153,7 +153,7 @@ func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
 }
 
 func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) (string, error) {
-	connector, err := ob.GetConnectorContract()
+	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
 		return "", err
 	}
@@ -163,13 +163,25 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 		return "", err
 	}
 
+	// check if the tx is confirmed
+	lastHeight := ob.GetLastBlockHeight()
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
+		return "", fmt.Errorf("txHash %s has not been confirmed yet: receipt block %d current block %d", txHash, receipt.BlockNumber, lastHeight)
+	}
+
 	var msg types.MsgVoteOnObservedInboundTx
 	for _, log := range receipt.Logs {
 		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
-			msg, err = ob.GetInboundVoteMsgForZetaSentEvent(event)
+			// sanity check tx event
+			err = ob.CheckEvmTxLog(&event.Raw, addrConnector, txHash, TopicsZetaSent)
 			if err == nil {
-				break
+				msg, err = ob.GetInboundVoteMsgForZetaSentEvent(event)
+				if err == nil {
+					break
+				}
+			} else {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("CheckEvmTxLog error on ZetaSent event")
 			}
 		}
 	}
@@ -189,7 +201,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 }
 
 func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool) (string, error) {
-	custody, err := ob.GetERC20CustodyContract()
+	addrCustory, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
 		return "", err
 	}
@@ -198,13 +210,26 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool)
 	if err != nil {
 		return "", err
 	}
+
+	// check if the tx is confirmed
+	lastHeight := ob.GetLastBlockHeight()
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
+		return "", fmt.Errorf("txHash %s has not been confirmed yet: receipt block %d current block %d", txHash, receipt.BlockNumber, lastHeight)
+	}
+
 	var msg types.MsgVoteOnObservedInboundTx
 	for _, log := range receipt.Logs {
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
-			msg, err = ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited)
+			// sanity check tx event
+			err = ob.CheckEvmTxLog(&zetaDeposited.Raw, addrCustory, txHash, TopicsDeposited)
 			if err == nil {
-				break
+				msg, err = ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited)
+				if err == nil {
+					break
+				}
+			} else {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("CheckEvmTxLog error on Deposited event")
 			}
 		}
 	}
@@ -242,6 +267,13 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string, vote bool) (
 		ob.logger.ExternalChainWatcher.Info().Msgf("tx %s failed; don't act", tx.Hash().Hex())
 		return "", errors.New("tx not successful yet")
 	}
+
+	// check if the tx is confirmed
+	lastHeight := ob.GetLastBlockHeight()
+	if !ob.HasEnoughConfirmations(receipt, lastHeight) {
+		return "", fmt.Errorf("txHash %s has not been confirmed yet: receipt block %d current block %d", txHash, receipt.BlockNumber, lastHeight)
+	}
+
 	block, err := ob.evmClient.BlockByNumber(context.Background(), receipt.BlockNumber)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Err(err).Msg("BlockByNumber error")
