@@ -15,8 +15,6 @@ import (
 func TestKeeper_IsAuthorized(t *testing.T) {
 	t.Run("authorized observer", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
-		chains := k.GetParams(ctx).GetSupportedChains()
-
 		r := rand.New(rand.NewSource(9))
 
 		// Set validator in the store
@@ -33,19 +31,15 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-		}
-		for _, chain := range chains {
-			assert.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String(), chain))
-		}
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		assert.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+
 	})
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
-		chains := k.GetParams(ctx).GetSupportedChains()
 
 		r := rand.New(rand.NewSource(9))
 
@@ -63,19 +57,15 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-		}
-		for _, chain := range chains {
-			assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String(), chain))
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+
+		assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+
 	})
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
-		chains := k.GetParams(ctx).GetSupportedChains()
 
 		r := rand.New(rand.NewSource(9))
 
@@ -93,14 +83,11 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-		}
-		for _, chain := range chains {
-			assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String(), chain))
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+
+		assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+
 	})
 }

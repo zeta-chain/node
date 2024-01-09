@@ -23,7 +23,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 
 	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 	isAdmin := msg.Creator == adminPolicyAccount
-	isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+	isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
 
 	isProven := false
 	if !(isAdmin || isObserver) && msg.Proof != nil {
