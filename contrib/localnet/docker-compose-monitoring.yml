@@ -26,10 +26,10 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.31
 
-  ethbalance:
-    image: peterlee0808/ethbalance
-    container_name: ethbalance
-    hostname: ethbalance
+  zetachain-exporter:
+    image: zetachain/zetachain-exporter:latest
+    container_name: zetachain-exporter
+    hostname: zetachain-exporter
     volumes:
       - ./grafana/addresses.txt:/app/addresses.txt
     ports:

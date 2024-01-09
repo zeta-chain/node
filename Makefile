@@ -253,8 +253,8 @@ stop-stateful-upgrade:
 
 start-monitoring:
 	@echo "Starting monitoring services"
-	cd contrib/localnet/ && ./grafana/get-tss-address.sh
-	$(DOCKER) compose -f docker-compose-monitoring.yml up -d
+	cd contrib/localnet/grafana/ && ./get-tss-address.sh
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
 
 stop-monitoring:
 	@echo "Stopping monitoring services"
