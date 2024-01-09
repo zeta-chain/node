@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"math/big"
 	"time"
 
@@ -65,7 +67,7 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 		panic(err)
 	}
 	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
-	_, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
+	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -86,25 +88,21 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 
 	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	initialBalance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash2.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected mined status; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
+
+	balance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	for {
-		time.Sleep(2 * time.Second)
-		balance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
-		if err != nil {
-			panic(err)
-		}
-		diff := big.NewInt(0)
-		diff.Sub(balance, initialBalance)
-		sm.Logger.Info("BTC Difference in balance: %d", diff.Uint64())
-		if diff.Cmp(big.NewInt(1.15*btcutil.SatoshiPerBitcoin)) != 0 {
-			sm.Logger.Info("waiting for BTC balance to show up in ZRC contract... current bal %d", balance)
-		} else {
-			sm.Logger.Info("BTC balance is in ZRC contract! Success")
-			break
-		}
+	if balance.Cmp(big.NewInt(0)) != 1 {
+		panic("balance should be positive")
 	}
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks

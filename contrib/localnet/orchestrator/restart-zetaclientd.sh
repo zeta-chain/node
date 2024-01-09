@@ -33,7 +33,7 @@ CURRENT_HEIGHT=0
 
 while [[ $CURRENT_HEIGHT -lt $UPGRADE_HEIGHT ]]
 do
-    CURRENT_HEIGHT=$(curl zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
+    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
     echo current height is "$CURRENT_HEIGHT", waiting for "$UPGRADE_HEIGHT"
     sleep 5
 done
