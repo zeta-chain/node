@@ -58,6 +58,8 @@
 
 ### Tests
 
+* [1538](https://github.com/zeta-chain/node/pull/1538) - improve stateful e2e testing
+
 ### CI
 * Removed private runners and unused GitHub Action
 
