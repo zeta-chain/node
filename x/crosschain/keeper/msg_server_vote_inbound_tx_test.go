@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	//"github.com/zeta-chain/zetacore/common"
@@ -10,11 +9,64 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest.ZetaKeepers) []string {
+	params := observertypes.DefaultParams()
+	zk.ObserverKeeper.SetParams(
+		ctx, params,
+	)
+
+	// Convert the validator address into a user address.
+	validators := k.StakingKeeper.GetAllValidators(ctx)
+	validatorAddressList := make([]string, len(validators))
+	validatorAddressListFormated := make([]string, len(validators))
+	for i, validator := range validators {
+		validatorAddressList[i] = validator.OperatorAddress
+		valAddr, err := sdk.ValAddressFromBech32(validatorAddressList[i])
+		assert.NoError(t, err)
+		addresstmp, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
+		assert.NoError(t, err)
+		validatorAddressListFormated[i] = addresstmp.String()
+	}
+
+	// Add validator to the observer list for voting
+	chains := zk.ObserverKeeper.GetParams(ctx).GetSupportedChains()
+	for _, chain := range chains {
+		zk.ObserverKeeper.SetObserverMapper(ctx, &observertypes.ObserverMapper{
+			ObserverChain: chain,
+			ObserverList:  validatorAddressListFormated,
+		})
+	}
+	return validatorAddressListFormated
+}
+func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
+	t.Run("successfully vote on evm deposit", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		validatorList := setObservers(t, k, ctx, zk)
+		msg := sample.InboundVote(0, 1337, 101)
+		for _, validatorAddr := range validatorList {
+			msg.Creator = validatorAddr
+			_, err := msgServer.VoteOnObservedInboundTx(
+				ctx,
+				&msg,
+			)
+			assert.NoError(t, err)
+		}
+		ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
+		assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
+		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
+		assert.True(t, found)
+		assert.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
+		assert.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+	})
+}
 
 /*
 Potential Double Event Submission
@@ -91,69 +143,12 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		EventIndex:    1,
 	}
 
-	fmt.Println("Vote again with the same TxHash")
 	_, err = msgServer.VoteOnObservedInboundTx(
 		ctx,
 		msg2,
 	)
-
 	assert.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
 }
-
-// FIMXE: make it work
-//func Test_CalculateGasFee(t *testing.T) {
-//
-//	tt := []struct {
-//		name        string
-//		gasPrice    sdk.Uint // Sample gasPrice posted by zeta-client based on observed value and posted to core using PostGasPriceVoter
-//		gasLimit    sdk.Uint // Sample gasLimit used in smartContract call
-//		rate        sdk.Uint // Sample Rate obtained from UniSwapV2 / V3 and posted to core using PostGasPriceVoter
-//		expectedFee sdk.Uint // ExpectedFee in Zeta Tokens
-//	}{
-//		{
-//			name:        "Test Price1",
-//			gasPrice:    sdk.NewUintFromString("20000000000"),
-//			gasLimit:    sdk.NewUintFromString("90000"),
-//			rate:        sdk.NewUintFromString("1000000000000000000"),
-//			expectedFee: sdk.NewUintFromString("1001800000000000000"),
-//		},
-//	}
-//	for _, test := range tt {
-//		test := test
-//		t.Run(test.name, func(t *testing.T) {
-//			assert.Equal(t, test.expectedFee, CalculateFee(test.gasPrice, test.gasLimit, test.rate))
-//		})
-//	}
-//}
-
-// FIXME: make it work
-//func Test_UpdateGasFees(t *testing.T) {
-//	keeper, ctx := setupKeeper(t)
-//	cctx := createNCctx(keeper, ctx, 1)
-//	cctx[0].Amount = sdk.NewUintFromString("8000000000000000000")
-//	keeper.SetGasPrice(ctx, types.GasPrice{
-//		Creator:     cctx[0].Creator,
-//		Index:       cctx[0].OutboundTxParams.ReceiverChain,
-//		Chain:       cctx[0].OutboundTxParams.ReceiverChain,
-//		Signers:     []string{cctx[0].Creator},
-//		BlockNums:   nil,
-//		Prices:      []uint64{20000000000, 20000000000, 20000000000, 20000000000},
-//		MedianIndex: 0,
-//	})
-//	//keeper.SetZetaConversionRate(ctx, types.ZetaConversionRate{
-//	//	Index:               cctx[0].OutboundTxParams.ReceiverChain,
-//	//	Chain:               cctx[0].OutboundTxParams.ReceiverChain,
-//	//	Signers:             []string{cctx[0].Creator},
-//	//	BlockNums:           nil,
-//	//	ZetaConversionRates: []string{"1000000000000000000", "1000000000000000000", "1000000000000000000", "1000000000000000000"},
-//	//	NativeTokenSymbol:   "",
-//	//	MedianIndex:         0,
-//	//})
-//	err := keeper.PayGasInZetaAndUpdateCctx(ctx, cctx[0].OutboundTxParams.ReceiverChain, &cctx[0])
-//	assert.NoError(t, err)
-//	fmt.Println(cctx[0].String())
-//}
-
 func TestStatus_StatusTransition(t *testing.T) {
 	tt := []struct {
 		Name         string

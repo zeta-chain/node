@@ -116,3 +116,22 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 		AbortedZetaAmount: math.NewUint(uint64(r.Int63())),
 	}
 }
+
+func InboundVote(coinType common.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
+	return types.MsgVoteOnObservedInboundTx{
+		Creator:       "",
+		Sender:        EthAddress().String(),
+		SenderChainId: Chain(from).GetChainId(), // ETH
+		Receiver:      EthAddress().String(),
+		ReceiverChain: Chain(to).GetChainId(), // zetachain
+		Amount:        UintInRange(10000000, 1000000000),
+		Message:       String(),
+		InBlockHeight: Uint64InRange(1, 10000),
+		GasLimit:      1000000000,
+		InTxHash:      Hash().String(),
+		CoinType:      coinType,
+		TxOrigin:      EthAddress().String(),
+		Asset:         "",
+		EventIndex:    EventIndex(),
+	}
+}

@@ -83,7 +83,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	index := msg.Digest()
-	fmt.Println("observation chain", observationChain)
 	// Add votes and Set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
 	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, index, observationChain, observationType)
@@ -128,8 +127,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	cctx := k.CreateNewCCTX(ctx, msg, index, tssPub, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
+		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 		// #nosec G701 always positive
 		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+		cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
@@ -212,7 +213,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		// successful HandleEVMDeposit;
 		commit()
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
-		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 
@@ -234,11 +234,9 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
-		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 	commit()
 	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
-	k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
