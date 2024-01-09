@@ -34,18 +34,18 @@ func validatePeer(seedPeer string) error {
 	parsedPeer := strings.Split(seedPeer, "/")
 
 	if len(parsedPeer) < 7 {
-		return errors.New("seed peer missing IP or ID")
+		return errors.New("seed peer missing IP or ID or both, seed: " + seedPeer)
 	}
 
 	seedIP := parsedPeer[2]
 	seedID := parsedPeer[6]
 
 	if net.ParseIP(seedIP) == nil {
-		return errors.New("invalid seed IP address")
+		return errors.New("invalid seed IP address format, seed: " + seedPeer)
 	}
 
 	if len(seedID) == 0 {
-		return errors.New("seed id is empty")
+		return errors.New("seed id is empty, seed: " + seedPeer)
 	}
 
 	return nil
