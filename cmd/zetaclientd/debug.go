@@ -73,7 +73,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreParams, err := bridge.GetCoreParams()
+			chainParams, err := bridge.GetChainParams()
 			if err != nil {
 				return err
 			}
@@ -115,19 +115,19 @@ func DebugCmd() *cobra.Command {
 					return fmt.Errorf("tx is still pending")
 				}
 
-				for _, chainCoreParams := range coreParams {
-					if chainCoreParams.ChainId == chainID {
-						ob.WithParams(observertypes.CoreParams{
+				for _, chainParams := range chainParams {
+					if chainParams.ChainId == chainID {
+						ob.WithParams(observertypes.ChainParams{
 							ChainId:                     chainID,
-							ConnectorContractAddress:    chainCoreParams.ConnectorContractAddress,
-							ZetaTokenContractAddress:    chainCoreParams.ZetaTokenContractAddress,
-							Erc20CustodyContractAddress: chainCoreParams.Erc20CustodyContractAddress,
+							ConnectorContractAddress:    chainParams.ConnectorContractAddress,
+							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
+							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainCoreParams.ZetaTokenContractAddress
+						cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						ob.SetConfig(cfg)
-						if strings.EqualFold(tx.To().Hex(), chainCoreParams.ConnectorContractAddress) {
+						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta
-						} else if strings.EqualFold(tx.To().Hex(), chainCoreParams.Erc20CustodyContractAddress) {
+						} else if strings.EqualFold(tx.To().Hex(), chainParams.Erc20CustodyContractAddress) {
 							coinType = common.CoinType_ERC20
 						} else if strings.EqualFold(tx.To().Hex(), tssEthAddress) {
 							coinType = common.CoinType_Gas
