@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -46,23 +45,30 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string) bool {
 	return true
 }
 
-func (k Keeper) FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType types.ObservationType) (ballot types.Ballot, isNew bool, err error) {
+func (k Keeper) FindBallot(
+	ctx sdk.Context,
+	index string,
+	chain *common.Chain,
+	observationType types.ObservationType,
+) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false
 	ballot, found := k.GetBallot(ctx, index)
 	if !found {
 		observerSet, _ := k.GetObserverSet(ctx)
-		obsParams := k.GetParams(ctx).GetParamsForChain(chain)
-		if !obsParams.IsSupported {
-			err = errors.Wrap(types.ErrSupportedChains, fmt.Sprintf("Thresholds not set for Chain %s and Observation %s", chain.String(), observationType))
+
+		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
+		if !found || cp == nil || !cp.IsSupported {
+			err = types.ErrSupportedChains
 			return
 		}
+
 		ballot = types.Ballot{
 			Index:                "",
 			BallotIdentifier:     index,
 			VoterList:            observerSet.ObserverList,
 			Votes:                types.CreateVotes(len(observerSet.ObserverList)),
 			ObservationType:      observationType,
-			BallotThreshold:      obsParams.BallotThreshold,
+			BallotThreshold:      cp.BallotThreshold,
 			BallotStatus:         types.BallotStatus_BallotInProgress,
 			BallotCreationHeight: ctx.BlockHeight(),
 		}
@@ -123,11 +129,13 @@ func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) 
 	if !found {
 		return types.ErrSelfDelegation
 	}
+
 	minDelegation, err := types.GetMinObserverDelegationDec()
 	if err != nil {
 		return err
 	}
 	tokens := validator.TokensFromShares(delegation.Shares)
+
 	if tokens.LT(minDelegation) {
 		k.RemoveObserverFromSet(ctx, accAddress)
 	}

@@ -24,7 +24,7 @@ import (
 // Authorized: admin policy group 1, observer.
 func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}

@@ -27762,15 +27762,30 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
+  /zeta-chain/observer/get_chain_params:
     get:
-      summary: Queries a list of GetClientParamsForChain items.
-      operationId: Query_GetCoreParamsForChain
+      summary: Queries a list of GetChainParams items.
+      operationId: Query_GetChainParams
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetCoreParamsForChainResponse'
+            $ref: '#/definitions/observerQueryGetChainParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/get_chain_params_for_chain/{chain_id}:
+    get:
+      summary: Queries a list of GetChainParamsForChain items.
+      operationId: Query_GetChainParamsForChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetChainParamsForChainResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27781,21 +27796,6 @@ paths:
           required: true
           type: string
           format: int64
-      tags:
-        - Query
-  /zeta-chain/observer/get_core_params:
-    get:
-      summary: Queries a list of GetCoreParams items.
-      operationId: Query_GetCoreParams
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetCoreParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/get_tss_address:
@@ -51287,9 +51287,12 @@ definitions:
       finalizedHeight:
         type: string
         format: uint64
-  observerCoreParams:
+  observerChainParams:
     type: object
     properties:
+      chain_id:
+        type: string
+        format: int64
       confirmation_count:
         type: string
         format: uint64
@@ -51311,23 +51314,26 @@ definitions:
         type: string
       erc20_custody_contract_address:
         type: string
-      chain_id:
-        type: string
-        format: int64
       outbound_tx_schedule_interval:
         type: string
         format: int64
       outbound_tx_schedule_lookahead:
         type: string
         format: int64
-  observerCoreParamsList:
+      ballot_threshold:
+        type: string
+      min_observer_delegation:
+        type: string
+      is_supported:
+        type: boolean
+  observerChainParamsList:
     type: object
     properties:
-      core_params:
+      chain_params:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerCoreParams'
+          $ref: '#/definitions/observerChainParams'
   observerCrosschainFlags:
     type: object
     properties:
@@ -51396,7 +51402,9 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
-  observerMsgUpdateCoreParamsResponse:
+  observerMsgRemoveChainParamsResponse:
+    type: object
+  observerMsgUpdateChainParamsResponse:
     type: object
   observerMsgUpdateCrosschainFlagsResponse:
     type: object
@@ -51456,6 +51464,7 @@ definitions:
         type: string
       is_supported:
         type: boolean
+    title: 'Deprecated: Use ChainParamsList'
   observerObserverUpdateReason:
     type: string
     enum:
@@ -51576,16 +51585,16 @@ definitions:
     properties:
       ChainNonces:
         $ref: '#/definitions/observerChainNonces'
-  observerQueryGetCoreParamsForChainResponse:
+  observerQueryGetChainParamsForChainResponse:
     type: object
     properties:
-      core_params:
-        $ref: '#/definitions/observerCoreParams'
-  observerQueryGetCoreParamsResponse:
+      chain_params:
+        $ref: '#/definitions/observerChainParams'
+  observerQueryGetChainParamsResponse:
     type: object
     properties:
-      core_params:
-        $ref: '#/definitions/observerCoreParamsList'
+      chain_params:
+        $ref: '#/definitions/observerChainParamsList'
   observerQueryGetCrosschainFlagsResponse:
     type: object
     properties:
@@ -51843,6 +51852,7 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerObserverParams'
+        title: 'Deprecated: Use ChainParamsList'
       admin_policy:
         type: array
         items:

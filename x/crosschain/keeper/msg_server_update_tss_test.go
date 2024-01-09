@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -22,7 +24,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
+		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -32,7 +34,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -44,6 +46,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
 		assert.Equal(t, 0, len(migrators))
 	})
+
 	t.Run("new tss has not been added to tss history", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -53,7 +56,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tssNew := sample.Tss()
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
+		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -63,7 +66,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -73,8 +76,9 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		assert.True(t, found)
 		assert.Equal(t, tssOld, tss)
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 	})
+
 	t.Run("old tss pubkey provided", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -83,7 +87,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tssOld := sample.Tss()
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
+		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -93,7 +97,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssOld.TssPubkey,
@@ -103,8 +107,9 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
 		assert.True(t, found)
 		assert.Equal(t, tssOld, tss)
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 	})
+
 	t.Run("unable to update tss when not enough migrators are present", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -112,33 +117,37 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
-			index := chain.ChainName.String() + "_migration_tx_index"
-			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
-				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
-			})
-			cctx := sample.CrossChainTx(t, index)
-			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
-			k.SetCrossChainTx(ctx, *cctx)
-			break
-		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), 1)
+		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
+
+		// set a single migrator while there are 2 supported chains
+		chain := k.GetObserverKeeper().GetSupportedChains(ctx)[0]
+		index := chain.ChainName.String() + "_migration_tx_index"
+		k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
+			ChainId:            chain.ChainId,
+			MigrationCctxIndex: index,
+		})
+		cctx := sample.CrossChainTx(t, index)
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
+		k.SetCrossChainTx(ctx, *cctx)
+
+		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), 1)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
 		})
-		assert.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
-		assert.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
+		require.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
+		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
-		assert.True(t, found)
-		assert.Equal(t, tssOld, tss)
+		require.True(t, found)
+		require.Equal(t, tssOld, tss)
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
 		assert.Equal(t, 1, len(migrators))
 	})
+
 	t.Run("unable to update tss when pending cctx is present", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -146,10 +155,13 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
+		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
+
+		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
@@ -159,7 +171,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 			k.SetCrossChainTx(ctx, *cctx)
 		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -170,8 +182,9 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		assert.True(t, found)
 		assert.Equal(t, tssOld, tss)
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
-		assert.Equal(t, len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()), len(migrators))
+		assert.Equal(t, len(k.GetObserverKeeper().GetSupportedChains(ctx)), len(migrators))
 	})
+
 	t.Run("unable to update tss cctx is not present", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -179,17 +192,20 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
+
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssNew)
 		k.GetObserverKeeper().SetTSS(ctx, tssOld)
-		for _, chain := range k.GetObserverKeeper().GetParams(ctx).GetSupportedChains() {
+		setSupportedChain(ctx, zk, getValidEthChainIDWithIndex(t, 0), getValidEthChainIDWithIndex(t, 1))
+
+		for _, chain := range k.GetObserverKeeper().GetSupportedChains(ctx) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
 				MigrationCctxIndex: index,
 			})
 		}
-		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()))
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
@@ -200,6 +216,6 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		assert.True(t, found)
 		assert.Equal(t, tssOld, tss)
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
-		assert.Equal(t, len(k.GetObserverKeeper().GetParams(ctx).GetSupportedChains()), len(migrators))
+		assert.Equal(t, len(k.GetObserverKeeper().GetSupportedChains(ctx)), len(migrators))
 	})
 }

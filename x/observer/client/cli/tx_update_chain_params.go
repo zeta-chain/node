@@ -12,21 +12,21 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func CmdUpdateCoreParams() *cobra.Command {
+func CmdUpdateChainParams() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-client-params [chain-id] [client-params.json]",
-		Short: "Broadcast message updateClientParams",
-		Args:  cobra.ExactArgs(1),
+		Use:   "update-chain-params [chain-id] [client-params.json]",
+		Short: "Broadcast message updateChainParams",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
-			argCoreParams := args[0]
+			argChainParams := args[0]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
-			var clientParams types.CoreParams
-			file, err := filepath.Abs(argCoreParams)
+			var clientParams types.ChainParams
+			file, err := filepath.Abs(argChainParams)
 			if err != nil {
 				return err
 			}
@@ -40,7 +40,7 @@ func CmdUpdateCoreParams() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgUpdateCoreParams(
+			msg := types.NewMsgUpdateChainParams(
 				clientCtx.GetFromAddress().String(),
 				&clientParams,
 			)

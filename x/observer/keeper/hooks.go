@@ -84,6 +84,7 @@ func (k Keeper) CleanSlashedValidator(ctx sdk.Context, valAddress sdk.ValAddress
 
 	tokensToBurn := sdk.NewDecFromInt(validator.Tokens).Mul(fraction)
 	resultingTokens := validator.Tokens.Sub(tokensToBurn.Ceil().TruncateInt())
+
 	mindelegation, found := types.GetMinObserverDelegation()
 	if !found {
 		return types.ErrMinDelegationNotFound

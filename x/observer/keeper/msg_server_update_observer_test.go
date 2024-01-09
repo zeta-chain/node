@@ -38,6 +38,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			Tombstoned:          true,
 			MissedBlocksCounter: 1,
 		})
+
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 

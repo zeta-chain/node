@@ -23,7 +23,7 @@ import (
 func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVoter) (*types.MsgGasPriceVoterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}

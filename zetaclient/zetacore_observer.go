@@ -262,8 +262,8 @@ func (co *CoreObserver) scheduleCctxEVM(
 		}
 
 		// #nosec G701 positive
-		interval := uint64(ob.GetCoreParams().OutboundTxScheduleInterval)
-		lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
+		interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
+		lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
 
 		// determining critical outtx; if it satisfies following criteria
 		// 1. it's the first pending outtx for this chain
@@ -316,7 +316,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 		co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: chain client is not a bitcoin client")
 		return
 	}
-	lookahead := ob.GetCoreParams().OutboundTxScheduleLookahead
+	lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
 
 	// schedule at most one keysign per ticker
 	for idx, cctx := range cctxList {
@@ -352,18 +352,25 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 		return nil, err
 	}
 	// update chain client core parameters
-	curParams := chainOb.GetCoreParams()
+	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
 		evmCfg, found := co.cfg.GetEVMConfig(chainID)
-		if found && curParams != evmCfg.CoreParams {
-			chainOb.SetCoreParams(evmCfg.CoreParams)
-			co.logger.ZetaChainWatcher.Info().Msgf("updated core params for chainID %d, new params: %v", chainID, evmCfg.CoreParams)
+		if found && curParams != evmCfg.ChainParams {
+			chainOb.SetChainParams(evmCfg.ChainParams)
+			co.logger.ZetaChainWatcher.Info().Msgf(
+				"updated chain params for chainID %d, new params: %v",
+				chainID,
+				evmCfg.ChainParams,
+			)
 		}
 	} else if common.IsBitcoinChain(chainID) {
 		_, btcCfg, found := co.cfg.GetBTCConfig()
-		if found && curParams != btcCfg.CoreParams {
-			chainOb.SetCoreParams(btcCfg.CoreParams)
-			co.logger.ZetaChainWatcher.Info().Msgf("updated core params for Bitcoin, new params: %v", btcCfg.CoreParams)
+		if found && curParams != btcCfg.ChainParams {
+			chainOb.SetChainParams(btcCfg.ChainParams)
+			co.logger.ZetaChainWatcher.Info().Msgf(
+				"updated chain params for Bitcoin, new params: %v",
+				btcCfg.ChainParams,
+			)
 		}
 	}
 	return chainOb, nil

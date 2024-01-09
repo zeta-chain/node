@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// UpdateObserver handles updating an observer address
 // Authorized: admin policy group 2 (admin update), old observer address (if the
 // reason is that the observer was tombstoned).
 func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
@@ -21,6 +22,7 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 	if !ok {
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
 	}
+
 	// We do not use IsAuthorized here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
 		return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
