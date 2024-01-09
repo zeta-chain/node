@@ -52,7 +52,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := DecodeBtcAddress(addrStr, chain.ChainId)
 		if err != nil {
 			return "", err
 		}
