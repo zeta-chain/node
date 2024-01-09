@@ -7,10 +7,11 @@ import "observer/observer.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
-message CoreParamsList {
-  repeated CoreParams core_params = 1;
+message ChainParamsList {
+  repeated ChainParams chain_params = 1;
 }
-message CoreParams {
+message ChainParams {
+  int64 chain_id = 11;
   uint64 confirmation_count = 1;
   uint64 gas_price_ticker = 2;
   uint64 in_tx_ticker = 3;
@@ -19,11 +20,20 @@ message CoreParams {
   string zeta_token_contract_address = 8;
   string connector_contract_address = 9;
   string erc20_custody_contract_address = 10;
-  int64 chain_id = 11;
   int64 outbound_tx_schedule_interval = 12;
   int64 outbound_tx_schedule_lookahead = 13;
+  string ballot_threshold = 14 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string min_observer_delegation = 15 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bool is_supported = 16;
 }
 
+// Deprecated: Use ChainParamsList
 message ObserverParams {
   common.Chain chain = 1;
   string ballot_threshold = 3 [
@@ -51,7 +61,10 @@ message Admin_Policy {
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
+
+  // Deprecated: Use ChainParamsList
   repeated ObserverParams observer_params = 1;
+
   repeated Admin_Policy admin_policy = 2;
   int64 ballot_maturity_blocks = 3;
 }

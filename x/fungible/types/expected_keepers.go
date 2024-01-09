@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-
+	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -45,7 +45,8 @@ type ObserverKeeper interface {
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
 	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
-	GetCoreParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.CoreParams, found bool)
+	GetChainParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.ChainParams, found bool)
+	GetSupportedChains(ctx sdk.Context) []*common.Chain
 	GetMaturedBallotList(ctx sdk.Context) []string
 }
 

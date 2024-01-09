@@ -129,3 +129,13 @@ func StringRandom(r *rand.Rand, length int) string {
 func Coins() sdk.Coins {
 	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
 }
+
+// Uint64InRange returns a sample uint64 in the given ranges
+func Uint64InRange(r *rand.Rand, low, high uint64) uint64 {
+	return r.Uint64()%(high-low) + low
+}
+
+// Int64InRange returns a sample int64 in the given ranges
+func Int64InRange(r *rand.Rand, low, high int64) int64 {
+	return r.Int63()%(high-low) + low
+}
