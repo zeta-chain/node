@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* ci: adding typescript publishing pipeline.
+
 ### Breaking Changes
 
 * PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
@@ -30,6 +32,7 @@
 * fix docker build issues with version: golang:1.20-alpine3.18
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
+* [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 
 ### Refactoring
 
