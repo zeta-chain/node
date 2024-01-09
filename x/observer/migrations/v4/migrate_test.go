@@ -63,13 +63,13 @@ func TestMigrateObserverParams(t *testing.T) {
 				Chain:                 &common.Chain{ChainId: 2},
 				BallotThreshold:       dec42,
 				MinObserverDelegation: dec1000,
-				IsSupported:           true,
+				IsActive:              true,
 			},
 			{
 				Chain:                 &common.Chain{ChainId: 3},
 				BallotThreshold:       dec43,
 				MinObserverDelegation: dec1001,
-				IsSupported:           true,
+				IsActive:              true,
 			},
 		},
 	}
@@ -92,16 +92,16 @@ func TestMigrateObserverParams(t *testing.T) {
 	require.EqualValues(t, dec1000, newChainParamsList.ChainParams[1].MinObserverDelegation)
 	require.EqualValues(t, dec43, newChainParamsList.ChainParams[2].BallotThreshold)
 	require.EqualValues(t, dec1001, newChainParamsList.ChainParams[2].MinObserverDelegation)
-	require.True(t, newChainParamsList.ChainParams[1].IsSupported)
-	require.True(t, newChainParamsList.ChainParams[2].IsSupported)
+	require.True(t, newChainParamsList.ChainParams[1].IsActive)
+	require.True(t, newChainParamsList.ChainParams[2].IsActive)
 
 	// check remaining values are unchanged
 	previousChainParamsList.ChainParams[1].BallotThreshold = dec42
 	previousChainParamsList.ChainParams[2].BallotThreshold = dec43
 	previousChainParamsList.ChainParams[1].MinObserverDelegation = dec1000
 	previousChainParamsList.ChainParams[2].MinObserverDelegation = dec1001
-	previousChainParamsList.ChainParams[1].IsSupported = true
-	previousChainParamsList.ChainParams[2].IsSupported = true
+	previousChainParamsList.ChainParams[1].IsActive = true
+	previousChainParamsList.ChainParams[2].IsActive = true
 	require.EqualValues(t, previousChainParamsList.ChainParams[1], newChainParamsList.ChainParams[1])
 	require.EqualValues(t, previousChainParamsList.ChainParams[2], newChainParamsList.ChainParams[2])
 }

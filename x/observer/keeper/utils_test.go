@@ -21,7 +21,7 @@ func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs .
 	chainParamsList := make([]*types.ChainParams, len(chainIDs))
 	for i, chainID := range chainIDs {
 		chainParams := sample.ChainParams(chainID)
-		chainParams.IsSupported = true
+		chainParams.IsActive = true
 		chainParamsList[i] = chainParams
 	}
 	observerKeeper.SetChainParamsList(ctx, types.ChainParamsList{

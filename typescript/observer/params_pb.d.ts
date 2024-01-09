@@ -116,9 +116,9 @@ export declare class ChainParams extends Message<ChainParams> {
   minObserverDelegation: string;
 
   /**
-   * @generated from field: bool is_supported = 16;
+   * @generated from field: bool is_active = 16;
    */
-  isSupported: boolean;
+  isActive: boolean;
 
   constructor(data?: PartialMessage<ChainParams>);
 
@@ -157,9 +157,9 @@ export declare class ObserverParams extends Message<ObserverParams> {
   minObserverDelegation: string;
 
   /**
-   * @generated from field: bool is_supported = 5;
+   * @generated from field: bool is_active = 5;
    */
-  isSupported: boolean;
+  isActive: boolean;
 
   constructor(data?: PartialMessage<ObserverParams>);
 

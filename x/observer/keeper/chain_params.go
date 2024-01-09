@@ -49,7 +49,7 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *co
 	}
 
 	for _, cp := range cpl.ChainParams {
-		if cp.ChainId == chainID && cp.IsSupported {
+		if cp.ChainId == chainID && cp.IsActive {
 			return common.GetChainFromChainID(chainID)
 		}
 	}
@@ -65,7 +65,7 @@ func (k Keeper) GetSupportedChains(ctx sdk.Context) []*common.Chain {
 
 	var chains []*common.Chain
 	for _, cp := range cpl.ChainParams {
-		if cp.IsSupported {
+		if cp.IsActive {
 			chains = append(chains, common.GetChainFromChainID(cp.ChainId))
 		}
 	}

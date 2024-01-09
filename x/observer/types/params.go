@@ -32,7 +32,7 @@ func DefaultParams() Params {
 	observerParams := make([]*ObserverParams, len(chains))
 	for i, chain := range chains {
 		observerParams[i] = &ObserverParams{
-			IsSupported:           true,
+			IsActive:              true,
 			Chain:                 chain,
 			BallotThreshold:       sdk.MustNewDecFromStr("0.66"),
 			MinObserverDelegation: sdk.MustNewDecFromStr("1000000000000000000000"), // 1000 ZETA

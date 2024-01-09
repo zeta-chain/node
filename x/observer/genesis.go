@@ -22,11 +22,11 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	} else {
 		// if no chain params are defined, set localnet chains for test purposes
 		btcChainParams := types.GetDefaultBtcRegtestChainParams()
-		btcChainParams.IsSupported = true
+		btcChainParams.IsActive = true
 		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
-		goerliChainParams.IsSupported = true
+		goerliChainParams.IsActive = true
 		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
-		zetaPrivnetChainParams.IsSupported = true
+		zetaPrivnetChainParams.IsActive = true
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
 				btcChainParams,

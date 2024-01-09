@@ -99,13 +99,13 @@ func ChainParams(chainID int64) *types.ChainParams {
 		OutboundTxScheduleLookahead: Int64InRange(r, 1, 500),
 		BallotThreshold:             fiftyPercent,
 		MinObserverDelegation:       sdk.NewDec(r.Int63()),
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 
 func ChainParamsSupported(chainID int64) *types.ChainParams {
 	cp := ChainParams(chainID)
-	cp.IsSupported = true
+	cp.IsActive = true
 	return cp
 }
 

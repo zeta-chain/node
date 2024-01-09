@@ -227,7 +227,7 @@ func setSupportedChain(ctx sdk.Context, zk testkeeper.ZetaKeepers, chainIDs ...i
 	chainParamsList := make([]*observertypes.ChainParams, len(chainIDs))
 	for i, chainID := range chainIDs {
 		chainParams := sample.ChainParams(chainID)
-		chainParams.IsSupported = true
+		chainParams.IsActive = true
 		chainParamsList[i] = chainParams
 	}
 	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{

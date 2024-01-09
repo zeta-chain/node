@@ -59,7 +59,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		OutboundTxScheduleLookahead: 1,
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 	s.btcParams = &types.ChainParams{
 		ConfirmationCount:           1,
@@ -75,7 +75,7 @@ func (s *UpdateChainParamsSuite) SetupTest() {
 		OutboundTxScheduleLookahead: 1,
 		BallotThreshold:             types.DefaultBallotThreshold,
 		MinObserverDelegation:       types.DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 

@@ -30,7 +30,7 @@ message ChainParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  bool is_supported = 16;
+  bool is_active = 16;
 }
 
 // Deprecated: Use ChainParamsList
@@ -44,7 +44,7 @@ message ObserverParams {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  bool is_supported = 5;
+  bool is_active = 5;
 }
 
 enum Policy_Type {

@@ -109,7 +109,7 @@ type ChainParams struct {
 	OutboundTxScheduleLookahead int64                                  `protobuf:"varint,13,opt,name=outbound_tx_schedule_lookahead,json=outboundTxScheduleLookahead,proto3" json:"outbound_tx_schedule_lookahead,omitempty"`
 	BallotThreshold             github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,14,opt,name=ballot_threshold,json=ballotThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"ballot_threshold"`
 	MinObserverDelegation       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,15,opt,name=min_observer_delegation,json=minObserverDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_observer_delegation"`
-	IsSupported                 bool                                   `protobuf:"varint,16,opt,name=is_supported,json=isSupported,proto3" json:"is_supported,omitempty"`
+	IsActive                    bool                                   `protobuf:"varint,16,opt,name=is_active,json=isSupported,proto3" json:"is_supported,omitempty"`
 }
 
 func (m *ChainParams) Reset()         { *m = ChainParams{} }
@@ -222,9 +222,9 @@ func (m *ChainParams) GetOutboundTxScheduleLookahead() int64 {
 	return 0
 }
 
-func (m *ChainParams) GetIsSupported() bool {
+func (m *ChainParams) GetIsActive() bool {
 	if m != nil {
-		return m.IsSupported
+		return m.IsActive
 	}
 	return false
 }
@@ -234,7 +234,7 @@ type ObserverParams struct {
 	Chain                 *common.Chain                          `protobuf:"bytes,1,opt,name=chain,proto3" json:"chain,omitempty"`
 	BallotThreshold       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=ballot_threshold,json=ballotThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"ballot_threshold"`
 	MinObserverDelegation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,4,opt,name=min_observer_delegation,json=minObserverDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"min_observer_delegation"`
-	IsSupported           bool                                   `protobuf:"varint,5,opt,name=is_supported,json=isSupported,proto3" json:"is_supported,omitempty"`
+	IsActive              bool                                   `protobuf:"varint,5,opt,name=is_active,json=isSupported,proto3" json:",omitempty"`
 }
 
 func (m *ObserverParams) Reset()         { *m = ObserverParams{} }
@@ -277,9 +277,9 @@ func (m *ObserverParams) GetChain() *common.Chain {
 	return nil
 }
 
-func (m *ObserverParams) GetIsSupported() bool {
+func (m *ObserverParams) GetIsActive() bool {
 	if m != nil {
-		return m.IsSupported
+		return m.IsActive
 	}
 	return false
 }
@@ -520,9 +520,9 @@ func (m *ChainParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.IsSupported {
+	if m.IsActive {
 		i--
-		if m.IsSupported {
+		if m.IsActive {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -636,9 +636,9 @@ func (m *ObserverParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.IsSupported {
+	if m.IsActive {
 		i--
-		if m.IsSupported {
+		if m.IsActive {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -844,7 +844,7 @@ func (m *ChainParams) Size() (n int) {
 	n += 1 + l + sovParams(uint64(l))
 	l = m.MinObserverDelegation.Size()
 	n += 1 + l + sovParams(uint64(l))
-	if m.IsSupported {
+	if m.IsActive {
 		n += 3
 	}
 	return n
@@ -864,7 +864,7 @@ func (m *ObserverParams) Size() (n int) {
 	n += 1 + l + sovParams(uint64(l))
 	l = m.MinObserverDelegation.Size()
 	n += 1 + l + sovParams(uint64(l))
-	if m.IsSupported {
+	if m.IsActive {
 		n += 2
 	}
 	return n
@@ -1347,7 +1347,7 @@ func (m *ChainParams) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 16:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsSupported", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field IsActive", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -1364,7 +1364,7 @@ func (m *ChainParams) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.IsSupported = bool(v != 0)
+			m.IsActive = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])
@@ -1521,7 +1521,7 @@ func (m *ObserverParams) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 5:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IsSupported", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field IsActive", wireType)
 			}
 			var v int
 			for shift := uint(0); ; shift += 7 {
@@ -1538,7 +1538,7 @@ func (m *ObserverParams) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			m.IsSupported = bool(v != 0)
+			m.IsActive = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipParams(dAtA[iNdEx:])

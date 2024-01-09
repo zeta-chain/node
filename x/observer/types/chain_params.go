@@ -153,7 +153,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
@@ -171,7 +171,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
@@ -189,7 +189,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
@@ -208,7 +208,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
@@ -226,7 +226,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
@@ -244,7 +244,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 60,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
@@ -262,7 +262,7 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 100,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
@@ -280,7 +280,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
@@ -298,7 +298,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 5,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
@@ -316,6 +316,6 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 		OutboundTxScheduleLookahead: 0,
 		BallotThreshold:             DefaultBallotThreshold,
 		MinObserverDelegation:       DefaultMinObserverDelegation,
-		IsSupported:                 false,
+		IsActive:                    false,
 	}
 }

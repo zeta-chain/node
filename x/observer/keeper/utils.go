@@ -57,7 +57,7 @@ func (k Keeper) FindBallot(
 		observerSet, _ := k.GetObserverSet(ctx)
 
 		cp, found := k.GetChainParamsByChainID(ctx, chain.ChainId)
-		if !found || cp == nil || !cp.IsSupported {
+		if !found || cp == nil || !cp.IsActive {
 			err = types.ErrSupportedChains
 			return
 		}

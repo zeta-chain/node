@@ -23,7 +23,7 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 
 		// chain params list but chain not supported
 		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
-		chainParams.IsSupported = false
+		chainParams.IsActive = false
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{chainParams},
 		})

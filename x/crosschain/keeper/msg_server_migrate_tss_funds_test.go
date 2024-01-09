@@ -164,7 +164,7 @@ func setupTssMigrationParams(
 				ChainId:               chain.ChainId,
 				BallotThreshold:       sdk.NewDec(0),
 				MinObserverDelegation: sdk.OneDec(),
-				IsSupported:           true,
+				IsActive:              true,
 			},
 		},
 	})

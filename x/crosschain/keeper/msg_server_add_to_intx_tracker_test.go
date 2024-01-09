@@ -158,7 +158,7 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),
 			BallotThreshold:          sdk.OneDec(),
 			MinObserverDelegation:    sdk.OneDec(),
-			IsSupported:              true,
+			IsActive:                 true,
 		},
 	}})
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{

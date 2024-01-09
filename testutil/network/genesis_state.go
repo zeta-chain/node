@@ -109,7 +109,7 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	// set chain params with chains all enabled
 	state.ChainParamsList = observertypes.GetDefaultChainParams()
 	for i := range state.ChainParamsList.ChainParams {
-		state.ChainParamsList.ChainParams[i].IsSupported = true
+		state.ChainParamsList.ChainParams[i].IsActive = true
 	}
 
 	// set params

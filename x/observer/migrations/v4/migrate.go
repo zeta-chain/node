@@ -64,7 +64,7 @@ func MigrateObserverParams(ctx sdk.Context, observerKeeper observerKeeper) error
 			if chainParamsList.ChainParams[i].ChainId == observerParam.Chain.ChainId {
 				chainParamsList.ChainParams[i].MinObserverDelegation = observerParam.MinObserverDelegation
 				chainParamsList.ChainParams[i].BallotThreshold = observerParam.BallotThreshold
-				chainParamsList.ChainParams[i].IsSupported = observerParam.IsSupported
+				chainParamsList.ChainParams[i].IsActive = observerParam.IsActive
 				break
 			}
 		}
