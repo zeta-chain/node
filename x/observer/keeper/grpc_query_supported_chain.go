@@ -9,6 +9,6 @@ import (
 
 func (k Keeper) SupportedChains(goCtx context.Context, _ *types.QuerySupportedChains) (*types.QuerySupportedChainsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chains := k.GetParams(ctx).GetSupportedChains()
+	chains := k.GetSupportedChains(ctx)
 	return &types.QuerySupportedChainsResponse{Chains: chains}, nil
 }

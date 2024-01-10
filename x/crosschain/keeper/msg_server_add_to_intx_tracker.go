@@ -12,17 +12,18 @@ import (
 )
 
 // AddToInTxTracker adds a new record to the inbound transaction tracker.
-// TODO https://github.com/zeta-chain/node/issues/1269
+//
+// Authorized: admin policy group 1, observer.
 func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToInTxTracker) (*types.MsgAddToInTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}
 
 	adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 	isAdmin := msg.Creator == adminPolicyAccount
-	isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+	isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
 
 	isProven := false
 	if !(isAdmin || isObserver) && msg.Proof != nil {

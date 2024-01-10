@@ -1,8 +1,11 @@
 package common
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
+	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
@@ -40,4 +43,38 @@ func (addr Address) IsEmpty() bool {
 
 func (addr Address) String() string {
 	return string(addr)
+}
+
+func ConvertRecoverToError(r interface{}) error {
+	switch x := r.(type) {
+	case string:
+		return errors.New(x)
+	case error:
+		return x
+	default:
+		return fmt.Errorf("%v", x)
+	}
+}
+
+func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Address, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = ConvertRecoverToError(r)
+			err = fmt.Errorf("input address:%s, chainId:%d, err:%s", inputAddress, chainID, err.Error())
+			return
+		}
+	}()
+	chainParams, err := GetBTCChainParams(chainID)
+	if err != nil {
+		return nil, err
+	}
+	if chainParams == nil {
+		return nil, fmt.Errorf("chain params not found")
+	}
+	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
+	ok := address.IsForNet(chainParams)
+	if !ok {
+		return nil, fmt.Errorf("address is not for network %s", chainParams.Name)
+	}
+	return
 }

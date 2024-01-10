@@ -310,7 +310,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 	send *types.CrossChainTx,
 	outTxMan *OutTxProcessorManager,
 	outTxID string,
-	evmClient ChainClient,
+	chainclient ChainClient,
 	zetaBridge ZetaCoreBridger,
 	height uint64,
 ) {
@@ -327,7 +327,6 @@ func (signer *EVMSigner) TryProcessOutTx(
 	myID := zetaBridge.GetKeys().GetOperatorAddress()
 
 	var to ethcommon.Address
-	var err error
 	var toChain *common.Chain
 	if send.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		to = ethcommon.HexToAddress(send.InboundTxParams.Sender)
@@ -348,13 +347,15 @@ func (signer *EVMSigner) TryProcessOutTx(
 		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", send.CctxStatus.Status)
 		return
 	}
-	if err != nil {
-		logger.Error().Err(err).Msg("ParseChain fail; skip")
+	evmClient, ok := chainclient.(*EVMChainClient)
+	if !ok {
+		logger.Error().Msgf("chain client is not an EVMChainClient")
 		return
 	}
 
 	// Early return if the cctx is already processed
-	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, send.GetCurrentOutTxParam().OutboundTxTssNonce, send.GetCurrentOutTxParam().CoinType, logger)
+	nonce := send.GetCurrentOutTxParam().OutboundTxTssNonce
+	included, confirmed, err := evmClient.IsSendOutTxProcessed(send.Index, nonce, send.GetCurrentOutTxParam().CoinType, logger)
 	if err != nil {
 		logger.Error().Err(err).Msg("IsSendOutTxProcessed failed")
 	}
@@ -381,7 +382,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 		logger.Warn().Msgf("gasLimit %d is too high; set to %d", send.GetCurrentOutTxParam().OutboundTxGasLimit, gasLimit)
 	}
 
-	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, send.InboundTxParams.Amount, to.Hex(), send.GetCurrentOutTxParam().OutboundTxTssNonce, send.InboundTxParams.InboundTxFinalizedZetaHeight)
+	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, send.InboundTxParams.Amount, to.Hex(), nonce, send.InboundTxParams.InboundTxFinalizedZetaHeight)
 	sendHash, err := hex.DecodeString(send.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
 		logger.Error().Err(err).Msgf("decode CCTX %s error", send.Index)
@@ -412,21 +413,17 @@ func (signer *EVMSigner) TryProcessOutTx(
 	} else {
 		gasprice = specified
 	}
-	//if common.IsEthereumChain(toChain.ChainId) {
-	//	suggested, err := signer.client.SuggestGasPrice(context.Background())
-	//	if err != nil {
-	//		logger.Error().Err(err).Msgf("cannot get gas price from chain %s ", toChain)
-	//		return
-	//	}
-	//	gasprice = roundUpToNearestGwei(suggested)
-	//} else {
-	//	specified, ok := new(big.Int).SetString(send.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-	//	if !ok {
-	//		logger.Error().Err(err).Msgf("cannot convert gas price  %s ", send.GetCurrentOutTxParam().OutboundTxGasPrice)
-	//		return
-	//	}
-	//	gasprice = specified
-	//}
+
+	// In case there is a pending transaction, make sure this keysign is a transaction replacement
+	pendingTx := evmClient.GetPendingTx(nonce)
+	if pendingTx != nil {
+		if gasprice.Cmp(pendingTx.GasPrice()) > 0 {
+			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, gasprice)
+		} else {
+			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
+			return
+		}
+	}
 
 	flags, err := zetaBridge.GetCrosschainFlags()
 	if err != nil {
@@ -549,7 +546,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", send.InboundTxParams.SenderChainId, toChain, send.GetCurrentOutTxParam().OutboundTxTssNonce)
 
-	_, err = zetaBridge.GetObserverList(*toChain)
+	_, err = zetaBridge.GetObserverList()
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 

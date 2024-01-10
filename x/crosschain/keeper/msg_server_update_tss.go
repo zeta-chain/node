@@ -10,6 +10,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// Authorized: admin policy group 2.
 func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateTssAddress) (*types.MsgUpdateTssAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// TODO : Add a new policy type for updating the TSS address
@@ -30,7 +31,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 
 	tssMigrators := k.zetaObserverKeeper.GetAllTssFundMigrators(ctx)
 	// Each connected chain should have its own tss migrator
-	if len(k.zetaObserverKeeper.GetParams(ctx).GetSupportedChains()) != len(tssMigrators) {
+	if len(k.zetaObserverKeeper.GetSupportedChains(ctx)) != len(tssMigrators) {
 		return nil, errorsmod.Wrap(types.ErrUnableToUpdateTss, "cannot update tss address not enough migrations have been created and completed")
 	}
 	// GetAllTssFundMigrators would return the migrators created for the current migration

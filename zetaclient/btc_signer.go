@@ -301,8 +301,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot get bitcoin net params%v", err)
 		return
 	}
-
-	addr, err := btcutil.DecodeAddress(params.Receiver, bitcoinNetParams)
+	addr, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
@@ -350,7 +349,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, btcClient.chain.ChainName, outboundTxTssNonce)
 
 	// FIXME: add prometheus metrics
-	_, err = zetaBridge.GetObserverList(btcClient.chain)
+	_, err = zetaBridge.GetObserverList()
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", outboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
 	}

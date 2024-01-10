@@ -114,9 +114,7 @@ func CmdAddToWatchList() *cobra.Command {
 				"",
 				-1,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -151,9 +149,7 @@ func CmdRemoveFromWatchList() *cobra.Command {
 				argChain,
 				argNonce,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

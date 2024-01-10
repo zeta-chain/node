@@ -6,7 +6,6 @@ networks:
       config:
         - subnet: 172.20.0.0/24
 
-
 services:
   rosetta:
     image: zetanode:latest
@@ -116,6 +115,7 @@ services:
 
   orchestrator:
     image: orchestrator:latest
+    tty: true
     container_name: orchestrator
     build:
       context: ../../.

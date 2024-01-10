@@ -2,40 +2,44 @@
 
 ## Unreleased
 
+* ci: adding typescript publishing pipeline.
+
 ### Breaking Changes
-- PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
-- ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
-- ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+
+* PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
+* ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
+* ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 ### Features
+* [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
-* [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
 * enable zetaclients to use dynamic gas price on zetachain - enables >0 min_gas_price in feemarket module
 * add static chain data for Sepolia testnet
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
+
+* [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
+* [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
+* [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
+* [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
+* fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
 * fix go-staticcheck warnings for zetaclient
 * fix Athens-3 issue - incorrect pending-tx inclusion and incorrect confirmation count
-* 6582f6b42f4f0eb0358e6fdefe5278295c791166 - masked zetaclient config at startup
-* 1b8fdd3394c35afa47e830a5858b3c5c133fad8e - Added check for redeployment of gas and asset token contracts
-* [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
-* [1367](https://github.com/zeta-chain/node/pull/1367) - fix minRelayTxFee issue and check misuse of bitcoin mainnet/testnet addresses
-* [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
-* prevent deposits for paused zrc20
-* [1406](https://github.com/zeta-chain/node/pull/1406) - improve log prints and speed up evm outtx inclusion
-* fix Athens-3 issue - include bitcoin outtx regardless of the cctx status
+* masked zetaclient config at startup
 * set limit for queried pending cctxs
 * add check to verify new tss has been produced when triggering tss funds migration
 * fix Athens-3 log print issue - avoid posting uncessary outtx confirmation
 * fix docker build issues with version: golang:1.20-alpine3.18
+* [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
+* [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
+* [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 
 ### Refactoring
+
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
-* [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
-* update `MsgUpdateContractBytecode` to use code hash instead of contract address
 * move tss state from crosschain to observer
 * move pending nonces, chain nonces and nonce to cctx to observer
 * move tss related cli from crosschain to observer
@@ -43,19 +47,55 @@
 * Add pagination to queries which iterate over large data sets InTxTrackerAll ,PendingNoncesAll ,AllBlameRecord ,TssHistory
 * GetTssAddress now returns only the current tss address for ETH and BTC
 * Add a new query GetTssAddressesByFinalizedBlockHeight to get any other tss addresses for a finalized block height
+* Move observer params into core params
+* Remove chain id from the index for observer mapper and rename it to observer set.
+* Add logger to smoke tests
+* [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+
+### Chores
+* [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
+* [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
+* [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
+* [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
+
+### Tests
+
+* [1538](https://github.com/zeta-chain/node/pull/1538) - improve stateful e2e testing
+
+### CI
+* Removed private runners and unused GitHub Action
+
+## Version: v11.0.0
+
+### Features
+
+* [1387](https://github.com/zeta-chain/node/pull/1387) - Add HSM capability for zetaclient hot key
+* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+* add a new tx to update an observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
+
+### Fixes
+
+* Added check for redeployment of gas and asset token contracts
+* [1372](https://github.com/zeta-chain/node/pull/1372) - Include Event Index as part for inbound tx digest
+* [1367](https://github.com/zeta-chain/node/pull/1367) - fix minRelayTxFee issue and check misuse of bitcoin mainnet/testnet addresses
+* [1358](https://github.com/zeta-chain/node/pull/1358) - add a new thread to zetaclient which checks zeta supply in all connected chains in every block
+* prevent deposits for paused zrc20
+* [1406](https://github.com/zeta-chain/node/pull/1406) - improve log prints and speed up evm outtx inclusion
+* fix Athens-3 issue - include bitcoin outtx regardless of the cctx status
+
+### Refactoring
+
+* [1391](https://github.com/zeta-chain/node/pull/1391) - consolidate node builds
+* update `MsgUpdateContractBytecode` to use code hash instead of contract address
 
 ### Chores
 
-* [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
-
 ### Tests
 - Add unit tests for adding votes to a ballot 
+
 ### CI
 
 ## Version: v10.1.2
-### Unreleased:
-* add a new thread to zetaclient which checks zeta supply in all connected chains in every block
-* add a new tx to update an observer, this can be either be run a tombstoned observer/validator or via admin_policy_group_2.
 
 ### Features
 * [1137](https://github.com/zeta-chain/node/pull/1137) - external stress testing

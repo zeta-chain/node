@@ -11,6 +11,8 @@ import (
 )
 
 // DeploySystemContracts deploy new instances of the system contracts
+//
+// Authorized: admin policy group 2.
 func (k msgServer) DeploySystemContracts(goCtx context.Context, msg *types.MsgDeploySystemContracts) (*types.MsgDeploySystemContractsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

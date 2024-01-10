@@ -13,11 +13,9 @@ fi
 cp  /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"
-#mv  /root/zetacored/zetacored_$node /root/.zetacored
-#mv /root/tss/$HOSTNAME /root/.tss
 
 echo "Wait for zetacore to exchange genesis file"
-sleep 30
+sleep 40
 operator=$(cat $HOME/.zetacored/os.json | jq '.ObserverAddress' )
 operatorAddress=$(echo "$operator" | tr -d '"')
 echo "operatorAddress: $operatorAddress"
@@ -26,7 +24,7 @@ if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/*
     MYIP=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
-    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress"  --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
+    zetaclientd init  --zetacore-url zetacore0 --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --keyring-backend "$BACKEND"
     zetaclientd start
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')

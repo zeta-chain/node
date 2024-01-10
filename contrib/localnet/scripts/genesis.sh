@@ -46,7 +46,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((7*NUMOFNODES))
+  sleep 10
   echo "genesis.json created"
 fi
 
@@ -93,6 +93,7 @@ then
 
   # set admin account
   zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
+  zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
@@ -122,7 +123,6 @@ then
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
-   sleep 2
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
    sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
