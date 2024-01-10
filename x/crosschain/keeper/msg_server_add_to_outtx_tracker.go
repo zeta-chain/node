@@ -29,7 +29,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		return nil, observertypes.ErrSupportedChains
 	}
 
-	// the cctx must exist and be pending
+	// the cctx must exist
 	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
 		ChainID: msg.ChainId,
 		Nonce:   msg.Nonce,
@@ -37,7 +37,9 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
 		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
 	}
+	// tracker submission is only allowed when the cctx is pending
 	if !IsPending(*cctx.CrossChainTx) {
+		// garbage tracker (for any reason) is harmful to outTx observation and should be removed
 		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
 		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
