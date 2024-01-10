@@ -39,8 +39,6 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
-
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 
@@ -48,13 +46,12 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		assert.NoError(t, err)
 
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count = 1
+
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -96,8 +93,6 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
-
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 
@@ -105,13 +100,10 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		assert.NoError(t, err)
 
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count = 1
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -152,17 +144,15 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
+
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -205,17 +195,14 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
+
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -258,17 +245,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
 
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{
 			Count: count,
@@ -308,18 +291,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
-
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -361,18 +339,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
-
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
 		})
@@ -419,17 +392,13 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 			MissedBlocksCounter: 1,
 		})
 
-		chains := k.GetParams(ctx).GetSupportedChains()
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
 		assert.NoError(t, err)
 		count := uint64(0)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  []string{accAddressOfValidator.String()},
-			})
-			count += 1
-		}
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{accAddressOfValidator.String()},
+		})
+		count += 1
 
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator: accAddressOfValidator.String(),
@@ -462,93 +431,4 @@ func TestUpdateObserverList(t *testing.T) {
 		assert.Equal(t, 4, len(list))
 		assert.Equal(t, newObserverAddress, list[3])
 	})
-}
-
-func TestKeeper_UpdateObserverAddress(t *testing.T) {
-	t.Run("update observer address", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
-		oldObserverAddress := sample.AccAddress()
-		newObserverAddress := sample.AccAddress()
-		chains := k.GetParams(ctx).GetSupportedChains()
-		observerList := CreateRandomObserverList(10, oldObserverAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  observerList,
-			})
-		}
-		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
-		observerMappers := k.GetAllObserverMappers(ctx)
-		for _, om := range observerMappers {
-			assert.Equal(t, len(observerList), len(om.ObserverList))
-			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
-		}
-	})
-	t.Run("update observer address long observerList", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
-		oldObserverAddress := sample.AccAddress()
-		newObserverAddress := sample.AccAddress()
-		chains := k.GetParams(ctx).GetSupportedChains()
-		observerList := CreateRandomObserverList(1000, oldObserverAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  observerList,
-			})
-		}
-		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
-		observerMappers := k.GetAllObserverMappers(ctx)
-		for _, om := range observerMappers {
-			assert.Equal(t, len(observerList), len(om.ObserverList))
-			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
-		}
-	})
-	t.Run("update observer address super long observerList", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
-		oldObserverAddress := sample.AccAddress()
-		newObserverAddress := sample.AccAddress()
-		chains := k.GetParams(ctx).GetSupportedChains()
-		observerList := CreateRandomObserverList(100000, oldObserverAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  observerList,
-			})
-		}
-		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
-		observerMappers := k.GetAllObserverMappers(ctx)
-		for _, om := range observerMappers {
-			assert.Equal(t, len(observerList), len(om.ObserverList))
-			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
-		}
-	})
-	t.Run("update observer address short observerList", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
-		oldObserverAddress := sample.AccAddress()
-		newObserverAddress := sample.AccAddress()
-		chains := k.GetParams(ctx).GetSupportedChains()
-		observerList := CreateRandomObserverList(1, oldObserverAddress)
-		for _, chain := range chains {
-			k.SetObserverMapper(ctx, &types.ObserverMapper{
-				ObserverChain: chain,
-				ObserverList:  observerList,
-			})
-		}
-		k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
-		observerMappers := k.GetAllObserverMappers(ctx)
-		for _, om := range observerMappers {
-			assert.Equal(t, len(observerList), len(om.ObserverList))
-			assert.Equal(t, newObserverAddress, om.ObserverList[len(om.ObserverList)-1])
-		}
-	})
-}
-
-func CreateRandomObserverList(maxLen int, observerAddress string) []string {
-	r := rand.New(rand.NewSource(9))
-	list := make([]string, r.Intn(maxLen)+1)
-	for i := range list {
-		list[i] = sample.AccAddress()
-	}
-	list = append(list, observerAddress)
-	return list
 }

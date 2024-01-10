@@ -2,11 +2,11 @@ package runner
 
 import (
 	"math/big"
+	"strings"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -29,7 +30,14 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	for {
 		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{})
 		if err != nil {
-			sm.Logger.Info("cctxClient.TSS error %s", err.Error())
+			// if error contains unknown method GetTssAddress for service, we might be using an older version of the chain for upgrade test
+			// we query the TSS address with legacy method
+			if strings.Contains(err.Error(), "unknown method GetTssAddress for service") {
+				sm.SetTSSAddressesLegacy()
+				return
+			}
+
+			sm.Logger.Info("ObserverClient.TSS error %s", err.Error())
 			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
 			time.Sleep(1 * time.Second)
 			continue
@@ -38,7 +46,8 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	}
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
-	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
+
+	btcTSSAddress, err := common.DecodeBtcAddress(res.Btc, common.BtcRegtestChain().ChainId)
 	if err != nil {
 		panic(err)
 	}
@@ -175,4 +184,30 @@ func (sm *SmokeTestRunner) SetupBTCZRC20() {
 		panic(err)
 	}
 	sm.BTCZRC20 = BTCZRC20
+}
+
+// SetTSSAddressesLegacy set TSS addresses from information queried from ZetaChain using legacy TSS query
+// TODO: remove this function after v12 once upgrade testing is no longer needed with v11
+func (sm *SmokeTestRunner) SetTSSAddressesLegacy() {
+	var err error
+	res := &crosschaintypes.QueryGetTssAddressResponse{}
+	for {
+		res, err = sm.CctxClient.GetTssAddress(sm.Ctx, &crosschaintypes.QueryGetTssAddressRequest{})
+		if err != nil {
+			sm.Logger.Info("cctxClient.TSS (legacy) error %s", err.Error())
+			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+
+	tssAddress := ethcommon.HexToAddress(res.Eth)
+	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
+	if err != nil {
+		panic(err)
+	}
+
+	sm.TSSAddress = tssAddress
+	sm.BTCTSSAddress = btcTSSAddress
 }

@@ -200,24 +200,27 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
 	}
 
-	coreParams, err := b.GetCoreParams()
+	chainParams, err := b.GetChainParams()
 	if err != nil {
 		return err
 	}
 
-	newEVMParams := make(map[int64]*observertypes.CoreParams)
-	var newBTCParams *observertypes.CoreParams
+	newEVMParams := make(map[int64]*observertypes.ChainParams)
+	var newBTCParams *observertypes.ChainParams
 
-	// check and update core params for each chain
-	for _, coreParam := range coreParams {
-		err := config.ValidateCoreParams(coreParam)
+	// check and update chain params for each chain
+	for _, chainParam := range chainParams {
+		err := config.ValidateChainParams(chainParam)
 		if err != nil {
-			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(coreParam.ChainId).ChainName)
+			b.logger.Debug().Err(err).Msgf(
+				"Invalid core params for chain %s",
+				common.GetChainFromChainID(chainParam.ChainId).ChainName,
+			)
 		}
-		if common.IsBitcoinChain(coreParam.ChainId) {
-			newBTCParams = coreParam
+		if common.IsBitcoinChain(chainParam.ChainId) {
+			newBTCParams = chainParam
 		} else {
-			newEVMParams[coreParam.ChainId] = coreParam
+			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
 
@@ -233,7 +236,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetacore")
 	}
-	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	cfg.UpdateChainParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {

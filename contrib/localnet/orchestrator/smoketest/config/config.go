@@ -1,13 +1,11 @@
 package config
 
 import (
+	"errors"
 	"os"
 
 	"gopkg.in/yaml.v2"
 )
-
-// TODO: support pre-deployed addresses for zEVM contracts
-// https://github.com/zeta-chain/node-private/issues/41
 
 // Config contains the configuration for the smoke test
 type Config struct {
@@ -55,6 +53,9 @@ type ZEVM struct {
 	BTCZRC20Addr       string `yaml:"btc_zrc20"`
 	UniswapFactoryAddr string `yaml:"uniswap_factory"`
 	UniswapRouterAddr  string `yaml:"uniswap_router"`
+	ZEVMSwapAppAddr    string `yaml:"zevm_swap_app"`
+	ContextAppAddr     string `yaml:"context_app"`
+	TestDappAddr       string `yaml:"test_dapp"`
 }
 
 func DefaultConfig() Config {
@@ -77,6 +78,10 @@ func DefaultConfig() Config {
 
 // ReadConfig reads the config file
 func ReadConfig(file string) (config Config, err error) {
+	if file == "" {
+		return Config{}, errors.New("file name cannot be empty")
+	}
+
 	// #nosec G304 -- this is a config file
 	b, err := os.ReadFile(file)
 	if err != nil {
@@ -91,6 +96,10 @@ func ReadConfig(file string) (config Config, err error) {
 
 // WriteConfig writes the config file
 func WriteConfig(file string, config Config) error {
+	if file == "" {
+		return errors.New("file name cannot be empty")
+	}
+
 	b, err := yaml.Marshal(config)
 	if err != nil {
 		return err

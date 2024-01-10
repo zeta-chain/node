@@ -4,43 +4,10 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-func (k Keeper) ObserversByChain(goCtx context.Context, req *types.QueryObserversByChainRequest) (*types.QueryObserversByChainResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// TODO move parsing to client
-	// https://github.com/zeta-chain/node/issues/867
-
-	chainName := common.ParseChainName(req.ObservationChain)
-	chain := k.GetParams(ctx).GetChainFromChainName(chainName)
-	if chain == nil {
-		return &types.QueryObserversByChainResponse{}, types.ErrSupportedChains
-	}
-	mapper, found := k.GetObserverMapper(ctx, chain)
-	if !found {
-		return &types.QueryObserversByChainResponse{}, types.ErrObserverNotPresent
-	}
-	return &types.QueryObserversByChainResponse{Observers: mapper.ObserverList}, nil
-}
-
-func (k Keeper) AllObserverMappers(goCtx context.Context, req *types.QueryAllObserverMappersRequest) (*types.QueryAllObserverMappersResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	mappers := k.GetAllObserverMappers(ctx)
-	return &types.QueryAllObserverMappersResponse{ObserverMappers: mappers}, nil
-}
 
 func (k Keeper) ShowObserverCount(goCtx context.Context, req *types.QueryShowObserverCountRequest) (*types.QueryShowObserverCountResponse, error) {
 	if req == nil {
@@ -57,4 +24,20 @@ func (k Keeper) ShowObserverCount(goCtx context.Context, req *types.QueryShowObs
 	return &types.QueryShowObserverCountResponse{
 		LastObserverCount: &lb,
 	}, nil
+}
+
+func (k Keeper) ObserverSet(goCtx context.Context, req *types.QueryObserverSet) (*types.QueryObserverSetResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	observerSet, found := k.GetObserverSet(ctx)
+	if !found {
+		return nil, status.Error(codes.NotFound, "observer set not found")
+	}
+	return &types.QueryObserverSetResponse{
+		Observers: observerSet.ObserverList,
+	}, nil
+
 }

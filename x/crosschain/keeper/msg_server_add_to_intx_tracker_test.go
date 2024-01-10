@@ -78,9 +78,10 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		require.False(t, found)
 	})
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   sample.AccAddress(),
@@ -101,6 +102,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -121,6 +123,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		tx_hash := "string"
 		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
 			Creator:   admin,
@@ -141,15 +144,6 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 
 func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
 	params := zk.ObserverKeeper.GetParams(ctx)
-	params.ObserverParams = append(params.ObserverParams, &observertypes.ObserverParams{
-		Chain: &common.Chain{
-			ChainId:   chainID,
-			ChainName: common.ChainName_goerli_testnet,
-		},
-		BallotThreshold:       sdk.OneDec(),
-		MinObserverDelegation: sdk.OneDec(),
-		IsSupported:           true,
-	})
 	zk.ObserverKeeper.SetParams(ctx, params)
 	zk.ObserverKeeper.SetBlockHeader(ctx, common.BlockHeader{
 		Height:     block.Number().Int64(),
@@ -158,10 +152,13 @@ func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_inde
 		ChainId:    chainID,
 		Header:     common.NewEthereumHeader(headerRLP),
 	})
-	zk.ObserverKeeper.SetCoreParams(ctx, observertypes.CoreParamsList{CoreParams: []*observertypes.CoreParams{
+	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{ChainParams: []*observertypes.ChainParams{
 		{
 			ChainId:                  chainID,
 			ConnectorContractAddress: block.Transactions()[tx_index].To().Hex(),
+			BallotThreshold:          sdk.OneDec(),
+			MinObserverDelegation:    sdk.OneDec(),
+			IsSupported:              true,
 		},
 	}})
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{

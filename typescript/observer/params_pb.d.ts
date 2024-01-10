@@ -23,33 +23,38 @@ export declare enum Policy_Type {
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.CoreParamsList
+ * @generated from message zetachain.zetacore.observer.ChainParamsList
  */
-export declare class CoreParamsList extends Message<CoreParamsList> {
+export declare class ChainParamsList extends Message<ChainParamsList> {
   /**
-   * @generated from field: repeated zetachain.zetacore.observer.CoreParams core_params = 1;
+   * @generated from field: repeated zetachain.zetacore.observer.ChainParams chain_params = 1;
    */
-  coreParams: CoreParams[];
+  chainParams: ChainParams[];
 
-  constructor(data?: PartialMessage<CoreParamsList>);
+  constructor(data?: PartialMessage<ChainParamsList>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.CoreParamsList";
+  static readonly typeName = "zetachain.zetacore.observer.ChainParamsList";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CoreParamsList;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ChainParamsList;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CoreParamsList;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ChainParamsList;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CoreParamsList;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ChainParamsList;
 
-  static equals(a: CoreParamsList | PlainMessage<CoreParamsList> | undefined, b: CoreParamsList | PlainMessage<CoreParamsList> | undefined): boolean;
+  static equals(a: ChainParamsList | PlainMessage<ChainParamsList> | undefined, b: ChainParamsList | PlainMessage<ChainParamsList> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.observer.CoreParams
+ * @generated from message zetachain.zetacore.observer.ChainParams
  */
-export declare class CoreParams extends Message<CoreParams> {
+export declare class ChainParams extends Message<ChainParams> {
+  /**
+   * @generated from field: int64 chain_id = 11;
+   */
+  chainId: bigint;
+
   /**
    * @generated from field: uint64 confirmation_count = 1;
    */
@@ -91,11 +96,6 @@ export declare class CoreParams extends Message<CoreParams> {
   erc20CustodyContractAddress: string;
 
   /**
-   * @generated from field: int64 chain_id = 11;
-   */
-  chainId: bigint;
-
-  /**
    * @generated from field: int64 outbound_tx_schedule_interval = 12;
    */
   outboundTxScheduleInterval: bigint;
@@ -105,22 +105,39 @@ export declare class CoreParams extends Message<CoreParams> {
    */
   outboundTxScheduleLookahead: bigint;
 
-  constructor(data?: PartialMessage<CoreParams>);
+  /**
+   * @generated from field: string ballot_threshold = 14;
+   */
+  ballotThreshold: string;
+
+  /**
+   * @generated from field: string min_observer_delegation = 15;
+   */
+  minObserverDelegation: string;
+
+  /**
+   * @generated from field: bool is_supported = 16;
+   */
+  isSupported: boolean;
+
+  constructor(data?: PartialMessage<ChainParams>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.observer.CoreParams";
+  static readonly typeName = "zetachain.zetacore.observer.ChainParams";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CoreParams;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ChainParams;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CoreParams;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ChainParams;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CoreParams;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ChainParams;
 
-  static equals(a: CoreParams | PlainMessage<CoreParams> | undefined, b: CoreParams | PlainMessage<CoreParams> | undefined): boolean;
+  static equals(a: ChainParams | PlainMessage<ChainParams> | undefined, b: ChainParams | PlainMessage<ChainParams> | undefined): boolean;
 }
 
 /**
+ * Deprecated: Use ChainParamsList
+ *
  * @generated from message zetachain.zetacore.observer.ObserverParams
  */
 export declare class ObserverParams extends Message<ObserverParams> {
@@ -195,6 +212,8 @@ export declare class Admin_Policy extends Message<Admin_Policy> {
  */
 export declare class Params extends Message<Params> {
   /**
+   * Deprecated: Use ChainParamsList
+   *
    * @generated from field: repeated zetachain.zetacore.observer.ObserverParams observer_params = 1;
    */
   observerParams: ObserverParams[];
