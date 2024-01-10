@@ -95,10 +95,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	tss := types.TSS{}
-	genStateTss := false
 	if genState.Tss != nil {
 		tss = *genState.Tss
-		genStateTss = true
 		k.SetTSS(ctx, tss)
 	}
 
@@ -109,7 +107,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	} else {
 		for _, chain := range common.DefaultChainsList() {
-			if genStateTss {
+			if genState.Tss != nil {
 				k.SetPendingNonces(ctx, types.PendingNonces{
 					NonceLow:  0,
 					NonceHigh: 0,
@@ -119,8 +117,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			}
 		}
 	}
-
-	// Get all chain nonces
 
 	for _, elem := range genState.TssHistory {
 		k.SetTSSHistory(ctx, elem)

@@ -237,19 +237,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				_, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
-			s.Require().NoError(s.network.WaitForNBlocks(2))
 
-			// Vote the tss
-			//for _, val := range s.network.Validators {
-			//	out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetAccountCmd(), []string{val.Address.String(), "--output", "json"})
-			//	s.Require().NoError(err)
-			//
-			//	var account authtypes.AccountI
-			//	s.NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
-			//	signedTx := BuildSignedTssVote(s.T(), val, s.cfg.BondDenom, account)
-			//	out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
-			//	s.Require().NoError(err)
-			//}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdListPendingNonces(), []string{"--output", "json"})
 			s.Require().NoError(err)
