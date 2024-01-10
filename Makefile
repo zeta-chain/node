@@ -240,12 +240,25 @@ stateful-upgrade:
 
 stateful-upgrade-source:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v10.1.7 -t zetanode -f ./Dockerfile-versioned-source .
+	$(DOCKER) build --build-arg old_version=v11.0.0-patch-core-params -t zetanode -f ./Dockerfile-versioned-source .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
 stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
+
+###############################################################################
+###                              Monitoring                                 ###
+###############################################################################
+
+start-monitoring:
+	@echo "Starting monitoring services"
+	cd contrib/localnet/grafana/ && ./get-tss-address.sh
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
+
+stop-monitoring:
+	@echo "Stopping monitoring services"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml down
 
 ###############################################################################
 ###                                GoReleaser  		                        ###
