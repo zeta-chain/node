@@ -33,11 +33,13 @@ CURRENT_HEIGHT=0
 
 while [[ $CURRENT_HEIGHT -lt $UPGRADE_HEIGHT ]]
 do
-    CURRENT_HEIGHT=$(curl zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
+    CURRENT_HEIGHT=$(curl -s zetacore0:26657/status | jq '.result.sync_info.latest_block_height' | tr -d '"')
+    echo current height is "$CURRENT_HEIGHT", waiting for "$UPGRADE_HEIGHT"
     sleep 5
 done
 
-echo current height is "$CURRENT_HEIGHT", restarting zetaclients
+echo upgrade height reached, restarting zetaclients
+
 for NODE in "${CLIENT_LIST[@]}"; do
     ssh -o "StrictHostKeyChecking no" "$NODE" -i ~/.ssh/localtest.pem killall zetaclientd
     ssh -o "StrictHostKeyChecking no" "$NODE" -i ~/.ssh/localtest.pem "$GOPATH/bin/new/zetaclientd start < /dev/null > $HOME/zetaclient.log 2>&1 &"

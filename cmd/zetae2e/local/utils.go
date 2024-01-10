@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,11 @@ func getConfig(cmd *cobra.Command) (config.Config, error) {
 	// use default config if no config file is specified
 	if configFile == "" {
 		return config.DefaultConfig(), nil
+	}
+
+	configFile, err = filepath.Abs(configFile)
+	if err != nil {
+		return config.Config{}, err
 	}
 
 	return config.ReadConfig(configFile)
@@ -77,7 +83,7 @@ func waitKeygenHeight(
 	cctxClient crosschaintypes.QueryClient,
 	logger *runner.Logger,
 ) {
-	// wait for keygen to be completed. ~ height 30
+	// wait for keygen to be completed
 	keygenHeight := int64(60)
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
 	for {
