@@ -398,7 +398,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 	client := &BitcoinChainClient{
 		Tss:               tss,
 		Mu:                &sync.Mutex{},
-		includedTxResults: make(map[string]btcjson.GetTransactionResult),
+		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 	}
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
@@ -413,7 +413,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
-	ob.includedTxResults[outTxID] = btcjson.GetTransactionResult{TxID: txid}
+	ob.includedTxResults[outTxID] = &btcjson.GetTransactionResult{TxID: txid}
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
