@@ -18,7 +18,7 @@ jobs:
 
       - name: Install buf
         run: |
-          curl -sSL https://github.com/bufbuild/buf/releases/download/v0.43.2/buf-Linux-x86_64 -o /usr/local/bin/buf
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-Linux-x86_64 -o /usr/local/bin/buf
           chmod +x /usr/local/bin/buf
 
       - name: Generate
