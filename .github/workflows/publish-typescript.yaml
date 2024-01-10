@@ -24,6 +24,7 @@ jobs:
       - name: Generate
         run: |
           make typescript 
+          ls -lah typescript/
 
       - name: Set Version
         working-directory: typescript
