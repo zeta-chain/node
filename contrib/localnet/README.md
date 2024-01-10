@@ -76,6 +76,30 @@ which does the following docker compose command:
 # in zeta-node/contrib/localnet/orchestrator
 $ docker compose down --remove-orphans
 ```
+### Run monitoring setup
+Before starting the monitoring setup, make sure the Zetacore API is up at http://localhost:1317.
+You can also add any additional ETH addresses to monitor in zeta-node/contrib/localnet/grafana/addresses.txt file
+```bash
+# in zeta-node/
+make start-monitoring
+```
+which does the following docker compose command:
+```bash
+# in zeta-node/contrib/localnet/
+$ docker compose -f docker-compose-monitoring.yml up -d
+```
+### Grafana credentials and dashboards
+The Grafana default credentials are admin:admin. The dashboards are located at http://localhost:3000.
+### Stop monitoring setup
+```bash
+# in zeta-node/
+make stop-monitoring
+```
+which does the following docker compose command:
+```bash
+# in zeta-node/contrib/localnet/
+$ docker compose -f docker-compose-monitoring.yml down --remove-orphans
+```
 
 ## Useful data
 

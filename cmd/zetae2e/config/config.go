@@ -74,3 +74,24 @@ func RunnerFromConfig(
 
 	return sm, err
 }
+
+// ExportContractsFromRunner export contracts from the runner to config using a source config
+func ExportContractsFromRunner(sm *runner.SmokeTestRunner, conf config.Config) config.Config {
+	// copy contracts from deployer runner
+	conf.Contracts.EVM.ZetaEthAddress = sm.ZetaEthAddr.Hex()
+	conf.Contracts.EVM.ConnectorEthAddr = sm.ConnectorEthAddr.Hex()
+	conf.Contracts.EVM.CustodyAddr = sm.ERC20CustodyAddr.Hex()
+	conf.Contracts.EVM.USDT = sm.USDTERC20Addr.Hex()
+
+	conf.Contracts.ZEVM.SystemContractAddr = sm.SystemContractAddr.Hex()
+	conf.Contracts.ZEVM.ETHZRC20Addr = sm.ETHZRC20Addr.Hex()
+	conf.Contracts.ZEVM.USDTZRC20Addr = sm.USDTZRC20Addr.Hex()
+	conf.Contracts.ZEVM.BTCZRC20Addr = sm.BTCZRC20Addr.Hex()
+	conf.Contracts.ZEVM.UniswapFactoryAddr = sm.UniswapV2FactoryAddr.Hex()
+	conf.Contracts.ZEVM.UniswapRouterAddr = sm.UniswapV2RouterAddr.Hex()
+	conf.Contracts.ZEVM.ZEVMSwapAppAddr = sm.ZEVMSwapAppAddr.Hex()
+	conf.Contracts.ZEVM.ContextAppAddr = sm.ContextAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = sm.TestDAppAddr.Hex()
+
+	return conf
+}
