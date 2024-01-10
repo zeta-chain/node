@@ -4,10 +4,8 @@ DIR="typescript"
 
 rm -rf $DIR
 
-echo "Generate using buf."
 (cd proto && buf generate --template buf.ts.yaml)
 
-echo "create package json $DIR/package.json"
 cat <<EOL > $DIR/package.json
 {
   "name": "@zetachain/node-types",
@@ -19,7 +17,6 @@ cat <<EOL > $DIR/package.json
   "license": "MIT"
 }
 EOL
-cat $DIR/package.json
 
 # Loop through all directories recursively
 find "$DIR" -type d | while read -r dir; do

@@ -24,23 +24,15 @@ jobs:
       - name: Generate
         run: |
           make typescript 
-          ls -lah typescript/
 
       - name: Set Version
         working-directory: typescript
         run: |
           version=$(cat ../app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
           npm version ${version}
-          #sed -i 's/@zetachain\/blockchain-types/@zetachain\/node-types/' package.json
-          cat package.json
-          
 
-#      - name: Install dependencies and build 🔧
-#        working-directory: typescript
-#        run: npm ci && npm run build
-#
-#      - name: Publish package on NPM 📦
-#        run: npm publish
-#        working-directory: typescript
-#        env:
-#          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish package on NPM 📦
+        run: npm publish
+        working-directory: typescript
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
