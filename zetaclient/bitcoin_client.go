@@ -57,9 +57,9 @@ type BitcoinChainClient struct {
 
 	Mu                *sync.Mutex // lock for all the maps, utxos and core params
 	pendingNonce      uint64
-	includedTxHashes  map[string]uint64                       // key: tx hash
-	includedTxResults map[string]btcjson.GetTransactionResult // key: chain-tss-nonce
-	broadcastedTx     map[string]string                       // key: chain-tss-nonce, value: outTx hash
+	includedTxHashes  map[string]uint64                        // key: tx hash
+	includedTxResults map[string]*btcjson.GetTransactionResult // key: chain-tss-nonce
+	broadcastedTx     map[string]string                        // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
 	params            observertypes.ChainParams
 
@@ -148,7 +148,7 @@ func NewBitcoinClient(
 	ob.zetaClient = bridge
 	ob.Tss = tss
 	ob.includedTxHashes = make(map[string]uint64)
-	ob.includedTxResults = make(map[string]btcjson.GetTransactionResult)
+	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
 	ob.params = btcCfg.ChainParams
 
@@ -442,24 +442,23 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		}
 
 		// Try including this outTx broadcasted by myself
-		inMempool, err := ob.checkNSaveIncludedTx(txnHash, params)
-		if err != nil {
-			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkNSaveIncludedTx failed")
+		txResult, inMempool := ob.checkIncludedTx(txnHash, params)
+		if txResult == nil {
+			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkIncludedTx failed")
 			return false, false, err
-		}
-		if inMempool { // to avoid unnecessary Tss keysign
+		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
+		} else { // included
+			ob.setIncludedTx(nonce, txResult)
 		}
 
 		// Get tx result again in case it is just included
-		ob.Mu.Lock()
-		res, included = ob.includedTxResults[outTxID]
-		ob.Mu.Unlock()
-		if !included {
+		res = ob.getIncludedTx(nonce)
+		if res == nil {
 			return false, false, nil
 		}
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: checkNSaveIncludedTx succeeded for outTx %s", outTxID)
+		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: setIncludedTx succeeded for outTx %s", outTxID)
 	}
 
 	// It's safe to use cctx's amount to post confirmation because it has already been verified in observeOutTx()
@@ -830,14 +829,11 @@ func (ob *BitcoinChainClient) refreshPendingNonce() {
 }
 
 func (ob *BitcoinChainClient) getOutTxidByNonce(nonce uint64, test bool) (string, error) {
-	ob.Mu.Lock()
-	res, included := ob.includedTxResults[ob.GetTxID(nonce)]
-	ob.Mu.Unlock()
 
 	// There are 2 types of txids an observer can trust
 	// 1. The ones had been verified and saved by observer self.
 	// 2. The ones had been finalized in zetacore based on majority vote.
-	if included {
+	if res := ob.getIncludedTx(nonce); res != nil {
 		return res.TxID, nil
 	}
 	if !test { // if not unit test, get cctx from zetacore
@@ -1020,12 +1016,27 @@ func (ob *BitcoinChainClient) observeOutTx() {
 				if len(tracker.HashList) > 1 {
 					ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx: oops, outTxID %s got multiple (%d) outTx hashes", outTxID, len(tracker.HashList))
 				}
-				// verify outTx hashes
+				// iterate over all txHashes to find the truly included one.
+				// we do it this (inefficient) way because we don't rely on the first one as it may be a false positive (for unknown reason).
+				txCount := 0
+				var txResult *btcjson.GetTransactionResult
 				for _, txHash := range tracker.HashList {
-					_, err := ob.checkNSaveIncludedTx(txHash.TxHash, params)
-					if err != nil {
-						ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: checkNSaveIncludedTx failed")
+					result, inMempool := ob.checkIncludedTx(txHash.TxHash, params)
+					if result != nil && !inMempool { // included
+						txCount++
+						txResult = result
+						ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: included outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, tracker.Nonce)
+						if txCount > 1 {
+							ob.logger.ObserveOutTx.Error().Msgf(
+								"observeOutTx: checkIncludedTx passed, txCount %d chain %d nonce %d result %v", txCount, ob.chain.ChainId, tracker.Nonce, result)
+						}
 					}
+				}
+				if txCount == 1 { // should be only one txHash included for each nonce
+					ob.setIncludedTx(tracker.Nonce, txResult)
+				} else if txCount > 1 {
+					ob.removeIncludedTx(tracker.Nonce) // we can't tell which txHash is true, so we remove all (if any) to be safe
+					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: included multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, tracker.Nonce)
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.ObserveOutTx)
@@ -1036,50 +1047,69 @@ func (ob *BitcoinChainClient) observeOutTx() {
 	}
 }
 
-// checkNSaveIncludedTx either includes a new outTx or update an existing outTx result.
-// Returns inMempool, error
-func (ob *BitcoinChainClient) checkNSaveIncludedTx(txHash string, params types.OutboundTxParams) (bool, error) {
+// checkIncludedTx checks if a txHash is included and returns (txResult, inMempool)
+// Note: if txResult is nil, then inMempool flag should be ignored.
+func (ob *BitcoinChainClient) checkIncludedTx(txHash string, params types.OutboundTxParams) (*btcjson.GetTransactionResult, bool) {
 	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
 	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
 	if err != nil {
-		return false, errors.Wrapf(err, "checkNSaveIncludedTx: error GetTxResultByHash: %s", txHash)
+		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
+		return nil, false
+	}
+	if txHash != getTxResult.TxID { // just in case, we'll use getTxResult.TxID later
+		ob.logger.ObserveOutTx.Error().Msgf("checkIncludedTx: inconsistent txHash %s and getTxResult.TxID %s", txHash, getTxResult.TxID)
+		return nil, false
 	}
 	if getTxResult.Confirmations >= 0 { // check included tx only
 		err = ob.checkTssOutTxResult(hash, getTxResult, params, params.OutboundTxTssNonce)
 		if err != nil {
-			return false, errors.Wrapf(err, "checkNSaveIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
+			ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
+			return nil, false
 		}
-
-		ob.Mu.Lock()
-		defer ob.Mu.Unlock()
-		nonce, foundHash := ob.includedTxHashes[txHash]
-		res, foundRes := ob.includedTxResults[outTxID]
-
-		// include new outTx and enforce rigid 1-to-1 mapping: outTxID(nonce) <===> txHash
-		if !foundHash && !foundRes {
-			ob.includedTxHashes[txHash] = params.OutboundTxTssNonce
-			ob.includedTxResults[outTxID] = *getTxResult
-			if params.OutboundTxTssNonce >= ob.pendingNonce { // try increasing pending nonce on every newly included outTx
-				ob.pendingNonce = params.OutboundTxTssNonce + 1
-			}
-			ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: included new bitcoin outTx %s outTxID %s pending nonce %d", txHash, outTxID, ob.pendingNonce)
-		}
-		// update saved tx result as confirmations may increase
-		if foundHash && foundRes {
-			ob.includedTxResults[outTxID] = *getTxResult
-			if getTxResult.Confirmations > res.Confirmations {
-				ob.logger.ObserveOutTx.Info().Msgf("checkNSaveIncludedTx: bitcoin outTx %s got confirmations %d", txHash, getTxResult.Confirmations)
-			}
-		}
-		if !foundHash && foundRes { // be alert for duplicate payment!!! As we got a new hash paying same cctx. It might happen (e.g. majority of signers get crupted)
-			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: duplicate payment by bitcoin outTx %s outTxID %s, prior result %v, current result %v", txHash, outTxID, res, *getTxResult)
-		}
-		if foundHash && !foundRes {
-			ob.logger.ObserveOutTx.Error().Msgf("checkNSaveIncludedTx: unreachable code path! outTx %s outTxID %s, prior nonce %d, current nonce %d", txHash, outTxID, nonce, params.OutboundTxTssNonce)
-		}
-		return false, nil
+		return getTxResult, false // included
 	}
-	return true, nil // in mempool
+	return getTxResult, true // in mempool
+}
+
+// setIncludedTx saves included tx result in memory
+func (ob *BitcoinChainClient) setIncludedTx(nonce uint64, getTxResult *btcjson.GetTransactionResult) {
+	txHash := getTxResult.TxID
+	outTxID := ob.GetTxID(nonce)
+
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	res, found := ob.includedTxResults[outTxID]
+
+	if !found { // not found.
+		ob.includedTxResults[outTxID] = getTxResult // include new outTx and enforce rigid 1-to-1 mapping: nonce <===> txHash
+		if nonce >= ob.pendingNonce {               // try increasing pending nonce on every newly included outTx
+			ob.pendingNonce = nonce + 1
+		}
+		ob.logger.ObserveOutTx.Info().Msgf("setIncludedTx: included new bitcoin outTx %s outTxID %s pending nonce %d", txHash, outTxID, ob.pendingNonce)
+	} else if txHash == res.TxID { // found same hash.
+		ob.includedTxResults[outTxID] = getTxResult // update tx result as confirmations may increase
+		if getTxResult.Confirmations > res.Confirmations {
+			ob.logger.ObserveOutTx.Info().Msgf("setIncludedTx: bitcoin outTx %s got confirmations %d", txHash, getTxResult.Confirmations)
+		}
+	} else { // found other hash.
+		// be alert for duplicate payment!!! As we got a new hash paying same cctx (for whatever reason).
+		delete(ob.includedTxResults, outTxID) // we can't tell which txHash is true, so we remove all to be safe
+		ob.logger.ObserveOutTx.Error().Msgf("setIncludedTx: duplicate payment by bitcoin outTx %s outTxID %s, prior outTx %s", txHash, outTxID, res.TxID)
+	}
+}
+
+// getIncludedTx gets the receipt and transaction from memory
+func (ob *BitcoinChainClient) getIncludedTx(nonce uint64) *btcjson.GetTransactionResult {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	return ob.includedTxResults[ob.GetTxID(nonce)]
+}
+
+// removeIncludedTx removes included tx's result from memory
+func (ob *BitcoinChainClient) removeIncludedTx(nonce uint64) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	delete(ob.includedTxResults, ob.GetTxID(nonce))
 }
 
 // Basic TSS outTX checks:

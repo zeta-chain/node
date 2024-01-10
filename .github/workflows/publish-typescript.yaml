@@ -16,16 +16,20 @@ jobs:
           node-version: '20.x'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Install buf
+        run: |
+          curl -sSL https://github.com/bufbuild/buf/releases/download/v1.28.1/buf-Linux-x86_64 -o /usr/local/bin/buf
+          chmod +x /usr/local/bin/buf
+
+      - name: Generate
+        run: |
+          make typescript 
+
       - name: Set Version
         working-directory: typescript
         run: |
-          version=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
+          version=$(cat ../app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
           npm version ${version}
-          sed -i 's/@zetachain\/blockchain-types/@zetachain\/node-types/' package.json
-
-      - name: Install dependencies and build 🔧
-        working-directory: typescript
-        run: npm ci && npm run build
 
       - name: Publish package on NPM 📦
         run: npm publish
