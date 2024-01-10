@@ -248,6 +248,19 @@ stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
 
 ###############################################################################
+###                              Monitoring                                 ###
+###############################################################################
+
+start-monitoring:
+	@echo "Starting monitoring services"
+	cd contrib/localnet/grafana/ && ./get-tss-address.sh
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
+
+stop-monitoring:
+	@echo "Stopping monitoring services"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml down
+
+###############################################################################
 ###                                GoReleaser  		                        ###
 ###############################################################################
 
