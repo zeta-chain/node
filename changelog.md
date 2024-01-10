@@ -20,6 +20,7 @@
 
 ### Fixes
 
+* [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
 * [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
 * fix Code4rena issue - zetaclients potentially miss inTx when PostSend (or other RPC) fails
