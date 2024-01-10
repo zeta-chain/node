@@ -296,11 +296,11 @@ func (ob *EVMChainClient) Stop() {
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
 func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
-	if !ob.isTxConfirmed(nonce) {
-		return false, false, nil
-	}
 	params := ob.GetChainParams()
 	receipt, transaction := ob.GetTxNReceipt(nonce)
+	if receipt == nil || transaction == nil { // not confirmed yet
+		return false, false, nil
+	}
 
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
@@ -543,13 +543,6 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 	return false, false, nil
 }
 
-// The lowest nonce we observe outTx for each chain
-var lowestOutTxNonceToObserve = map[int64]uint64{
-	5:     113000, // Goerli
-	97:    102600, // BSC testnet
-	80001: 154500, // Mumbai
-}
-
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
 func (ob *EVMChainClient) observeOutTx() {
@@ -558,7 +551,7 @@ func (ob *EVMChainClient) observeOutTx() {
 	if err != nil || timeoutNonce <= 0 {
 		timeoutNonce = 100 * 3 // process up to 100 hashes
 	}
-	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx using timeoutNonce %d seconds", timeoutNonce)
+	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: using timeoutNonce %d seconds", timeoutNonce)
 
 	ticker, err := NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
@@ -577,27 +570,36 @@ func (ob *EVMChainClient) observeOutTx() {
 			//FIXME: remove this timeout here to ensure that all trackers are queried
 			outTimeout := time.After(time.Duration(timeoutNonce) * time.Second)
 		TRACKERLOOP:
-			// Skip old gabbage trackers as we spent too much time on querying them
 			for _, tracker := range trackers {
 				nonceInt := tracker.Nonce
-				if nonceInt < lowestOutTxNonceToObserve[ob.chain.ChainId] {
-					continue
-				}
 				if ob.isTxConfirmed(nonceInt) { // Go to next tracker if this one already has a confirmed tx
 					continue
 				}
+				txCount := 0
+				var receipt *ethtypes.Receipt
+				var transaction *ethtypes.Transaction
 				for _, txHash := range tracker.HashList {
 					select {
 					case <-outTimeout:
-						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
+						ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx: timeout on chain %d nonce %d", ob.chain.ChainId, nonceInt)
 						break TRACKERLOOP
 					default:
-						if ob.confirmTxByHash(txHash.TxHash, nonceInt) {
-							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
-							break
+						if recpt, tx, ok := ob.checkConfirmedTx(txHash.TxHash, nonceInt); ok {
+							txCount++
+							receipt = recpt
+							transaction = tx
+							ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: confirmed outTx %s for chain %d nonce %d", txHash.TxHash, ob.chain.ChainId, nonceInt)
+							if txCount > 1 {
+								ob.logger.ObserveOutTx.Error().Msgf(
+									"observeOutTx: checkConfirmedTx passed, txCount %d chain %d nonce %d receipt %v transaction %v", txCount, ob.chain.ChainId, nonceInt, receipt, transaction)
+							}
 						}
-						ob.logger.ObserveOutTx.Debug().Msgf("observeOutTx outTx %s for chain %d nonce %d not confirmed yet", txHash.TxHash, ob.chain.ChainId, nonceInt)
 					}
+				}
+				if txCount == 1 { // should be only one txHash confirmed for each nonce.
+					ob.SetTxNReceipt(nonceInt, receipt, transaction)
+				} else if txCount > 1 { // should not happen. We can't tell which txHash is true. It might happen (e.g. glitchy/hacked endpoint)
+					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: confirmed multiple (%d) outTx for chain %d nonce %d", txCount, ob.chain.ChainId, nonceInt)
 				}
 			}
 			ticker.UpdateInterval(ob.GetChainParams().OutTxTicker, ob.logger.ObserveOutTx)
@@ -611,47 +613,45 @@ func (ob *EVMChainClient) observeOutTx() {
 // SetPendingTx sets the pending transaction in memory
 func (ob *EVMChainClient) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
 	ob.outTxPendingTransactions[ob.GetTxID(nonce)] = transaction
-	ob.Mu.Unlock()
 }
 
 // GetPendingTx gets the pending transaction from memory
 func (ob *EVMChainClient) GetPendingTx(nonce uint64) *ethtypes.Transaction {
 	ob.Mu.Lock()
-	transaction := ob.outTxPendingTransactions[ob.GetTxID(nonce)]
-	ob.Mu.Unlock()
-	return transaction
+	defer ob.Mu.Unlock()
+	return ob.outTxPendingTransactions[ob.GetTxID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
 func (ob *EVMChainClient) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
 	delete(ob.outTxPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
 	ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] = receipt
 	ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] = transaction
-	ob.Mu.Unlock()
 }
 
-// getTxNReceipt gets the receipt and transaction from memory
+// GetTxNReceipt gets the receipt and transaction from memory
 func (ob *EVMChainClient) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
 	receipt := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
 	transaction := ob.outTXConfirmedTransactions[ob.GetTxID(nonce)]
-	ob.Mu.Unlock()
 	return receipt, transaction
 }
 
 // isTxConfirmed returns true if there is a confirmed tx for 'nonce'
 func (ob *EVMChainClient) isTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
-	confirmed := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
-	ob.Mu.Unlock()
-	return confirmed
+	defer ob.Mu.Unlock()
+	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
 }
 
-// confirmTxByHash checks if a txHash is confirmed and saves transaction and receipt in memory
-// returns true if confirmed or false otherwise
-func (ob *EVMChainClient) confirmTxByHash(txHash string, nonce uint64) bool {
+// checkConfirmedTx checks if a txHash is confirmed
+// returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
+func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -659,15 +659,34 @@ func (ob *EVMChainClient) confirmTxByHash(txHash string, nonce uint64) bool {
 	transaction, isPending, err := ob.evmClient.TransactionByHash(ctxt, ethcommon.HexToHash(txHash))
 	if err != nil {
 		log.Error().Err(err).Msgf("confirmTxByHash: TransactionByHash error, txHash %s nonce %d", txHash, nonce)
-		return false
+		return nil, nil, false
 	}
 	if transaction == nil { // should not happen
 		log.Error().Msgf("confirmTxByHash: transaction is nil for txHash %s nonce %d", txHash, nonce)
-		return false
+		return nil, nil, false
 	}
-	if isPending { // save pending transaction
+
+	// check tx sender and nonce
+	signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+	from, err := signer.Sender(transaction)
+	if err != nil {
+		log.Error().Err(err).Msgf("confirmTxByHash: local recovery of sender address failed for txHash %s chain %d", transaction.Hash().Hex(), ob.chain.ChainId)
+		return nil, nil, false
+	}
+	if from != ob.Tss.EVMAddress() { // must be TSS address
+		log.Error().Msgf("confirmTxByHash: sender %s for txHash %s chain %d is not TSS address %s",
+			from.Hex(), transaction.Hash().Hex(), ob.chain.ChainId, ob.Tss.EVMAddress().Hex())
+		return nil, nil, false
+	}
+	if transaction.Nonce() != nonce { // must match cctx nonce
+		log.Error().Msgf("confirmTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
+		return nil, nil, false
+	}
+
+	// save pending transaction
+	if isPending {
 		ob.SetPendingTx(nonce, transaction)
-		return false
+		return nil, nil, false
 	}
 
 	// query receipt
@@ -676,33 +695,26 @@ func (ob *EVMChainClient) confirmTxByHash(txHash string, nonce uint64) bool {
 		if err != ethereum.NotFound {
 			log.Warn().Err(err).Msgf("confirmTxByHash: TransactionReceipt error, txHash %s nonce %d", txHash, nonce)
 		}
-		return false
+		return nil, nil, false
 	}
 	if receipt == nil { // should not happen
 		log.Error().Msgf("confirmTxByHash: receipt is nil for txHash %s nonce %d", txHash, nonce)
-		return false
+		return nil, nil, false
 	}
 
-	// check nonce and confirmations
-	if transaction.Nonce() != nonce {
-		log.Error().Msgf("confirmTxByHash: txHash %s nonce mismatch: wanted %d, got tx nonce %d", txHash, nonce, transaction.Nonce())
-		return false
-	}
+	// check confirmations
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
 	if confHeight >= math.MaxInt64 {
 		log.Error().Msgf("confirmTxByHash: confHeight is too large for txHash %s nonce %d", txHash, nonce)
-		return false
+		return nil, nil, false
 	}
 	if confHeight > ob.GetLastBlockHeight() {
 		log.Info().Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
 			txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
-		return false
+		return nil, nil, false
 	}
 
-	// confirmed, save receipt and transaction
-	ob.SetTxNReceipt(nonce, receipt, transaction)
-
-	return true
+	return receipt, transaction, true
 }
 
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
