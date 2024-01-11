@@ -19,9 +19,9 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	txCreatePair, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
+	_, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.BTCZRC20Addr)
 	if err != nil {
-		panic(err)
+		sm.Logger.Print("ℹ️create pair error")
 	}
 	txUSDTApprove, err := sm.USDTZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
@@ -42,9 +42,6 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txCreatePair, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
-		panic("create pair failed")
-	}
 	if receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txUSDTApprove, sm.Logger, sm.ReceiptTimeout); receipt.Status != 1 {
 		panic("usdt approve failed")
 	}

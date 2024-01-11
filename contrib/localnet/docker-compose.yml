@@ -6,7 +6,6 @@ networks:
       config:
         - subnet: 172.20.0.0/24
 
-
 services:
   rosetta:
     image: zetanode:latest

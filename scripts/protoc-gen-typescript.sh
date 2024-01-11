@@ -8,7 +8,7 @@ rm -rf $DIR
 
 cat <<EOL > $DIR/package.json
 {
-  "name": "@zetachain/blockchain-types",
+  "name": "@zetachain/node-types",
   "version": "0.0.0-set-on-publish",
   "description": "",
   "main": "",
