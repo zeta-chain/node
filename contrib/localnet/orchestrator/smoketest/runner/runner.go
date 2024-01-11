@@ -306,3 +306,27 @@ func (sm *SmokeTestRunner) Lock() {
 func (sm *SmokeTestRunner) Unlock() {
 	sm.mutex.Unlock()
 }
+
+// PrintContractAddresses prints the addresses of the contracts
+// the printed contracts are grouped in a zevm and evm section
+// there is a padding used to print the addresses at the same position
+func (sm *SmokeTestRunner) PrintContractAddresses() {
+	// zevm contracts
+	sm.Logger.Print(" --- 📜zEVM contracts ---")
+	sm.Logger.Print("SystemContract: %s", sm.SystemContractAddr.Hex())
+	sm.Logger.Print("ETHZRC20:       %s", sm.ETHZRC20Addr.Hex())
+	sm.Logger.Print("USDTZRC20:      %s", sm.USDTZRC20Addr.Hex())
+	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
+	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
+	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
+	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())
+	sm.Logger.Print("ContextApp:     %s", sm.ContextAppAddr.Hex())
+	sm.Logger.Print("TestDapp:       %s", sm.TestDAppAddr.Hex())
+
+	// evm contracts
+	sm.Logger.Print(" --- 📜EVM contracts ---")
+	sm.Logger.Print("ZetaEth:        %s", sm.ZetaEthAddr.Hex())
+	sm.Logger.Print("ConnectorEth:   %s", sm.ConnectorEthAddr.Hex())
+	sm.Logger.Print("ERC20Custody:   %s", sm.ERC20CustodyAddr.Hex())
+	sm.Logger.Print("USDTERC20:      %s", sm.USDTERC20Addr.Hex())
+}

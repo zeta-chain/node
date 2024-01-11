@@ -170,6 +170,32 @@ func (t *DynamicTicker) Stop() {
 	t.impl.Stop()
 }
 
+// CheckEvmTxLog checks the basics of an EVM tx log
+func (ob *EVMChainClient) CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
+	if vLog.Removed {
+		return fmt.Errorf("log is removed, chain reorg?")
+	}
+	if vLog.Address != wantAddress {
+		return fmt.Errorf("log emitter address mismatch: want %s got %s", wantAddress.Hex(), vLog.Address.Hex())
+	}
+	if vLog.TxHash.Hex() == "" {
+		return fmt.Errorf("log tx hash is empty: %d %s", vLog.BlockNumber, vLog.TxHash.Hex())
+	}
+	if wantHash != "" && vLog.TxHash.Hex() != wantHash {
+		return fmt.Errorf("log tx hash mismatch: want %s got %s", wantHash, vLog.TxHash.Hex())
+	}
+	if len(vLog.Topics) != wantTopics {
+		return fmt.Errorf("number of topics mismatch: want %d got %d", wantTopics, len(vLog.Topics))
+	}
+	return nil
+}
+
+// HasEnoughConfirmations checks if the given receipt has enough confirmations
+func (ob *EVMChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
+	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
+	return lastHeight >= confHeight
+}
+
 func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) (types.MsgVoteOnObservedInboundTx, error) {
 	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
 	if bytes.Equal(event.Message, []byte(DonationMessage)) {

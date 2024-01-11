@@ -17,10 +17,10 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	// if the tx fails due to already initialized, it will be ignored
 	tx, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
 	if err != nil {
-		panic(err)
+		sm.Logger.Print("ℹ️create pair error")
+	} else {
+		utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	//sm.Logger.Info("USDT-ETH pair receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
 	if err != nil {
@@ -32,7 +32,7 @@ func TestZRC20Swap(sm *runner.SmokeTestRunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("USDT ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	tx, err = sm.ETHZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
