@@ -34,8 +34,11 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 		ChainID: msg.ChainId,
 		Nonce:   msg.Nonce,
 	})
-	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
-		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
+	if err != nil {
+		return nil, cosmoserrors.Wrap(err, "CcxtByNonce failed")
+	}
+	if cctx == nil || cctx.CrossChainTx == nil {
+		return nil, cosmoserrors.Wrapf(types.ErrCannotFindCctx, "no corresponding cctx found for chain %d, nonce %d", msg.ChainId, msg.Nonce)
 	}
 	// tracker submission is only allowed when the cctx is pending
 	if !IsPending(*cctx.CrossChainTx) {
