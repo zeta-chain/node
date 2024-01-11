@@ -37,7 +37,6 @@
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
-* [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
 
 ### Refactoring
 
