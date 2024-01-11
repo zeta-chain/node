@@ -34,7 +34,7 @@ func processError(err error) {
 	if strings.Contains(err.Error(), "cannot set custom bip32 path with ledger") {
 		printNotice([]string{
 			"note: --ledger flag can't be used with Ethereum HD path (used by default)",
-			"Please set a blank path with --hd-path="" to use Cosmos HD path instead.",
+			"Please set a blank path with --hd-path=\"\" to use Cosmos HD path instead.",
 		})
 		os.Exit(1)
 	}
