@@ -20,6 +20,7 @@
 
 ### Fixes
 
+* [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
@@ -52,6 +53,7 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* Update --ledger flag hint
 
 ### Chores
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
