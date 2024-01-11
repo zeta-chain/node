@@ -47,19 +47,14 @@ func bitcoinTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
 		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
-
-		bitcoinRunner.WaitForTxReceiptOnEvm(txZetaSend)
 		bitcoinRunner.WaitForTxReceiptOnEvm(txUSDTSend)
 
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := bitcoinRunner.DepositZeta()
 		txEtherDeposit := bitcoinRunner.DepositEther(false)
 		txERC20Deposit := bitcoinRunner.DepositERC20()
 		bitcoinRunner.SetupBitcoinAccount()
 		bitcoinRunner.DepositBTC(false)
-		bitcoinRunner.WaitForMinedCCTX(txZetaDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
 
