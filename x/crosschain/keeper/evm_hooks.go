@@ -1,10 +1,12 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -16,8 +18,6 @@ import (
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
-	"math/big"
-
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
