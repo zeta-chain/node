@@ -885,7 +885,7 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	lastScannedDeposited := ob.observeERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.observeTssRecvd(startBlock, toBlock)
+	lastScannedTssRecvd := ob.observeTssRecvd(startBlock, toBlock, flags)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -1068,7 +1068,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 
 // observeTssRecvd queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
-func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64) uint64 {
+func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
 	// check TSS address (after keygen, ob.Tss.pubkey will be updated)
 	tssAddress := ob.Tss.EVMAddress()
 	if tssAddress == (ethcommon.Address{}) {
@@ -1080,7 +1080,9 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64) uint64 {
 	for bn := startBlock; bn <= toBlock; bn++ {
 		// post new block header (if any) to zetacore and ignore error
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
-		if common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+		if flags.BlockHeaderVerificationFlags != nil &&
+			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
+			common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")

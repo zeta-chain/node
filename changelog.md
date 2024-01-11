@@ -20,6 +20,7 @@
 
 ### Fixes
 
+* [1559](https://github.com/zeta-chain/node/issues/1559) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
