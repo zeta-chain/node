@@ -110,7 +110,6 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 		sm.Logger.Info("  Amount: %d", event.Amount)
 		sm.Logger.Info("  Message: %x", event.Message)
 	}
-	sm.Logger.Info("gas limit %d", sm.ZevmAuth.GasLimit)
 	return tx.Hash()
 }
 

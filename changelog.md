@@ -20,6 +20,7 @@
 
 ### Fixes
 
+* [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
 * [1518](https://github.com/zeta-chain/node/pull/1518) - Avoid duplicate keysign if an outTx is already pending
@@ -59,6 +60,8 @@
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
 
 ### Tests
+
+* [1538](https://github.com/zeta-chain/node/pull/1538) - improve stateful e2e testing
 
 ### CI
 * Removed private runners and unused GitHub Action
