@@ -91,6 +91,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		return nil, err
 	}
 	if isNew {
+		// Check if the inbound has already been processed.
+		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+			return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+		}
 		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
 	}
 	// AddVoteToBallot adds a vote and sets the ballot
@@ -98,14 +102,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		return nil, err
 	}
+
 	_, isFinalizedInThisBlock := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalizedInThisBlock {
 		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-	}
-	// Check if the inbound has already been processed.
-	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-		return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash %s, SenderChainID %d, EventIndex %d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
 	}
 
 	// Validation if we want to send ZETA to external chain, but there is no ZETA token.

@@ -120,7 +120,8 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Check that the vote passed
-	ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
+	ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+	assert.True(t, found)
 	assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
@@ -145,6 +146,8 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		msg2,
 	)
 	assert.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
+	_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
+	assert.False(t, found)
 }
 func TestStatus_StatusTransition(t *testing.T) {
 	tt := []struct {
