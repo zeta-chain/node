@@ -53,6 +53,7 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* [1558](https://github.com/zeta-chain/node/pull/1558) - change log level for gas stability pool iteration error
 * Update --ledger flag hint
 
 ### Chores
