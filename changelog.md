@@ -20,6 +20,7 @@
 
 ### Fixes
 
+* [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
