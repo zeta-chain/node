@@ -42,6 +42,7 @@
 
 ### Refactoring
 
+* [1552](https://github.com/zeta-chain/node/pull/1552) - requires group2 to enable header verification
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
 * move tss state from crosschain to observer
