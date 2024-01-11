@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -24,6 +25,10 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+const (
+	OutTxTrackerReportTimeout = 10 * time.Minute
+)
+
 type EVMSigner struct {
 	client                      EVMRPCClient
 	chain                       *common.Chain
@@ -36,6 +41,10 @@ type EVMSigner struct {
 	erc20CustodyContractAddress ethcommon.Address
 	logger                      zerolog.Logger
 	ts                          *TelemetryServer
+
+	// for outTx tracker report only
+	mu                     *sync.Mutex
+	outTxHashBeingReported map[string]bool
 }
 
 var _ ChainSigner = &EVMSigner{}
@@ -83,7 +92,9 @@ func NewEVMSigner(
 		logger: logger.With().
 			Str("chain", chain.ChainName.String()).
 			Str("module", "EVMSigner").Logger(),
-		ts: ts,
+		ts:                     ts,
+		mu:                     &sync.Mutex{},
+		outTxHashBeingReported: make(map[string]bool),
 	}, nil
 }
 
@@ -566,11 +577,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 				log.Warn().Err(err).Msgf("OutTx Broadcast error")
 				retry, report := HandleBroadcastError(err, strconv.FormatUint(send.GetCurrentOutTxParam().OutboundTxTssNonce, 10), toChain.String(), outTxHash)
 				if report {
-					zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash, nil, "", -1)
-					if err != nil {
-						logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, toChain, outTxHash)
-					}
-					logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+					signer.reportToOutTxTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outTxHash, logger)
 				}
 				if !retry {
 					break
@@ -579,15 +586,62 @@ func (signer *EVMSigner) TryProcessOutTx(
 				continue
 			}
 			logger.Info().Msgf("Broadcast success: nonce %d to chain %s outTxHash %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, toChain, outTxHash)
-			zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(toChain.ChainId, tx.Nonce(), outTxHash, nil, "", -1)
-			if err != nil {
-				logger.Err(err).Msgf("Unable to add to tracker on ZetaCore: nonce %d chain %s outTxHash %s", send.GetCurrentOutTxParam().OutboundTxTssNonce, toChain, outTxHash)
-			}
-			logger.Info().Msgf("Broadcast to core successful %s", zetaHash)
+			signer.reportToOutTxTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outTxHash, logger)
 			break // successful broadcast; no need to retry
 		}
-
 	}
+}
+
+// reportToOutTxTracker reports outTxHash to tracker only when tx receipt is available
+func (signer *EVMSigner) reportToOutTxTracker(zetaBridge ZetaCoreBridger, chainID int64, nonce uint64, outTxHash string, logger zerolog.Logger) {
+	// skip if already being reported
+	signer.mu.Lock()
+	defer signer.mu.Unlock()
+	if _, found := signer.outTxHashBeingReported[outTxHash]; found {
+		logger.Info().Msgf("reportToOutTxTracker: outTxHash %s for chain %d nonce %d is being reported", outTxHash, chainID, nonce)
+		return
+	}
+	signer.outTxHashBeingReported[outTxHash] = true // mark as being reported
+
+	// report to outTx tracker with goroutine
+	go func() {
+		defer func() {
+			signer.mu.Lock()
+			delete(signer.outTxHashBeingReported, outTxHash)
+			signer.mu.Unlock()
+		}()
+
+		// try fetching tx receipt for 10 minutes
+		tStart := time.Now()
+		for {
+			if time.Since(tStart) > OutTxTrackerReportTimeout { // give up after 10 minutes
+				logger.Info().Msgf("reportToOutTxTracker: outTxHash report timeout for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+				return
+			}
+			receipt, err := signer.client.TransactionReceipt(context.TODO(), ethcommon.HexToHash(outTxHash))
+			if err != nil {
+				logger.Info().Err(err).Msgf("reportToOutTxTracker: receipt not available for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+				time.Sleep(10 * time.Second)
+				continue
+			}
+			if receipt != nil {
+				_, isPending, err := signer.client.TransactionByHash(context.TODO(), ethcommon.HexToHash(outTxHash))
+				if err != nil || isPending {
+					logger.Info().Err(err).Msgf("reportToOutTxTracker: error getting tx or tx is pending for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+					time.Sleep(10 * time.Second)
+					continue
+				}
+				break
+			}
+		}
+
+		// report to outTxTracker
+		zetaHash, err := zetaBridge.AddTxHashToOutTxTracker(chainID, nonce, outTxHash, nil, "", -1)
+		if err != nil {
+			logger.Err(err).Msgf("reportToOutTxTracker: unable to add to tracker on ZetaCore for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+		}
+		logger.Info().Msgf("reportToOutTxTracker: reported outTxHash to core successful %s, chain %d nonce %d outTxHash %s", zetaHash, chainID, nonce, outTxHash)
+	}()
 }
 
 // SignERC20WithdrawTx
