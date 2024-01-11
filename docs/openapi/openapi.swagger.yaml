@@ -27817,7 +27817,7 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_tss_address:
+  /zeta-chain/observer/get_tss_address/{bitcoin_chain_id}:
     get:
       summary: Queries a list of GetTssAddress items.
       operationId: Query_GetTssAddress
@@ -27832,8 +27832,8 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: bitcoin_chain_id
-          in: query
-          required: false
+          in: path
+          required: true
           type: string
           format: int64
       tags:
