@@ -20,6 +20,8 @@
 
 ### Fixes
 
+* [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
+* [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
@@ -37,9 +39,12 @@
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
+* [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
+* [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 
 ### Refactoring
 
+* [1552](https://github.com/zeta-chain/node/pull/1552) - requires group2 to enable header verification
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
 * move tss state from crosschain to observer
@@ -53,6 +58,7 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* [1558](https://github.com/zeta-chain/node/pull/1558) - change log level for gas stability pool iteration error
 * Update --ledger flag hint
 
 ### Chores
