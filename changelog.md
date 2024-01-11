@@ -21,6 +21,8 @@
 ### Fixes
 
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
+* [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
+* [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
@@ -36,6 +38,7 @@
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
+* [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 
 ### Refactoring
 
@@ -52,6 +55,8 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* [1558](https://github.com/zeta-chain/node/pull/1558) - change log level for gas stability pool iteration error
+* Update --ledger flag hint
 
 ### Chores
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 

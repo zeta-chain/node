@@ -365,9 +365,11 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// add block header to zetacore
-		err = ob.postBlockHeader(bn)
-		if err != nil {
-			ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
+		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+			err = ob.postBlockHeader(bn)
+			if err != nil {
+				ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
+			}
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
