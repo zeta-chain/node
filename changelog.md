@@ -20,6 +20,8 @@
 
 ### Fixes
 
+* [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
+* [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
@@ -54,6 +56,7 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* [1558](https://github.com/zeta-chain/node/pull/1558) - change log level for gas stability pool iteration error
 * Update --ledger flag hint
 
 ### Chores
