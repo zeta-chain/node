@@ -174,7 +174,7 @@ func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {
 func validateTrueBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
 	blockHash := header.BlockHash()
 
-	// Ture Bitcoin header should pass validation
+	// True Bitcoin header should pass validation
 	err := common.ValidateBitcoinHeader(headerBytes, blockHash[:], 18332)
 	require.NoError(t, err)
 
