@@ -127,8 +127,18 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 		FinalizedZetaHeight: 1,
 		KeyGenZetaHeight:    1,
 	}
+	pendingNonces := make([]observertypes.PendingNonces, len(common.DefaultChainsList()))
+	for i, chain := range common.DefaultChainsList() {
+		pendingNonces[i] = observertypes.PendingNonces{
+			ChainId:   chain.ChainId,
+			NonceLow:  0,
+			NonceHigh: 0,
+			Tss:       tss.TssPubkey,
+		}
+	}
 	state.Tss = &tss
 	state.TssHistory = []observertypes.TSS{tss}
+	state.PendingNonces = pendingNonces
 
 	// set crosschain flags
 	crosschainFlags := &observertypes.CrosschainFlags{

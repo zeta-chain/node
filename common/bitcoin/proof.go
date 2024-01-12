@@ -41,7 +41,7 @@ func (m *Merkle) BuildMerkleProof(txIndex int) ([]byte, uint, error) {
 	path := make([]byte, 0)
 	var siblingIndexes uint
 
-	// Find intermediate nodes on the path to the root buttom-up.
+	// Find intermediate nodes on the path to the root bottom-up.
 	nodeIndex := txIndex
 	nodesOnLevel := N / 2
 	for nodesOnLevel > 1 {
