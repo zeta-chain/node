@@ -15,7 +15,7 @@ All chains now have the same observer set:
 
 Observer params and core params have been merged into chain params:
 * `Params`: `/zeta-chain/observer/params` no longer returns observer params. Observer params data have been moved to chain params described below.
-* `GetCoreParams`: Renamed into `GetCoreParams`. `/zeta-chain/observer/get_core_params` moved to `/zeta-chain/observer/get_chain_params`.
+* `GetCoreParams`: Renamed into `GetChainParams`. `/zeta-chain/observer/get_core_params` moved to `/zeta-chain/observer/get_chain_params`.
 * `GetCoreParamsByChain`: Renamed into `GetChainParamsForChain`. `/zeta-chain/observer/get_core_params_by_chain` moved to `/zeta-chain/observer/get_chain_params_by_chain`.
 
 Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin chain id:
