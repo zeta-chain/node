@@ -203,7 +203,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			},
 			ballotResult:          observerTypes.BallotStatus_BallotInProgress,
 			cctxStatus:            crosschaintypes.CctxStatus_PendingOutbound,
-			falseBallotIdentifier: GetBallotIdentifier("majority wrong votes incorrect ballot finalized / correct ballot still in progress" + "falseVote"),
+			falseBallotIdentifier: "majority wrong votes incorrect ballot finalized / correct ballot still in progress" + "falseVote",
 		},
 		{
 			name: "7 votes only just crossed threshold",
@@ -223,7 +223,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			cctxStatus:   crosschaintypes.CctxStatus_PendingOutbound,
 		},
 	}
-	for _, test := range tt {
+	for i, test := range tt {
 		test := test
 		s.Run(test.name, func() {
 			// Vote the gas price
@@ -260,14 +260,14 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				if vote == observerTypes.VoteType_FailureObservation {
 					message = message + "falseVote"
 				}
-				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message)
+				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message, i)
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 
 			// Get the ballot
-			ballotIdentifier := GetBallotIdentifier(test.name)
+			ballotIdentifier := GetBallotIdentifier(test.name, i)
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdBallotByIdentifier(), []string{ballotIdentifier, "--output", "json"})
 			s.Require().NoError(err)
 			ballot := observerTypes.QueryBallotByIdentifierResponse{}
@@ -287,7 +287,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			// Get the cctx and check its status
 			cctxIdentifier := ballotIdentifier
 			if test.falseBallotIdentifier != "" {
-				cctxIdentifier = test.falseBallotIdentifier
+				cctxIdentifier = GetBallotIdentifier(test.falseBallotIdentifier, i)
 			}
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx := crosschaintypes.QueryGetCctxResponse{}
