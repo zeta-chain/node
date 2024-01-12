@@ -9,6 +9,7 @@
 * PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
 * ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+* GetTssAddress : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoing chain id can now now passed as a parameter to fetch the correct tss for required BTC chain.This parameter only affects the BTC tss address in the response.
 
 ### Features
 * [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
@@ -36,7 +37,7 @@
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
-* * [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
+* [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
 
 ### Refactoring
 
