@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,6 +45,12 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	SetupConfigForTest()
+
+	//Prompt for Hotkey and TSS key-share passwords
+	hotkeyPass, tssKeyPass, err := promptPasswords()
+	if err != nil {
+		return err
+	}
 
 	//Load Config file given path
 	cfg, err := config.Load(rootArgs.zetaCoreHome)
@@ -120,7 +127,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
 	// Each node processes a portion of the key stored in ~/.tss by default . Custom location can be specified in config file during init.
 	// After generating the key , the address is set on the zetacore
-	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey()
+	bridgePk, err := zetaBridge.GetKeys().GetPrivateKey(hotkeyPass)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("zetabridge getPrivateKey error")
 	}
@@ -160,7 +167,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass)
 	if err != nil {
 		return err
 	}
@@ -308,4 +315,24 @@ func initPreParams(path string) {
 			}
 		}
 	}
+}
+
+func promptPasswords() (string, string, error) {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("HotKey Password: ")
+	hotKeyPass, err := reader.ReadString('\n')
+	if err != nil {
+		return "", "", err
+	}
+	fmt.Print("TSS Password: ")
+	TSSKeyPass, err := reader.ReadString('\n')
+	if err != nil {
+		return "", "", err
+	}
+
+	if hotKeyPass == "" || TSSKeyPass == "" {
+		return "", "", errors.New("hotkey and tss passwords are required to start zetaclient")
+	}
+
+	return hotKeyPass, TSSKeyPass, err
 }

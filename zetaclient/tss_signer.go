@@ -83,8 +83,9 @@ func NewTSS(
 	tssHistoricalList []observertypes.TSS,
 	metrics *metrics.Metrics,
 	bitcoinChainID int64,
+	tssPassword string,
 ) (*TSS, error) {
-	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
+	server, err := SetupTSSServer(peer, privkey, preParams, cfg, tssPassword)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -118,7 +119,7 @@ func NewTSS(
 	return &newTss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, tssPassword string) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 

@@ -137,12 +137,7 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 }
 
 // GetPrivateKey return the private key
-func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
-	password, err := k.GetHotkeyPassword()
-	if err != nil {
-		return nil, err
-	}
-
+func (k *Keys) GetPrivateKey(password string) (cryptotypes.PrivKey, error) {
 	signer := GetGranteeKeyName(k.signerName)
 	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, password)
 	if err != nil {
@@ -160,13 +155,13 @@ func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
 }
 
-func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
+func (k *Keys) GetPubKeySet(password string) (common.PubKeySet, error) {
 	pubkeySet := common.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
 
-	pK, err := k.GetPrivateKey()
+	pK, err := k.GetPrivateKey(password)
 	if err != nil {
 		return pubkeySet, err
 	}
