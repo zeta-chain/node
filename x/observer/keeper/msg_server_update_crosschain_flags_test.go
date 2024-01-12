@@ -57,6 +57,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Equal(t, uint32(42), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
 		require.True(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
 		require.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
+
 		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
 
 		// can update flags again
@@ -71,7 +72,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 			},
 			BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
 				IsEthTypeChainEnabled: false,
-				IsBtcTypeChainEnabled: false,
+				IsBtcTypeChainEnabled: true,
 			},
 		})
 		require.NoError(t, err)
@@ -84,7 +85,8 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Equal(t, time.Minute*43, flags.GasPriceIncreaseFlags.RetryInterval)
 		require.Equal(t, uint32(43), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
 		require.False(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
-		require.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
+		require.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
+
 		// group 1 should be able to disable inbound and outbound
 		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
 
@@ -103,6 +105,33 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Equal(t, int64(43), flags.GasPriceIncreaseFlags.EpochLength)
 		require.Equal(t, time.Minute*43, flags.GasPriceIncreaseFlags.RetryInterval)
 		require.Equal(t, uint32(43), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
+		require.False(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
+		require.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
+
+		// group 1 should be able to disable header verification
+		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+
+		// if gas price increase flags is nil, it should not be updated
+		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
+			Creator:           admin,
+			IsInboundEnabled:  false,
+			IsOutboundEnabled: false,
+			BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+				IsEthTypeChainEnabled: false,
+				IsBtcTypeChainEnabled: false,
+			},
+		})
+		require.NoError(t, err)
+
+		flags, found = k.GetCrosschainFlags(ctx)
+		require.True(t, found)
+		require.False(t, flags.IsInboundEnabled)
+		require.False(t, flags.IsOutboundEnabled)
+		require.Equal(t, int64(43), flags.GasPriceIncreaseFlags.EpochLength)
+		require.Equal(t, time.Minute*43, flags.GasPriceIncreaseFlags.RetryInterval)
+		require.Equal(t, uint32(43), flags.GasPriceIncreaseFlags.GasPriceIncreasePercent)
+		require.False(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
+		require.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
 
 		// if flags are not defined, default should be used
 		k.RemoveCrosschainFlags(ctx)

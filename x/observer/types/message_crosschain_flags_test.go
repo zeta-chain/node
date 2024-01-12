@@ -116,3 +116,118 @@ func TestGasPriceIncreaseFlags_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  types.MsgUpdateCrosschainFlags
+		want types.Policy_Type
+	}{
+		{
+			name: "disabling outbound and inbound allows group 1",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:                      sample.AccAddress(),
+				IsInboundEnabled:             false,
+				IsOutboundEnabled:            false,
+				BlockHeaderVerificationFlags: nil,
+				GasPriceIncreaseFlags:        nil,
+			},
+			want: types.Policy_Type_group1,
+		},
+		{
+			name: "disabling outbound and inbound and block header verification allows group 1",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  false,
+				IsOutboundEnabled: false,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: false,
+					IsBtcTypeChainEnabled: false,
+				},
+				GasPriceIncreaseFlags: nil,
+			},
+			want: types.Policy_Type_group1,
+		},
+		{
+			name: "updating gas price increase flags requires group 2",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  false,
+				IsOutboundEnabled: false,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: false,
+					IsBtcTypeChainEnabled: false,
+				},
+				GasPriceIncreaseFlags: &types.GasPriceIncreaseFlags{
+					EpochLength:             1,
+					RetryInterval:           1,
+					GasPriceIncreasePercent: 1,
+					MaxPendingCctxs:         100,
+				},
+			},
+			want: types.Policy_Type_group2,
+		},
+		{
+			name: "enabling inbound requires group 2",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  true,
+				IsOutboundEnabled: false,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: false,
+					IsBtcTypeChainEnabled: false,
+				},
+				GasPriceIncreaseFlags: nil,
+			},
+			want: types.Policy_Type_group2,
+		},
+		{
+			name: "enabling outbound requires group 2",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  false,
+				IsOutboundEnabled: true,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: false,
+					IsBtcTypeChainEnabled: false,
+				},
+				GasPriceIncreaseFlags: nil,
+			},
+			want: types.Policy_Type_group2,
+		},
+		{
+			name: "enabling eth header verification requires group 2",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  false,
+				IsOutboundEnabled: false,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: true,
+					IsBtcTypeChainEnabled: false,
+				},
+				GasPriceIncreaseFlags: nil,
+			},
+			want: types.Policy_Type_group2,
+		},
+		{
+			name: "enabling btc header verification requires group 2",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator:           sample.AccAddress(),
+				IsInboundEnabled:  false,
+				IsOutboundEnabled: false,
+				BlockHeaderVerificationFlags: &types.BlockHeaderVerificationFlags{
+					IsEthTypeChainEnabled: false,
+					IsBtcTypeChainEnabled: true,
+				},
+				GasPriceIncreaseFlags: nil,
+			},
+			want: types.Policy_Type_group2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.msg.GetRequiredGroup())
+		})
+	}
+}

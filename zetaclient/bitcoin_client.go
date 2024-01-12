@@ -57,7 +57,7 @@ type BitcoinChainClient struct {
 
 	Mu                *sync.Mutex // lock for all the maps, utxos and core params
 	pendingNonce      uint64
-	includedTxHashes  map[string]uint64                        // key: tx hash
+	includedTxHashes  map[string]bool                          // key: tx hash
 	includedTxResults map[string]*btcjson.GetTransactionResult // key: chain-tss-nonce
 	broadcastedTx     map[string]string                        // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
@@ -147,7 +147,7 @@ func NewBitcoinClient(
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
-	ob.includedTxHashes = make(map[string]uint64)
+	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
 	ob.params = btcCfg.ChainParams
@@ -365,9 +365,11 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		}
 
 		// add block header to zetacore
-		err = ob.postBlockHeader(bn)
-		if err != nil {
-			ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
+		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+			err = ob.postBlockHeader(bn)
+			if err != nil {
+				ob.logger.WatchInTx.Warn().Err(err).Msgf("observeInTxBTC: error posting block header %d", bn)
+			}
 		}
 
 		tssAddress := ob.Tss.BTCAddress()
@@ -755,16 +757,13 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	}
 	maxConfirmations := int(bh)
 
-	// List unspent.
+	// List all unspent UTXOs (160ms)
 	tssAddr := ob.Tss.BTCAddress()
 	address, err := common.DecodeBtcAddress(tssAddr, ob.chain.ChainId)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
-	addresses := []btcutil.Address{address}
-
-	// fetching all TSS utxos takes 160ms
-	utxos, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, addresses)
+	utxos, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, maxConfirmations, []btcutil.Address{address})
 	if err != nil {
 		return err
 	}
@@ -780,12 +779,20 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 		return utxos[i].Amount < utxos[j].Amount
 	})
 
-	// filter UTXOs big enough to cover the cost of spending themselves
+	// filter UTXOs good to spend for next TSS transaction
 	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
 	for _, utxo := range utxos {
-		if utxo.Amount >= BtcDepositorFeeMin {
-			utxosFiltered = append(utxosFiltered, utxo)
+		// UTXOs big enough to cover the cost of spending themselves
+		if utxo.Amount < BtcDepositorFeeMin {
+			continue
 		}
+		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend
+		if utxo.Confirmations == 0 {
+			if !ob.isTssTransaction(utxo.TxID) {
+				continue
+			}
+		}
+		utxosFiltered = append(utxosFiltered, utxo)
 	}
 
 	ob.Mu.Lock()
@@ -793,6 +800,13 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil
+}
+
+// isTssTransaction checks if a given transaction was sent by TSS itself.
+// An unconfirmed transaction is safe to spend only if it was sent by TSS and verified by ourselves.
+func (ob *BitcoinChainClient) isTssTransaction(txid string) bool {
+	_, found := ob.includedTxHashes[txid]
+	return found
 }
 
 // refreshPendingNonce tries increasing the artificial pending nonce of outTx (if lagged behind).
@@ -1081,6 +1095,7 @@ func (ob *BitcoinChainClient) setIncludedTx(nonce uint64, getTxResult *btcjson.G
 	res, found := ob.includedTxResults[outTxID]
 
 	if !found { // not found.
+		ob.includedTxHashes[txHash] = true
 		ob.includedTxResults[outTxID] = getTxResult // include new outTx and enforce rigid 1-to-1 mapping: nonce <===> txHash
 		if nonce >= ob.pendingNonce {               // try increasing pending nonce on every newly included outTx
 			ob.pendingNonce = nonce + 1
@@ -1105,11 +1120,15 @@ func (ob *BitcoinChainClient) getIncludedTx(nonce uint64) *btcjson.GetTransactio
 	return ob.includedTxResults[ob.GetTxID(nonce)]
 }
 
-// removeIncludedTx removes included tx's result from memory
+// removeIncludedTx removes included tx from memory
 func (ob *BitcoinChainClient) removeIncludedTx(nonce uint64) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	delete(ob.includedTxResults, ob.GetTxID(nonce))
+	txResult, found := ob.includedTxResults[ob.GetTxID(nonce)]
+	if found {
+		delete(ob.includedTxHashes, txResult.TxID)
+		delete(ob.includedTxResults, ob.GetTxID(nonce))
+	}
 }
 
 // Basic TSS outTX checks:
