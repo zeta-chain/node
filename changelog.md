@@ -41,6 +41,7 @@
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 * [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
+* [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
 * [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 * [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
 
