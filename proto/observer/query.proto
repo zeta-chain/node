@@ -111,7 +111,7 @@ service Query {
 
   // Queries a list of GetTssAddress items.
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_tss_address";
+    option (google.api.http).get = "/zeta-chain/observer/get_tss_address/{bitcoin_chain_id}";
   }
 
   rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest) returns (QueryGetTssAddressByFinalizedHeightResponse) {

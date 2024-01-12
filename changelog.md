@@ -9,6 +9,7 @@
 * PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
 * ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+* GetTssAddress : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoing chain id can now now passed as a parameter to fetch the correct tss for required BTC chain.This parameter only affects the BTC tss address in the response.
 
 ### Features
 * [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
@@ -41,6 +42,7 @@
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 * [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
 * [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
+* [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
 
 ### Refactoring
 
