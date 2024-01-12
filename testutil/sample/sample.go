@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -131,11 +132,18 @@ func Coins() sdk.Coins {
 }
 
 // Uint64InRange returns a sample uint64 in the given ranges
-func Uint64InRange(r *rand.Rand, low, high uint64) uint64 {
+func Uint64InRange(low, high uint64) uint64 {
+	r := newRandFromSeed(int64(low))
 	return r.Uint64()%(high-low) + low
 }
 
 // Int64InRange returns a sample int64 in the given ranges
-func Int64InRange(r *rand.Rand, low, high int64) int64 {
+func Int64InRange(low, high int64) int64 {
+	r := newRandFromSeed(low)
 	return r.Int63()%(high-low) + low
+}
+
+func UintInRange(low, high uint64) sdkmath.Uint {
+	u := Uint64InRange(low, high)
+	return sdkmath.NewUint(u)
 }

@@ -59,6 +59,11 @@ export declare class GenesisState extends Message<GenesisState> {
    */
   zetaAccounting?: ZetaAccounting;
 
+  /**
+   * @generated from field: repeated string FinalizedInbounds = 16;
+   */
+  FinalizedInbounds: string[];
+
   constructor(data?: PartialMessage<GenesisState>);
 
   static readonly runtime: typeof proto3;

@@ -190,7 +190,7 @@ func (AppModule) ConsensusVersion() uint64 { return 4 }
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	err := am.keeper.IterateAndUpdateCctxGasPrice(ctx)
 	if err != nil {
-		ctx.Logger().Error("Error iterating and updating pending cctx gas price", "err", err.Error())
+		ctx.Logger().Info("Error iterating and updating pending cctx gas price", "err", err.Error())
 	}
 }
 
