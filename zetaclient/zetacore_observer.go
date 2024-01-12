@@ -356,7 +356,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
 		evmCfg, found := co.cfg.GetEVMConfig(chainID)
-		if found && curParams != evmCfg.ChainParams {
+		if found && curParams.String() != evmCfg.ChainParams.String() {
 			chainOb.SetChainParams(evmCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v",
@@ -366,7 +366,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 		}
 	} else if common.IsBitcoinChain(chainID) {
 		_, btcCfg, found := co.cfg.GetBTCConfig()
-		if found && curParams != btcCfg.ChainParams {
+		if found && curParams.String() != btcCfg.ChainParams.String() {
 			chainOb.SetChainParams(btcCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for Bitcoin, new params: %v",
