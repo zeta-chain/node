@@ -319,20 +319,20 @@ func initPreParams(path string) {
 
 func promptPasswords() (string, string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("HotKey Password: ")
-	hotKeyPass, err := reader.ReadString('\n')
-	if err != nil {
-		return "", "", err
-	}
+	//fmt.Print("HotKey Password: ")
+	//hotKeyPass, err := reader.ReadString('\n')
+	//if err != nil {
+	//	return "", "", err
+	//}
 	fmt.Print("TSS Password: ")
 	TSSKeyPass, err := reader.ReadString('\n')
 	if err != nil {
 		return "", "", err
 	}
 
-	if hotKeyPass == "" || TSSKeyPass == "" {
+	if TSSKeyPass == "" {
 		return "", "", errors.New("hotkey and tss passwords are required to start zetaclient")
 	}
 
-	return hotKeyPass, TSSKeyPass, err
+	return "", TSSKeyPass, err
 }

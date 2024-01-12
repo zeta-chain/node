@@ -153,6 +153,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		},
 		preParams, // use pre-generated pre-params if non-nil
 		IP,        // for docker test
+		tssPassword,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")
