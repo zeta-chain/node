@@ -23,7 +23,6 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 		return err
 	}
 	return MigrateObserverParams(ctx, observerKeeper)
-
 }
 
 func MigrateObserverMapper(ctx sdk.Context, observerStoreKey storetypes.StoreKey, cdc codec.BinaryCodec) error {
@@ -55,7 +54,7 @@ func MigrateObserverMapper(ctx sdk.Context, observerStoreKey storetypes.StoreKey
 }
 
 // MigrateObserverParams migrates the observer params to the chain params
-// the function assumes that each oberver params entry has a corresponding chain params entry
+// the function assumes that each observer params entry has a corresponding chain params entry
 // if the chain is not found, the observer params entry is ignored because it is considered as not supported
 func MigrateObserverParams(ctx sdk.Context, observerKeeper observerKeeper) error {
 	chainParamsList, found := observerKeeper.GetChainParamsList(ctx)

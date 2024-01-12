@@ -11,7 +11,7 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-func (sm *SmokeTestRunner) SetupBitcoinAccount() {
+func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
@@ -27,20 +27,23 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 
 	sm.setBtcAddress()
 
-	err = sm.BtcRPCClient.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
-	if err != nil {
-		panic(err)
-	}
+	if initNetwork {
+		// import the TSS address
+		err = sm.BtcRPCClient.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
+		if err != nil {
+			panic(err)
+		}
 
-	// mine some blocks to get some BTC into the deployer address
-	_, err = sm.BtcRPCClient.GenerateToAddress(101, sm.BTCDeployerAddress, nil)
-	if err != nil {
-		panic(err)
-	}
+		// mine some blocks to get some BTC into the deployer address
+		_, err = sm.BtcRPCClient.GenerateToAddress(101, sm.BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
 
-	_, err = sm.BtcRPCClient.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
-	if err != nil {
-		panic(err)
+		_, err = sm.BtcRPCClient.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
