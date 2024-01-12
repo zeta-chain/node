@@ -38,6 +38,7 @@
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
+* [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 * [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
 * [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 
@@ -65,6 +66,7 @@
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
+*  [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
 
 ### Tests
 
