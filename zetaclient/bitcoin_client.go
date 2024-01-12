@@ -1326,7 +1326,7 @@ func (ob *BitcoinChainClient) LoadLastBlock() error {
 	if ob.chain.ChainId == 18444 { // bitcoin regtest: start from block 100
 		ob.SetLastBlockHeightScanned(100)
 	}
-	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.lastBlock)
+	ob.logger.ChainLogger.Info().Msgf("%s: start scanning from block %d", ob.chain.String(), ob.GetLastBlockHeightScanned())
 
 	return nil
 }
