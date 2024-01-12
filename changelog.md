@@ -66,6 +66,7 @@
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
+*  [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
 
 ### Tests
 
