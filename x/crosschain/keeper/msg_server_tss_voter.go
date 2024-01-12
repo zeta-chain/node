@@ -97,7 +97,6 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		}
 		// Set TSS history only, current TSS is updated via admin transaction
 		// In Case this is the first TSS address update both current and history
-
 		tssList := k.zetaObserverKeeper.GetAllTSS(ctx)
 		if len(tssList) == 0 {
 			k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, tss)

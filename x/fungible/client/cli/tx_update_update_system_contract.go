@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -20,7 +18,6 @@ func CmdUpdateSystemContract() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("CLI address: %s\n", clientCtx.GetFromAddress().String())
 			msg := types.NewMsgUpdateSystemContract(clientCtx.GetFromAddress().String(), args[0])
 			if err := msg.ValidateBasic(); err != nil {
 				return err
