@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"runtime"
 	"time"
 
@@ -49,41 +48,27 @@ func bitcoinTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		printBtcSupply(bitcoinRunner)
 		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
 		bitcoinRunner.WaitForTxReceiptOnEvm(txUSDTSend)
-		printBtcSupply(bitcoinRunner)
-		if !initBitcoinNetwork {
-			bitcoinRunner.Logger.Print("sleeping 10sec...")
-			time.Sleep(10 * time.Second)
-			printBtcSupply(bitcoinRunner)
-		}
+
 		// depositing the necessary tokens on ZetaChain
 		txEtherDeposit := bitcoinRunner.DepositEther(false)
-		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
-		printBtcSupply(bitcoinRunner)
 		txERC20Deposit := bitcoinRunner.DepositERC20()
+
+		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
-		printBtcSupply(bitcoinRunner)
+
 		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
-		if initBitcoinNetwork {
-			printBtcSupply(bitcoinRunner)
-			bitcoinRunner.DepositBTC(false)
-			printBtcSupply(bitcoinRunner)
-		}
-		printBtcSupply(bitcoinRunner)
-		if err := bitcoinRunner.CheckBtcTSSBalance(); err != nil {
-			return err
-		}
+		bitcoinRunner.DepositBTC(false)
 
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
 		if err := bitcoinRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			//smoketests.TestBitcoinWithdrawName,
-			//smoketests.TestSendZetaOutBTCRevertName,
-			//smoketests.TestCrosschainSwapName,
+			smoketests.TestBitcoinWithdrawName,
+			smoketests.TestSendZetaOutBTCRevertName,
+			smoketests.TestCrosschainSwapName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
@@ -96,13 +81,4 @@ func bitcoinTestRoutine(
 
 		return err
 	}
-}
-
-func printBtcSupply(runner *runner.SmokeTestRunner) {
-	zrc20Supply, err := runner.BTCZRC20.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		runner.Logger.Print("failed to get btc supply: %v", err)
-		return
-	}
-	runner.Logger.Print("btc supply: %v", zrc20Supply.String())
 }
