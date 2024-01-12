@@ -18,7 +18,7 @@ type crosschainKeeper interface {
 	GetStoreKey() storetypes.StoreKey
 	GetCodec() codec.Codec
 	GetAllCrossChainTx(ctx sdk.Context) []types.CrossChainTx
-	AddFinalizedInbound(ctx sdk.Context, inboundTxHash string, senderChainId int64, height uint64)
+	AddFinalizedInbound(ctx sdk.Context, inboundTxHash string, senderChainID int64, height uint64)
 }
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 3 to 4
