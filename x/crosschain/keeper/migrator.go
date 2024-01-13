@@ -31,5 +31,5 @@ func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 
 // Migrate3to4 migrates the store from consensus version 3 to 4
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
-	return v4.MigrateStore(ctx, m.crossChainKeeper.zetaObserverKeeper, m.crossChainKeeper.storeKey, m.crossChainKeeper.cdc)
+	return v4.MigrateStore(ctx, m.crossChainKeeper.zetaObserverKeeper, m.crossChainKeeper)
 }

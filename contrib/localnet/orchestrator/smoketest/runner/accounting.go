@@ -57,6 +57,7 @@ func (sm *SmokeTestRunner) CheckBtcTSSBalance() error {
 			btcBalance += utxo.Amount
 		}
 	}
+
 	zrc20Supply, err := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
@@ -67,10 +68,15 @@ func (sm *SmokeTestRunner) CheckBtcTSSBalance() error {
 	// #nosec G701 smoketest - always in range
 	if int64(btcBalance*1e8) < (zrc20Supply.Int64() - 10000000) {
 		// #nosec G701 smoketest - always in range
-		return fmt.Errorf("BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d) ", int64(btcBalance*1e8), zrc20Supply)
+		return fmt.Errorf(
+			"BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d)",
+			int64(btcBalance*1e8),
+			zrc20Supply.Int64()-10000000,
+		)
 	}
 	// #nosec G701 smoketest - always in range
-	sm.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply)
+	sm.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply.Int64()-10000000)
+
 	return nil
 }
 

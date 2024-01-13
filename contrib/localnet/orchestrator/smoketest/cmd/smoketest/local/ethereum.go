@@ -56,8 +56,6 @@ func ethereumTestRoutine(
 		ethereumRunner.WaitForMinedCCTX(txZetaDeposit)
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
 
-		ethereumRunner.SetupContextApp()
-
 		// run ethereum test
 		// Note: due to the extensive block generation in Ethereum localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
