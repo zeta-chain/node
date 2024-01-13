@@ -9,6 +9,7 @@
 * PendingNonces :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
 * ChainNonces : Changed from `/zeta-chain/criosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
 * ChainNoncesAll :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+* GetTssAddress : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoing chain id can now now passed as a parameter to fetch the correct tss for required BTC chain.This parameter only affects the BTC tss address in the response.
 
 ### Features
 * [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
@@ -20,6 +21,9 @@
 
 ### Fixes
 
+* [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
+* [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
+* [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
 * [1537](https://github.com/zeta-chain/node/issues/1537) - Sanity check events of ZetaSent/ZetaReceived/ZetaRevertedWithdrawn/Deposited
 * [1530](https://github.com/zeta-chain/node/pull/1530) - Outbound tx confirmation/inclusion enhancement
 * [1496](https://github.com/zeta-chain/node/issues/1496) - post block header for enabled EVM chains only
@@ -36,9 +40,15 @@
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
 * [1557](https://github.com/zeta-chain/node/pull/1557) - remove decreaseAllowance and increaseAllowance checks
+* [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
+* [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
+* [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
+* [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
+* [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
 
 ### Refactoring
 
+* [1552](https://github.com/zeta-chain/node/pull/1552) - requires group2 to enable header verification
 * [1211](https://github.com/zeta-chain/node/issues/1211) - use `grpc` and `msg` for query and message files
 * refactor cctx scheduler - decouple evm cctx scheduler from btc cctx scheduler
 * move tss state from crosschain to observer
@@ -52,12 +62,15 @@
 * Remove chain id from the index for observer mapper and rename it to observer set.
 * Add logger to smoke tests
 * [1521](https://github.com/zeta-chain/node/pull/1521) - replace go-tss lib version with one that reverts back to thorchain tss-lib
+* [1558](https://github.com/zeta-chain/node/pull/1558) - change log level for gas stability pool iteration error
+* Update --ledger flag hint
 
 ### Chores
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
 * [1504](https://github.com/zeta-chain/node/pull/1504) - remove `-race` in the `make install` commmand
+*  [1564](https://github.com/zeta-chain/node/pull/1564) - bump ti-actions/changed-files
 
 ### Tests
 

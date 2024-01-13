@@ -250,6 +250,9 @@ func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*z
 	if err != nil {
 		return nil, err
 	}
+	if len(log.Topics) == 0 {
+		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid log - no topics")
+	}
 	event, err := zrc20ZEVM.ParseWithdrawal(log)
 	if err != nil {
 		return nil, err
@@ -280,6 +283,9 @@ func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*con
 	zetaConnectorZEVM, err := connectorzevm.NewZetaConnectorZEVMFilterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
 		return nil, err
+	}
+	if len(log.Topics) == 0 {
+		return nil, fmt.Errorf("ParseZetaSentEvent: invalid log - no topics")
 	}
 	event, err := zetaConnectorZEVM.ParseZetaSent(log)
 	if err != nil {
