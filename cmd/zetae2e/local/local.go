@@ -135,7 +135,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	testStartTime := time.Now()
-	logger.Print("starting tests")
+	logger.Print("starting E2E tests")
+
+	if testAdmin {
+		logger.Print("⚠️ admin tests enabled")
+	}
 
 	// start timer
 	go func() {
