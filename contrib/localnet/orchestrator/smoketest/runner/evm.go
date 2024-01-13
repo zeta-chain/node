@@ -126,17 +126,13 @@ func (sm *SmokeTestRunner) DepositEther(testHeader bool) ethcommon.Hash {
 	if err != nil {
 		panic(err)
 	}
+	sm.Logger.EVMTransaction(*signedTx)
 
-	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
-	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
-	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
-	sm.Logger.Info("  to: %s", signedTx.To().String())
-	sm.Logger.Info("  value: %d", signedTx.Value())
-	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
+	sm.Logger.EVMReceipt(*receipt)
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test

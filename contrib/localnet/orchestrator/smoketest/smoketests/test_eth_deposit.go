@@ -18,6 +18,11 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+// TestEtherDeposit tests deposit of ethers
+func TestEtherDeposit(sm *runner.SmokeTestRunner) {
+	sm.DepositEther(false)
+}
+
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
 func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Deploying example contract")
