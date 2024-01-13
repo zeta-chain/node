@@ -51,6 +51,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
+* [1557](https://github.com/zeta-chain/node/pull/1557) - remove decreaseAllowance and increaseAllowance checks
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 * [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
 * [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
