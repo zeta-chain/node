@@ -35,20 +35,7 @@ func TestEtherWithdraw(sm *runner.SmokeTestRunner) {
 		panic("withdraw failed")
 	}
 	sm.Logger.EVMReceipt(*receipt, "withdraw")
-
-	for _, log := range receipt.Logs {
-		event, err := sm.ETHZRC20.ParseWithdrawal(*log)
-		if err != nil {
-			continue
-		}
-		sm.Logger.Info(
-			"  logs: from %s, to %x, value %d, gasfee %d",
-			event.From.Hex(),
-			event.To,
-			event.Value,
-			event.Gasfee,
-		)
-	}
+	sm.Logger.ZRC20Withdrawal(sm.ETHZRC20, *receipt, "withdraw")
 
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)

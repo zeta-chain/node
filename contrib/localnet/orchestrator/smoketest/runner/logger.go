@@ -3,6 +3,7 @@ package runner
 import (
 	"fmt"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/fatih/color"
@@ -138,6 +139,30 @@ func (l *Logger) EVMReceipt(receipt ethtypes.Receipt, name string) {
 	l.Info("  GasUsed: %d", receipt.GasUsed)
 	l.Info("  ContractAddress: %s", receipt.ContractAddress.Hex())
 	l.Info("  Status: %d", receipt.Status)
+}
+
+// ZRC20Withdrawal prints a ZRC20Withdrawal event
+func (l *Logger) ZRC20Withdrawal(
+	contract interface {
+		ParseWithdrawal(ethtypes.Log) (*zrc20.ZRC20Withdrawal, error)
+	},
+	receipt ethtypes.Receipt,
+	name string,
+) {
+	for _, log := range receipt.Logs {
+		event, err := contract.ParseWithdrawal(*log)
+		if err != nil {
+			continue
+		}
+		l.Info(
+			" %s ZRC20Withdrawal: from %s, to %x, value %d, gasfee %d",
+			name,
+			event.From.Hex(),
+			event.To,
+			event.Value,
+			event.Gasfee,
+		)
+	}
 }
 
 func (l *Logger) getPrefixWithPadding() string {
