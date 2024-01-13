@@ -58,7 +58,7 @@ func bitcoinTestRoutine(
 		txEtherDeposit := bitcoinRunner.DepositEther(false)
 		txERC20Deposit := bitcoinRunner.DepositERC20()
 		bitcoinRunner.SetupBitcoinAccount()
-		bitcoinRunner.DepositBTC(false)
+		bitcoinRunner.DepositBTC(true)
 		bitcoinRunner.SetupZEVMSwapApp()
 		bitcoinRunner.WaitForMinedCCTX(txZetaDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
