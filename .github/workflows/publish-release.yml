@@ -133,4 +133,4 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm -rf *
+        run: sudo rm -rf * || echo "failed to cleanup workspace please investigate"

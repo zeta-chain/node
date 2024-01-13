@@ -85,4 +85,4 @@ jobs:
       - name: Clean Up Workspace
         if: always()
         shell: bash
-        run: rm -rf *
+        run: sudp rm -rf * || echo "failed to clean workspace please investigate"
