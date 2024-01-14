@@ -330,3 +330,59 @@ func (sm *SmokeTestRunner) PrintContractAddresses() {
 	sm.Logger.Print("ERC20Custody:   %s", sm.ERC20CustodyAddr.Hex())
 	sm.Logger.Print("USDTERC20:      %s", sm.USDTERC20Addr.Hex())
 }
+
+// ShowAccountInfo shows the account balances of the accounts used in the smoke test
+// Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
+func (sm *SmokeTestRunner) ShowAccountInfo() error {
+	sm.Logger.Print(" ---💰 Account info %s ---", sm.DeployerAddress.Hex())
+
+	// evm
+	sm.Logger.Print("* Ethereum:")
+
+	// zeta balance on evm
+	balance, err := sm.ZetaEth.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		return err
+	}
+	sm.Logger.Print("* ZETA balance:  %s", balance.String())
+
+	// eth balance on evm
+	balance, err = sm.GoerliClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	if err != nil {
+		return err
+	}
+	sm.Logger.Print("* ETH balance:   %s", balance.String())
+
+	// erc20 balance on evm
+	balance, err = sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		return err
+	}
+	sm.Logger.Print("* ERC20 balance: %s", balance.String())
+
+	// zevm
+	sm.Logger.Print("* ZetaChain:")
+
+	// zeta balance on zevm
+	balance, err = sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	if err != nil {
+		return nil
+	}
+	sm.Logger.Print("* ZETA balance:  %s", balance.String())
+
+	// eth balance on zevm
+	balance, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		return nil
+	}
+	sm.Logger.Print("* ETH balance:   %s", balance.String())
+
+	// erc20 balance on zevm
+	balance, err = sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		return nil
+	}
+	sm.Logger.Print("* ERC20 balance: %s", balance.String())
+
+	return nil
+}

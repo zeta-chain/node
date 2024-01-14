@@ -183,7 +183,7 @@ generate: proto openapi specs typescript docs-zetacored
 ###############################################################################
 
 install-zetae2e: go.sum
-	@echo "--> Installing orchestrator"
+	@echo "--> Installing zetae2e"
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
