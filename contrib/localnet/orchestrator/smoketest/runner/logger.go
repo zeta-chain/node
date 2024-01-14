@@ -73,7 +73,7 @@ func (l *Logger) Error(message string, args ...interface{}) {
 
 // CCTX prints a CCTX
 func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
-	l.Info("🔁%s cross-chain transaction: %s", name, cctx.Index)
+	l.Info(" %s cross-chain transaction: %s", name, cctx.Index)
 	if cctx.CctxStatus != nil {
 		l.Info(" CctxStatus:")
 		l.Info("  Status: %s", cctx.CctxStatus.Status.String())
@@ -124,17 +124,16 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 
 // EVMTransaction prints a transaction
 func (l *Logger) EVMTransaction(tx ethtypes.Transaction, name string) {
-	l.Info("⤴️%s EVM transaction: %s", name, tx.Hash().Hex())
+	l.Info(" %s EVM transaction: %s", name, tx.Hash().Hex())
 	l.Info("  To: %s", tx.To().Hex())
 	l.Info("  Value: %d", tx.Value())
 	l.Info("  Gas: %d", tx.Gas())
 	l.Info("  GasPrice: %d", tx.GasPrice())
-	l.Info("  Data: %s", tx.Data())
 }
 
 // EVMReceipt prints a receipt
 func (l *Logger) EVMReceipt(receipt ethtypes.Receipt, name string) {
-	l.Info("📄%s EVM receipt: %s", name, receipt.TxHash.Hex())
+	l.Info(" %s EVM receipt: %s", name, receipt.TxHash.Hex())
 	l.Info("  BlockNumber: %d", receipt.BlockNumber)
 	l.Info("  GasUsed: %d", receipt.GasUsed)
 	l.Info("  ContractAddress: %s", receipt.ContractAddress.Hex())

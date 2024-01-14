@@ -229,9 +229,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
+		//eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
+		//eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
+		//eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {

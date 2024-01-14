@@ -11,7 +11,7 @@ import (
 // TestEtherWithdraw tests the withdraw of ether
 func TestEtherWithdraw(sm *runner.SmokeTestRunner) {
 	// approve
-	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.USDTZRC20Addr, big.NewInt(1e18))
+	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}

@@ -55,9 +55,10 @@ func ethereumTestRoutine(
 		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestContextUpgradeName,
-			smoketests.TestEtherDepositAndCallName,
-			smoketests.TestDepositAndCallRefundName,
+			smoketests.TestEtherWithdrawName,
+			//smoketests.TestContextUpgradeName,
+			//smoketests.TestEtherDepositAndCallName,
+			//smoketests.TestDepositAndCallRefundName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}

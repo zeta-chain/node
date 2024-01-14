@@ -249,11 +249,13 @@ func waitKeygenHeight(
 	// wait for keygen to be completed. ~ height 30
 	keygenHeight := int64(60)
 	logger.Print("⏳ wait height %v for keygen to be completed", keygenHeight)
-	for {
-		time.Sleep(2 * time.Second)
+	for i := 0; ; i++ {
+		time.Sleep(1 * time.Second)
 		response, err := cctxClient.LastZetaHeight(ctx, &crosschaintypes.QueryLastZetaHeightRequest{})
 		if err != nil {
-			logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			if i%10 == 0 {
+				logger.Error("cctxClient.LastZetaHeight error: %s", err)
+			}
 			continue
 		}
 		if response.Height >= keygenHeight {
