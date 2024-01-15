@@ -56,9 +56,9 @@ func ethereumTestRoutine(
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
 			smoketests.TestEtherWithdrawName,
-			//smoketests.TestContextUpgradeName,
-			//smoketests.TestEtherDepositAndCallName,
-			//smoketests.TestDepositAndCallRefundName,
+			smoketests.TestContextUpgradeName,
+			smoketests.TestEtherDepositAndCallName,
+			smoketests.TestDepositAndCallRefundName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
