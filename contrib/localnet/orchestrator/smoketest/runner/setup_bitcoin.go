@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 )
@@ -47,6 +46,31 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 	}
 }
 
+// GetBtcAddress returns the BTC address of the deployer from its EVM private key
+func (sm *SmokeTestRunner) GetBtcAddress() (string, error) {
+	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
+	if err != nil {
+		return "", err
+	}
+
+	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	privkeyWIF, err := btcutil.NewWIF(sk, sm.BitcoinParams, true)
+	if err != nil {
+		return "", err
+	}
+
+	address, err := btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(privkeyWIF.SerializePubKey()),
+		sm.BitcoinParams,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	// return the string representation of the address
+	return address.EncodeAddress(), nil
+}
+
 // setBtcAddress
 func (sm *SmokeTestRunner) setBtcAddress() {
 	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
@@ -57,7 +81,7 @@ func (sm *SmokeTestRunner) setBtcAddress() {
 	// TODO: support non regtest chain
 	// https://github.com/zeta-chain/node/issues/1482
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
+	privkeyWIF, err := btcutil.NewWIF(sk, sm.BitcoinParams, true)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +93,7 @@ func (sm *SmokeTestRunner) setBtcAddress() {
 
 	sm.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
-		&chaincfg.RegressionNetParams,
+		sm.BitcoinParams,
 	)
 	if err != nil {
 		panic(err)
@@ -77,19 +101,3 @@ func (sm *SmokeTestRunner) setBtcAddress() {
 
 	sm.Logger.Info("BTCDeployerAddress: %s", sm.BTCDeployerAddress.EncodeAddress())
 }
-
-//// getBtcAddress returns the BTC address of the deployer from its EVM private key
-//func (sm *SmokeTestRunner) getBtcAddress() (string, error) {
-//	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-//	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	return privkeyWIF.PrivKey.PubKey()., nil
-//}

@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 
@@ -61,14 +62,25 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 }
 
 // getBtcClient get btc client
-func getBtcClient(rpc string) (*rpcclient.Client, error) {
+func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
+	var param string
+	switch rpcConf.Params {
+	case config.Regnet:
+	case config.Testnet3:
+		param = "testnet3"
+	case config.Mainnet:
+		param = "mainnet"
+	default:
+		return nil, fmt.Errorf("invalid bitcoin params %s", rpcConf.Params)
+	}
+
 	connCfg := &rpcclient.ConnConfig{
-		Host:         rpc,
-		User:         "smoketest",
-		Pass:         "123",
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       "testnet3",
+		Host:         rpcConf.Host,
+		User:         rpcConf.User,
+		Pass:         rpcConf.Pass,
+		HTTPPostMode: rpcConf.HTTPPostMode,
+		DisableTLS:   rpcConf.DisableTLS,
+		Params:       param,
 	}
 	return rpcclient.New(connCfg, nil)
 }

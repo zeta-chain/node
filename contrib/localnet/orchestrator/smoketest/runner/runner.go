@@ -3,6 +3,7 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/btcsuite/btcd/chaincfg"
 	"runtime"
 	"sync"
 	"time"
@@ -93,12 +94,13 @@ type SmokeTestRunner struct {
 	ReceiptTimeout time.Duration
 
 	// other
-	Name      string
-	Ctx       context.Context
-	CtxCancel context.CancelFunc
-	Logger    *Logger
-	WG        sync.WaitGroup
-	mutex     sync.Mutex
+	Name          string
+	Ctx           context.Context
+	CtxCancel     context.CancelFunc
+	Logger        *Logger
+	WG            sync.WaitGroup
+	BitcoinParams *chaincfg.Params
+	mutex         sync.Mutex
 }
 
 func NewSmokeTestRunner(

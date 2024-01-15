@@ -49,7 +49,7 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
 
-	btcTSSAddress, err := common.DecodeBtcAddress(res.Btc, common.BtcRegtestChain().ChainId)
+	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, sm.BitcoinParams)
 	if err != nil {
 		panic(err)
 	}
@@ -205,7 +205,7 @@ func (sm *SmokeTestRunner) SetTSSAddressesLegacy() {
 	}
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
-	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
+	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, sm.BitcoinParams)
 	if err != nil {
 		panic(err)
 	}

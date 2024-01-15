@@ -20,7 +20,8 @@ func NewRootCmd() *cobra.Command {
 	}
 	cmd.AddCommand(
 		NewRunCmd(),
-		NewAccountCmd(),
+		NewBalancesCmd(),
+		NewBitcoinAddressCmd(),
 		local.NewLocalCmd(),
 	)
 

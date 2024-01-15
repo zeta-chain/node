@@ -230,7 +230,7 @@ func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
 			sm.Logger.Info("  vout %d", vout.N)
 			sm.Logger.Info("  value %f", vout.Value)
 			sm.Logger.Info("  scriptPubKey %s", vout.ScriptPubKey.Hex)
-			sm.Logger.Info("  p2wpkh address: %s", utils.ScriptPKToAddress(vout.ScriptPubKey.Hex))
+			sm.Logger.Info("  p2wpkh address: %s", utils.ScriptPKToAddress(vout.ScriptPubKey.Hex, sm.BitcoinParams))
 		}
 	}
 

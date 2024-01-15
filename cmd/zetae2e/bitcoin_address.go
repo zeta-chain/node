@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -13,19 +14,19 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-// NewAccountCmd returns the account command
-// which runs shows from the key and rpc, the balance of the account on different network
-func NewAccountCmd() *cobra.Command {
+// NewBitcoinAddressCmd returns the bitcoin address command
+// which shows from the used config file, the bitcoin address that can be used to receive funds for the E2E tests
+func NewBitcoinAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "account [config-file]",
-		Short: "Show account balances on networks for E2E tests",
-		RunE:  runAccount,
+		Use:   "bitcoin-address [config-file]",
+		Short: "Show Bitcoin address to receive funds for E2E tests",
+		RunE:  runBitcoinAddress,
 		Args:  cobra.ExactArgs(1),
 	}
 	return cmd
 }
 
-func runAccount(cmd *cobra.Command, args []string) error {
+func runBitcoinAddress(cmd *cobra.Command, args []string) error {
 	// read the config file
 	conf, err := config.ReadConfig(args[0])
 	if err != nil {
@@ -33,7 +34,7 @@ func runAccount(cmd *cobra.Command, args []string) error {
 	}
 
 	// initialize logger
-	logger := runner.NewLogger(false, color.FgHiCyan, "")
+	logger := runner.NewLogger(false, color.FgHiYellow, "")
 
 	// set config
 	app.SetConfig()
@@ -65,5 +66,12 @@ func runAccount(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return r.ShowAccountInfo()
+	addr, err := r.GetBtcAddress()
+	if err != nil {
+		return err
+	}
+
+	logger.Print("* BTC address: %s", addr)
+
+	return nil
 }
