@@ -5,7 +5,13 @@ accounts:
 rpcs:
   zevm: "<zevm (ZetaChain) url>, generally using port 8545"
   evm: "<evm url>, generally using port 8545"
-  bitcoin: "<bitcoin url>"
+  bitcoin:
+    host: "<bitcoin rpc url>"
+    user: "<bitcoin user>"
+    pass: "<bitcoin pass>"
+    http_post_mode: true
+    disable_tls: true
+    params: "<mainnet|testnet3|regnet>"
   zetacore_grpc: "<ZetaChain grpc url>, generally using port 9090"
   zetacore_rpc: "<ZetaChain grpc url>, generally using port 26657"
 contracts:
