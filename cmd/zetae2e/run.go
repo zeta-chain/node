@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -12,7 +13,6 @@ import (
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
@@ -52,7 +52,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// initialize logger
-	logger := runner.NewLogger(verbose, color.FgWhite, "e2e")
+	logger := runner.NewLogger(verbose, color.FgHiCyan, "e2e")
 
 	// set config
 	app.SetConfig()
@@ -62,7 +62,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 
 	// get EVM address from config
 	evmAddr := conf.Accounts.EVMAddress
-	if ethcommon.IsHexAddress(evmAddr) {
+	if !ethcommon.IsHexAddress(evmAddr) {
 		cancel()
 		return errors.New("invalid EVM address")
 	}
@@ -75,8 +75,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		conf,
 		ethcommon.HexToAddress(evmAddr),
 		conf.Accounts.EVMPrivKey,
-		utils.FungibleAdminName,
-		FungibleAdminMnemonic,
+		utils.FungibleAdminName, // placeholder value, not used
+		FungibleAdminMnemonic,   // placeholder value, not used
 		logger,
 	)
 	if err != nil {
@@ -90,7 +90,11 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	// fetch the TSS address
 	testRunner.SetTSSAddresses()
 
-	// run tests
+	// set timeout
+	testRunner.CctxTimeout = 5 * time.Minute
+	testRunner.ReceiptTimeout = 5 * time.Minute
+
+	//run tests
 	if err := testRunner.RunSmokeTestsFromNames(
 		smoketests.AllSmokeTests,
 		conf.TestList...,

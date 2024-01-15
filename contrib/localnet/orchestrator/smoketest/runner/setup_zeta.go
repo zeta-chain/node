@@ -27,7 +27,7 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 
 	var err error
 	res := &observertypes.QueryGetTssAddressResponse{}
-	for {
+	for i := 0; ; i++ {
 		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{})
 		if err != nil {
 			// if error contains unknown method GetTssAddress for service, we might be using an older version of the chain for upgrade test
@@ -37,8 +37,10 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 				return
 			}
 
-			sm.Logger.Info("ObserverClient.TSS error %s", err.Error())
-			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			if i%10 == 0 {
+				sm.Logger.Info("ObserverClient.TSS error %s", err.Error())
+				sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -189,11 +191,13 @@ func (sm *SmokeTestRunner) SetupBTCZRC20() {
 func (sm *SmokeTestRunner) SetTSSAddressesLegacy() {
 	var err error
 	res := &crosschaintypes.QueryGetTssAddressResponse{}
-	for {
+	for i := 0; ; i++ {
 		res, err = sm.CctxClient.GetTssAddress(sm.Ctx, &crosschaintypes.QueryGetTssAddressRequest{})
 		if err != nil {
-			sm.Logger.Info("cctxClient.TSS (legacy) error %s", err.Error())
-			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			if i%10 == 0 {
+				sm.Logger.Info("cctxClient.TSS (legacy) error %s", err.Error())
+				sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
