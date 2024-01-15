@@ -23,6 +23,9 @@ Observer params and core params have been merged into chain params:
 Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin chain id:
 * `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoin chain id can now be passed as a parameter to fetch the correct tss for required BTC chain. This parameter only affects the BTC tss address in the response.
 
+Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+* `zetaclientd start` : 2 inputs required from stdin
+
 ### Features
 
 * [1549](https://github.com/zeta-chain/node/pull/1549) - add monitoring for vote tx results in ZetaClient
