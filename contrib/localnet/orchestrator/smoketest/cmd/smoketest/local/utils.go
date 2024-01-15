@@ -152,10 +152,10 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	*bind.TransactOpts,
 	error,
 ) {
-	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
-	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
-	}
+	//btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
+	//if err != nil {
+	//	return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+	//}
 	goerliClient, goerliAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
@@ -168,7 +168,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
-	return btcRPCClient,
+	return nil,
 		goerliClient,
 		goerliAuth,
 		cctxClient,
@@ -179,19 +179,6 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 		zevmClient,
 		zevmAuth,
 		nil
-}
-
-// getBtcClient get btc client
-func getBtcClient(rpc string) (*rpcclient.Client, error) {
-	connCfg := &rpcclient.ConnConfig{
-		Host:         rpc,
-		User:         "smoketest",
-		Pass:         "123",
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       "testnet3",
-	}
-	return rpcclient.New(connCfg, nil)
 }
 
 // getEVMClient get goerli client

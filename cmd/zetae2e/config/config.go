@@ -71,6 +71,9 @@ func RunnerFromConfig(
 
 	// set contracts
 	err = setContractsFromConfig(sm, conf)
+	if err != nil {
+		return nil, err
+	}
 
 	// set bitcoin params
 	chainParams, err := conf.RPCs.Bitcoin.Params.GetParams()

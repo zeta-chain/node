@@ -39,7 +39,7 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90E
 
 # run e2e tests
 echo "running e2e tests..."
-zetae2e "$ZETAE2E_CMD" --verbose
+zetae2e "$ZETAE2E_CMD"
 ZETAE2E_EXIT_CODE=$?
 
 # if e2e passed, exit with 0, otherwise exit with 1

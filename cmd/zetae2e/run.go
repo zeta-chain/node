@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"time"
+
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"

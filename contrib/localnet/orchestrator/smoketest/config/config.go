@@ -3,8 +3,9 @@ package config
 import (
 	"errors"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
 	"os"
+
+	"github.com/btcsuite/btcd/chaincfg"
 
 	"gopkg.in/yaml.v2"
 )

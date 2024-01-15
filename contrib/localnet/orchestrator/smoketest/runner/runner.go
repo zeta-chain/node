@@ -3,10 +3,11 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/btcsuite/btcd/chaincfg"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
@@ -339,7 +340,7 @@ func (sm *SmokeTestRunner) ShowAccountInfo() error {
 	sm.Logger.Print(" ---💰 Account info %s ---", sm.DeployerAddress.Hex())
 
 	// evm
-	sm.Logger.Print("* Ethereum:")
+	sm.Logger.Print("Ethereum:")
 
 	// zeta balance on evm
 	balance, err := sm.ZetaEth.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
@@ -363,7 +364,7 @@ func (sm *SmokeTestRunner) ShowAccountInfo() error {
 	sm.Logger.Print("* ERC20 balance: %s", balance.String())
 
 	// zevm
-	sm.Logger.Print("* ZetaChain:")
+	sm.Logger.Print("ZetaChain:")
 
 	// zeta balance on zevm
 	balance, err = sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
