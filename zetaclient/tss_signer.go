@@ -84,6 +84,7 @@ func NewTSS(
 	metrics *metrics.Metrics,
 	bitcoinChainID int64,
 	tssPassword string,
+	hotkeyPassword string,
 ) (*TSS, error) {
 	server, err := SetupTSSServer(peer, privkey, preParams, cfg, tssPassword)
 	if err != nil {
@@ -102,7 +103,7 @@ func NewTSS(
 	if err != nil {
 		return nil, err
 	}
-	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg, hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}

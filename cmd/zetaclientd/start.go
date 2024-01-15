@@ -84,7 +84,7 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// CreateZetaBridge:  Zetabridge is used for all communication to zetacore , which this client connects to.
 	// Zetacore accumulates votes , and provides a centralized source of truth for all clients
-	zetaBridge, err := CreateZetaBridge(cfg, telemetryServer)
+	zetaBridge, err := CreateZetaBridge(cfg, telemetryServer, hotkeyPass)
 	if err != nil {
 		panic(err)
 	}
@@ -167,7 +167,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -319,11 +319,11 @@ func initPreParams(path string) {
 
 func promptPasswords() (string, string, error) {
 	reader := bufio.NewReader(os.Stdin)
-	//fmt.Print("HotKey Password: ")
-	//hotKeyPass, err := reader.ReadString('\n')
-	//if err != nil {
-	//	return "", "", err
-	//}
+	fmt.Print("HotKey Password: ")
+	hotKeyPass, err := reader.ReadString('\n')
+	if err != nil {
+		return "", "", err
+	}
 	fmt.Print("TSS Password: ")
 	TSSKeyPass, err := reader.ReadString('\n')
 	if err != nil {
@@ -334,5 +334,5 @@ func promptPasswords() (string, string, error) {
 		return "", "", errors.New("hotkey and tss passwords are required to start zetaclient")
 	}
 
-	return "", TSSKeyPass, err
+	return hotKeyPass, TSSKeyPass, err
 }
