@@ -77,3 +77,19 @@ func (sm *SmokeTestRunner) setBtcAddress() {
 
 	sm.Logger.Info("BTCDeployerAddress: %s", sm.BTCDeployerAddress.EncodeAddress())
 }
+
+//// getBtcAddress returns the BTC address of the deployer from its EVM private key
+//func (sm *SmokeTestRunner) getBtcAddress() (string, error) {
+//	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+//	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	return privkeyWIF.PrivKey.PubKey()., nil
+//}

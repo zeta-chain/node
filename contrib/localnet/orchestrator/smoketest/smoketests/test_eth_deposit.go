@@ -20,7 +20,11 @@ import (
 
 // TestEtherDeposit tests deposit of ethers
 func TestEtherDeposit(sm *runner.SmokeTestRunner) {
-	sm.DepositEther(false)
+	hash := sm.DepositEther(false)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	sm.Logger.CCTX(*cctx, "deposit")
 }
 
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
