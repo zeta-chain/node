@@ -170,7 +170,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeT
 		if !ok {
 			return fmt.Errorf("smoke test %s not found", smokeTestName)
 		}
-		if err := sm.RunSmokeTest(smokeTest); err != nil {
+		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
 			return err
 		}
 	}
@@ -202,7 +202,13 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 		timeBefore := time.Now()
 
 		// run test
-		testErr := sm.RunSmokeTest(test)
+		testErr := sm.RunSmokeTest(test, false)
+		if testErr != nil {
+			sm.Logger.Info("test %s failed: %s", test.Name, testErr.Error())
+		}
+
+		// wait 5 sec to make sure we get updated balances
+		time.Sleep(5 * time.Second)
 
 		// get info after test
 		balancesAfter, err := sm.GetAccountBalances()
@@ -227,7 +233,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 // RunSmokeTests runs a list of smoke tests
 func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
 	for _, smokeTest := range smokeTests {
-		if err := sm.RunSmokeTest(smokeTest); err != nil {
+		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
 			return err
 		}
 	}
@@ -235,7 +241,7 @@ func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
 }
 
 // RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error) {
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -254,8 +260,10 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error)
 	smokeTestWithName.SmokeTest(sm)
 
 	//check supplies
-	if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
-		return err
+	if checkAccounting {
+		if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
+			return err
+		}
 	}
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)

@@ -42,7 +42,7 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 	}
 
 	// evm
-	ethEth, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	evmEth, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -59,7 +59,7 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
 		ZetaERC20: zetaErc20,
-		EvmETH:    ethEth,
+		EvmETH:    evmEth,
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
 	}, nil
@@ -103,12 +103,12 @@ func (sm *SmokeTestRunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff
 
 // GetAccountBalancesDiff returns the difference in the account balances of the accounts used in the smoke test
 func GetAccountBalancesDiff(balancesBefore, balancesAfter AccountBalances) AccountBalancesDiff {
-	balancesBeforeZeta := big.NewInt(0).Add(balancesBefore.ZetaETH, balancesBefore.ZetaZETA)
-	balancesBeforeEth := big.NewInt(0).Add(balancesBefore.EvmETH, balancesBefore.EvmZETA)
+	balancesBeforeZeta := big.NewInt(0).Add(balancesBefore.ZetaZETA, balancesBefore.EvmZETA)
+	balancesBeforeEth := big.NewInt(0).Add(balancesBefore.ZetaETH, balancesBefore.EvmETH)
 	balancesBeforeErc20 := big.NewInt(0).Add(balancesBefore.ZetaERC20, balancesBefore.EvmERC20)
 
-	balancesAfterZeta := big.NewInt(0).Add(balancesAfter.ZetaETH, balancesAfter.ZetaZETA)
-	balancesAfterEth := big.NewInt(0).Add(balancesAfter.EvmETH, balancesAfter.EvmZETA)
+	balancesAfterZeta := big.NewInt(0).Add(balancesAfter.ZetaZETA, balancesAfter.EvmZETA)
+	balancesAfterEth := big.NewInt(0).Add(balancesAfter.ZetaETH, balancesAfter.EvmETH)
 	balancesAfterErc20 := big.NewInt(0).Add(balancesAfter.ZetaERC20, balancesAfter.EvmERC20)
 
 	diffZeta := big.NewInt(0).Sub(balancesBeforeZeta, balancesAfterZeta)

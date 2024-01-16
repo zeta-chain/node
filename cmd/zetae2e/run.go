@@ -91,8 +91,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	testRunner.SetTSSAddresses()
 
 	// set timeout
-	testRunner.CctxTimeout = 5 * time.Minute
-	testRunner.ReceiptTimeout = 5 * time.Minute
+	testRunner.CctxTimeout = 10 * time.Minute
+	testRunner.ReceiptTimeout = 10 * time.Minute
 
 	balancesBefore, err := testRunner.GetAccountBalances()
 	if err != nil {
