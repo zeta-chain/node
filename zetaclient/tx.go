@@ -3,6 +3,7 @@ package zetaclient
 import (
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -144,6 +145,9 @@ func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObser
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
 		if err == nil {
+			// monitor the result of the transaction
+			go b.MonitorTxResult(zetaTxHash, true)
+
 			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
@@ -205,6 +209,9 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
 		if err == nil {
+			// monitor the result of the transaction
+			go b.MonitorTxResult(zetaTxHash, true)
+
 			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
@@ -300,4 +307,41 @@ func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, hei
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", fmt.Errorf("post add block header failed after %d retries", DefaultRetryCount)
+}
+
+// MonitorTxResult monitors the result of a tx (used for inbound and outbound vote txs)
+func (b *ZetaCoreBridge) MonitorTxResult(zetaTxHash string, isInbound bool) {
+	var lastErr error
+	ticker := 5 * time.Second
+	retry := 10
+	prefix := "MonitorOutboundTxResult"
+	if isInbound {
+		prefix = "MonitorInboundTxResult"
+	}
+
+	for i := 0; i < retry; i++ {
+		time.Sleep(ticker)
+		txResult, err := b.QueryTxResult(zetaTxHash)
+		if err == nil {
+			// the inbound vote tx shouldn't fail to execute
+			if strings.Contains(txResult.RawLog, "failed to execute message") {
+				b.logger.Error().Msgf(
+					"%s: failed to execute vote, txHash: %s, txResult %s",
+					prefix,
+					zetaTxHash,
+					txResult.String(),
+				)
+			}
+			return
+		}
+		lastErr = err
+	}
+
+	b.logger.Error().Err(lastErr).Msgf(
+		"%s: unable to query tx result for txHash %s, err %s",
+		prefix,
+		zetaTxHash,
+		lastErr.Error(),
+	)
+	return
 }

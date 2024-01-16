@@ -13,24 +13,34 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// crosschainKeeper is an interface to prevent cyclic dependency
+type crosschainKeeper interface {
+	GetStoreKey() storetypes.StoreKey
+	GetCodec() codec.Codec
+	GetAllCrossChainTx(ctx sdk.Context) []types.CrossChainTx
+	AddFinalizedInbound(ctx sdk.Context, inboundTxHash string, senderChainID int64, height uint64)
+}
+
 // MigrateStore migrates the x/crosschain module state from the consensus version 3 to 4
 // It initializes the aborted zeta amount to 0
 func MigrateStore(
 	ctx sdk.Context,
 	observerKeeper types.ObserverKeeper,
-	crossChainStoreKey storetypes.StoreKey,
-	cdc codec.BinaryCodec,
+	crosschainKeeper crosschainKeeper,
 ) error {
-	SetZetaAccounting(ctx, crossChainStoreKey, cdc)
-	MoveTssToObserverModule(ctx, observerKeeper, crossChainStoreKey, cdc)
-	MoveNonceToObserverModule(ctx, observerKeeper, crossChainStoreKey, cdc)
+	SetZetaAccounting(ctx, crosschainKeeper.GetStoreKey(), crosschainKeeper.GetCodec())
+	MoveTssToObserverModule(ctx, observerKeeper, crosschainKeeper.GetStoreKey(), crosschainKeeper.GetCodec())
+	MoveNonceToObserverModule(ctx, observerKeeper, crosschainKeeper.GetStoreKey(), crosschainKeeper.GetCodec())
+	SetBitcoinFinalizedInbound(ctx, crosschainKeeper)
+
 	return nil
 }
 
 func SetZetaAccounting(
 	ctx sdk.Context,
 	crossChainStoreKey storetypes.StoreKey,
-	cdc codec.BinaryCodec) {
+	cdc codec.BinaryCodec,
+) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	prefixedStore := prefix.NewStore(ctx.KVStore(crossChainStoreKey), p)
 	abortedAmountZeta := sdkmath.ZeroUint()
@@ -124,7 +134,8 @@ func MoveNonceToObserverModule(
 func MoveTssToObserverModule(ctx sdk.Context,
 	observerKeeper types.ObserverKeeper,
 	crossChainStoreKey storetypes.StoreKey,
-	cdc codec.BinaryCodec) {
+	cdc codec.BinaryCodec,
+) {
 	// Using New Types from observer module as the structure is the same
 	var tss observertypes.TSS
 	var tssHistory []observertypes.TSS
@@ -157,5 +168,23 @@ func MoveTssToObserverModule(ctx sdk.Context,
 	}
 	if writeTss {
 		observerKeeper.SetTSS(ctx, tss)
+	}
+}
+
+// SetBitcoinFinalizedInbound sets the finalized inbound for bitcoin chains to prevent new ballots from being created with same intxhash
+func SetBitcoinFinalizedInbound(ctx sdk.Context, crosschainKeeper crosschainKeeper) {
+	for _, cctx := range crosschainKeeper.GetAllCrossChainTx(ctx) {
+		if cctx.InboundTxParams != nil {
+			// check if bitcoin inbound
+			if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) {
+				// add finalized inbound
+				crosschainKeeper.AddFinalizedInbound(
+					ctx,
+					cctx.InboundTxParams.InboundTxObservedHash,
+					cctx.InboundTxParams.SenderChainId,
+					0,
+				)
+			}
+		}
 	}
 }

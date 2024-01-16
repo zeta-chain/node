@@ -47,17 +47,12 @@ func erc20TestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserERC20Address, 1000)
 		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserERC20Address, 10)
-
-		erc20Runner.WaitForTxReceiptOnEvm(txZetaSend)
 		erc20Runner.WaitForTxReceiptOnEvm(txUSDTSend)
 
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := erc20Runner.DepositZeta()
 		txEtherDeposit := erc20Runner.DepositEther(false)
 		txERC20Deposit := erc20Runner.DepositERC20()
-		erc20Runner.WaitForMinedCCTX(txZetaDeposit)
 		erc20Runner.WaitForMinedCCTX(txEtherDeposit)
 		erc20Runner.WaitForMinedCCTX(txERC20Deposit)
 

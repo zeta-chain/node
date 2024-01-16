@@ -47,7 +47,7 @@ fi
 echo "E2E setup passed, waiting for upgrade height..."
 
 # Restart zetaclients at upgrade height
-/work/restart-zetaclientd.sh -u 180 -n 2
+/work/restart-zetaclientd.sh -u 200 -n 2
 
 echo "waiting 10 seconds for node to restart..."
 
