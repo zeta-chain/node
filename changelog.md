@@ -4,6 +4,8 @@
 
 ## Version: v12.0.0
 
+* [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+
 ### Breaking Changes
 
 TSS and chain validation related queries have been moved from `crosschain` module to `observer` module:
