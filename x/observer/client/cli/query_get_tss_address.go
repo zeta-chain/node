@@ -48,7 +48,7 @@ func CmdGetTssAddressByFinalizedZetaHeight() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-historical-tss-address [finalizedZetaHeight] [bitcoinChainId]",
 		Short: "Query tss address by finalized zeta height (for historical tss addresses)",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientTxContext(cmd)
