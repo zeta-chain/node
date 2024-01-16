@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tests
+
+* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+
 ## Version: v12.0.0
 
 ### Breaking Changes
