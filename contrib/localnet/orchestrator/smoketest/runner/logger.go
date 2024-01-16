@@ -36,11 +36,28 @@ func NewLogger(verbose bool, printColor color.Attribute, prefix string) *Logger 
 	}
 }
 
+// SetColor sets the color of the logger
+func (l *Logger) SetColor(printColor color.Attribute) {
+	l.logger = color.New(printColor)
+}
+
+// Prefix returns the prefix of the logger
+func (l *Logger) Prefix() string {
+	return l.getPrefixWithPadding() + loggerSeparator
+}
+
 // Print prints a message to the logger
 func (l *Logger) Print(message string, args ...interface{}) {
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
 	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + text + "\n")
+}
+
+// PrintNoPrefix prints a message to the logger without the prefix
+func (l *Logger) PrintNoPrefix(message string, args ...interface{}) {
+	text := fmt.Sprintf(message, args...)
+	// #nosec G104 - we are not using user input
+	l.logger.Printf(text + "\n")
 }
 
 // Info prints a message to the logger if verbose is true

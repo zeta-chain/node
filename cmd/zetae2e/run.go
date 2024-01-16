@@ -5,8 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -14,6 +12,7 @@ import (
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
@@ -95,16 +94,34 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	testRunner.CctxTimeout = 5 * time.Minute
 	testRunner.ReceiptTimeout = 5 * time.Minute
 
-	//run tests
-	if err := testRunner.RunSmokeTestsFromNames(
-		smoketests.AllSmokeTests,
-		conf.TestList...,
-	); err != nil {
+	balancesBefore, err := testRunner.GetAccountBalances()
+	if err != nil {
 		cancel()
 		return err
 	}
 
+	//run tests
+	reports, err := testRunner.RunSmokeTestsFromNamesIntoReport(
+		smoketests.AllSmokeTests,
+		conf.TestList...,
+	)
+	if err != nil {
+		cancel()
+		return err
+	}
+
+	balancesAfter, err := testRunner.GetAccountBalances()
+	if err != nil {
+		cancel()
+		return err
+	}
+
+	// Print tests completion info
 	logger.Print("tests finished successfully in %s", time.Since(testStartTime).String())
+	testRunner.Logger.SetColor(color.FgHiRed)
+	testRunner.PrintTotalDiff(runner.GetAccountBalancesDiff(balancesBefore, balancesAfter))
+	testRunner.Logger.SetColor(color.FgHiGreen)
+	testRunner.PrintTestReports(reports)
 
 	return nil
 }

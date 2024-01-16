@@ -66,5 +66,12 @@ func runBalances(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	return r.ShowAccountInfo()
+	balances, err := r.GetAccountBalances()
+	if err != nil {
+		cancel()
+		return err
+	}
+	r.PrintAccountBalances(balances)
+
+	return nil
 }
