@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fix
+
+* [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
+
 ## Version: v12.0.0
 
 ### Breaking Changes
