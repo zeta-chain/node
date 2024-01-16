@@ -2,9 +2,12 @@
 
 ## Unreleased
 
-## Version: v12.0.0
+### Chores
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+
+## Version: v12.0.0
+
 
 ### Breaking Changes
 
