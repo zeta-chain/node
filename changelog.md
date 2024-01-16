@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Tests
+
+* [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
+
 ## Version: v12.0.0
 
 ### Breaking Changes
