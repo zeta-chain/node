@@ -83,7 +83,7 @@ to [run the smoke test](./contrib/localnet/README.md).
 
 
 ## Creating a Release Candidate
-Creating a release candidate for internal testing is a straightforward process. Here are the steps to follow:
+Creating a release candidate for testing is a straightforward process. Here are the steps to follow:
 
 ### Steps
  - Step 1. Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
@@ -92,8 +92,8 @@ Creating a release candidate for internal testing is a straightforward process. 
 By following these steps, you can efficiently create a release candidate for testnet for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
 
-## Creating a final Release
-Creating a final release is a straightforward process. Here are the steps to follow:
+## Creating a Release
+After the Release Candidate has been fully tested, creating a final release for use on public networks is a straightforward process. Here are the steps to follow:
 
 ### Steps
  - Step 1. Open a Pull Request (PR): Begin by opening a PR from the release candidate branch (e.g., vx.x.x-rc) to the main branch.
