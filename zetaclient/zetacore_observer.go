@@ -2,9 +2,10 @@ package zetaclient
 
 import (
 	"fmt"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"strings"
 	"time"
+
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdkmath "cosmossdk.io/math"
 
