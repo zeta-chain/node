@@ -11,15 +11,14 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-func (sm *SmokeTestRunner) SetupBitcoinAccount() {
+func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
 		sm.Logger.Print("✅ Bitcoin account setup in %s\n", time.Since(startTime))
 	}()
 
-	btc := sm.BtcRPCClient
-	_, err := btc.CreateWallet(sm.Name, rpcclient.WithCreateWalletBlank())
+	_, err := sm.BtcRPCClient.CreateWallet(sm.Name, rpcclient.WithCreateWalletBlank())
 	if err != nil {
 		if !strings.Contains(err.Error(), "Database already exists") {
 			panic(err)
@@ -28,20 +27,23 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount() {
 
 	sm.setBtcAddress()
 
-	err = btc.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
-	if err != nil {
-		panic(err)
-	}
+	if initNetwork {
+		// import the TSS address
+		err = sm.BtcRPCClient.ImportAddress(sm.BTCTSSAddress.EncodeAddress())
+		if err != nil {
+			panic(err)
+		}
 
-	// mine some blocks to get some BTC into the deployer address
-	_, err = btc.GenerateToAddress(101, sm.BTCDeployerAddress, nil)
-	if err != nil {
-		panic(err)
-	}
+		// mine some blocks to get some BTC into the deployer address
+		_, err = sm.BtcRPCClient.GenerateToAddress(101, sm.BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
 
-	_, err = btc.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
-	if err != nil {
-		panic(err)
+		_, err = sm.BtcRPCClient.GenerateToAddress(4, sm.BTCDeployerAddress, nil)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

@@ -115,12 +115,12 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	sm.SystemContract = SystemContract
 	sm.SystemContractAddr = systemContractAddr
 
+	// set ZRC20 contracts
 	sm.SetupETHZRC20()
 	sm.SetupBTCZRC20()
-}
 
-func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
-	zevmSwapAppAddr, tx, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
+	// deploy ZEVMSwapApp and ContextApp
+	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
 		sm.ZevmAuth,
 		sm.ZevmClient,
 		sm.UniswapV2RouterAddr,
@@ -129,25 +129,23 @@ func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("ZEVMSwapApp deployment failed")
-	}
-	sm.Logger.Info("ZEVMSwapApp contract address: %s, tx hash: %s", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
-	sm.ZEVMSwapAppAddr = zevmSwapAppAddr
-	sm.ZEVMSwapApp = zevmSwapApp
-}
 
-func (sm *SmokeTestRunner) SetupContextApp() {
-	contextAppAddr, tx, contextApp, err := contextapp.DeployContextApp(sm.ZevmAuth, sm.ZevmClient)
+	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(sm.ZevmAuth, sm.ZevmClient)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txZEVMSwapApp, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("ZEVMSwapApp deployment failed")
+	}
+	sm.ZEVMSwapAppAddr = zevmSwapAppAddr
+	sm.ZEVMSwapApp = zevmSwapApp
+
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txContextApp, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
-	sm.Logger.Info("ContextApp contract address: %s, tx hash: %s", contextAppAddr.Hex(), tx.Hash().Hex())
 	sm.ContextAppAddr = contextAppAddr
 	sm.ContextApp = contextApp
 }

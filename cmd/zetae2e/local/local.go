@@ -205,7 +205,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetZEVMContracts()
 		deployerRunner.MintUSDTOnEvm(10000)
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
-		deployerRunner.PrintContractAddresses()
 	}
 
 	// if a config output is specified, write the config
@@ -224,6 +223,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ config file written in %s", configOut)
 	}
 
+	deployerRunner.PrintContractAddresses()
+
 	// if setup only, quit
 	if setupOnly {
 		os.Exit(0)
@@ -234,7 +235,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {

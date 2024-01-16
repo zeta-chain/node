@@ -16,6 +16,7 @@ func bitcoinTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.SmokeTestRunner,
 	verbose bool,
+	initBitcoinNetwork bool,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -47,22 +48,18 @@ func bitcoinTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserBitcoinAddress, 1000)
 		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserBitcoinAddress, 1000)
-
-		bitcoinRunner.WaitForTxReceiptOnEvm(txZetaSend)
 		bitcoinRunner.WaitForTxReceiptOnEvm(txUSDTSend)
 
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := bitcoinRunner.DepositZeta()
 		txEtherDeposit := bitcoinRunner.DepositEther(false)
 		txERC20Deposit := bitcoinRunner.DepositERC20()
-		bitcoinRunner.SetupBitcoinAccount()
-		bitcoinRunner.DepositBTC(true)
-		bitcoinRunner.SetupZEVMSwapApp()
-		bitcoinRunner.WaitForMinedCCTX(txZetaDeposit)
+
 		bitcoinRunner.WaitForMinedCCTX(txEtherDeposit)
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
+
+		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
+		bitcoinRunner.DepositBTC(true)
 
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
