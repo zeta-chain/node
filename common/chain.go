@@ -52,7 +52,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := DecodeBtcAddress(addrStr, chain.ChainId)
 		if err != nil {
 			return "", err
 		}
@@ -187,14 +187,6 @@ func GetChainFromChainID(chainID int64) *Chain {
 		}
 	}
 	return nil
-}
-
-func GetChainNameFromChainID(chainID int64) (string, error) {
-	chain := GetChainFromChainID(chainID)
-	if chain == nil {
-		return "", fmt.Errorf("chain %d not found", chainID)
-	}
-	return chain.GetChainName().String(), nil
 }
 
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {

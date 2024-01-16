@@ -8,17 +8,14 @@ import (
 )
 
 // UpdateCrosschainFlags updates the crosschain related flags.
-// Only the admin policy account is authorized to broadcast this message.
+//
+// Aurthorized: admin policy group 1 (except enabling/disabled
+// inbounds/outbounds and gas price increase), admin policy group 2 (all).
 func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUpdateCrosschainFlags) (*types.MsgUpdateCrosschainFlagsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	requiredGroup := types.Policy_Type_group1
-	if msg.IsInboundEnabled || msg.IsOutboundEnabled || msg.GasPriceIncreaseFlags != nil {
-		requiredGroup = types.Policy_Type_group2
-	}
-
 	// check permission
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(requiredGroup) {
+	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(msg.GetRequiredGroup()) {
 		return &types.MsgUpdateCrosschainFlagsResponse{}, types.ErrNotAuthorizedPolicy
 	}
 

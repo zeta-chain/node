@@ -50,7 +50,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *elem)
 		}
 	}
-
+	for _, elem := range genState.FinalizedInbounds {
+		k.SetFinalizedInbound(ctx, elem)
+	}
 }
 
 // ExportGenesis returns the crosschain module's exported genesis.
@@ -87,6 +89,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if found {
 		genesis.ZetaAccounting = amount
 	}
+	genesis.FinalizedInbounds = k.GetAllFinalizedInbound(ctx)
 
 	return &genesis
 }

@@ -9,9 +9,10 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// RemoveForeignCoin removes a coin from the list of foreign coins in the module's state.
+// RemoveForeignCoin removes a coin from the list of foreign coins in the
+// module's state.
 //
-// Only the admin policy account is authorized to broadcast this message.
+// Authorized: admin policy group 2.
 func (k msgServer) RemoveForeignCoin(goCtx context.Context, msg *types.MsgRemoveForeignCoin) (*types.MsgRemoveForeignCoinResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {

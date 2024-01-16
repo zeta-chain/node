@@ -83,8 +83,8 @@ build-testnet-ubuntu: go.sum
 
 install: go.sum
 		@echo "--> Installing zetacored & zetaclientd"
-		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
-		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetacored
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
 install-zetaclient: go.sum
 		@echo "--> Installing zetaclientd"
@@ -98,10 +98,6 @@ install-zetacore: go.sum
 install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
-
-install-smoketest: go.sum
-		@echo "--> Installing orchestrator"
-		@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 ###############################################################################
 ###                             Local network                               ###
@@ -183,8 +179,23 @@ generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
+###                            E2E tests                                    ###
+###############################################################################
+
+install-zetae2e: go.sum
+	@echo "--> Installing orchestrator"
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
+.PHONY: install-zetae2e
+
+###############################################################################
 ###                            Smoke tests                                  ###
 ###############################################################################
+
+# Note: smoke tests are deprecated and will be removed in the future, replaced with e2e tests
+
+install-smoketest: go.sum
+	@echo "--> Installing orchestrator"
+	@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 zetanode:
 	@echo "Building zetanode"
@@ -229,12 +240,25 @@ stateful-upgrade:
 
 stateful-upgrade-source:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v10.1.7 -t zetanode -f ./Dockerfile-versioned-source .
+	$(DOCKER) build --build-arg old_version=v11.0.0-patch-core-params -t zetanode -f ./Dockerfile-versioned-source .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
 stop-stateful-upgrade:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
+
+###############################################################################
+###                              Monitoring                                 ###
+###############################################################################
+
+start-monitoring:
+	@echo "Starting monitoring services"
+	cd contrib/localnet/grafana/ && ./get-tss-address.sh
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml up -d
+
+stop-monitoring:
+	@echo "Stopping monitoring services"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-monitoring.yml down
 
 ###############################################################################
 ###                                GoReleaser  		                        ###

@@ -46,3 +46,11 @@ localnet/ganache/storage
 localnet/zetachain-monorepo
 /standalone-network/authz/tx.json
 /zetanode.log
+
+# Blockscout Files
+contrib/localnet/blockscout/services/blockscout-db-data/*
+contrib/localnet/blockscout/services/logs/*
+contrib/localnet/blockscout/services/redis-data/*
+contrib/localnet/blockscout/services/stats-db-data/*
+contrib/localnet/grafana/addresses.txt
+contrib/localnet/addresses.txt

@@ -2,6 +2,8 @@
 
 ## MsgAddObserver
 
+Authorized: admin policy group 2.
+
 ```proto
 message MsgAddObserver {
 	string creator = 1;
@@ -13,6 +15,10 @@ message MsgAddObserver {
 
 ## MsgUpdateObserver
 
+UpdateObserver handles updating an observer address
+Authorized: admin policy group 2 (admin update), old observer address (if the
+reason is that the observer was tombstoned).
+
 ```proto
 message MsgUpdateObserver {
 	string creator = 1;
@@ -22,20 +28,28 @@ message MsgUpdateObserver {
 }
 ```
 
-## MsgUpdateCoreParams
+## MsgUpdateChainParams
 
-UpdateCoreParams updates core parameters for a specific chain. Core parameters include
-confirmation count, outbound transaction schedule interval, ZETA token,
+UpdateChainParams updates chain parameters for a specific chain, or add a new one.
+Chain parameters include: confirmation count, outbound transaction schedule interval, ZETA token,
 connector and ERC20 custody contract addresses, etc.
-
-Throws an error if the chain ID is not supported.
-
 Only the admin policy account is authorized to broadcast this message.
 
 ```proto
-message MsgUpdateCoreParams {
+message MsgUpdateChainParams {
 	string creator = 1;
-	CoreParams coreParams = 2;
+	ChainParams chainParams = 2;
+}
+```
+
+## MsgRemoveChainParams
+
+RemoveChainParams removes chain parameters for a specific chain.
+
+```proto
+message MsgRemoveChainParams {
+	string creator = 1;
+	int64 chain_id = 2;
 }
 ```
 
@@ -52,7 +66,9 @@ message MsgAddBlameVote {
 ## MsgUpdateCrosschainFlags
 
 UpdateCrosschainFlags updates the crosschain related flags.
-Only the admin policy account is authorized to broadcast this message.
+
+Aurthorized: admin policy group 1 (except enabling/disabled
+inbounds/outbounds and gas price increase), admin policy group 2 (all).
 
 ```proto
 message MsgUpdateCrosschainFlags {
@@ -66,9 +82,10 @@ message MsgUpdateCrosschainFlags {
 
 ## MsgUpdateKeygen
 
-UpdateKeygen updates the block height of the keygen and sets the status to "pending keygen".
+UpdateKeygen updates the block height of the keygen and sets the status to
+"pending keygen".
 
-Only the admin policy account is authorized to broadcast this message.
+Authorized: admin policy group 1.
 
 ```proto
 message MsgUpdateKeygen {

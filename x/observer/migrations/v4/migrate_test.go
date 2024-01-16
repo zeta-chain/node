@@ -10,8 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMigrateStore(t *testing.T) {
-
+func TestMigrateCrosschainFlags(t *testing.T) {
 	k, ctx := keepertest.ObserverKeeper(t)
 	store := prefix.NewStore(ctx.KVStore(k.StoreKey()), types.KeyPrefix(types.CrosschainFlagsKey))
 	legacyFlags := types.LegacyCrosschainFlags{
@@ -21,8 +20,10 @@ func TestMigrateStore(t *testing.T) {
 	}
 	val := k.Codec().MustMarshal(&legacyFlags)
 	store.Set([]byte{0}, val)
-	err := v4.MigrateStore(ctx, k.StoreKey(), k.Codec())
+
+	err := v4.MigrateCrosschainFlags(ctx, k.StoreKey(), k.Codec())
 	assert.NoError(t, err)
+
 	flags, found := k.GetCrosschainFlags(ctx)
 	assert.True(t, found)
 	assert.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)

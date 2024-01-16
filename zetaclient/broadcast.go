@@ -6,18 +6,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-
-	"github.com/zeta-chain/zetacore/common/cosmos"
-	"github.com/zeta-chain/zetacore/zetaclient/hsm"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	flag "github.com/spf13/pflag"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 
 const (
@@ -181,4 +180,13 @@ func (b *ZetaCoreBridge) SignTx(
 		return hsm.SignWithHSM(txf, name, txBuilder, overwriteSig, txConfig)
 	}
 	return clienttx.Sign(txf, name, txBuilder, overwriteSig)
+}
+
+// QueryTxResult query the result of a tx
+func (b *ZetaCoreBridge) QueryTxResult(hash string) (*sdktypes.TxResponse, error) {
+	ctx, err := b.GetContext()
+	if err != nil {
+		return nil, err
+	}
+	return authtx.QueryTx(ctx, hash)
 }

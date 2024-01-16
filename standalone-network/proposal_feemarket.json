@@ -1,0 +1,15 @@
+{
+  "messages": [
+    {
+      "@type": "/ethermint.feemarket.v1.MsgUpdateParams",
+      "authority": "zeta10d07y265gmmuvt4z0w9aw880jnsr700jvxasvr",
+      "params": {
+        "base_fee": "7",
+        "min_gas_price" : "100000000000000",
+        "base_fee_change_denominator": "8"
+      }
+    }
+  ],
+  "metadata" : "some metadata",
+  "deposit": "10000000azeta"
+}

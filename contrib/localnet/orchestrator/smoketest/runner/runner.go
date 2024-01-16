@@ -1,7 +1,11 @@
 package runner
 
 import (
+	"context"
+	"fmt"
+	"runtime"
 	"sync"
+	"time"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
@@ -84,15 +88,23 @@ type SmokeTestRunner struct {
 	SystemContractAddr   ethcommon.Address
 	SystemContract       *systemcontract.SystemContract
 
+	// config
+	CctxTimeout    time.Duration
+	ReceiptTimeout time.Duration
+
 	// other
-	WG sync.WaitGroup
+	Name      string
+	Ctx       context.Context
+	CtxCancel context.CancelFunc
+	Logger    *Logger
+	WG        sync.WaitGroup
+	mutex     sync.Mutex
 }
 
-// SmokeTest is a function representing a smoke test
-// It takes a SmokeTestRunner as an argument
-type SmokeTest func(*SmokeTestRunner)
-
 func NewSmokeTestRunner(
+	ctx context.Context,
+	name string,
+	ctxCancel context.CancelFunc,
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
 	fungibleAdminMnemonic string,
@@ -107,8 +119,13 @@ func NewSmokeTestRunner(
 	goerliAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
+	logger *Logger,
 ) *SmokeTestRunner {
 	return &SmokeTestRunner{
+		Name:      name,
+		Ctx:       ctx,
+		CtxCancel: ctxCancel,
+
 		DeployerAddress:       deployerAddress,
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,
@@ -126,22 +143,190 @@ func NewSmokeTestRunner(
 		ZevmAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
 
+		Logger: logger,
+
 		WG: sync.WaitGroup{},
 	}
 }
 
-// RunSmokeTests runs a list of smoke tests
-func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) {
-	for _, smokeTest := range smokeTests {
-		sm.RunSmokeTest(smokeTest)
+// SmokeTestFunc is a function representing a smoke test
+// It takes a SmokeTestRunner as an argument
+type SmokeTestFunc func(*SmokeTestRunner)
+
+// SmokeTest represents a smoke test with a name
+type SmokeTest struct {
+	Name        string
+	Description string
+	SmokeTest   SmokeTestFunc
+}
+
+// RunSmokeTestsFromNames runs a list of smoke tests by name in a list of smoke tests
+func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeTestNames ...string) error {
+	for _, smokeTestName := range smokeTestNames {
+		smokeTest, ok := findSmokeTest(smokeTestName, smokeTests)
+		if !ok {
+			return fmt.Errorf("smoke test %s not found", smokeTestName)
+		}
+		if err := sm.RunSmokeTest(smokeTest); err != nil {
+			return err
+		}
 	}
+
+	return nil
+}
+
+// RunSmokeTests runs a list of smoke tests
+func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
+	for _, smokeTest := range smokeTests {
+		if err := sm.RunSmokeTest(smokeTest); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTest SmokeTest) {
-	// run smoke test
-	smokeTest(sm)
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error) {
+	// return an error on panic
+	// https://github.com/zeta-chain/node/issues/1500
+	defer func() {
+		if r := recover(); r != nil {
+			// print stack trace
+			stack := make([]byte, 4096)
+			n := runtime.Stack(stack, false)
+			err = fmt.Errorf("%s failed: %v, stack trace %s", smokeTestWithName.Name, r, stack[:n])
+		}
+	}()
 
-	// check supplies
-	sm.CheckZRC20ReserveAndSupply()
+	startTime := time.Now()
+	sm.Logger.Print("⏳running - %s", smokeTestWithName.Description)
+
+	// run smoke test
+	smokeTestWithName.SmokeTest(sm)
+
+	//check supplies
+	if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
+		return err
+	}
+
+	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
+
+	return err
+}
+
+// findSmokeTest finds a smoke test by name
+func findSmokeTest(name string, smokeTests []SmokeTest) (SmokeTest, bool) {
+	for _, test := range smokeTests {
+		if test.Name == name {
+			return test, true
+		}
+	}
+	return SmokeTest{}, false
+}
+
+// CopyAddressesFrom copies addresses from another SmokeTestRunner that initialized the contracts
+func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error) {
+	// copy TSS address
+	sm.TSSAddress = other.TSSAddress
+	sm.BTCTSSAddress = other.BTCTSSAddress
+
+	// copy addresses
+	sm.ZetaEthAddr = other.ZetaEthAddr
+	sm.ConnectorEthAddr = other.ConnectorEthAddr
+	sm.ERC20CustodyAddr = other.ERC20CustodyAddr
+	sm.USDTERC20Addr = other.USDTERC20Addr
+	sm.USDTZRC20Addr = other.USDTZRC20Addr
+	sm.ETHZRC20Addr = other.ETHZRC20Addr
+	sm.BTCZRC20Addr = other.BTCZRC20Addr
+	sm.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
+	sm.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	sm.TestDAppAddr = other.TestDAppAddr
+	sm.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
+	sm.ContextAppAddr = other.ContextAppAddr
+	sm.SystemContractAddr = other.SystemContractAddr
+
+	// create instances of contracts
+	sm.ZetaEth, err = zetaeth.NewZetaEth(sm.ZetaEthAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(sm.ConnectorEthAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.ERC20Custody, err = erc20custody.NewERC20Custody(sm.ERC20CustodyAddr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.USDTERC20, err = erc20.NewUSDT(sm.USDTERC20Addr, sm.GoerliClient)
+	if err != nil {
+		return err
+	}
+	sm.USDTZRC20, err = zrc20.NewZRC20(sm.USDTZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ETHZRC20, err = zrc20.NewZRC20(sm.ETHZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.BTCZRC20, err = zrc20.NewZRC20(sm.BTCZRC20Addr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(sm.ZEVMSwapAppAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.ContextApp, err = contextapp.NewContextApp(sm.ContextAppAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.SystemContract, err = systemcontract.NewSystemContract(sm.SystemContractAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Lock locks the mutex
+func (sm *SmokeTestRunner) Lock() {
+	sm.mutex.Lock()
+}
+
+// Unlock unlocks the mutex
+func (sm *SmokeTestRunner) Unlock() {
+	sm.mutex.Unlock()
+}
+
+// PrintContractAddresses prints the addresses of the contracts
+// the printed contracts are grouped in a zevm and evm section
+// there is a padding used to print the addresses at the same position
+func (sm *SmokeTestRunner) PrintContractAddresses() {
+	// zevm contracts
+	sm.Logger.Print(" --- 📜zEVM contracts ---")
+	sm.Logger.Print("SystemContract: %s", sm.SystemContractAddr.Hex())
+	sm.Logger.Print("ETHZRC20:       %s", sm.ETHZRC20Addr.Hex())
+	sm.Logger.Print("USDTZRC20:      %s", sm.USDTZRC20Addr.Hex())
+	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
+	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
+	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
+	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())
+	sm.Logger.Print("ContextApp:     %s", sm.ContextAppAddr.Hex())
+	sm.Logger.Print("TestDapp:       %s", sm.TestDAppAddr.Hex())
+
+	// evm contracts
+	sm.Logger.Print(" --- 📜EVM contracts ---")
+	sm.Logger.Print("ZetaEth:        %s", sm.ZetaEthAddr.Hex())
+	sm.Logger.Print("ConnectorEth:   %s", sm.ConnectorEthAddr.Hex())
+	sm.Logger.Print("ERC20Custody:   %s", sm.ERC20CustodyAddr.Hex())
+	sm.Logger.Print("USDTERC20:      %s", sm.USDTERC20Addr.Hex())
 }

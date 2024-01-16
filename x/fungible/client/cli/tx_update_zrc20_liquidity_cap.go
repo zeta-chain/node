@@ -29,9 +29,7 @@ func CmdUpdateZRC20LiquidityCap() *cobra.Command {
 				args[0],
 				newCap,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

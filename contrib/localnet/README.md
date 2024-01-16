@@ -76,6 +76,30 @@ which does the following docker compose command:
 # in zeta-node/contrib/localnet/orchestrator
 $ docker compose down --remove-orphans
 ```
+### Run monitoring setup
+Before starting the monitoring setup, make sure the Zetacore API is up at http://localhost:1317.
+You can also add any additional ETH addresses to monitor in zeta-node/contrib/localnet/grafana/addresses.txt file
+```bash
+# in zeta-node/
+make start-monitoring
+```
+which does the following docker compose command:
+```bash
+# in zeta-node/contrib/localnet/
+$ docker compose -f docker-compose-monitoring.yml up -d
+```
+### Grafana credentials and dashboards
+The Grafana default credentials are admin:admin. The dashboards are located at http://localhost:3000.
+### Stop monitoring setup
+```bash
+# in zeta-node/
+make stop-monitoring
+```
+which does the following docker compose command:
+```bash
+# in zeta-node/contrib/localnet/
+$ docker compose -f docker-compose-monitoring.yml down --remove-orphans
+```
 
 ## Useful data
 
@@ -90,6 +114,15 @@ $ docker compose down --remove-orphans
 The smoke test (integration tests) are located in the
 orchestrator/smoketest directory. The orchestrator is a Go program.
 
+## LocalNet Governance Proposals
+
+Localnet can be used for testing the creation and execution of governance propoosals. 
+
+Exec into the zetacored0 docker container and run the script to automatically generate proposals in a variety of states and then extends the voting window to one hour, allowing you time to view a proposal in a pending state. 
+```
+docker exec  -it zetacore0 bash
+/root/gov-proposals-testing.sh
+```
 
 ## References
 [Setup testnet reference](https://www.notion.so/zetachain/Set-up-athens-1-like-testnet-to-test-your-PRs-ac523eb5dd5d4e73902072ab7d85fa2f)

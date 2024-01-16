@@ -115,7 +115,9 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 			valueReceived:       "7991636132140714751",
 		},
 	}
-	for _, test := range tt {
+	for i, test := range tt {
+		// Buffer event index so that it does not clash with the inbound voter test
+		eventIndex := i + 100
 		test := test
 		s.Run(test.name, func() {
 			broadcaster := s.network.Validators[0]
@@ -148,14 +150,14 @@ func (s *IntegrationTestSuite) TestCCTXOutBoundVoter() {
 				var account authtypes.AccountI
 				s.NoError(val.ClientCtx.Codec.UnmarshalInterfaceJSON(out.Bytes(), &account))
 				message := test.name
-				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message)
+				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message, eventIndex)
 				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
 				s.Require().NoError(err)
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 
 			// Get the ballot
-			cctxIdentifier := GetBallotIdentifier(test.name)
+			cctxIdentifier := GetBallotIdentifier(test.name, eventIndex)
 			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdShowSend(), []string{cctxIdentifier, "--output", "json"})
 			cctx := crosschaintypes.QueryGetCctxResponse{}
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))

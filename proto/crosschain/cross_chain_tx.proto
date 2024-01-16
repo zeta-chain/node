@@ -16,6 +16,12 @@ enum CctxStatus {
   Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
 }
 
+enum TxFinalizationStatus {
+  option (gogoproto.goproto_enum_stringer) = true;
+  NotFinalized = 0; // the corresponding tx is not finalized
+  Finalized = 1; // the corresponding tx is finalized but not executed yet
+  Executed = 2; // the corresponding tx is executed
+}
 message InboundTxParams {
   string sender = 1; // this address is the immediate contract/EOA that calls the Connector.send()
   int64 sender_chain_id = 2;
@@ -30,6 +36,7 @@ message InboundTxParams {
   uint64 inbound_tx_observed_external_height = 8;
   string inbound_tx_ballot_index = 9;
   uint64 inbound_tx_finalized_zeta_height = 10;
+  TxFinalizationStatus tx_finalization_status = 11;
 }
 
 message ZetaAccounting {
@@ -63,6 +70,7 @@ message OutboundTxParams {
   ];
   uint64 outbound_tx_effective_gas_limit = 22;
   string tss_pubkey = 11;
+  TxFinalizationStatus tx_finalization_status = 12;
 }
 
 message Status {

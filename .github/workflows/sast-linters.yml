@@ -73,7 +73,7 @@ jobs:
         with:
           version: v1.54
           skip-cache: true
-          args: --timeout=20m
+          args: --out-format=json
 
   nosec_alert:
     runs-on: ubuntu-latest
@@ -88,7 +88,7 @@ jobs:
 
       - name: Getting files updated in the PR
         id: changed-files
-        uses: tj-actions/changed-files@v39
+        uses: tj-actions/changed-files@v41
         with:
           base_sha: ${{ github.event.pull_request.base.sha }} 
 

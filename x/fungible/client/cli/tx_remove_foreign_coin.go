@@ -25,9 +25,7 @@ func CmdRemoveForeignCoin() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argName,
 			)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}

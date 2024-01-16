@@ -46,7 +46,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((7*NUMOFNODES))
+  sleep 10
   echo "genesis.json created"
 fi
 
@@ -91,10 +91,23 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["feemarket"]["params"]["min_gas_price"]="10000000000.0000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
-  # set admin account
+# set admin account
   zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
+  zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
+# give balance to runner accounts to deploy contracts directly on zEVM
+# deployer
+  zetacored add-genesis-account zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd 100000000000000000000000000azeta
+# erc20 tester
+  zetacored add-genesis-account zeta1datate7xmwm4uk032f9rmcu0cwy7ch7kg6y6zv 100000000000000000000000000azeta
+# zeta tester
+  zetacored add-genesis-account zeta1tnp0hvsq4y5mxuhrq9h3jfwulxywpq0ads0rer 100000000000000000000000000azeta
+# bitcoin tester
+  zetacored add-genesis-account zeta19q7czqysah6qg0n4y3l2a08gfzqxydla492v80 100000000000000000000000000azeta
+# ethers tester
+  zetacored add-genesis-account zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING --gas-prices 20000000000azeta
@@ -122,7 +135,6 @@ then
       scp ~/.zetacored/config/genesis.json $NODE:~/.zetacored/config/genesis.json
   done
 # 6. Update Config in zetacore0 so that it has the correct persistent peer list
-   sleep 2
    pp=$(cat $HOME/.zetacored/config/gentx/z2gentx/*.json | jq '.body.memo' )
    pps=${pp:1:58}
    sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
