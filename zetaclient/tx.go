@@ -34,12 +34,6 @@ const (
 
 	// DefaultRetryInterval is the interval between retries in seconds
 	DefaultRetryInterval = 5
-
-	// MonitorTxResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorTxResultInterval = 5
-
-	// MonitorTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorTxResultRetryCount = 20
 )
 
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner, error) {

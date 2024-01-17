@@ -1,11 +1,12 @@
 package zetaclient
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"strings"
 	"time"
+
+	"cosmossdk.io/math"
+	"github.com/zeta-chain/zetacore/common"
 
 	"github.com/pkg/errors"
 
@@ -21,6 +22,12 @@ const (
 
 	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
 	PostVoteInboundMessagePassingExecutionGasLimit = 1_000_000
+
+	// MonitorVoteInboundTxResultInterval is the interval between retries for monitoring tx result in seconds
+	MonitorVoteInboundTxResultInterval = 5
+
+	// MonitorVoteInboundTxResultRetryCount is the number of retries to fetch monitoring tx result
+	MonitorVoteInboundTxResultRetryCount = 20
 )
 
 // GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
@@ -81,7 +88,7 @@ func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *ty
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
 		if err == nil {
-			// monitor the result of the transaction
+			// monitor the result of the transaction and resend if necessary
 			go b.MonitorVoteInboundTxResult(zetaTxHash, retryGasLimit, msg)
 
 			return zetaTxHash, ballotIndex, nil
@@ -98,8 +105,8 @@ func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *ty
 func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) {
 	var lastErr error
 
-	for i := 0; i < MonitorTxResultRetryCount; i++ {
-		time.Sleep(MonitorTxResultInterval * time.Second)
+	for i := 0; i < MonitorVoteInboundTxResultRetryCount; i++ {
+		time.Sleep(MonitorVoteInboundTxResultInterval * time.Second)
 
 		// query tx result from ZetaChain
 		txResult, err := b.QueryTxResult(zetaTxHash)
@@ -112,11 +119,12 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 					"MonitorInboundTxResult: failed to execute vote, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 			} else if strings.Contains(txResult.RawLog, "out of gas") {
-				// if the tx fails with out of gas error, resend the tx with more gas if retryGasLimit > 0
+				// if the tx fails with an out of gas error, resend the tx with more gas if retryGasLimit > 0
 				b.logger.Debug().Msgf(
 					"MonitorInboundTxResult: out of gas, txHash: %s, log %s", zetaTxHash, txResult.RawLog,
 				)
 				if retryGasLimit > 0 {
+					// new retryGasLimit set to 0 to prevent reentering this function
 					_, _, err := b.PostVoteInbound(retryGasLimit, 0, msg)
 					if err != nil {
 						b.logger.Error().Err(err).Msgf(
