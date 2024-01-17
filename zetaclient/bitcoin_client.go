@@ -385,12 +385,12 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		// post inbound vote message to zetacore
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendExecutionGasLimit, msg)
+			zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
 				return err // we have to re-scan this block next time
 			} else if zetaHash != "" {
-				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostVoteInbound zeta tx: %s ballot %s", zetaHash, ballot)
 			}
 		}
 
@@ -470,7 +470,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+	zetaHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive

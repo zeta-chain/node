@@ -28,17 +28,17 @@ const (
 	// AddTxHashToOutTxTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
 	AddTxHashToOutTxTrackerGasLimit = 200_000
 
-	// PostSendGasLimit is the gas limit for voting on observed inbound tx
-	PostSendGasLimit = 400_000
+	// PostVoteInboundGasLimit is the gas limit for voting on observed inbound tx
+	PostVoteInboundGasLimit = 400_000
 
-	// PostSendExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
-	PostSendExecutionGasLimit = 4_000_000
+	// PostVoteInboundExecutionGasLimit is the gas limit for voting on observed inbound tx and executing it
+	PostVoteInboundExecutionGasLimit = 4_000_000
 
-	// PostSendMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
-	PostSendMessagePassingExecutionGasLimit = 1_000_000
+	// PostVoteInboundMessagePassingExecutionGasLimit is the gas limit for voting on, and executing ,observed inbound tx related to message passing (coin_type == zeta)
+	PostVoteInboundMessagePassingExecutionGasLimit = 1_000_000
 
-	// PostReceiveConfirmationGasLimit is the gas limit for voting on observed outbound tx
-	PostReceiveConfirmationGasLimit = 400_000
+	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx
+	PostVoteOutboundGasLimit = 400_000
 
 	// PostBlameDataGasLimit is the gas limit for voting on blames
 	PostBlameDataGasLimit = 200_000
@@ -146,10 +146,10 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	return zetaTxHash, nil
 }
 
-// PostSend posts a vote on an observed inbound tx
+// PostVoteInbound posts a vote on an observed inbound tx
 // retryGasLimit is the gas limit used to resend the tx if it fails because of insufficient gas
 // it is used when the ballot is finalized and the inbound tx needs to be processed
-func (b *ZetaCoreBridge) PostSend(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
+func (b *ZetaCoreBridge) PostVoteInbound(gasLimit, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
 	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
 	if err != nil {
 		return "", "", err
@@ -159,7 +159,7 @@ func (b *ZetaCoreBridge) PostSend(gasLimit, retryGasLimit uint64, msg *types.Msg
 	ballotIndex := msg.Digest()
 	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostSend: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(err, "PostVoteInbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
@@ -173,13 +173,13 @@ func (b *ZetaCoreBridge) PostSend(gasLimit, retryGasLimit uint64, msg *types.Msg
 
 			return zetaTxHash, ballotIndex, nil
 		}
-		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
+		b.logger.Debug().Err(err).Msgf("PostVoteInbound broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", ballotIndex, fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
 }
 
-func (b *ZetaCoreBridge) PostReceiveConfirmation(
+func (b *ZetaCoreBridge) PostVoteOutbound(
 	sendHash string,
 	outTxHash string,
 	outBlockHeight uint64,
@@ -217,7 +217,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 	ballotIndex := msg.Digest()
 	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
 	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostReceiveConfirmation: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
+		return "", ballotIndex, errors.Wrapf(err, "PostVoteOutbound: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
 	}
 	if hasVoted {
 		return "", ballotIndex, nil
@@ -225,9 +225,9 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.
-	var gasLimit uint64 = PostReceiveConfirmationGasLimit
+	var gasLimit uint64 = PostVoteOutboundGasLimit
 	if status == common.ReceiveStatus_Failed {
-		gasLimit = PostSendExecutionGasLimit
+		gasLimit = PostVoteInboundExecutionGasLimit
 	}
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
@@ -236,7 +236,7 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 			//go b.MonitorTxResult(zetaTxHash, true)
 			return zetaTxHash, ballotIndex, nil
 		}
-		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
+		b.logger.Debug().Err(err).Msgf("PostVoteOutbound broadcast fail | Retry count : %d", i+1)
 		time.Sleep(DefaultRetryInterval * time.Second)
 	}
 	return "", ballotIndex, fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
@@ -358,7 +358,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 				)
 				// resend the tx with more gas
 				if retryGasLimit > 0 {
-					_, _, err := b.PostSend(retryGasLimit, 0, msg)
+					_, _, err := b.PostVoteInbound(retryGasLimit, 0, msg)
 					if err != nil {
 						b.logger.Error().Err(err).Msgf(
 							"MonitorInboundTxResult: failed to resend tx, txHash: %s, log %s",

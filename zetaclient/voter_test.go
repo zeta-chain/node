@@ -85,20 +85,20 @@ func (s *VoterSuite) SetUpTest(c *C) {
 func (s *VoterSuite) TestSendVoter(c *C) {
 	b1 := s.bridge1
 	b2 := s.bridge2
-	metaHash, err := b1.PostSend("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
+	metaHash, err := b1.PostVoteInbound("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
 		"0xtxhash", 123123, "0xtoken")
 
 	c.Assert(err, IsNil)
-	log.Info().Msgf("PostSend metaHash %s", metaHash)
+	log.Info().Msgf("PostVoteInbound metaHash %s", metaHash)
 
 	// wait for the next block
 	timer1 := time.NewTimer(2 * time.Second)
 	<-timer1.C
 
-	metaHash, err = b2.PostSend("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
+	metaHash, err = b2.PostVoteInbound("0xfrom", "Ethereum", "0xfrom", "0xto", "BSC", "123456", "23245", "little message",
 		"0xtxhash", 123123, "0xtoken")
 	c.Assert(err, IsNil)
-	log.Info().Msgf("Second PostSend metaHash %s", metaHash)
+	log.Info().Msgf("Second PostVoteInbound metaHash %s", metaHash)
 
 	// wait for the next block
 	timer2 := time.NewTimer(2 * time.Second)
@@ -111,13 +111,13 @@ func (s *VoterSuite) TestSendVoter(c *C) {
 
 	send := sends[0]
 
-	metaHash, err = b1.PostReceiveConfirmation(send.Index, "0xoutHash", 2123, "23245")
+	metaHash, err = b1.PostVoteOutbound(send.Index, "0xoutHash", 2123, "23245")
 	c.Assert(err, IsNil)
 
 	timer3 := time.NewTimer(2 * time.Second)
 	<-timer3.C
 
-	metaHash, err = b2.PostReceiveConfirmation(send.Index, "0xoutHash", 2123, "23245")
+	metaHash, err = b2.PostVoteOutbound(send.Index, "0xoutHash", 2123, "23245")
 	c.Assert(err, IsNil)
 
 	receives, err := b2.GetAllReceive()
