@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Features
+
+### Fixes
+
+* [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
+
 ## Version: v12.0.0
 
 ### Breaking Changes
