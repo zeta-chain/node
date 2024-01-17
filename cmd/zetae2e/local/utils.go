@@ -16,9 +16,9 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// getConfig returns config from file from the command line flag
-func getConfig(cmd *cobra.Command) (config.Config, error) {
-	configFile, err := cmd.Flags().GetString(flagConfigFile)
+// GetConfig returns config from file from the command line flag
+func GetConfig(cmd *cobra.Command) (config.Config, error) {
+	configFile, err := cmd.Flags().GetString(FlagConfigFile)
 	if err != nil {
 		return config.Config{}, err
 	}

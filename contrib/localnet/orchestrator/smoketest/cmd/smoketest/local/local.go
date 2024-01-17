@@ -112,7 +112,7 @@ func localSmokeTest(cmd *cobra.Command, _ []string) {
 	}()
 
 	// initialize smoke tests config
-	conf, err := getConfig(cmd)
+	conf, err := GetConfig(cmd)
 	if err != nil {
 		panic(err)
 	}

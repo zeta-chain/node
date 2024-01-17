@@ -24,8 +24,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-// getConfig returns config from file from the command line flag
-func getConfig(cmd *cobra.Command) (config.Config, error) {
+// GetConfig returns config from file from the command line flag
+func GetConfig(cmd *cobra.Command) (config.Config, error) {
 	configFile, err := cmd.Flags().GetString(flagConfigFile)
 	if err != nil {
 		return config.Config{}, err

@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/cmd/smoketest/local"
 	"math/big"
 	"os"
 	"sort"
@@ -32,6 +34,7 @@ import (
 const (
 	StatInterval      = 5
 	StressTestTimeout = 100 * time.Minute
+	flagVerbose       = "verbose"
 )
 
 var (
@@ -61,9 +64,10 @@ func NewStressTestCmd() *cobra.Command {
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "", "--network TESTNET")
 	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
-	StressCmd.Flags().StringVar(&stressTestArgs.config, flagConfigFile, "", "config file to use for the smoketest")
+	StressCmd.Flags().StringVar(&stressTestArgs.config, "cfg", "", "config file to use for the smoketest")
+	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
-	DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
+	local.DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
 
 	return StressCmd
 }
@@ -85,7 +89,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	cosmosConf.Seal()
 
 	// initialize smoke tests config
-	conf, err := getConfig(cmd)
+	conf, err := local.GetConfig(cmd)
 	if err != nil {
 		panic(err)
 	}
@@ -96,11 +100,11 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	bal, err := goerliClient.BalanceAt(context.TODO(), DeployerAddress, nil)
+	bal, err := goerliClient.BalanceAt(context.TODO(), local.DeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Deployer address: %s, balance: %d Wei\n", DeployerAddress.Hex(), bal)
+	fmt.Printf("Deployer address: %s, balance: %d Wei\n", local.DeployerAddress.Hex(), bal)
 
 	chainid, err := goerliClient.ChainID(context.Background())
 	if err != nil {
@@ -146,7 +150,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	zetaTxServer, err := txserver.NewZetaTxServer(
 		conf.RPCs.ZetaCoreRPC,
 		[]string{utils.FungibleAdminName},
-		[]string{FungibleAdminMnemonic},
+		[]string{local.FungibleAdminMnemonic},
 		conf.ZetaChainID,
 	)
 	if err != nil {
@@ -173,11 +177,23 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
+	// initialize context
+	ctx, cancel := context.WithCancel(context.Background())
+
+	verbose, err := cmd.Flags().GetBool(flagVerbose)
+	if err != nil {
+		panic(err)
+	}
+	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
+
 	// initialize smoke test runner
 	smokeTest := runner.NewSmokeTestRunner(
-		DeployerAddress,
-		DeployerPrivateKey,
-		FungibleAdminMnemonic,
+		ctx,
+		"deployer",
+		cancel,
+		local.DeployerAddress,
+		local.DeployerPrivateKey,
+		local.FungibleAdminMnemonic,
 		goerliClient,
 		zevmClient,
 		cctxClient,
@@ -189,6 +205,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		goerliAuth,
 		zevmAuth,
 		nil,
+		logger,
 	)
 
 	// setup TSS addresses
@@ -204,8 +221,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		smokeTest.SetZEVMContracts()
 
 		// deposit on ZetaChain
-		smokeTest.DepositEtherIntoZRC20()
-		smokeTest.SendZetaIn()
+		smokeTest.DepositEther(false)
+		smokeTest.DepositZeta()
 	} else if stressTestArgs.network == "TESTNET" {
 		ethZRC20Addr, err := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
 		if err != nil {
@@ -222,7 +239,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Check zrc20 balance of Deployer address
-	ethZRC20Balance, err := smokeTest.ETHZRC20.BalanceOf(nil, DeployerAddress)
+	ethZRC20Balance, err := smokeTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -235,7 +252,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(smokeTest.ZevmClient, tx)
+	receipt := utils.MustWaitForTxReceipt(ctx, smokeTest.ZevmClient, tx, logger, smokeTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
@@ -245,7 +262,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// #nosec G701 smoketest - always in range
-	nonce, err := smokeTest.ZevmClient.NonceAt(context.Background(), DeployerAddress, big.NewInt(int64(blockNum)))
+	nonce, err := smokeTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
@@ -348,7 +365,7 @@ func WithdrawETHZRC20(sm *runner.SmokeTestRunner) {
 	ethZRC20 := sm.ETHZRC20
 
 	sm.ZevmAuth.Nonce = zevmNonce
-	_, err := ethZRC20.Withdraw(sm.ZevmAuth, DeployerAddress.Bytes(), big.NewInt(100))
+	_, err := ethZRC20.Withdraw(sm.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}
