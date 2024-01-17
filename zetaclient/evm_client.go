@@ -58,7 +58,7 @@ type EVMLog struct {
 const (
 	DonationMessage    = "I am rich!"
 	TopicsZetaSent     = 3 // [signature, zetaTxSenderAddress, destinationChainId] https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L34
-	TopicsZetaReceived = 4 // [signature, sourceChainId, destinationAddress]       https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L45
+	TopicsZetaReceived = 4 // [signature, sourceChainId, destinationAddress, internalSendHash] https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L45
 	TopicsZetaReverted = 3 // [signature, destinationChainId, internalSendHash]    https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ZetaConnector.base.sol#L54
 	TopicsWithdrawn    = 3 // [signature, recipient, asset] https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L43
 	TopicsDeposited    = 2 // [signature, asset]            https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42
@@ -720,14 +720,29 @@ func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtyp
 		return nil, nil, false
 	}
 
-	// check confirmations
-	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
-	if confHeight >= math.MaxInt64 {
-		log.Error().Msgf("confirmTxByHash: confHeight is too large for txHash %s nonce %d", txHash, nonce)
+	// cross-check receipt against the block
+	block, err := ob.GetBlockByNumberCached(receipt.BlockNumber.Uint64())
+	if err != nil {
+		log.Error().Err(err).Msgf("confirmTxByHash: GetBlockByNumberCached error, txHash %s nonce %d block %d",
+			txHash, nonce, receipt.BlockNumber)
 		return nil, nil, false
 	}
-	if confHeight > ob.GetLastBlockHeight() {
-		log.Info().Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
+	// #nosec G701 non negative value
+	if receipt.TransactionIndex >= uint(len(block.Transactions())) {
+		log.Error().Msgf("confirmTxByHash: transaction index %d out of range [0, %d), txHash %s nonce %d block %d",
+			receipt.TransactionIndex, len(block.Transactions()), txHash, nonce, receipt.BlockNumber)
+		return nil, nil, false
+	}
+	txAtIndex := block.Transactions()[receipt.TransactionIndex]
+	if txAtIndex.Hash() != transaction.Hash() {
+		log.Error().Msgf("confirmTxByHash: transaction at index %d has different hash %s, txHash %s nonce %d block %d",
+			receipt.TransactionIndex, txAtIndex.Hash().Hex(), txHash, nonce, receipt.BlockNumber)
+		return nil, nil, false
+	}
+
+	// check confirmations
+	if !ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()) {
+		log.Debug().Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
 			txHash, nonce, receipt.BlockNumber, ob.GetLastBlockHeight())
 		return nil, nil, false
 	}
@@ -847,11 +862,11 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	}
 
 	// get and update latest block height
-	header, err := ob.evmClient.HeaderByNumber(context.Background(), nil)
+	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
 		return err
 	}
-	ob.SetLastBlockHeight(header.Number.Uint64())
+	ob.SetLastBlockHeight(blockNumber)
 
 	// increment prom counter
 	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
@@ -861,10 +876,10 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	counter.Inc()
 
 	// skip if current height is too low
-	if header.Number.Uint64() < ob.GetChainParams().ConfirmationCount {
-		return fmt.Errorf("observeInTX: skipping observer, current block number %d is too low", header.Number.Uint64())
+	if blockNumber < ob.GetChainParams().ConfirmationCount {
+		return fmt.Errorf("observeInTX: skipping observer, current block number %d is too low", blockNumber)
 	}
-	confirmedBlockNum := header.Number.Uint64() - ob.GetChainParams().ConfirmationCount
+	confirmedBlockNum := blockNumber - ob.GetChainParams().ConfirmationCount
 
 	// skip if no new block is confirmed
 	lastScanned := ob.GetLastBlockHeightScanned()
