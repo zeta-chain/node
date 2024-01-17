@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+* [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
+
 ## Version: v12.0.0
 
 ### Breaking Changes
