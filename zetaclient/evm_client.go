@@ -1069,7 +1069,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 			return beingScanned - 1 // we have to re-scan from this block next time
 		}
 
-		msg := ob.GetInboundVoteMsgForDepositedEvent(tx, sender, event)
+		msg := ob.GetInboundVoteMsgForDepositedEvent(event, sender)
 		if msg == nil {
 			continue
 		}

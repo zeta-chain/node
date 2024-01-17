@@ -211,7 +211,7 @@ func (ob *EVMChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHa
 	return sender, nil
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(tx *ethtypes.Transaction, sender ethcommon.Address, event *erc20custody.ERC20CustodyDeposited) *types.MsgVoteOnObservedInboundTx {
+func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
 	if bytes.Equal(event.Message, []byte(DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil

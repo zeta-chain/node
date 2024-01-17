@@ -237,7 +237,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool)
 			// sanity check tx event
 			err = ob.CheckEvmTxLog(&zetaDeposited.Raw, addrCustory, txHash, TopicsDeposited)
 			if err == nil {
-				msg = ob.GetInboundVoteMsgForDepositedEvent(tx, sender, zetaDeposited)
+				msg = ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 				if err == nil {
 					break
 				}
