@@ -35,5 +35,5 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 }
 
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
-	return v5.MigrateStore(ctx, m.observerKeeper.storeKey, m.observerKeeper.cdc)
+	return v5.MigrateStore(ctx, m.observerKeeper)
 }

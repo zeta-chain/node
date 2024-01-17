@@ -451,9 +451,9 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
-		} else { // included
-			ob.setIncludedTx(nonce, txResult)
 		}
+		// included
+		ob.setIncludedTx(nonce, txResult)
 
 		// Get tx result again in case it is just included
 		res = ob.getIncludedTx(nonce)
