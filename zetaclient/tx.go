@@ -51,6 +51,12 @@ const (
 
 	// DefaultRetryInterval is the interval between retries in seconds
 	DefaultRetryInterval = 5
+
+	// MonitorTxResultInterval is the interval between retries for monitoring tx result in seconds
+	MonitorTxResultInterval = 5
+
+	// MonitorTxResultRetryCount is the number of retries to fetch monitoring tx result
+	MonitorTxResultRetryCount = 10
 )
 
 // GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
@@ -336,27 +342,29 @@ func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, hei
 // if retryGasLimit is 0, the tx is not resent
 func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) {
 	var lastErr error
-	ticker := 5 * time.Second
-	retry := 10
 
-	for i := 0; i < retry; i++ {
-		time.Sleep(ticker)
+	for i := 0; i < MonitorTxResultRetryCount; i++ {
+		time.Sleep(MonitorTxResultInterval * time.Second)
+
+		// query tx result from ZetaChain
 		txResult, err := b.QueryTxResult(zetaTxHash)
+
 		if err == nil {
-			// the inbound vote tx shouldn't fail to execute
 			if strings.Contains(txResult.RawLog, "failed to execute message") {
+				// the inbound vote tx shouldn't fail to execute
+				// this shouldn't happen
 				b.logger.Error().Msgf(
 					"MonitorInboundTxResult: failed to execute vote, txHash: %s, log %s",
 					zetaTxHash,
 					txResult.RawLog,
 				)
 			} else if strings.Contains(txResult.RawLog, "out of gas") {
-				b.logger.Error().Msgf(
+				// if the tx fails with out of gas error, resend the tx with more gas if retryGasLimit > 0
+				b.logger.Debug().Msgf(
 					"MonitorInboundTxResult: out of gas, txHash: %s, log %s",
 					zetaTxHash,
 					txResult.RawLog,
 				)
-				// resend the tx with more gas
 				if retryGasLimit > 0 {
 					_, _, err := b.PostVoteInbound(retryGasLimit, 0, msg)
 					if err != nil {
@@ -374,7 +382,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 					}
 				}
 			} else {
-				b.logger.Info().Msgf(
+				b.logger.Debug().Msgf(
 					"MonitorInboundTxResult: successful txHash %s, log %s",
 					zetaTxHash,
 					txResult.RawLog,
@@ -385,7 +393,7 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 		lastErr = err
 	}
 
-	b.logger.Info().Err(lastErr).Msgf(
+	b.logger.Error().Err(lastErr).Msgf(
 		"MonitorInboundTxResult: unable to query tx result for txHash %s, err %s",
 		zetaTxHash,
 		lastErr.Error(),
