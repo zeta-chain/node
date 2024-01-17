@@ -56,7 +56,7 @@ const (
 	MonitorTxResultInterval = 5
 
 	// MonitorTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorTxResultRetryCount = 10
+	MonitorTxResultRetryCount = 20
 )
 
 // GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
