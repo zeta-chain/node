@@ -2,6 +2,7 @@ package zetaclient
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -160,7 +161,7 @@ func (co *CoreObserver) startCctxScheduler() {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("couldn't get operator balance")
 					} else {
 						diff := co.lastOperatorBalance.Sub(balance)
-						if diff.GT(sdkmath.NewInt(0)) {
+						if diff.GT(sdkmath.NewInt(0)) && diff.LT(sdkmath.NewInt(math.MaxInt64)) {
 							co.ts.AddFeeEntry(bn, diff.Int64())
 							co.lastOperatorBalance = balance
 						}
