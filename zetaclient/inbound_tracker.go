@@ -114,7 +114,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 	if !vote {
 		return msg.Digest(), nil
 	}
-	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendExecutionGasLimit, msg)
 	if err != nil {
 		ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
@@ -192,7 +192,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendMessagePassingExecutionGasLimit, &msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
@@ -240,7 +240,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool)
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendExecutionGasLimit, &msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
@@ -297,7 +297,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string, vote bool) (
 		return msg.Digest(), nil
 	}
 
-	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+	zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendExecutionGasLimit, msg)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting to zeta core")
 		return "", err

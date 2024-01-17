@@ -385,7 +385,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		// post inbound vote message to zetacore
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendGasLimit, PostSendExecutionGasLimit, msg)
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
 				return err // we have to re-scan this block next time
