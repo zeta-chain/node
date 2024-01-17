@@ -319,3 +319,21 @@ func GetDefaultZetaPrivnetChainParams() *ChainParams {
 		IsSupported:                 false,
 	}
 }
+
+// ChainParamsEqual returns true if two chain params are equal
+func ChainParamsEqual(params1, params2 ChainParams) bool {
+	return params1.ChainId == params2.ChainId &&
+		params1.ConfirmationCount == params2.ConfirmationCount &&
+		params1.ZetaTokenContractAddress == params2.ZetaTokenContractAddress &&
+		params1.ConnectorContractAddress == params2.ConnectorContractAddress &&
+		params1.Erc20CustodyContractAddress == params2.Erc20CustodyContractAddress &&
+		params1.InTxTicker == params2.InTxTicker &&
+		params1.OutTxTicker == params2.OutTxTicker &&
+		params1.WatchUtxoTicker == params2.WatchUtxoTicker &&
+		params1.GasPriceTicker == params2.GasPriceTicker &&
+		params1.OutboundTxScheduleInterval == params2.OutboundTxScheduleInterval &&
+		params1.OutboundTxScheduleLookahead == params2.OutboundTxScheduleLookahead &&
+		params1.BallotThreshold.Equal(params2.BallotThreshold) &&
+		params1.MinObserverDelegation.Equal(params2.MinObserverDelegation) &&
+		params1.IsSupported == params2.IsSupported
+}
