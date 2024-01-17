@@ -7,6 +7,7 @@
 ### Fixes
 
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
+* [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
 
 ## Version: v12.0.0
 

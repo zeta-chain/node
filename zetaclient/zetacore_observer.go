@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/pkg/errors"
@@ -356,7 +358,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
 		evmCfg, found := co.cfg.GetEVMConfig(chainID)
-		if found && curParams.String() != evmCfg.ChainParams.String() {
+		if found && !observertypes.ChainParamsEqual(curParams, evmCfg.ChainParams) {
 			chainOb.SetChainParams(evmCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v",
@@ -366,7 +368,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 		}
 	} else if common.IsBitcoinChain(chainID) {
 		_, btcCfg, found := co.cfg.GetBTCConfig()
-		if found && curParams.String() != btcCfg.ChainParams.String() {
+		if found && !observertypes.ChainParamsEqual(curParams, btcCfg.ChainParams) {
 			chainOb.SetChainParams(btcCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for Bitcoin, new params: %v",
