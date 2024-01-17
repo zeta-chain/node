@@ -4,30 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
 	"math/big"
 	"os"
 	"sort"
 	"time"
 
+	"github.com/fatih/color"
+	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
+	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/txserver"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
 )
 
@@ -54,13 +50,13 @@ var stressTestArgs = stressArguments{}
 func NewStressTestCmd() *cobra.Command {
 	var StressCmd = &cobra.Command{
 		Use:   "stress",
-		Short: "Run Local Stress Test",
+		Short: "Run Stress Test",
 		Run:   StressTest,
 	}
 
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerAddress, "addr", "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", "--addr <eth address>")
 	StressCmd.Flags().StringVar(&stressTestArgs.deployerPrivateKey, "privKey", "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263", "--privKey <eth private key>")
-	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "", "--network TESTNET")
+	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
 	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
 	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the smoketest")
@@ -105,75 +101,29 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 	fmt.Printf("Deployer address: %s, balance: %d Wei\n", local.DeployerAddress.Hex(), bal)
 
-	chainid, err := goerliClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	deployerPrivkey, err := crypto.HexToECDSA(stressTestArgs.deployerPrivateKey)
-	if err != nil {
-		panic(err)
-	}
-	goerliAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
-	if err != nil {
-		panic(err)
-	}
-
 	grpcConn, err := grpc.Dial(conf.RPCs.ZetaCoreGRPC, grpc.WithInsecure())
 	if err != nil {
 		panic(err)
 	}
 
 	cctxClient := crosschaintypes.NewQueryClient(grpcConn)
-	fungibleClient := fungibletypes.NewQueryClient(grpcConn)
-	bankClient := banktypes.NewQueryClient(grpcConn)
-	authClient := authtypes.NewQueryClient(grpcConn)
-	observerClient := observertypes.NewQueryClient(grpcConn)
 	// -----------------------------------------------------------------------------------
 
-	// Wait for Genesis and keygen to be completed. ~ height 30
-	time.Sleep(20 * time.Second)
-	for {
-		time.Sleep(5 * time.Second)
-		response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
-		if err != nil {
-			fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
-			continue
+	// Wait for Genesis and keygen to be completed if network is local. ~ height 30
+	if stressTestArgs.network == "LOCAL" {
+		time.Sleep(20 * time.Second)
+		for {
+			time.Sleep(5 * time.Second)
+			response, err := cctxClient.LastZetaHeight(context.Background(), &crosschaintypes.QueryLastZetaHeightRequest{})
+			if err != nil {
+				fmt.Printf("cctxClient.LastZetaHeight error: %s", err)
+				continue
+			}
+			if response.Height >= 30 {
+				break
+			}
+			fmt.Printf("Last ZetaHeight: %d\n", response.Height)
 		}
-		if response.Height >= 30 {
-			break
-		}
-		fmt.Printf("Last ZetaHeight: %d\n", response.Height)
-	}
-
-	// initialize client to send messages to ZetaChain
-	zetaTxServer, err := txserver.NewZetaTxServer(
-		conf.RPCs.ZetaCoreRPC,
-		[]string{utils.FungibleAdminName},
-		[]string{local.FungibleAdminMnemonic},
-		conf.ZetaChainID,
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	// get the clients for tests
-	var zevmClient *ethclient.Client
-	for {
-		time.Sleep(5 * time.Second)
-		fmt.Printf("dialing zevm client: %s\n", conf.RPCs.Zevm)
-		zevmClient, err = ethclient.Dial(conf.RPCs.Zevm)
-		if err != nil {
-			continue
-		}
-		break
-	}
-	chainid, err = zevmClient.ChainID(context.Background())
-	if err != nil {
-		panic(err)
-	}
-	zevmAuth, err := bind.NewKeyedTransactorWithChainID(deployerPrivkey, chainid)
-	if err != nil {
-		panic(err)
 	}
 
 	// initialize context
@@ -186,36 +136,28 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	// initialize smoke test runner
-	smokeTest := runner.NewSmokeTestRunner(
+	smokeTest, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
+		conf,
 		local.DeployerAddress,
 		local.DeployerPrivateKey,
-		local.FungibleAdminMnemonic,
-		goerliClient,
-		zevmClient,
-		cctxClient,
-		zetaTxServer,
-		fungibleClient,
-		authClient,
-		bankClient,
-		observerClient,
-		goerliAuth,
-		zevmAuth,
-		nil,
+		utils.FungibleAdminName,
+		FungibleAdminMnemonic,
 		logger,
 	)
+	if err != nil {
+		panic(err)
+	}
 
 	// setup TSS addresses
 	smokeTest.SetTSSAddresses()
 
 	smokeTest.SetupEVM(stressTestArgs.contractsDeployed)
 
-	fmt.Printf("Stress test arguments: %+v", stressTestArgs)
-
 	// If stress test is running on local docker environment
-	if stressTestArgs.network == "" {
+	if stressTestArgs.network == "LOCAL" {
 		// deploy and set zevm contract
 		smokeTest.SetZEVMContracts()
 

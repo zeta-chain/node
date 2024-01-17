@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
+
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 )
@@ -13,7 +15,7 @@ var configFile = ""
 func NewInitCmd() *cobra.Command {
 	var InitCmd = &cobra.Command{
 		Use:   "init",
-		Short: "Run Local Stress Test",
+		Short: "initialize config file for e2e tests",
 		Run:   initConfig,
 	}
 
@@ -24,7 +26,7 @@ func NewInitCmd() *cobra.Command {
 	InitCmd.Flags().StringVar(&initConf.RPCs.Bitcoin, "btcURL", "bitcoin:18443", "--grpcURL bitcoin:18443")
 
 	InitCmd.Flags().StringVar(&initConf.ZetaChainID, "chainID", "athens_101-1", "--chainID athens_101-1")
-	InitCmd.Flags().StringVar(&configFile, "cfg", "smoketest.config", "--cfg ./smoketest.config")
+	InitCmd.Flags().StringVar(&configFile, local.FlagConfigFile, "smoketest.config", "--cfg ./smoketest.config")
 
 	return InitCmd
 }
