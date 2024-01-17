@@ -232,14 +232,12 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
 	// NewMsgReceiveConfirmation to it.
 	var gasLimit uint64 = PostVoteOutboundGasLimit
-	if status == common.ReceiveStatus_Failed {
-		gasLimit = PostVoteInboundExecutionGasLimit
-	}
+	//if status == common.ReceiveStatus_Failed {
+	//	gasLimit = PostVoteInboundExecutionGasLimit
+	//}
 	for i := 0; i < DefaultRetryCount; i++ {
 		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
 		if err == nil {
-			//// monitor the result of the transaction
-			//go b.MonitorTxResult(zetaTxHash, true)
 			return zetaTxHash, ballotIndex, nil
 		}
 		b.logger.Debug().Err(err).Msgf("PostVoteOutbound broadcast fail | Retry count : %d", i+1)
