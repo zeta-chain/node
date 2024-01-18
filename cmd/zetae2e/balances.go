@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"github.com/btcsuite/btcutil"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -12,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	"log"
 )
 
 // NewBalancesCmd returns the balances command
@@ -84,46 +83,46 @@ func runBalances(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func getBitcoinBalance(r *runner.SmokeTestRunner) (string, error) {
-	addr, err := r.GetBtcAddress()
-	if err != nil {
-		return "", err
-	}
-
-	address, err := btcutil.DecodeAddress(addr, r.BitcoinParams)
-	if err != nil {
-		log.Fatalf("address decoding failed: %v", err)
-	}
-
-	//skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	//privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//address, err := btcutil.NewAddressWitnessPubKeyHash(
-	//	btcutil.Hash160(privkeyWIF.SerializePubKey()),
-	//	r.BitcoinParams,
-	//)
-	//if err != nil {
-	//	return "", err
-	//}
-
-	unspentList, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
-	if err != nil {
-		return "", err
-	}
-
-	// calculate total amount
-	var totalAmount btcutil.Amount
-	for _, unspent := range unspentList {
-		totalAmount += btcutil.Amount(unspent.Amount * 1e8)
-	}
-
-	return totalAmount.String(), nil
-}
+//func getBitcoinBalance(r *runner.SmokeTestRunner) (string, error) {
+//	addr, err := r.GetBtcAddress()
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	address, err := btcutil.DecodeAddress(addr, r.BitcoinParams)
+//	if err != nil {
+//		log.Fatalf("address decoding failed: %v", err)
+//	}
+//
+//	//skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
+//	//if err != nil {
+//	//	return "", err
+//	//}
+//	//
+//	//sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+//	//privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
+//	//if err != nil {
+//	//	return "", err
+//	//}
+//	//
+//	//address, err := btcutil.NewAddressWitnessPubKeyHash(
+//	//	btcutil.Hash160(privkeyWIF.SerializePubKey()),
+//	//	r.BitcoinParams,
+//	//)
+//	//if err != nil {
+//	//	return "", err
+//	//}
+//
+//	unspentList, err := r.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	// calculate total amount
+//	var totalAmount btcutil.Amount
+//	for _, unspent := range unspentList {
+//		totalAmount += btcutil.Amount(unspent.Amount * 1e8)
+//	}
+//
+//	return totalAmount.String(), nil
+//}
