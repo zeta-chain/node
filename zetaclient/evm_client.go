@@ -282,6 +282,41 @@ func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
+	go ob.ExternalChainRPCStatus()
+}
+
+func (ob *EVMChainClient) ExternalChainRPCStatus() {
+	ob.logger.ChainLogger.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			bn, err := ob.evmClient.BlockNumber(context.Background())
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			gasPrice, err := ob.evmClient.SuggestGasPrice(context.Background())
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(bn))
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			blockTime := time.Unix(int64(header.Time), 0).UTC()
+			elapsedSeconds := time.Since(blockTime).Seconds()
+			if elapsedSeconds > 100 {
+				ob.logger.ChainLogger.Warn().Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
+				continue
+			}
+			ob.logger.ChainLogger.Info().Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
+		case <-ob.stop:
+			return
+		}
+	}
 }
 
 func (ob *EVMChainClient) Stop() {
@@ -1078,7 +1113,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 // returns the last block successfully scanned
 func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
 	if !ob.GetChainParams().IsSupported {
-		ob.logger.ExternalChainWatcher.Warn().Msgf("observeTssRecvd: chain %d is not supported", ob.chain.ChainId)
+		//ob.logger.ExternalChainWatcher.Warn().Msgf("observeTssRecvd: chain %d is not supported", ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
 	}
 	// check TSS address (after keygen, ob.Tss.pubkey will be updated)
@@ -1153,7 +1188,7 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 }
 
 func (ob *EVMChainClient) WatchGasPrice() {
-
+	ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice starting...")
 	err := ob.PostGasPrice()
 	if err != nil {
 		height, err := ob.zetaClient.GetBlockHeight()
@@ -1169,6 +1204,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
 	}
+	ob.logger.WatchGasPrice.Info().Msgf("WatchGasPrice started with interval %d", ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
@@ -1192,6 +1228,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 }
 
 func (ob *EVMChainClient) PostGasPrice() error {
+
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
@@ -1213,7 +1250,6 @@ func (ob *EVMChainClient) PostGasPrice() error {
 		return err
 	}
 	_ = zetaHash
-	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 
 	return nil
 }
