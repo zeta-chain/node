@@ -204,7 +204,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 		// run test
 		testErr := sm.RunSmokeTest(test, false)
 		if testErr != nil {
-			sm.Logger.Info("test %s failed: %s", test.Name, testErr.Error())
+			sm.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
 		}
 
 		// wait 5 sec to make sure we get updated balances
