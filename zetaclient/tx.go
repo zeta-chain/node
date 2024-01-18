@@ -203,25 +203,28 @@ func (b *ZetaCoreBridge) PostReceiveConfirmation(
 }
 
 func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
-
-	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
-	if err != nil {
-		return "", err
-	}
-
-	zetaTxHash := ""
-	for i := 0; i <= DefaultRetryCount; i++ {
-		zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
-		if err == nil {
-			return zetaTxHash, nil
-		}
-		b.logger.Debug().Err(err).Msgf("SetTSS broadcast fail | Retry count : %d", i+1)
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-
-	return "", fmt.Errorf("set tss failed | err %s", err.Error())
+	log := fmt.Sprintf("TSS not reported , tssPubkey : %s , keygenZetaHeight %d , status %s", tssPubkey, keyGenZetaHeight, status.String())
+	b.logger.Info().Msg(log)
+	return log, nil
+	//signerAddress := b.keys.GetOperatorAddress().String()
+	//msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
+	//
+	//authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//zetaTxHash := ""
+	//for i := 0; i <= DefaultRetryCount; i++ {
+	//	zetaTxHash, err = b.Broadcast(DefaultGasLimit, authzMsg, authzSigner)
+	//	if err == nil {
+	//		return zetaTxHash, nil
+	//	}
+	//	b.logger.Debug().Err(err).Msgf("SetTSS broadcast fail | Retry count : %d", i+1)
+	//	time.Sleep(DefaultRetryInterval * time.Second)
+	//}
+	//
+	//return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
 func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
@@ -243,30 +246,33 @@ func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
 }
 
 func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	zetaBlame := &observerTypes.Blame{
-		Index:         index,
-		FailureReason: blame.FailReason,
-		Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
-	}
-	msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
-
-	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
-	if err != nil {
-		return "", err
-	}
-
-	var gasLimit uint64 = PostBlameDataGasLimit
-
-	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
-		if err == nil {
-			return zetaTxHash, nil
-		}
-		b.logger.Error().Err(err).Msgf("PostBlame broadcast fail | Retry count : %d", i+1)
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
+	log := fmt.Sprintf("Blame not reported , blame : %s , chainID %d , index %s", blame.String(), chainID, index)
+	b.logger.Info().Msg(log)
+	return log, nil
+	//signerAddress := b.keys.GetOperatorAddress().String()
+	//zetaBlame := &observerTypes.Blame{
+	//	Index:         index,
+	//	FailureReason: blame.FailReason,
+	//	Nodes:         observerTypes.ConvertNodes(blame.BlameNodes),
+	//}
+	//msg := observerTypes.NewMsgAddBlameVoteMsg(signerAddress, chainID, zetaBlame)
+	//
+	//authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//var gasLimit uint64 = PostBlameDataGasLimit
+	//
+	//for i := 0; i < DefaultRetryCount; i++ {
+	//	zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
+	//	if err == nil {
+	//		return zetaTxHash, nil
+	//	}
+	//	b.logger.Error().Err(err).Msgf("PostBlame broadcast fail | Retry count : %d", i+1)
+	//	time.Sleep(DefaultRetryInterval * time.Second)
+	//}
+	//return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
 func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, height int64, header common.HeaderData) (string, error) {
