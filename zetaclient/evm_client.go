@@ -1092,6 +1092,10 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 // observeTssRecvd queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
 func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+	if !ob.GetChainParams().IsSupported {
+		ob.logger.ExternalChainWatcher.Warn().Msgf("observeTssRecvd: chain %d is not supported", ob.chain.ChainId)
+		return startBlock - 1 // lastScanned
+	}
 	// check TSS address (after keygen, ob.Tss.pubkey will be updated)
 	tssAddress := ob.Tss.EVMAddress()
 	if tssAddress == (ethcommon.Address{}) {
