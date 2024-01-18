@@ -74,12 +74,12 @@ func runBalances(_ *cobra.Command, args []string) error {
 	}
 	r.PrintAccountBalances(balances)
 
-	bitcoinBalance, err := getBitcoinBalance(r)
-	if err != nil {
-		cancel()
-		return err
-	}
-	logger.Print("* BTC balance: %s", bitcoinBalance)
+	//bitcoinBalance, err := getBitcoinBalance(r)
+	//if err != nil {
+	//	cancel()
+	//	return err
+	//}
+	//logger.Print("* BTC balance: %s", bitcoinBalance)
 
 	return nil
 }
