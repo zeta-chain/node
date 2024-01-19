@@ -23,6 +23,6 @@ else
   zetaclientd init \
     --peer /ip4/172.20.0.21/tcp/6668/p2p/$SEED \
     --pre-params ~/preParams.json --zetacore-url $node \
-    --chain-id athens_101-1 --operator zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52 --log-level 0 --hotkey=val_grantee_observer
+    --chain-id athens_101-1 --operator zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52 --log-level 1 --hotkey=val_grantee_observer
   zetaclientd start
 fi

@@ -196,7 +196,8 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		return err
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped; please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
 	}
 
@@ -212,14 +213,16 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	for _, chainParam := range chainParams {
 		err := config.ValidateChainParams(chainParam)
 		if err != nil {
-			b.logger.Debug().Err(err).Msgf(
-				"Invalid core params for chain %s",
-				common.GetChainFromChainID(chainParam.ChainId).ChainName,
-			)
+			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+			continue
+		}
+		if !chainParam.GetIsSupported() {
+			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+			continue
 		}
 		if common.IsBitcoinChain(chainParam.ChainId) {
 			newBTCParams = chainParam
-		} else {
+		} else if common.IsEVMChain(chainParam.ChainId) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}

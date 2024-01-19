@@ -5,6 +5,10 @@
 Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
 * `zetaclientd start` : 2 inputs required from stdin
 
+### Features
+
+* [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
+
 ## Version: v12.0.0
 
 ### Breaking Changes
@@ -38,6 +42,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 ### Fixes
 
+* [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
