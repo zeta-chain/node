@@ -20,7 +20,7 @@ import (
 
 // TestEtherDeposit tests deposit of ethers
 func TestEtherDeposit(sm *runner.SmokeTestRunner) {
-	hash := sm.DepositEther(false)
+	hash := sm.DepositEtherWithAmount(false, big.NewInt(100000000000000000)) // in wei (0.1 eth)
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)

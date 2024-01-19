@@ -71,10 +71,6 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 
 func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
-	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ ERC20 deposited in %s", time.Since(startTime))
-	}()
 
 	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
@@ -115,14 +111,14 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 
 // DepositEther sends Ethers into ZEVM
 func (sm *SmokeTestRunner) DepositEther(testHeader bool) ethcommon.Hash {
-	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
-	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
-	}()
+	return sm.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
+}
 
-	value := big.NewInt(1000000000000000000) // in wei (1 eth)
-	signedTx, err := sm.SendEther(sm.TSSAddress, value, nil)
+// DepositEtherWithAmount sends Ethers into ZEVM
+func (sm *SmokeTestRunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
+
+	signedTx, err := sm.SendEther(sm.TSSAddress, amount, nil)
 	if err != nil {
 		panic(err)
 	}

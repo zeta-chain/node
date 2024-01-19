@@ -77,7 +77,7 @@ func (sm *SmokeTestRunner) PrintAccountBalances(balances AccountBalances) {
 	sm.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
 
 	// evm
-	sm.Logger.Print("Ethereum:")
+	sm.Logger.Print("EVM:")
 	sm.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
 	sm.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
 	sm.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
