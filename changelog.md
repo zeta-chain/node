@@ -8,7 +8,8 @@
 
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
-* [1592](https://github.com/zeta-chain/node/issues/1592) - Check inbound tracker tx hash against Tss address and some refactor on inTx observation
+* [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
+* [1602](https://github.com/zeta-chain/node/issues/1602) - Check inbound tracker tx hash against Tss address and some refactor on inTx observation
 
 ## Version: v12.0.0
 
@@ -43,7 +44,10 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 ### Fixes
 
+<<<<<<< HEAD
 * [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
+=======
+>>>>>>> 6de5bc85c8b7c298e285602b57a4d2f8ff2d21cd
 * [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
