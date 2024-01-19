@@ -89,7 +89,7 @@ Creating a release candidate for testing is a straightforward process. Here are 
  - Step 1. Create the release candidate tag with the following format (e.g., vx.x.x-rc) ex. v11.0.0-rc.
  - Step 2. Once a RC branch is created the automation will kickoff to build and upload the release and its binaries.
 
-By following these steps, you can efficiently create a release candidate for testnet for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
+By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
 
 ## Creating a Release
