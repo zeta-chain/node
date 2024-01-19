@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-
 ## Version: v12.1.0
 
 ### Tests
@@ -26,6 +25,9 @@
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
 
+### Features
+
+* [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
 
 ## Version: v12.0.0
 
@@ -60,7 +62,10 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 ### Fixes
 
+<<<<<<< HEAD
 * [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
+=======
+>>>>>>> 6de5bc85 (refactor(`hotfix`): support retrying sending inbound vote with higher gas limit (#1601))
 * [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available

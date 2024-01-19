@@ -318,7 +318,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
 		}
-		zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+		zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 			sendHash,
 			receipt.TxHash.Hex(),
 			receipt.BlockNumber.Uint64(),
@@ -340,7 +340,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -361,7 +361,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -375,7 +375,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			} else if zetaTxHash != "" {
 				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
@@ -405,7 +405,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						sendhash := vLog.Topics[3].Hex()
 						//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 						mMint := receivedLog.ZetaValue
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -442,7 +442,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						sendhash := vLog.Topics[2].Hex()
 						mMint := revertedLog.RemainingZetaValue
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -470,7 +470,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -510,7 +510,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 					}
 					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -537,7 +537,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			}
 		} else {
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -551,7 +551,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_ERC20,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			} else if zetaTxHash != "" {
 				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
@@ -986,7 +986,7 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 				"observeZetaSent: error getting inbound vote msg for tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 			continue
 		}
-		zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
+		zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundMessagePassingExecutionGasLimit, &msg)
 		if err != nil {
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
 				"observeZetaSent: error posting event to zeta core for tx %s at height %d for chain %d",
@@ -994,7 +994,7 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 			return beingScanned - 1 // we have to re-scan from this block next time
 		} else if zetaHash != "" {
 			ob.logger.ExternalChainWatcher.Info().Msgf(
-				"observeZetaSent: event detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+				"observeZetaSent: event detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 				event.Raw.TxHash.Hex(), event.Raw.BlockNumber, ob.chain.ChainId, zetaHash, ballot)
 		}
 	}
@@ -1065,7 +1065,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 				"observeERC20Deposited: error getting inbound vote msg for tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 			continue
 		}
-		zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
+		zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, &msg)
 		if err != nil {
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
 				"observeERC20Deposited: error posting event to zeta core for tx %s at height %d for chain %d",
@@ -1073,7 +1073,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 			return beingScanned - 1 // we have to re-scan from this block next time
 		} else if zetaHash != "" {
 			ob.logger.ExternalChainWatcher.Info().Msgf(
-				"observeERC20Deposited: event detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+				"observeERC20Deposited: event detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 				event.Raw.TxHash.Hex(), event.Raw.BlockNumber, ob.chain.ChainId, zetaHash, ballot)
 		}
 	}
@@ -1148,14 +1148,14 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 				if msg == nil {
 					continue
 				}
-				zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+				zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
 				if err != nil {
 					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
 						"observeTssRecvd: error posting to zeta core for tx %s at height %d for chain %d", tx.Hash().Hex(), bn, ob.chain.ChainId)
 					return startBlock - 1 // we have to re-scan this block next time
 				} else if zetaHash != "" {
 					ob.logger.ExternalChainWatcher.Info().Msgf(
-						"observeTssRecvd: gas asset deposit detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+						"observeTssRecvd: gas asset deposit detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 						tx.Hash().Hex(), bn, ob.chain.ChainId, zetaHash, ballot)
 				}
 			}
