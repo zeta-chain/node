@@ -28,5 +28,8 @@ contracts:
     custody: "0x000047f11c6e42293f433c82473532e869ce4ec5"
     usdt: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
 test_list:
-  - "eth_deposit"
-  - "eth_withdraw"
+#  - "erc20_deposit"
+#  - "erc20_withdraw"
+#  - "eth_deposit"
+#  - "eth_withdraw"
+

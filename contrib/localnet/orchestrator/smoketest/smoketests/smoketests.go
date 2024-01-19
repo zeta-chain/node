@@ -6,7 +6,6 @@ const (
 	TestContextUpgradeName              = "context_upgrade"
 	TestDepositAndCallRefundName        = "deposit_and_call_refund"
 	TestMultipleERC20DepositName        = "erc20_multiple_deposit"
-	TestWithdrawERC20Name               = "erc20_withdraw"
 	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
 	TestSendZetaOutName                 = "send_zeta_out"
 	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert" // #nosec G101 - not a hardcoded password
@@ -23,6 +22,7 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
+	TestWithdrawERC20Name = "erc20_withdraw"
 	TestERC20DepositName  = "erc20_deposit"
 	TestEtherDepositName  = "eth_deposit"
 	TestEtherWithdrawName = "eth_withdraw"
