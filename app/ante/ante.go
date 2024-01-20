@@ -17,19 +17,18 @@ package ante
 
 import (
 	"fmt"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"runtime/debug"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	tmlog "github.com/tendermint/tendermint/libs/log"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 func ValidateHandlerOptions(options HandlerOptions) error {
