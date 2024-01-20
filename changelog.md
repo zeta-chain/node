@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Chores
+
+* [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+
 ### Features
 
 ### Fixes
@@ -10,6 +14,7 @@
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
 
 ## Version: v12.0.0
+
 
 ### Breaking Changes
 
