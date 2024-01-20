@@ -18,17 +18,39 @@ package ante
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	ibcante "github.com/cosmos/ibc-go/v6/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	ethante "github.com/evmos/ethermint/app/ante"
 	ethermint "github.com/evmos/ethermint/types"
 )
 
-func NewLegacyCosmosAnteHandlerEip712(options ethante.HandlerOptions) sdk.AnteHandler {
+type HandlerOptions struct {
+	AccountKeeper          evmtypes.AccountKeeper
+	BankKeeper             evmtypes.BankKeeper
+	IBCKeeper              *ibckeeper.Keeper
+	FeeMarketKeeper        FeeMarketKeeper
+	EvmKeeper              EVMKeeper
+	FeegrantKeeper         ante.FeegrantKeeper
+	SignModeHandler        authsigning.SignModeHandler
+	SigGasConsumer         func(meter sdk.GasMeter, sig signing.SignatureV2, params authtypes.Params) error
+	MaxTxGasWanted         uint64
+	ExtensionOptionChecker ante.ExtensionOptionChecker
+	TxFeeChecker           ante.TxFeeChecker
+	DisabledAuthzMsgs      []string
+	ObserverKeeper         *observerkeeper.Keeper
+}
+
+func NewLegacyCosmosAnteHandlerEip712(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
@@ -52,7 +74,7 @@ func NewLegacyCosmosAnteHandlerEip712(options ethante.HandlerOptions) sdk.AnteHa
 	)
 }
 
-func newEthAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
+func newEthAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.NewEthSetUpContextDecorator(options.EvmKeeper),                         // outermost AnteDecorator. SetUpContext must be called first
 		ethante.NewEthMempoolFeeDecorator(options.EvmKeeper),                           // Check eth effective gas price against minimal-gas-prices
@@ -68,7 +90,7 @@ func newEthAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 	)
 }
 
-func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
+func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
@@ -92,19 +114,21 @@ func newCosmosAnteHandler(options ethante.HandlerOptions) sdk.AnteHandler {
 }
 
 // this applies to special cosmos tx that calls EVM, in which case the EVM overrides the gas limit
-func newCosmosAnteHandlerNoGasLimit(options ethante.HandlerOptions) sdk.AnteHandler {
+func newCosmosAnteHandlerNoGasFee(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),
 		NewVestingAccountDecorator(),
-		NewSetUpContextDecorator(),
+		ante.NewSetUpContextDecorator(),
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		ante.NewValidateBasicDecorator(),
 		ante.NewTxTimeoutHeightDecorator(),
-		NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+		// system txs are not subject to minimum gas price check
+		//NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		// the following decorators are disabled; so no fees are deducted for special system txs.
+		//ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),

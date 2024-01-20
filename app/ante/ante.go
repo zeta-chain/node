@@ -17,10 +17,10 @@ package ante
 
 import (
 	"fmt"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"runtime/debug"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethante "github.com/evmos/ethermint/app/ante"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -29,9 +29,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
-func ValidateHandlerOptions(options ethante.HandlerOptions) error {
+func ValidateHandlerOptions(options HandlerOptions) error {
 	if options.AccountKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "account keeper is required for AnteHandler")
 	}
@@ -47,6 +48,9 @@ func ValidateHandlerOptions(options ethante.HandlerOptions) error {
 	if options.EvmKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "evm keeper is required for AnteHandler")
 	}
+	if options.ObserverKeeper == nil {
+		return errorsmod.Wrap(errortypes.ErrLogic, "observer keeper is required for AnteHandler")
+	}
 	return nil
 }
 
@@ -54,7 +58,7 @@ func ValidateHandlerOptions(options ethante.HandlerOptions) error {
 // Ethereum or SDK transaction to an internal ante handler for performing
 // transaction-level processing (e.g. fee payment, signature verification) before
 // being passed onto it's respective handler.
-func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
+func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if err := ValidateHandlerOptions(options); err != nil {
 		return nil, err
 	}
@@ -94,28 +98,55 @@ func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			found := false
-			for _, msg := range tx.GetMsgs() {
-				switch msg.(type) {
-				// treat these three msg types differently because they might call EVM which results in massive gas consumption
-				// For these two msg types, we don't check gas limit by using a different ante handler
-				case *cctxtypes.MsgGasPriceVoter, *cctxtypes.MsgVoteOnObservedInboundTx:
-					found = true
-					break
-				case *stakingtypes.MsgCreateValidator:
-					if ctx.BlockHeight() == 0 {
-						found = true
-						break
-					}
+			anteHandler = newCosmosAnteHandler(options)
+			if len(tx.GetMsgs()) != 1 {
+				break
+			}
+
+			msg := tx.GetMsgs()[0] // now we must have len(tx.GetMsgs()) == 1
+			var innerMsg sdk.Msg
+			innerMsg = msg
+			if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
+				msgs, err := mm.GetMessages()
+				if err == nil && len(msgs) == 1 {
+					innerMsg = msgs[0]
 				}
 			}
-			if len(tx.GetMsgs()) == 1 && found {
-				// this differs newCosmosAnteHandler only in that it doesn't check gas limit
-				// by using an Infinite Gas Meter.
-				anteHandler = newCosmosAnteHandlerNoGasLimit(options)
-			} else {
-				anteHandler = newCosmosAnteHandler(options)
+
+			isAuthorize := options.ObserverKeeper.IsAuthorized
+			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
 			}
+			if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorize(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+			if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+				anteHandler = newCosmosAnteHandlerNoGasFee(options)
+				break
+			}
+
 		default:
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}
