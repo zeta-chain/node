@@ -116,32 +116,25 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorize(ctx, mm.Creator) {
+			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorize(ctx, mm.Creator) {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
-			}
-			if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+			} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
 				anteHandler = newCosmosAnteHandlerNoGasFee(options)
 				break
 			}
