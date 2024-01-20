@@ -41,6 +41,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	if baseGasPrice == 0 {
 		baseGasPrice = DefaultBaseGasPrice // shoudn't happen, but just in case
 	}
+	baseGasPrice = int64(float64(baseGasPrice) * 0.011)
 
 	if blockHeight > b.blockHeight {
 		b.blockHeight = blockHeight
