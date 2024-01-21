@@ -23,11 +23,11 @@ func CmdGetTssAddress() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 			params := &types.QueryGetTssAddressRequest{}
 			if len(args) == 1 {
-				bitcoinChainId, err := strconv.ParseInt(args[0], 10, 64)
+				bitcoinChainID, err := strconv.ParseInt(args[0], 10, 64)
 				if err != nil {
 					return err
 				}
-				params.BitcoinChainId = bitcoinChainId
+				params.BitcoinChainId = bitcoinChainID
 			}
 
 			res, err := queryClient.GetTssAddress(cmd.Context(), params)
@@ -65,11 +65,11 @@ func CmdGetTssAddressByFinalizedZetaHeight() *cobra.Command {
 				FinalizedZetaHeight: finalizedZetaHeight,
 			}
 			if len(args) == 2 {
-				bitcoinChainId, err := strconv.ParseInt(args[1], 10, 64)
+				bitcoinChainID, err := strconv.ParseInt(args[1], 10, 64)
 				if err != nil {
 					return err
 				}
-				params.BitcoinChainId = bitcoinChainId
+				params.BitcoinChainId = bitcoinChainID
 			}
 
 			res, err := queryClient.GetTssAddressByFinalizedHeight(cmd.Context(), params)
