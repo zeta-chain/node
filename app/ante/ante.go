@@ -105,6 +105,14 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
 
+			// if tx is MsgCreatorValidator, use the newCosmosAnteHandlerForSystemTx handler to
+			// exempt gas fee requirement in genesis because it's not possible to pay gas fee in genesis
+			if len(tx.GetMsgs()) == 1 {
+				if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+					anteHandler = newCosmosAnteHandlerForSystemTx(options)
+				}
+			}
+
 		default:
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}
@@ -173,8 +181,6 @@ func AssertSystemTxIntoCreatorTx(tx sdk.Tx) CreatorMsg {
 	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok {
 		return mm
 	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok {
-		return mm
-	} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok {
 		return mm
 	}
 
