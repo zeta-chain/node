@@ -241,10 +241,13 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdListPendingNonces(), []string{"--output", "json"})
 			s.Require().NoError(err)
-			fmt.Println(out.String())
+			//fmt.Println(out.String())
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdGetSupportedChains(), []string{"--output", "json"})
 			s.Require().NoError(err)
-			fmt.Println(out.String())
+			//fmt.Println(out.String())
+			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdListGasPrice(), []string{"--output", "json"})
+			s.Require().NoError(err)
+			//fmt.Println(out.String())
 
 			// Vote the inbound tx
 			for _, val := range s.network.Validators {
