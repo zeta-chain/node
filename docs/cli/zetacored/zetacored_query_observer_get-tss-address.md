@@ -3,7 +3,7 @@
 Query current tss address
 
 ```
-zetacored query observer get-tss-address [flags]
+zetacored query observer get-tss-address [bitcoinChainId]] [flags]
 ```
 
 ### Options
