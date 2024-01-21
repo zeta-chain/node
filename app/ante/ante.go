@@ -100,8 +100,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			anteHandler = newCosmosAnteHandler(options)
 
 			// if tx is a system tx, and singer is authorized, use system tx handler
-			msgCreator := AssertSystemTxIntoCreatorTx(tx)
-			if msgCreator != nil && options.ObserverKeeper.IsAuthorized(ctx, msgCreator.GetCreator()) {
+
+			isAuthorized := func(creator string) bool {
+				return options.ObserverKeeper.IsAuthorized(ctx, creator)
+			}
+			if IsSystemTx(tx, isAuthorized) {
 				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
 
@@ -147,13 +150,15 @@ type CreatorMsg interface {
 	GetCreator() string
 }
 
-// if tx is a system tx, return the CreatorMsg of the type asserted innerMsg
-// returns nil if tx is not a system tx
-func AssertSystemTxIntoCreatorTx(tx sdk.Tx) CreatorMsg {
+// IsSystemTx determines whether tx is a system tx that's signed by an authorized signer
+// system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
+// the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
+// the tx is authorized.
+func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 	// the following determines whether the tx is a system tx which will uses different handler
 	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
 	if len(tx.GetMsgs()) != 1 { // this is not a system tx
-		return nil
+		return false
 	}
 	msg := tx.GetMsgs()[0]
 
@@ -166,23 +171,19 @@ func AssertSystemTxIntoCreatorTx(tx sdk.Tx) CreatorMsg {
 			innerMsg = msgs[0]
 		}
 	}
-
-	// is authorized checks if the creator of the tx is in the observer set
-	if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok {
-		return mm
-	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok {
-		return mm
+	switch innerMsg.(type) {
+	case *cctxtypes.MsgGasPriceVoter,
+		*cctxtypes.MsgVoteOnObservedInboundTx,
+		*cctxtypes.MsgVoteOnObservedOutboundTx,
+		*cctxtypes.MsgAddToOutTxTracker,
+		*cctxtypes.MsgCreateTSSVoter,
+		*observertypes.MsgAddBlockHeader,
+		*observertypes.MsgAddBlameVote:
+		signers := innerMsg.GetSigners()
+		if len(signers) == 1 {
+			return isAuthorizedSigner(signers[0].String())
+		}
 	}
 
-	return nil
+	return false
 }
