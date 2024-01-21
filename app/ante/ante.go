@@ -97,12 +97,17 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
+			// default: handle as normal Cosmos SDK tx
 			anteHandler = newCosmosAnteHandler(options)
-			if len(tx.GetMsgs()) != 1 {
+
+			// the following determines whether the tx is a system tx which will uses different handler
+			// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
+			if len(tx.GetMsgs()) != 1 { // this is not a system tx
 				break
 			}
+			msg := tx.GetMsgs()[0]
 
-			msg := tx.GetMsgs()[0] // now we must have len(tx.GetMsgs()) == 1
+			// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
 			var innerMsg sdk.Msg
 			innerMsg = msg
 			if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
@@ -112,31 +117,24 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 				}
 			}
 
-			isAuthorize := options.ObserverKeeper.IsAuthorized
-			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
+			// is authorized checks if the creator of the tx is in the observer set
+			isAuthorized := options.ObserverKeeper.IsAuthorized
+			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorized(ctx, mm.Creator) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
 
 		default:
