@@ -2,12 +2,24 @@
 
 ## Unreleased
 
+### Tests
+
+* [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
+
 ### Features
 
 ### Fixes
 
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
+
+### CI
+
+* [1580](https://github.com/zeta-chain/node/pull/1580) - Fix release pipelines cleanup step.
+
+### Chores
+
+* [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 
 ## Version: v12.0.0
 
