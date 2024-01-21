@@ -19,9 +19,6 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmlog "github.com/tendermint/tendermint/libs/log"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func ValidateHandlerOptions(options HandlerOptions) error {
@@ -100,40 +99,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			// default: handle as normal Cosmos SDK tx
 			anteHandler = newCosmosAnteHandler(options)
 
-			// the following determines whether the tx is a system tx which will uses different handler
-			// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
-			if len(tx.GetMsgs()) != 1 { // this is not a system tx
-				break
-			}
-			msg := tx.GetMsgs()[0]
-
-			// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
-			var innerMsg sdk.Msg
-			innerMsg = msg
-			if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
-				msgs, err := mm.GetMessages()
-				if err == nil && len(msgs) == 1 {
-					innerMsg = msgs[0]
-				}
-			}
-
-			// is authorized checks if the creator of the tx is in the observer set
-			isAuthorized := options.ObserverKeeper.IsAuthorized
-			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorized(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerForSystemTx(options)
-			} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+			// if tx is a system tx, and singer is authorized, use system tx handler
+			msgCreator := AssertSystemTxIntoCreatorTx(tx)
+			if msgCreator != nil && options.ObserverKeeper.IsAuthorized(ctx, msgCreator.GetCreator()) {
 				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
 
@@ -165,4 +133,50 @@ func Recover(logger tmlog.Logger, err *error) {
 			)
 		}
 	}
+}
+
+type CreatorMsg interface {
+	GetCreator() string
+}
+
+// if tx is a system tx, return the CreatorMsg of the type asserted innerMsg
+// returns nil if tx is not a system tx
+func AssertSystemTxIntoCreatorTx(tx sdk.Tx) CreatorMsg {
+	// the following determines whether the tx is a system tx which will uses different handler
+	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
+	if len(tx.GetMsgs()) != 1 { // this is not a system tx
+		return nil
+	}
+	msg := tx.GetMsgs()[0]
+
+	// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
+	var innerMsg sdk.Msg
+	innerMsg = msg
+	if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
+		msgs, err := mm.GetMessages()
+		if err == nil && len(msgs) == 1 {
+			innerMsg = msgs[0]
+		}
+	}
+
+	// is authorized checks if the creator of the tx is in the observer set
+	if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok {
+		return mm
+	} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok {
+		return mm
+	} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok {
+		return mm
+	}
+
+	return nil
 }

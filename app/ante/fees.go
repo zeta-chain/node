@@ -96,9 +96,9 @@ func (mpd MinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return next(ctx, tx, simulate)
 	}
 
-	// Short-circuit genesis txs gentx
+	// Short-circuit genesis txs gentx at block 0 (there is no way to pay fee in genesis file)
 	if len(tx.GetMsgs()) == 1 {
-		if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok {
+		if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
 			return next(ctx, tx, simulate)
 		}
 	}
