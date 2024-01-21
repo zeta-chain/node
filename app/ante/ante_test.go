@@ -53,11 +53,15 @@ func TestIsSystemTx(t *testing.T) {
 	isAuthorized := func(_ string) bool {
 		return true
 	}
+	isAuthorizedFalse := func(_ string) bool {
+		return false
+	}
 
 	tests := []struct {
-		name   string
-		tx     sdk.Tx
-		wantIs bool
+		name         string
+		tx           sdk.Tx
+		isAuthorized func(string) bool
+		wantIs       bool
 	}{
 		{
 			"MsgCreateTSSVoter",
@@ -65,6 +69,16 @@ func TestIsSystemTx(t *testing.T) {
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
 			}),
+			isAuthorizedFalse,
+			false,
+		},
+		{
+			"MsgCreateTSSVoter",
+			buildTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+				Creator:   sample.AccAddress(),
+				TssPubkey: "pubkey1234",
+			}),
+			isAuthorized,
 			true,
 		},
 		{
@@ -73,21 +87,29 @@ func TestIsSystemTx(t *testing.T) {
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
 			"MsgSend",
 			buildTxFromMsg(&banktypes.MsgSend{}),
+			isAuthorized,
+
 			false,
 		},
 		{
 			"MsgExec{MsgSend}",
 			buildAuthzTxFromMsg(&banktypes.MsgSend{}),
+			isAuthorized,
+
 			false,
 		},
 		{
 			"MsgCreateValidator",
 			buildTxFromMsg(&stakingtypes.MsgCreateValidator{}),
+			isAuthorized,
+
 			false,
 		},
 
@@ -96,6 +118,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&crosschaintypes.MsgVoteOnObservedInboundTx{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -103,6 +127,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteOnObservedInboundTx{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 
@@ -111,6 +137,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&crosschaintypes.MsgVoteOnObservedOutboundTx{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -118,6 +146,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&crosschaintypes.MsgVoteOnObservedOutboundTx{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -125,6 +155,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&crosschaintypes.MsgAddToOutTxTracker{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -132,6 +164,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&crosschaintypes.MsgAddToOutTxTracker{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -139,6 +173,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -146,6 +182,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -153,6 +191,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&observertypes.MsgAddBlockHeader{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -160,6 +200,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&observertypes.MsgAddBlockHeader{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -167,6 +209,8 @@ func TestIsSystemTx(t *testing.T) {
 			buildTxFromMsg(&observertypes.MsgAddBlameVote{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 		{
@@ -174,12 +218,14 @@ func TestIsSystemTx(t *testing.T) {
 			buildAuthzTxFromMsg(&observertypes.MsgAddBlameVote{
 				Creator: sample.AccAddress(),
 			}),
+			isAuthorized,
+
 			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			is := ante.IsSystemTx(tt.tx, isAuthorized)
+			is := ante.IsSystemTx(tt.tx, tt.isAuthorized)
 			require.Equal(t, tt.wantIs, is)
 		})
 	}
