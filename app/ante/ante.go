@@ -19,9 +19,6 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
@@ -29,6 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmlog "github.com/tendermint/tendermint/libs/log"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func ValidateHandlerOptions(options HandlerOptions) error {
@@ -97,46 +96,24 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
+			// default: handle as normal Cosmos SDK tx
 			anteHandler = newCosmosAnteHandler(options)
-			if len(tx.GetMsgs()) != 1 {
-				break
+
+			// if tx is a system tx, and singer is authorized, use system tx handler
+
+			isAuthorized := func(creator string) bool {
+				return options.ObserverKeeper.IsAuthorized(ctx, creator)
+			}
+			if IsSystemTx(tx, isAuthorized) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
 			}
 
-			msg := tx.GetMsgs()[0] // now we must have len(tx.GetMsgs()) == 1
-			var innerMsg sdk.Msg
-			innerMsg = msg
-			if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
-				msgs, err := mm.GetMessages()
-				if err == nil && len(msgs) == 1 {
-					innerMsg = msgs[0]
+			// if tx is MsgCreatorValidator, use the newCosmosAnteHandlerForSystemTx handler to
+			// exempt gas fee requirement in genesis because it's not possible to pay gas fee in genesis
+			if len(tx.GetMsgs()) == 1 {
+				if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+					anteHandler = newCosmosAnteHandlerForSystemTx(options)
 				}
-			}
-
-			isAuthorize := options.ObserverKeeper.IsAuthorized
-			if mm, ok := innerMsg.(*cctxtypes.MsgGasPriceVoter); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedInboundTx); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgVoteOnObservedOutboundTx); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgAddToOutTxTracker); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*cctxtypes.MsgCreateTSSVoter); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlockHeader); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if mm, ok := innerMsg.(*observertypes.MsgAddBlameVote); ok && isAuthorize(ctx, mm.Creator) {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
-			} else if _, ok := innerMsg.(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
-				anteHandler = newCosmosAnteHandlerNoGasFee(options)
-				break
 			}
 
 		default:
@@ -167,4 +144,42 @@ func Recover(logger tmlog.Logger, err *error) {
 			)
 		}
 	}
+}
+
+// IsSystemTx determines whether tx is a system tx that's signed by an authorized signer
+// system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
+// the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
+// the tx is authorized.
+func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
+	// the following determines whether the tx is a system tx which will uses different handler
+	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
+	if len(tx.GetMsgs()) != 1 { // this is not a system tx
+		return false
+	}
+	msg := tx.GetMsgs()[0]
+
+	// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
+	var innerMsg sdk.Msg
+	innerMsg = msg
+	if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
+		msgs, err := mm.GetMessages()
+		if err == nil && len(msgs) == 1 {
+			innerMsg = msgs[0]
+		}
+	}
+	switch innerMsg.(type) {
+	case *cctxtypes.MsgGasPriceVoter,
+		*cctxtypes.MsgVoteOnObservedInboundTx,
+		*cctxtypes.MsgVoteOnObservedOutboundTx,
+		*cctxtypes.MsgAddToOutTxTracker,
+		*cctxtypes.MsgCreateTSSVoter,
+		*observertypes.MsgAddBlockHeader,
+		*observertypes.MsgAddBlameVote:
+		signers := innerMsg.GetSigners()
+		if len(signers) == 1 {
+			return isAuthorizedSigner(signers[0].String())
+		}
+	}
+
+	return false
 }

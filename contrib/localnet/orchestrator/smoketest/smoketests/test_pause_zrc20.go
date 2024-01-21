@@ -28,7 +28,7 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
-	tx, err = sm.BTCZRC20.Approve(sm.ZevmAuth, vaultAddr, big.NewInt(1e18))
+	tx, err = sm.USDTZRC20.Approve(sm.ZevmAuth, vaultAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
@@ -93,23 +93,23 @@ func TestPauseZRC20(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("Operations all failed")
 
-	// Check we can still interact with BTC ZRC20
+	// Check we can still interact with USDT ZRC20
 	sm.Logger.Info("Check other ZRC20 can still be operated")
-	tx, err = sm.BTCZRC20.Transfer(sm.ZevmAuth, sample.EthAddress(), big.NewInt(1e3))
+	tx, err = sm.USDTZRC20.Transfer(sm.ZevmAuth, sample.EthAddress(), big.NewInt(1e3))
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
-		panic("BTC transfer should succeed")
+		panic("USDT transfer should succeed")
 	}
-	tx, err = vaultContract.Deposit(sm.ZevmAuth, sm.BTCZRC20Addr, big.NewInt(1e3))
+	tx, err = vaultContract.Deposit(sm.ZevmAuth, sm.USDTZRC20Addr, big.NewInt(1e3))
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
-		panic("BTC vault deposit should succeed")
+		panic("USDT vault deposit should succeed")
 	}
 
 	// Check deposit revert when paused

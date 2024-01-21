@@ -115,7 +115,7 @@ func newCosmosAnteHandler(options HandlerOptions) sdk.AnteHandler {
 }
 
 // this applies to special cosmos tx that calls EVM, in which case the EVM overrides the gas limit
-func newCosmosAnteHandlerNoGasFee(options HandlerOptions) sdk.AnteHandler {
+func newCosmosAnteHandlerForSystemTx(options HandlerOptions) sdk.AnteHandler {
 	return sdk.ChainAnteDecorators(
 		ethante.RejectMessagesDecorator{}, // reject MsgEthereumTxs
 		NewAuthzLimiterDecorator(options.DisabledAuthzMsgs...),

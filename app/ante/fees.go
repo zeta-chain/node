@@ -29,6 +29,10 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 )
 
+var (
+	GasPriceReductionRate = "0.01" // 1% of regular tx gas price for system txs
+)
+
 // MinGasPriceDecorator will check if the transaction's fee is at least as large
 // as the MinGasPrices param. If fee is too low, decorator returns error and tx
 // is rejected. This applies for both CheckTx and DeliverTx
@@ -92,14 +96,15 @@ func (mpd MinGasPriceDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate 
 		return next(ctx, tx, simulate)
 	}
 
-	// Short-circuit genesis txs gentx
+	// Short-circuit genesis txs gentx at block 0 (there is no way to pay fee in genesis file)
 	if len(tx.GetMsgs()) == 1 {
-		if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok {
+		if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
 			return next(ctx, tx, simulate)
 		}
 	}
 
-	minGasPrice = minGasPrice.Mul(sdk.NewDecWithPrec(1, 2)) //
+	reductionRate := sdk.MustNewDecFromStr(GasPriceReductionRate)
+	minGasPrice = minGasPrice.Mul(reductionRate) // discounts min gas price for system tx
 
 	evmParams := mpd.evmKeeper.GetParams(ctx)
 	evmDenom := evmParams.GetEvmDenom()

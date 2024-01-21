@@ -3,7 +3,7 @@
 Query tss address by finalized zeta height (for historical tss addresses)
 
 ```
-zetacored query observer get-historical-tss-address [finalizedZetaHeight] [flags]
+zetacored query observer get-historical-tss-address [finalizedZetaHeight] [bitcoinChainId] [flags]
 ```
 
 ### Options
