@@ -2,12 +2,33 @@
 
 ## Unreleased
 
+### Tests
+
+* [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
+
+### Features
+
+### Fixes
+
+* [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
+* [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
+
+### CI
+
+* [1580](https://github.com/zeta-chain/node/pull/1580) - Fix release pipelines cleanup step.
+
+### Chores
+
+* [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+
+## Version: v12.0.0
+
 ### Breaking Changes
 
 TSS and chain validation related queries have been moved from `crosschain` module to `observer` module:
 * `PendingNonces` :Changed from `/zeta-chain/crosschain/pendingNonces/{chain_id}/{address}` to `/zeta-chain/observer/pendingNonces/{chain_id}/{address}` . It returns all the pending nonces for a chain id and address. This returns the current pending nonces for the chain.
-* `ChainNonces` : Changed from `/zeta-chain/crosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce oof the TSS address for the chain.
-* `ChainNoncesAll` :Changed from `/zeta-chain/observer/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
+* `ChainNonces` : Changed from `/zeta-chain/crosschain/chainNonces/{chain_id}` to`/zeta-chain/observer/chainNonces/{chain_id}` . It returns all the chain nonces for a chain id. This returns the current nonce of the TSS address for the chain.
+* `ChainNoncesAll` :Changed from `/zeta-chain/crosschain/chainNonces` to `/zeta-chain/observer/chainNonces` . It returns all the chain nonces for all chains. This returns the current nonce of the TSS address for all chains.
 
 All chains now have the same observer set:
 * `ObserversByChain`: `/zeta-chain/observer/observers_by_chain/{observation_chain}` has been removed and replaced with `/zeta-chain/observer/observer_set`. All chains have the same observer set.
@@ -19,7 +40,7 @@ Observer params and core params have been merged into chain params:
 * `GetCoreParamsByChain`: Renamed into `GetChainParamsForChain`. `/zeta-chain/observer/get_core_params_by_chain` moved to `/zeta-chain/observer/get_chain_params_by_chain`.
 
 Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin chain id:
-* `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoing chain id can now now passed as a parameter to fetch the correct tss for required BTC chain.This parameter only affects the BTC tss address in the response.
+* `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoin chain id can now be passed as a parameter to fetch the correct tss for required BTC chain. This parameter only affects the BTC tss address in the response.
 
 ### Features
 
@@ -32,7 +53,9 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * added metrics to track the burn rate of the hotkey in the telemetry server as well as prometheus
 
 ### Fixes
-* Fix release pipelines cleanup step.
+
+* [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
+* [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal

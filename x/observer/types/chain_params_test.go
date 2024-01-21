@@ -44,6 +44,12 @@ func TestUpdateChainParamsSuiteSuite(t *testing.T) {
 	suite.Run(t, new(UpdateChainParamsSuite))
 }
 
+func TestChainParamsEqual(t *testing.T) {
+	params := types.GetDefaultChainParams()
+	require.True(t, types.ChainParamsEqual(*params.ChainParams[0], *params.ChainParams[0]))
+	require.False(t, types.ChainParamsEqual(*params.ChainParams[0], *params.ChainParams[1]))
+}
+
 func (s *UpdateChainParamsSuite) SetupTest() {
 	s.evmParams = &types.ChainParams{
 		ConfirmationCount:           1,
