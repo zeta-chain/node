@@ -146,10 +146,6 @@ func Recover(logger tmlog.Logger, err *error) {
 	}
 }
 
-type CreatorMsg interface {
-	GetCreator() string
-}
-
 // IsSystemTx determines whether tx is a system tx that's signed by an authorized signer
 // system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
 // the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
