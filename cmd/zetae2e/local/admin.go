@@ -66,7 +66,7 @@ func adminTestRoutine(
 			smoketests.TestUpdateBytecodeName,
 			smoketests.TestDepositEtherLiquidityCapName,
 		); err != nil {
-			return fmt.Errorf("admim tests failed: %v", err)
+			return fmt.Errorf("admin tests failed: %v", err)
 		}
 
 		adminRunner.Logger.Print("🍾 admin tests completed in %s", time.Since(startTime).String())

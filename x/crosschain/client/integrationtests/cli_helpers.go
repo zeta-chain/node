@@ -165,7 +165,9 @@ func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string,
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -188,7 +190,9 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -229,7 +233,9 @@ func BuildSignedOutboundVote(
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(outboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -262,7 +268,9 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "4000000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
