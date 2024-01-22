@@ -41,6 +41,14 @@ func TestMigrateObserverMapper(t *testing.T) {
 		}
 		assert.Equal(t, 0, len(observerMappers))
 	})
+
+	t.Run("TestMigrateStoreNoObserverMapper", func(t *testing.T) {
+		k, ctx := keepertest.ObserverKeeper(t)
+		err := v5.MigrateObserverMapper(ctx, k.StoreKey(), k.Codec())
+		assert.NoError(t, err)
+		_, found := k.GetObserverSet(ctx)
+		assert.False(t, found)
+	})
 }
 
 func TestMigrateObserverParams(t *testing.T) {
