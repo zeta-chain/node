@@ -36,20 +36,23 @@ func MigrateObserverMapper(ctx sdk.Context, observerStoreKey storetypes.StoreKey
 		legacyObserverMappers = append(legacyObserverMappers, &val)
 	}
 
-	// We can safely assume that the observer list is the same for all the observer mappers
-	observerList := legacyObserverMappers[0].ObserverList
+	if len(legacyObserverMappers) > 0 {
+		// We can safely assume that the observer list is the same for all the observer mappers
+		observerList := legacyObserverMappers[0].ObserverList
 
-	storelastBlockObserverCount := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.LastBlockObserverCountKey))
-	b := cdc.MustMarshal(&types.LastObserverCount{Count: uint64(len(observerList)), LastChangeHeight: ctx.BlockHeight()})
-	storelastBlockObserverCount.Set([]byte{0}, b)
+		storelastBlockObserverCount := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.LastBlockObserverCountKey))
+		b := cdc.MustMarshal(&types.LastObserverCount{Count: uint64(len(observerList)), LastChangeHeight: ctx.BlockHeight()})
+		storelastBlockObserverCount.Set([]byte{0}, b)
 
-	storeObserverSet := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.ObserverSetKey))
-	b = cdc.MustMarshal(&types.ObserverSet{ObserverList: observerList})
-	storeObserverSet.Set([]byte{0}, b)
+		storeObserverSet := prefix.NewStore(ctx.KVStore(observerStoreKey), types.KeyPrefix(types.ObserverSetKey))
+		b = cdc.MustMarshal(&types.ObserverSet{ObserverList: observerList})
+		storeObserverSet.Set([]byte{0}, b)
 
-	for _, legacyObserverMapper := range legacyObserverMappers {
-		legacyObserverMapperStore.Delete(types.KeyPrefix(legacyObserverMapper.Index))
+		for _, legacyObserverMapper := range legacyObserverMappers {
+			legacyObserverMapperStore.Delete(types.KeyPrefix(legacyObserverMapper.Index))
+		}
 	}
+
 	return nil
 }
 
