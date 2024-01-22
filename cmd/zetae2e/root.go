@@ -23,6 +23,8 @@ func NewRootCmd() *cobra.Command {
 		NewBalancesCmd(),
 		NewBitcoinAddressCmd(),
 		local.NewLocalCmd(),
+		NewStressTestCmd(),
+		NewInitCmd(),
 	)
 
 	return cmd

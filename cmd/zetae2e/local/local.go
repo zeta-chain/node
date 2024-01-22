@@ -18,7 +18,7 @@ import (
 const (
 	flagContractsDeployed = "deployed"
 	flagWaitForHeight     = "wait-for"
-	flagConfigFile        = "config"
+	FlagConfigFile        = "config"
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
 	flagTestCustom        = "test-custom"
@@ -51,7 +51,7 @@ func NewLocalCmd() *cobra.Command {
 		"block height for tests to begin, ex. --wait-for 100",
 	)
 	cmd.Flags().String(
-		flagConfigFile,
+		FlagConfigFile,
 		"",
 		"config file to use for the tests",
 	)
@@ -135,7 +135,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	testStartTime := time.Now()
-	logger.Print("starting tests")
+	logger.Print("starting E2E tests")
+
+	if testAdmin {
+		logger.Print("⚠️ admin tests enabled")
+	}
 
 	// start timer
 	go func() {
@@ -145,7 +149,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}()
 
 	// initialize tests config
-	conf, err := getConfig(cmd)
+	conf, err := GetConfig(cmd)
 	if err != nil {
 		panic(err)
 	}

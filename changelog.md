@@ -5,6 +5,23 @@
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
+
+### Features
+
+### Fixes
+
+* [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
+* [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
+* [1650](https://github.com/zeta-chain/node/pull/1605) - exempt (discounted) *system txs* from min gas price check and gas fee deduction
+
+### CI
+
+* [1580](https://github.com/zeta-chain/node/pull/1580) - Fix release pipelines cleanup step.
+
+### Chores
+
+* [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 
 ## Version: v12.0.0
 
@@ -39,6 +56,8 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 ### Fixes
 
+* [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
+* [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
@@ -63,6 +82,8 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
 * [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 * [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
+* [1501](https://github.com/zeta-chain/node/pull/1501) - fix stress test - use new refactored config file and smoketest runner
+* [1589](https://github.com/zeta-chain/node/pull/1589) - add bitcoin chain id to `get tss address` and `get tss address historical` cli query
 
 ### Refactoring
 
