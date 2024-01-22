@@ -81,6 +81,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
 * [1555](https://github.com/zeta-chain/node/pull/1555) - Reduce websocket message limit to 10MB
 * [1567](https://github.com/zeta-chain/node/pull/1567) - add bitcoin chain id to fetch the tss address rpc endpoint
+* [1501](https://github.com/zeta-chain/node/pull/1501) - fix stress test - use new refactored config file and smoketest runner
 * [1589](https://github.com/zeta-chain/node/pull/1589) - add bitcoin chain id to `get tss address` and `get tss address historical` cli query
 
 ### Refactoring

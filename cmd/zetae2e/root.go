@@ -13,6 +13,8 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(
 		NewRunCmd(),
 		local.NewLocalCmd(),
+		NewStressTestCmd(),
+		NewInitCmd(),
 	)
 
 	return cmd
