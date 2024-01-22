@@ -317,6 +317,9 @@ func initPreParams(path string) {
 	}
 }
 
+// promptPasswords() This function will prompt for passwords which will be used to decrypt two key files:
+// 1. HotKey
+// 2. TSS key-share
 func promptPasswords() (string, string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("HotKey Password: ")
