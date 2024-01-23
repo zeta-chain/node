@@ -15,6 +15,31 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
+	t.Run("test gas price multiplier", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		admin := sample.AccAddress()
+		setAdminPolicies(ctx, zk, admin)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		chain := getValidEthChain(t)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		assert.True(t, found)
+		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		})
+		assert.NoError(t, err)
+		hash := crypto.Keccak256Hash([]byte(indexString))
+		index := hash.Hex()
+		_, found = k.GetCrossChainTx(ctx, index)
+		assert.True(t, found)
+		assert.Equal(t, gp.MulUint64(crosschaintypes.TssMigrationGasMultiplierEVM), k.GetGasPrice(ctx, chain.ChainId).Prices[1])
+
+	})
+}
 func TestMsgServer_MigrateTssFunds(t *testing.T) {
 	t.Run("successfully create tss migration cctx", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -210,7 +235,7 @@ func setupTssMigrationParams(
 		ChainId:     chain.ChainId,
 		Signers:     nil,
 		BlockNums:   nil,
-		Prices:      []uint64{1, 1, 1},
+		Prices:      []uint64{100000, 100000, 100000},
 		MedianIndex: 1,
 	})
 	k.GetObserverKeeper().SetChainNonces(ctx, observertypes.ChainNonces{
