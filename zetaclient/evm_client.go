@@ -1070,6 +1070,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 	}
 
 	// post to zetacore
+	guard := make(map[string]bool) // guard against multiple events in the same tx
 	beingScanned := uint64(0)
 	for _, event := range events {
 		// remember which block we are scanning (there could be multiple events in the same block)
@@ -1088,6 +1089,10 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 				"observeERC20Deposited: GetTransactionSender error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
 			return beingScanned - 1 // we have to re-scan from this block next time
 		}
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("more than one remote call event in a single tx %s; skip the rest", event.Raw.TxHash.Hex())
+			continue
+		}
 
 		msg := ob.GetInboundVoteMsgForDepositedEvent(event, sender)
 		if msg == nil {
@@ -1104,6 +1109,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 				"observeERC20Deposited: event detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 				event.Raw.TxHash.Hex(), event.Raw.BlockNumber, ob.chain.ChainId, zetaHash, ballot)
 		}
+		guard[event.Raw.TxHash.Hex()] = true
 	}
 	// successful processed all events in [startBlock, toBlock]
 	return toBlock
