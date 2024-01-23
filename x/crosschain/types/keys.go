@@ -25,6 +25,8 @@ const (
 	MemStoreKey = "mem_metacore"
 
 	ProtocolFee = 2000000000000000000
+
+	TssMigrationGasMultiplierEVM = "2.5"
 )
 
 func GetProtocolFee() sdk.Uint {

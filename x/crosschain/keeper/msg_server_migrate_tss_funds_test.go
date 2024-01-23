@@ -22,7 +22,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain(t)
-		amount := sdkmath.NewUint(100)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
@@ -35,20 +35,38 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		_, found := k.GetCrossChainTx(ctx, index)
 		assert.True(t, found)
 	})
+	t.Run("not enough funds in tss address for migration", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		admin := sample.AccAddress()
+		setAdminPolicies(ctx, zk, admin)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		chain := getValidEthChain(t)
+		amount := sdkmath.NewUintFromString("100")
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		})
+		assert.ErrorContains(t, err, crosschaintypes.ErrCannotMigrateTssFunds.Error())
+		hash := crypto.Keccak256Hash([]byte(indexString))
+		index := hash.Hex()
+		_, found := k.GetCrossChainTx(ctx, index)
+		assert.False(t, found)
+	})
 	t.Run("unable to migrate funds if new TSS is not created ", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain(t)
-		amount := sdkmath.NewUint(100)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, true)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
 		assert.ErrorContains(t, err, "no new tss address has been generated")
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
@@ -61,7 +79,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain(t)
-		amount := sdkmath.NewUint(100)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
@@ -87,7 +105,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain(t)
-		amount := sdkmath.NewUint(100)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, tssPubkey := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 			NonceLow:  1,
@@ -123,7 +141,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		chain := getValidEthChain(t)
-		amount := sdkmath.NewUint(100)
+		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
 		currentTss, found := k.GetObserverKeeper().GetTSS(ctx)
 		assert.True(t, found)

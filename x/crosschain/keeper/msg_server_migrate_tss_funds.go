@@ -116,6 +116,24 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		}
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
+		// Tss migration is a send transaction, so the gas limit is set to 21000
+		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = common.EVMSend
+		// Multiple current gas price with standard multiplier to add some buffer
+		multiplier, err := sdk.NewDecFromStr(types.TssMigrationGasMultiplierEVM)
+		if err != nil {
+			return err
+		}
+		gasPrice, err := sdk.NewDecFromStr(medianGasPrice.String())
+		if err != nil {
+			return err
+		}
+		newGasPrice := gasPrice.Mul(multiplier)
+		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = newGasPrice.TruncateInt().String()
+		evmFee := sdkmath.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit).Mul(medianGasPrice)
+		if evmFee.GT(amount) {
+			return errorsmod.Wrap(types.ErrInsufficientFundsTssMigration, fmt.Sprintf("insufficient funds to pay for gas fee, amount: %s, gas fee: %s, chainid: %d", amount.String(), evmFee.String(), chainID))
+		}
+		cctx.GetCurrentOutTxParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
 	if common.IsBitcoinChain(chainID) {
