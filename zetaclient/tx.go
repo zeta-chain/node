@@ -111,6 +111,15 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	blockHash string,
 	txIndex int64,
 ) (string, error) {
+	// don't report if the tracker already contains the txHash
+	tracker, err := b.GetOutTxTracker(common.Chain{ChainId: chainID}, nonce)
+	if err == nil {
+		for _, hash := range tracker.HashList {
+			if strings.EqualFold(hash.TxHash, txHash) {
+				return "", nil
+			}
+		}
+	}
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
