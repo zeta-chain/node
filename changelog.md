@@ -22,6 +22,9 @@
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 
+### Refactoring
+* [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
+
 ## Version: v12.0.0
 
 ### Breaking Changes
