@@ -2,10 +2,9 @@ package runner
 
 import (
 	"fmt"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"strings"
-
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
 // AccountBalances is a struct that contains the balances of the accounts used in the smoke test

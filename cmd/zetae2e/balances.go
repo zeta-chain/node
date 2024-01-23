@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
@@ -96,6 +95,13 @@ func getBitcoinBalance(r *runner.SmokeTestRunner) (string, error) {
 		return "", fmt.Errorf("failed to decode BTC address: %w", err)
 	}
 
+	//_, err = r.BtcRPCClient.CreateWallet("user")
+	//if err != nil {
+	//	if !strings.Contains(err.Error(), "Database already exists") {
+	//		return "", fmt.Errorf("failed to create wallet: %w", err)
+	//	}
+	//}
+	//
 	//skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
 	//if err != nil {
 	//	return "", fmt.Errorf("failed to decode private key: %w", err)
@@ -106,8 +112,8 @@ func getBitcoinBalance(r *runner.SmokeTestRunner) (string, error) {
 	//if err != nil {
 	//	return "", fmt.Errorf("failed to create WIF: %w", err)
 	//}
-
-	// Import the key to the wallet
+	//
+	//// Import the key to the wallet
 	//err = r.BtcRPCClient.ImportPrivKeyLabel(privkeyWIF, "user")
 	//if err != nil {
 	//	return "", fmt.Errorf("failed to import private key: %w", err)
