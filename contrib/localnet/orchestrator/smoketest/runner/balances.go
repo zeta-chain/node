@@ -2,9 +2,11 @@ package runner
 
 import (
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"strings"
+
+	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
 // AccountBalances is a struct that contains the balances of the accounts used in the smoke test
@@ -12,9 +14,11 @@ type AccountBalances struct {
 	ZetaETH   *big.Int
 	ZetaZETA  *big.Int
 	ZetaERC20 *big.Int
+	ZetaBTC   *big.Int
 	EvmETH    *big.Int
 	EvmZETA   *big.Int
 	EvmERC20  *big.Int
+	BtcBTC    string
 }
 
 // AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the smoke test
@@ -39,6 +43,10 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 	if err != nil {
 		return AccountBalances{}, err
 	}
+	zetaBtc, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	if err != nil {
+		return AccountBalances{}, err
+	}
 
 	// evm
 	evmEth, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
@@ -54,14 +62,50 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 		return AccountBalances{}, err
 	}
 
+	// bitcoin
+	var BtcBTC string
+	if sm.BtcRPCClient != nil {
+		if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
+			return AccountBalances{}, err
+		}
+	}
+
 	return AccountBalances{
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
 		ZetaERC20: zetaErc20,
+		ZetaBTC:   zetaBtc,
 		EvmETH:    evmEth,
 		EvmZETA:   evmZeta,
 		EvmERC20:  evmErc20,
+		BtcBTC:    BtcBTC,
 	}, nil
+}
+
+// GetBitcoinBalance returns the spendable BTC balance of the BTC address
+func (sm *SmokeTestRunner) GetBitcoinBalance() (string, error) {
+	addr, err := sm.GetBtcAddress()
+	if err != nil {
+		return "", fmt.Errorf("failed to get BTC address: %w", err)
+	}
+
+	address, err := btcutil.DecodeAddress(addr, sm.BitcoinParams)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode BTC address: %w", err)
+	}
+
+	unspentList, err := sm.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+	if err != nil {
+		return "", fmt.Errorf("failed to list unspent: %w", err)
+	}
+
+	// calculate total amount
+	var totalAmount btcutil.Amount
+	for _, unspent := range unspentList {
+		totalAmount += btcutil.Amount(unspent.Amount * 1e8)
+	}
+
+	return totalAmount.String(), nil
 }
 
 // PrintAccountBalances shows the account balances of the accounts used in the smoke test
@@ -74,12 +118,17 @@ func (sm *SmokeTestRunner) PrintAccountBalances(balances AccountBalances) {
 	sm.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
 	sm.Logger.Print("* ETH balance:   %s", balances.ZetaETH.String())
 	sm.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
+	sm.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
 
 	// evm
 	sm.Logger.Print("EVM:")
 	sm.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
 	sm.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
 	sm.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
+
+	// bitcoin
+	sm.Logger.Print("Bitcoin:")
+	sm.Logger.Print("* BTC balance: %s", balances.BtcBTC)
 
 	return
 }

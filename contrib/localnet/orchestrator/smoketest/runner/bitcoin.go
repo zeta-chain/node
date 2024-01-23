@@ -361,3 +361,35 @@ func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	}
 	sm.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
+
+//_, err = r.BtcRPCClient.CreateWallet("user")
+//if err != nil {
+//	if !strings.Contains(err.Error(), "Database already exists") {
+//		return "", fmt.Errorf("failed to create wallet: %w", err)
+//	}
+//}
+//
+//skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
+//if err != nil {
+//	return "", fmt.Errorf("failed to decode private key: %w", err)
+//}
+//
+//sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+//privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
+//if err != nil {
+//	return "", fmt.Errorf("failed to create WIF: %w", err)
+//}
+//
+//// Import the key to the wallet
+//err = r.BtcRPCClient.ImportPrivKeyLabel(privkeyWIF, "user")
+//if err != nil {
+//	return "", fmt.Errorf("failed to import private key: %w", err)
+//}
+
+//address, err := btcutil.NewAddressWitnessPubKeyHash(
+//	btcutil.Hash160(privkeyWIF.SerializePubKey()),
+//	r.BitcoinParams,
+//)
+//if err != nil {
+//	return "", err
+//}
