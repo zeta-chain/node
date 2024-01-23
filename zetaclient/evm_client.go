@@ -306,6 +306,7 @@ func (ob *EVMChainClient) ExternalChainRPCStatus() {
 				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
 				continue
 			}
+			// #nosec G701 always in range
 			blockTime := time.Unix(int64(header.Time), 0).UTC()
 			elapsedSeconds := time.Since(blockTime).Seconds()
 			if elapsedSeconds > 100 {
