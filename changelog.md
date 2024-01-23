@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+
+## Version: v12.1.0
+
 ### Tests
 
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
@@ -21,6 +24,8 @@
 ### Chores
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+* [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
+
 
 ## Version: v12.0.0
 
