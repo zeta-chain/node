@@ -174,7 +174,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
-	btc *rpcclient.Client,
+	btcRPC *rpcclient.Client,
 	memo []byte,
 	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
@@ -204,7 +204,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	// create raw transaction
-	tx, err := btc.CreateRawTransaction(inputs, amountMap, nil)
+	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -247,28 +247,28 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		}
 	}
 
-	stx, signed, err := btc.SignRawTransactionWithWallet2(tx, inputsForSign)
+	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
 	if err != nil {
 		panic(err)
 	}
 	if !signed {
 		panic("btc transaction not signed")
 	}
-	txid, err := btc.SendRawTransaction(stx, true)
+	txid, err := btcRPC.SendRawTransaction(stx, true)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("txid: %+v", txid)
-	_, err = btc.GenerateToAddress(6, btcDeployerAddress, nil)
+	_, err = btcRPC.GenerateToAddress(6, btcDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	gtx, err := btc.GetTransaction(txid)
+	gtx, err := btcRPC.GetTransaction(txid)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	rawtx, err := btc.GetRawTransactionVerbose(txid)
+	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
 	if err != nil {
 		panic(err)
 	}
@@ -278,7 +278,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		common.BtcTestNetChain().ChainId,
+		common.BtcRegtestChain().ChainId,
 	)
 	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
