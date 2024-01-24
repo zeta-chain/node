@@ -78,6 +78,9 @@ func GenerateTss(logger zerolog.Logger,
 			triedKeygenAtBlock = false
 			continue
 		}
+		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
+			return tss, nil
+		}
 		// Try generating TSS at keygen block , only when status is pending keygen and generation has not been tried at the block
 		if keyGen.Status == observertypes.KeygenStatus_PendingKeygen {
 			if keyGen.BlockNumber == math.MaxInt64 {
