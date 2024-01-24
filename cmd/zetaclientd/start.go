@@ -333,7 +333,7 @@ func promptPasswords() (string, string, error) {
 		return "", "", err
 	}
 
-	if TSSKeyPass == "" || hotKeyPass == "" {
+	if TSSKeyPass == "" {
 		return "", "", errors.New("hotkey and tss passwords are required to start zetaclient")
 	}
 
