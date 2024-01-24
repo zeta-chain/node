@@ -3,6 +3,8 @@ package runner
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"runtime"
 	"sync"
 	"time"
@@ -82,13 +84,18 @@ type SmokeTestRunner struct {
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
 	UniswapV2Router      *uniswapv2router.UniswapV2Router02
-	TestDAppAddr         ethcommon.Address
-	ZEVMSwapAppAddr      ethcommon.Address
-	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
-	ContextAppAddr       ethcommon.Address
-	ContextApp           *contextapp.ContextApp
-	SystemContractAddr   ethcommon.Address
-	SystemContract       *systemcontract.SystemContract
+	ConnectorZEVMAddr    ethcommon.Address
+	ConnectorZEVM        *connectorzevm.ZetaConnectorZEVM
+	WZetaAddr            ethcommon.Address
+	WZeta                *wzeta.WETH9
+
+	TestDAppAddr       ethcommon.Address
+	ZEVMSwapAppAddr    ethcommon.Address
+	ZEVMSwapApp        *zevmswap.ZEVMSwapApp
+	ContextAppAddr     ethcommon.Address
+	ContextApp         *contextapp.ContextApp
+	SystemContractAddr ethcommon.Address
+	SystemContract     *systemcontract.SystemContract
 
 	// config
 	CctxTimeout    time.Duration
@@ -297,6 +304,8 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 	sm.BTCZRC20Addr = other.BTCZRC20Addr
 	sm.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	sm.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	sm.ConnectorZEVMAddr = other.ConnectorZEVMAddr
+	sm.WZetaAddr = other.WZetaAddr
 	sm.TestDAppAddr = other.TestDAppAddr
 	sm.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
 	sm.ContextAppAddr = other.ContextAppAddr
@@ -339,6 +348,15 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 	if err != nil {
 		return err
 	}
+	sm.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(sm.ConnectorZEVMAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.WZeta, err = wzeta.NewWETH9(sm.WZetaAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+
 	sm.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(sm.ZEVMSwapAppAddr, sm.ZevmClient)
 	if err != nil {
 		return err
@@ -376,6 +394,9 @@ func (sm *SmokeTestRunner) PrintContractAddresses() {
 	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
 	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
 	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
+	sm.Logger.Print("ConnectorZEVM:    %s", sm.ConnectorZEVMAddr.Hex())
+	sm.Logger.Print("WZeta:          %s", sm.WZetaAddr.Hex())
+
 	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())
 	sm.Logger.Print("ContextApp:     %s", sm.ContextAppAddr.Hex())
 	sm.Logger.Print("TestDapp:       %s", sm.TestDAppAddr.Hex())
