@@ -84,7 +84,7 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
 func (sm *SmokeTestRunner) GetBitcoinBalance() (string, error) {
-	addr, err := sm.GetBtcAddress()
+	addr, _, err := sm.GetBtcAddress()
 	if err != nil {
 		return "", fmt.Errorf("failed to get BTC address: %w", err)
 	}

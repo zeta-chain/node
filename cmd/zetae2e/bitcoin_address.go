@@ -14,19 +14,31 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
+const flagPrivKey = "privkey"
+
 // NewBitcoinAddressCmd returns the bitcoin address command
 // which shows from the used config file, the bitcoin address that can be used to receive funds for the E2E tests
 func NewBitcoinAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "bitcoin-address [config-file]",
+		Use:   "bitcoin-address [config-file] ",
 		Short: "Show Bitcoin address to receive funds for E2E tests",
 		RunE:  runBitcoinAddress,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().Bool(
+		flagPrivKey,
+		false,
+		"show the priv key in WIF format",
+	)
 	return cmd
 }
 
-func runBitcoinAddress(_ *cobra.Command, args []string) error {
+func runBitcoinAddress(cmd *cobra.Command, args []string) error {
+	showPrivKey, err := cmd.Flags().GetBool(flagPrivKey)
+	if err != nil {
+		return err
+	}
+
 	// read the config file
 	conf, err := config.ReadConfig(args[0])
 	if err != nil {
@@ -66,12 +78,15 @@ func runBitcoinAddress(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	addr, err := r.GetBtcAddress()
+	addr, privKey, err := r.GetBtcAddress()
 	if err != nil {
 		return err
 	}
 
 	logger.Print("* BTC address: %s", addr)
+	if showPrivKey {
+		logger.Print("* BTC privkey: %s", privKey)
+	}
 
 	return nil
 }

@@ -26,6 +26,53 @@ import (
 
 var blockHeaderBTCTimeout = 5 * time.Minute
 
+// DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
+func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) {
+	sm.Logger.Print("⏳ depositing BTC into ZEVM")
+
+	// fetch utxos
+	utxos, err := sm.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{sm.BTCDeployerAddress})
+	if err != nil {
+		panic(err)
+	}
+
+	spendableAmount := 0.0
+	spendableUTXOs := 0
+	for _, utxo := range utxos {
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
+	}
+
+	if spendableAmount < amount {
+		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
+	}
+
+	sm.Logger.Info("ListUnspent:")
+	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
+	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	sm.Logger.Info("Now sending two txs to TSS address...")
+
+	amount = amount + zetaclient.BtcDepositorFeeMin
+	txHash, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
+
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf(
+			"expected mined status; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
+	sm.Logger.CCTX(*cctx, "deposit")
+}
+
 // DepositBTC deposits BTC on ZetaChain
 func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	sm.Logger.Print("⏳ depositing BTC into ZEVM")
@@ -231,7 +278,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		common.BtcRegtestChain().ChainId,
+		common.BtcTestNetChain().ChainId,
 	)
 	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
