@@ -1,8 +1,6 @@
 package v6
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,10 +21,8 @@ func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
 }
 
 func SetKeyGenStatus(ctx sdk.Context, keeper observerKeeper) error {
-	fmt.Println("Migrating keygen status")
 	keygen, found := keeper.GetKeygen(ctx)
 	if !found {
-		fmt.Println("Keygen not found")
 		return types.ErrKeygenNotFound
 	}
 	if keygen.Status == types.KeygenStatus_PendingKeygen {
