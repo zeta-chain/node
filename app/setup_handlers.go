@@ -17,7 +17,6 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		//vm[observerTypes.ModuleName] = vm[observerTypes.ModuleName] - 1
 		vm = VersionMigrator{vm}.TriggerMigration(observerTypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
