@@ -7,6 +7,8 @@
 * [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
 * [1592](https://github.com/zeta-chain/node/issues/1592) - check inbound tracker tx hash against Tss address and some refactor on inTx observation
 
+### Fixes
+* [1625](https://github.com/zeta-chain/node/pull/1625) - temporarily skip keygen check in zetaclient
 ## Version: v12.0.0
 
 ### Breaking Changes
