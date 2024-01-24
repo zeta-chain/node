@@ -83,8 +83,10 @@ func NewTSS(
 	tssHistoricalList []observertypes.TSS,
 	metrics *metrics.Metrics,
 	bitcoinChainID int64,
+	tssPassword string,
+	hotkeyPassword string,
 ) (*TSS, error) {
-	server, err := SetupTSSServer(peer, privkey, preParams, cfg)
+	server, err := SetupTSSServer(peer, privkey, preParams, cfg, tssPassword)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
@@ -101,7 +103,7 @@ func NewTSS(
 	if err != nil {
 		return nil, err
 	}
-	_, pubkeyInBech32, err := GetKeyringKeybase(cfg)
+	_, pubkeyInBech32, err := GetKeyringKeybase(cfg, hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +120,7 @@ func NewTSS(
 	return &newTss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config) (*tss.TssServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, tssPassword string) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
@@ -152,6 +154,7 @@ func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keyg
 		},
 		preParams, // use pre-generated pre-params if non-nil
 		IP,        // for docker test
+		tssPassword,
 	)
 	if err != nil {
 		log.Error().Err(err).Msg("NewTSS error")

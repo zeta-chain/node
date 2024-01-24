@@ -1,7 +1,9 @@
 # CHANGELOG
 
 ## Unreleased
-
+* [1574](https://github.com/zeta-chain/node/pull/1574) added password prompts for hotkey and tss keyshare in zetaclient
+  Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+* `zetaclientd start` : 2 inputs required from stdin
 
 ## Version: v12.1.0
 
