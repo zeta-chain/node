@@ -22,10 +22,11 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
-	TestWithdrawERC20Name = "erc20_withdraw"
-	TestERC20DepositName  = "erc20_deposit"
-	TestEtherDepositName  = "eth_deposit"
-	TestEtherWithdrawName = "eth_withdraw"
+	TestWithdrawERC20Name  = "erc20_withdraw"
+	TestERC20DepositName   = "erc20_deposit"
+	TestEtherDepositName   = "eth_deposit"
+	TestEtherWithdrawName  = "eth_withdraw"
+	TestBitcoinDepositName = "bitcoin_deposit"
 )
 
 // AllSmokeTests is an ordered list of all smoke tests
@@ -139,5 +140,10 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestEtherWithdrawName,
 		"withdraw Ether from ZEVM",
 		TestEtherWithdraw,
+	},
+	{
+		TestBitcoinDepositName,
+		"deposit Bitcoin into ZEVM",
+		TestBitcoinDeposit,
 	},
 }
