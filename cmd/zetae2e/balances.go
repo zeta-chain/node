@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
