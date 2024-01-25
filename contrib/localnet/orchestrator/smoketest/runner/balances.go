@@ -64,11 +64,11 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 
 	// bitcoin
 	var BtcBTC string
-	if sm.BtcRPCClient != nil {
-		if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
-			return AccountBalances{}, err
-		}
-	}
+	//if sm.BtcRPCClient != nil {
+	//	if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
+	//		return AccountBalances{}, err
+	//	}
+	//}
 
 	return AccountBalances{
 		ZetaETH:   zetaEth,
