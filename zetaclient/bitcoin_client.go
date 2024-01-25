@@ -323,10 +323,13 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+		return fmt.Errorf("observeInTxBTC: error getting block number: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+		return fmt.Errorf("observeInTxBTC: block number is negative: %d", cnt)
+	}
+	if cnt < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTxBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(cnt)
 
