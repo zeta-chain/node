@@ -260,6 +260,9 @@ message MsgCreateTSSVoter {
 
 ## MsgAbortStuckCCTX
 
+AbortStuckCCTX aborts a stuck CCTX
+Authorized: admin policy group 2
+
 ```proto
 message MsgAbortStuckCCTX {
 	string creator = 1;
