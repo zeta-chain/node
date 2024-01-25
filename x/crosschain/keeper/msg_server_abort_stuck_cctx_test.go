@@ -137,7 +137,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "cctx_index")
 		cctx.CctxStatus = &crosschaintypes.Status{
 			Status:        crosschaintypes.CctxStatus_OutboundMined,
-			StatusMessage: "outbound minted",
+			StatusMessage: "outbound mined",
 		}
 		k.SetCrossChainTx(ctx, *cctx)
 
