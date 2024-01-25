@@ -119,17 +119,9 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		// Tss migration is a send transaction, so the gas limit is set to 21000
 		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = common.EVMSend
 		// Multiple current gas price with standard multiplier to add some buffer
-		multiplier, err := sdk.NewDecFromStr(types.TssMigrationGasMultiplierEVM)
-		if err != nil {
-			return err
-		}
-		gasPrice, err := sdk.NewDecFromStr(medianGasPrice.String())
-		if err != nil {
-			return err
-		}
-		newGasPrice := gasPrice.Mul(multiplier)
-		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = newGasPrice.TruncateInt().String()
-		evmFee := sdkmath.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit).Mul(medianGasPrice)
+		multipliedGasPrice, err := common.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
+		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = multipliedGasPrice.String()
+		evmFee := sdkmath.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit).Mul(multipliedGasPrice)
 		if evmFee.GT(amount) {
 			return errorsmod.Wrap(types.ErrInsufficientFundsTssMigration, fmt.Sprintf("insufficient funds to pay for gas fee, amount: %s, gas fee: %s, chainid: %d", amount.String(), evmFee.String(), chainID))
 		}

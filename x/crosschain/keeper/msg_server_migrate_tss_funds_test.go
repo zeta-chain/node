@@ -6,7 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -25,18 +25,20 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
 		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
-		assert.True(t, found)
+		require.True(t, found)
 		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
 			Creator: admin,
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
-		_, found = k.GetCrossChainTx(ctx, index)
-		assert.True(t, found)
-		assert.Equal(t, gp.MulUint64(crosschaintypes.TssMigrationGasMultiplierEVM), k.GetGasPrice(ctx, chain.ChainId).Prices[1])
+		cctx, found := k.GetCrossChainTx(ctx, index)
+		require.True(t, found)
+		multipliedValue, err := common.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
+		require.NoError(t, err)
+		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 
 	})
 }
@@ -54,11 +56,14 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
-		_, found := k.GetCrossChainTx(ctx, index)
-		assert.True(t, found)
+		cctx, found := k.GetCrossChainTx(ctx, index)
+		require.True(t, found)
+		feeCalculated := sdk.NewUint(cctx.GetCurrentOutTxParam().OutboundTxGasLimit).
+			Mul(sdkmath.NewUintFromString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice))
+		require.Equal(t, cctx.GetCurrentOutTxParam().Amount.String(), amount.Sub(feeCalculated).String())
 	})
 	t.Run("not enough funds in tss address for migration", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -73,11 +78,11 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorContains(t, err, crosschaintypes.ErrCannotMigrateTssFunds.Error())
+		require.ErrorContains(t, err, crosschaintypes.ErrCannotMigrateTssFunds.Error())
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		_, found := k.GetCrossChainTx(ctx, index)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("unable to migrate funds if new TSS is not created ", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -92,11 +97,11 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorContains(t, err, "no new tss address has been generated")
+		require.ErrorContains(t, err, "no new tss address has been generated")
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		_, found := k.GetCrossChainTx(ctx, index)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("unable to migrate funds when nonce low does not match nonce high", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -117,12 +122,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
-		assert.ErrorContains(t, err, "cannot migrate funds when there are pending nonces")
+		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
+		require.ErrorContains(t, err, "cannot migrate funds when there are pending nonces")
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		_, found := k.GetCrossChainTx(ctx, index)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("unable to migrate funds when a pending cctx is presnt in migration info", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -150,14 +155,14 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
-		assert.ErrorContains(t, err, "cannot migrate funds while there are pending migrations")
+		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
+		require.ErrorContains(t, err, "cannot migrate funds while there are pending migrations")
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		_, found := k.GetCrossChainTx(ctx, index)
-		assert.False(t, found)
+		require.False(t, found)
 		_, found = k.GetCrossChainTx(ctx, existingCctx.Index)
-		assert.True(t, found)
+		require.True(t, found)
 	})
 
 	t.Run("unable to migrate funds if current TSS is not present in TSSHistory and no new TSS has been generated", func(t *testing.T) {
@@ -169,7 +174,7 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 		amount := sdkmath.NewUintFromString("10000000000000000000")
 		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, false, false)
 		currentTss, found := k.GetObserverKeeper().GetTSS(ctx)
-		assert.True(t, found)
+		require.True(t, found)
 		newTss := sample.Tss()
 		newTss.FinalizedZetaHeight = currentTss.FinalizedZetaHeight - 10
 		newTss.KeyGenZetaHeight = currentTss.KeyGenZetaHeight - 10
@@ -179,12 +184,12 @@ func TestMsgServer_MigrateTssFunds(t *testing.T) {
 			ChainId: chain.ChainId,
 			Amount:  amount,
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
-		assert.ErrorContains(t, err, "current tss is the latest")
+		require.ErrorIs(t, err, crosschaintypes.ErrCannotMigrateTssFunds)
+		require.ErrorContains(t, err, "current tss is the latest")
 		hash := crypto.Keccak256Hash([]byte(indexString))
 		index := hash.Hex()
 		_, found = k.GetCrossChainTx(ctx, index)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 }
 func setupTssMigrationParams(
