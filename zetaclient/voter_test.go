@@ -7,6 +7,8 @@
 package zetaclient
 
 import (
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,14 +18,14 @@ import (
 )
 
 type VoterSuite struct {
-	bridge1 *ZetaCoreBridge
-	bridge2 *ZetaCoreBridge
+	bridge1 *zetabridge.ZetaCoreBridge
+	bridge2 *zetabridge.ZetaCoreBridge
 }
 
 var _ = Suite(&VoterSuite{})
 
 func (s *VoterSuite) SetUpTest(c *C) {
-	SetupConfigForTest() // setup meta-prefix
+	keys.SetupConfigForTest() // setup meta-prefix
 
 	c.Logf("Settting up test...")
 	homeDir, err := os.UserHomeDir()
@@ -40,18 +42,18 @@ func (s *VoterSuite) SetUpTest(c *C) {
 	{
 		signerName := "alice"
 		signerPass := "password"
-		kb, _, err := GetKeyringKeybase([]common.KeyType{common.ObserverGranteeKey}, chainHomeFoler, signerName, signerPass)
+		kb, _, err := keys.GetKeyringKeybase([]common.KeyType{common.ObserverGranteeKey}, chainHomeFoler, signerName, signerPass)
 		if err != nil {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewZetaCoreBridge(k, chainIP, "alice")
+		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "alice")
 		if err != nil {
 			c.Fail()
 		}
@@ -63,18 +65,18 @@ func (s *VoterSuite) SetUpTest(c *C) {
 	{
 		signerName := "bob"
 		signerPass := "password"
-		kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+		kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 		if err != nil {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewZetaCoreBridge(k, chainIP, "bob")
+		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "bob")
 		if err != nil {
 			c.Fail()
 		}

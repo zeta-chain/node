@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"os"
 	"sync"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common/cosmos"
-	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -38,7 +38,7 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 	}
 	startLogger.Warn().Msgf("my pubkey %s", pubkeyBech32)
 
-	var s *mc.TelemetryServer
+	var s *metrics.TelemetryServer
 	if len(peers) == 0 {
 		startLogger.Warn().Msg("No seed peer specified; assuming I'm the host")
 
@@ -83,7 +83,7 @@ func RunDiagnostics(startLogger zerolog.Logger, peers p2p.AddrList, bridgePk cry
 	}
 	startLogger.Info().Msgf("host created: ID %s", host.ID().String())
 	if len(peers) == 0 {
-		s = mc.NewTelemetryServer()
+		s = metrics.NewTelemetryServer()
 		s.SetP2PID(host.ID().String())
 		go func() {
 			startLogger.Info().Msg("Starting TSS HTTP Server...")

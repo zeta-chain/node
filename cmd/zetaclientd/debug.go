@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"io"
 	"strconv"
 	"strings"
@@ -17,7 +22,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -54,7 +58,7 @@ func DebugCmd() *cobra.Command {
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
-			telemetryServer := zetaclient.NewTelemetryServer()
+			telemetryServer := metrics.NewTelemetryServer()
 			go func() {
 				err := telemetryServer.Start()
 				if err != nil {
@@ -62,8 +66,8 @@ func DebugCmd() *cobra.Command {
 				}
 			}()
 
-			bridge, err := zetaclient.NewZetaCoreBridge(
-				&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
+			bridge, err := zetabridge.NewZetaCoreBridge(
+				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
 				debugArgs.zetaChainID,
@@ -89,7 +93,7 @@ func DebugCmd() *cobra.Command {
 
 			if common.IsEVMChain(chain.ChainId) {
 
-				ob := zetaclient.EVMChainClient{
+				ob := evm.EVMChainClient{
 					Mu: &sync.Mutex{},
 				}
 				ob.WithZetaClient(bridge)
@@ -159,7 +163,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if common.IsBitcoinChain(chain.ChainId) {
-				obBtc := zetaclient.BitcoinChainClient{
+				obBtc := bitcoin.BitcoinChainClient{
 					Mu: &sync.Mutex{},
 				}
 				obBtc.WithZetaClient(bridge)

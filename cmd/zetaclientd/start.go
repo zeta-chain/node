@@ -66,7 +66,7 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
-	telemetryServer := mc.NewTelemetryServer()
+	telemetryServer := metrics2.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {

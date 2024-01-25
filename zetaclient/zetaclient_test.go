@@ -7,6 +7,8 @@
 package zetaclient
 
 import (
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"os"
 	"path/filepath"
 
@@ -15,13 +17,13 @@ import (
 )
 
 type MySuite struct {
-	bridge *ZetaCoreBridge
+	bridge *zetabridge.ZetaCoreBridge
 }
 
 var _ = Suite(&MySuite{})
 
 func (s *MySuite) SetUpTest(c *C) {
-	SetupConfigForTest() // setup meta-prefix
+	keys.SetupConfigForTest() // setup meta-prefix
 
 	c.Logf("Settting up test...")
 	homeDir, err := os.UserHomeDir()
@@ -32,19 +34,19 @@ func (s *MySuite) SetUpTest(c *C) {
 	// alice is the default user created by Starport chain serve
 	signerName := "alice"
 	signerPass := "password"
-	kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+	kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 	if err != nil {
 		log.Fatal().Err(err).Msg("fail to get keyring keybase")
 	}
 
-	k := NewKeysWithKeybase(kb, signerName, signerPass)
+	k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
 	//log.Info().Msgf("keybase: %s", k.GetSignerInfo().GetAddress())
 
 	chainIP := os.Getenv("CHAIN_IP")
 	if chainIP == "" {
 		chainIP = "127.0.0.1"
 	}
-	bridge, err := NewZetaCoreBridge(k, chainIP, "alice")
+	bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "alice")
 	if err != nil {
 		c.Fail()
 	}
