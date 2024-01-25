@@ -27,6 +27,8 @@ const (
 	TestEtherDepositName   = "eth_deposit"
 	TestEtherWithdrawName  = "eth_withdraw"
 	TestBitcoinDepositName = "bitcoin_deposit"
+
+	TestDonationEtherName = "donation_ether"
 )
 
 // AllSmokeTests is an ordered list of all smoke tests
@@ -145,5 +147,10 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestBitcoinDepositName,
 		"deposit Bitcoin into ZEVM",
 		TestBitcoinDeposit,
+	},
+	{
+		TestDonationEtherName,
+		"donate Ether to the TSS",
+		TestDonationEther,
 	},
 }

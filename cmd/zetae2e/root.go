@@ -22,6 +22,7 @@ func NewRootCmd() *cobra.Command {
 		NewRunCmd(),
 		NewBalancesCmd(),
 		NewBitcoinAddressCmd(),
+		NewShowTSSCmd(),
 		local.NewLocalCmd(),
 		NewStressTestCmd(),
 		NewInitCmd(),
