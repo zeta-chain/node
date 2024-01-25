@@ -258,3 +258,12 @@ message MsgCreateTSSVoter {
 }
 ```
 
+## MsgAbortStuckCCTX
+
+```proto
+message MsgAbortStuckCCTX {
+	string creator = 1;
+	string cctx_index = 2;
+}
+```
+
