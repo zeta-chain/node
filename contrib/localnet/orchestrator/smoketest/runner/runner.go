@@ -3,11 +3,12 @@ package runner
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	"github.com/btcsuite/btcd/chaincfg"
 
