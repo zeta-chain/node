@@ -33,7 +33,7 @@ zetacored keys add [name] [flags]
 ```
       --account uint32           Account number for HD derivation (less than equal 2147483647)
       --algo string              Key signing algorithm to generate keys for 
-      --coin-type uint32         coin type number for HD derivation (default 118)
+      --coin-type uint32         coin type number for HD derivation (default 60)
       --dry-run                  Perform action, but don't add key to local keystore
       --hd-path string           Manual HD Path derivation (overrides BIP44 config) 
   -h, --help                     help for add
