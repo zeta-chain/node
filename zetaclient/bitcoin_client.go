@@ -239,7 +239,7 @@ func (ob *BitcoinChainClient) RPCStatus() {
 				continue
 			}
 			if len(res) == 0 {
-				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: TSS address has no utxos; TSS address is not importede? ")
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
 				continue
 			}
 			ob.logger.ChainLogger.Info().Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
