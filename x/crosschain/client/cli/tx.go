@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateTss(),
 		CmdMigrateTssFunds(),
 		CmdAddToInTxTracker(),
+		CmdAbortStuckCCTX(),
 	)
 
 	return cmd
