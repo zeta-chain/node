@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+* [1642](https://github.com/zeta-chain/node/pull/1642) - Change WhitelistERC20 authorization from group1 to group2
+
 ## Version: v12.1.0
 
 ### Tests
