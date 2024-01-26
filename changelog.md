@@ -35,6 +35,9 @@
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
 
+### Refactoring
+* [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
+
 ## Version: v12.0.0
 
 ### Breaking Changes

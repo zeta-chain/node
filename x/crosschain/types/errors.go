@@ -43,4 +43,6 @@ var (
 	ErrReceiverIsEmpty            = errorsmod.Register(ModuleName, 1142, "receiver is empty")
 	ErrUnsupportedStatus          = errorsmod.Register(ModuleName, 1143, "unsupported status")
 	ErrObservedTxAlreadyFinalized = errorsmod.Register(ModuleName, 1144, "observed tx already finalized")
+
+	ErrInsufficientFundsTssMigration = errorsmod.Register(ModuleName, 1145, "insufficient funds for TSS migration")
 )
