@@ -121,9 +121,13 @@ func (proxy *proxyBlockWithoutTransactions) toBlock() Block {
 		Difficulty:       big.Int(proxy.Difficulty),
 		TotalDifficulty:  big.Int(proxy.TotalDifficulty),
 		ExtraData:        proxy.ExtraData,
+		// #nosec G701 - copied file from 3rd library, always in range
 		Size:             int(proxy.Size),
+		// #nosec G701 - copied file from 3rd library, always in range
 		GasLimit:         int(proxy.GasLimit),
+		// #nosec G701 - copied file from 3rd library, always in range
 		GasUsed:          int(proxy.GasUsed),
+		// #nosec G701 - copied file from 3rd library, always in range
 		Timestamp:        int(proxy.Timestamp),
 		Uncles:           proxy.Uncles,
 	}
