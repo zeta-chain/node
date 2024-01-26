@@ -650,7 +650,7 @@ func (signer *EVMSigner) reportToOutTxTracker(zetaBridge ZetaCoreBridger, chainI
 				break
 			}
 			// keep monitoring pending tx
-			logger.Info().Err(err).Msgf("reportToOutTxTracker: tx has not been included yet for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
+			logger.Info().Msgf("reportToOutTxTracker: tx has not been included yet for chain %d nonce %d outTxHash %s", chainID, nonce, outTxHash)
 		}
 
 		// try adding to outTx tracker for 10 minutes
