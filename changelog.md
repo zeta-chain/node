@@ -34,6 +34,10 @@
 * [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
 * [1592](https://github.com/zeta-chain/node/issues/1592) - check inbound tracker tx hash against Tss address and some refactor on inTx observation
 
+### Refactoring
+
+* [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+
 ## Version: v12.0.0
 
 ### Breaking Changes
