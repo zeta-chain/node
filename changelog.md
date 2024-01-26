@@ -5,17 +5,16 @@
 ## Version: v12.1.0
 
 ### Tests
-
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features
 
 ### Fixes
-
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
 * [1638](https://github.com/zeta-chain/node/issues/1638) - additional check to make sure external chain height always increases
 * [1650](https://github.com/zeta-chain/node/pull/1605) - exempt (discounted) *system txs* from min gas price check and gas fee deduction
+* [1632](https://github.com/zeta-chain/node/pull/1632) - set keygen to `KeygenStatus_KeyGenSuccess` if its in `KeygenStatus_PendingKeygen`.
 * [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
 * [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 
