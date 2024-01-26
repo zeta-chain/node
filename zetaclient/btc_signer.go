@@ -119,11 +119,11 @@ func (signer *BTCSigner) SignWithdrawTx(
 		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
-		signer.logger.Warn().Msgf("sizeLimit %d is less than outTxBytesMin %d; use outTxBytesMin", sizeLimit, outTxBytesMin)
+		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, outTxBytesMin)
 		txSize = outTxBytesMin
 	}
 	if txSize > outTxBytesMax { // in case of accident
-		signer.logger.Warn().Msgf("sizeLimit %d is greater than outTxBytesMax %d; use outTxBytesMax", sizeLimit, outTxBytesMax)
+		signer.logger.Warn().Msgf("txSize %d is greater than outTxBytesMax %d; use outTxBytesMax", txSize, outTxBytesMax)
 		txSize = outTxBytesMax
 	}
 
