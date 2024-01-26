@@ -2,17 +2,20 @@
 
 ## Unreleased
 
-### Tests
+## Version: v12.1.0
 
+### Tests
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features
 
 ### Fixes
-
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
 * [1650](https://github.com/zeta-chain/node/pull/1605) - exempt (discounted) *system txs* from min gas price check and gas fee deduction
+* [1632](https://github.com/zeta-chain/node/pull/1632) - set keygen to `KeygenStatus_KeyGenSuccess` if its in `KeygenStatus_PendingKeygen`.
+* [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
+* [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 
 ### CI
 
@@ -21,6 +24,16 @@
 ### Chores
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
+* [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
+
+### Features
+
+* [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
+* [1592](https://github.com/zeta-chain/node/issues/1592) - check inbound tracker tx hash against Tss address and some refactor on inTx observation
+
+### Refactoring
+
+* [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
 
 ### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
@@ -47,8 +60,6 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * `GetTssAddress` : Changed from `/zeta-chain/observer/get_tss_address/` to `/zeta-chain/observer/getTssAddress/{bitcoin_chain_id}` . Optional bitcoin chain id can now be passed as a parameter to fetch the correct tss for required BTC chain. This parameter only affects the BTC tss address in the response.
 
 ### Features
-
-* [1549](https://github.com/zeta-chain/node/pull/1549) - add monitoring for vote tx results in ZetaClient
 * [1498](https://github.com/zeta-chain/node/pull/1498) - Add monitoring(grafana, prometheus, ethbalance) for localnet testing
 * [1395](https://github.com/zeta-chain/node/pull/1395) - Add state variable to track aborted zeta amount
 * [1410](https://github.com/zeta-chain/node/pull/1410) - `snapshots` commands
@@ -58,8 +69,6 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 ### Fixes
 
-* [1576](https://github.com/zeta-chain/node/pull/1576) - Fix zetaclient crash due to out of bound integer conversion and log prints.
-* [1575](https://github.com/zeta-chain/node/issues/1575) - Skip unsupported chain parameters by IsSupported flag
 * [1554](https://github.com/zeta-chain/node/pull/1554) - Screen out unconfirmed UTXOs that are not created by TSS itself
 * [1560](https://github.com/zeta-chain/node/issues/1560) - Zetaclient post evm-chain outtx hashes only when receipt is available
 * [1516](https://github.com/zeta-chain/node/issues/1516) - Unprivileged outtx tracker removal
@@ -78,7 +87,6 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1525](https://github.com/zeta-chain/node/pull/1525) - relax EVM chain block header length check 1024->4096
 * [1522](https://github.com/zeta-chain/node/pull/1522/files) - block `distribution` module account from receiving zeta
 * [1528](https://github.com/zeta-chain/node/pull/1528) - fix panic caused on decoding malformed BTC addresses
-* [1557](https://github.com/zeta-chain/node/pull/1557) - remove decreaseAllowance and increaseAllowance checks
 * [1536](https://github.com/zeta-chain/node/pull/1536) - add index to check previously finalized inbounds
 * [1556](https://github.com/zeta-chain/node/pull/1556) - add emptiness check for topic array in event parsing
 * [1546](https://github.com/zeta-chain/node/pull/1546) - fix reset of pending nonces on genesis import
@@ -107,7 +115,6 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * Update --ledger flag hint
 
 ### Chores
-
 * [1446](https://github.com/zeta-chain/node/pull/1446) - renamed file `zetaclientd/aux.go` to `zetaclientd/utils.go` to avoid complaints from go package resolver. 
 * [1499](https://github.com/zeta-chain/node/pull/1499) - Add scripts to localnet to help test gov proposals
 * [1442](https://github.com/zeta-chain/node/pull/1442) - remove build types in `.goreleaser.yaml`
@@ -119,9 +126,7 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 * [1538](https://github.com/zeta-chain/node/pull/1538) - improve stateful e2e testing
 
 ### CI
-
 * Removed private runners and unused GitHub Action
-* Adding typescript publishing pipeline.
 
 ## Version: v11.0.0
 

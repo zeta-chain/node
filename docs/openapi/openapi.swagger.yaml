@@ -50830,6 +50830,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  crosschainMsgAbortStuckCCTXResponse:
+    type: object
   crosschainMsgAddToInTxTrackerResponse:
     type: object
   crosschainMsgAddToOutTxTrackerResponse:
