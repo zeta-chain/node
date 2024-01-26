@@ -153,5 +153,6 @@ type proxyTransaction struct {
 }
 
 func (proxy *proxyBlockWithTransactions) toBlock() Block {
+	// #nosec G103 - copied file from 3rd library, should be safe enough
 	return *(*Block)(unsafe.Pointer(proxy))
 }
