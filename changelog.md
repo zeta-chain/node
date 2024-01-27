@@ -25,6 +25,7 @@
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
+* [1652](https://github.com/zeta-chain/node/pull/1652) - add admin to init script in standalone network
 
 ### Features
 
