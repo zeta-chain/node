@@ -66,6 +66,8 @@ type ZEVM struct {
 	BTCZRC20Addr       string `yaml:"btc_zrc20"`
 	UniswapFactoryAddr string `yaml:"uniswap_factory"`
 	UniswapRouterAddr  string `yaml:"uniswap_router"`
+	ConnectorZEVMAddr  string `yaml:"connector_zevm"`
+	WZetaAddr          string `yaml:"wzeta"`
 	ZEVMSwapAppAddr    string `yaml:"zevm_swap_app"`
 	ContextAppAddr     string `yaml:"context_app"`
 	TestDappAddr       string `yaml:"test_dapp"`

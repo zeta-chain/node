@@ -25,7 +25,7 @@ func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx, err = sm.USDTZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(100))
+	tx, err = sm.USDTZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(1000))
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +47,7 @@ func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
 
 	// verify the withdraw value
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	verifyTransferAmountFromCCTX(sm, cctx, 100)
+	verifyTransferAmountFromCCTX(sm, cctx, 1000)
 }
 
 func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {

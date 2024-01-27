@@ -395,7 +395,7 @@ func (sm *SmokeTestRunner) PrintContractAddresses() {
 	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
 	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
 	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
-	sm.Logger.Print("ConnectorZEVM:    %s", sm.ConnectorZEVMAddr.Hex())
+	sm.Logger.Print("ConnectorZEVM:  %s", sm.ConnectorZEVMAddr.Hex())
 	sm.Logger.Print("WZeta:          %s", sm.WZetaAddr.Hex())
 
 	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())

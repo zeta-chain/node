@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
 	"strings"
 	"time"
@@ -67,7 +69,7 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, usdtZRC20Addr, err := sm.ZetaTxServer.DeploySystemContractsAndZRC20(
+	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, usdtZRC20Addr, err := sm.ZetaTxServer.DeploySystemContractsAndZRC20(
 		utils.FungibleAdminName,
 		sm.USDTERC20Addr.Hex(),
 	)
@@ -92,6 +94,20 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	// UniswapV2RouterAddr
 	sm.UniswapV2RouterAddr = ethcommon.HexToAddress(uniswapV2RouterAddr)
 	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+
+	// ZevmConnectorAddr
+	sm.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
+	sm.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(sm.ConnectorZEVMAddr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+
+	// WZetaAddr
+	sm.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
+	sm.WZeta, err = wzeta.NewWETH9(sm.WZetaAddr, sm.ZevmClient)
 	if err != nil {
 		panic(err)
 	}
