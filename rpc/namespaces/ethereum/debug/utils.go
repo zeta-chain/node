@@ -30,11 +30,7 @@ import (
 func isCPUProfileConfigurationActivated(ctx *server.Context) bool {
 	// TODO: use same constants as server/start.go
 	// constant declared in start.go cannot be imported (cyclical dependency)
-	const flagCPUProfile = "cpu-profile"
-	if cpuProfile := ctx.Viper.GetString(flagCPUProfile); cpuProfile != "" {
-		return true
-	}
-	return false
+	return ctx.Viper.GetString("cpu-profile") != ""
 }
 
 // ExpandHome expands home directory in file paths.

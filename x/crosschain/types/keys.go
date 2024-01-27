@@ -25,6 +25,8 @@ const (
 	MemStoreKey = "mem_metacore"
 
 	ProtocolFee = 2000000000000000000
+	//TssMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the tss migration . This is done to avoid the tss migration tx getting stuck in the mempool
+	TssMigrationGasMultiplierEVM = "2.5"
 )
 
 func GetProtocolFee() sdk.Uint {
