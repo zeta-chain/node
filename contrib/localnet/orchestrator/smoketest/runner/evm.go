@@ -72,11 +72,11 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return sm.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
+	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
 
 func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
-	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, big.NewInt(1e18))
+	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
