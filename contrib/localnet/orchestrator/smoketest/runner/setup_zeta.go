@@ -1,11 +1,12 @@
 package runner
 
 import (
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"math/big"
 	"strings"
 	"time"
+
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -24,19 +25,25 @@ import (
 )
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
-func (sm *SmokeTestRunner) SetTSSAddresses() {
+func (sm *SmokeTestRunner) SetTSSAddresses() error {
 	sm.Logger.Print("⚙️ setting up TSS address")
 
-	var err error
+	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
+	if err != nil {
+		return err
+	}
+
 	res := &observertypes.QueryGetTssAddressResponse{}
 	for i := 0; ; i++ {
-		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{})
+		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{
+			BitcoinChainId: btcChainID,
+		})
 		if err != nil {
 			// if error contains unknown method GetTssAddress for service, we might be using an older version of the chain for upgrade test
 			// we query the TSS address with legacy method
 			if strings.Contains(err.Error(), "unknown method GetTssAddress for service") {
 				sm.SetTSSAddressesLegacy()
-				return
+				return nil
 			}
 
 			if i%10 == 0 {
@@ -58,6 +65,8 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 
 	sm.TSSAddress = tssAddress
 	sm.BTCTSSAddress = btcTSSAddress
+
+	return nil
 }
 
 // SetZEVMContracts set contracts for the ZEVM

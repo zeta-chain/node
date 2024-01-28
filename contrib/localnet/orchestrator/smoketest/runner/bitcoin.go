@@ -59,10 +59,10 @@ func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) {
 	if err != nil {
 		panic(err)
 	}
-
-	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
+	sm.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
 
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	sm.Logger.CCTX(*cctx, "deposit")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",
@@ -70,7 +70,6 @@ func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) {
 			cctx.CctxStatus.StatusMessage),
 		)
 	}
-	sm.Logger.CCTX(*cctx, "deposit")
 }
 
 // DepositBTC deposits BTC on ZetaChain
@@ -203,7 +202,8 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		btcDeployerAddress: change,
 	}
 
-	// create raw transaction
+	// create raw
+	sm.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
 	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
 	if err != nil {
 		panic(err)
@@ -273,12 +273,16 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 
+	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
+	if err != nil {
+		panic(err)
+	}
 	events := zetaclient.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		common.BtcRegtestChain().ChainId,
+		btcChainID,
 	)
 	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
@@ -408,35 +412,3 @@ func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	}
 	sm.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }
-
-//_, err = r.BtcRPCClient.CreateWallet("user")
-//if err != nil {
-//	if !strings.Contains(err.Error(), "Database already exists") {
-//		return "", fmt.Errorf("failed to create wallet: %w", err)
-//	}
-//}
-//
-//skBytes, err := hex.DecodeString(r.DeployerPrivateKey)
-//if err != nil {
-//	return "", fmt.Errorf("failed to decode private key: %w", err)
-//}
-//
-//sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-//privkeyWIF, err := btcutil.NewWIF(sk, r.BitcoinParams, true)
-//if err != nil {
-//	return "", fmt.Errorf("failed to create WIF: %w", err)
-//}
-//
-//// Import the key to the wallet
-//err = r.BtcRPCClient.ImportPrivKeyLabel(privkeyWIF, "user")
-//if err != nil {
-//	return "", fmt.Errorf("failed to import private key: %w", err)
-//}
-
-//address, err := btcutil.NewAddressWitnessPubKeyHash(
-//	btcutil.Hash160(privkeyWIF.SerializePubKey()),
-//	r.BitcoinParams,
-//)
-//if err != nil {
-//	return "", err
-//}

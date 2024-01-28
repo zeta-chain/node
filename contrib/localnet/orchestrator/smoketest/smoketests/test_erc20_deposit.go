@@ -12,7 +12,7 @@ import (
 )
 
 func TestERC20Deposit(sm *runner.SmokeTestRunner) {
-	hash := sm.DepositERC20()
+	hash := sm.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)

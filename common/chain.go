@@ -202,6 +202,19 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	}
 }
 
+func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
+	switch params.Name {
+	case chaincfg.RegressionNetParams.Name:
+		return 18444, nil
+	case chaincfg.TestNet3Params.Name:
+		return 18332, nil
+	case chaincfg.MainNetParams.Name:
+		return 8332, nil
+	default:
+		return 0, fmt.Errorf("error chain %s is not a Bitcoin chain", params.Name)
+	}
+}
+
 // InChainList checks whether the chain is in the chain list
 func (chain Chain) InChainList(chainList []*Chain) bool {
 	return ChainIDInChainList(chain.ChainId, chainList)

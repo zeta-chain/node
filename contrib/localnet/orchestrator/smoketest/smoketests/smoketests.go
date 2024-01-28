@@ -7,8 +7,8 @@ const (
 	TestDepositAndCallRefundName        = "deposit_and_call_refund"
 	TestMultipleERC20DepositName        = "erc20_multiple_deposit"
 	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
-	TestSendZetaOutName                 = "send_zeta_out"
-	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert" // #nosec G101 - not a hardcoded password
+	TestWithdrawZetaName                = "withdraw_zeta"
+	TestWithdrawZetaBTCRevertName       = "withdraw_zeta_out_btc_revert" // #nosec G101 - not a hardcoded password
 	TestMessagePassingName              = "message_passing"
 	TestZRC20SwapName                   = "zrc20_swap"
 	TestBitcoinWithdrawName             = "bitcoin_withdraw"
@@ -59,14 +59,14 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestMultipleWithdraws,
 	},
 	{
-		TestSendZetaOutName,
+		TestWithdrawZetaName,
 		"sending ZETA from ZEVM to Ethereum",
-		TestSendZetaOut,
+		TestWithdrawZeta,
 	},
 	{
-		TestSendZetaOutBTCRevertName,
-		"sending ZETA from ZEVM to Bitcoin; should revert when ",
-		TestSendZetaOutBTCRevert,
+		TestWithdrawZetaBTCRevertName,
+		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
+		TestWithdrawZetaBTCRevert,
 	},
 	{
 		TestMessagePassingName,

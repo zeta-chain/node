@@ -64,11 +64,11 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 
 	// bitcoin
 	var BtcBTC string
-	//if sm.BtcRPCClient != nil {
-	//	if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
-	//		return AccountBalances{}, err
-	//	}
-	//}
+	if sm.BtcRPCClient != nil {
+		if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
+			return AccountBalances{}, err
+		}
+	}
 
 	return AccountBalances{
 		ZetaETH:   zetaEth,
@@ -102,7 +102,9 @@ func (sm *SmokeTestRunner) GetBitcoinBalance() (string, error) {
 	// calculate total amount
 	var totalAmount btcutil.Amount
 	for _, unspent := range unspentList {
-		totalAmount += btcutil.Amount(unspent.Amount * 1e8)
+		if unspent.Spendable {
+			totalAmount += btcutil.Amount(unspent.Amount * 1e8)
+		}
 	}
 
 	return totalAmount.String(), nil

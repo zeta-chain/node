@@ -88,7 +88,9 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	logger.Print("starting tests")
 
 	// fetch the TSS address
-	testRunner.SetTSSAddresses()
+	if err := testRunner.SetTSSAddresses(); err != nil {
+		return err
+	}
 
 	// set timeout
 	testRunner.CctxTimeout = 40 * time.Minute

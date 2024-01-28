@@ -90,12 +90,6 @@ func (sm *SmokeTestRunner) SetBtcAddress(name string, rescan bool) {
 			panic(err)
 		}
 	}
-	//else {
-	//	err = sm.BtcRPCClient.ImportPrivKeyLabel(privkeyWIF, name)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//}
 
 	sm.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),

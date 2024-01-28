@@ -67,7 +67,9 @@ func runShowTSS(_ *cobra.Command, args []string) error {
 	}
 
 	// fetch the TSS address
-	testRunner.SetTSSAddresses()
+	if err := testRunner.SetTSSAddresses(); err != nil {
+		return err
+	}
 
 	// print the TSS address
 	logger.Info("TSS EVM address: %s\n", testRunner.TSSAddress.Hex())
