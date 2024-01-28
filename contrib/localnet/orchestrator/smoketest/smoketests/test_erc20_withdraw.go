@@ -12,7 +12,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestWithdrawERC20(sm *runner.SmokeTestRunner) {
+func TestERC20Withdraw(sm *runner.SmokeTestRunner) {
 	// approve
 	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.USDTZRC20Addr, big.NewInt(1e18))
 	if err != nil {
