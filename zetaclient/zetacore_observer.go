@@ -249,7 +249,8 @@ func (co *CoreObserver) scheduleCctxEVM(
 			continue
 		}
 		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+MaxLookaheadNonce {
-			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d", params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
+				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
 			break
 		}
 
