@@ -153,7 +153,6 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	InitGenesis(ctx, am.keeper, genState)
-
 	am.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
 	am.accountKeeper.GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
 	am.accountKeeper.GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)

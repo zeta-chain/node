@@ -14,7 +14,6 @@ import (
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	emissionPoolBalance := keeper.GetReservesFactor(ctx)
 	blockRewards := types.BlockReward
-
 	if blockRewards.GT(emissionPoolBalance) {
 		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
@@ -22,6 +21,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
+
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
 	tmpCtx, commit := ctx.CacheContext()
