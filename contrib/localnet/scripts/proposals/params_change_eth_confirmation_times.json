@@ -1,0 +1,27 @@
+{
+    "group_policy_address": "zeta1dlszg2sst9r69my4f84l3mj66zxcf3umcgujys30t84srg95dgvs5wguxq",
+    "messages": [
+      {
+        "@type": "/zetachain.zetacore.observer.MsgUpdateChainParams",
+        "creator": "zeta1dlszg2sst9r69my4f84l3mj66zxcf3umcgujys30t84srg95dgvs5wguxq",
+        "chainParams": {
+                  "chainId": "1337",
+                  "confirmationCount": "64",
+                  "gasPriceTicker": "300",
+                  "inTxTicker": "15",
+                  "outTxTicker": "15",
+                  "watchUtxoTicker": "0",
+                  "zetaTokenContractAddress": "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
+                  "connectorContractAddress": "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
+                  "erc20CustodyContractAddress": "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
+                  "outboundTxScheduleInterval": "64",
+                  "outboundTxScheduleLookahead": "60",
+                  "ballotThreshold": "0.6600",
+                  "minObserverDelegation": "10000000000000000000",
+                  "isSupported": true
+              }
+      }
+    ],
+    "metadata": "ipfs://QmedMZL6AoL1HiGVGrj4rZNt6DEZgXZgxtU1m8EFgNCkDp",
+    "proposers": ["zeta14m8s4x036jkjnfnkw92004zweh5prqzq69n880"]
+  }
