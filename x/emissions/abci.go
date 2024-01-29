@@ -37,21 +37,27 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	ctx.Logger().Info(fmt.Sprintf("Validator Rewards Total:%s , Percentage %s", validatorRewards.String(), keeper.GetParams(ctx).ValidatorEmissionPercentage))
 	ctx.Logger().Info(fmt.Sprintf("Observer Rewards Total:%s , Percentage %s", observerRewards.String(), keeper.GetParams(ctx).ObserverEmissionPercentage))
 	ctx.Logger().Info(fmt.Sprintf("TssSigner Rewards Total:%s , Percentage %s", tssSignerRewards.String(), keeper.GetParams(ctx).TssSignerEmissionPercentage))
-	err = DistributeValidatorRewards(ctx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
+
+	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
+	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
+	tmpCtx, commit := ctx.CacheContext()
+	err = DistributeValidatorRewards(tmpCtx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
 		return
 	}
-	err = DistributeObserverRewards(ctx, observerRewards, keeper)
+	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
 		return
 	}
-	err = DistributeTssRewards(ctx, tssSignerRewards, keeper.GetBankKeeper())
+	err = DistributeTssRewards(tmpCtx, tssSignerRewards, keeper.GetBankKeeper())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing tss signer rewards %s", err))
 		return
 	}
+	commit()
+
 	types.EmitValidatorEmissions(ctx, "", "",
 		"",
 		validatorRewards.String(),
