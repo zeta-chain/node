@@ -4,6 +4,7 @@
 
 ### Fixes
 * [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
+* [1657](https://github.com/zeta-chain/node/issues/1657) - removed unused localnet files and updated exporter image configuration files
 
 ## Version: v12.1.0
 
