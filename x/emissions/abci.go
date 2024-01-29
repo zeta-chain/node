@@ -27,7 +27,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		return
 	}
 	if blockRewards.GT(emissonPoolBalance) {
-		ctx.Logger().Error(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissonPoolBalance.String()))
+		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissonPoolBalance.String()))
 		return
 	}
 	ctx.Logger().Info(fmt.Sprintf("Block Rewards Total:%s Block Height:%d", blockRewards.String(), ctx.BlockHeight()))
