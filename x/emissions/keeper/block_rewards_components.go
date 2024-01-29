@@ -61,7 +61,7 @@ func (k Keeper) GetReservesFactor(ctx sdk.Context) sdk.Dec {
 	return sdk.NewDecFromInt(reserveAmount.Amount)
 }
 
-func (k Keeper) GetFixedBlockRewards(ctx sdk.Context) (sdk.Dec, error) {
+func (k Keeper) GetFixedBlockRewards() (sdk.Dec, error) {
 	return CalculateFixedValidatorRewards(types.AvgBlockTime)
 }
 

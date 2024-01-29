@@ -1,5 +1,6 @@
 package emissions_test
 
+//TODO : https://github.com/zeta-chain/node/issues/1659
 //func getaZetaFromString(amount string) sdk.Coins {
 //	emissionPoolInt, _ := sdk.NewIntFromString(amount)
 //	return sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emissionPoolInt))
