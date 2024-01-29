@@ -23,10 +23,7 @@ type Chains []Chain
 
 // IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
-	if chain.ChainId == c.ChainId {
-		return true
-	}
-	return false
+	return chain.ChainId == c.ChainId
 }
 
 func (chain Chain) IsZetaChain() bool {

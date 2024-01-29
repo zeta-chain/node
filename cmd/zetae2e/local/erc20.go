@@ -62,7 +62,6 @@ func erc20TestRoutine(
 		// run erc20 test
 		if err := erc20Runner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
-			smoketests.TestMultipleERC20DepositName,
 			smoketests.TestERC20WithdrawName,
 			smoketests.TestMultipleWithdrawsName,
 			smoketests.TestERC20DepositAndCallRefundName,
