@@ -30,8 +30,6 @@ services:
     image: zetachain/zetachain-exporter:latest
     container_name: zetachain-exporter
     hostname: zetachain-exporter
-    volumes:
-      - ./grafana/addresses.txt:/app/addresses.txt
     ports:
       - "9015:9015"
     networks:
@@ -39,6 +37,17 @@ services:
         ipv4_address: 172.20.0.32
     environment:
       - GETH=http://eth:8545
+      - PREFIX=zetachain_exporter_
+      - GETH_URL=http://eth:8545
+      - POLYGON_URL=http://eth:8545
+      - BSC_URL=http://eth:8545
+      - ZETA_URL=http://zetacored:26657
+      - ZETA_LCD_URL=http://zetacored:1317
+      - BTC_URL=http://bitcoin:18443
+      - ENV BTC_CHAIN_ID=18332
+      - ETH_CHAIN_ID=1337
+      - PORT=9015
+    
 
 networks:
   mynetwork:
