@@ -12,25 +12,13 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+	emissionPoolBalance := keeper.GetReservesFactor(ctx)
+	blockRewards := types.BlockReward
 
-	emissonPoolBalance := keeper.GetReservesFactor(ctx)
-	if emissonPoolBalance.IsZero() {
+	if blockRewards.GT(emissionPoolBalance) {
+		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
 	}
-	blockRewards, err := keeper.GetFixedBlockRewards()
-	if err != nil {
-		ctx.Logger().Error(fmt.Sprintf("Error while getting fixed block rewards %s", err))
-		return
-	}
-	if blockRewards.IsZero() {
-		ctx.Logger().Error("Block rewards are zero")
-		return
-	}
-	if blockRewards.GT(emissonPoolBalance) {
-		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissonPoolBalance.String()))
-		return
-	}
-	ctx.Logger().Info(fmt.Sprintf("Block Rewards Total:%s Block Height:%d", blockRewards.String(), ctx.BlockHeight()))
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
@@ -41,7 +29,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
 	tmpCtx, commit := ctx.CacheContext()
-	err = DistributeValidatorRewards(tmpCtx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
+	err := DistributeValidatorRewards(tmpCtx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
 		return

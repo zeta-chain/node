@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -50,4 +51,5 @@ var (
 	EmissionsModuleAddress                  = authtypes.NewModuleAddress(ModuleName)
 	UndistributedObserverRewardsPoolAddress = authtypes.NewModuleAddress(UndistributedObserverRewardsPool)
 	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTssRewardsPool)
+	BlockReward                             = sdk.MustNewDecFromStr("9620949074074074074.074070733466756687")
 )
