@@ -14,6 +14,8 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
+const flagSkipBTC = "skip-btc"
+
 // NewBalancesCmd returns the balances command
 // which shows from the key and rpc, the balance of the account on different network
 func NewBalancesCmd() *cobra.Command {
@@ -23,12 +25,22 @@ func NewBalancesCmd() *cobra.Command {
 		RunE:  runBalances,
 		Args:  cobra.ExactArgs(1),
 	}
+	cmd.Flags().Bool(
+		flagSkipBTC,
+		false,
+		"skip the BTC network",
+	)
 	return cmd
 }
 
-func runBalances(_ *cobra.Command, args []string) error {
+func runBalances(cmd *cobra.Command, args []string) error {
 	// read the config file
 	conf, err := config.ReadConfig(args[0])
+	if err != nil {
+		return err
+	}
+
+	skipBTC, err := cmd.Flags().GetBool(flagSkipBTC)
 	if err != nil {
 		return err
 	}
@@ -66,7 +78,7 @@ func runBalances(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	balances, err := r.GetAccountBalances()
+	balances, err := r.GetAccountBalances(skipBTC)
 	if err != nil {
 		cancel()
 		return err

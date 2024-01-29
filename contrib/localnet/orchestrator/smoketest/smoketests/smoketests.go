@@ -105,7 +105,7 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts; should refund on ZetaChain if no liquidity pool, should refund on origin if liquidity pool",
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
 		TestERC20DepositAndCallRefund,
 	},
 	{

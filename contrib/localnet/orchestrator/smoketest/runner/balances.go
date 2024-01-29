@@ -13,6 +13,7 @@ import (
 type AccountBalances struct {
 	ZetaETH   *big.Int
 	ZetaZETA  *big.Int
+	ZetaWZETA *big.Int
 	ZetaERC20 *big.Int
 	ZetaBTC   *big.Int
 	EvmETH    *big.Int
@@ -29,9 +30,13 @@ type AccountBalancesDiff struct {
 }
 
 // GetAccountBalances returns the account balances of the accounts used in the smoke test
-func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
+func (sm *SmokeTestRunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
 	zetaZeta, err := sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	if err != nil {
+		return AccountBalances{}, err
+	}
+	zetaWZeta, err := sm.WZeta.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -64,7 +69,7 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 
 	// bitcoin
 	var BtcBTC string
-	if sm.BtcRPCClient != nil {
+	if !skipBTC {
 		if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
 			return AccountBalances{}, err
 		}
@@ -73,6 +78,7 @@ func (sm *SmokeTestRunner) GetAccountBalances() (AccountBalances, error) {
 	return AccountBalances{
 		ZetaETH:   zetaEth,
 		ZetaZETA:  zetaZeta,
+		ZetaWZETA: zetaWZeta,
 		ZetaERC20: zetaErc20,
 		ZetaBTC:   zetaBtc,
 		EvmETH:    evmEth,
@@ -118,6 +124,7 @@ func (sm *SmokeTestRunner) PrintAccountBalances(balances AccountBalances) {
 	// zevm
 	sm.Logger.Print("ZetaChain:")
 	sm.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
+	sm.Logger.Print("* WZETA balance: %s", balances.ZetaWZETA.String())
 	sm.Logger.Print("* ETH balance:   %s", balances.ZetaETH.String())
 	sm.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
 	sm.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())

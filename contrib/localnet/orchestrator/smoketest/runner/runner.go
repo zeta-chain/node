@@ -203,7 +203,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 	reports := make(TestReports, 0, len(smokeTestNames))
 	for _, test := range tests {
 		// get info before test
-		balancesBefore, err := sm.GetAccountBalances()
+		balancesBefore, err := sm.GetAccountBalances(true)
 		if err != nil {
 			return nil, err
 		}
@@ -219,7 +219,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 		time.Sleep(5 * time.Second)
 
 		// get info after test
-		balancesAfter, err := sm.GetAccountBalances()
+		balancesAfter, err := sm.GetAccountBalances(true)
 		if err != nil {
 			return nil, err
 		}
