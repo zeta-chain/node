@@ -1,6 +1,7 @@
 package emissions
 
 import (
+	"fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -12,15 +13,23 @@ import (
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 
-	reservesFactor, bondFactor, durationFactor := keeper.GetBlockRewardComponents(ctx)
-	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
+	emissonPoolBalance := keeper.GetReservesFactor(ctx)
+	if emissonPoolBalance.IsZero() {
+		return
+	}
+	blockRewards, err := keeper.GetFixedBlockRewards(ctx)
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Error while getting fixed block rewards %s", err))
+		return
+	}
 	if blockRewards.IsZero() {
+		ctx.Logger().Error("Block rewards are zero")
 		return
 	}
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
-	err := DistributeValidatorRewards(ctx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
+	err = DistributeValidatorRewards(ctx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
 	if err != nil {
 		panic(err)
 	}
@@ -32,8 +41,8 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
-	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(),
-		durationFactor.String(),
+	types.EmitValidatorEmissions(ctx, "", "",
+		"",
 		validatorRewards.String(),
 		observerRewards.String(),
 		tssSignerRewards.String())

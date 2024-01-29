@@ -23,7 +23,11 @@ const (
 	MemStoreKey              = "mem_emissions"
 	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
 
-	SecsInMonth = 30 * 24 * 60 * 60
+	SecsInMonth        = 30 * 24 * 60 * 60
+	BlockRewardsInZeta = "210000000"
+
+	EmissionScheduledYears = 4
+	AvgBlockTime           = "5.7"
 )
 
 func KeyPrefix(p string) []byte {
