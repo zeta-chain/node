@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"

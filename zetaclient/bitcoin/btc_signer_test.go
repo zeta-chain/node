@@ -3,13 +3,14 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"math"
 	"math/rand"
 	"sort"
 	"sync"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
@@ -387,7 +388,7 @@ func TestP2WPHSizeBreakdown(t *testing.T) {
 }
 
 // helper function to create a new BitcoinChainClient
-func createTestClient(t *testing.T) *BitcoinChainClient {
+func createTestClient(t *testing.T) *ChainClient {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
 	require.Nil(t, err)
@@ -397,7 +398,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 	tssAddress := tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 
 	// Create BitcoinChainClient
-	client := &BitcoinChainClient{
+	client := &ChainClient{
 		Tss:               tss,
 		Mu:                &sync.Mutex{},
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
@@ -412,7 +413,7 @@ func createTestClient(t *testing.T) *BitcoinChainClient {
 	return client
 }
 
-func mineTxNSetNonceMark(ob *BitcoinChainClient, nonce uint64, txid string, preMarkIndex int) {
+func mineTxNSetNonceMark(ob *ChainClient, nonce uint64, txid string, preMarkIndex int) {
 	// Mine transaction
 	outTxID := ob.GetTxID(nonce)
 	ob.includedTxResults[outTxID] = &btcjson.GetTransactionResult{TxID: txid}

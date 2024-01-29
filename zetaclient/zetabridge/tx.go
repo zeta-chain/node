@@ -1,12 +1,13 @@
 package zetabridge
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
-	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
 	"math/big"
 	"strings"
 	"time"
+
+	"cosmossdk.io/math"
+	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -60,12 +61,12 @@ const (
 	MonitorVoteOutboundTxResultRetryCount = 20
 )
 
-func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.AuthZSigner, error) {
+func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
 
 	// verify message validity
 	if err := msg.ValidateBasic(); err != nil {
-		return nil, authz2.AuthZSigner{}, fmt.Errorf("%s invalid msg | %s", msgURL, err.Error())
+		return nil, authz2.Signer{}, fmt.Errorf("%s invalid msg | %s", msgURL, err.Error())
 	}
 
 	authzSigner := authz2.GetSigner(msgURL)

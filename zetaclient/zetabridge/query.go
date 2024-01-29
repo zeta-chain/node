@@ -3,9 +3,10 @@ package zetabridge
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"sort"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"

@@ -3,15 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"io"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -93,7 +95,7 @@ func DebugCmd() *cobra.Command {
 
 			if common.IsEVMChain(chain.ChainId) {
 
-				ob := evm.EVMChainClient{
+				ob := evm.ChainClient{
 					Mu: &sync.Mutex{},
 				}
 				ob.WithZetaClient(bridge)
@@ -163,7 +165,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if common.IsBitcoinChain(chain.ChainId) {
-				obBtc := bitcoin.BitcoinChainClient{
+				obBtc := bitcoin.ChainClient{
 					Mu: &sync.Mutex{},
 				}
 				obBtc.WithZetaClient(bridge)

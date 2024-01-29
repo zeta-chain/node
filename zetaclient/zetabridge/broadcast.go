@@ -2,10 +2,11 @@ package zetabridge
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/zeta-chain/zetacore/zetaclient/authz"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
@@ -27,7 +28,7 @@ const (
 )
 
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
-func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.AuthZSigner) (string, error) {
+func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
 	b.broadcastLock.Lock()
 	defer b.broadcastLock.Unlock()
 	var err error

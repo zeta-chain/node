@@ -5,9 +5,10 @@ package bitcoin
 
 import (
 	"encoding/hex"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -19,7 +20,7 @@ import (
 
 type BitcoinClientTestSuite struct {
 	suite.Suite
-	BitcoinChainClient *BitcoinChainClient
+	BitcoinChainClient *ChainClient
 }
 
 func (suite *BitcoinClientTestSuite) SetupTest() {

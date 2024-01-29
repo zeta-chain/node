@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/out_tx_processor"
-	"github.com/zeta-chain/zetacore/zetaclient/tss"
 	"math/big"
 	"math/rand"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/tss"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -79,7 +80,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 	amount float64,
 	gasPrice *big.Int,
 	sizeLimit uint64,
-	btcClient *BitcoinChainClient,
+	btcClient *ChainClient,
 	height uint64,
 	nonce uint64,
 	chain *common.Chain,
@@ -239,7 +240,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 
 func (signer *BTCSigner) TryProcessOutTx(
 	cctx *types.CrossChainTx,
-	outTxMan *out_tx_processor.OutTxProcessorManager,
+	outTxMan *outtxprocessor.Manager,
 	outTxID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,
@@ -264,7 +265,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
-	btcClient, ok := chainclient.(*BitcoinChainClient)
+	btcClient, ok := chainclient.(*ChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return

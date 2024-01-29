@@ -3,10 +3,6 @@ package evm
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/klaytn"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"math"
 	"math/big"
 	"os"
@@ -15,6 +11,11 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/klaytn"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.non-eth.sol"
@@ -51,7 +52,7 @@ type OutTx struct {
 	TxHash   string
 	Nonce    int64
 }
-type EVMLog struct {
+type Log struct {
 	ChainLogger          zerolog.Logger // Parent logger
 	ExternalChainWatcher zerolog.Logger // Observes external Chains for incoming trasnactions
 	WatchGasPrice        zerolog.Logger // Observes external Chains for Gas prices and posts to core
@@ -68,9 +69,9 @@ const (
 	TopicsDeposited    = 2 // [signature, asset]            https://github.com/zeta-chain/protocol-contracts/blob/d65814debf17648a6c67d757ba03646415842790/contracts/evm/ERC20Custody.sol#L42
 )
 
-// EVMChainClient represents the chain configuration for an EVM chain
+// ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
-type EVMChainClient struct {
+type ChainClient struct {
 	*metricsPkg.ChainMetrics
 	chain                      common.Chain
 	evmClient                  interfaces.EVMRPCClient
@@ -91,7 +92,7 @@ type EVMChainClient struct {
 	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
 	fileLogger                 *zerolog.Logger // for critical info
-	logger                     EVMLog
+	logger                     Log
 	cfg                        *config.Config
 	params                     observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
@@ -99,7 +100,7 @@ type EVMChainClient struct {
 	BlockCache *lru.Cache
 }
 
-var _ interfaces.ChainClient = (*EVMChainClient)(nil)
+var _ interfaces.ChainClient = (*ChainClient)(nil)
 
 // NewEVMChainClient returns a new configuration based on supplied target chain
 func NewEVMChainClient(
@@ -111,13 +112,13 @@ func NewEVMChainClient(
 	cfg *config.Config,
 	evmCfg config.EVMConfig,
 	ts *metricsPkg.TelemetryServer,
-) (*EVMChainClient, error) {
-	ob := EVMChainClient{
+) (*ChainClient, error) {
+	ob := ChainClient{
 		ChainMetrics: metricsPkg.NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
 	}
 	chainLogger := logger.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
-	ob.logger = EVMLog{
+	ob.logger = Log{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
 		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
@@ -189,15 +190,15 @@ func NewEVMChainClient(
 
 	return &ob, nil
 }
-func (ob *EVMChainClient) WithChain(chain common.Chain) {
+func (ob *ChainClient) WithChain(chain common.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
 }
-func (ob *EVMChainClient) WithLogger(logger zerolog.Logger) {
+func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.logger = EVMLog{
+	ob.logger = Log{
 		ChainLogger:          logger,
 		ExternalChainWatcher: logger.With().Str("module", "ExternalChainWatcher").Logger(),
 		WatchGasPrice:        logger.With().Str("module", "WatchGasPrice").Logger(),
@@ -205,61 +206,61 @@ func (ob *EVMChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *EVMChainClient) WithEvmClient(client *ethclient.Client) {
+func (ob *ChainClient) WithEvmClient(client *ethclient.Client) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client
 }
 
-func (ob *EVMChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
+func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.zetaClient = bridge
 }
 
-func (ob *EVMChainClient) WithParams(params observertypes.ChainParams) {
+func (ob *ChainClient) WithParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
-func (ob *EVMChainClient) SetConfig(cfg *config.Config) {
+func (ob *ChainClient) SetConfig(cfg *config.Config) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.cfg = cfg
 }
 
-func (ob *EVMChainClient) SetChainParams(params observertypes.ChainParams) {
+func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.params = params
 }
 
-func (ob *EVMChainClient) GetChainParams() observertypes.ChainParams {
+func (ob *ChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.params
 }
 
-func (ob *EVMChainClient) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
+func (ob *ChainClient) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContract(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *EVMChainClient) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
+func (ob *ChainClient) GetConnectorContractEth() (ethcommon.Address, *zetaconnectoreth.ZetaConnectorEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ConnectorContractAddress)
 	contract, err := FetchConnectorContractEth(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *EVMChainClient) GetZetaTokenNonEthContract() (ethcommon.Address, *zeta.ZetaNonEth, error) {
+func (ob *ChainClient) GetZetaTokenNonEthContract() (ethcommon.Address, *zeta.ZetaNonEth, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().ZetaTokenContractAddress)
 	contract, err := FetchZetaZetaNonEthTokenContract(addr, ob.evmClient)
 	return addr, contract, err
 }
 
-func (ob *EVMChainClient) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
+func (ob *ChainClient) GetERC20CustodyContract() (ethcommon.Address, *erc20custody.ERC20Custody, error) {
 	addr := ethcommon.HexToAddress(ob.GetChainParams().Erc20CustodyContractAddress)
 	contract, err := FetchERC20CustodyContract(addr, ob.evmClient)
 	return addr, contract, err
@@ -281,7 +282,7 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 	return erc20custody.NewERC20Custody(addr, client)
 }
 
-func (ob *EVMChainClient) Start() {
+func (ob *ChainClient) Start() {
 	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
@@ -289,7 +290,7 @@ func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainRPCStatus()
 }
 
-func (ob *EVMChainClient) ExternalChainRPCStatus() {
+func (ob *ChainClient) ExternalChainRPCStatus() {
 	ob.logger.ChainLogger.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
 	ticker := time.NewTicker(60 * time.Second)
 	for {
@@ -324,7 +325,7 @@ func (ob *EVMChainClient) ExternalChainRPCStatus() {
 	}
 }
 
-func (ob *EVMChainClient) Stop() {
+func (ob *ChainClient) Stop() {
 	ob.logger.ChainLogger.Info().Msgf("ob %s is stopping", ob.chain.String())
 	close(ob.stop) // this notifies all goroutines to stop
 
@@ -343,7 +344,7 @@ func (ob *EVMChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *ChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
 	params := ob.GetChainParams()
 	receipt, transaction := ob.GetTxNReceipt(nonce)
 	if receipt == nil || transaction == nil { // not confirmed yet
@@ -603,7 +604,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 // FIXME: there's a chance that a txhash in OutTxChan may not deliver when Stop() is called
 // observeOutTx periodically checks all the txhash in potential outbound txs
-func (ob *EVMChainClient) observeOutTx() {
+func (ob *ChainClient) observeOutTx() {
 	// read env variables if set
 	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
 	if err != nil || timeoutNonce <= 0 {
@@ -669,21 +670,21 @@ func (ob *EVMChainClient) observeOutTx() {
 }
 
 // SetPendingTx sets the pending transaction in memory
-func (ob *EVMChainClient) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
+func (ob *ChainClient) SetPendingTx(nonce uint64, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.outTxPendingTransactions[ob.GetTxID(nonce)] = transaction
 }
 
 // GetPendingTx gets the pending transaction from memory
-func (ob *EVMChainClient) GetPendingTx(nonce uint64) *ethtypes.Transaction {
+func (ob *ChainClient) GetPendingTx(nonce uint64) *ethtypes.Transaction {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.outTxPendingTransactions[ob.GetTxID(nonce)]
 }
 
 // SetTxNReceipt sets the receipt and transaction in memory
-func (ob *EVMChainClient) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
+func (ob *ChainClient) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt, transaction *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	delete(ob.outTxPendingTransactions, ob.GetTxID(nonce)) // remove pending transaction, if any
@@ -692,7 +693,7 @@ func (ob *EVMChainClient) SetTxNReceipt(nonce uint64, receipt *ethtypes.Receipt,
 }
 
 // GetTxNReceipt gets the receipt and transaction from memory
-func (ob *EVMChainClient) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
+func (ob *ChainClient) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	receipt := ob.outTXConfirmedReceipts[ob.GetTxID(nonce)]
@@ -701,7 +702,7 @@ func (ob *EVMChainClient) GetTxNReceipt(nonce uint64) (*ethtypes.Receipt, *ethty
 }
 
 // isTxConfirmed returns true if there is a confirmed tx for 'nonce'
-func (ob *EVMChainClient) isTxConfirmed(nonce uint64) bool {
+func (ob *ChainClient) isTxConfirmed(nonce uint64) bool {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	return ob.outTXConfirmedReceipts[ob.GetTxID(nonce)] != nil && ob.outTXConfirmedTransactions[ob.GetTxID(nonce)] != nil
@@ -709,7 +710,7 @@ func (ob *EVMChainClient) isTxConfirmed(nonce uint64) bool {
 
 // checkConfirmedTx checks if a txHash is confirmed
 // returns (receipt, transaction, true) if confirmed or (nil, nil, false) otherwise
-func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
+func (ob *ChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtypes.Receipt, *ethtypes.Transaction, bool) {
 	ctxt, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -791,19 +792,19 @@ func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtyp
 }
 
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *EVMChainClient) SetLastBlockHeightScanned(height uint64) {
+func (ob *ChainClient) SetLastBlockHeightScanned(height uint64) {
 	atomic.StoreUint64(&ob.lastBlockScanned, height)
 	ob.ts.SetLastScannedBlockNumber(ob.chain.ChainId, height)
 }
 
 // GetLastBlockHeightScanned get last block height scanned (not necessarily caught up with external block; could be slow/paused)
-func (ob *EVMChainClient) GetLastBlockHeightScanned() uint64 {
+func (ob *ChainClient) GetLastBlockHeightScanned() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlockScanned)
 	return height
 }
 
 // SetLastBlockHeight set external last block height
-func (ob *EVMChainClient) SetLastBlockHeight(height uint64) {
+func (ob *ChainClient) SetLastBlockHeight(height uint64) {
 	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
 	}
@@ -811,7 +812,7 @@ func (ob *EVMChainClient) SetLastBlockHeight(height uint64) {
 }
 
 // GetLastBlockHeight get external last block height
-func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
+func (ob *ChainClient) GetLastBlockHeight() uint64 {
 	height := atomic.LoadUint64(&ob.lastBlock)
 	if height >= math.MaxInt64 {
 		panic("lastBlock is too large")
@@ -819,7 +820,7 @@ func (ob *EVMChainClient) GetLastBlockHeight() uint64 {
 	return height
 }
 
-func (ob *EVMChainClient) ExternalChainWatcher() {
+func (ob *ChainClient) ExternalChainWatcher() {
 	ticker, err := bitcoin.NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
@@ -845,7 +846,7 @@ func (ob *EVMChainClient) ExternalChainWatcher() {
 }
 
 // calcBlockRangeToScan calculates the next range of blocks to scan
-func (ob *EVMChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, batchSize uint64) (uint64, uint64) {
+func (ob *ChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, batchSize uint64) (uint64, uint64) {
 	startBlock := lastScanned + 1
 	toBlock := lastScanned + batchSize
 	if toBlock > latestConfirmed {
@@ -854,7 +855,7 @@ func (ob *EVMChainClient) calcBlockRangeToScan(latestConfirmed, lastScanned, bat
 	return startBlock, toBlock
 }
 
-func (ob *EVMChainClient) postBlockHeader(tip uint64) error {
+func (ob *ChainClient) postBlockHeader(tip uint64) error {
 	bn := tip
 
 	res, err := ob.zetaClient.GetBlockHeaderStateByChain(ob.chain.ChainId)
@@ -891,7 +892,7 @@ func (ob *EVMChainClient) postBlockHeader(tip uint64) error {
 	return nil
 }
 
-func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
+func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	// make sure inbound TXS / Send is enabled by the protocol
 	flags, err := ob.zetaClient.GetCrosschainFlags()
 	if err != nil {
@@ -964,7 +965,7 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 
 // observeZetaSent queries the ZetaSent event from the connector contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
+func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
@@ -1041,7 +1042,7 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 
 // observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 {
+func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
@@ -1137,7 +1138,7 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 
 // observeTssRecvd queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+func (ob *ChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
 	if !ob.GetChainParams().IsSupported {
 		//ob.logger.ExternalChainWatcher.Warn().Msgf("observeTssRecvd: chain %d is not supported", ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
@@ -1213,7 +1214,7 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 	return toBlock
 }
 
-func (ob *EVMChainClient) WatchGasPrice() {
+func (ob *ChainClient) WatchGasPrice() {
 	ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice starting...")
 	err := ob.PostGasPrice()
 	if err != nil {
@@ -1253,7 +1254,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 	}
 }
 
-func (ob *EVMChainClient) PostGasPrice() error {
+func (ob *ChainClient) PostGasPrice() error {
 
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
@@ -1280,7 +1281,7 @@ func (ob *EVMChainClient) PostGasPrice() error {
 	return nil
 }
 
-func (ob *EVMChainClient) BuildLastBlock() error {
+func (ob *ChainClient) BuildLastBlock() error {
 	logger := ob.logger.ChainLogger.With().Str("module", "BuildBlockIndex").Logger()
 	envvar := ob.chain.ChainName.String() + "_SCAN_FROM"
 	scanFromBlock := os.Getenv(envvar)
@@ -1318,7 +1319,7 @@ func (ob *EVMChainClient) BuildLastBlock() error {
 	return nil
 }
 
-func (ob *EVMChainClient) BuildReceiptsMap() error {
+func (ob *ChainClient) BuildReceiptsMap() error {
 	logger := ob.logger
 	var receipts []clienttypes.ReceiptSQLType
 	if err := ob.db.Find(&receipts).Error; err != nil {
@@ -1336,7 +1337,7 @@ func (ob *EVMChainClient) BuildReceiptsMap() error {
 	return nil
 }
 
-func (ob *EVMChainClient) BuildTransactionsMap() error {
+func (ob *ChainClient) BuildTransactionsMap() error {
 	logger := ob.logger
 	var transactions []clienttypes.TransactionSQLType
 	if err := ob.db.Find(&transactions).Error; err != nil {
@@ -1354,7 +1355,7 @@ func (ob *EVMChainClient) BuildTransactionsMap() error {
 }
 
 // LoadDB open sql database and load data into EVMChainClient
-func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
+func (ob *ChainClient) LoadDB(dbPath string, chain common.Chain) error {
 	if dbPath != "" {
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 			err := os.MkdirAll(dbPath, os.ModePerm)
@@ -1385,7 +1386,7 @@ func (ob *EVMChainClient) LoadDB(dbPath string, chain common.Chain) error {
 	return nil
 }
 
-func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
+func (ob *ChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error {
 	minNonce, maxNonce := int64(-1), int64(0)
 	for _, tracker := range trackers {
 		conv := tracker.Nonce
@@ -1410,12 +1411,12 @@ func (ob *EVMChainClient) SetMinAndMaxNonce(trackers []types.OutTxTracker) error
 	return nil
 }
 
-func (ob *EVMChainClient) GetTxID(nonce uint64) string {
+func (ob *ChainClient) GetTxID(nonce uint64) string {
 	tssAddr := ob.Tss.EVMAddress().String()
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
-func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Block, error) {
+func (ob *ChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Block, error) {
 	if block, ok := ob.BlockCache.Get(blockNumber); ok {
 		return block.(*ethtypes.Block), nil
 	}

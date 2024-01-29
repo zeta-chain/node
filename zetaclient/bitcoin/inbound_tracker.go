@@ -2,12 +2,13 @@ package bitcoin
 
 import (
 	"errors"
+
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
-func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
+func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Err(err).Msg("error creating ticker")
@@ -30,7 +31,7 @@ func (ob *BitcoinChainClient) ExternalChainWatcherForNewInboundTrackerSuggestion
 	}
 }
 
-func (ob *BitcoinChainClient) ObserveTrackerSuggestions() error {
+func (ob *ChainClient) ObserveTrackerSuggestions() error {
 	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -46,7 +47,7 @@ func (ob *BitcoinChainClient) ObserveTrackerSuggestions() error {
 	return nil
 }
 
-func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
+func (ob *ChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", err

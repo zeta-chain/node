@@ -1,9 +1,10 @@
-package zeta_supply_checker_test
+package zetasupplychecker_test
 
 import (
-	"github.com/zeta-chain/zetacore/zetaclient/zeta_supply_checker"
 	"os"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/zetasupplychecker"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/rs/zerolog"
@@ -47,7 +48,7 @@ func TestZetaSupplyChecker_ValidateZetaSupply(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
-			tc.validate(t, zeta_supply_checker.ValidateZetaSupply(logger, tc.abortedTxAmount, tc.zetaInTransit, tc.genesisAmounts, tc.externalChainTotalSupply, tc.zetaTokenSupplyOnNode, tc.ethLockedAmount))
+			tc.validate(t, zetasupplychecker.ValidateZetaSupply(logger, tc.abortedTxAmount, tc.zetaInTransit, tc.genesisAmounts, tc.externalChainTotalSupply, tc.zetaTokenSupplyOnNode, tc.ethLockedAmount))
 		})
 	}
 }

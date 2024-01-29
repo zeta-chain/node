@@ -3,6 +3,7 @@ package evm
 import (
 	"errors"
 	"fmt"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -13,7 +14,7 @@ import (
 
 // ExternalChainWatcherForNewInboundTrackerSuggestions At each tick, gets a list of Inbound tracker suggestions from zeta-core and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
-func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
+func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	ticker, err := bitcoin.NewDynamicTicker(
 		fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId),
 		ob.GetChainParams().InTxTicker,
@@ -40,7 +41,7 @@ func (ob *EVMChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 	}
 }
 
-func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
+func (ob *ChainClient) ObserveTrackerSuggestions() error {
 	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -71,7 +72,7 @@ func (ob *EVMChainClient) ObserveTrackerSuggestions() error {
 	return nil
 }
 
-func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) (string, error) {
+func (ob *ChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) (string, error) {
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
 		return "", err
@@ -122,7 +123,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeZeta(txHash string, vote bool) 
 	return msg.Digest(), nil
 }
 
-func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool) (string, error) {
+func (ob *ChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool) (string, error) {
 	addrCustory, custody, err := ob.GetERC20CustodyContract()
 	if err != nil {
 		return "", err
@@ -182,7 +183,7 @@ func (ob *EVMChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool)
 	return msg.Digest(), nil
 }
 
-func (ob *EVMChainClient) CheckReceiptForCoinTypeGas(txHash string, vote bool) (string, error) {
+func (ob *ChainClient) CheckReceiptForCoinTypeGas(txHash string, vote bool) (string, error) {
 	// TSS address should be set
 	tssAddress := ob.Tss.EVMAddress()
 	if tssAddress == (ethcommon.Address{}) {

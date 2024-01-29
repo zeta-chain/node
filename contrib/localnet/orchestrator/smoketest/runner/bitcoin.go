@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/zeta-chain/zetacore/common/bitcoin"
+
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -19,9 +21,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
+	zc_btc "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
@@ -62,12 +63,12 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	sm.Logger.Info("Now sending two txs to TSS address...")
 
 	// send two transactions to the TSS address
-	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
+	amount1 := 1.1 + zc_btc.BtcDepositorFeeMin
 	txHash1, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount1, utxos[:2], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
+	amount2 := 0.05 + zc_btc.BtcDepositorFeeMin
 	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -80,7 +81,7 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 		0.11,
 		utxos[4:5],
 		btc,
-		[]byte(zetaclient.DonationMessage),
+		[]byte(zc_btc.DonationMessage),
 		sm.BTCDeployerAddress,
 	)
 	if err != nil {
@@ -226,7 +227,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 
-	events := zetaclient.FilterAndParseIncomingTx(
+	events := zc_btc.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),

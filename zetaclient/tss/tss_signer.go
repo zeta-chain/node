@@ -5,14 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"os"
 	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -34,14 +35,14 @@ import (
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
-type TSSKey struct {
+type Key struct {
 	PubkeyInBytes  []byte // FIXME: compressed pubkey?
 	PubkeyInBech32 string // FIXME: same above
 	AddressInHex   string
 }
 
-func NewTSSKey(pk string) (*TSSKey, error) {
-	TSSKey := &TSSKey{
+func NewTSSKey(pk string) (*Key, error) {
+	TSSKey := &Key{
 		PubkeyInBech32: pk,
 	}
 	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, pk)
@@ -63,7 +64,7 @@ var _ interfaces.TSSSigner = (*TSS)(nil)
 // TSS is a struct that holds the server and the keys for TSS
 type TSS struct {
 	Server        *tss.TssServer
-	Keys          map[string]*TSSKey // PubkeyInBech32 => TSSKey
+	Keys          map[string]*Key // PubkeyInBech32 => TSSKey
 	CurrentPubkey string
 	logger        zerolog.Logger
 	Signers       []string
@@ -92,7 +93,7 @@ func NewTSS(
 	}
 	newTss := TSS{
 		Server:         server,
-		Keys:           make(map[string]*TSSKey),
+		Keys:           make(map[string]*Key),
 		CurrentPubkey:  cfg.CurrentTssPubkey,
 		logger:         log.With().Str("module", "tss_signer").Logger(),
 		CoreBridge:     bridge,

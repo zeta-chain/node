@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	libp2p "github.com/libp2p/go-libp2p"

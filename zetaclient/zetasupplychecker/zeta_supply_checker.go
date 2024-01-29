@@ -1,11 +1,13 @@
-package zeta_supply_checker
+package zetasupplychecker
 
 import (
 	"fmt"
+
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 
 	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"

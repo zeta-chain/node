@@ -2,12 +2,13 @@ package zetaclient
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/out_tx_processor"
 	"math"
 	"strings"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
@@ -131,7 +132,7 @@ func (co *CoreObserver) MonitorCore() {
 
 // startCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
 func (co *CoreObserver) startCctxScheduler() {
-	outTxMan := out_tx_processor.NewOutTxProcessorManager(co.logger.ChainLogger)
+	outTxMan := outtxprocessor.NewOutTxProcessorManager(co.logger.ChainLogger)
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
 	for {
@@ -226,7 +227,7 @@ func (co *CoreObserver) startCctxScheduler() {
 
 // scheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)
 func (co *CoreObserver) scheduleCctxEVM(
-	outTxMan *out_tx_processor.OutTxProcessorManager,
+	outTxMan *outtxprocessor.Manager,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,
@@ -245,7 +246,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutTxParam()
 		nonce := params.OutboundTxTssNonce
-		outTxID := out_tx_processor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
+		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
@@ -311,13 +312,13 @@ func (co *CoreObserver) scheduleCctxEVM(
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
 func (co *CoreObserver) scheduleCctxBTC(
-	outTxMan *out_tx_processor.OutTxProcessorManager,
+	outTxMan *outtxprocessor.Manager,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
 	signer interfaces.ChainSigner) {
-	btcClient, ok := ob.(*bitcoin.BitcoinChainClient)
+	btcClient, ok := ob.(*bitcoin.ChainClient)
 	if !ok { // should never happen
 		co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: chain client is not a bitcoin client")
 		return
@@ -328,7 +329,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 	for idx, cctx := range cctxList {
 		params := cctx.GetCurrentOutTxParam()
 		nonce := params.OutboundTxTssNonce
-		outTxID := out_tx_processor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
+		outTxID := outtxprocessor.ToOutTxID(cctx.Index, params.ReceiverChainId, nonce)
 
 		if params.ReceiverChainId != chainID {
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)

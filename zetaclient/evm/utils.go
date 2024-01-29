@@ -3,10 +3,13 @@ package evm
 import (
 	"bytes"
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"strings"
+
+	sdkmath "cosmossdk.io/math"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -15,12 +18,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-	"math/big"
-	"strings"
 )
 
 // CheckEvmTxLog checks the basics of an EVM tx log
-func (ob *EVMChainClient) CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
+func (ob *ChainClient) CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
 	if vLog.Removed {
 		return fmt.Errorf("log is removed, chain reorg?")
 	}
@@ -40,13 +41,13 @@ func (ob *EVMChainClient) CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommo
 }
 
 // HasEnoughConfirmations checks if the given receipt has enough confirmations
-func (ob *EVMChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
+func (ob *ChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHeight uint64) bool {
 	confHeight := receipt.BlockNumber.Uint64() + ob.GetChainParams().ConfirmationCount
 	return lastHeight >= confHeight
 }
 
 // GetTransactionSender returns the sender of the given transaction
-func (ob *EVMChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHash ethcommon.Hash, txIndex uint) (ethcommon.Address, error) {
+func (ob *ChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHash ethcommon.Hash, txIndex uint) (ethcommon.Address, error) {
 	sender, err := ob.evmClient.TransactionSender(context.Background(), tx, blockHash, txIndex)
 	if err != nil {
 		// trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address
@@ -60,7 +61,7 @@ func (ob *EVMChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHa
 	return sender, nil
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
 	if bytes.Equal(event.Message, []byte(DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil
@@ -87,7 +88,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
@@ -127,7 +128,7 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
 	if bytes.Equal(tx.Data(), []byte(DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
 		return nil

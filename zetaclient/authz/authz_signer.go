@@ -6,22 +6,22 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-type AuthZSigner struct {
+type Signer struct {
 	KeyType        common.KeyType
 	GranterAddress string
 	GranteeAddress sdk.AccAddress
 }
 
-func (a AuthZSigner) String() string {
+func (a Signer) String() string {
 	return a.KeyType.String() + " " + a.GranterAddress + " " + a.GranteeAddress.String()
 }
 
-var signers map[string]AuthZSigner
+var signers map[string]Signer
 
 func init() {
-	signersList := make(map[string]AuthZSigner)
+	signersList := make(map[string]Signer)
 	for _, tx := range crosschaintypes.GetAllAuthzZetaclientTxTypes() {
-		signersList[tx] = AuthZSigner{KeyType: common.ZetaClientGranteeKey}
+		signersList[tx] = Signer{KeyType: common.ZetaClientGranteeKey}
 	}
 	signers = signersList
 }
@@ -34,6 +34,6 @@ func SetupAuthZSignerList(granter string, grantee sdk.AccAddress) {
 	}
 }
 
-func GetSigner(msgURL string) AuthZSigner {
+func GetSigner(msgURL string) Signer {
 	return signers[msgURL]
 }

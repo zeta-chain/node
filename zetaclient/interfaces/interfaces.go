@@ -2,10 +2,11 @@ package interfaces
 
 import (
 	"context"
+	"math/big"
+
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/klaytn"
-	"github.com/zeta-chain/zetacore/zetaclient/out_tx_processor"
-	"math/big"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -49,7 +50,7 @@ type ChainClient interface {
 type ChainSigner interface {
 	TryProcessOutTx(
 		send *crosschaintypes.CrossChainTx,
-		outTxMan *out_tx_processor.OutTxProcessorManager,
+		outTxMan *outtxprocessor.Manager,
 		outTxID string,
 		evmClient ChainClient,
 		zetaBridge ZetaCoreBridger,

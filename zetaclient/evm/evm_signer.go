@@ -5,16 +5,17 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/out_tx_processor"
 	"math/big"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -33,7 +34,7 @@ const (
 	OutTxTrackerReportTimeout = 10 * time.Minute
 )
 
-type EVMSigner struct {
+type Signer struct {
 	client                      interfaces.EVMRPCClient
 	chain                       *common.Chain
 	chainID                     *big.Int
@@ -51,7 +52,7 @@ type EVMSigner struct {
 	outTxHashBeingReported map[string]bool
 }
 
-var _ interfaces.ChainSigner = &EVMSigner{}
+var _ interfaces.ChainSigner = &Signer{}
 
 func NewEVMSigner(
 	chain common.Chain,
@@ -63,7 +64,7 @@ func NewEVMSigner(
 	erc20CustodyContract ethcommon.Address,
 	logger zerolog.Logger,
 	ts *metrics.TelemetryServer,
-) (*EVMSigner, error) {
+) (*Signer, error) {
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
 		return nil, err
@@ -83,7 +84,7 @@ func NewEVMSigner(
 		return nil, err
 	}
 
-	return &EVMSigner{
+	return &Signer{
 		client:                      client,
 		chain:                       &chain,
 		tssSigner:                   tssSigner,
@@ -104,7 +105,7 @@ func NewEVMSigner(
 
 // Sign given data, and metadata (gas, nonce, etc)
 // returns a signed transaction, sig bytes, hash bytes, and error
-func (signer *EVMSigner) Sign(
+func (signer *Signer) Sign(
 	data []byte,
 	to ethcommon.Address,
 	gasLimit uint64,
@@ -135,7 +136,7 @@ func (signer *EVMSigner) Sign(
 }
 
 // Broadcast takes in signed tx, broadcast to external chain node
-func (signer *EVMSigner) Broadcast(tx *ethtypes.Transaction) error {
+func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 	ctxt, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	return signer.client.SendTransaction(ctxt, tx)
@@ -152,7 +153,7 @@ func (signer *EVMSigner) Broadcast(tx *ethtypes.Transaction) error {
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
+func (signer *Signer) SignOutboundTx(sender ethcommon.Address,
 	srcChainID *big.Int,
 	to ethcommon.Address,
 	amount *big.Int,
@@ -192,7 +193,7 @@ func (signer *EVMSigner) SignOutboundTx(sender ethcommon.Address,
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *EVMSigner) SignRevertTx(
+func (signer *Signer) SignRevertTx(
 	sender ethcommon.Address,
 	srcChainID *big.Int,
 	to []byte,
@@ -221,7 +222,7 @@ func (signer *EVMSigner) SignRevertTx(
 	return tx, nil
 }
 
-func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, height, nonce, signer.chain, "")
@@ -242,7 +243,7 @@ func (signer *EVMSigner) SignCancelTx(nonce uint64, gasPrice *big.Int, height ui
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignWithdrawTx(
+func (signer *Signer) SignWithdrawTx(
 	to ethcommon.Address,
 	amount *big.Int,
 	nonce uint64,
@@ -269,7 +270,7 @@ func (signer *EVMSigner) SignWithdrawTx(
 	return signedTX, nil
 }
 
-func (signer *EVMSigner) SignCommandTx(
+func (signer *Signer) SignCommandTx(
 	cmd string,
 	params string,
 	to ethcommon.Address,
@@ -321,9 +322,9 @@ func (signer *EVMSigner) SignCommandTx(
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
 }
 
-func (signer *EVMSigner) TryProcessOutTx(
+func (signer *Signer) TryProcessOutTx(
 	send *types.CrossChainTx,
-	outTxMan *out_tx_processor.OutTxProcessorManager,
+	outTxMan *outtxprocessor.Manager,
 	outTxID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,
@@ -362,7 +363,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", send.CctxStatus.Status)
 		return
 	}
-	evmClient, ok := chainclient.(*EVMChainClient)
+	evmClient, ok := chainclient.(*ChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not an EVMChainClient")
 		return
@@ -597,7 +598,7 @@ func (signer *EVMSigner) TryProcessOutTx(
 }
 
 // reportToOutTxTracker reports outTxHash to tracker only when tx receipt is available
-func (signer *EVMSigner) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger, chainID int64, nonce uint64, outTxHash string, logger zerolog.Logger) {
+func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger, chainID int64, nonce uint64, outTxHash string, logger zerolog.Logger) {
 	// skip if already being reported
 	signer.mu.Lock()
 	defer signer.mu.Unlock()
@@ -654,7 +655,7 @@ func (signer *EVMSigner) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBrid
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignERC20WithdrawTx(
+func (signer *Signer) SignERC20WithdrawTx(
 	recipient ethcommon.Address,
 	asset ethcommon.Address,
 	amount *big.Int,
@@ -685,7 +686,7 @@ func (signer *EVMSigner) SignERC20WithdrawTx(
 // function unwhitelist(
 // address asset,
 // ) external onlyTssAddress
-func (signer *EVMSigner) SignWhitelistTx(
+func (signer *Signer) SignWhitelistTx(
 	action string,
 	_ ethcommon.Address,
 	asset ethcommon.Address,

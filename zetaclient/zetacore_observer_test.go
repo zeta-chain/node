@@ -4,13 +4,15 @@
 package zetaclient
 
 import (
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -24,7 +26,7 @@ import (
 type COSuite struct {
 	bridge1      *zetabridge.ZetaCoreBridge
 	bridge2      *zetabridge.ZetaCoreBridge
-	signer       *evm.EVMSigner
+	signer       *evm.Signer
 	coreObserver *CoreObserver
 }
 

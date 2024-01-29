@@ -7,11 +7,12 @@
 package zetaclient
 
 import (
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
 	"github.com/rs/zerolog/log"
 	. "gopkg.in/check.v1"

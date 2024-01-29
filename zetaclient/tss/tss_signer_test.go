@@ -2,9 +2,10 @@ package tss
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"os"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/rs/zerolog"
@@ -40,7 +41,7 @@ func Test_LoadTssFilesFromDirectory(t *testing.T) {
 			assert.NoError(t, err)
 			tss := TSS{
 				logger:        zerolog.New(os.Stdout),
-				Keys:          map[string]*TSSKey{},
+				Keys:          map[string]*Key{},
 				CurrentPubkey: "",
 			}
 			err = tss.LoadTssFilesFromDirectory(tempdir)

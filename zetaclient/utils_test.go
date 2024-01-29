@@ -2,8 +2,9 @@ package zetaclient
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -82,7 +83,7 @@ func TestCheckEvmTxLog(t *testing.T) {
 		},
 	}
 
-	evmClient := evm.EVMChainClient{}
+	evmClient := evm.ChainClient{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fmt.Printf("check test: %s\n", tt.name)

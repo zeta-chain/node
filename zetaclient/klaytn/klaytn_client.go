@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 )
 
-type KlaytnClient struct {
+type Client struct {
 	c *rpc.Client
 }
 
@@ -34,19 +34,19 @@ type RPCBlock struct {
 	Transactions []RPCTransaction `json:"transactions"`
 }
 
-func Dial(url string) (*KlaytnClient, error) {
+func Dial(url string) (*Client, error) {
 	c, err := rpc.Dial(url)
 	if err != nil {
 		return nil, err
 	}
-	return &KlaytnClient{c}, nil
+	return &Client{c}, nil
 }
 
-func (ec *KlaytnClient) BlockByNumber(ctx context.Context, number *big.Int) (*RPCBlock, error) {
+func (ec *Client) BlockByNumber(ctx context.Context, number *big.Int) (*RPCBlock, error) {
 	return ec.getBlock(ctx, "klay_getBlockByNumber", toBlockNumArg(number), true)
 }
 
-func (ec *KlaytnClient) getBlock(ctx context.Context, method string, args ...interface{}) (*RPCBlock, error) {
+func (ec *Client) getBlock(ctx context.Context, method string, args ...interface{}) (*RPCBlock, error) {
 	var raw json.RawMessage
 	err := ec.c.CallContext(ctx, &raw, method, args...)
 	if err != nil {
