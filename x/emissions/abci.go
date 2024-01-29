@@ -22,10 +22,6 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
-	ctx.Logger().Info(fmt.Sprintf("Validator Rewards Total:%s , Percentage %s", validatorRewards.String(), keeper.GetParams(ctx).ValidatorEmissionPercentage))
-	ctx.Logger().Info(fmt.Sprintf("Observer Rewards Total:%s , Percentage %s", observerRewards.String(), keeper.GetParams(ctx).ObserverEmissionPercentage))
-	ctx.Logger().Info(fmt.Sprintf("TssSigner Rewards Total:%s , Percentage %s", tssSignerRewards.String(), keeper.GetParams(ctx).TssSignerEmissionPercentage))
-
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
 	tmpCtx, commit := ctx.CacheContext()
@@ -75,9 +71,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	if err != nil {
 		return err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Distributing Observer Rewards Total:%s To UndistributedObserverRewardsPool", amount.String()))
 	ballotIdentifiers := keeper.GetObserverKeeper().GetMaturedBallotList(ctx)
-	ctx.Logger().Info(fmt.Sprintf("Matured Ballot Identifiers : %d", len(ballotIdentifiers)))
 	// do not distribute rewards if no ballots are matured, the rewards can accumulate in the undistributed pool
 	if len(ballotIdentifiers) == 0 {
 		return nil
@@ -93,7 +87,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	if totalRewardsUnits > 0 && amount.IsPositive() {
 		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
 	}
-	ctx.Logger().Info(fmt.Sprintf("Total Rewards Units : %d , Total Reward Units : %d", totalRewardsUnits, totalRewardsUnits))
+	ctx.Logger().Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
 	sortedKeys := make([]string, 0, len(rewardsDistributer))
 	for k := range rewardsDistributer {
 		sortedKeys = append(sortedKeys, k)
@@ -117,7 +111,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 				ObserverAddress: observerAddress.String(),
 				Amount:          sdkmath.ZeroInt(),
 			})
-			ctx.Logger().Info(fmt.Sprintf("Observer Address : %s , EmissionType_Slash %s", observerAddress.String(), sdkmath.ZeroInt().String()))
 			continue
 		}
 		if observerRewardUnits < 0 {
@@ -128,7 +121,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 				ObserverAddress: observerAddress.String(),
 				Amount:          slashAmount,
 			})
-			ctx.Logger().Info(fmt.Sprintf("Observer Address : %s , EmissionType_Slash %s", observerAddress.String(), slashAmount.String()))
 			continue
 		}
 		// Defensive check
@@ -140,7 +132,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 				ObserverAddress: observerAddress.String(),
 				Amount:          rewardAmount,
 			})
-			ctx.Logger().Info(fmt.Sprintf("Observer Address : %s , EmissionType_Rewards %s ", observerAddress.String(), rewardAmount.String()))
 		}
 	}
 	types.EmitObserverEmissions(ctx, finalDistributionList)
