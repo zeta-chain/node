@@ -36,19 +36,33 @@ func TestDistributeObserverRewards(t *testing.T) {
 	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, rewardCoins)
 	assert.NoError(t, err)
 	undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
-	emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
+	undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
 	feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
-	for i := 0; i < 90; i++ {
-		balanceEmissonPool := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom)
-		fmt.Println("Emission Pool Balance: ", balanceEmissonPool.String())
+	emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
+
+	for i := 0; i < 20736000; i++ {
+		balanceEmissonPoolBeforeBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
 
 		emissionsModule.BeginBlocker(ctx, *k)
 
-		feeCoolecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom)
-		fmt.Println("Fee Collected : ", feeCoolecterBalance.String())
-		balances := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom)
-		fmt.Println("Balance Observer : ", balances.String())
+		feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
+		observerPoolBalance := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount
+		tssPoolBalance := sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount
+		emissionPoolBalanceAfterBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
+		rewardsDistributedAndLeftInPool := emissionPoolBalanceAfterBlockDistribution.Sub(rewardCoins.AmountOf(config.BaseDenom))
+		assert.True(t, balanceEmissonPoolBeforeBlockDistribution.Sub(rewardsDistributedAndLeftInPool).GTE(sdk.ZeroInt()))
+		totalPoolBalance := feeCollecterBalance.Add(observerPoolBalance).Add(tssPoolBalance)
+		assert.True(t, rewardCoins.AmountOf(config.BaseDenom).Sub(totalPoolBalance).GTE(sdk.ZeroInt()))
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	}
 
+}
+
+func TestKeeper_CalculateFixedObserverRewards(t *testing.T) {
+	SecsInAHour := float64(60 * 60)
+	BlockTime := 6.0
+	BlocksInAHour := SecsInAHour / BlockTime
+	NoOfHours := 2
+	StartingBlock := 1940897
+	fmt.Println("Proposal Block :", StartingBlock+int(BlocksInAHour*float64(NoOfHours)))
 }
