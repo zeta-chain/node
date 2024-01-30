@@ -27,6 +27,7 @@ const (
 	TestEtherDepositName   = "eth_deposit"
 	TestEtherWithdrawName  = "eth_withdraw"
 	TestBitcoinDepositName = "bitcoin_deposit"
+	TestZetaDepositName    = "zeta_deposit"
 
 	TestDonationEtherName = "donation_ether"
 )
@@ -60,8 +61,13 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		TestZetaWithdrawName,
-		"sending ZETA from ZEVM to Ethereum",
+		"withdraw ZETA from ZEVM to Ethereum",
 		TestZetaWithdraw,
+	},
+	{
+		TestZetaDepositName,
+		"deposit ZETA from Ethereum to ZEVM",
+		TestZetaDeposit,
 	},
 	{
 		TestZetaWithdrawBTCRevertName,
