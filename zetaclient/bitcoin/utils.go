@@ -3,6 +3,7 @@ package bitcoin
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/btcsuite/btcd/blockchain"
 	"math"
 	"math/big"
 	"time"
@@ -10,35 +11,32 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+
+	"github.com/btcsuite/btcd/wire"
 )
 
 const (
 	satoshiPerBitcoin = 1e8
 	bytesPerKB        = 1000
-	BytesEmptyTx      = 10  // an empty tx is about 10 bytes
-	BytesPerInput     = 41  // each input is about 41 bytes
-	BytesPerOutput    = 31  // each output is about 31 bytes
-	Bytes1stWitness   = 110 // the 1st witness incurs about 110 bytes and it may vary
-	BytesPerWitness   = 108 // each additional witness incurs about 108 bytes and it may vary
+	bytesPerInput     = 41  // each input is about 41 bytes
+	bytesPerOutput    = 31  // each output is about 31 bytes
+	bytes1stWitness   = 110 // the 1st witness incurs about 110 bytes and it may vary
+	bytesPerWitness   = 108 // each additional witness incurs about 108 bytes and it may vary
 )
 
 var (
-	BtcOutTxBytesMin        uint64
-	BtcOutTxBytesMax        uint64
 	BtcOutTxBytesDepositor  uint64
 	BtcOutTxBytesWithdrawer uint64
 	BtcDepositorFeeMin      float64
 )
 
 func init() {
-	BtcOutTxBytesMin = EstimateSegWitTxSize(2, 3)      // 403B, estimated size for a 2-input, 3-output SegWit tx
-	BtcOutTxBytesMax = EstimateSegWitTxSize(21, 3)     // 3234B, estimated size for a 21-input, 3-output SegWit tx
-	BtcOutTxBytesDepositor = SegWitTxSizeDepositor()   // 149B, the outtx size incurred by the depositor
-	BtcOutTxBytesWithdrawer = SegWitTxSizeWithdrawer() // 254B, the outtx size incurred by the withdrawer
+	BtcOutTxBytesDepositor = SegWitTxSizeDepositor()   // 68vB, the outtx size incurred by the depositor
+	BtcOutTxBytesWithdrawer = SegWitTxSizeWithdrawer() // 171vB, the outtx size incurred by the withdrawer
 
-	// depositor fee calculation is based on a fixed fee rate of 5 sat/byte just for simplicity.
+	// depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
 	// In reality, the fee rate on UTXO deposit is different from the fee rate when the UTXO is spent.
-	BtcDepositorFeeMin = DepositorFee(5) // 0.00000745 (5 * 149B / 100000000), the minimum deposit fee in BTC for 5 sat/byte
+	BtcDepositorFeeMin = DepositorFee(20) // 0.00001360 (20 * 68vB / 100000000), the minimum deposit fee in BTC for 20 sat/byte
 }
 
 func PrettyPrintStruct(val interface{}) (string, error) {
@@ -60,27 +58,39 @@ func FeeRateToSatPerByte(rate float64) *big.Int {
 	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
 }
 
+// WiredTxSize calculates the wired tx size in bytes
+func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
+	// Version 4 bytes + LockTime 4 bytes + Serialized varint size for the
+	// number of transaction inputs and outputs.
+	// #nosec G701 always positive
+	return uint64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
+}
+
 // EstimateSegWitTxSize estimates SegWit tx size
 func EstimateSegWitTxSize(numInputs uint64, numOutputs uint64) uint64 {
 	if numInputs == 0 {
 		return 0
 	}
-	bytesInput := numInputs * BytesPerInput
-	bytesOutput := numOutputs * BytesPerOutput
-	bytesWitness := Bytes1stWitness + (numInputs-1)*BytesPerWitness
-	return BytesEmptyTx + bytesInput + bytesOutput + bytesWitness
+	bytesWiredTx := WiredTxSize(numInputs, numOutputs)
+	bytesInput := numInputs * bytesPerInput
+	bytesOutput := numOutputs * bytesPerOutput
+	bytesWitness := bytes1stWitness + (numInputs-1)*bytesPerWitness
+	// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+	// Calculation for signed SegWit tx: blockchain.GetTransactionWeight(tx) / 4
+	return bytesWiredTx + bytesInput + bytesOutput + bytesWitness/blockchain.WitnessScaleFactor
 }
 
-// SegWitTxSizeDepositor returns SegWit tx size (149B) incurred by the depositor
+// SegWitTxSizeDepositor returns SegWit tx size (68vB) incurred by the depositor
 func SegWitTxSizeDepositor() uint64 {
-	return BytesPerInput + BytesPerWitness
+	return bytesPerInput + bytesPerWitness/blockchain.WitnessScaleFactor
 }
 
-// SegWitTxSizeWithdrawer returns SegWit tx size (254B) incurred by the withdrawer
+// SegWitTxSizeWithdrawer returns SegWit tx size (171vB) incurred by the withdrawer (1 input, 3 outputs)
 func SegWitTxSizeWithdrawer() uint64 {
-	bytesInput := uint64(1) * BytesPerInput   // nonce mark
-	bytesOutput := uint64(3) * BytesPerOutput // 3 outputs: new nonce mark, payment, change
-	return BytesEmptyTx + bytesInput + bytesOutput + Bytes1stWitness
+	bytesWiredTx := WiredTxSize(1, 3)
+	bytesInput := uint64(1) * bytesPerInput   // nonce mark
+	bytesOutput := uint64(3) * bytesPerOutput // 3 outputs: new nonce mark, payment, change
+	return bytesWiredTx + bytesInput + bytesOutput + bytes1stWitness/blockchain.WitnessScaleFactor
 }
 
 // DepositorFee calculates the depositor fee in BTC for a given sat/byte fee rate

@@ -28,18 +28,10 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	consolidationRank  = 10 // the rank below (or equal to) which we consolidate UTXOs
+	consolidationRank  = 10           // the rank below (or equal to) which we consolidate UTXOs
+	outTxBytesMin      = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 3)
+	outTxBytesMax      = uint64(1531) // 1531v == EstimateSegWitTxSize(21, 3)
 )
-
-var (
-	outTxBytesMin uint64
-	outTxBytesMax uint64
-)
-
-func init() {
-	outTxBytesMin = EstimateSegWitTxSize(2, 3)  // 403B, estimated size for a 2-input, 3-output SegWit tx
-	outTxBytesMax = EstimateSegWitTxSize(21, 3) // 3234B, estimated size for a 21-input, 3-output SegWit tx
-}
 
 type BTCSigner struct {
 	tssSigner interfaces.TSSSigner
@@ -119,9 +111,9 @@ func (signer *BTCSigner) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize := uint64(tx.SerializeSize())
-	if txSize > sizeLimit { // ZRC20 'withdraw' charged less fee from end user
-		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
+	txSize := EstimateSegWitTxSize(uint64(len(prevOuts)), 3)
+	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
+		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
 		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, outTxBytesMin)
