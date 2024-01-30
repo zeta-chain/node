@@ -14,10 +14,7 @@ import (
 )
 
 func TestZetaWithdraw(sm *runner.SmokeTestRunner) {
-	//amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
-
-	// 0.1 Zeta
-	amount := big.NewInt(1e17)
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
 
 	sm.ZevmAuth.Value = amount
 	tx, err := sm.WZeta.Deposit(sm.ZevmAuth)
