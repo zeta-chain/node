@@ -2,6 +2,7 @@ package zetabridge
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -193,4 +194,22 @@ func (b *ZetaCoreBridge) QueryTxResult(hash string) (*sdktypes.TxResponse, error
 		return nil, err
 	}
 	return authtx.QueryTx(ctx, hash)
+}
+
+// HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
+	if strings.Contains(err.Error(), "nonce too low") {
+		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")
+		return false, false
+	}
+	if strings.Contains(err.Error(), "replacement transaction underpriced") {
+		log.Warn().Err(err).Msgf("Broadcast replacement: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false, false
+	} else if strings.Contains(err.Error(), "already known") { // this is error code from QuickNode
+		log.Warn().Err(err).Msgf("Broadcast duplicates: nonce %s chain %s outTxHash %s", nonce, toChain, outTxHash)
+		return false, true // report to tracker, because there's possibilities a successful broadcast gets this error code
+	}
+
+	log.Error().Err(err).Msgf("Broadcast error: nonce %s chain %s outTxHash %s; retrying...", nonce, toChain, outTxHash)
+	return true, false
 }

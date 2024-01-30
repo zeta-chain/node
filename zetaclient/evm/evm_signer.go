@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -29,6 +28,7 @@ import (
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
 const (
@@ -583,7 +583,7 @@ func (signer *Signer) TryProcessOutTx(
 			err := signer.Broadcast(tx)
 			if err != nil {
 				log.Warn().Err(err).Msgf("OutTx Broadcast error")
-				retry, report := zetaclient.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutTxParam().OutboundTxTssNonce, 10), toChain.String(), outTxHash)
+				retry, report := zbridge.HandleBroadcastError(err, strconv.FormatUint(cctx.GetCurrentOutTxParam().OutboundTxTssNonce, 10), toChain.String(), outTxHash)
 				if report {
 					signer.reportToOutTxTracker(zetaBridge, toChain.ChainId, tx.Nonce(), outTxHash, logger)
 				}
