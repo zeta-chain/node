@@ -3,10 +3,11 @@ package bitcoin
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/btcsuite/btcd/blockchain"
 	"math"
 	"math/big"
 	"time"
+
+	"github.com/btcsuite/btcd/blockchain"
 
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/pkg/errors"
