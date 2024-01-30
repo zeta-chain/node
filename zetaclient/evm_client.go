@@ -24,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -33,7 +34,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/ethrpc"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
@@ -73,7 +73,7 @@ type EVMChainClient struct {
 	*ChainMetrics
 	chain                      common.Chain
 	evmClient                  EVMRPCClient
-	rpcClient                  *ethrpc.EthRPC // a fallback rpc client
+	evmClientAlternate         *ethrpc.EthRPC // a fallback rpc client
 	KlaytnClient               KlaytnRPCClient
 	zetaClient                 ZetaCoreBridger
 	Tss                        TSSSigner
@@ -96,8 +96,9 @@ type EVMChainClient struct {
 	params                     observertypes.ChainParams
 	ts                         *TelemetryServer
 
-	BlockCache  *lru.Cache
-	HeaderCache *lru.Cache
+	blockCache   *lru.Cache
+	blockCacheV3 *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
+	headerCache  *lru.Cache
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
@@ -151,15 +152,20 @@ func NewEVMChainClient(
 		return nil, err
 	}
 	ob.evmClient = client
-	ob.rpcClient = ethrpc.NewEthRPC(evmCfg.Endpoint)
+	ob.evmClientAlternate = ethrpc.NewEthRPC(evmCfg.Endpoint)
 
 	// create block header and block caches
-	ob.BlockCache, err = lru.New(1000)
+	ob.blockCache, err = lru.New(1000)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache")
 		return nil, err
 	}
-	ob.HeaderCache, err = lru.New(1000)
+	ob.blockCacheV3, err = lru.New(1000)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache v3")
+		return nil, err
+	}
+	ob.headerCache, err = lru.New(1000)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create header cache")
 		return nil, err
@@ -1221,7 +1227,7 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 						}
 						return bn - 1 // we have to re-scan this block next time
 					}
-					if ok := ob.processIntxToTss(tx, blockRPC.Number, ethcommon.HexToHash(blockRPC.Hash)); !ok {
+					if ok := ob.processIntxToTss(tx, bn, ethcommon.HexToHash(blockRPC.Hash)); !ok {
 						return bn - 1 // we have to re-scan this block next time
 					}
 				}
@@ -1477,37 +1483,44 @@ func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 }
 
 func (ob *EVMChainClient) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
-	if header, ok := ob.HeaderCache.Get(blockNumber); ok {
+	if header, ok := ob.headerCache.Get(blockNumber); ok {
 		return header.(*ethtypes.Header), nil
 	}
 	header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
 	if err != nil {
 		return nil, err
 	}
-	ob.HeaderCache.Add(blockNumber, header)
+	ob.headerCache.Add(blockNumber, header)
 	return header, nil
 }
 
 // GetBlockByNumberCached get block by number from cache
 // returns block, ethrpc.Block, isFallback, isSkip, error
 func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Block, *ethrpc.Block, bool, bool, error) {
-	if block, ok := ob.BlockCache.Get(blockNumber); ok {
+	if block, ok := ob.blockCache.Get(blockNumber); ok {
 		return block.(*ethtypes.Block), nil, false, false, nil
+	}
+	if block, ok := ob.blockCacheV3.Get(blockNumber); ok {
+		return nil, block.(*ethrpc.Block), true, false, nil
 	}
 	block, err := ob.evmClient.BlockByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
 	if err != nil {
 		if strings.Contains(err.Error(), "block header indicates no transactions") {
 			return nil, nil, false, true, err // it's ok skip empty block
 		} else if strings.Contains(err.Error(), "transaction type not supported") {
-			rpcBlock, err := ob.rpcClient.EthGetBlockByNumber(blockNumber, true)
+			if blockNumber > math.MaxInt32 {
+				return nil, nil, true, false, fmt.Errorf("block number %d is too large", blockNumber)
+			}
+			// #nosec G701 always in range, checked above
+			rpcBlock, err := ob.evmClientAlternate.EthGetBlockByNumber(int(blockNumber), true)
 			if err != nil {
 				return nil, nil, true, false, err // fall back on ethRPC but still fail
 			}
+			ob.blockCacheV3.Add(blockNumber, rpcBlock)
 			return nil, rpcBlock, true, false, nil // fall back on ethRPC without error
 		}
 		return nil, nil, false, false, err
 	}
-	ob.BlockCache.Add(blockNumber, block)
-	ob.BlockCache.Add(block.Hash(), block)
+	ob.blockCache.Add(blockNumber, block)
 	return block, nil, false, false, nil
 }
