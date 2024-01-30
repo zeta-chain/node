@@ -35,6 +35,10 @@ import (
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
+const (
+	envFlagPostBlame = "POST_BLAME"
+)
+
 type Key struct {
 	PubkeyInBytes  []byte // FIXME: compressed pubkey?
 	PubkeyInBech32 string // FIXME: same above
@@ -203,13 +207,16 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msgf("keysign status FAIL posting blame to core, blaming node(s): %#v", ksRes.Blame.BlameNodes)
 
-		digest := hex.EncodeToString(digest)
-		index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
-
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
-		if err != nil {
-			log.Error().Err(err).Msg("error sending blame data to core")
-			return [65]byte{}, err
+		// post blame data if enabled
+		if IsEnvFlagEnabled(envFlagPostBlame) {
+			digest := hex.EncodeToString(digest)
+			index := observertypes.GetBlameIndex(chain.ChainId, nonce, digest, height)
+			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			if err != nil {
+				log.Error().Err(err).Msg("error sending blame data to core")
+				return [65]byte{}, err
+			}
+			log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 		}
 
 		// Increment Blame counter
@@ -221,8 +228,6 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 			}
 			counter.Inc()
 		}
-
-		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 	signature := ksRes.Signatures
 
@@ -276,13 +281,17 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 
 	if ksRes.Status == thorcommon.Fail {
 		log.Warn().Msg("keysign status FAIL posting blame to core")
-		digest := combineDigests(digestBase64)
-		index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
 
-		zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
-		if err != nil {
-			log.Error().Err(err).Msg("error sending blame data to core")
-			return [][65]byte{}, err
+		// post blame data if enabled
+		if IsEnvFlagEnabled(envFlagPostBlame) {
+			digest := combineDigests(digestBase64)
+			index := observertypes.GetBlameIndex(chain.ChainId, nonce, hex.EncodeToString(digest), height)
+			zetaHash, err := tss.CoreBridge.PostBlameData(&ksRes.Blame, chain.ChainId, index)
+			if err != nil {
+				log.Error().Err(err).Msg("error sending blame data to core")
+				return [][65]byte{}, err
+			}
+			log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 		}
 
 		// Increment Blame counter
@@ -294,8 +303,6 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 			}
 			counter.Inc()
 		}
-
-		log.Info().Msgf("keysign posted blame data tx hash: %s", zetaHash)
 	}
 
 	signatures := ksRes.Signatures
@@ -614,4 +621,9 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.A
 		return nil, err
 	}
 	return addr, nil
+}
+
+func IsEnvFlagEnabled(flag string) bool {
+	value := os.Getenv(flag)
+	return value == "true" || value == "1"
 }
