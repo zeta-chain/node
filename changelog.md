@@ -4,6 +4,8 @@
 
 ### Fixes
 * [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
+* [1661](https://github.com/zeta-chain/node/issues/1661) - use estimated SegWit tx size for Bitcoin gas fee calculation
+* [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
 
 ## Version: v12.1.0
 

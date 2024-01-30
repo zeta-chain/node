@@ -32,8 +32,8 @@ var (
 )
 
 func init() {
-	outTxBytesMin = EstimateSegWitTxSize(2, 3)  // 403B, estimated size for a 2-input, 3-output SegWit tx
-	outTxBytesMax = EstimateSegWitTxSize(21, 3) // 3234B, estimated size for a 21-input, 3-output SegWit tx
+	outTxBytesMin = EstimateSegWitTxSize(2, 3)  // 239vB, estimated size for a 2-input, 3-output SegWit tx
+	outTxBytesMax = EstimateSegWitTxSize(21, 3) // 1531vB, estimated size for a 21-input, 3-output SegWit tx
 }
 
 type BTCSigner struct {
@@ -114,9 +114,9 @@ func (signer *BTCSigner) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize := uint64(tx.SerializeSize())
-	if txSize > sizeLimit { // ZRC20 'withdraw' charged less fee from end user
-		signer.logger.Info().Msgf("sizeLimit %d is less than txSize %d for nonce %d", sizeLimit, txSize, nonce)
+	txSize := EstimateSegWitTxSize(uint64(len(prevOuts)), 3)
+	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
+		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
 	if txSize < outTxBytesMin { // outbound shouldn't be blocked a low sizeLimit
 		signer.logger.Warn().Msgf("txSize %d is less than outTxBytesMin %d; use outTxBytesMin", txSize, outTxBytesMin)
