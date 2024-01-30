@@ -91,24 +91,32 @@ func TestZetaWithdraw(sm *runner.SmokeTestRunner) {
 }
 
 func TestZetaWithdrawBTCRevert(sm *runner.SmokeTestRunner) {
-	sm.ZevmAuth.Value = big.NewInt(1e18)
+	sm.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
 	tx, err := sm.WZeta.Deposit(sm.ZevmAuth)
 	if err != nil {
 		panic(err)
 	}
 	sm.ZevmAuth.Value = big.NewInt(0)
-
 	sm.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("Deposit tx receipt: status %d", receipt.Status)
+	sm.Logger.EVMReceipt(*receipt, "Deposit")
+	if receipt.Status != 1 {
+		panic("Deposit failed")
+	}
 
 	tx, err = sm.WZeta.Approve(sm.ZevmAuth, sm.ConnectorZEVMAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("approve tx receipt: status %d", receipt.Status)
+	sm.Logger.EVMReceipt(*receipt, "Approve")
+	if receipt.Status != 1 {
+		panic("Approve failed")
+	}
+
 	tx, err = sm.ConnectorZEVM.Send(sm.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
@@ -121,8 +129,9 @@ func TestZetaWithdrawBTCRevert(sm *runner.SmokeTestRunner) {
 		panic(err)
 	}
 	sm.Logger.Info("send tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("send tx receipt: status %d", receipt.Status)
+	sm.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 0 {
 		panic("Was able to send ZETA to BTC")
 	}
