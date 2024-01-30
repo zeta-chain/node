@@ -2,10 +2,11 @@ package zetabridge
 
 import (
 	"fmt"
-	"github.com/rs/zerolog/log"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 
