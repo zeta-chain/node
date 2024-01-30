@@ -76,11 +76,22 @@ func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
 }
 
 func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
-	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
+	// reset allowance, necessary for USDT
+	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
 	}
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status == 0 {
+		panic("approve failed")
+	}
+	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+
+	tx, err = sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}

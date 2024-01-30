@@ -71,7 +71,7 @@ func (sm *SmokeTestRunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
-		DestinationChainId:  big.NewInt(common.ZetaPrivnetChain().ChainId),
+		DestinationChainId:  big.NewInt(common.ZetaChainMainnet().ChainId),
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
