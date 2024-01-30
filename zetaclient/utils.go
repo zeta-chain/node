@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"os"
 	"strings"
 	"time"
 
@@ -50,6 +51,11 @@ func init() {
 	// depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
 	// In reality, the fee rate on UTXO deposit is different from the fee rate when the UTXO is spent.
 	BtcDepositorFeeMin = DepositorFee(20) // 0.00001360 (20 * 68vB / 100000000), the minimum deposit fee in BTC for 20 sat/byte
+}
+
+func IsEnvFlagEnabled(flag string) bool {
+	value := os.Getenv(flag)
+	return value == "true" || value == "1"
 }
 
 func PrettyPrintStruct(val interface{}) (string, error) {
