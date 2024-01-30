@@ -23,18 +23,10 @@ import (
 
 const (
 	maxNoOfInputsPerTx = 20
-	consolidationRank  = 10 // the rank below (or equal to) which we consolidate UTXOs
+	consolidationRank  = 10           // the rank below (or equal to) which we consolidate UTXOs
+	outTxBytesMin      = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 3)
+	outTxBytesMax      = uint64(1531) // 1531v == EstimateSegWitTxSize(21, 3)
 )
-
-var (
-	outTxBytesMin uint64
-	outTxBytesMax uint64
-)
-
-func init() {
-	outTxBytesMin = EstimateSegWitTxSize(2, 3)  // 239vB, estimated size for a 2-input, 3-output SegWit tx
-	outTxBytesMax = EstimateSegWitTxSize(21, 3) // 1531vB, estimated size for a 21-input, 3-output SegWit tx
-}
 
 type BTCSigner struct {
 	tssSigner TSSSigner
