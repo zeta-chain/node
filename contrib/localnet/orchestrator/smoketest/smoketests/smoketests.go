@@ -34,6 +34,7 @@ const (
 	TestStressEtherWithdrawName = "stress_eth_withdraw"
 	TestStressBTCWithdrawName   = "stress_btc_withdraw"
 	TestStressEtherDepositName  = "stress_eth_deposit"
+	TestStressBTCDepositName    = "stress_btc_deposit"
 )
 
 // AllSmokeTests is an ordered list of all smoke tests
@@ -177,5 +178,10 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestStressEtherDepositName,
 		"stress test Ether deposit",
 		TestStressEtherDeposit,
+	},
+	{
+		TestStressBTCDepositName,
+		"stress test BTC deposit",
+		TestStressBTCDeposit,
 	},
 }

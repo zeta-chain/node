@@ -27,7 +27,7 @@ import (
 var blockHeaderBTCTimeout = 5 * time.Minute
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
-func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) {
+func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
 	sm.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// fetch utxos
@@ -55,21 +55,13 @@ func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) {
 	sm.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetaclient.BtcDepositorFeeMin
-	txHash, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
+	txHash, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	sm.Logger.CCTX(*cctx, "deposit")
-	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
-		panic(fmt.Sprintf(
-			"expected mined status; got %s, message: %s",
-			cctx.CctxStatus.Status.String(),
-			cctx.CctxStatus.StatusMessage),
-		)
-	}
+	return txHash
 }
 
 // DepositBTC deposits BTC on ZetaChain
