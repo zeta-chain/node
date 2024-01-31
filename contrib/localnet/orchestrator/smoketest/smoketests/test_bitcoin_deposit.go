@@ -2,6 +2,7 @@ package smoketests
 
 import (
 	"fmt"
+
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"

@@ -2,8 +2,9 @@ package smoketests
 
 import (
 	"fmt"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"time"
+
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
