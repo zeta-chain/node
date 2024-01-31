@@ -25,6 +25,12 @@ const (
 	DefaultBaseGasPrice = 1_000_000
 )
 
+var (
+	// paying 50% more than the current base gas price to buffer for potential block-by-block
+	// gas price increase due to EIP1559 feemarket on ZetaChain
+	bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
+)
+
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner AuthZSigner) (string, error) {
 	b.broadcastLock.Lock()
@@ -44,7 +50,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	}
 	reductionRate := sdktypes.MustNewDecFromStr(ante.GasPriceReductionRate)
 	// multiply gas price by the system tx reduction rate
-	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate)
+	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
 
 	if blockHeight > b.blockHeight {
 		b.blockHeight = blockHeight
