@@ -374,10 +374,13 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+		return fmt.Errorf("observeInTxBTC: error getting block number: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+		return fmt.Errorf("observeInTxBTC: block number is negative: %d", cnt)
+	}
+	if cnt < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTxBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(cnt)
 
@@ -441,7 +444,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
 				return err // we have to re-scan this block next time
 			} else if zetaHash != "" {
-				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostVoteInbound zeta tx: %s ballot %s", zetaHash, ballot)
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s", zetaHash, inTx.TxHash, ballot)
 			}
 		}
 
@@ -639,11 +642,12 @@ func FilterAndParseIncomingTx(
 		}
 		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
 		if err != nil {
-			logger.Error().Err(err).Msg("error getting btc event")
+			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 			continue
 		}
 		if inTx != nil {
 			inTxs = append(inTxs, inTx)
+			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 	return inTxs
