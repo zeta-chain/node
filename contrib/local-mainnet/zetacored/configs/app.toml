@@ -1,0 +1,77 @@
+minimum-gas-prices = "1.0azeta"
+pruning = "nothing"
+pruning-keep-recent = "0"
+pruning-keep-every = "0"
+pruning-interval = "0"
+halt-height = 0
+halt-time = 0
+min-retain-blocks = 0
+inter-block-cache = true
+index-events = []
+iavl-cache-size = 781250
+iavl-disable-fastnode = true
+
+[telemetry]
+service-name = "tss"
+enabled = true
+enable-hostname = true
+enable-hostname-label = true
+enable-service-label = false
+prometheus-retention-time = 10
+global-labels = [ ]
+
+[api]
+enable = true
+swagger = true
+address = "tcp://0.0.0.0:1317"
+max-open-connections = 1000
+rpc-read-timeout = 10
+rpc-write-timeout = 0
+rpc-max-body-bytes = 1000000
+enabled-unsafe-cors = false
+
+[rosetta]
+enable = false
+address = ":8080"
+blockchain = "app"
+network = "network"
+retries = 3
+offline = false
+
+[grpc]
+enable = true
+address = "0.0.0.0:9090"
+
+[grpc-web]
+enable = true
+address = "127.0.0.1:9091"
+enable-unsafe-cors = false
+
+[state-sync]
+snapshot-interval = 0
+snapshot-keep-recent = 2
+
+[evm]
+tracer = ""
+max-tx-gas-wanted = 0
+
+[json-rpc]
+enable = true
+address = "0.0.0.0:8545"
+ws-address = "0.0.0.0:8546"
+api = "eth,net,web3,txpool,personal,debug"
+gas-cap = 25000000
+evm-timeout = "5s"
+txfee-cap = 1
+filter-cap = 200
+feehistory-cap = 100
+logs-cap = 10000
+block-range-cap = 10000
+http-timeout = "30s"
+http-idle-timeout = "2m0s"
+allow-unprotected-txs = false
+max-open-connections = 0
+enable-indexer = false
+
+[tls]
+certificate-path = ""

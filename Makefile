@@ -294,3 +294,13 @@ release:
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
 		release --clean --skip-validate
+
+###############################################################################
+###                     Local Mainnet Development                           ###
+###############################################################################
+
+mainnet-zetarpc-node:
+	cd contrib/local-mainnet/zetacored && docker-compose up
+
+mainnet-bitcoind-node:
+	cd contrib/local-mainnet/bitcoind && docker-compose up

@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  zetachain_mainnet_rpc:
+    platform: linux/amd64
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    #image: golang:1.21
+    container_name: zetachain_mainnet_rpc
+    environment:
+      CHAIN_ID: "zetachain_7000-1"
+      BINARY_VERSION: "N/A"
+      MONIKER: "main-rpc"
+      STATE_SYNC_SERVER: "34.69.20.168:26657"
+      RPC_STATE_SYNC_SERVERS: "34.69.20.168:26657,34.69.20.168:26657"
+      SEED_NODE: "8d93468c6022fb3b263963bdea46b0a131d247cd@34.28.196.79:26656"
+      PEERS: "e04ee1d6b5cc1aa24f7c1ab55139d1cec9962e39@52.45.59.77:26656"
+      DOWNLOAD_BINARY: "false"
+      DEBUG: "true"
+    ports:
+      - "26656:26656"
+      - "1317:1317"
+      - "9545:8545"
+      - "9546:8546"
+      - "26657:26657"
+      - "9090:9090"
+      - "9091:9091"
+    volumes:
+      - ./configs:/root/.zetacored/config
+      - zetacored_data:/root/.zetacored/data
+    entrypoint: bash /root/.zetacored/config/start.sh
+
+volumes:
+  zetacored_data:
