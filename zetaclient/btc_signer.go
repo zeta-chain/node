@@ -275,18 +275,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		return
 	}
 	myid := zetaBridge.GetKeys().GetAddress()
-	// Early return if the send is already processed
-	// FIXME: handle revert case
+
 	outboundTxTssNonce := params.OutboundTxTssNonce
-	included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx.Index, outboundTxTssNonce, common.CoinType_Gas, logger)
-	if err != nil {
-		logger.Error().Err(err).Msgf("cannot check if send %s is processed", cctx.Index)
-		return
-	}
-	if included || confirmed {
-		logger.Info().Msgf("CCTX %s already processed; exit signer", outTxID)
-		return
-	}
 
 	sizelimit := params.OutboundTxGasLimit
 	gasprice, ok := new(big.Int).SetString(params.OutboundTxGasPrice, 10)
