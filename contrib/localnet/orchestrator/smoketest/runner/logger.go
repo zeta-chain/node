@@ -2,6 +2,7 @@ package runner
 
 import (
 	"fmt"
+	"sync"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -20,6 +21,7 @@ type Logger struct {
 	verbose bool
 	logger  *color.Color
 	prefix  string
+	mu      sync.Mutex
 }
 
 // NewLogger creates a new Logger
@@ -48,6 +50,9 @@ func (l *Logger) Prefix() string {
 
 // Print prints a message to the logger
 func (l *Logger) Print(message string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
 	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + text + "\n")
@@ -55,6 +60,9 @@ func (l *Logger) Print(message string, args ...interface{}) {
 
 // PrintNoPrefix prints a message to the logger without the prefix
 func (l *Logger) PrintNoPrefix(message string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
 	l.logger.Printf(text + "\n")
@@ -62,6 +70,9 @@ func (l *Logger) PrintNoPrefix(message string, args ...interface{}) {
 
 // Info prints a message to the logger if verbose is true
 func (l *Logger) Info(message string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
@@ -71,6 +82,9 @@ func (l *Logger) Info(message string, args ...interface{}) {
 
 // InfoLoud prints a message to the logger if verbose is true
 func (l *Logger) InfoLoud(message string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	if l.verbose {
 		text := fmt.Sprintf(message, args...)
 		// #nosec G104 - we are not using user input
@@ -84,6 +98,9 @@ func (l *Logger) InfoLoud(message string, args ...interface{}) {
 
 // Error prints an error message to the logger
 func (l *Logger) Error(message string, args ...interface{}) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
 	text := fmt.Sprintf(message, args...)
 	// #nosec G104 - we are not using user input
 	l.logger.Printf(l.getPrefixWithPadding() + loggerSeparator + "[ERROR]" + text + "\n")
