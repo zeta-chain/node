@@ -93,8 +93,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// set timeout
-	testRunner.CctxTimeout = 40 * time.Minute
-	testRunner.ReceiptTimeout = 40 * time.Minute
+	testRunner.CctxTimeout = 60 * time.Minute
+	testRunner.ReceiptTimeout = 60 * time.Minute
 
 	balancesBefore, err := testRunner.GetAccountBalances(true)
 	if err != nil {
