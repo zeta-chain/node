@@ -4,6 +4,12 @@
 
 ### Fixes
 
+* [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
+
+## Version: v12.2.4
+
+### Fixes
+
 * [1638](https://github.com/zeta-chain/node/issues/1638) - additional check to make sure external chain height always increases
 * [1672](https://github.com/zeta-chain/node/pull/1672) - paying 50% more than base gas price to buffer EIP1559 gas price increase
 * [1642](https://github.com/zeta-chain/node/pull/1642) - Change WhitelistERC20 authorization from group1 to group2
