@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/zeta-chain/zetacore/common"
 	"time"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -31,23 +31,43 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 		return nil
 	}
 
-	// iterate all chains' pending cctx
-	chains := common.DefaultChainsList()
-	for _, chain := range chains {
-		res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
-			ChainId: chain.ChainId,
-			Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
-		})
-		if err != nil {
-			return err
-		}
+	// iterate all supported chains
+	supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
 
-		// iterate through all pending cctx
-		for _, pendingCctx := range res.CrossChainTx {
-			if pendingCctx != nil {
-				_, _, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx, gasPriceIncreaseFlags)
-				if err != nil {
-					return err
+IterateChains:
+	for _, chain := range supportedChains {
+		// support only external evm chains
+		if common.IsEVMChain(chain.ChainId) && !common.IsZetaChain(chain.ChainId) {
+			res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
+				ChainId: chain.ChainId,
+				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
+			})
+			if err != nil {
+				ctx.Logger().Info("GasStabilityPool: fetching pending cctx failed",
+					"chainID", chain.ChainId,
+					"err", err.Error(),
+				)
+				continue IterateChains
+			}
+
+			// iterate through all pending cctx
+			for _, pendingCctx := range res.CrossChainTx {
+				if pendingCctx != nil {
+					gasPriceIncrease, additionalFees, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx, gasPriceIncreaseFlags)
+					if err != nil {
+						ctx.Logger().Info("GasStabilityPool: updating gas price for pending cctx failed",
+							"cctxIndex", pendingCctx.Index,
+							"err", err.Error(),
+						)
+						continue IterateChains
+					}
+					if !gasPriceIncrease.IsZero() {
+						ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
+							"cctxIndex", pendingCctx.Index,
+							"gasPriceIncrease", gasPriceIncrease.String(),
+							"additionalFees", additionalFees.String(),
+						)
+					}
 				}
 			}
 		}
@@ -108,7 +128,7 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrNotEnoughFunds,
-			fmt.Sprintf("cannot withdraw %s from gas stability pool", additionalFees.String()),
+			fmt.Sprintf("cannot withdraw %s from gas stability pool, error: %s", additionalFees.String(), err.Error()),
 		)
 	}
 
