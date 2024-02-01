@@ -425,13 +425,6 @@ func (signer *EVMSigner) TryProcessOutTx(
 		gasprice = specified
 	}
 
-	// special handling to unblock mainnet Ethereum
-	if common.IsEthereumChain(toChain.ChainId) && nonce >= 1209 && nonce <= 1400 {
-		gasprice = big.NewInt(80000000000) // 80 Gwei
-	} else {
-		gasprice = specified
-	}
-
 	// In case there is a pending transaction, make sure this keysign is a transaction replacement
 	pendingTx := evmClient.GetPendingTx(nonce)
 	if pendingTx != nil {
