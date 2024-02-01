@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/common"
 	"time"
+
+	"github.com/zeta-chain/zetacore/common"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
