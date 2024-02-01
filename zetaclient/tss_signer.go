@@ -183,7 +183,7 @@ func (tss *TSS) Pubkey() []byte {
 // Sign signs a digest
 // digest should be Hashes of some data
 // NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64, _ uint64, _ *common.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -257,7 +257,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *common.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, _ uint64, _ *common.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -580,7 +580,7 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 	return bytes.Equal(pubkey.Bytes(), compressedPubkey)
 }
 
-func combineDigests(digestList []string) []byte {
+func CombineDigests(digestList []string) []byte {
 	digestConcat := strings.Join(digestList[:], "")
 	digestBytes := chainhash.DoubleHashH([]byte(digestConcat))
 	return digestBytes.CloneBytes()
