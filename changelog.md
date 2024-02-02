@@ -5,6 +5,9 @@
 ### Fixes
 * [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
 
+## Chores
+* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use assert testing package for the entire node folder
+
 ## Version: v12.1.0
 
 ### Tests
@@ -28,7 +31,7 @@
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
-* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network
+
 
 ### Features
 
