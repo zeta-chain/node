@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
@@ -199,6 +200,54 @@ func (ob *BitcoinChainClient) Start() {
 	go ob.WatchUTXOS()
 	go ob.WatchGasPrice()
 	go ob.ExternalChainWatcherForNewInboundTrackerSuggestions()
+	go ob.RPCStatus()
+}
+
+func (ob *BitcoinChainClient) RPCStatus() {
+	ob.logger.ChainLogger.Info().Msgf("RPCStatus is starting")
+	ticker := time.NewTicker(60 * time.Second)
+
+	for {
+		select {
+		case <-ticker.C:
+			//ob.logger.ChainLogger.Info().Msgf("RPCStatus is running")
+			bn, err := ob.rpcClient.GetBlockCount()
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: RPC down? ")
+				continue
+			}
+			hash, err := ob.rpcClient.GetBlockHash(bn)
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: RPC down? ")
+				continue
+			}
+			header, err := ob.rpcClient.GetBlockHeader(hash)
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: RPC down? ")
+				continue
+			}
+			blockTime := header.Timestamp
+			elapsedSeconds := time.Since(blockTime).Seconds()
+			if elapsedSeconds > 1200 {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: RPC down? ")
+				continue
+			}
+			tssAddr := ob.Tss.BTCAddressWitnessPubkeyHash()
+			res, err := ob.rpcClient.ListUnspentMinMaxAddresses(0, 1000000, []btcutil.Address{tssAddr})
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: can't list utxos of TSS address; wallet or loaded? TSS address is not imported? ")
+				continue
+			}
+			if len(res) == 0 {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC status check: TSS address has no utxos; TSS address is not imported? ")
+				continue
+			}
+			ob.logger.ChainLogger.Info().Msgf("[OK] RPC status check: latest block number %d, timestamp %s (%.fs ago), tss addr %s, #utxos: %d", bn, blockTime, elapsedSeconds, tssAddr, len(res))
+
+		case <-ob.stop:
+			return
+		}
+	}
 }
 
 func (ob *BitcoinChainClient) Stop() {
@@ -323,10 +372,13 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+		return fmt.Errorf("observeInTxBTC: error getting block number: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+		return fmt.Errorf("observeInTxBTC: block number is negative: %d", cnt)
+	}
+	if cnt < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTxBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(cnt)
 
@@ -385,12 +437,12 @@ func (ob *BitcoinChainClient) observeInTx() error {
 		// post inbound vote message to zetacore
 		for _, inTx := range inTxs {
 			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
+			zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
 				return err // we have to re-scan this block next time
 			} else if zetaHash != "" {
-				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostSend zeta tx: %s ballot %s", zetaHash, ballot)
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s", zetaHash, inTx.TxHash, ballot)
 			}
 		}
 
@@ -470,7 +522,7 @@ func (ob *BitcoinChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64
 	}
 
 	logger.Debug().Msgf("Bitcoin outTx confirmed: txid %s, amount %s\n", res.TxID, amountInSat.String())
-	zetaHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+	zetaHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 		sendHash,
 		res.TxID,
 		// #nosec G701 always positive
@@ -584,11 +636,12 @@ func FilterAndParseIncomingTx(
 		}
 		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
 		if err != nil {
-			logger.Error().Err(err).Msg("error getting btc event")
+			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 			continue
 		}
 		if inTx != nil {
 			inTxs = append(inTxs, inTx)
+			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 	return inTxs

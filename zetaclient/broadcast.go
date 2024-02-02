@@ -25,6 +25,12 @@ const (
 	DefaultBaseGasPrice = 1_000_000
 )
 
+var (
+	// paying 50% more than the current base gas price to buffer for potential block-by-block
+	// gas price increase due to EIP1559 feemarket on ZetaChain
+	bufferMultiplier = sdktypes.MustNewDecFromStr("1.5")
+)
+
 // Broadcast Broadcasts tx to metachain. Returns txHash and error
 func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner AuthZSigner) (string, error) {
 	b.broadcastLock.Lock()
@@ -44,7 +50,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	}
 	reductionRate := sdktypes.MustNewDecFromStr(ante.GasPriceReductionRate)
 	// multiply gas price by the system tx reduction rate
-	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate)
+	adjustedBaseGasPrice := sdktypes.NewDec(baseGasPrice).Mul(reductionRate).Mul(bufferMultiplier)
 
 	if blockHeight > b.blockHeight {
 		b.blockHeight = blockHeight
@@ -57,7 +63,6 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 			b.seqNumber[authzSigner.KeyType] = seqNumber
 		}
 	}
-	//b.logger.Info().Uint64("account_number", b.accountNumber).Uint64("sequence_number", b.seqNumber).Msg("account info")
 
 	flags := flag.NewFlagSet("zetacore", 0)
 
@@ -73,12 +78,13 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 	if err != nil {
 		return "", err
 	}
+
 	builder.SetGasLimit(gaslimit)
+
 	// #nosec G701 always in range
 	fee := sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom,
 		cosmos.NewInt(int64(gaslimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt())))
 	builder.SetFeeAmount(fee)
-	//fmt.Printf("signing from name: %s\n", ctx.GetFromName())
 	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {
 		return "", err
@@ -94,6 +100,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 		b.logger.Error().Err(err).Msgf("fail to broadcast tx %s", err.Error())
 		return "", err
 	}
+
 	// Code will be the tendermint ABICode , it start at 1 , so if it is an error , code will not be zero
 	if commit.Code > 0 {
 		if commit.Code == 32 {
@@ -118,11 +125,8 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 		}
 		return commit.TxHash, fmt.Errorf("fail to broadcast to zetachain,code:%d, log:%s", commit.Code, commit.RawLog)
 	}
-	//b.logger.Debug().Msgf("Received a TxHash of %v from the metachain, Code %d, log %s", commit.TxHash, commit.Code, commit.Logs)
 
 	// increment seqNum
-	//seq := b.seqNumber[authzSigner.KeyType]
-	//atomic.AddUint64(&seq, 1)
 	b.seqNumber[authzSigner.KeyType] = b.seqNumber[authzSigner.KeyType] + 1
 
 	return commit.TxHash, nil

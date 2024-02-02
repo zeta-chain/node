@@ -48,8 +48,8 @@ type ChainSigner interface {
 
 // ZetaCoreBridger is the interface to interact with ZetaCore
 type ZetaCoreBridger interface {
-	PostSend(zetaGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
-	PostReceiveConfirmation(
+	PostVoteInbound(gasLimit, retryGasLimit uint64, msg *crosschaintypes.MsgVoteOnObservedInboundTx) (string, string, error)
+	PostVoteOutbound(
 		sendHash string,
 		outTxHash string,
 		outBlockHeight uint64,
@@ -82,6 +82,7 @@ type ZetaCoreBridger interface {
 	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
+	GetOutTxTracker(chain common.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error)
 	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList() ([]string, error)

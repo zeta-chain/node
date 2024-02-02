@@ -57,7 +57,10 @@ require (
 	gorm.io/gorm v1.24.6
 )
 
-require github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+require (
+	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+	github.com/onrik/ethrpc v1.2.0
+)
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect

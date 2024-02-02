@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -23,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/onrik/ethrpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -71,6 +73,7 @@ type EVMChainClient struct {
 	*ChainMetrics
 	chain                      common.Chain
 	evmClient                  EVMRPCClient
+	evmClientAlternate         *ethrpc.EthRPC // a fallback rpc client
 	KlaytnClient               KlaytnRPCClient
 	zetaClient                 ZetaCoreBridger
 	Tss                        TSSSigner
@@ -93,7 +96,9 @@ type EVMChainClient struct {
 	params                     observertypes.ChainParams
 	ts                         *TelemetryServer
 
-	BlockCache *lru.Cache
+	blockCache   *lru.Cache
+	blockCacheV3 *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
+	headerCache  *lru.Cache
 }
 
 var _ ChainClient = (*EVMChainClient)(nil)
@@ -147,10 +152,22 @@ func NewEVMChainClient(
 		return nil, err
 	}
 	ob.evmClient = client
+	ob.evmClientAlternate = ethrpc.NewEthRPC(evmCfg.Endpoint)
 
-	ob.BlockCache, err = lru.New(1000)
+	// create block header and block caches
+	ob.blockCache, err = lru.New(1000)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache")
+		return nil, err
+	}
+	ob.blockCacheV3, err = lru.New(1000)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create block cache v3")
+		return nil, err
+	}
+	ob.headerCache, err = lru.New(1000)
+	if err != nil {
+		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create header cache")
 		return nil, err
 	}
 
@@ -283,6 +300,42 @@ func (ob *EVMChainClient) Start() {
 	go ob.ExternalChainWatcher() // Observes external Chains for incoming trasnactions
 	go ob.WatchGasPrice()        // Observes external Chains for Gas prices and posts to core
 	go ob.observeOutTx()         // Populates receipts and confirmed outbound transactions
+	go ob.ExternalChainRPCStatus()
+}
+
+func (ob *EVMChainClient) ExternalChainRPCStatus() {
+	ob.logger.ChainLogger.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
+	ticker := time.NewTicker(60 * time.Second)
+	for {
+		select {
+		case <-ticker.C:
+			bn, err := ob.evmClient.BlockNumber(context.Background())
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			gasPrice, err := ob.evmClient.SuggestGasPrice(context.Background())
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(bn))
+			if err != nil {
+				ob.logger.ChainLogger.Error().Err(err).Msg("RPC Status Check error: RPC down?")
+				continue
+			}
+			// #nosec G701 always in range
+			blockTime := time.Unix(int64(header.Time), 0).UTC()
+			elapsedSeconds := time.Since(blockTime).Seconds()
+			if elapsedSeconds > 100 {
+				ob.logger.ChainLogger.Warn().Msgf("RPC Status Check warning: RPC stale or chain stuck (check explorer)? Latest block %d timestamp is %.0fs ago", bn, elapsedSeconds)
+				continue
+			}
+			ob.logger.ChainLogger.Info().Msgf("[OK] RPC status: latest block num %d, timestamp %s ( %.0fs ago), suggested gas price %d", header.Number, blockTime.String(), elapsedSeconds, gasPrice.Uint64())
+		case <-ob.stop:
+			return
+		}
+	}
 }
 
 func (ob *EVMChainClient) Stop() {
@@ -318,7 +371,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
 		}
-		zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+		zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 			sendHash,
 			receipt.TxHash.Hex(),
 			receipt.BlockNumber.Uint64(),
@@ -340,7 +393,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 
 	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -361,7 +414,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			return true, true, nil
 		} else if receipt.Status == 0 { // the same as below events flow
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -375,7 +428,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_Gas,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
+				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
 			} else if zetaTxHash != "" {
 				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
@@ -405,7 +458,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						sendhash := vLog.Topics[3].Hex()
 						//var rxAddress string = ethcommon.HexToAddress(vLog.Topics[1].Hex()).Hex()
 						mMint := receivedLog.ZetaValue
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -442,7 +495,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 						}
 						sendhash := vLog.Topics[2].Hex()
 						mMint := revertedLog.RemainingZetaValue
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendhash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -470,7 +523,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 		} else if receipt.Status == 0 {
 			//FIXME: check nonce here by getTransaction RPC
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -510,7 +563,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 					}
 					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetacore...")
-						zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+						zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 							sendHash,
 							vLog.TxHash.Hex(),
 							vLog.BlockNumber,
@@ -537,7 +590,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 			}
 		} else {
 			logger.Info().Msgf("Found (failed tx) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), receipt.TxHash.Hex())
-			zetaTxHash, ballot, err := ob.zetaClient.PostReceiveConfirmation(
+			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
 				receipt.TxHash.Hex(),
 				receipt.BlockNumber.Uint64(),
@@ -551,7 +604,7 @@ func (ob *EVMChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, co
 				common.CoinType_ERC20,
 			)
 			if err != nil {
-				logger.Error().Err(err).Msgf("PostReceiveConfirmation error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
+				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
 			} else if zetaTxHash != "" {
 				logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
 			}
@@ -721,26 +774,6 @@ func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtyp
 		return nil, nil, false
 	}
 
-	// cross-check receipt against the block
-	block, err := ob.GetBlockByNumberCached(receipt.BlockNumber.Uint64())
-	if err != nil {
-		log.Error().Err(err).Msgf("confirmTxByHash: GetBlockByNumberCached error, txHash %s nonce %d block %d",
-			txHash, nonce, receipt.BlockNumber)
-		return nil, nil, false
-	}
-	// #nosec G701 non negative value
-	if receipt.TransactionIndex >= uint(len(block.Transactions())) {
-		log.Error().Msgf("confirmTxByHash: transaction index %d out of range [0, %d), txHash %s nonce %d block %d",
-			receipt.TransactionIndex, len(block.Transactions()), txHash, nonce, receipt.BlockNumber)
-		return nil, nil, false
-	}
-	txAtIndex := block.Transactions()[receipt.TransactionIndex]
-	if txAtIndex.Hash() != transaction.Hash() {
-		log.Error().Msgf("confirmTxByHash: transaction at index %d has different hash %s, txHash %s nonce %d block %d",
-			receipt.TransactionIndex, txAtIndex.Hash().Hex(), txHash, nonce, receipt.BlockNumber)
-		return nil, nil, false
-	}
-
 	// check confirmations
 	if !ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()) {
 		log.Debug().Msgf("confirmTxByHash: txHash %s nonce %d included but not confirmed: receipt block %d, current block %d",
@@ -748,7 +781,47 @@ func (ob *EVMChainClient) checkConfirmedTx(txHash string, nonce uint64) (*ethtyp
 		return nil, nil, false
 	}
 
+	// cross-check tx inclusion against the block
+	// Note: a guard for false BlockNumber in receipt. The blob-carrying tx won't come here
+	err = ob.checkTxInclusion(transaction, receipt.BlockNumber.Uint64(), receipt.TransactionIndex)
+	if err != nil {
+		log.Error().Err(err).Msgf("confirmTxByHash: checkTxInclusion error for txHash %s nonce %d", txHash, nonce)
+		return nil, nil, false
+	}
+
 	return receipt, transaction, true
+}
+
+// checkTxInclusion returns nil only if tx is included in the block at blockNumber and txIndex
+func (ob *EVMChainClient) checkTxInclusion(tx *ethtypes.Transaction, blockNumber uint64, txIndex uint) error {
+	block, blockRPC, fallBack, _, err := ob.GetBlockByNumberCached(blockNumber)
+	if err != nil {
+		return fmt.Errorf("GetBlockByNumberCached error for block %d txHash %s nonce %d: %w", blockNumber, tx.Hash(), tx.Nonce(), err)
+	}
+	if !fallBack {
+		// #nosec G701 non negative value
+		if txIndex >= uint(len(block.Transactions())) {
+			return fmt.Errorf("transaction index %d out of range [0, %d), txHash %s nonce %d block %d",
+				txIndex, len(block.Transactions()), tx.Hash(), tx.Nonce(), blockNumber)
+		}
+		txAtIndex := block.Transactions()[txIndex]
+		if txAtIndex.Hash() != tx.Hash() {
+			return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
+				txIndex, txAtIndex.Hash().Hex(), tx.Hash(), tx.Nonce(), blockNumber)
+		}
+	} else { // fell back on ETH RPC as ethclient failed to parse the block
+		// #nosec G701 non negative value
+		if txIndex >= uint(len(blockRPC.Transactions)) {
+			return fmt.Errorf("transaction index %d out of range [0, %d), txHash %s nonce %d block %d",
+				txIndex, len(block.Transactions()), tx.Hash(), tx.Nonce(), blockNumber)
+		}
+		txAtIndex := blockRPC.Transactions[txIndex]
+		if ethcommon.HexToHash(txAtIndex.Hash) != tx.Hash() {
+			return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
+				txIndex, txAtIndex.Hash, tx.Hash(), tx.Nonce(), blockNumber)
+		}
+	}
+	return nil
 }
 
 // SetLastBlockHeightScanned set last block height scanned (not necessarily caught up with external block; could be slow/paused)
@@ -828,12 +901,12 @@ func (ob *EVMChainClient) postBlockHeader(tip uint64) error {
 		return fmt.Errorf("postBlockHeader: must post block confirmed block header: %d > %d", bn, tip)
 	}
 
-	block, err := ob.GetBlockByNumberCached(bn)
+	header, err := ob.GetBlockHeaderCached(bn)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error getting block: %d", bn)
 		return err
 	}
-	headerRLP, err := rlp.EncodeToBytes(block.Header())
+	headerRLP, err := rlp.EncodeToBytes(header)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error encoding block header: %d", bn)
 		return err
@@ -841,8 +914,8 @@ func (ob *EVMChainClient) postBlockHeader(tip uint64) error {
 
 	_, err = ob.zetaClient.PostAddBlockHeader(
 		ob.chain.ChainId,
-		block.Hash().Bytes(),
-		block.Number().Int64(),
+		header.Hash().Bytes(),
+		header.Number.Int64(),
 		common.NewEthereumHeader(headerRLP),
 	)
 	if err != nil {
@@ -866,6 +939,9 @@ func (ob *EVMChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	blockNumber, err := ob.evmClient.BlockNumber(context.Background())
 	if err != nil {
 		return err
+	}
+	if blockNumber < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTX: block number should not decrease: current %d last %d", blockNumber, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(blockNumber)
 
@@ -980,13 +1056,11 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 		if event.Raw.BlockNumber > beingScanned {
 			beingScanned = event.Raw.BlockNumber
 		}
-		msg, err := ob.GetInboundVoteMsgForZetaSentEvent(event)
-		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
-				"observeZetaSent: error getting inbound vote msg for tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
+		msg := ob.GetInboundVoteMsgForZetaSentEvent(event)
+		if msg == nil {
 			continue
 		}
-		zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendNonEVMGasLimit, &msg)
+		zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundMessagePassingExecutionGasLimit, msg)
 		if err != nil {
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
 				"observeZetaSent: error posting event to zeta core for tx %s at height %d for chain %d",
@@ -994,7 +1068,7 @@ func (ob *EVMChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 			return beingScanned - 1 // we have to re-scan from this block next time
 		} else if zetaHash != "" {
 			ob.logger.ExternalChainWatcher.Info().Msgf(
-				"observeZetaSent: event detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+				"observeZetaSent: event detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 				event.Raw.TxHash.Hex(), event.Raw.BlockNumber, ob.chain.ChainId, zetaHash, ballot)
 		}
 	}
@@ -1053,19 +1127,35 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 	}
 
 	// post to zetacore
+	guard := make(map[string]bool) // guard against multiple events in the same tx
 	beingScanned := uint64(0)
 	for _, event := range events {
 		// remember which block we are scanning (there could be multiple events in the same block)
 		if event.Raw.BlockNumber > beingScanned {
 			beingScanned = event.Raw.BlockNumber
 		}
-		msg, err := ob.GetInboundVoteMsgForDepositedEvent(event)
+		tx, _, err := ob.evmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
-				"observeERC20Deposited: error getting inbound vote msg for tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
+			ob.logger.ExternalChainWatcher.Err(err).Msgf(
+				"observeERC20Deposited: TransactionByHash error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+			return beingScanned - 1 // we have to re-scan from this block next time
+		}
+		sender, err := ob.GetTransactionSender(tx, event.Raw.BlockHash, event.Raw.TxIndex)
+		if err != nil {
+			ob.logger.ExternalChainWatcher.Err(err).Msgf(
+				"observeERC20Deposited: GetTransactionSender error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+			return beingScanned - 1 // we have to re-scan from this block next time
+		}
+		if guard[event.Raw.TxHash.Hex()] {
+			ob.logger.ExternalChainWatcher.Warn().Msgf("more than one remote call event in a single tx %s; skip the rest", event.Raw.TxHash.Hex())
 			continue
 		}
-		zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, &msg)
+
+		msg := ob.GetInboundVoteMsgForDepositedEvent(event, sender)
+		if msg == nil {
+			continue
+		}
+		zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
 		if err != nil {
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
 				"observeERC20Deposited: error posting event to zeta core for tx %s at height %d for chain %d",
@@ -1073,9 +1163,10 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 			return beingScanned - 1 // we have to re-scan from this block next time
 		} else if zetaHash != "" {
 			ob.logger.ExternalChainWatcher.Info().Msgf(
-				"observeERC20Deposited: event detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+				"observeERC20Deposited: event detected in tx %s at height %d for chain %d, PostVoteInbound zeta tx: %s ballot %s",
 				event.Raw.TxHash.Hex(), event.Raw.BlockNumber, ob.chain.ChainId, zetaHash, ballot)
 		}
+		guard[event.Raw.TxHash.Hex()] = true
 	}
 	// successful processed all events in [startBlock, toBlock]
 	return toBlock
@@ -1084,6 +1175,10 @@ func (ob *EVMChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint
 // observeTssRecvd queries the incoming gas asset to TSS address and posts to zetacore
 // returns the last block successfully scanned
 func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+	if !ob.GetChainParams().IsSupported {
+		//ob.logger.ExternalChainWatcher.Warn().Msgf("observeTssRecvd: chain %d is not supported", ob.chain.ChainId)
+		return startBlock - 1 // lastScanned
+	}
 	// check TSS address (after keygen, ob.Tss.pubkey will be updated)
 	tssAddress := ob.Tss.EVMAddress()
 	if tssAddress == (ethcommon.Address{}) {
@@ -1105,58 +1200,39 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 		}
 
 		// TODO: we can track the total number of 'getBlockByNumber' RPC calls made
-		block, err := ob.GetBlockByNumberCached(bn)
+		block, blockRPC, fallBack, skip, err := ob.GetBlockByNumberCached(bn)
 		if err != nil {
+			if skip {
+				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeTssRecvd: skip block %d for chain %d", bn, ob.chain.ChainId)
+				continue
+			}
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeTssRecvd: error getting block %d for chain %d", bn, ob.chain.ChainId)
-			return startBlock - 1 // we have to re-scan from this block next time
+			return bn - 1 // we have to re-scan from this block next time
 		}
-		for _, tx := range block.Transactions() {
-			if tx.To() == nil {
-				continue
-			}
-			if bytes.Equal(tx.Data(), []byte(DonationMessage)) {
-				ob.logger.ExternalChainWatcher.Info().Msgf(
-					"observeTssRecvd: thank you rich folk for your donation!: %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
-				continue
-			}
-
-			if *tx.To() == tssAddress {
-				receipt, err := ob.evmClient.TransactionReceipt(context.Background(), tx.Hash())
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf(
-						"observeTssRecvd: TransactionReceipt error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
-					return startBlock - 1 // we have to re-scan this block next time
-				}
-				if receipt.Status != 1 { // 1: successful, 0: failed
-					ob.logger.ExternalChainWatcher.Info().Msgf("observeTssRecvd: tx %s chain %d failed; don't act", tx.Hash().Hex(), ob.chain.ChainId)
-					continue
-				}
-
-				from, err := ob.evmClient.TransactionSender(context.Background(), tx, block.Hash(), receipt.TransactionIndex)
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf("observeTssRecvd: TransactionSender error for tx %s", tx.Hash().Hex())
-					// trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address
-					signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-					from, err = signer.Sender(tx)
-					if err != nil {
-						ob.logger.ExternalChainWatcher.Err(err).Msgf(
-							"observeTssRecvd: local recovery of sender address failed for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
-						continue
+		if !fallBack {
+			for _, tx := range block.Transactions() {
+				if tx.To() != nil && *tx.To() == tssAddress {
+					if ok := ob.processIntxToTss(tx, bn, block.Hash()); !ok {
+						return bn - 1 // we have to re-scan this block next time
 					}
 				}
-				msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx.Hash(), tx.Value(), receipt, from, tx.Data())
-				if msg == nil {
-					continue
-				}
-				zetaHash, ballot, err := ob.zetaClient.PostSend(PostSendEVMGasLimit, msg)
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
-						"observeTssRecvd: error posting to zeta core for tx %s at height %d for chain %d", tx.Hash().Hex(), bn, ob.chain.ChainId)
-					return startBlock - 1 // we have to re-scan this block next time
-				} else if zetaHash != "" {
-					ob.logger.ExternalChainWatcher.Info().Msgf(
-						"observeTssRecvd: gas asset deposit detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
-						tx.Hash().Hex(), bn, ob.chain.ChainId, zetaHash, ballot)
+			}
+		} else { // fell back on ETH RPC as ethclient failed to parse the block
+			ob.logger.ExternalChainWatcher.Info().Msgf("observeTssRecvd: processing block %d using fallback for chain %d", bn, ob.chain.ChainId)
+			for _, txRPC := range blockRPC.Transactions {
+				if ethcommon.HexToAddress(txRPC.To) == tssAddress {
+					tx, _, err := ob.evmClient.TransactionByHash(context.Background(), ethcommon.HexToHash(txRPC.Hash))
+					if err != nil {
+						if strings.Contains(err.Error(), "transaction type not supported") {
+							ob.logger.ExternalChainWatcher.Err(err).Msgf(
+								"observeTssRecvd: transaction type not supported for tx %s chain %d", txRPC.Hash, ob.chain.ChainId)
+							continue // skip blob-carrying tx to TSS address
+						}
+						return bn - 1 // we have to re-scan this block next time
+					}
+					if ok := ob.processIntxToTss(tx, bn, ethcommon.HexToHash(blockRPC.Hash)); !ok {
+						return bn - 1 // we have to re-scan this block next time
+					}
 				}
 			}
 		}
@@ -1165,8 +1241,50 @@ func (ob *EVMChainClient) observeTssRecvd(startBlock, toBlock uint64, flags obse
 	return toBlock
 }
 
-func (ob *EVMChainClient) WatchGasPrice() {
+// processIntxToTss processes the incoming tx to TSS address and posts to zetacore
+// returns true if the tx is successfully processed, false otherwise
+func (ob *EVMChainClient) processIntxToTss(tx *ethtypes.Transaction, bn uint64, blockHash ethcommon.Hash) bool {
+	receipt, err := ob.evmClient.TransactionReceipt(context.Background(), tx.Hash())
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Err(err).Msgf(
+			"processIntxToTss: TransactionReceipt error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+		return false // we have to re-scan this block next time
+	}
+	if receipt.Status != 1 { // 1: successful, 0: failed
+		ob.logger.ExternalChainWatcher.Info().Msgf("processIntxToTss: tx %s chain %d failed; don't act", tx.Hash().Hex(), ob.chain.ChainId)
+		return true // skip failed tx
+	}
+	if bytes.Equal(tx.Data(), []byte(DonationMessage)) {
+		ob.logger.ExternalChainWatcher.Info().Msgf(
+			"processIntxToTss: thank you rich folk for your donation!: %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+		return true // skip donation tx
+	}
+	sender, err := ob.GetTransactionSender(tx, blockHash, receipt.TransactionIndex)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Err(err).Msgf(
+			"processIntxToTss: GetTransactionSender error for tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+		return false // we have to re-scan this block next time
+	}
 
+	msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx, sender, bn)
+	if msg == nil {
+		return true // should never happen, always non-nil
+	}
+	zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
+	if err != nil {
+		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
+			"processIntxToTss: error posting to zeta core for tx %s at height %d for chain %d", tx.Hash().Hex(), bn, ob.chain.ChainId)
+		return false // we have to re-scan this block next time
+	} else if zetaHash != "" {
+		ob.logger.ExternalChainWatcher.Info().Msgf(
+			"processIntxToTss: gas asset deposit detected in tx %s at height %d for chain %d, PostSend zeta tx: %s ballot %s",
+			tx.Hash().Hex(), bn, ob.chain.ChainId, zetaHash, ballot)
+	}
+	return true
+}
+
+func (ob *EVMChainClient) WatchGasPrice() {
+	ob.logger.WatchGasPrice.Info().Msg("WatchGasPrice starting...")
 	err := ob.PostGasPrice()
 	if err != nil {
 		height, err := ob.zetaClient.GetBlockHeight()
@@ -1182,6 +1300,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
 	}
+	ob.logger.WatchGasPrice.Info().Msgf("WatchGasPrice started with interval %d", ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
@@ -1205,6 +1324,7 @@ func (ob *EVMChainClient) WatchGasPrice() {
 }
 
 func (ob *EVMChainClient) PostGasPrice() error {
+
 	// GAS PRICE
 	gasPrice, err := ob.evmClient.SuggestGasPrice(context.TODO())
 	if err != nil {
@@ -1226,7 +1346,6 @@ func (ob *EVMChainClient) PostGasPrice() error {
 		return err
 	}
 	_ = zetaHash
-	//ob.logger.WatchGasPrice.Debug().Msgf("PostGasPrice zeta tx: %s", zetaHash)
 
 	return nil
 }
@@ -1366,15 +1485,45 @@ func (ob *EVMChainClient) GetTxID(nonce uint64) string {
 	return fmt.Sprintf("%d-%s-%d", ob.chain.ChainId, tssAddr, nonce)
 }
 
-func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Block, error) {
-	if block, ok := ob.BlockCache.Get(blockNumber); ok {
-		return block.(*ethtypes.Block), nil
+func (ob *EVMChainClient) GetBlockHeaderCached(blockNumber uint64) (*ethtypes.Header, error) {
+	if header, ok := ob.headerCache.Get(blockNumber); ok {
+		return header.(*ethtypes.Header), nil
 	}
-	block, err := ob.evmClient.BlockByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
+	header, err := ob.evmClient.HeaderByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
 	if err != nil {
 		return nil, err
 	}
-	ob.BlockCache.Add(blockNumber, block)
-	ob.BlockCache.Add(block.Hash(), block)
-	return block, nil
+	ob.headerCache.Add(blockNumber, header)
+	return header, nil
+}
+
+// GetBlockByNumberCached get block by number from cache
+// returns block, ethrpc.Block, isFallback, isSkip, error
+func (ob *EVMChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Block, *ethrpc.Block, bool, bool, error) {
+	if block, ok := ob.blockCache.Get(blockNumber); ok {
+		return block.(*ethtypes.Block), nil, false, false, nil
+	}
+	if block, ok := ob.blockCacheV3.Get(blockNumber); ok {
+		return nil, block.(*ethrpc.Block), true, false, nil
+	}
+	block, err := ob.evmClient.BlockByNumber(context.Background(), new(big.Int).SetUint64(blockNumber))
+	if err != nil {
+		if strings.Contains(err.Error(), "block header indicates no transactions") {
+			return nil, nil, false, true, err // it's ok skip empty block
+		} else if strings.Contains(err.Error(), "transaction type not supported") {
+			if blockNumber > math.MaxInt32 {
+				return nil, nil, true, false, fmt.Errorf("block number %d is too large", blockNumber)
+			}
+			// #nosec G701 always in range, checked above
+			rpcBlock, err := ob.evmClientAlternate.EthGetBlockByNumber(int(blockNumber), true)
+			if err != nil {
+				return nil, nil, true, false, err // fall back on ethRPC but still fail
+			}
+			ob.blockCacheV3.Add(blockNumber, rpcBlock)
+			return nil, rpcBlock, true, false, nil // fall back on ethRPC without error
+		}
+		return nil, nil, false, false, err
+	}
+	ob.blockCache.Add(blockNumber, block)
+	return block, nil, false, false, nil
 }

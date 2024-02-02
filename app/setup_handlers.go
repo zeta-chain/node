@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-const releaseVersion = "v12.1.0"
+const releaseVersion = "v12.2.0"
 
 func SetupHandlers(app *App) {
 	app.UpgradeKeeper.SetUpgradeHandler(releaseVersion, func(ctx sdk.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
@@ -16,6 +16,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
+
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
 
@@ -33,4 +34,13 @@ func SetupHandlers(app *App) {
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
 		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+}
+
+type VersionMigrator struct {
+	v module.VersionMap
+}
+
+func (v VersionMigrator) TriggerMigration(moduleName string) module.VersionMap {
+	v.v[moduleName] = v.v[moduleName] - 1
+	return v.v
 }
