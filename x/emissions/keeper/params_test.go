@@ -83,7 +83,7 @@ func TestKeeper_GetParams(t *testing.T) {
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
 			},
-			isPanic: "invalid block time",
+			isPanic: "block time cannot be less than or equal to 0",
 		},
 		{
 			name: "bond ratio too high",
