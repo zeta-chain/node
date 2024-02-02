@@ -18,8 +18,21 @@ const (
 	RemainingFeesToStabilityPoolPercent = 95
 )
 
+// CheckAndUpdateCctxGasPriceFunc is a function type for checking and updating the gas price of a cctx
+type CheckAndUpdateCctxGasPriceFunc func(
+	ctx sdk.Context,
+	k Keeper,
+	cctx types.CrossChainTx,
+	flags observertypes.GasPriceIncreaseFlags,
+) (math.Uint, math.Uint, error)
+
 // IterateAndUpdateCctxGasPrice iterates through all cctx and updates the gas price if pending for too long
-func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
+// The function returns the number of cctxs updated and the gas price increase flags used
+func (k Keeper) IterateAndUpdateCctxGasPrice(
+	ctx sdk.Context,
+	chains []*common.Chain,
+	updateFunc CheckAndUpdateCctxGasPriceFunc,
+) (int, observertypes.GasPriceIncreaseFlags, error) {
 	// fetch the gas price increase flags or use default
 	gasPriceIncreaseFlags := observertypes.DefaultGasPriceIncreaseFlags
 	crosschainFlags, found := k.zetaObserverKeeper.GetCrosschainFlags(ctx)
@@ -29,14 +42,13 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 
 	// skip if haven't reached epoch end
 	if ctx.BlockHeight()%gasPriceIncreaseFlags.EpochLength != 0 {
-		return nil
+		return 0, gasPriceIncreaseFlags, nil
 	}
 
-	// iterate all supported chains
-	supportedChains := k.GetObserverKeeper().GetSupportedChains(ctx)
+	cctxCount := 0
 
 IterateChains:
-	for _, chain := range supportedChains {
+	for _, chain := range chains {
 		// support only external evm chains
 		if common.IsEVMChain(chain.ChainId) && !common.IsZetaChain(chain.ChainId) {
 			res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
@@ -54,33 +66,36 @@ IterateChains:
 			// iterate through all pending cctx
 			for _, pendingCctx := range res.CrossChainTx {
 				if pendingCctx != nil {
-					gasPriceIncrease, additionalFees, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx, gasPriceIncreaseFlags)
+					gasPriceIncrease, additionalFees, err := updateFunc(ctx, k, *pendingCctx, gasPriceIncreaseFlags)
 					if err != nil {
 						ctx.Logger().Info("GasStabilityPool: updating gas price for pending cctx failed",
 							"cctxIndex", pendingCctx.Index,
 							"err", err.Error(),
 						)
 						continue IterateChains
-					}
-					if !gasPriceIncrease.IsZero() {
-						ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
-							"cctxIndex", pendingCctx.Index,
-							"gasPriceIncrease", gasPriceIncrease.String(),
-							"additionalFees", additionalFees.String(),
-						)
+					} else {
+						if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
+							ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
+								"cctxIndex", pendingCctx.Index,
+								"gasPriceIncrease", gasPriceIncrease.String(),
+								"additionalFees", additionalFees.String(),
+							)
+							cctxCount++
+						}
 					}
 				}
 			}
 		}
 	}
 
-	return nil
+	return cctxCount, gasPriceIncreaseFlags, nil
 }
 
 // CheckAndUpdateCctxGasPrice checks if the retry interval is reached and updates the gas price if so
 // The function returns the gas price increase and the additional fees paid from the gas stability pool
-func (k Keeper) CheckAndUpdateCctxGasPrice(
+func CheckAndUpdateCctxGasPrice(
 	ctx sdk.Context,
+	k Keeper,
 	cctx types.CrossChainTx,
 	flags observertypes.GasPriceIncreaseFlags,
 ) (math.Uint, math.Uint, error) {
