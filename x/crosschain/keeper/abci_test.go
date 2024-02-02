@@ -63,8 +63,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	// test that the default crosschain flags are used when not set and the epoch length is not reached
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength + 1)
 
-	cctxCount, flags, err := k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
-	require.NoError(t, err)
+	cctxCount, flags := k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 	require.Equal(t, 0, cctxCount)
 	require.Equal(t, *observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags, flags)
 
@@ -80,15 +79,14 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	crosschainFlags.GasPriceIncreaseFlags = &customFlags
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, *crosschainFlags)
 
-	cctxCount, flags, err = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
-	require.NoError(t, err)
+	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 	require.Equal(t, 0, cctxCount)
 	require.Equal(t, customFlags, flags)
 
 	// test that cctx are iterated and updated when the epoch length is reached
 
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength * 2)
-	cctxCount, flags, err = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 
 	// 2 eth + 5 bsc = 7
 	require.Equal(t, 7, cctxCount)

@@ -32,7 +32,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 	ctx sdk.Context,
 	chains []*common.Chain,
 	updateFunc CheckAndUpdateCctxGasPriceFunc,
-) (int, observertypes.GasPriceIncreaseFlags, error) {
+) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default
 	gasPriceIncreaseFlags := observertypes.DefaultGasPriceIncreaseFlags
 	crosschainFlags, found := k.zetaObserverKeeper.GetCrosschainFlags(ctx)
@@ -42,7 +42,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 
 	// skip if haven't reached epoch end
 	if ctx.BlockHeight()%gasPriceIncreaseFlags.EpochLength != 0 {
-		return 0, gasPriceIncreaseFlags, nil
+		return 0, gasPriceIncreaseFlags
 	}
 
 	cctxCount := 0
@@ -87,7 +87,7 @@ IterateChains:
 		}
 	}
 
-	return cctxCount, gasPriceIncreaseFlags, nil
+	return cctxCount, gasPriceIncreaseFlags
 }
 
 // CheckAndUpdateCctxGasPrice checks if the retry interval is reached and updates the gas price if so

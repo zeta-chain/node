@@ -192,7 +192,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	supportedChains := am.keeper.GetObserverKeeper().GetSupportedChains(ctx)
 
 	// iterate and update gas price for cctx that are pending for too long
-	// #nosec G703 - error is logged in the function
+	// error is logged in the function
 	am.keeper.IterateAndUpdateCctxGasPrice(ctx, supportedChains, keeper.CheckAndUpdateCctxGasPrice)
 }
 
