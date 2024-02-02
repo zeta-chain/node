@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
@@ -14,7 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -279,10 +275,10 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce int64) {
 
 	tssPubKey := "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"
-	k.GetObserverKeeper().SetTSS(ctx, observerTypes.TSS{
+	k.GetObserverKeeper().SetTSS(ctx, observertypes.TSS{
 		TssPubkey: tssPubKey,
 	})
-	k.SetPendingNonces(ctx, types.PendingNonces{
+	k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 		Tss:       tssPubKey,
 		NonceLow:  0,
 		NonceHigh: 1,
@@ -296,7 +292,7 @@ func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce in
 		},
 	}
 	k.SetCrossChainTx(ctx, cctx)
-	k.SetNonceToCctx(ctx, types.NonceToCctx{
+	k.GetObserverKeeper().SetNonceToCctx(ctx, observertypes.NonceToCctx{
 		ChainId:   chainId,
 		Nonce:     nonce,
 		CctxIndex: "0x123",

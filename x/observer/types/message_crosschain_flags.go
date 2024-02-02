@@ -68,10 +68,10 @@ func (gpf GasPriceIncreaseFlags) Validate() error {
 	return nil
 }
 
-// GetRequiredGroup returns the assertd group policy for the message to execute the message
+// GetRequiredGroup returns the required group policy for the message to execute the message
 // Group 1 should only be able to stop or disable functiunalities in case of emergency
 // this concerns disabling inbound and outbound txs or block header verification
-// every other action asserts group 2
+// every other action requires group 2
 func (msg *MsgUpdateCrosschainFlags) GetRequiredGroup() Policy_Type {
 	if msg.IsInboundEnabled || msg.IsOutboundEnabled {
 		return Policy_Type_group2

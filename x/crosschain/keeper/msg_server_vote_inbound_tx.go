@@ -32,7 +32,7 @@ import (
 //
 // If the receiver chain is a connected chain, the `FinalizeInbound` method is
 // called to prepare the CCTX to be processed as an outbound transaction. To
-// cover the outbound transaction fee, the assertd amount of tokens submitted
+// cover the outbound transaction fee, the required amount of tokens submitted
 // with the CCTX are swapped using a Uniswap V2 contract instance on ZetaChain
 // for the ZRC20 of the gas token of the receiver chain. The ZRC20 tokens are
 // then burned. The nonce is updated. If everything is successful, the CCTX
