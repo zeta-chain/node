@@ -189,7 +189,7 @@ func (AppModule) ConsensusVersion() uint64 { return 4 }
 // BeginBlock executes all ABCI BeginBlock logic respective to the crosschain module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	// iterate and update gas price for cctx that are pending for too long
-	// NOTE: error is logged and ignored in the function
+	// #nosec G703 - error is logged in the function
 	_ = am.keeper.IterateAndUpdateCctxGasPrice(ctx)
 }
 
