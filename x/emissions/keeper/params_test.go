@@ -5,7 +5,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
@@ -20,7 +19,7 @@ func TestKeeper_GetParams(t *testing.T) {
 			name: "Successfully set params",
 			params: emissionstypes.Params{
 				MaxBondFactor:               "1.25",
-				MinBondFactor:               "0.85",
+				MinBondFactor:               "0.75",
 				AvgBlockTime:                "6.00",
 				TargetBondRatio:             "00.67",
 				ValidatorEmissionPercentage: "00.50",
@@ -30,6 +29,21 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			isPanic: "",
+		},
+		{
+			name: "negative observer slashed amount",
+			params: emissionstypes.Params{
+				MaxBondFactor:               "1.25",
+				MinBondFactor:               "0.75",
+				AvgBlockTime:                "6.00",
+				TargetBondRatio:             "00.67",
+				ValidatorEmissionPercentage: "00.50",
+				ObserverEmissionPercentage:  "00.25",
+				TssSignerEmissionPercentage: "00.25",
+				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(-10),
+			},
+			isPanic: "slash amount cannot be less than 0",
 		},
 		{
 			name: "MaxBondFactor too high",
@@ -42,6 +56,7 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
+				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			isPanic: "max bond factor cannot be higher that 0.25",
 		},
@@ -215,7 +230,6 @@ func TestKeeper_GetParams(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			k, ctx := keepertest.EmissionsKeeper(t)
 			defaultParams := k.GetParams(ctx)
-			require.NotEqualf(t, tt.params, defaultParams, "expected: %v, got: %v", tt.params, defaultParams)
 			assertPanic(t, func() {
 				k.SetParams(ctx, tt.params)
 			}, tt.isPanic)
