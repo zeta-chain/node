@@ -111,9 +111,12 @@ func validateAvgBlockTime(i interface{}) error {
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
-	_, err := strconv.ParseFloat(v, 64)
+	blocktime, err := strconv.ParseFloat(v, 64)
 	if err != nil {
 		return fmt.Errorf("invalid block time: %T", i)
+	}
+	if blocktime <= 0 {
+		return fmt.Errorf("block time cannot be less than or equal to 0")
 	}
 	return nil
 }

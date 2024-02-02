@@ -72,6 +72,20 @@ func TestKeeper_GetParams(t *testing.T) {
 			isPanic: "invalid block time",
 		},
 		{
+			name: "invalid block time less than 0",
+			params: emissionstypes.Params{
+				MaxBondFactor:               "1.25",
+				MinBondFactor:               "0.75",
+				AvgBlockTime:                "-2",
+				TargetBondRatio:             "00.67",
+				ValidatorEmissionPercentage: "00.50",
+				ObserverEmissionPercentage:  "00.25",
+				TssSignerEmissionPercentage: "00.25",
+				DurationFactorConstant:      "0.001877876953694702",
+			},
+			isPanic: "invalid block time",
+		},
+		{
 			name: "bond ratio too high",
 			params: emissionstypes.Params{
 				MaxBondFactor:               "1.25",
