@@ -3,7 +3,7 @@ package common
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChain_EncodeAddress(t *testing.T) {
@@ -41,18 +41,18 @@ func TestChain_EncodeAddress(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s, err := tc.chain.EncodeAddress(tc.b)
 			if tc.wantErr {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			}
-			require.Equal(t, tc.want, s)
+			assert.Equal(t, tc.want, s)
 		})
 	}
 }
 
 func TestChain_InChainList(t *testing.T) {
-	require.True(t, ZetaChainMainnet().InChainList(ZetaChainList()))
-	require.True(t, ZetaMocknetChain().InChainList(ZetaChainList()))
-	require.True(t, ZetaPrivnetChain().InChainList(ZetaChainList()))
-	require.True(t, ZetaTestnetChain().InChainList(ZetaChainList()))
-	require.False(t, EthChain().InChainList(ZetaChainList()))
+	assert.True(t, ZetaChainMainnet().InChainList(ZetaChainList()))
+	assert.True(t, ZetaMocknetChain().InChainList(ZetaChainList()))
+	assert.True(t, ZetaPrivnetChain().InChainList(ZetaChainList()))
+	assert.True(t, ZetaTestnetChain().InChainList(ZetaChainList()))
+	assert.False(t, EthChain().InChainList(ZetaChainList()))
 }

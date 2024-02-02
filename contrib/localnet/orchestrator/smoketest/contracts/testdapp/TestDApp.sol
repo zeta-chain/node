@@ -85,7 +85,7 @@ contract TestDApp is  ZetaReceiver {
 
     function onZetaMessage(ZetaInterfaces.ZetaMessage calldata zetaMessage) external override {
         (, bool doRevert) = abi.decode(zetaMessage.message, (bytes32, bool));
-        require(doRevert == false,  "message says revert");
+        assert(doRevert == false,  "message says revert");
 
         emit HelloWorldEvent();
     }
@@ -109,7 +109,7 @@ contract TestDApp is  ZetaReceiver {
 
     function onZetaRevert(ZetaInterfaces.ZetaRevert calldata zetaRevert) external override {
         (, bool doRevert) = abi.decode(zetaRevert.message, (bytes32, bool));
-        require(doRevert == true, "the 1st outbound was not caused by revert flag in message");
+        assert(doRevert == true, "the 1st outbound was not caused by revert flag in message");
         emit RevertedHelloWorldEvent();
     }
 }

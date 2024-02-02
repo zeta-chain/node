@@ -12,7 +12,7 @@ import (
 
 	btcsecp256k1 "github.com/btcsuite/btcd/btcec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	keystone "github.com/zeta-chain/keystone/keys"
 )
 
@@ -26,20 +26,20 @@ func TestSignSecp256k1(t *testing.T) {
 
 	//Generate random label for key
 	label, err := randomBytes(16)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	//Generate key
 	key, err := GenerateKey(string(label), keystone.KEYGEN_SECP256K1, config)
-	require.NoError(t, err)
-	require.NotNil(t, key)
+	assert.NoError(t, err)
+	assert.NotNil(t, key)
 
 	//Create sample message
 	msg := []byte("Signing this plaintext tells me what exactly?")
 
 	signature, err := Sign(config, msg, string(label))
-	require.NoError(t, err)
-	require.NotNil(t, signature)
-	require.Equal(t, key.KeyType(), keystone.KEYGEN_SECP256K1)
+	assert.NoError(t, err)
+	assert.NotNil(t, signature)
+	assert.Equal(t, key.KeyType(), keystone.KEYGEN_SECP256K1)
 
 	pubkey := key.PubKey()
 	secp256k1key := pubkey.(*secp256k1.PubKey)
@@ -57,7 +57,7 @@ func TestSignSecp256k1(t *testing.T) {
 	log.Printf("Address from HSM: %v, PubKey from HSM: %v", address, pubKey)
 
 	err = key.Delete()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 }
 
 func randomBytes(n int) ([]byte, error) {
