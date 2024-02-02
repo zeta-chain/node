@@ -75,11 +75,18 @@ IterateChains:
 						continue IterateChains
 					}
 					if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
-						ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
-							"cctxIndex", pendingCctx.Index,
-							"gasPriceIncrease", gasPriceIncrease.String(),
-							"additionalFees", additionalFees.String(),
-						)
+						// Emit typed event for gas price increase
+						if err := ctx.EventManager().EmitTypedEvent(
+							&types.EventCCTXGasPriceIncreased{
+								CctxIndex:        pendingCctx.Index,
+								GasPriceIncrease: gasPriceIncrease.String(),
+								AdditionalFees:   additionalFees.String(),
+							}); err != nil {
+							ctx.Logger().Error(
+								"GasStabilityPool: failed to emit EventCCTXGasPriceIncreased",
+								"err", err.Error(),
+							)
+						}
 						cctxCount++
 					}
 				}
