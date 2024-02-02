@@ -45,6 +45,7 @@ const (
 	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
 	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
 	ParamDurationFactorConstant      = "DurationFactorConstant"
+	ParamObserverSlashAmount         = "ObserverSlashAmount"
 )
 
 var (
