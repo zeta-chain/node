@@ -73,15 +73,14 @@ IterateChains:
 							"err", err.Error(),
 						)
 						continue IterateChains
-					} else {
-						if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
-							ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
-								"cctxIndex", pendingCctx.Index,
-								"gasPriceIncrease", gasPriceIncrease.String(),
-								"additionalFees", additionalFees.String(),
-							)
-							cctxCount++
-						}
+					}
+					if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
+						ctx.Logger().Info("GasStabilityPool: updated gas price for pending cctx",
+							"cctxIndex", pendingCctx.Index,
+							"gasPriceIncrease", gasPriceIncrease.String(),
+							"additionalFees", additionalFees.String(),
+						)
+						cctxCount++
 					}
 				}
 			}
