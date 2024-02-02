@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixes
+* [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
+
 ## Version: v12.1.0
 
 ### Tests
@@ -31,6 +34,13 @@
 
 * [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
 * [1592](https://github.com/zeta-chain/node/issues/1592) - check inbound tracker tx hash against Tss address and some refactor on inTx observation
+
+### Refactoring
+
+* [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+
+### Refactoring
+* [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
 
 ## Version: v12.0.0
 
