@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -268,8 +268,8 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 
 				// ensure median gas price is set
 				medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
-				require.True(t, isFound)
-				require.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
+				assert.True(t, isFound)
+				assert.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
 			}
 
 			// set block timestamp
@@ -285,23 +285,23 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx, tc.flags)
 
 			if tc.isError {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			}
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			// check values
-			require.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
-			require.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
+			assert.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
+			assert.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
 
 			// check cctx
 			if !tc.expectedGasPriceIncrease.IsZero() {
 				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
-				require.True(t, found)
+				assert.True(t, found)
 				newGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
-				require.NoError(t, err)
-				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
-				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
+				assert.NoError(t, err)
+				assert.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
+				assert.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
 		})
 	}

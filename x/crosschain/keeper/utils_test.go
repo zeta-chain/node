@@ -12,7 +12,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/ethereum/go-ethereum/common"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	zetacommon "github.com/zeta-chain/zetacore/common"
@@ -40,7 +40,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	case 1:
 		return zetacommon.GoerliChain().ChainId
 	default:
-		require.Fail(t, "invalid index")
+		assert.Fail(t, "invalid index")
 	}
 	return 0
 }
@@ -48,10 +48,10 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 // assert that a contract has been deployed by checking stored code is non-empty.
 func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
-	require.NotNil(t, acc)
+	assert.NotNil(t, acc)
 
 	code := k.GetCode(ctx, common.BytesToHash(acc.CodeHash))
-	require.NotEmpty(t, code)
+	assert.NotEmpty(t, code)
 }
 
 // deploySystemContracts deploys the system contracts and returns their addresses.
@@ -64,28 +64,28 @@ func deploySystemContracts(
 	var err error
 
 	wzeta, err = k.DeployWZETA(ctx)
-	require.NoError(t, err)
-	require.NotEmpty(t, wzeta)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, wzeta)
 	assertContractDeployment(t, evmk, ctx, wzeta)
 
 	uniswapV2Factory, err = k.DeployUniswapV2Factory(ctx)
-	require.NoError(t, err)
-	require.NotEmpty(t, uniswapV2Factory)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, uniswapV2Factory)
 	assertContractDeployment(t, evmk, ctx, uniswapV2Factory)
 
 	uniswapV2Router, err = k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
-	require.NoError(t, err)
-	require.NotEmpty(t, uniswapV2Router)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, uniswapV2Router)
 	assertContractDeployment(t, evmk, ctx, uniswapV2Router)
 
 	connector, err = k.DeployConnectorZEVM(ctx, wzeta)
-	require.NoError(t, err)
-	require.NotEmpty(t, connector)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, connector)
 	assertContractDeployment(t, evmk, ctx, connector)
 
 	systemContract, err = k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
-	require.NoError(t, err)
-	require.NotEmpty(t, systemContract)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, systemContract)
 	assertContractDeployment(t, evmk, ctx, systemContract)
 
 	return
@@ -109,7 +109,7 @@ func setupGasCoin(
 		8,
 		nil,
 	)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
 	return addr
 }
@@ -135,7 +135,7 @@ func deployZRC20(
 		assetAddress,
 		big.NewInt(21_000),
 	)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
 	return addr
 }
@@ -149,22 +149,22 @@ func setupZRC20Pool(
 	zrc20Addr common.Address,
 ) {
 	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// enough for the small numbers used in test
 	liquidityAmount := big.NewInt(1e17)
 
 	// mint some zrc20 and zeta
 	_, err = k.DepositZRC20(ctx, zrc20Addr, types.ModuleAddressEVM, liquidityAmount)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	err = bankKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
 		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(liquidityAmount))),
 	)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// approve the router to spend the zeta
 	err = k.CallZRC20Approve(
@@ -175,7 +175,7 @@ func setupZRC20Pool(
 		liquidityAmount,
 		false,
 	)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	// add the liquidity
 	//function addLiquidityETH(
@@ -203,7 +203,7 @@ func setupZRC20Pool(
 		types.ModuleAddressEVM,
 		liquidityAmount,
 	)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 }
 
 // setAdminPolicies sets the admin policies for the observer module with group 1 and 2

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -49,10 +49,10 @@ func TestNewMsgMigrateTssFunds(t *testing.T) {
 			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}

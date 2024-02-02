@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -51,9 +50,9 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := k.ChainNonces(wctx, tc.request)
 			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
+				assert.ErrorIs(t, err, tc.err)
 			} else {
-				require.Equal(t, tc.response, response)
+				assert.Equal(t, tc.response, response)
 			}
 		})
 	}
@@ -81,7 +80,7 @@ func TestChainNoncesQueryPaginated(t *testing.T) {
 		step := 2
 		for i := 0; i < len(chainNonces); i += step {
 			resp, err := k.ChainNoncesAll(wctx, request(nil, uint64(i), uint64(step), false))
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			for j := i; j < len(chainNonces) && j < i+step; j++ {
 				assert.Equal(t, chainNonces[j], resp.ChainNonces[j-i])
 			}
@@ -92,7 +91,7 @@ func TestChainNoncesQueryPaginated(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(chainNonces); i += step {
 			resp, err := k.ChainNoncesAll(wctx, request(next, 0, uint64(step), false))
-			require.NoError(t, err)
+			assert.NoError(t, err)
 			for j := i; j < len(chainNonces) && j < i+step; j++ {
 				assert.Equal(t, chainNonces[j], resp.ChainNonces[j-i])
 			}
@@ -101,11 +100,11 @@ func TestChainNoncesQueryPaginated(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		resp, err := k.ChainNoncesAll(wctx, request(nil, 0, 0, true))
-		require.NoError(t, err)
-		require.Equal(t, len(chainNonces), int(resp.Pagination.Total))
+		assert.NoError(t, err)
+		assert.Equal(t, len(chainNonces), int(resp.Pagination.Total))
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
 		_, err := k.ChainNoncesAll(wctx, nil)
-		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+		assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

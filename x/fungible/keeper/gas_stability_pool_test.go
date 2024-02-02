@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -15,21 +15,21 @@ func TestKeeper_EnsureGasStabilityPoolAccountCreated(t *testing.T) {
 
 		// account doesn't exist
 		acc := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
-		require.Nil(t, acc)
+		assert.Nil(t, acc)
 
 		// create the account
 		k.EnsureGasStabilityPoolAccountCreated(ctx)
 		acc = k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
-		require.NotNil(t, acc)
-		require.Equal(t, types.GasStabilityPoolAddress(), acc.GetAddress())
+		assert.NotNil(t, acc)
+		assert.Equal(t, types.GasStabilityPoolAddress(), acc.GetAddress())
 
 		// can call the method again without side effects
 		k.EnsureGasStabilityPoolAccountCreated(ctx)
 		acc2 := k.GetAuthKeeper().GetAccount(ctx, types.GasStabilityPoolAddress())
-		require.NotNil(t, acc2)
-		require.True(t, acc.GetAddress().Equals(acc2.GetAddress()))
-		require.Equal(t, acc.GetAccountNumber(), acc2.GetAccountNumber())
-		require.Equal(t, acc.GetSequence(), acc2.GetSequence())
+		assert.NotNil(t, acc2)
+		assert.True(t, acc.GetAddress().Equals(acc2.GetAddress()))
+		assert.Equal(t, acc.GetAccountNumber(), acc2.GetAccountNumber())
+		assert.Equal(t, acc.GetSequence(), acc2.GetSequence())
 	})
 }
 
@@ -46,25 +46,25 @@ func TestKeeper_FundGasStabilityPool(t *testing.T) {
 
 		// balance is initially 0
 		balance, err := k.GetGasStabilityPoolBalance(ctx, chainID)
-		require.NoError(t, err)
-		require.Equal(t, int64(0), balance.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(0), balance.Int64())
 
 		// fund the gas stability pool
 		err = k.FundGasStabilityPool(ctx, chainID, big.NewInt(100))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// balance is now 100
 		balance, err = k.GetGasStabilityPoolBalance(ctx, chainID)
-		require.NoError(t, err)
-		require.Equal(t, int64(100), balance.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(100), balance.Int64())
 
 		// withdraw from the gas stability pool
 		err = k.WithdrawFromGasStabilityPool(ctx, chainID, big.NewInt(50))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// balance is now 50
 		balance, err = k.GetGasStabilityPoolBalance(ctx, chainID)
-		require.NoError(t, err)
-		require.Equal(t, int64(50), balance.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(50), balance.Int64())
 	})
 }

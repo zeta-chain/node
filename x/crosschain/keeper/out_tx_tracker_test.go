@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -33,8 +33,8 @@ func TestOutTxTrackerGet(t *testing.T) {
 			item.ChainId,
 			item.Nonce,
 		)
-		require.True(t, found)
-		require.Equal(t,
+		assert.True(t, found)
+		assert.Equal(t,
 			nullify.Fill(&item),
 			nullify.Fill(&rst),
 		)
@@ -52,14 +52,14 @@ func TestOutTxTrackerRemove(t *testing.T) {
 			item.ChainId,
 			item.Nonce,
 		)
-		require.False(t, found)
+		assert.False(t, found)
 	}
 }
 
 func TestOutTxTrackerGetAll(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNOutTxTracker(keeper, ctx, 10)
-	require.ElementsMatch(t,
+	assert.ElementsMatch(t,
 		nullify.Fill(items),
 		nullify.Fill(keeper.GetAllOutTxTracker(ctx)),
 	)

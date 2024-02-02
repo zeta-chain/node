@@ -3,9 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/stretchr/testify/assert"
+
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -134,16 +133,16 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
 		k.SetCrossChainTx(ctx, *cctx)
 
-		require.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), 1)
+		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), 1)
 		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
 			Creator:   admin,
 			TssPubkey: tssNew.TssPubkey,
 		})
-		require.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
-		require.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
+		assert.ErrorContains(t, err, "cannot update tss address not enough migrations have been created and completed")
+		assert.ErrorIs(t, err, crosschaintypes.ErrUnableToUpdateTss)
 		tss, found := k.GetObserverKeeper().GetTSS(ctx)
-		require.True(t, found)
-		require.Equal(t, tssOld, tss)
+		assert.True(t, found)
+		assert.Equal(t, tssOld, tss)
 		migrators := k.GetObserverKeeper().GetAllTssFundMigrators(ctx)
 		assert.Equal(t, 1, len(migrators))
 	})

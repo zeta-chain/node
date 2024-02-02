@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -19,20 +19,20 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 			AbortedZetaAmount: originalAmount,
 		})
 		val, found := k.GetZetaAccounting(ctx)
-		require.True(t, found)
-		require.Equal(t, originalAmount, val.AbortedZetaAmount)
+		assert.True(t, found)
+		assert.Equal(t, originalAmount, val.AbortedZetaAmount)
 		addAmount := sdkmath.NewUint(rand.Uint64())
 		k.AddZetaAbortedAmount(ctx, addAmount)
 		val, found = k.GetZetaAccounting(ctx)
-		require.True(t, found)
-		require.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
+		assert.True(t, found)
+		assert.Equal(t, originalAmount.Add(addAmount), val.AbortedZetaAmount)
 	})
 
 	t.Run("cant find aborted amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		val, found := k.GetZetaAccounting(ctx)
-		require.False(t, found)
-		require.Equal(t, types.ZetaAccounting{}, val)
+		assert.False(t, found)
+		assert.Equal(t, types.ZetaAccounting{}, val)
 	})
 
 	t.Run("add very high zeta amount", func(t *testing.T) {
@@ -42,8 +42,8 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 			AbortedZetaAmount: highAmount,
 		})
 		val, found := k.GetZetaAccounting(ctx)
-		require.True(t, found)
-		require.Equal(t, highAmount, val.AbortedZetaAmount)
+		assert.True(t, found)
+		assert.Equal(t, highAmount, val.AbortedZetaAmount)
 	})
 
 }

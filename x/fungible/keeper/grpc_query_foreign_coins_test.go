@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -54,10 +54,10 @@ func TestForeignCoinsQuerySingle(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.ForeignCoins(wctx, tc.request)
 			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
+				assert.ErrorIs(t, err, tc.err)
 			} else {
-				require.NoError(t, err)
-				require.Equal(t,
+				assert.NoError(t, err)
+				assert.Equal(t,
 					nullify.Fill(tc.response),
 					nullify.Fill(response),
 				)
@@ -85,9 +85,9 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.ForeignCoinsAll(wctx, request(nil, uint64(i), uint64(step), false))
-			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.ForeignCoins), step)
-			require.Subset(t,
+			assert.NoError(t, err)
+			assert.LessOrEqual(t, len(resp.ForeignCoins), step)
+			assert.Subset(t,
 				nullify.Fill(msgs),
 				nullify.Fill(resp.ForeignCoins),
 			)
@@ -98,9 +98,9 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.ForeignCoinsAll(wctx, request(next, 0, uint64(step), false))
-			require.NoError(t, err)
-			require.LessOrEqual(t, len(resp.ForeignCoins), step)
-			require.Subset(t,
+			assert.NoError(t, err)
+			assert.LessOrEqual(t, len(resp.ForeignCoins), step)
+			assert.Subset(t,
 				nullify.Fill(msgs),
 				nullify.Fill(resp.ForeignCoins),
 			)
@@ -109,15 +109,15 @@ func TestForeignCoinsQueryPaginated(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		resp, err := keeper.ForeignCoinsAll(wctx, request(nil, 0, 0, true))
-		require.NoError(t, err)
-		require.Equal(t, len(msgs), int(resp.Pagination.Total))
-		require.ElementsMatch(t,
+		assert.NoError(t, err)
+		assert.Equal(t, len(msgs), int(resp.Pagination.Total))
+		assert.ElementsMatch(t,
 			nullify.Fill(msgs),
 			nullify.Fill(resp.ForeignCoins),
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
 		_, err := keeper.ForeignCoinsAll(wctx, nil)
-		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+		assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

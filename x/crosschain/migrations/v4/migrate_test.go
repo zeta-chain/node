@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -148,13 +147,13 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", common.GoerliChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", common.EthChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", common.MumbaiChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x111", common.BtcMainnetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x222", common.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x333", common.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x444", common.BtcRegtestChain().ChainId, 0))
+		assert.False(t, k.IsFinalizedInbound(ctx, "0xaaa", common.GoerliChain().ChainId, 0))
+		assert.False(t, k.IsFinalizedInbound(ctx, "0xbbb", common.EthChain().ChainId, 0))
+		assert.False(t, k.IsFinalizedInbound(ctx, "0xccc", common.MumbaiChain().ChainId, 0))
+		assert.True(t, k.IsFinalizedInbound(ctx, "0x111", common.BtcMainnetChain().ChainId, 0))
+		assert.True(t, k.IsFinalizedInbound(ctx, "0x222", common.BtcTestNetChain().ChainId, 0))
+		assert.True(t, k.IsFinalizedInbound(ctx, "0x333", common.BtcTestNetChain().ChainId, 0))
+		assert.True(t, k.IsFinalizedInbound(ctx, "0x444", common.BtcRegtestChain().ChainId, 0))
 
 	})
 }

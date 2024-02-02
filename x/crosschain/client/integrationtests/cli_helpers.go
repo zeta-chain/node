@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcli "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
@@ -44,7 +44,7 @@ func WriteToNewTempFile(t testing.TB, s string) *os.File {
 	fp := TempFile(t)
 	_, err := fp.WriteString(s)
 
-	require.Nil(t, err)
+	assert.Nil(t, err)
 
 	return fp
 }
@@ -54,7 +54,7 @@ func TempFile(t testing.TB) *os.File {
 	t.Helper()
 
 	fp, err := os.CreateTemp(GetTempDir(t), "")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	return fp
 }
@@ -67,10 +67,10 @@ func GetTempDir(t testing.TB) string {
 	// https://github.com/cosmos/cosmos-sdk/pull/10341 for
 	// this change's rationale.
 	tempdir, err := os.MkdirTemp("", "")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	t.Cleanup(func() {
 		err := os.RemoveAll(tempdir)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 	})
 	return tempdir
 }
@@ -86,11 +86,11 @@ func BuildSignedDeploySystemContract(t testing.TB, val *network.Validator, denom
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 4000000),
 	}
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, txArgs)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -112,11 +112,11 @@ func BuildSignedUpdateSystemContract(
 	}
 	args := append([]string{systemContractAddress}, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -145,11 +145,11 @@ func BuildSignedDeployETHZRC20(
 		"1000000",
 	}, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -171,11 +171,11 @@ func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string,
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -196,11 +196,11 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -239,12 +239,12 @@ func BuildSignedOutboundVote(
 	}
 	args := append(outboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 
@@ -274,11 +274,11 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	unsignerdTx := WriteToNewTempFile(t, out.String())
 	res, err := TxSignExec(val.ClientCtx, val.Address, unsignerdTx.Name(),
 		"--offline", "--account-number", strconv.FormatUint(account.GetAccountNumber(), 10), "--sequence", strconv.FormatUint(account.GetSequence(), 10))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return WriteToNewTempFile(t, res.String())
 }
 

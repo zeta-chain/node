@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -39,39 +39,39 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			Creator: admin,
 			ChainId: chain2,
 		})
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// check list has two chain params
 		chainParamsList, found := k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Len(t, chainParamsList.ChainParams, 2)
-		require.Equal(t, chain1, chainParamsList.ChainParams[0].ChainId)
-		require.Equal(t, chain3, chainParamsList.ChainParams[1].ChainId)
+		assert.True(t, found)
+		assert.Len(t, chainParamsList.ChainParams, 2)
+		assert.Equal(t, chain1, chainParamsList.ChainParams[0].ChainId)
+		assert.Equal(t, chain3, chainParamsList.ChainParams[1].ChainId)
 
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: chain1,
 		})
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// check list has one chain params
 		chainParamsList, found = k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Len(t, chainParamsList.ChainParams, 1)
-		require.Equal(t, chain3, chainParamsList.ChainParams[0].ChainId)
+		assert.True(t, found)
+		assert.Len(t, chainParamsList.ChainParams, 1)
+		assert.Equal(t, chain3, chainParamsList.ChainParams[0].ChainId)
 
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: chain3,
 		})
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// check list has no chain params
 		chainParamsList, found = k.GetChainParamsList(ctx)
-		require.True(t, found)
-		require.Len(t, chainParamsList.ChainParams, 0)
+		assert.True(t, found)
+		assert.Len(t, chainParamsList.ChainParams, 0)
 	})
 
 	t.Run("cannot remove chain params if not authorized", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			Creator:     sample.AccAddress(),
 			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 
 		// group 1 should not be able to update core params
 		admin := sample.AccAddress()
@@ -92,7 +92,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			Creator:     sample.AccAddress(),
 			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 
 	})
 
@@ -106,13 +106,13 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		// not found if no chain params
 		_, found := k.GetChainParamsList(ctx)
-		require.False(t, found)
+		assert.False(t, found)
 
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
 			ChainId: common.ExternalChainList()[0].ChainId,
 		})
-		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
+		assert.ErrorIs(t, err, types.ErrChainParamsNotFound)
 
 		// add chain params
 		k.SetChainParamsList(ctx, types.ChainParamsList{
@@ -128,6 +128,6 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			Creator: admin,
 			ChainId: common.ExternalChainList()[3].ChainId,
 		})
-		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
+		assert.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})
 }

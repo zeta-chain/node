@@ -8,7 +8,7 @@ package cli_test
 //
 //	"github.com/cosmos/cosmos-sdk/client/flags"
 //	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-//	"github.com/stretchr/testify/require"
+//	"github.com/stretchr/testify/assert"
 //	tmcli "github.com/tendermint/tendermint/libs/cli"
 //	"google.golang.org/grpc/codes"
 //	"google.golang.org/grpc/status"
@@ -26,7 +26,7 @@ package cli_test
 //	t.Helper()
 //	cfg := network.DefaultConfig()
 //	state := types.GenesisState{}
-//	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+//	assert.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 //
 //	for i := 0; i < n; i++ {
 //		foreignCoins := types.ForeignCoins{
@@ -36,7 +36,7 @@ package cli_test
 //		state.ForeignCoinsList = append(state.ForeignCoinsList, foreignCoins)
 //	}
 //	buf, err := cfg.Codec.MarshalJSON(&state)
-//	require.NoError(t, err)
+//	assert.NoError(t, err)
 //	cfg.GenesisState[types.ModuleName] = buf
 //	return network.New(t, cfg), state.ForeignCoinsList
 //}
@@ -79,14 +79,14 @@ package cli_test
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowForeignCoins(), args)
 //			if tc.err != nil {
 //				stat, ok := status.FromError(tc.err)
-//				require.True(t, ok)
-//				require.ErrorIs(t, stat.Err(), tc.err)
+//				assert.True(t, ok)
+//				assert.ErrorIs(t, stat.Err(), tc.err)
 //			} else {
-//				require.NoError(t, err)
+//				assert.NoError(t, err)
 //				var resp types.QueryGetForeignCoinsResponse
-//				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//				require.NotNil(t, resp.ForeignCoins)
-//				require.Equal(t,
+//				assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//				assert.NotNil(t, resp.ForeignCoins)
+//				assert.Equal(t,
 //					nullify.Fill(&tc.obj),
 //					nullify.Fill(&resp.ForeignCoins),
 //				)
@@ -119,11 +119,11 @@ package cli_test
 //		for i := 0; i < len(objs); i += step {
 //			args := request(nil, uint64(i), uint64(step), false)
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListForeignCoins(), args)
-//			require.NoError(t, err)
+//			assert.NoError(t, err)
 //			var resp types.QueryAllForeignCoinsResponse
-//			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//			require.LessOrEqual(t, len(resp.ForeignCoins), step)
-//			require.Subset(t,
+//			assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//			assert.LessOrEqual(t, len(resp.ForeignCoins), step)
+//			assert.Subset(t,
 //				nullify.Fill(objs),
 //				nullify.Fill(resp.ForeignCoins),
 //			)
@@ -135,11 +135,11 @@ package cli_test
 //		for i := 0; i < len(objs); i += step {
 //			args := request(next, 0, uint64(step), false)
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListForeignCoins(), args)
-//			require.NoError(t, err)
+//			assert.NoError(t, err)
 //			var resp types.QueryAllForeignCoinsResponse
-//			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//			require.LessOrEqual(t, len(resp.ForeignCoins), step)
-//			require.Subset(t,
+//			assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//			assert.LessOrEqual(t, len(resp.ForeignCoins), step)
+//			assert.Subset(t,
 //				nullify.Fill(objs),
 //				nullify.Fill(resp.ForeignCoins),
 //			)
@@ -149,12 +149,12 @@ package cli_test
 //	t.Run("Total", func(t *testing.T) {
 //		args := request(nil, 0, uint64(len(objs)), true)
 //		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListForeignCoins(), args)
-//		require.NoError(t, err)
+//		assert.NoError(t, err)
 //		var resp types.QueryAllForeignCoinsResponse
-//		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//		require.NoError(t, err)
-//		require.Equal(t, len(objs), int(resp.Pagination.Total))
-//		require.ElementsMatch(t,
+//		assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//		assert.NoError(t, err)
+//		assert.Equal(t, len(objs), int(resp.Pagination.Total))
+//		assert.ElementsMatch(t,
 //			nullify.Fill(objs),
 //			nullify.Fill(resp.ForeignCoins),
 //		)

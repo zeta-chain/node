@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -40,12 +40,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.NoError(t, err)
-		require.False(t, contractCall)
+		assert.NoError(t, err)
+		assert.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
-		require.NoError(t, err)
-		require.Equal(t, big.NewInt(42), balance)
+		assert.NoError(t, err)
+		assert.Equal(t, big.NewInt(42), balance)
 	})
 
 	t.Run("can deposit non-gas coin for transfers", func(t *testing.T) {
@@ -72,12 +72,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_ERC20,
 			assetAddress,
 		)
-		require.NoError(t, err)
-		require.False(t, contractCall)
+		assert.NoError(t, err)
+		assert.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
-		require.NoError(t, err)
-		require.Equal(t, big.NewInt(42), balance)
+		assert.NoError(t, err)
+		assert.Equal(t, big.NewInt(42), balance)
 	})
 
 	t.Run("should fail if trying to call a contract with data to a EOC", func(t *testing.T) {
@@ -104,7 +104,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_ERC20,
 			assetAddress,
 		)
-		require.ErrorIs(t, err, types.ErrCallNonContract)
+		assert.ErrorIs(t, err, types.ErrCallNonContract)
 	})
 
 	t.Run("can deposit coin for transfers with liquidity cap not reached", func(t *testing.T) {
@@ -121,17 +121,17 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// there is an initial total supply minted during gas pool setup
 		initialTotalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// set a liquidity cap
 		coin, found := k.GetForeignCoins(ctx, zrc20.String())
-		require.True(t, found)
+		assert.True(t, found)
 		coin.LiquidityCap = math.NewUint(initialTotalSupply.Uint64() + 1000)
 		k.SetForeignCoins(ctx, coin)
 
 		// increase total supply
 		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// deposit
 		to := sample.EthAddress()
@@ -145,12 +145,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.NoError(t, err)
-		require.False(t, contractCall)
+		assert.NoError(t, err)
+		assert.False(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, to)
-		require.NoError(t, err)
-		require.Equal(t, big.NewInt(500), balance)
+		assert.NoError(t, err)
+		assert.Equal(t, big.NewInt(500), balance)
 	})
 
 	t.Run("should fail if coin paused", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// pause the coin
 		coin, found := k.GetForeignCoins(ctx, zrc20.String())
-		require.True(t, found)
+		assert.True(t, found)
 		coin.Paused = true
 		k.SetForeignCoins(ctx, coin)
 
@@ -182,7 +182,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.ErrorIs(t, err, types.ErrPausedZRC20)
+		assert.ErrorIs(t, err, types.ErrPausedZRC20)
 	})
 
 	t.Run("should fail if liquidity cap reached", func(t *testing.T) {
@@ -199,17 +199,17 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 
 		// there is an initial total supply minted during gas pool setup
 		initialTotalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// set a liquidity cap
 		coin, found := k.GetForeignCoins(ctx, zrc20.String())
-		require.True(t, found)
+		assert.True(t, found)
 		coin.LiquidityCap = math.NewUint(initialTotalSupply.Uint64() + 1000)
 		k.SetForeignCoins(ctx, coin)
 
 		// increase total supply
 		_, err = k.DepositZRC20(ctx, zrc20, sample.EthAddress(), big.NewInt(500))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// deposit (500 + 501 > 1000)
 		to := sample.EthAddress()
@@ -223,7 +223,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.ErrorIs(t, err, types.ErrForeignCoinCapReached)
+		assert.ErrorIs(t, err, types.ErrForeignCoinCapReached)
 	})
 
 	t.Run("should fail if gas coin not found", func(t *testing.T) {
@@ -249,7 +249,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.ErrorIs(t, err, crosschaintypes.ErrGasCoinNotFound)
+		assert.ErrorIs(t, err, crosschaintypes.ErrGasCoinNotFound)
 	})
 
 	t.Run("should fail if zrc20 not found", func(t *testing.T) {
@@ -275,7 +275,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_ERC20,
 			assetAddress,
 		)
-		require.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
+		assert.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
 	})
 
 	t.Run("should return contract call if receiver is a contract", func(t *testing.T) {
@@ -291,7 +291,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
 
 		example, err := k.DeployContract(ctx, contracts.ExampleMetaData)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, example)
 
 		// deposit
@@ -305,12 +305,12 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.NoError(t, err)
-		require.True(t, contractCall)
+		assert.NoError(t, err)
+		assert.True(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, example)
-		require.NoError(t, err)
-		require.Equal(t, big.NewInt(42), balance)
+		assert.NoError(t, err)
+		assert.Equal(t, big.NewInt(42), balance)
 
 		// check onCrossChainCall() hook was called
 		assertExampleBarValue(t, ctx, k, example, 42)
@@ -329,7 +329,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chain.ChainId, "foobar", "foobar")
 
 		reverter, err := k.DeployContract(ctx, contracts.ReverterMetaData)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, reverter)
 
 		// deposit
@@ -343,11 +343,11 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			common.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
-		require.Error(t, err)
-		require.True(t, contractCall)
+		assert.Error(t, err)
+		assert.True(t, contractCall)
 
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, reverter)
-		require.NoError(t, err)
-		require.EqualValues(t, int64(0), balance.Int64())
+		assert.NoError(t, err)
+		assert.EqualValues(t, int64(0), balance.Int64())
 	})
 }

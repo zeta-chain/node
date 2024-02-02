@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -45,10 +45,10 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			} else {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			}
 		})
 	}

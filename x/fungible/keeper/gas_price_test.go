@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -21,19 +21,19 @@ func TestKeeper_SetGasPrice(t *testing.T) {
 
 	queryGasPrice := func(chainID *big.Int) *big.Int {
 		abi, err := systemcontract.SystemContractMetaData.GetAbi()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, system, keeper.BigIntZero, nil, false, false, "gasPriceByChainId", chainID)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		unpacked, err := abi.Unpack("gasPriceByChainId", res.Ret)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		gasPrice, ok := unpacked[0].(*big.Int)
-		require.True(t, ok)
+		assert.True(t, ok)
 		return gasPrice
 	}
 
 	_, err := k.SetGasPrice(ctx, big.NewInt(1), big.NewInt(42))
-	require.NoError(t, err)
-	require.Equal(t, big.NewInt(42), queryGasPrice(big.NewInt(1)))
+	assert.NoError(t, err)
+	assert.Equal(t, big.NewInt(42), queryGasPrice(big.NewInt(1)))
 }
 
 func TestKeeper_SetGasCoin(t *testing.T) {
@@ -43,11 +43,11 @@ func TestKeeper_SetGasCoin(t *testing.T) {
 
 	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 	err := k.SetGasCoin(ctx, big.NewInt(1), gas)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(1))
-	require.NoError(t, err)
-	require.Equal(t, gas.Hex(), found.Hex())
+	assert.NoError(t, err)
+	assert.Equal(t, gas.Hex(), found.Hex())
 }
 
 func TestKeeper_SetGasZetaPool(t *testing.T) {
@@ -59,17 +59,17 @@ func TestKeeper_SetGasZetaPool(t *testing.T) {
 
 	queryZetaPool := func(chainID *big.Int) ethcommon.Address {
 		abi, err := systemcontract.SystemContractMetaData.GetAbi()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, system, keeper.BigIntZero, nil, false, false, "gasZetaPoolByChainId", chainID)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		unpacked, err := abi.Unpack("gasZetaPoolByChainId", res.Ret)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		pool, ok := unpacked[0].(ethcommon.Address)
-		require.True(t, ok)
+		assert.True(t, ok)
 		return pool
 	}
 
 	err := k.SetGasZetaPool(ctx, big.NewInt(1), zrc20)
-	require.NoError(t, err)
-	require.NotEqual(t, ethcommon.Address{}, queryZetaPool(big.NewInt(1)))
+	assert.NoError(t, err)
+	assert.NotEqual(t, ethcommon.Address{}, queryZetaPool(big.NewInt(1)))
 }

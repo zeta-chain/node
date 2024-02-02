@@ -9,8 +9,8 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -36,8 +36,8 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// initial protocol fee is zero
 		protocolFee, err := k.QueryProtocolFlatFee(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Zero(t, protocolFee.Uint64())
+		assert.NoError(t, err)
+		assert.Zero(t, protocolFee.Uint64())
 
 		// can update the protocol fee and gas limit
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
@@ -46,15 +46,15 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.NewUint(42),
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// can query the updated fee
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(42), protocolFee.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(42), protocolFee.Uint64())
 		gasLimit, err := k.QueryGasLimit(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(42), gasLimit.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update protocol fee only
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
@@ -63,13 +63,13 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(43),
 			math.Uint{},
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(43), protocolFee.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(43), protocolFee.Uint64())
 		gasLimit, err = k.QueryGasLimit(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(42), gasLimit.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(42), gasLimit.Uint64())
 
 		// can update gas limit only
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
@@ -78,13 +78,13 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.Uint{},
 			math.NewUint(44),
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		protocolFee, err = k.QueryProtocolFlatFee(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(43), protocolFee.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(43), protocolFee.Uint64())
 		gasLimit, err = k.QueryGasLimit(ctx, zrc20Addr)
-		require.NoError(t, err)
-		require.Equal(t, uint64(44), gasLimit.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(44), gasLimit.Uint64())
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if invalid zrc20 address", func(t *testing.T) {
@@ -112,7 +112,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
+		assert.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
 	t.Run("should fail if can't retrieve the foreign coin", func(t *testing.T) {
@@ -127,7 +127,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 
 	t.Run("should fail if can't query old fee", func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, types.ErrContractCall)
+		assert.ErrorIs(t, err, types.ErrContractCall)
 	})
 
 	t.Run("should fail if contract call for setting new protocol fee fails", func(t *testing.T) {
@@ -173,9 +173,9 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// this is the query (commit == false)
 		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		mockEVMKeeper.On(
 			"ApplyMessage",
 			mock.Anything,
@@ -185,7 +185,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		).Return(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee}, nil)
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		mockEVMKeeper.On(
 			"ApplyMessage",
 			mock.Anything,
@@ -209,7 +209,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, types.ErrContractCall)
+		assert.ErrorIs(t, err, types.ErrContractCall)
 
 		mockEVMKeeper.AssertExpectations(t)
 	})
@@ -236,9 +236,9 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 
 		// this is the query (commit == false)
 		zrc20ABI, err := zrc20.ZRC20MetaData.GetAbi()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		mockEVMKeeper.On(
 			"ApplyMessage",
 			mock.Anything,
@@ -248,7 +248,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		).Return(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee}, nil)
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		mockEVMKeeper.On(
 			"ApplyMessage",
 			mock.Anything,
@@ -272,7 +272,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.Uint{},
 			math.NewUint(42),
 		))
-		require.ErrorIs(t, err, types.ErrContractCall)
+		assert.ErrorIs(t, err, types.ErrContractCall)
 
 		mockEVMKeeper.AssertExpectations(t)
 	})

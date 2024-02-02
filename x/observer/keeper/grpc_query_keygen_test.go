@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"testing"
 
@@ -29,9 +29,9 @@ func TestKeygenQuery(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.Keygen(wctx, tc.request)
 			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
+				assert.ErrorIs(t, err, tc.err)
 			} else {
-				require.Equal(t, tc.response, response)
+				assert.Equal(t, tc.response, response)
 			}
 		})
 	}

@@ -6,7 +6,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -45,25 +45,25 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.NoError(t, err)
-		require.NotNil(t, res)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
 		zrc20 := res.Zrc20Address
 		cctxIndex := res.CctxIndex
 
 		// check zrc20 and cctx created
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(zrc20))
 		fc, found := zk.FungibleKeeper.GetForeignCoins(ctx, zrc20)
-		require.True(t, found)
-		require.EqualValues(t, "foo", fc.Name)
-		require.EqualValues(t, erc20Address, fc.Asset)
+		assert.True(t, found)
+		assert.EqualValues(t, "foo", fc.Name)
+		assert.EqualValues(t, erc20Address, fc.Asset)
 		cctx, found := k.GetCrossChainTx(ctx, cctxIndex)
-		require.True(t, found)
-		require.EqualValues(t, fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
+		assert.True(t, found)
+		assert.EqualValues(t, fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
 
 		// check gas limit is set
 		gasLimit, err := zk.FungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(zrc20))
-		require.NoError(t, err)
-		require.Equal(t, uint64(100000), gasLimit.Uint64())
+		assert.NoError(t, err)
+		assert.Equal(t, uint64(100000), gasLimit.Uint64())
 
 		// Ensure that whitelist a new erc20 create a cctx with a different index
 		res, err = msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
@@ -75,9 +75,9 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.NoError(t, err)
-		require.NotNil(t, res)
-		require.NotEqual(t, cctxIndex, res.CctxIndex)
+		assert.NoError(t, err)
+		assert.NotNil(t, res)
+		assert.NotEqual(t, cctxIndex, res.CctxIndex)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
@@ -94,7 +94,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if invalid erc20 address", func(t *testing.T) {
@@ -114,7 +114,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
+		assert.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
 	t.Run("should fail if foreign coin already exists for the asset", func(t *testing.T) {
@@ -141,7 +141,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, fungibletypes.ErrForeignCoinAlreadyExist)
+		assert.ErrorIs(t, err, fungibletypes.ErrForeignCoinAlreadyExist)
 	})
 
 	t.Run("should fail if no tss set", func(t *testing.T) {
@@ -163,7 +163,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
+		assert.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
 	})
 
 	t.Run("should fail if nox valid chain ID", func(t *testing.T) {
@@ -185,6 +185,6 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, types.ErrInvalidChainID)
+		assert.ErrorIs(t, err, types.ErrInvalidChainID)
 	})
 }

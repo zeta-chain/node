@@ -3,7 +3,7 @@ package v3_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	v3 "github.com/zeta-chain/zetacore/x/observer/migrations/v3"
@@ -18,9 +18,9 @@ func TestMigrateStore(t *testing.T) {
 	params.AdminPolicy = []*types.Admin_Policy{}
 	k.SetParams(ctx, params)
 	err := v3.MigrateStore(ctx, k)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	params = k.GetParams(ctx)
-	require.Len(t, params.AdminPolicy, 0)
+	assert.Len(t, params.AdminPolicy, 0)
 
 	// update admin policy
 	admin := sample.AccAddress()
@@ -41,11 +41,11 @@ func TestMigrateStore(t *testing.T) {
 	}
 	k.SetParams(ctx, params)
 	err = v3.MigrateStore(ctx, k)
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	params = k.GetParams(ctx)
-	require.Len(t, params.AdminPolicy, 2)
-	require.Equal(t, params.AdminPolicy[0].PolicyType, types.Policy_Type_group1)
-	require.Equal(t, params.AdminPolicy[1].PolicyType, types.Policy_Type_group2)
-	require.Equal(t, params.AdminPolicy[0].Address, admin)
-	require.Equal(t, params.AdminPolicy[1].Address, admin)
+	assert.Len(t, params.AdminPolicy, 2)
+	assert.Equal(t, params.AdminPolicy[0].PolicyType, types.Policy_Type_group1)
+	assert.Equal(t, params.AdminPolicy[1].PolicyType, types.Policy_Type_group2)
+	assert.Equal(t, params.AdminPolicy[0].Address, admin)
+	assert.Equal(t, params.AdminPolicy[1].Address, admin)
 }

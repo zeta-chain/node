@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/evmos/ethermint/x/evm/statedb"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -35,7 +35,7 @@ func codeHashFromAddress(t *testing.T, ctx sdk.Context, k *keeper.Keeper, contra
 	res, err := k.CodeHash(ctx, &types.QueryCodeHashRequest{
 		Address: contractAddr,
 	})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return res.CodeHash
 }
 
@@ -51,10 +51,10 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		// sample chainIDs and addresses
 		chainList := zetacommon.DefaultChainsList()
-		require.True(t, len(chainList) > 1)
-		require.NotNil(t, chainList[0])
-		require.NotNil(t, chainList[1])
-		require.NotEqual(t, chainList[0].ChainId, chainList[1].ChainId)
+		assert.True(t, len(chainList) > 1)
+		assert.NotNil(t, chainList[0])
+		assert.NotNil(t, chainList[1])
+		assert.NotEqual(t, chainList[0].ChainId, chainList[1].ChainId)
 		chainID1 := chainList[0].ChainId
 		chainID2 := chainList[1].ChainId
 
@@ -67,28 +67,28 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		// do some operation to populate the state
 		_, err := k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(100))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		_, err = k.DepositZRC20(ctx, zrc20, addr2, big.NewInt(200))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// check the state
 		checkState := func() {
 			// state that should not change
 			balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
-			require.NoError(t, err)
-			require.Equal(t, int64(100), balance.Int64())
+			assert.NoError(t, err)
+			assert.Equal(t, int64(100), balance.Int64())
 			balance, err = k.BalanceOfZRC4(ctx, zrc20, addr2)
-			require.NoError(t, err)
-			require.Equal(t, int64(200), balance.Int64())
+			assert.NoError(t, err)
+			assert.Equal(t, int64(200), balance.Int64())
 			totalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
-			require.NoError(t, err)
-			require.Equal(t, int64(10000300), totalSupply.Int64()) // 10000000 minted on deploy
+			assert.NoError(t, err)
+			assert.Equal(t, int64(10000300), totalSupply.Int64()) // 10000000 minted on deploy
 		}
 
 		checkState()
 		chainID, err := k.QueryChainIDFromContract(ctx, zrc20)
-		require.NoError(t, err)
-		require.Equal(t, chainID1, chainID.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, chainID1, chainID.Int64())
 
 		// deploy new zrc20
 		newCodeAddress, err := k.DeployZRC20Contract(
@@ -101,7 +101,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			"beta",
 			big.NewInt(90_000),
 		)
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		codeHash := codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 
 		// update the bytecode
@@ -110,29 +110,29 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			zrc20.Hex(),
 			codeHash,
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		// check the returned new bytecode hash matches the one in the account
 		acct := sdkk.EvmKeeper.GetAccount(ctx, zrc20)
-		require.Equal(t, acct.CodeHash, ethcommon.HexToHash(codeHash).Bytes())
+		assert.Equal(t, acct.CodeHash, ethcommon.HexToHash(codeHash).Bytes())
 
 		// check the state
 		// balances and total supply should remain
 		// BYTECODE value is immutable and therefore part of the code, this value should change
 		checkState()
 		chainID, err = k.QueryChainIDFromContract(ctx, zrc20)
-		require.NoError(t, err)
-		require.Equal(t, chainID2, chainID.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, chainID2, chainID.Int64())
 
 		// can continue to interact with the contract
 		_, err = k.DepositZRC20(ctx, zrc20, addr1, big.NewInt(1000))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		balance, err := k.BalanceOfZRC4(ctx, zrc20, addr1)
-		require.NoError(t, err)
-		require.Equal(t, int64(1100), balance.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1100), balance.Int64())
 		totalSupply, err := k.TotalSupplyZRC4(ctx, zrc20)
-		require.NoError(t, err)
-		require.Equal(t, int64(10001300), totalSupply.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(10001300), totalSupply.Int64())
 
 		// can change again bytecode
 		newCodeAddress, err = k.DeployZRC20Contract(
@@ -146,22 +146,22 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			big.NewInt(90_000),
 		)
 		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20.Hex(),
 			codeHash,
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		balance, err = k.BalanceOfZRC4(ctx, zrc20, addr1)
-		require.NoError(t, err)
-		require.Equal(t, int64(1100), balance.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(1100), balance.Int64())
 		totalSupply, err = k.TotalSupplyZRC4(ctx, zrc20)
-		require.NoError(t, err)
-		require.Equal(t, int64(10001300), totalSupply.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, int64(10001300), totalSupply.Int64())
 		chainID, err = k.QueryChainIDFromContract(ctx, zrc20)
-		require.NoError(t, err)
-		require.Equal(t, chainID1, chainID.Int64())
+		assert.NoError(t, err)
+		assert.Equal(t, chainID1, chainID.Int64())
 	})
 
 	t.Run("can update the bytecode of the wzeta connector contract", func(t *testing.T) {
@@ -177,8 +177,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 
 		// deploy a new connector that will become official connector
 		newConnector, err := k.DeployConnectorZEVM(ctx, wzeta)
-		require.NoError(t, err)
-		require.NotEmpty(t, newConnector)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, newConnector)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, newConnector)
 
 		// can update the bytecode of the new connector with the old connector contract
@@ -187,7 +187,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			newConnector.Hex(),
 			codeHash,
 		))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 	})
 
 	t.Run("should fail if unauthorized", func(t *testing.T) {
@@ -199,7 +199,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			sample.EthAddress().Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail invalid contract address", func(t *testing.T) {
@@ -214,7 +214,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			ContractAddress: "invalid",
 			NewCodeHash:     sample.Hash().Hex(),
 		})
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
+		assert.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
 	t.Run("should fail if can't get contract account", func(t *testing.T) {
@@ -238,7 +238,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			contractAddr.Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, types.ErrContractNotFound)
+		assert.ErrorIs(t, err, types.ErrContractNotFound)
 
 		mockEVMKeeper.AssertExpectations(t)
 	})
@@ -258,7 +258,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			wzeta.Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, types.ErrInvalidContract)
+		assert.ErrorIs(t, err, types.ErrInvalidContract)
 	})
 
 	t.Run("should fail if system contract not found", func(t *testing.T) {
@@ -279,7 +279,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			connector.Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, types.ErrSystemContractNotFound)
+		assert.ErrorIs(t, err, types.ErrSystemContractNotFound)
 	})
 
 	t.Run("should fail if can't set account with new bytecode", func(t *testing.T) {
@@ -316,7 +316,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			contractAddr.Hex(),
 			newCodeHash,
 		))
-		require.ErrorIs(t, err, types.ErrSetBytecode)
+		assert.ErrorIs(t, err, types.ErrSetBytecode)
 
 		mockEVMKeeper.AssertExpectations(t)
 	})

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -25,12 +25,12 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", "foo")
 
 		_, found := k.GetForeignCoins(ctx, zrc20.Hex())
-		require.True(t, found)
+		assert.True(t, found)
 
 		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, zrc20.Hex()))
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		_, found = k.GetForeignCoins(ctx, zrc20.Hex())
-		require.False(t, found)
+		assert.False(t, found)
 	})
 
 	t.Run("should fail if not admin", func(t *testing.T) {
@@ -43,8 +43,8 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", "foo")
 
 		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(sample.AccAddress(), zrc20.Hex()))
-		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if not found", func(t *testing.T) {
@@ -55,7 +55,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, sample.EthAddress().Hex()))
-		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+		assert.Error(t, err)
+		assert.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 }

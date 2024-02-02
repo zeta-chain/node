@@ -31,7 +31,7 @@ import (
 // status.
 //
 // If the previous status was `PendingOutbound`, a new revert transaction is
-// created. To cover the revert transaction fee, the required amount of tokens
+// created. To cover the revert transaction fee, the assertd amount of tokens
 // submitted with the CCTX are swapped using a Uniswap V2 contract instance on
 // ZetaChain for the ZRC20 of the gas token of the receiver chain. The ZRC20
 // tokens are then

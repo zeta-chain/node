@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -102,10 +102,10 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 
 			err := k.FundGasStabilityPoolFromRemainingFees(ctx, *outbound, 42)
 			if tc.isError {
-				require.Error(t, err)
+				assert.Error(t, err)
 				return
 			}
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			fungibleMock.AssertExpectations(t)
 		})

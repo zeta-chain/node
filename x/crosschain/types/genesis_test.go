@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -82,9 +82,9 @@ func TestGenesisState_Validate(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			err := tc.genState.Validate()
 			if tc.valid {
-				require.NoError(t, err)
+				assert.NoError(t, err)
 			} else {
-				require.Error(t, err)
+				assert.Error(t, err)
 			}
 		})
 	}

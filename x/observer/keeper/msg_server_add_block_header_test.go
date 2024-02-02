@@ -7,7 +7,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -37,7 +36,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		IsEthTypeChainEnabled bool
 		IsBtcTypeChainEnabled bool
 		validator             stakingtypes.Validator
-		wantErr               require.ErrorAssertionFunc
+		wantErr               assert.ErrorAssertionFunc
 	}{
 		{
 			name: "success submit eth header",
@@ -51,7 +50,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr:               require.NoError,
+			wantErr:               assert.NoError,
 		},
 		{
 			name: "failure submit eth header eth disabled",
@@ -65,8 +64,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: false,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				assert.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 			},
 		},
 		{
@@ -81,8 +80,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: false,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 			},
 		},
 		{
@@ -97,8 +96,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.Error(t, err)
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.Error(t, err)
 			},
 		},
 		{
@@ -113,7 +112,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr:               require.NoError,
+			wantErr:               assert.NoError,
 		},
 		{
 			name: "should succeed to post 3rd header if 2nd header is posted",
@@ -127,8 +126,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.Error(t, err)
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.Error(t, err)
 			},
 		},
 		{
@@ -143,8 +142,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrSupportedChains)
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.ErrorIs(t, err, types.ErrSupportedChains)
 			},
 		},
 	}
@@ -172,8 +171,8 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			tc.wantErr(t, err)
 			if err == nil {
 				bhs, found := k.GetBlockHeaderState(ctx, tc.msg.ChainId)
-				require.True(t, found)
-				require.Equal(t, tc.msg.Height, bhs.LatestHeight)
+				assert.True(t, found)
+				assert.Equal(t, tc.msg.Height, bhs.LatestHeight)
 			}
 		})
 	}

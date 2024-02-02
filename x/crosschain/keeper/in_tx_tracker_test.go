@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -31,15 +31,15 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 		intxTrackers := createNInTxTracker(keeper, ctx, 10, 5)
 		for _, item := range intxTrackers {
 			rst, found := keeper.GetInTxTracker(ctx, item.ChainId, item.TxHash)
-			require.True(t, found)
-			require.Equal(t, item, rst)
+			assert.True(t, found)
+			assert.Equal(t, item, rst)
 		}
 	})
 	t.Run("Get all InTx trackers", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := createNInTxTracker(keeper, ctx, 10, 5)
 		rst := keeper.GetAllInTxTracker(ctx)
-		require.Equal(t, intxTrackers, rst)
+		assert.Equal(t, intxTrackers, rst)
 	})
 	t.Run("Get all InTx trackers for chain", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -51,39 +51,39 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 		sort.SliceStable(intxTrackersNew, func(i, j int) bool {
 			return intxTrackersNew[i].TxHash < intxTrackersNew[j].TxHash
 		})
-		require.Equal(t, intxTrackersNew, rst)
+		assert.Equal(t, intxTrackersNew, rst)
 	})
 	t.Run("Get all InTx trackers for chain paginated by limit", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := createNInTxTracker(keeper, ctx, 100, 6)
 		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(ctx, 6, &query.PageRequest{Limit: 10, CountTotal: true})
-		require.NoError(t, err)
-		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
-		require.Equal(t, len(intxTrackers), int(pageRes.Total))
+		assert.NoError(t, err)
+		assert.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
+		assert.Equal(t, len(intxTrackers), int(pageRes.Total))
 	})
 	t.Run("Get all InTx trackers for chain paginated by offset", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := createNInTxTracker(keeper, ctx, 100, 6)
 		rst, pageRes, err := keeper.GetAllInTxTrackerForChainPaginated(ctx, 6, &query.PageRequest{Offset: 10, CountTotal: true})
-		require.NoError(t, err)
-		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
-		require.Equal(t, len(intxTrackers), int(pageRes.Total))
+		assert.NoError(t, err)
+		assert.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
+		assert.Equal(t, len(intxTrackers), int(pageRes.Total))
 	})
 	t.Run("Get all InTx trackers paginated by limit", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := append(createNInTxTracker(keeper, ctx, 10, 6), createNInTxTracker(keeper, ctx, 10, 7)...)
 		rst, pageRes, err := keeper.GetAllInTxTrackerPaginated(ctx, &query.PageRequest{Limit: 20, CountTotal: true})
-		require.NoError(t, err)
-		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
-		require.Equal(t, len(intxTrackers), int(pageRes.Total))
+		assert.NoError(t, err)
+		assert.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
+		assert.Equal(t, len(intxTrackers), int(pageRes.Total))
 	})
 	t.Run("Get all InTx trackers paginated by offset", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		intxTrackers := append(createNInTxTracker(keeper, ctx, 100, 6), createNInTxTracker(keeper, ctx, 100, 7)...)
 		rst, pageRes, err := keeper.GetAllInTxTrackerPaginated(ctx, &query.PageRequest{Offset: 10, CountTotal: true})
-		require.NoError(t, err)
-		require.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
-		require.Equal(t, len(intxTrackers), int(pageRes.Total))
+		assert.NoError(t, err)
+		assert.Subset(t, nullify.Fill(intxTrackers), nullify.Fill(rst))
+		assert.Equal(t, len(intxTrackers), int(pageRes.Total))
 	})
 	t.Run("Delete InTxTracker", func(t *testing.T) {
 		keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -98,6 +98,6 @@ func TestKeeper_GetAllInTxTrackerForChain(t *testing.T) {
 			keeper.RemoveInTxTrackerIfExists(ctx, item.ChainId, item.TxHash)
 		}
 		rst := keeper.GetAllInTxTrackerForChain(ctx, 6)
-		require.Equal(t, 0, len(rst))
+		assert.Equal(t, 0, len(rst))
 	})
 }

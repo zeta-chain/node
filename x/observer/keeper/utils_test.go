@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -37,7 +36,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	case 1:
 		return zetacommon.GoerliChain().ChainId
 	default:
-		require.Fail(t, "invalid index")
+		assert.Fail(t, "invalid index")
 	}
 	return 0
 }
