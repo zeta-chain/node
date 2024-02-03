@@ -68,7 +68,7 @@ func (sm *SmokeTestRunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash
 	}
 
 	// query the chain ID using zevm client
-	zetaChainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	zetaChainID, err := sm.ZevmClient.ChainID(sm.Ctx)
 	if err != nil {
 		panic(err)
 	}
