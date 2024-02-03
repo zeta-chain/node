@@ -86,6 +86,12 @@ Show the Bitcoin address (the address is derived from the Ethereum private key, 
 zetae2e bitcoin-address [config]
 ```
 
+The list of tests to be run can be found by running following command:
+
+```go
+zetae2e list-tests
+```
+
 Run tests:
 
 ```go

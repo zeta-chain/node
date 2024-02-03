@@ -7,7 +7,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -68,10 +67,16 @@ func (sm *SmokeTestRunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash
 		panic("approve tx failed")
 	}
 
+	// query the chain ID using zevm client
+	zetaChainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
-		DestinationChainId:  big.NewInt(common.ZetaChainMainnet().ChainId),
+		DestinationChainId:  zetaChainID,
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
