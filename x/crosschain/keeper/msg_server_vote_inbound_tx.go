@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -54,6 +56,11 @@ import (
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := msg.Digest()
+
+	// Check if the inbound has already been processed.
+	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+	}
 
 	// vote on inbound ballot
 	finalized, err := k.zetaObserverKeeper.VoteOnInboundBallot(

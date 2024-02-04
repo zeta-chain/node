@@ -70,10 +70,6 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, err
 	}
 	if isNew {
-		// Check if the inbound has already been processed.
-		//if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-		//	return false, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
-		//}
 		EmitEventBallotCreated(ctx, ballot, inTxHash, senderChain.String())
 	}
 
