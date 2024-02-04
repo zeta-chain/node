@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
@@ -34,7 +35,7 @@ func RunnerFromConfig(
 		zevmAuth,
 		err := getClientsFromConfig(ctx, conf, evmUserPrivKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get clients from config: %w", err)
 	}
 	// initialize client to send messages to ZetaChain
 	zetaTxServer, err := txserver.NewZetaTxServer(
@@ -44,7 +45,7 @@ func RunnerFromConfig(
 		conf.ZetaChainID,
 	)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize ZetaChain tx server: %w", err)
 	}
 
 	// initialize smoke test runner
@@ -71,6 +72,16 @@ func RunnerFromConfig(
 
 	// set contracts
 	err = setContractsFromConfig(sm, conf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to set contracts from config: %w", err)
+	}
+
+	// set bitcoin params
+	chainParams, err := conf.RPCs.Bitcoin.Params.GetParams()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get bitcoin params: %w", err)
+	}
+	sm.BitcoinParams = &chainParams
 
 	return sm, err
 }

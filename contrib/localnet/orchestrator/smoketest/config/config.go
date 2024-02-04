@@ -2,7 +2,10 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"os"
+
+	"github.com/btcsuite/btcd/chaincfg"
 
 	"gopkg.in/yaml.v2"
 )
@@ -24,11 +27,21 @@ type Accounts struct {
 
 // RPCs contains the configuration for the RPC endpoints
 type RPCs struct {
-	Zevm         string `yaml:"zevm"`
-	EVM          string `yaml:"evm"`
-	Bitcoin      string `yaml:"bitcoin"`
-	ZetaCoreGRPC string `yaml:"zetacore_grpc"`
-	ZetaCoreRPC  string `yaml:"zetacore_rpc"`
+	Zevm         string     `yaml:"zevm"`
+	EVM          string     `yaml:"evm"`
+	Bitcoin      BitcoinRPC `yaml:"bitcoin"`
+	ZetaCoreGRPC string     `yaml:"zetacore_grpc"`
+	ZetaCoreRPC  string     `yaml:"zetacore_rpc"`
+}
+
+// BitcoinRPC contains the configuration for the Bitcoin RPC endpoint
+type BitcoinRPC struct {
+	User         string             `yaml:"user"`
+	Pass         string             `yaml:"pass"`
+	Host         string             `yaml:"host"`
+	HTTPPostMode bool               `yaml:"http_post_mode"`
+	DisableTLS   bool               `yaml:"disable_tls"`
+	Params       BitcoinNetworkType `yaml:"params"`
 }
 
 // Contracts contains the addresses of predeployed contracts
@@ -53,17 +66,27 @@ type ZEVM struct {
 	BTCZRC20Addr       string `yaml:"btc_zrc20"`
 	UniswapFactoryAddr string `yaml:"uniswap_factory"`
 	UniswapRouterAddr  string `yaml:"uniswap_router"`
+	ConnectorZEVMAddr  string `yaml:"connector_zevm"`
+	WZetaAddr          string `yaml:"wzeta"`
 	ZEVMSwapAppAddr    string `yaml:"zevm_swap_app"`
 	ContextAppAddr     string `yaml:"context_app"`
 	TestDappAddr       string `yaml:"test_dapp"`
 }
 
+// DefaultConfig returns the default config using values for localnet testing
 func DefaultConfig() Config {
 	return Config{
 		RPCs: RPCs{
-			Zevm:         "http://zetacore0:8545",
-			EVM:          "http://eth:8545",
-			Bitcoin:      "bitcoin:18443",
+			Zevm: "http://zetacore0:8545",
+			EVM:  "http://eth:8545",
+			Bitcoin: BitcoinRPC{
+				Host:         "bitcoin:18443",
+				User:         "smoketest",
+				Pass:         "123",
+				HTTPPostMode: true,
+				DisableTLS:   true,
+				Params:       Regnet,
+			},
 			ZetaCoreGRPC: "zetacore0:9090",
 			ZetaCoreRPC:  "http://zetacore0:26657",
 		},
@@ -91,6 +114,10 @@ func ReadConfig(file string) (config Config, err error) {
 	if err != nil {
 		return Config{}, err
 	}
+	if err := config.Validate(); err != nil {
+		return Config{}, err
+	}
+
 	return
 }
 
@@ -109,4 +136,38 @@ func WriteConfig(file string, config Config) error {
 		return err
 	}
 	return nil
+}
+
+// Validate validates the config
+func (c Config) Validate() error {
+	if c.RPCs.Bitcoin.Params != Mainnet &&
+		c.RPCs.Bitcoin.Params != Testnet3 &&
+		c.RPCs.Bitcoin.Params != Regnet {
+		return errors.New("invalid bitcoin params")
+	}
+	return nil
+}
+
+// BitcoinNetworkType is a custom type to represent allowed network types
+type BitcoinNetworkType string
+
+// Enum values for BitcoinNetworkType
+const (
+	Mainnet  BitcoinNetworkType = "mainnet"
+	Testnet3 BitcoinNetworkType = "testnet3"
+	Regnet   BitcoinNetworkType = "regnet"
+)
+
+// GetParams returns the chaincfg.Params for the BitcoinNetworkType
+func (bnt BitcoinNetworkType) GetParams() (chaincfg.Params, error) {
+	switch bnt {
+	case Mainnet:
+		return chaincfg.MainNetParams, nil
+	case Testnet3:
+		return chaincfg.TestNet3Params, nil
+	case Regnet:
+		return chaincfg.RegressionNetParams, nil
+	default:
+		return chaincfg.Params{}, fmt.Errorf("invalid bitcoin params %s", bnt)
+	}
 }

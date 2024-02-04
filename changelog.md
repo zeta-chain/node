@@ -18,9 +18,14 @@
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
 
+### Tests
+
+* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+
 ## Version: v12.1.0
 
 ### Tests
+
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features

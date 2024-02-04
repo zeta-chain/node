@@ -7,8 +7,9 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestERC20Deposit(sm *runner.SmokeTestRunner) {
-	hash := sm.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
+func TestZetaDeposit(sm *runner.SmokeTestRunner) {
+	// Deposit 1 Zeta
+	hash := sm.DepositZetaWithAmount(big.NewInt(1e18))
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
