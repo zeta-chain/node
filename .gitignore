@@ -25,7 +25,6 @@ contrib/meta.pem.pub
 dispatch_payload.json
 .github/workflows/local-testing.yml
 
-
 # Hardhat files
 cache
 localnet/artifacts
@@ -54,3 +53,6 @@ contrib/localnet/blockscout/services/redis-data/*
 contrib/localnet/blockscout/services/stats-db-data/*
 contrib/localnet/grafana/addresses.txt
 contrib/localnet/addresses.txt
+
+# Config for e2e tests
+e2e_conf*

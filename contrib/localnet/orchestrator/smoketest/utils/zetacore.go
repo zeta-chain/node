@@ -48,36 +48,45 @@ func WaitCctxsMinedByInTxHash(
 	}
 
 	// fetch cctxs by inTxHash
-	for {
+	for i := 0; ; i++ {
 		time.Sleep(1 * time.Second)
 		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
 			InTxHash: inTxHash,
 		})
 		if err != nil {
-			logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+			}
 			continue
 		}
 		if len(res.CrossChainTxs) < cctxsCount {
-			logger.Info(
-				"not enough cctxs found by inTxHash: %s, expected: %d, found: %d",
-				inTxHash,
-				cctxsCount,
-				len(res.CrossChainTxs),
-			)
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info(
+					"not enough cctxs found by inTxHash: %s, expected: %d, found: %d",
+					inTxHash,
+					cctxsCount,
+					len(res.CrossChainTxs),
+				)
+			}
 			continue
 		}
 		cctxs := make([]*crosschaintypes.CrossChainTx, 0, len(res.CrossChainTxs))
 		allFound := true
-		for i, cctx := range res.CrossChainTxs {
+		for j, cctx := range res.CrossChainTxs {
 			cctx := cctx
 			if !IsTerminalStatus(cctx.CctxStatus.Status) {
-				logger.Info(
-					"waiting for cctx index %d to be mined by inTxHash: %s, cctx status: %s, message: %s",
-					i,
-					inTxHash,
-					cctx.CctxStatus.Status.String(),
-					cctx.CctxStatus.StatusMessage,
-				)
+				// prevent spamming logs
+				if i%10 == 0 {
+					logger.Info(
+						"waiting for cctx index %d to be mined by inTxHash: %s, cctx status: %s, message: %s",
+						j,
+						inTxHash,
+						cctx.CctxStatus.Status.String(),
+						cctx.CctxStatus.StatusMessage,
+					)
+				}
 				allFound = false
 				break
 			}
@@ -116,12 +125,16 @@ func WaitForBlockHeight(
 		panic(err)
 	}
 	status := &coretypes.ResultStatus{}
-	for status.SyncInfo.LatestBlockHeight < height {
+	for i := 0; status.SyncInfo.LatestBlockHeight < height; i++ {
 		status, err = rpc.Status(ctx)
 		if err != nil {
 			panic(err)
 		}
 		time.Sleep(1 * time.Second)
-		logger.Info("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+
+		// prevent spamming logs
+		if i%10 == 0 {
+			logger.Info("waiting for block: %d, current height: %d\n", height, status.SyncInfo.LatestBlockHeight)
+		}
 	}
 }
