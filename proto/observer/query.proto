@@ -35,25 +35,22 @@ service Query {
   }
 
   // Queries a list of ObserversByChainAndType items.
-  rpc ObserversByChain(QueryObserversByChainRequest) returns (QueryObserversByChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/observers_by_chain/{observation_chain}";
-  }
-  rpc AllObserverMappers(QueryAllObserverMappersRequest) returns (QueryAllObserverMappersResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/all_observer_mappers";
+  rpc ObserverSet(QueryObserverSet) returns (QueryObserverSetResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/observer_set";
   }
 
   rpc SupportedChains(QuerySupportedChains) returns (QuerySupportedChainsResponse) {
     option (google.api.http).get = "/zeta-chain/observer/supportedChains";
   }
 
-  // Queries a list of GetClientParamsForChain items.
-  rpc GetCoreParamsForChain(QueryGetCoreParamsForChainRequest) returns (QueryGetCoreParamsForChainResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_client_params_for_chain/{chain_id}";
+  // Queries a list of GetChainParamsForChain items.
+  rpc GetChainParamsForChain(QueryGetChainParamsForChainRequest) returns (QueryGetChainParamsForChainResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_chain_params_for_chain/{chain_id}";
   }
 
-  // Queries a list of GetCoreParams items.
-  rpc GetCoreParams(QueryGetCoreParamsRequest) returns (QueryGetCoreParamsResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_core_params";
+  // Queries a list of GetChainParams items.
+  rpc GetChainParams(QueryGetChainParamsRequest) returns (QueryGetChainParamsResponse) {
+    option (google.api.http).get = "/zeta-chain/observer/get_chain_params";
   }
 
   // Queries a nodeAccount by index.
@@ -114,7 +111,7 @@ service Query {
 
   // Queries a list of GetTssAddress items.
   rpc GetTssAddress(QueryGetTssAddressRequest) returns (QueryGetTssAddressResponse) {
-    option (google.api.http).get = "/zeta-chain/observer/get_tss_address";
+    option (google.api.http).get = "/zeta-chain/observer/get_tss_address/{bitcoin_chain_id}";
   }
 
   rpc GetTssAddressByFinalizedHeight(QueryGetTssAddressByFinalizedHeightRequest) returns (QueryGetTssAddressByFinalizedHeightResponse) {
@@ -261,17 +258,10 @@ message QueryBallotByIdentifierResponse {
   BallotStatus ballot_status = 4;
 }
 
-message QueryObserversByChainRequest {
-  string observation_chain = 1;
-}
+message QueryObserverSet {}
 
-message QueryObserversByChainResponse {
+message QueryObserverSetResponse {
   repeated string observers = 1;
-}
-
-message QueryAllObserverMappersRequest {}
-message QueryAllObserverMappersResponse {
-  repeated ObserverMapper observer_mappers = 1;
 }
 
 message QuerySupportedChains {}
@@ -280,18 +270,18 @@ message QuerySupportedChainsResponse {
   repeated common.Chain chains = 1;
 }
 
-message QueryGetCoreParamsForChainRequest {
+message QueryGetChainParamsForChainRequest {
   int64 chain_id = 1;
 }
 
-message QueryGetCoreParamsForChainResponse {
-  CoreParams core_params = 1;
+message QueryGetChainParamsForChainResponse {
+  ChainParams chain_params = 1;
 }
 
-message QueryGetCoreParamsRequest {}
+message QueryGetChainParamsRequest {}
 
-message QueryGetCoreParamsResponse {
-  CoreParamsList core_params = 1;
+message QueryGetChainParamsResponse {
+  ChainParamsList chain_params = 1;
 }
 
 message QueryGetNodeAccountRequest {

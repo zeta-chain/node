@@ -23,10 +23,7 @@ type Chains []Chain
 
 // IsEqual compare two chain to see whether they represent the same chain
 func (chain Chain) IsEqual(c Chain) bool {
-	if chain.ChainId == c.ChainId {
-		return true
-	}
-	return false
+	return chain.ChainId == c.ChainId
 }
 
 func (chain Chain) IsZetaChain() bool {
@@ -52,7 +49,7 @@ func (chain Chain) EncodeAddress(b []byte) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		addr, err := btcutil.DecodeAddress(addrStr, chainParams)
+		addr, err := DecodeBtcAddress(addrStr, chain.ChainId)
 		if err != nil {
 			return "", err
 		}
@@ -194,14 +191,6 @@ func GetChainFromChainID(chainID int64) *Chain {
 	return nil
 }
 
-func GetChainNameFromChainID(chainID int64) (string, error) {
-	chain := GetChainFromChainID(chainID)
-	if chain == nil {
-		return "", fmt.Errorf("chain %d not found", chainID)
-	}
-	return chain.GetChainName().String(), nil
-}
-
 func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	switch chainID {
 	case 18444:
@@ -212,6 +201,19 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 		return &chaincfg.MainNetParams, nil
 	default:
 		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+	}
+}
+
+func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
+	switch params.Name {
+	case chaincfg.RegressionNetParams.Name:
+		return 18444, nil
+	case chaincfg.TestNet3Params.Name:
+		return 18332, nil
+	case chaincfg.MainNetParams.Name:
+		return 8332, nil
+	default:
+		return 0, fmt.Errorf("error chain %s is not a Bitcoin chain", params.Name)
 	}
 }
 

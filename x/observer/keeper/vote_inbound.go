@@ -29,7 +29,7 @@ func (k Keeper) VoteOnInboundBallot(
 	// makes sure we are getting only supported chains
 	// if a chain support has been turned on using gov proposal
 	// this function returns nil
-	senderChain := k.GetParams(ctx).GetChainFromChainID(senderChainID)
+	senderChain := k.GetSupportedChainFromChainID(ctx, senderChainID)
 	if senderChain == nil {
 		return false, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf(
 			"ChainID %d, Observation %s",
@@ -39,12 +39,12 @@ func (k Keeper) VoteOnInboundBallot(
 	}
 
 	// checks the voter is authorized to vote on the observation chain
-	if ok := k.IsAuthorized(ctx, voter, senderChain); !ok {
+	if ok := k.IsAuthorized(ctx, voter); !ok {
 		return false, observertypes.ErrNotAuthorizedPolicy
 	}
 
 	// makes sure we are getting only supported chains
-	receiverChain := k.GetParams(ctx).GetChainFromChainID(receiverChainID)
+	receiverChain := k.GetSupportedChainFromChainID(ctx, receiverChainID)
 	if receiverChain == nil {
 		return false, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf(
 			"ChainID %d, Observation %s",
@@ -55,9 +55,9 @@ func (k Keeper) VoteOnInboundBallot(
 
 	// check if we want to send ZETA to external chain, but there is no ZETA token.
 	if receiverChain.IsExternalChain() {
-		coreParams, found := k.GetCoreParamsByChainID(ctx, receiverChain.ChainId)
+		coreParams, found := k.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 		if !found {
-			return false, types.ErrNotFoundCoreParams
+			return false, types.ErrNotFoundChainParams
 		}
 		if coreParams.ZetaTokenContractAddress == "" && coinType == common.CoinType_Zeta {
 			return false, types.ErrUnableToSendCoinType
@@ -70,6 +70,10 @@ func (k Keeper) VoteOnInboundBallot(
 		return false, err
 	}
 	if isNew {
+		// Check if the inbound has already been processed.
+		//if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		//	return false, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+		//}
 		EmitEventBallotCreated(ctx, ballot, inTxHash, senderChain.String())
 	}
 

@@ -2,14 +2,11 @@ package zetaclient
 
 import (
 	"fmt"
-	"math/big"
+	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/pkg/errors"
-
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -18,55 +15,27 @@ import (
 )
 
 const (
-	PostGasPriceGasLimit            = 1_500_000
-	AddTxHashToOutTxTrackerGasLimit = 200_000
-	PostNonceGasLimit               = 200_000
-	PostSendEVMGasLimit             = 4_000_000 // likely emit a lot of logs, so costly
-	PostSendNonEVMGasLimit          = 1_000_000
-	PostReceiveConfirmationGasLimit = 400_000
-	PostBlameDataGasLimit           = 200_000
-	DefaultGasLimit                 = 200_000
-	PostProveOutboundTxGasLimit     = 400_000
-	DefaultRetryCount               = 5
-	ExtendedRetryCount              = 15
-	DefaultRetryInterval            = 5
-)
+	// DefaultGasLimit is the default gas limit used for broadcasting txs
+	DefaultGasLimit = 200_000
 
-// GetInBoundVoteMessage returns a new MsgVoteOnObservedInboundTx
-func GetInBoundVoteMessage(
-	sender string,
-	senderChain int64,
-	txOrigin string,
-	receiver string,
-	receiverChain int64,
-	amount math.Uint,
-	message string,
-	inTxHash string,
-	inBlockHeight uint64,
-	gasLimit uint64,
-	coinType common.CoinType,
-	asset string,
-	signerAddress string,
-	eventIndex uint,
-) *types.MsgVoteOnObservedInboundTx {
-	msg := types.NewMsgVoteOnObservedInboundTx(
-		signerAddress,
-		sender,
-		senderChain,
-		txOrigin,
-		receiver,
-		receiverChain,
-		amount,
-		message,
-		inTxHash,
-		inBlockHeight,
-		gasLimit,
-		coinType,
-		asset,
-		eventIndex,
-	)
-	return msg
-}
+	// PostGasPriceGasLimit is the gas limit for voting new gas price
+	PostGasPriceGasLimit = 1_500_000
+
+	// AddTxHashToOutTxTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
+	AddTxHashToOutTxTrackerGasLimit = 200_000
+
+	// PostBlameDataGasLimit is the gas limit for voting on blames
+	PostBlameDataGasLimit = 200_000
+
+	// DefaultRetryCount is the number of retries for broadcasting a tx
+	DefaultRetryCount = 5
+
+	// ExtendedRetryCount is an extended number of retries for broadcasting a tx, used in keygen operations
+	ExtendedRetryCount = 15
+
+	// DefaultRetryInterval is the interval between retries in seconds
+	DefaultRetryInterval = 5
+)
 
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, AuthZSigner, error) {
 	msgURL := sdk.MsgTypeURL(msg)
@@ -110,6 +79,15 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	blockHash string,
 	txIndex int64,
 ) (string, error) {
+	// don't report if the tracker already contains the txHash
+	tracker, err := b.GetOutTxTracker(common.Chain{ChainId: chainID}, nonce)
+	if err == nil {
+		for _, hash := range tracker.HashList {
+			if strings.EqualFold(hash.TxHash, txHash) {
+				return "", nil
+			}
+		}
+	}
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 
@@ -123,94 +101,6 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 		return "", err
 	}
 	return zetaTxHash, nil
-}
-
-func (b *ZetaCoreBridge) PostSend(zetaGasLimit uint64, msg *types.MsgVoteOnObservedInboundTx) (string, string, error) {
-	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
-	if err != nil {
-		return "", "", err
-	}
-
-	// don't post send if has already voted before
-	ballotIndex := msg.Digest()
-	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
-	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostSend: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
-	}
-	if hasVoted {
-		return "", ballotIndex, nil
-	}
-
-	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(zetaGasLimit, authzMsg, authzSigner)
-		if err == nil {
-			return zetaTxHash, ballotIndex, nil
-		}
-		b.logger.Debug().Err(err).Msgf("PostSend broadcast fail | Retry count : %d", i+1)
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-	return "", ballotIndex, fmt.Errorf("post send failed after %d retries", DefaultRetryInterval)
-}
-
-func (b *ZetaCoreBridge) PostReceiveConfirmation(
-	sendHash string,
-	outTxHash string,
-	outBlockHeight uint64,
-	outTxGasUsed uint64,
-	outTxEffectiveGasPrice *big.Int,
-	outTxEffectiveGasLimit uint64,
-	amount *big.Int,
-	status common.ReceiveStatus,
-	chain common.Chain,
-	nonce uint64,
-	coinType common.CoinType,
-) (string, string, error) {
-	signerAddress := b.keys.GetOperatorAddress().String()
-	msg := types.NewMsgVoteOnObservedOutboundTx(
-		signerAddress,
-		sendHash,
-		outTxHash,
-		outBlockHeight,
-		outTxGasUsed,
-		math.NewIntFromBigInt(outTxEffectiveGasPrice),
-		outTxEffectiveGasLimit,
-		math.NewUintFromBigInt(amount),
-		status,
-		chain.ChainId,
-		nonce,
-		coinType,
-	)
-
-	authzMsg, authzSigner, err := b.WrapMessageWithAuthz(msg)
-	if err != nil {
-		return "", "", err
-	}
-
-	// don't post confirmation if has already voted before
-	ballotIndex := msg.Digest()
-	hasVoted, err := b.HasVoted(ballotIndex, msg.Creator)
-	if err != nil {
-		return "", ballotIndex, errors.Wrapf(err, "PostReceiveConfirmation: unable to check if already voted for ballot %s voter %s", ballotIndex, msg.Creator)
-	}
-	if hasVoted {
-		return "", ballotIndex, nil
-	}
-
-	// FIXME: remove this gas limit stuff; in the special ante handler with no gas limit, add
-	// NewMsgReceiveConfirmation to it.
-	var gasLimit uint64 = PostReceiveConfirmationGasLimit
-	if status == common.ReceiveStatus_Failed {
-		gasLimit = PostSendEVMGasLimit
-	}
-	for i := 0; i < DefaultRetryCount; i++ {
-		zetaTxHash, err := b.Broadcast(gasLimit, authzMsg, authzSigner)
-		if err == nil {
-			return zetaTxHash, ballotIndex, nil
-		}
-		b.logger.Debug().Err(err).Msgf("PostReceive broadcast fail | Retry count : %d", i+1)
-		time.Sleep(DefaultRetryInterval * time.Second)
-	}
-	return "", ballotIndex, fmt.Errorf("post receive failed after %d retries", DefaultRetryCount)
 }
 
 func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {

@@ -7,12 +7,16 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 )
 
@@ -132,6 +136,52 @@ func setContractsFromConfig(r *runner.SmokeTestRunner, conf config.Config) error
 		if err != nil {
 			return err
 		}
+	}
+	if c := conf.Contracts.ZEVM.ConnectorZEVMAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ConnectorZEVMAddr: %s", c)
+		}
+		r.ConnectorZEVMAddr = ethcommon.HexToAddress(c)
+		r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.WZetaAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid WZetaAddr: %s", c)
+		}
+		r.WZetaAddr = ethcommon.HexToAddress(c)
+		r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.ZEVMSwapAppAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ZEVMSwapAppAddr: %s", c)
+		}
+		r.ZEVMSwapAppAddr = ethcommon.HexToAddress(c)
+		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.ContextAppAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ContextAppAddr: %s", c)
+		}
+		r.ContextAppAddr = ethcommon.HexToAddress(c)
+		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.TestDappAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid TestDappAddr: %s", c)
+		}
+		r.TestDAppAddr = ethcommon.HexToAddress(c)
 	}
 
 	return nil

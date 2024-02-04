@@ -730,3 +730,51 @@ export declare class MsgVoteOnObservedInboundTxResponse extends Message<MsgVoteO
   static equals(a: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined, b: MsgVoteOnObservedInboundTxResponse | PlainMessage<MsgVoteOnObservedInboundTxResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgAbortStuckCCTX
+ */
+export declare class MsgAbortStuckCCTX extends Message<MsgAbortStuckCCTX> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string cctx_index = 2;
+   */
+  cctxIndex: string;
+
+  constructor(data?: PartialMessage<MsgAbortStuckCCTX>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAbortStuckCCTX";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAbortStuckCCTX;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAbortStuckCCTX;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAbortStuckCCTX;
+
+  static equals(a: MsgAbortStuckCCTX | PlainMessage<MsgAbortStuckCCTX> | undefined, b: MsgAbortStuckCCTX | PlainMessage<MsgAbortStuckCCTX> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgAbortStuckCCTXResponse
+ */
+export declare class MsgAbortStuckCCTXResponse extends Message<MsgAbortStuckCCTXResponse> {
+  constructor(data?: PartialMessage<MsgAbortStuckCCTXResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgAbortStuckCCTXResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgAbortStuckCCTXResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgAbortStuckCCTXResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgAbortStuckCCTXResponse;
+
+  static equals(a: MsgAbortStuckCCTXResponse | PlainMessage<MsgAbortStuckCCTXResponse> | undefined, b: MsgAbortStuckCCTXResponse | PlainMessage<MsgAbortStuckCCTXResponse> | undefined): boolean;
+}
+

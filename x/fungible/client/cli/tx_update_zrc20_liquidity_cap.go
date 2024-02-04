@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"fmt"
-
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,7 +21,6 @@ func CmdUpdateZRC20LiquidityCap() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Printf("CLI address: %s\n", clientCtx.GetFromAddress().String())
 			msg := types.NewMsgUpdateZRC20LiquidityCap(
 				clientCtx.GetFromAddress().String(),
 				args[0],

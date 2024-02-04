@@ -22,7 +22,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain := k.GetParams(ctx).GetChainFromChainID(outTxChainID)
+	observationChain := k.GetSupportedChainFromChainID(ctx, outTxChainID)
 	if observationChain == nil {
 		return false, false, ballotStatus, "", observertypes.ErrSupportedChains
 	}
@@ -31,7 +31,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	}
 
 	// check if voter is authorized
-	if ok := k.IsAuthorized(ctx, voter, observationChain); !ok {
+	if ok := k.IsAuthorized(ctx, voter); !ok {
 		return false, false, ballotStatus, "", observertypes.ErrNotAuthorizedPolicy
 	}
 

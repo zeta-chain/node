@@ -72,14 +72,11 @@ func AddObserverAccountsCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var observerMapper []*types.ObserverMapper
+			var observerSet types.ObserverSet
 			var grantAuthorizations []authz.GrantAuthorization
 			var nodeAccounts []*types.NodeAccount
 			var keygenPubKeys []string
-			observersForChain := map[int64][]string{}
 
-			// DefaultChainsList is based on Build Flags
-			supportedChains := common.DefaultChainsList()
 			var balances []banktypes.Balance
 			validatorTokens, ok := sdk.NewIntFromString(ValidatorTokens)
 			if !ok {
@@ -115,9 +112,8 @@ func AddObserverAccountsCmd() *cobra.Command {
 					panic("ZetaClientGranteeAddress or ObserverAddress is empty")
 				}
 				grantAuthorizations = append(grantAuthorizations, generateGrants(info)...)
-				for _, chain := range supportedChains {
-					observersForChain[chain.ChainId] = append(observersForChain[chain.ChainId], info.ObserverAddress)
-				}
+
+				observerSet.ObserverList = append(observerSet.ObserverList, info.ObserverAddress)
 				if info.ZetaClientGranteePubKey != "" {
 					pubkey, err := common.NewPubKey(info.ZetaClientGranteePubKey)
 					if err != nil {
@@ -143,17 +139,6 @@ func AddObserverAccountsCmd() *cobra.Command {
 				keygenPubKeys = append(keygenPubKeys, info.ZetaClientGranteePubKey)
 			}
 
-			// Generate observer mappers for each chain
-			for chainID, observers := range observersForChain {
-				observers = removeDuplicate(observers)
-				chain := common.GetChainFromChainID(chainID)
-				mapper := types.ObserverMapper{
-					ObserverChain: chain,
-					ObserverList:  observers,
-				}
-				observerMapper = append(observerMapper, &mapper)
-			}
-
 			genFile := serverConfig.GenesisFile()
 			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
 			if err != nil {
@@ -176,10 +161,10 @@ func AddObserverAccountsCmd() *cobra.Command {
 					KeyGenZetaHeight:    0,
 				}
 			}
-
+			observerSet.ObserverList = removeDuplicate(observerSet.ObserverList)
 			// Add observers to observer genesis state
 			zetaObserverGenState := types.GetGenesisStateFromAppState(cdc, appState)
-			zetaObserverGenState.Observers = observerMapper
+			zetaObserverGenState.Observers = observerSet
 			zetaObserverGenState.NodeAccountList = nodeAccounts
 			zetaObserverGenState.Tss = &tss
 			keyGenStatus := types.KeygenStatus_PendingKeygen

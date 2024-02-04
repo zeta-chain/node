@@ -26696,6 +26696,25 @@ paths:
           type: string
       tags:
         - Query
+  /zeta-chain/crosschain/get_tss_address:
+    get:
+      summary: |-
+        GetTssAddress queries the tss address of the module.
+        Deprecated: Moved to observer
+        TODO: remove after v12 once upgrade testing is no longer needed with v11
+        https://github.com/zeta-chain/node/issues/1547
+      operationId: Query_GetTssAddress
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorecrosschainQueryGetTssAddressResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
     get:
       summary: Queries a InTxHashToCctx data by index.
@@ -27446,20 +27465,6 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/observer/all_observer_mappers:
-    get:
-      operationId: Query_AllObserverMappers
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryAllObserverMappersResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/observer/ballot_by_identifier/{ballot_identifier}:
     get:
       summary: Queries a list of VoterByIdentifier items.
@@ -27776,15 +27781,30 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_client_params_for_chain/{chain_id}:
+  /zeta-chain/observer/get_chain_params:
     get:
-      summary: Queries a list of GetClientParamsForChain items.
-      operationId: Query_GetCoreParamsForChain
+      summary: Queries a list of GetChainParams items.
+      operationId: Query_GetChainParams
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetCoreParamsForChainResponse'
+            $ref: '#/definitions/observerQueryGetChainParamsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
+  /zeta-chain/observer/get_chain_params_for_chain/{chain_id}:
+    get:
+      summary: Queries a list of GetChainParamsForChain items.
+      operationId: Query_GetChainParamsForChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/observerQueryGetChainParamsForChainResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27797,22 +27817,7 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_core_params:
-    get:
-      summary: Queries a list of GetCoreParams items.
-      operationId: Query_GetCoreParams
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/observerQueryGetCoreParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
-  /zeta-chain/observer/get_tss_address:
+  /zeta-chain/observer/get_tss_address/{bitcoin_chain_id}:
     get:
       summary: Queries a list of GetTssAddress items.
       operationId: Query_GetTssAddress
@@ -27820,15 +27825,15 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetTssAddressResponse'
+            $ref: '#/definitions/zetacoreobserverQueryGetTssAddressResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: bitcoin_chain_id
-          in: query
-          required: false
+          in: path
+          required: true
           type: string
           format: int64
       tags:
@@ -27976,24 +27981,19 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/observer/observers_by_chain/{observation_chain}:
+  /zeta-chain/observer/observer_set:
     get:
       summary: Queries a list of ObserversByChainAndType items.
-      operationId: Query_ObserversByChain
+      operationId: Query_ObserverSet
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryObserversByChainResponse'
+            $ref: '#/definitions/observerQueryObserverSetResponse'
         default:
           description: An unexpected error response.
           schema:
             $ref: '#/definitions/googlerpcStatus'
-      parameters:
-        - name: observation_chain
-          in: path
-          required: true
-          type: string
       tags:
         - Query
   /zeta-chain/observer/params:
@@ -50813,6 +50813,8 @@ definitions:
       inbound_tx_finalized_zeta_height:
         type: string
         format: uint64
+      tx_finalization_status:
+        $ref: '#/definitions/crosschainTxFinalizationStatus'
   crosschainLastBlockHeight:
     type: object
     properties:
@@ -50828,6 +50830,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  crosschainMsgAbortStuckCCTXResponse:
+    type: object
   crosschainMsgAddToInTxTrackerResponse:
     type: object
   crosschainMsgAddToOutTxTrackerResponse:
@@ -50914,6 +50918,8 @@ definitions:
         format: uint64
       tss_pubkey:
         type: string
+      tx_finalization_status:
+        $ref: '#/definitions/crosschainTxFinalizationStatus'
   crosschainQueryAllCctxResponse:
     type: object
     properties:
@@ -51064,6 +51070,17 @@ definitions:
     properties:
       aborted_zeta_amount:
         type: string
+  crosschainTxFinalizationStatus:
+    type: string
+    enum:
+      - NotFinalized
+      - Finalized
+      - Executed
+    default: NotFinalized
+    title: |-
+      - NotFinalized: the corresponding tx is not finalized
+       - Finalized: the corresponding tx is finalized but not executed yet
+       - Executed: the corresponding tx is executed
   crosschainTxHashList:
     type: object
     properties:
@@ -51306,9 +51323,12 @@ definitions:
       finalizedHeight:
         type: string
         format: uint64
-  observerCoreParams:
+  observerChainParams:
     type: object
     properties:
+      chain_id:
+        type: string
+        format: int64
       confirmation_count:
         type: string
         format: uint64
@@ -51330,23 +51350,26 @@ definitions:
         type: string
       erc20_custody_contract_address:
         type: string
-      chain_id:
-        type: string
-        format: int64
       outbound_tx_schedule_interval:
         type: string
         format: int64
       outbound_tx_schedule_lookahead:
         type: string
         format: int64
-  observerCoreParamsList:
+      ballot_threshold:
+        type: string
+      min_observer_delegation:
+        type: string
+      is_supported:
+        type: boolean
+  observerChainParamsList:
     type: object
     properties:
-      core_params:
+      chain_params:
         type: array
         items:
           type: object
-          $ref: '#/definitions/observerCoreParams'
+          $ref: '#/definitions/observerChainParams'
   observerCrosschainFlags:
     type: object
     properties:
@@ -51415,7 +51438,9 @@ definitions:
     type: object
   observerMsgAddObserverResponse:
     type: object
-  observerMsgUpdateCoreParamsResponse:
+  observerMsgRemoveChainParamsResponse:
+    type: object
+  observerMsgUpdateChainParamsResponse:
     type: object
   observerMsgUpdateCrosschainFlagsResponse:
     type: object
@@ -51464,17 +51489,6 @@ definitions:
       - TSSKeyGen
       - TSSKeySign
     default: EmptyObserverType
-  observerObserverMapper:
-    type: object
-    properties:
-      index:
-        type: string
-      observer_chain:
-        $ref: '#/definitions/commonChain'
-      observer_list:
-        type: array
-        items:
-          type: string
   observerObserverParams:
     type: object
     properties:
@@ -51486,6 +51500,7 @@ definitions:
         type: string
       is_supported:
         type: boolean
+    title: 'Deprecated: Use ChainParamsList'
   observerObserverUpdateReason:
     type: string
     enum:
@@ -51554,14 +51569,6 @@ definitions:
           $ref: '#/definitions/observerNodeAccount'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllObserverMappersResponse:
-    type: object
-    properties:
-      observer_mappers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/observerObserverMapper'
   observerQueryAllPendingNoncesResponse:
     type: object
     properties:
@@ -51614,16 +51621,16 @@ definitions:
     properties:
       ChainNonces:
         $ref: '#/definitions/observerChainNonces'
-  observerQueryGetCoreParamsForChainResponse:
+  observerQueryGetChainParamsForChainResponse:
     type: object
     properties:
-      core_params:
-        $ref: '#/definitions/observerCoreParams'
-  observerQueryGetCoreParamsResponse:
+      chain_params:
+        $ref: '#/definitions/observerChainParams'
+  observerQueryGetChainParamsResponse:
     type: object
     properties:
-      core_params:
-        $ref: '#/definitions/observerCoreParamsList'
+      chain_params:
+        $ref: '#/definitions/observerChainParamsList'
   observerQueryGetCrosschainFlagsResponse:
     type: object
     properties:
@@ -51651,19 +51658,12 @@ definitions:
         type: string
       btc:
         type: string
-  observerQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
   observerQueryHasVotedResponse:
     type: object
     properties:
       has_voted:
         type: boolean
-  observerQueryObserversByChainResponse:
+  observerQueryObserverSetResponse:
     type: object
     properties:
       observers:
@@ -51817,6 +51817,17 @@ definitions:
       enabled:
         type: boolean
     description: Params defines the parameters for the module.
+  zetacorecrosschainQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
+    title: |-
+      Deprecated: Moved to observer
+      TODO: remove after v12 once upgrade testing is no longer needed with v11
+      https://github.com/zeta-chain/node/issues/1547
   zetacorecrosschainQueryParamsResponse:
     type: object
     properties:
@@ -51881,6 +51892,7 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerObserverParams'
+        title: 'Deprecated: Use ChainParamsList'
       admin_policy:
         type: array
         items:
@@ -51890,6 +51902,13 @@ definitions:
         type: string
         format: int64
     description: Params defines the parameters for the module.
+  zetacoreobserverQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:

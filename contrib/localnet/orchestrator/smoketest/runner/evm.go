@@ -71,16 +71,13 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 
 func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
-	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ ERC20 deposited in %s", time.Since(startTime))
-	}()
 
 	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
 
 func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
-	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
+	// reset allowance, necessary for USDT
+	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +87,18 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 	}
 	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
+	tx, err = sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
+	if err != nil {
+		panic(err)
+	}
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status == 0 {
+		panic("approve failed")
+	}
+	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+
 	tx, err = sm.ERC20Custody.Deposit(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
+	sm.Logger.Print("TX: %v", tx)
 	if err != nil {
 		panic(err)
 	}
@@ -110,34 +118,29 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 		sm.Logger.Info("  Amount: %d", event.Amount)
 		sm.Logger.Info("  Message: %x", event.Message)
 	}
-	sm.Logger.Info("gas limit %d", sm.ZevmAuth.GasLimit)
 	return tx.Hash()
 }
 
 // DepositEther sends Ethers into ZEVM
 func (sm *SmokeTestRunner) DepositEther(testHeader bool) ethcommon.Hash {
-	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
-	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ Ethers deposited in %s", time.Since(startTime))
-	}()
+	return sm.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
+}
 
-	value := big.NewInt(1000000000000000000) // in wei (1 eth)
-	signedTx, err := sm.SendEther(sm.TSSAddress, value, nil)
+// DepositEtherWithAmount sends Ethers into ZEVM
+func (sm *SmokeTestRunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
+
+	signedTx, err := sm.SendEther(sm.TSSAddress, amount, nil)
 	if err != nil {
 		panic(err)
 	}
+	sm.Logger.EVMTransaction(*signedTx, "send to TSS")
 
-	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
-	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
-	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
-	sm.Logger.Info("  to: %s", signedTx.To().String())
-	sm.Logger.Info("  value: %d", signedTx.Value())
-	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
+	sm.Logger.EVMReceipt(*receipt, "send to TSS")
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test

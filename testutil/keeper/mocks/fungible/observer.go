@@ -4,8 +4,8 @@ package mocks
 
 import (
 	mock "github.com/stretchr/testify/mock"
-	common "github.com/zeta-chain/zetacore/common"
 
+	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -30,26 +30,6 @@ func (_m *FungibleObserverKeeper) GetAllBallots(ctx types.Context) []*observerty
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*observertypes.Ballot)
-		}
-	}
-
-	return r0
-}
-
-// GetAllObserverMappers provides a mock function with given fields: ctx
-func (_m *FungibleObserverKeeper) GetAllObserverMappers(ctx types.Context) []*observertypes.ObserverMapper {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllObserverMappers")
-	}
-
-	var r0 []*observertypes.ObserverMapper
-	if rf, ok := ret.Get(0).(func(types.Context) []*observertypes.ObserverMapper); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*observertypes.ObserverMapper)
 		}
 	}
 
@@ -84,24 +64,24 @@ func (_m *FungibleObserverKeeper) GetBallot(ctx types.Context, index string) (ob
 	return r0, r1
 }
 
-// GetCoreParamsByChainID provides a mock function with given fields: ctx, chainID
-func (_m *FungibleObserverKeeper) GetCoreParamsByChainID(ctx types.Context, chainID int64) (*observertypes.CoreParams, bool) {
+// GetChainParamsByChainID provides a mock function with given fields: ctx, chainID
+func (_m *FungibleObserverKeeper) GetChainParamsByChainID(ctx types.Context, chainID int64) (*observertypes.ChainParams, bool) {
 	ret := _m.Called(ctx, chainID)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetCoreParamsByChainID")
+		panic("no return value specified for GetChainParamsByChainID")
 	}
 
-	var r0 *observertypes.CoreParams
+	var r0 *observertypes.ChainParams
 	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, int64) (*observertypes.CoreParams, bool)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, int64) (*observertypes.ChainParams, bool)); ok {
 		return rf(ctx, chainID)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, int64) *observertypes.CoreParams); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, int64) *observertypes.ChainParams); ok {
 		r0 = rf(ctx, chainID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*observertypes.CoreParams)
+			r0 = ret.Get(0).(*observertypes.ChainParams)
 		}
 	}
 
@@ -114,27 +94,47 @@ func (_m *FungibleObserverKeeper) GetCoreParamsByChainID(ctx types.Context, chai
 	return r0, r1
 }
 
-// GetObserverMapper provides a mock function with given fields: ctx, chain
-func (_m *FungibleObserverKeeper) GetObserverMapper(ctx types.Context, chain *common.Chain) (observertypes.ObserverMapper, bool) {
-	ret := _m.Called(ctx, chain)
+// GetMaturedBallotList provides a mock function with given fields: ctx
+func (_m *FungibleObserverKeeper) GetMaturedBallotList(ctx types.Context) []string {
+	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetObserverMapper")
+		panic("no return value specified for GetMaturedBallotList")
 	}
 
-	var r0 observertypes.ObserverMapper
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, *common.Chain) (observertypes.ObserverMapper, bool)); ok {
-		return rf(ctx, chain)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *common.Chain) observertypes.ObserverMapper); ok {
-		r0 = rf(ctx, chain)
+	var r0 []string
+	if rf, ok := ret.Get(0).(func(types.Context) []string); ok {
+		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(observertypes.ObserverMapper)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, *common.Chain) bool); ok {
-		r1 = rf(ctx, chain)
+	return r0
+}
+
+// GetObserverSet provides a mock function with given fields: ctx
+func (_m *FungibleObserverKeeper) GetObserverSet(ctx types.Context) (observertypes.ObserverSet, bool) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetObserverSet")
+	}
+
+	var r0 observertypes.ObserverSet
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.ObserverSet, bool)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context) observertypes.ObserverSet); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(observertypes.ObserverSet)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
@@ -160,13 +160,33 @@ func (_m *FungibleObserverKeeper) GetParams(ctx types.Context) observertypes.Par
 	return r0
 }
 
+// GetSupportedChains provides a mock function with given fields: ctx
+func (_m *FungibleObserverKeeper) GetSupportedChains(ctx types.Context) []*common.Chain {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetSupportedChains")
+	}
+
+	var r0 []*common.Chain
+	if rf, ok := ret.Get(0).(func(types.Context) []*common.Chain); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*common.Chain)
+		}
+	}
+
+	return r0
+}
+
 // SetBallot provides a mock function with given fields: ctx, ballot
 func (_m *FungibleObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
 	_m.Called(ctx, ballot)
 }
 
-// SetObserverMapper provides a mock function with given fields: ctx, om
-func (_m *FungibleObserverKeeper) SetObserverMapper(ctx types.Context, om *observertypes.ObserverMapper) {
+// SetObservers provides a mock function with given fields: ctx, om
+func (_m *FungibleObserverKeeper) SetObservers(ctx types.Context, om observertypes.ObserverSet) {
 	_m.Called(ctx, om)
 }
 

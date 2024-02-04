@@ -26,7 +26,7 @@ type CrosschainStakingKeeper interface {
 
 //go:generate mockery --name CrosschainObserverKeeper --filename observer.go --case underscore --output ./crosschain
 type CrosschainObserverKeeper interface {
-	crosschaintypes.ZetaObserverKeeper
+	crosschaintypes.ObserverKeeper
 }
 
 //go:generate mockery --name CrosschainFungibleKeeper --filename fungible.go --case underscore --output ./crosschain
