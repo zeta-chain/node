@@ -55,6 +55,7 @@ func ethereumTestRoutine(
 		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
+			smoketests.TestEtherWithdrawName,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositAndCallRefundName,

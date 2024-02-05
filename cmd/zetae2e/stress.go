@@ -152,7 +152,9 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// setup TSS addresses
-	smokeTest.SetTSSAddresses()
+	if err := smokeTest.SetTSSAddresses(); err != nil {
+		panic(err)
+	}
 
 	smokeTest.SetupEVM(stressTestArgs.contractsDeployed)
 

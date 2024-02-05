@@ -7,7 +7,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -131,6 +133,26 @@ func setContractsFromConfig(r *runner.SmokeTestRunner, conf config.Config) error
 		}
 		r.UniswapV2RouterAddr = ethcommon.HexToAddress(c)
 		r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.ConnectorZEVMAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid ConnectorZEVMAddr: %s", c)
+		}
+		r.ConnectorZEVMAddr = ethcommon.HexToAddress(c)
+		r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZevmClient)
+		if err != nil {
+			return err
+		}
+	}
+	if c := conf.Contracts.ZEVM.WZetaAddr; c != "" {
+		if !ethcommon.IsHexAddress(c) {
+			return fmt.Errorf("invalid WZetaAddr: %s", c)
+		}
+		r.WZetaAddr = ethcommon.HexToAddress(c)
+		r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZevmClient)
 		if err != nil {
 			return err
 		}
