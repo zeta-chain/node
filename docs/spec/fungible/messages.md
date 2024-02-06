@@ -56,7 +56,7 @@ Authorized: admin policy group 2.
 ```proto
 message MsgRemoveForeignCoin {
 	string creator = 1;
-	string name = 2;
+	string zrc20_address = 2;
 }
 ```
 

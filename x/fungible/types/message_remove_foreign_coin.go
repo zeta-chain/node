@@ -11,8 +11,8 @@ var _ sdk.Msg = &MsgRemoveForeignCoin{}
 
 func NewMsgRemoveForeignCoin(creator string, name string) *MsgRemoveForeignCoin {
 	return &MsgRemoveForeignCoin{
-		Creator: creator,
-		Name:    name,
+		Creator:      creator,
+		ZRC20Address: name,
 	}
 }
 
