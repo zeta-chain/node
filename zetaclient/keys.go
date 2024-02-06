@@ -2,7 +2,6 @@ package zetaclient
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -20,22 +19,21 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
-// HotkeyPasswordEnvVar is the environment variable used to retrieve the password for the hotkey
-const HotkeyPasswordEnvVar = "HOTKEY_PASSWORD"
-
 // Keys manages all the keys used by zeta client
 type Keys struct {
 	signerName      string
 	kb              ckeys.Keyring
 	OperatorAddress sdk.AccAddress
+	hotkeyPassword  string
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string, hotkeyPassword string) *Keys {
 	return &Keys{
 		signerName:      granteeName,
 		kb:              kb,
 		OperatorAddress: granterAddress,
+		hotkeyPassword:  hotkeyPassword,
 	}
 }
 
@@ -44,7 +42,7 @@ func GetGranteeKeyName(signerName string) string {
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
+func GetKeyringKeybase(cfg *config.Config, hotkeyPassword string) (ckeys.Keyring, string, error) {
 	granteeName := cfg.AuthzHotkey
 	chainHomeFolder := cfg.ZetaCoreHome
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()
@@ -55,13 +53,9 @@ func GetKeyringKeybase(cfg *config.Config) (ckeys.Keyring, string, error) {
 	// read password from env if using keyring backend file
 	buf := bytes.NewBufferString("")
 	if cfg.KeyringBackend == config.KeyringBackendFile {
-		password, err := getHotkeyPassword()
-		if err != nil {
-			return nil, "", err
-		}
-		buf.WriteString(password)
+		buf.WriteString(hotkeyPassword)
 		buf.WriteByte('\n') // the library used by keyring is using ReadLine , which expect a new line
-		buf.WriteString(password)
+		buf.WriteString(hotkeyPassword)
 		buf.WriteByte('\n')
 	}
 
@@ -137,12 +131,7 @@ func (k *Keys) GetAddress() sdk.AccAddress {
 }
 
 // GetPrivateKey return the private key
-func (k *Keys) GetPrivateKey() (cryptotypes.PrivKey, error) {
-	password, err := k.GetHotkeyPassword()
-	if err != nil {
-		return nil, err
-	}
-
+func (k *Keys) GetPrivateKey(password string) (cryptotypes.PrivKey, error) {
 	signer := GetGranteeKeyName(k.signerName)
 	privKeyArmor, err := k.kb.ExportPrivKeyArmor(signer, password)
 	if err != nil {
@@ -160,13 +149,13 @@ func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
 }
 
-func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
+func (k *Keys) GetPubKeySet(password string) (common.PubKeySet, error) {
 	pubkeySet := common.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
 
-	pK, err := k.GetPrivateKey()
+	pK, err := k.GetPrivateKey(password)
 	if err != nil {
 		return pubkeySet, err
 	}
@@ -185,25 +174,9 @@ func (k *Keys) GetPubKeySet() (common.PubKeySet, error) {
 
 // GetHotkeyPassword returns the password to be used
 // returns empty if no password is needed
-func (k *Keys) GetHotkeyPassword() (string, error) {
+func (k *Keys) GetHotkeyPassword() string {
 	if k.GetKeybase().Backend() == ckeys.BackendFile {
-		return getHotkeyPassword()
+		return k.hotkeyPassword
 	}
-	return "", nil
-}
-
-// getHotkeyPassword retrieves the HOTKEY_PASSWORD environment variable
-// and returns an error if it's not defined or shorter than 8 characters.
-func getHotkeyPassword() (string, error) {
-	password := os.Getenv(HotkeyPasswordEnvVar)
-
-	if password == "" {
-		return "", errors.New("HOTKEY_PASSWORD environment variable is not defined, use --keyring-backend-test to use the test keyring")
-	}
-
-	if len(password) < 8 {
-		return "", errors.New("HOTKEY_PASSWORD should be at least 8 characters long")
-	}
-
-	return password, nil
+	return ""
 }

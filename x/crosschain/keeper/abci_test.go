@@ -6,13 +6,105 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/zeta-chain/zetacore/common"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
+func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
+	k, ctx, _, zk := testkeeper.CrosschainKeeper(t)
+
+	// updateFuncMap tracks the calls done with cctx index
+	updateFuncMap := make(map[string]struct{})
+
+	// failMap gives the cctx index that should fail
+	failMap := make(map[string]struct{})
+
+	// updateFunc mocks the update function and keep track of the calls done with cctx index
+	updateFunc := func(
+		ctx sdk.Context,
+		k keeper.Keeper,
+		cctx types.CrossChainTx,
+		flags observertypes.GasPriceIncreaseFlags,
+	) (math.Uint, math.Uint, error) {
+		if _, ok := failMap[cctx.Index]; ok {
+			return math.NewUint(0), math.NewUint(0), errors.New("failed")
+		}
+
+		updateFuncMap[cctx.Index] = struct{}{}
+		return math.NewUint(10), math.NewUint(10), nil
+	}
+
+	// add some evm and non-evm chains
+	supportedChains := []*common.Chain{
+		{ChainId: common.EthChain().ChainId},
+		{ChainId: common.BtcMainnetChain().ChainId},
+		{ChainId: common.BscMainnetChain().ChainId},
+		{ChainId: common.ZetaChainMainnet().ChainId},
+	}
+
+	// set pending cctx
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+	createCctxWithNonceRange(t, ctx, *k, 10, 15, common.EthChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 20, 25, common.BtcMainnetChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 30, 35, common.BscMainnetChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 40, 45, common.ZetaChainMainnet().ChainId, tss, zk)
+
+	// set a cctx where the update function should fail to test that the next cctx are not updated but the next chains are
+	failMap["1-12"] = struct{}{}
+
+	// test that the default crosschain flags are used when not set and the epoch length is not reached
+	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength + 1)
+
+	cctxCount, flags := k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	assert.Equal(t, 0, cctxCount)
+	assert.Equal(t, *observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags, flags)
+
+	// test that custom crosschain flags are used when set and the epoch length is reached
+	customFlags := observertypes.GasPriceIncreaseFlags{
+		EpochLength:             100,
+		RetryInterval:           time.Minute * 10,
+		GasPriceIncreasePercent: 100,
+		GasPriceIncreaseMax:     200,
+		MaxPendingCctxs:         10,
+	}
+	crosschainFlags := sample.CrosschainFlags()
+	crosschainFlags.GasPriceIncreaseFlags = &customFlags
+	zk.ObserverKeeper.SetCrosschainFlags(ctx, *crosschainFlags)
+
+	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+	assert.Equal(t, 0, cctxCount)
+	assert.Equal(t, customFlags, flags)
+
+	// test that cctx are iterated and updated when the epoch length is reached
+
+	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength * 2)
+	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
+
+	// 2 eth + 5 bsc = 7
+	assert.Equal(t, 7, cctxCount)
+	assert.Equal(t, customFlags, flags)
+
+	// check that the update function was called with the cctx index
+	assert.Equal(t, 7, len(updateFuncMap))
+	assert.Contains(t, updateFuncMap, "1-10")
+	assert.Contains(t, updateFuncMap, "1-11")
+
+	assert.Contains(t, updateFuncMap, "56-30")
+	assert.Contains(t, updateFuncMap, "56-31")
+	assert.Contains(t, updateFuncMap, "56-32")
+	assert.Contains(t, updateFuncMap, "56-33")
+	assert.Contains(t, updateFuncMap, "56-34")
+}
+
+func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 	sampleTimestamp := time.Now()
 	retryIntervalReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval + time.Second)
 	retryIntervalNotReached := sampleTimestamp.Add(observertypes.DefaultGasPriceIncreaseFlags.RetryInterval - time.Second)
@@ -282,7 +374,7 @@ func TestKeeper_CheckAndUpdateCctxGasPrice(t *testing.T) {
 			}
 
 			// check and update gas price
-			gasPriceIncrease, feesPaid, err := k.CheckAndUpdateCctxGasPrice(ctx, tc.cctx, tc.flags)
+			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasPrice(ctx, *k, tc.cctx, tc.flags)
 
 			if tc.isError {
 				assert.Error(t, err)

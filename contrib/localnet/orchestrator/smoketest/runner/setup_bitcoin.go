@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 )
@@ -25,7 +24,7 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 		}
 	}
 
-	sm.setBtcAddress()
+	sm.SetBtcAddress(sm.Name, true)
 
 	if initNetwork {
 		// import the TSS address
@@ -47,29 +46,54 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 	}
 }
 
-// setBtcAddress
-func (sm *SmokeTestRunner) setBtcAddress() {
+// GetBtcAddress returns the BTC address of the deployer from its EVM private key
+func (sm *SmokeTestRunner) GetBtcAddress() (string, string, error) {
+	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
+	if err != nil {
+		return "", "", err
+	}
+
+	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
+	privkeyWIF, err := btcutil.NewWIF(sk, sm.BitcoinParams, true)
+	if err != nil {
+		return "", "", err
+	}
+
+	address, err := btcutil.NewAddressWitnessPubKeyHash(
+		btcutil.Hash160(privkeyWIF.SerializePubKey()),
+		sm.BitcoinParams,
+	)
+	if err != nil {
+		return "", "", err
+	}
+
+	// return the string representation of the address
+	return address.EncodeAddress(), privkeyWIF.String(), nil
+}
+
+// SetBtcAddress imports the deployer's private key into the Bitcoin node
+func (sm *SmokeTestRunner) SetBtcAddress(name string, rescan bool) {
 	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
 	if err != nil {
 		panic(err)
 	}
 
-	// TODO: support non regtest chain
-	// https://github.com/zeta-chain/node/issues/1482
 	sk, _ := btcec.PrivKeyFromBytes(btcec.S256(), skBytes)
-	privkeyWIF, err := btcutil.NewWIF(sk, &chaincfg.RegressionNetParams, true)
+	privkeyWIF, err := btcutil.NewWIF(sk, sm.BitcoinParams, true)
 	if err != nil {
 		panic(err)
 	}
 
-	err = sm.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, sm.Name, true)
-	if err != nil {
-		panic(err)
+	if rescan {
+		err = sm.BtcRPCClient.ImportPrivKeyRescan(privkeyWIF, name, true)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	sm.BTCDeployerAddress, err = btcutil.NewAddressWitnessPubKeyHash(
 		btcutil.Hash160(privkeyWIF.PrivKey.PubKey().SerializeCompressed()),
-		&chaincfg.RegressionNetParams,
+		sm.BitcoinParams,
 	)
 	if err != nil {
 		panic(err)

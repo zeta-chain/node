@@ -1,0 +1,15 @@
+{
+  "title": "Change Max Gas Limit",
+  "description": "This proposal is to change the max gas limit per block.",
+  "changes": [
+    {
+      "subspace": "baseapp",
+      "key": "BlockParams",
+      "value": {
+        "max_bytes": "22020096",
+        "max_gas": "500000000"
+      }
+    }
+  ],
+  "deposit": "100000000000000000azeta"
+}

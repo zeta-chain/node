@@ -58,3 +58,9 @@ message EventOutboundSuccess {
   string new_status = 4;
   string value_received = 5;
 }
+
+message EventCCTXGasPriceIncreased {
+  string cctx_index = 1;
+  string gas_price_increase = 2;
+  string additional_fees = 3;
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Emissions Distribution",
+  "description": "Update emissions distribution",
+  "changes": [
+    {
+      "subspace": "emissions",
+      "key": "ValidatorEmissionPercentage",
+      "value": "0.75"
+    },
+    {
+      "subspace": "emissions",
+      "key": "ObserverEmissionPercentage",
+      "value": "0.125"
+    },
+    {
+      "subspace": "emissions",
+      "key": "SignerEmissionPercentage",
+      "value": "0.125"
+    }
+  ],
+  "deposit": "10000000azeta"
+}
