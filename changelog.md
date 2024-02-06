@@ -1,13 +1,23 @@
 # CHANGELOG
 
 ## Unreleased
+
+* `zetaclientd start` : 2 inputs required from stdin
+
+### Refactor
+
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
-* `zetaclientd start` : 2 inputs required from stdin
 
 ### Fixes
 
+* [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
+* [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+
+### Tests
+
+* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 
 ## Version: v12.2.4
 
@@ -22,11 +32,6 @@
 * [1663](https://github.com/zeta-chain/node/issues/1663) - skip Mumbai empty block if ethclient sanity check fails
 * [1661](https://github.com/zeta-chain/node/issues/1661) - use estimated SegWit tx size for Bitcoin gas fee calculation
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
-* [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
-
-### Tests
-
-* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 
 ## Version: v12.1.0
 

@@ -342,7 +342,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 		}
 		if included || confirmed {
 			co.logger.ZetaChainWatcher.Info().Msgf("scheduleCctxBTC: outtx %s already included; do not schedule keysign", outTxID)
-			return
+			continue
 		}
 
 		// stop if the nonce being processed is higher than the pending nonce
