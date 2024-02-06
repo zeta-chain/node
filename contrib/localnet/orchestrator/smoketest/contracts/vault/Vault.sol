@@ -12,21 +12,21 @@ contract Vault {
     mapping(address => mapping(address => uint256)) public balances;
 
     function deposit(address tokenAddress, uint256 amount) external {
-        assert(amount > 0, "Amount should be greater than 0");
+        require(amount > 0, "Amount should be greater than 0");
 
         IERC20 token = IERC20(tokenAddress);
-        assert(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(token.transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         balances[msg.sender][tokenAddress] += amount;
     }
 
     function withdraw(address tokenAddress, uint256 amount) external {
-        assert(amount > 0, "Amount should be greater than 0");
-        assert(balances[msg.sender][tokenAddress] >= amount, "Insufficient balance");
+        require(amount > 0, "Amount should be greater than 0");
+        require(balances[msg.sender][tokenAddress] >= amount, "Insufficient balance");
 
         balances[msg.sender][tokenAddress] -= amount;
 
         IERC20 token = IERC20(tokenAddress);
-        assert(token.transfer(msg.sender, amount), "Transfer failed");
+        require(token.transfer(msg.sender, amount), "Transfer failed");
     }
 }

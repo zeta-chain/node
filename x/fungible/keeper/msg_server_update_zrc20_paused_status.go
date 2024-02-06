@@ -27,7 +27,7 @@ func (k msgServer) UpdateZRC20PausedStatus(
 	}
 
 	// check if the sender is the admin
-	// unpausing asserts group2 admin
+	// unpausing requires group2 admin
 	requiredPolicyAccount := zetaObserverTypes.Policy_Type_group1
 	if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
 		requiredPolicyAccount = zetaObserverTypes.Policy_Type_group2
