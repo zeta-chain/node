@@ -142,19 +142,19 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
 
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, err.Error())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 		} else if err != nil && isContractReverted { // contract call reverted; should refund
 			revertMessage := err.Error()
 			chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
 			if chain == nil {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, "invalid sender chain")
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 
 			gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
 			if err != nil {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, "can't get revert tx gas limit"+err.Error())
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "can't get revert tx gas limit"+err.Error())
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			if gasLimit == 0 {
@@ -203,8 +203,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 						)
 					}
 				}
-
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, err.Error()+" deposit revert message: "+revertMessage)
+				cctx.IsRefunded = true
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}
 			commit()
@@ -234,7 +234,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, err.Error())
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 	commit()

@@ -72,6 +72,18 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
 func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx) error {
+	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
+	// deposit the amount to the tx orgin instead of receiver as this is a refund
+	to := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
+	if to == (ethcommon.Address{}) {
+		return errors.New("invalid receiver address")
+	}
+	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
+		return errors.New("no amount to refund")
+	}
+	if err := k.fungibleKeeper.DepositCoinZeta(ctx, to, cctx.InboundTxParams.Amount.BigInt()); err != nil {
+		return errors.New("failed to deposit zeta on ZetaChain" + err.Error())
+	}
 	return nil
 }
 

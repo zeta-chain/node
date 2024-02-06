@@ -41,7 +41,7 @@ func (k msgServer) AbortStuckCCTX(
 	}
 
 	cctx.CctxStatus = &types.Status{
-		Status:        types.CctxStatus_Aborted_Refundable,
+		Status:        types.CctxStatus_Aborted,
 		StatusMessage: AbortMessage,
 	}
 

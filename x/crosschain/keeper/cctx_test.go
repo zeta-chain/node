@@ -122,7 +122,7 @@ func TestSends(t *testing.T) {
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingInbound, types.CctxStatus_PendingInbound)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingOutbound, types.CctxStatus_PendingOutbound)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.PendingRevert, types.CctxStatus_PendingRevert)...)
-			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted_Refundable)...)
+			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted)...)
 			//assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))

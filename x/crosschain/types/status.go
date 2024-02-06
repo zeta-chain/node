@@ -11,7 +11,7 @@ func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	}
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
-		m.Status = CctxStatus_Aborted_Refundable
+		m.Status = CctxStatus_Aborted
 		return
 	}
 	m.Status = newStatus
@@ -37,19 +37,19 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 	stateTransitionMap := make(map[CctxStatus][]CctxStatus)
 	stateTransitionMap[CctxStatus_PendingInbound] = []CctxStatus{
 		CctxStatus_PendingOutbound,
-		CctxStatus_Aborted_Refundable,
+		CctxStatus_Aborted,
 		CctxStatus_OutboundMined, // EVM Deposit
 		CctxStatus_PendingRevert, // EVM Deposit contract call reverted; should refund
 	}
 	stateTransitionMap[CctxStatus_PendingOutbound] = []CctxStatus{
-		CctxStatus_Aborted_Refundable,
+		CctxStatus_Aborted,
 		CctxStatus_PendingRevert,
 		CctxStatus_OutboundMined,
 		CctxStatus_Reverted,
 	}
 
 	stateTransitionMap[CctxStatus_PendingRevert] = []CctxStatus{
-		CctxStatus_Aborted_Refundable,
+		CctxStatus_Aborted,
 		CctxStatus_OutboundMined,
 		CctxStatus_Reverted,
 	}

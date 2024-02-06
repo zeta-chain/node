@@ -22,8 +22,8 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 		return nil, types.ErrCannotFindCctx
 	}
 	// check if the cctx is aborted
-	if cctx.CctxStatus.Status != types.CctxStatus_Aborted_Refundable {
-		return nil, errorsmod.Wrap(types.ErrInvalidStatus, "CCTX is not aborted and refundable")
+	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
+		return nil, errorsmod.Wrap(types.ErrInvalidStatus, "CCTX is not aborted")
 	}
 
 	// refund the amount
