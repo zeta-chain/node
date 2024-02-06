@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
@@ -30,7 +30,7 @@ func newRandFromSeed(s int64) *rand.Rand {
 func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
 	h := fnv.New64a()
 	_, err := h.Write([]byte(s))
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return newRandFromSeed(int64(h.Sum64()))
 }
 
@@ -70,7 +70,7 @@ func Validator(t testing.TB, r *rand.Rand) stakingtypes.Validator {
 		ValAddress(r),
 		ed25519.GenPrivKeyFromSecret(seed).PubKey(),
 		stakingtypes.Description{})
-	require.NoError(t, err)
+	assert.NoError(t, err)
 	return val
 }
 

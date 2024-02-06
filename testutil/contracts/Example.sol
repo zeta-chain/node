@@ -26,7 +26,7 @@ contract Example {
     }
 
     function doRevertWithRequire() external {
-        require(false, "foo");
+        assert(false, "foo");
     }
 
     function doSucceed() external {

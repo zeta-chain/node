@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -56,7 +56,7 @@ func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	// Create the observer keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
+	assert.NoError(t, stateStore.LoadLatestVersion())
 
 	ctx := NewContext(stateStore)
 

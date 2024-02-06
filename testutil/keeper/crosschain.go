@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 	tmdb "github.com/tendermint/tm-db"
 	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -78,7 +78,7 @@ func CrosschainKeeperWithMocks(
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
+	assert.NoError(t, stateStore.LoadLatestVersion())
 
 	ctx := NewContext(stateStore)
 
@@ -137,30 +137,30 @@ func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Ze
 
 func GetCrosschainAccountMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainAccountKeeper {
 	cak, ok := keeper.GetAuthKeeper().(*crosschainmocks.CrosschainAccountKeeper)
-	require.True(t, ok)
+	assert.True(t, ok)
 	return cak
 }
 
 func GetCrosschainBankMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainBankKeeper {
 	cbk, ok := keeper.GetBankKeeper().(*crosschainmocks.CrosschainBankKeeper)
-	require.True(t, ok)
+	assert.True(t, ok)
 	return cbk
 }
 
 func GetCrosschainStakingMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainStakingKeeper {
 	csk, ok := keeper.GetStakingKeeper().(*crosschainmocks.CrosschainStakingKeeper)
-	require.True(t, ok)
+	assert.True(t, ok)
 	return csk
 }
 
 func GetCrosschainObserverMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainObserverKeeper {
 	cok, ok := keeper.GetObserverKeeper().(*crosschainmocks.CrosschainObserverKeeper)
-	require.True(t, ok)
+	assert.True(t, ok)
 	return cok
 }
 
 func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainFungibleKeeper {
 	cfk, ok := keeper.GetFungibleKeeper().(*crosschainmocks.CrosschainFungibleKeeper)
-	require.True(t, ok)
+	assert.True(t, ok)
 	return cfk
 }
