@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -29,6 +30,31 @@ type BTCSignerSuite struct {
 }
 
 var _ = Suite(&BTCSignerSuite{})
+
+// 21 example UTXO txids to use in the test.
+var exampleTxids = []string{
+	"c1729638e1c9b6bfca57d11bf93047d98b65594b0bf75d7ee68bf7dc80dc164e",
+	"54f9ebbd9e3ad39a297da54bf34a609b6831acbea0361cb5b7b5c8374f5046aa",
+	"b18a55a34319cfbedebfcfe1a80fef2b92ad8894d06caf8293a0344824c2cfbc",
+	"969fb309a4df7c299972700da788b5d601c0c04bab4ab46fff79d0335a7d75de",
+	"6c71913061246ffc20e268c1b0e65895055c36bfbf1f8faf92dcad6f8242121e",
+	"ba6d6e88cb5a97556684a1232719a3ffe409c5c9501061e1f59741bc412b3585",
+	"69b56c3c8c5d1851f9eaec256cd49f290b477a5d43e2aef42ef25d3c1d9f4b33",
+	"b87effd4cb46fe1a575b5b1ba0289313dc9b4bc9e615a3c6cbc0a14186921fdf",
+	"3135433054523f5e220621c9e3d48efbbb34a6a2df65635c2a3e7d462d3e1cda",
+	"8495c22a9ce6359ab53aa048c13b41c64fdf5fe141f516ba2573cc3f9313f06e",
+	"f31583544b475370d7b9187c9a01b92e44fb31ac5fcfa7fc55565ac64043aa9a",
+	"c03d55f9f717c1df978623e2e6b397b720999242f9ead7db9b5988fee3fb3933",
+	"ee55688439b47a5410cdc05bac46be0094f3af54d307456fdfe6ba8caf336e0b",
+	"61895f86c70f0bc3eef55d9a00347b509fa90f7a344606a9774be98a3ee9e02a",
+	"ffabb401a19d04327bd4a076671d48467dbcde95459beeab23df21686fd01525",
+	"b7e1c03b9b73e4e90fc06da893072c5604203c49e66699acbb2f61485d822981",
+	"185614d21973990138e478ce10e0a4014352df58044276d4e4c0093aa140f482",
+	"4a2800f13d15dc0c82308761d6fe8f6d13b65e42d7ca96a42a3a7048830e8c55",
+	"fb98f52e91db500735b185797cebb5848afbfe1289922d87e03b98c3da5b85ef",
+	"7901c5e36d9e8456ac61b29b82048650672a889596cbd30a9f8910a589ffc5b3",
+	"6bcd0850fd2fa1404290ed04d78d4ae718414f16d4fbfd344951add8dcf60326",
+}
 
 func (s *BTCSignerSuite) SetUpTest(c *C) {
 	// test private key with EVM address
@@ -218,11 +244,10 @@ func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, []b
 
 func addTxInputs(t *testing.T, tx *wire.MsgTx, txids []string) {
 	preTxSize := tx.SerializeSize()
-	assert.Equal(t, bytesEmptyTx, preTxSize)
-	for i, txid := range txids {
+	for _, txid := range txids {
 		hash, err := chainhash.NewHashFromStr(txid)
 		assert.Nil(t, err)
-		outpoint := wire.NewOutPoint(hash, uint32(i%3))
+		outpoint := wire.NewOutPoint(hash, uint32(rand.Intn(100)))
 		txIn := wire.NewTxIn(outpoint, nil, nil)
 		tx.AddTxIn(txIn)
 		assert.Equal(t, bytesPerInput, tx.SerializeSize()-preTxSize)
@@ -306,13 +331,12 @@ func TestP2WPHSize2In3Out(t *testing.T) {
 	// Payer sign the redeeming transaction.
 	signTx(t, tx, payerScript, privateKey)
 
-	// Estimate the tx size
+	// Estimate the tx size in vByte
 	// #nosec G701 always positive
-	txSize := uint64(tx.SerializeSize())
-	sizeEstimated := EstimateSegWitTxSize(uint64(len(utxosTxids)), 3)
-	assert.Equal(t, outTxBytesMin, sizeEstimated)
-	assert.True(t, outTxBytesMin >= txSize)
-	assert.True(t, outTxBytesMin-txSize <= 2) // 2 witness may vary
+	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytesEstimated := EstimateSegWitTxSize(uint64(len(utxosTxids)), 3)
+	assert.Equal(t, vBytes, vBytesEstimated)
+	assert.Equal(t, vBytes, outTxBytesMin)
 }
 
 func TestP2WPHSize21In3Out(t *testing.T) {
@@ -320,35 +344,9 @@ func TestP2WPHSize21In3Out(t *testing.T) {
 	privateKey, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 	_, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 
-	// 21 example UTXO txids to use in the test.
-	utxosTxids := []string{
-		"c1729638e1c9b6bfca57d11bf93047d98b65594b0bf75d7ee68bf7dc80dc164e",
-		"54f9ebbd9e3ad39a297da54bf34a609b6831acbea0361cb5b7b5c8374f5046aa",
-		"b18a55a34319cfbedebfcfe1a80fef2b92ad8894d06caf8293a0344824c2cfbc",
-		"969fb309a4df7c299972700da788b5d601c0c04bab4ab46fff79d0335a7d75de",
-		"6c71913061246ffc20e268c1b0e65895055c36bfbf1f8faf92dcad6f8242121e",
-		"ba6d6e88cb5a97556684a1232719a3ffe409c5c9501061e1f59741bc412b3585",
-		"69b56c3c8c5d1851f9eaec256cd49f290b477a5d43e2aef42ef25d3c1d9f4b33",
-		"b87effd4cb46fe1a575b5b1ba0289313dc9b4bc9e615a3c6cbc0a14186921fdf",
-		"3135433054523f5e220621c9e3d48efbbb34a6a2df65635c2a3e7d462d3e1cda",
-		"8495c22a9ce6359ab53aa048c13b41c64fdf5fe141f516ba2573cc3f9313f06e",
-		"f31583544b475370d7b9187c9a01b92e44fb31ac5fcfa7fc55565ac64043aa9a",
-		"c03d55f9f717c1df978623e2e6b397b720999242f9ead7db9b5988fee3fb3933",
-		"ee55688439b47a5410cdc05bac46be0094f3af54d307456fdfe6ba8caf336e0b",
-		"61895f86c70f0bc3eef55d9a00347b509fa90f7a344606a9774be98a3ee9e02a",
-		"ffabb401a19d04327bd4a076671d48467dbcde95459beeab23df21686fd01525",
-		"b7e1c03b9b73e4e90fc06da893072c5604203c49e66699acbb2f61485d822981",
-		"185614d21973990138e478ce10e0a4014352df58044276d4e4c0093aa140f482",
-		"4a2800f13d15dc0c82308761d6fe8f6d13b65e42d7ca96a42a3a7048830e8c55",
-		"fb98f52e91db500735b185797cebb5848afbfe1289922d87e03b98c3da5b85ef",
-		"7901c5e36d9e8456ac61b29b82048650672a889596cbd30a9f8910a589ffc5b3",
-		"6bcd0850fd2fa1404290ed04d78d4ae718414f16d4fbfd344951add8dcf60326",
-	}
-
 	// Create a new transaction and add inputs
 	tx := wire.NewMsgTx(wire.TxVersion)
-	assert.Equal(t, bytesEmptyTx, tx.SerializeSize())
-	addTxInputs(t, tx, utxosTxids)
+	addTxInputs(t, tx, exampleTxids)
 
 	// Add P2WPKH outputs
 	addTxOutputs(t, tx, payerScript, payeeScript)
@@ -356,13 +354,48 @@ func TestP2WPHSize21In3Out(t *testing.T) {
 	// Payer sign the redeeming transaction.
 	signTx(t, tx, payerScript, privateKey)
 
-	// Estimate the tx size
+	// Estimate the tx size in vByte
 	// #nosec G701 always positive
-	txSize := uint64(tx.SerializeSize())
-	sizeEstimated := EstimateSegWitTxSize(uint64(len(utxosTxids)), 3)
-	assert.Equal(t, outTxBytesMax, sizeEstimated)
-	assert.True(t, outTxBytesMax >= txSize)
-	assert.True(t, outTxBytesMax-txSize <= 21) // 21 witness may vary
+	vError := uint64(21 / 4) // 5 vBytes error tolerance
+	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+	vBytesEstimated := EstimateSegWitTxSize(uint64(len(exampleTxids)), 3)
+	assert.Equal(t, vBytesEstimated, outTxBytesMax)
+	if vBytes > vBytesEstimated {
+		assert.True(t, vBytes-vBytesEstimated <= vError)
+	} else {
+		assert.True(t, vBytesEstimated-vBytes <= vError)
+	}
+}
+
+func TestP2WPHSizeXIn3Out(t *testing.T) {
+	// Generate payer/payee private keys and P2WPKH addresss
+	privateKey, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
+	_, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
+
+	// Create new transactions with X (2 <= X <= 21) inputs and 3 outputs respectively
+	for x := 2; x <= 21; x++ {
+		tx := wire.NewMsgTx(wire.TxVersion)
+		addTxInputs(t, tx, exampleTxids[:x])
+
+		// Add P2WPKH outputs
+		addTxOutputs(t, tx, payerScript, payeeScript)
+
+		// Payer sign the redeeming transaction.
+		signTx(t, tx, payerScript, privateKey)
+
+		// Estimate the tx size
+		// #nosec G701 always positive
+		vError := uint64(0.25 + float64(x)/4) // 1st witness incur 0.25 vByte error, other witness incur 1/4 vByte error tolerance,
+		vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
+		vBytesEstimated := EstimateSegWitTxSize(uint64(len(exampleTxids[:x])), 3)
+		if vBytes > vBytesEstimated {
+			assert.True(t, vBytes-vBytesEstimated <= vError)
+			//fmt.Printf("%d error percentage: %.2f%%\n", float64(vBytes-vBytesEstimated)/float64(vBytes)*100)
+		} else {
+			assert.True(t, vBytesEstimated-vBytes <= vError)
+			//fmt.Printf("error percentage: %.2f%%\n", float64(vBytesEstimated-vBytes)/float64(vBytes)*100)
+		}
+	}
 }
 
 func TestP2WPHSizeBreakdown(t *testing.T) {
@@ -373,14 +406,14 @@ func TestP2WPHSizeBreakdown(t *testing.T) {
 	fmt.Printf("1 input, 1 output: %d\n", sz)
 
 	txSizeDepositor := SegWitTxSizeDepositor()
-	assert.Equal(t, uint64(149), txSizeDepositor)
+	assert.Equal(t, uint64(68), txSizeDepositor)
 
 	txSizeWithdrawer := SegWitTxSizeWithdrawer()
-	assert.Equal(t, uint64(254), txSizeWithdrawer)
-	assert.Equal(t, txSize2In3Out, txSizeDepositor+txSizeWithdrawer) // 403 = 149 + 254
+	assert.Equal(t, uint64(171), txSizeWithdrawer)
+	assert.Equal(t, txSize2In3Out, txSizeDepositor+txSizeWithdrawer) // 239 = 68 + 171
 
-	depositFee := DepositorFee(5)
-	assert.Equal(t, depositFee, 0.00000745)
+	depositFee := DepositorFee(20)
+	assert.Equal(t, depositFee, 0.00001360)
 }
 
 // helper function to create a new BitcoinChainClient
