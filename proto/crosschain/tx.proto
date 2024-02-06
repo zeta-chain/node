@@ -21,6 +21,7 @@ service Msg {
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
 
   rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
+  rpc RefundAbortedCCTX(MsgRefundAbortedCCTX) returns (MsgRefundAbortedCCTXResponse);
 }
 
 message MsgCreateTSSVoter {
@@ -162,3 +163,10 @@ message MsgAbortStuckCCTX {
 }
 
 message MsgAbortStuckCCTXResponse {}
+
+message MsgRefundAbortedCCTX {
+  string creator = 1;
+  string cctx_index = 2;
+}
+
+message MsgRefundAbortedCCTXResponse {}

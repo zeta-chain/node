@@ -167,7 +167,7 @@ func TestStatus_StatusTransition(t *testing.T) {
 			},
 			Msg:          "Got super majority and finalized Inbound",
 			NonErrStatus: types.CctxStatus_PendingOutbound,
-			ErrStatus:    types.CctxStatus_Aborted,
+			ErrStatus:    types.CctxStatus_Aborted_Refundable,
 			IsErr:        false,
 		},
 		{
@@ -179,7 +179,7 @@ func TestStatus_StatusTransition(t *testing.T) {
 			},
 			Msg:          "Got super majority and finalized Inbound",
 			NonErrStatus: types.CctxStatus_OutboundMined,
-			ErrStatus:    types.CctxStatus_Aborted,
+			ErrStatus:    types.CctxStatus_Aborted_Refundable,
 			IsErr:        false,
 		},
 	}

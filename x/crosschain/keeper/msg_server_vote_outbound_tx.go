@@ -160,7 +160,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		case observerTypes.BallotStatus_BallotFinalized_FailureObservation:
 			if msg.CoinType == common.CoinType_Cmd || common.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
 				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
+				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, "")
 			} else {
 				switch oldStatus {
 				case types.CctxStatus_PendingOutbound:
@@ -200,7 +200,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 					}
 					cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
 				case types.CctxStatus_PendingRevert:
-					cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
+					cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, "Outbound failed: revert failed; abort TX")
 				}
 			}
 			newStatus := cctx.CctxStatus.Status.String()
@@ -210,7 +210,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}()
 	if err != nil {
 		// do not commit tmpCtx
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted_Refundable, err.Error())
 		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		ctx.Logger().Error(err.Error())
 		// #nosec G701 always in range

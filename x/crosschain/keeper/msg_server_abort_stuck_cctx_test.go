@@ -35,7 +35,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
 		require.True(t, found)
-		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted_Refundable, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
@@ -62,7 +62,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
 		require.True(t, found)
-		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted_Refundable, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
@@ -89,7 +89,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
 		require.True(t, found)
-		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted_Refundable, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
