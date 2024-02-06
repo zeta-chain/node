@@ -45,4 +45,9 @@ var (
 	ErrObservedTxAlreadyFinalized = errorsmod.Register(ModuleName, 1144, "observed tx already finalized")
 
 	ErrInsufficientFundsTssMigration = errorsmod.Register(ModuleName, 1145, "insufficient funds for TSS migration")
+
+	ErrInvalidCCTXIndex = errorsmod.Register(ModuleName, 1146, "invalid cctx index")
+
+	ErrInvalidStatus       = errorsmod.Register(ModuleName, 1147, "invalid status")
+	ErrUnableProcessRefund = errorsmod.Register(ModuleName, 1148, "unable to process refund")
 )

@@ -35,14 +35,14 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			"bar",
 		)
 
-		err := k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				Asset:         asset,
+				Amount:        math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.NoError(t, err)
 
@@ -52,14 +52,14 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 		require.Equal(t, uint64(42), balance.Uint64())
 
 		// can refund again
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: chainID,
 				Sender:        sender.String(),
 				Asset:         asset,
+				Amount:        math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.NoError(t, err)
 		balance, err = zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
@@ -70,71 +70,70 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 	t.Run("should fail with invalid cctx", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		err := k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: common.CoinType_Zeta,
+				Amount:   math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.ErrorContains(t, err, "unsupported coin type")
 
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: common.CoinType_Gas,
+				CoinType: common.CoinType_Zeta,
+				Amount:   math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.ErrorContains(t, err, "unsupported coin type")
 
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: 999999,
+				Amount:        math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.ErrorContains(t, err, "only EVM chains are supported")
 
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: getValidEthChainID(t),
 				Sender:        "invalid",
+				Amount:        math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.ErrorContains(t, err, "invalid sender address")
 
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: getValidEthChainID(t),
 				Sender:        sample.EthAddress().String(),
-			},
-		},
-			math.Uint{},
+				Amount:        math.Uint{},
+			}},
 		)
 		require.ErrorContains(t, err, "no amount to refund")
 
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: getValidEthChainID(t),
 				Sender:        sample.EthAddress().String(),
+				Amount:        math.ZeroUint(),
 			}},
-			math.ZeroUint(),
 		)
 		require.ErrorContains(t, err, "no amount to refund")
 
 		// the foreign coin has not been set
-		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
+		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: getValidEthChainID(t),
 				Sender:        sample.EthAddress().String(),
 				Asset:         sample.EthAddress().String(),
+				Amount:        math.NewUint(42),
 			}},
-			math.NewUint(42),
 		)
 		require.ErrorContains(t, err, "zrc not found")
 	})

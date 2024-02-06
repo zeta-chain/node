@@ -194,7 +194,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				// in this gas we should refund the sender on ZetaChain
 				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
 
-					if err := k.RefundAmountOnZetaChain(ctx, cctx, cctx.InboundTxParams.Amount); err != nil {
+					if err := k.RefundAmountOnZetaChainERC20(ctx, cctx); err != nil {
 						// log the error
 						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
 							"error", err,

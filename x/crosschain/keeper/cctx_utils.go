@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,9 +51,34 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 	return nil
 }
 
-// RefundAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
+func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx) error {
+	coinType := cctx.InboundTxParams.CoinType
+	switch coinType {
+	case common.CoinType_Gas:
+		return k.RefundAmountOnZetaChainGas(ctx, cctx)
+	case common.CoinType_Zeta:
+		return k.RefundAmountOnZetaChainZeta(ctx, cctx)
+	case common.CoinType_ERC20:
+		return k.RefundAmountOnZetaChainERC20(ctx, cctx)
+	default:
+		return errors.New("unsupported coin type for refund on ZetaChain")
+	}
+}
+
+// RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
+func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChainTx) error {
+	return nil
+}
+
+// RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
+func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx) error {
+	return nil
+}
+
+// RefundAmountOnZetaChainERC20 refunds the amount of the cctx on ZetaChain in case of aborted cctx
 // NOTE: GetCurrentOutTxParam should contain the last up to date cctx amount
-func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, inputAmount math.Uint) error {
+func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx) error {
+	inputAmount := cctx.InboundTxParams.Amount
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")

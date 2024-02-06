@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -80,7 +81,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 
 	return &types.CrossChainTx{
 		Creator:          AccAddress(),
-		Index:            index,
+		Index:            crypto.Keccak256Hash([]byte(index)).String(),
 		ZetaFees:         math.NewUint(uint64(r.Int63())),
 		RelayedMessage:   StringRandom(r, 32),
 		CctxStatus:       Status(t, index),
