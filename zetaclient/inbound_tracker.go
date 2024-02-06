@@ -96,7 +96,7 @@ func (ob *BitcoinChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool)
 	if err != nil {
 		return "", err
 	}
-	tss, err := ob.zetaClient.GetBtcTssAddress()
+	tss, err := ob.zetaClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
