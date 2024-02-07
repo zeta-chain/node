@@ -9,7 +9,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -47,13 +46,8 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 	if zrc20 == (ethcommon.Address{}) {
 		return cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
-	// Calcualte amount ot zeta to refund to the tx origin
-	zetaAmount, err := k.fungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, amountOfGasTokenLocked.BigInt(), zrc20)
-	if err != nil {
-		return cosmoserrors.Wrapf(fungibletypes.ErrContractCall, err.Error())
-	}
 	// deposit the amount to the tx orgin instead of receiver as this is a refund
-	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundTo, zetaAmount); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundTo, amountOfGasTokenLocked.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
 	return nil
