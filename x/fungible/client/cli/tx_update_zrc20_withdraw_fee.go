@@ -1,12 +1,12 @@
 package cli
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	sdkmath "cosmossdk.io/math"
 )
 
 func CmdUpdateZRC20WithdrawFee() *cobra.Command {
@@ -25,7 +25,7 @@ func CmdUpdateZRC20WithdrawFee() *cobra.Command {
 			newWithdrawFee := sdkmath.NewUintFromString(args[1])
 
 			newGasLimit := sdkmath.NewUintFromString(args[2])
-			
+
 			msg := types.NewMsgUpdateZRC20WithdrawFee(
 				clientCtx.GetFromAddress().String(),
 				contractAddress,
