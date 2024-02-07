@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -192,8 +193,9 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 				// gas payment for erc20 type might fail because no liquidity pool is defined to swap the zrc20 token into the gas token
 				// in this gas we should refund the sender on ZetaChain
-				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
-					if err := k.RefundAbortedAmountOnZetaChainForEvmChain(ctx, cctx); err != nil {
+				refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 && refundAddress != (ethcommon.Address{}) {
+					if err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, refundAddress); err != nil {
 						// log the error
 						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
 							"error", err,

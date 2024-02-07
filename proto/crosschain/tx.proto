@@ -167,7 +167,7 @@ message MsgAbortStuckCCTXResponse {}
 message MsgRefundAbortedCCTX {
   string creator = 1;
   string cctx_index = 2;
-  string receiver_btc_refund = 3;
+  string refund_address = 3; // if not provided, the refund will be sent to the sender/txOrgin
 }
 
 message MsgRefundAbortedCCTXResponse {}

@@ -32,12 +32,52 @@ func TestKeeper_RefundAmountOnZetaChainGas(t *testing.T) {
 				TxOrigin:      sender.String(),
 				Amount:        math.NewUint(42),
 			}},
+			sender,
 		)
 		require.NoError(t, err)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, sender)
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), balance.Uint64())
 	})
+	t.Run("failed refund zrc20 gas on zeta chain if gas coin not found", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID(t)
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		err := k.RefundAmountOnZetaChainGas(ctx, types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: chainID,
+				Sender:        sender.String(),
+				TxOrigin:      sender.String(),
+				Amount:        math.NewUint(42),
+			}},
+			sender,
+		)
+		require.ErrorContains(t, err, types.ErrForeignCoinNotFound.Error())
+	})
+	t.Run("failed refund amount zrc20 gas on zeta chain if amount is 0", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID(t)
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+		err := k.RefundAmountOnZetaChainGas(ctx, types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: chainID,
+				Sender:        sender.String(),
+				TxOrigin:      sender.String(),
+				Amount:        math.ZeroUint(),
+			}},
+			sender,
+		)
+		require.ErrorContains(t, err, "no amount to refund")
+	})
+
 }
 
 func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
@@ -55,11 +95,30 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 				TxOrigin:      sender.String(),
 				Amount:        math.NewUint(42),
 			}},
+			sender,
 		)
 		require.NoError(t, err)
 		coin := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(sender.Bytes()), config.BaseDenom)
 		fmt.Println(coin.Amount.String())
 		require.Equal(t, "42", coin.Amount.String())
+	})
+	t.Run("failed refund amount on zeta chain amount is 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		sender := sample.EthAddress()
+		chainID := getValidEthChainID(t)
+
+		err := k.RefundAmountOnZetaChainZeta(ctx, types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: chainID,
+				Sender:        sender.String(),
+				TxOrigin:      sender.String(),
+				Amount:        math.ZeroUint(),
+			}},
+			sender,
+		)
+		require.ErrorContains(t, err, "no amount to refund")
 	})
 }
 
@@ -92,6 +151,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				Asset:         asset,
 				Amount:        math.NewUint(42),
 			}},
+			sender,
 		)
 		require.NoError(t, err)
 
@@ -109,6 +169,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				Asset:         asset,
 				Amount:        math.NewUint(42),
 			}},
+			sender,
 		)
 		require.NoError(t, err)
 		balance, err = zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
@@ -124,14 +185,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				CoinType: common.CoinType_Zeta,
 				Amount:   math.NewUint(42),
 			}},
-		)
-		require.ErrorContains(t, err, "unsupported coin type")
-
-		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
-				CoinType: common.CoinType_Zeta,
-				Amount:   math.NewUint(42),
-			}},
+			sample.EthAddress(),
 		)
 		require.ErrorContains(t, err, "unsupported coin type")
 
@@ -141,18 +195,9 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				SenderChainId: 999999,
 				Amount:        math.NewUint(42),
 			}},
+			sample.EthAddress(),
 		)
 		require.ErrorContains(t, err, "only EVM chains are supported")
-
-		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
-				Sender:        "invalid",
-				Amount:        math.NewUint(42),
-			}},
-		)
-		require.ErrorContains(t, err, "invalid sender address")
 
 		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -161,16 +206,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				Sender:        sample.EthAddress().String(),
 				Amount:        math.Uint{},
 			}},
-		)
-		require.ErrorContains(t, err, "no amount to refund")
-
-		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
-				Sender:        sample.EthAddress().String(),
-				Amount:        math.ZeroUint(),
-			}},
+			sample.EthAddress(),
 		)
 		require.ErrorContains(t, err, "no amount to refund")
 
@@ -183,6 +219,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 				Asset:         sample.EthAddress().String(),
 				Amount:        math.NewUint(42),
 			}},
+			sample.EthAddress(),
 		)
 		require.ErrorContains(t, err, "zrc not found")
 	})
