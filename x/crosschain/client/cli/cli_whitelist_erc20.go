@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,6 +34,9 @@ func CmdWhitelistERC20() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if decimals > 128 {
+				return fmt.Errorf("decimals must be less than 128")
+			}
 
 			gasLimit, err := strconv.ParseInt(args[5], 10, 64)
 			if err != nil {
@@ -45,6 +49,7 @@ func CmdWhitelistERC20() *cobra.Command {
 				chainID,
 				name,
 				symbol,
+				// #nosec G701 always in range
 				uint32(decimals),
 				gasLimit,
 			)
