@@ -7,6 +7,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
+
+	"github.com/btcsuite/btcd/chaincfg"
+
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -80,25 +85,31 @@ type SmokeTestRunner struct {
 	UniswapV2Factory     *uniswapv2factory.UniswapV2Factory
 	UniswapV2RouterAddr  ethcommon.Address
 	UniswapV2Router      *uniswapv2router.UniswapV2Router02
-	TestDAppAddr         ethcommon.Address
-	ZEVMSwapAppAddr      ethcommon.Address
-	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
-	ContextAppAddr       ethcommon.Address
-	ContextApp           *contextapp.ContextApp
-	SystemContractAddr   ethcommon.Address
-	SystemContract       *systemcontract.SystemContract
+	ConnectorZEVMAddr    ethcommon.Address
+	ConnectorZEVM        *connectorzevm.ZetaConnectorZEVM
+	WZetaAddr            ethcommon.Address
+	WZeta                *wzeta.WETH9
+
+	TestDAppAddr       ethcommon.Address
+	ZEVMSwapAppAddr    ethcommon.Address
+	ZEVMSwapApp        *zevmswap.ZEVMSwapApp
+	ContextAppAddr     ethcommon.Address
+	ContextApp         *contextapp.ContextApp
+	SystemContractAddr ethcommon.Address
+	SystemContract     *systemcontract.SystemContract
 
 	// config
 	CctxTimeout    time.Duration
 	ReceiptTimeout time.Duration
 
 	// other
-	Name      string
-	Ctx       context.Context
-	CtxCancel context.CancelFunc
-	Logger    *Logger
-	WG        sync.WaitGroup
-	mutex     sync.Mutex
+	Name          string
+	Ctx           context.Context
+	CtxCancel     context.CancelFunc
+	Logger        *Logger
+	WG            sync.WaitGroup
+	BitcoinParams *chaincfg.Params
+	mutex         sync.Mutex
 }
 
 func NewSmokeTestRunner(
@@ -167,7 +178,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeT
 		if !ok {
 			return fmt.Errorf("smoke test %s not found", smokeTestName)
 		}
-		if err := sm.RunSmokeTest(smokeTest); err != nil {
+		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
 			return err
 		}
 	}
@@ -175,10 +186,62 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeT
 	return nil
 }
 
+// RunSmokeTestsFromNamesIntoReport runs a list of smoke tests by name in a list of smoke tests and returns a report
+// The function doesn't return an error, it returns a report with the error
+func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTest, smokeTestNames ...string) (TestReports, error) {
+	// get all tests so we can return an error if a test is not found
+	tests := make([]SmokeTest, 0, len(smokeTestNames))
+	for _, smokeTestName := range smokeTestNames {
+		smokeTest, ok := findSmokeTest(smokeTestName, smokeTests)
+		if !ok {
+			return nil, fmt.Errorf("smoke test %s not found", smokeTestName)
+		}
+		tests = append(tests, smokeTest)
+	}
+
+	// go through all tests
+	reports := make(TestReports, 0, len(smokeTestNames))
+	for _, test := range tests {
+		// get info before test
+		balancesBefore, err := sm.GetAccountBalances(true)
+		if err != nil {
+			return nil, err
+		}
+		timeBefore := time.Now()
+
+		// run test
+		testErr := sm.RunSmokeTest(test, false)
+		if testErr != nil {
+			sm.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
+		}
+
+		// wait 5 sec to make sure we get updated balances
+		time.Sleep(5 * time.Second)
+
+		// get info after test
+		balancesAfter, err := sm.GetAccountBalances(true)
+		if err != nil {
+			return nil, err
+		}
+		timeAfter := time.Now()
+
+		// create report
+		report := TestReport{
+			Name:     test.Name,
+			Success:  testErr == nil,
+			Time:     timeAfter.Sub(timeBefore),
+			GasSpent: GetAccountBalancesDiff(balancesBefore, balancesAfter),
+		}
+		reports = append(reports, report)
+	}
+
+	return reports, nil
+}
+
 // RunSmokeTests runs a list of smoke tests
 func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
 	for _, smokeTest := range smokeTests {
-		if err := sm.RunSmokeTest(smokeTest); err != nil {
+		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
 			return err
 		}
 	}
@@ -186,7 +249,7 @@ func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
 }
 
 // RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error) {
+func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -205,8 +268,10 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest) (err error)
 	smokeTestWithName.SmokeTest(sm)
 
 	//check supplies
-	if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
-		return err
+	if checkAccounting {
+		if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
+			return err
+		}
 	}
 
 	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
@@ -240,6 +305,8 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 	sm.BTCZRC20Addr = other.BTCZRC20Addr
 	sm.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
 	sm.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	sm.ConnectorZEVMAddr = other.ConnectorZEVMAddr
+	sm.WZetaAddr = other.WZetaAddr
 	sm.TestDAppAddr = other.TestDAppAddr
 	sm.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
 	sm.ContextAppAddr = other.ContextAppAddr
@@ -282,6 +349,15 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 	if err != nil {
 		return err
 	}
+	sm.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(sm.ConnectorZEVMAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+	sm.WZeta, err = wzeta.NewWETH9(sm.WZetaAddr, sm.ZevmClient)
+	if err != nil {
+		return err
+	}
+
 	sm.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(sm.ZEVMSwapAppAddr, sm.ZevmClient)
 	if err != nil {
 		return err
@@ -319,6 +395,9 @@ func (sm *SmokeTestRunner) PrintContractAddresses() {
 	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
 	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
 	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
+	sm.Logger.Print("ConnectorZEVM:  %s", sm.ConnectorZEVMAddr.Hex())
+	sm.Logger.Print("WZeta:          %s", sm.WZetaAddr.Hex())
+
 	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())
 	sm.Logger.Print("ContextApp:     %s", sm.ContextAppAddr.Hex())
 	sm.Logger.Print("TestDapp:       %s", sm.TestDAppAddr.Hex())

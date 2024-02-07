@@ -27,7 +27,9 @@ func GenerateTss(logger zerolog.Logger,
 	priKey secp256k1.PrivKey,
 	ts *mc.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
-	metrics *metrics.Metrics) (*mc.TSS, error) {
+	metrics *metrics.Metrics,
+	tssPassword string,
+	hotkeyPassword string) (*mc.TSS, error) {
 	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
 	// Bitcoin chain ID is currently used for using the correct signature format
@@ -47,6 +49,8 @@ func GenerateTss(logger zerolog.Logger,
 		tssHistoricalList,
 		metrics,
 		bitcoinChainID,
+		tssPassword,
+		hotkeyPassword,
 	)
 	if err != nil {
 		keygenLogger.Error().Err(err).Msg("NewTSS error")

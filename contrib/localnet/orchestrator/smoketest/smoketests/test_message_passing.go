@@ -14,6 +14,11 @@ import (
 )
 
 func TestMessagePassing(sm *runner.SmokeTestRunner) {
+	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	sm.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -31,7 +36,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
+		DestinationChainId:  chainID,
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
@@ -92,7 +97,10 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 }
 
 func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
-	sm.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
+	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -109,7 +117,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
 	sm.Logger.Info("Calling ConnectorEth.Send")
 	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(1337), // in dev mode, GOERLI has chainid 1337
+		DestinationChainId:  chainID,
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
@@ -152,7 +160,10 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 }
 
 func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
-	sm.Logger.Info("Approving TestDApp to spend deployer's ZetaEth")
+	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
@@ -184,7 +195,7 @@ func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
 	}
 	sm.Logger.Info("$$$ Before: SUPPLY OF AZETA: %d", res2.Amount.Amount)
 
-	tx, err = testDApp.SendHelloWorld(auth, sm.TestDAppAddr, big.NewInt(1337), amount, true)
+	tx, err = testDApp.SendHelloWorld(auth, sm.TestDAppAddr, chainID, amount, true)
 	if err != nil {
 		panic(err)
 	}
