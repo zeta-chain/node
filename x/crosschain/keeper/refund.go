@@ -46,7 +46,7 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 	if zrc20 == (ethcommon.Address{}) {
 		return cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
-	// deposit the amount to the tx orgin instead of receiver as this is a refund
+	// deposit the amount to the tx origin instead of receiver as this is a refund
 	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundTo, amountOfGasTokenLocked.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
