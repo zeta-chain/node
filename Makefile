@@ -183,7 +183,7 @@ generate: proto openapi specs typescript docs-zetacored
 ###############################################################################
 
 install-zetae2e: go.sum
-	@echo "--> Installing orchestrator"
+	@echo "--> Installing zetae2e"
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
@@ -240,7 +240,7 @@ stateful-upgrade:
 
 stateful-upgrade-source:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v11.0.0-patch-core-params -t zetanode -f ./Dockerfile-versioned-source .
+	$(DOCKER) build --build-arg old_version=v12.0.0 -t zetanode -f ./Dockerfile-versioned-source .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 

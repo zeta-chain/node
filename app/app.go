@@ -575,7 +575,7 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := evmante.HandlerOptions{
+	options := ante.HandlerOptions{
 		AccountKeeper:   app.AccountKeeper,
 		BankKeeper:      app.BankKeeper,
 		EvmKeeper:       app.EvmKeeper,
@@ -589,6 +589,7 @@ func New(
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
 		},
+		ObserverKeeper: app.ZetaObserverKeeper,
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)

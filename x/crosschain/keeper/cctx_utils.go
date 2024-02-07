@@ -124,8 +124,5 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 
 func IsPending(cctx types.CrossChainTx) bool {
 	// pending inbound is not considered a "pending" state because it has not reached consensus yet
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		return true
-	}
-	return false
+	return cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
 }

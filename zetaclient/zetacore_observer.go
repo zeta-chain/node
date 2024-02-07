@@ -2,8 +2,11 @@ package zetaclient
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
+
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -158,7 +161,7 @@ func (co *CoreObserver) startCctxScheduler() {
 						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("couldn't get operator balance")
 					} else {
 						diff := co.lastOperatorBalance.Sub(balance)
-						if diff.GT(sdkmath.NewInt(0)) {
+						if diff.GT(sdkmath.NewInt(0)) && diff.LT(sdkmath.NewInt(math.MaxInt64)) {
 							co.ts.AddFeeEntry(bn, diff.Int64())
 							co.lastOperatorBalance = balance
 						}
@@ -246,14 +249,15 @@ func (co *CoreObserver) scheduleCctxEVM(
 			continue
 		}
 		if params.OutboundTxTssNonce > cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce+MaxLookaheadNonce {
-			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d", params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce)
+			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxEVM: nonce too high: signing %d, earliest pending %d, chain %d",
+				params.OutboundTxTssNonce, cctxList[0].GetCurrentOutTxParam().OutboundTxTssNonce, chainID)
 			break
 		}
 
 		// try confirming the outtx
 		included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
 		if err != nil {
-			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: IsSendOutTxProcessed faild for chain %d", chainID)
+			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
 		}
 		if included {
@@ -316,6 +320,8 @@ func (co *CoreObserver) scheduleCctxBTC(
 		co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: chain client is not a bitcoin client")
 		return
 	}
+	// #nosec G701 positive
+	interval := uint64(ob.GetChainParams().OutboundTxScheduleInterval)
 	lookahead := ob.GetChainParams().OutboundTxScheduleLookahead
 
 	// schedule at most one keysign per ticker
@@ -328,6 +334,17 @@ func (co *CoreObserver) scheduleCctxBTC(
 			co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: outtx %s chainid mismatch: want %d, got %d", outTxID, chainID, params.ReceiverChainId)
 			continue
 		}
+		// try confirming the outtx
+		included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx.Index, nonce, params.CoinType, co.logger.ZetaChainWatcher)
+		if err != nil {
+			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxBTC: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
+			continue
+		}
+		if included || confirmed {
+			co.logger.ZetaChainWatcher.Info().Msgf("scheduleCctxBTC: outtx %s already included; do not schedule keysign", outTxID)
+			continue
+		}
+
 		// stop if the nonce being processed is higher than the pending nonce
 		if nonce > btcClient.GetPendingNonce() {
 			break
@@ -338,7 +355,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 			break
 		}
 		// try confirming the outtx or scheduling a keysign
-		if !outTxMan.IsOutTxActive(outTxID) {
+		if nonce%interval == zetaHeight%interval && !outTxMan.IsOutTxActive(outTxID) {
 			outTxMan.StartTryProcess(outTxID)
 			co.logger.ZetaChainWatcher.Debug().Msgf("scheduleCctxBTC: sign outtx %s with value %d\n", outTxID, params.Amount)
 			go signer.TryProcessOutTx(cctx, outTxMan, outTxID, ob, co.bridge, zetaHeight)
@@ -355,7 +372,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
 		evmCfg, found := co.cfg.GetEVMConfig(chainID)
-		if found && curParams != evmCfg.ChainParams {
+		if found && !observertypes.ChainParamsEqual(curParams, evmCfg.ChainParams) {
 			chainOb.SetChainParams(evmCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v",
@@ -365,7 +382,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (ChainClient, error) {
 		}
 	} else if common.IsBitcoinChain(chainID) {
 		_, btcCfg, found := co.cfg.GetBTCConfig()
-		if found && curParams != btcCfg.ChainParams {
+		if found && !observertypes.ChainParamsEqual(curParams, btcCfg.ChainParams) {
 			chainOb.SetChainParams(btcCfg.ChainParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for Bitcoin, new params: %v",

@@ -86,3 +86,8 @@ func Proof() (txIndex int64, block *ethtypes.Block, header ethtypes.Header, head
 	tx = block.Transactions()[txIndex]
 	return
 }
+
+func EventIndex() uint64 {
+	r := newRandFromSeed(1)
+	return r.Uint64()
+}

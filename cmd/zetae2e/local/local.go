@@ -18,7 +18,7 @@ import (
 const (
 	flagContractsDeployed = "deployed"
 	flagWaitForHeight     = "wait-for"
-	flagConfigFile        = "config"
+	FlagConfigFile        = "config"
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
 	flagTestCustom        = "test-custom"
@@ -51,7 +51,7 @@ func NewLocalCmd() *cobra.Command {
 		"block height for tests to begin, ex. --wait-for 100",
 	)
 	cmd.Flags().String(
-		flagConfigFile,
+		FlagConfigFile,
 		"",
 		"config file to use for the tests",
 	)
@@ -135,7 +135,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	testStartTime := time.Now()
-	logger.Print("starting tests")
+	logger.Print("starting E2E tests")
+
+	if testAdmin {
+		logger.Print("⚠️ admin tests enabled")
+	}
 
 	// start timer
 	go func() {
@@ -145,7 +149,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}()
 
 	// initialize tests config
-	conf, err := getConfig(cmd)
+	conf, err := GetConfig(cmd)
 	if err != nil {
 		panic(err)
 	}
@@ -191,7 +195,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// query and set the TSS
-	deployerRunner.SetTSSAddresses()
+	if err := deployerRunner.SetTSSAddresses(); err != nil {
+		panic(err)
+	}
 
 	// setting up the networks
 	if !skipSetup {
@@ -201,7 +207,6 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		deployerRunner.SetZEVMContracts()
 		deployerRunner.MintUSDTOnEvm(10000)
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
-		deployerRunner.PrintContractAddresses()
 	}
 
 	// if a config output is specified, write the config
@@ -220,6 +225,8 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("✅ config file written in %s", configOut)
 	}
 
+	deployerRunner.PrintContractAddresses()
+
 	// if setup only, quit
 	if setupOnly {
 		os.Exit(0)
@@ -230,7 +237,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {

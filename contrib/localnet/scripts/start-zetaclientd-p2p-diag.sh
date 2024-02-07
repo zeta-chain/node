@@ -17,7 +17,7 @@ then
       --pre-params ~/preParams.json  --zetacore-url zetacore0 \
       --chain-id athens_101-1 --dev --operator zeta1z46tdw75jvh4h39y3vu758ctv34rw5z9kmyhgz --log-level 0 --hotkey=val_grantee_observer \
       --p2p-diagnostic
-    zetaclientd start
+    zetaclientd start < /root/password.file
 else
   num=$(echo $HOSTNAME | tr -dc '0-9')
   node="zetacore$num"
@@ -29,5 +29,5 @@ else
     --pre-params ~/preParams.json --zetacore-url $node \
     --chain-id athens_101-1 --dev --operator zeta1lz2fqwzjnk6qy48fgj753h48444fxtt7hekp52 --log-level 0 --hotkey=val_grantee_observer \
     --p2p-diagnostic
-  zetaclientd start
+  zetaclientd start < /root/password.file
 fi

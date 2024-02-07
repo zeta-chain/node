@@ -1,6 +1,7 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -23,7 +24,11 @@ const (
 	MemStoreKey              = "mem_emissions"
 	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
 
-	SecsInMonth = 30 * 24 * 60 * 60
+	SecsInMonth        = 30 * 24 * 60 * 60
+	BlockRewardsInZeta = "210000000"
+
+	EmissionScheduledYears = 4
+	AvgBlockTime           = "5.7"
 )
 
 func KeyPrefix(p string) []byte {
@@ -40,10 +45,12 @@ const (
 	ParamObserverEmissionPercentage  = "ObserverEmissionPercentage"
 	ParamTssSignerEmissionPercentage = "SignerEmissionPercentage"
 	ParamDurationFactorConstant      = "DurationFactorConstant"
+	ParamObserverSlashAmount         = "ObserverSlashAmount"
 )
 
 var (
 	EmissionsModuleAddress                  = authtypes.NewModuleAddress(ModuleName)
 	UndistributedObserverRewardsPoolAddress = authtypes.NewModuleAddress(UndistributedObserverRewardsPool)
 	UndistributedTssRewardsPoolAddress      = authtypes.NewModuleAddress(UndistributedTssRewardsPool)
+	BlockReward                             = sdk.MustNewDecFromStr("9620949074074074074.074070733466756687")
 )

@@ -9,11 +9,14 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"os"
 	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/txscript"
+	"github.com/btcsuite/btcd/wire"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/pkg/errors"
@@ -36,22 +39,23 @@ const (
 )
 
 var (
-	BtcOutTxBytesMin        uint64
-	BtcOutTxBytesMax        uint64
 	BtcOutTxBytesDepositor  uint64
 	BtcOutTxBytesWithdrawer uint64
 	BtcDepositorFeeMin      float64
 )
 
 func init() {
-	BtcOutTxBytesMin = EstimateSegWitTxSize(2, 3)      // 403B, estimated size for a 2-input, 3-output SegWit tx
-	BtcOutTxBytesMax = EstimateSegWitTxSize(21, 3)     // 3234B, estimated size for a 21-input, 3-output SegWit tx
-	BtcOutTxBytesDepositor = SegWitTxSizeDepositor()   // 149B, the outtx size incurred by the depositor
-	BtcOutTxBytesWithdrawer = SegWitTxSizeWithdrawer() // 254B, the outtx size incurred by the withdrawer
+	BtcOutTxBytesDepositor = SegWitTxSizeDepositor()   // 68vB, the outtx size incurred by the depositor
+	BtcOutTxBytesWithdrawer = SegWitTxSizeWithdrawer() // 171vB, the outtx size incurred by the withdrawer
 
-	// depositor fee calculation is based on a fixed fee rate of 5 sat/byte just for simplicity.
+	// depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
 	// In reality, the fee rate on UTXO deposit is different from the fee rate when the UTXO is spent.
-	BtcDepositorFeeMin = DepositorFee(5) // 0.00000745 (5 * 149B / 100000000), the minimum deposit fee in BTC for 5 sat/byte
+	BtcDepositorFeeMin = DepositorFee(20) // 0.00001360 (20 * 68vB / 100000000), the minimum deposit fee in BTC for 20 sat/byte
+}
+
+func IsEnvFlagEnabled(flag string) bool {
+	value := os.Getenv(flag)
+	return value == "true" || value == "1"
 }
 
 func PrettyPrintStruct(val interface{}) (string, error) {
@@ -73,27 +77,40 @@ func FeeRateToSatPerByte(rate float64) *big.Int {
 	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
 }
 
-// EstimateSegWitTxSize estimates SegWit tx size
+// WiredTxSize calculates the wired tx size in bytes
+func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
+	// Version 4 bytes + LockTime 4 bytes + Serialized varint size for the
+	// number of transaction inputs and outputs.
+	// #nosec G701 always positive
+	return uint64(8 + wire.VarIntSerializeSize(numInputs) + wire.VarIntSerializeSize(numOutputs))
+}
+
+// EstimateSegWitTxSize estimates SegWit tx size in vByte
 func EstimateSegWitTxSize(numInputs uint64, numOutputs uint64) uint64 {
 	if numInputs == 0 {
 		return 0
 	}
+	bytesWiredTx := WiredTxSize(numInputs, numOutputs)
 	bytesInput := numInputs * bytesPerInput
 	bytesOutput := numOutputs * bytesPerOutput
 	bytesWitness := bytes1stWitness + (numInputs-1)*bytesPerWitness
-	return bytesEmptyTx + bytesInput + bytesOutput + bytesWitness
+
+	// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
+	// Calculation for signed SegWit tx: blockchain.GetTransactionWeight(tx) / 4
+	return bytesWiredTx + bytesInput + bytesOutput + bytesWitness/blockchain.WitnessScaleFactor
 }
 
-// SegWitTxSizeDepositor returns SegWit tx size (149B) incurred by the depositor
+// SegWitTxSizeDepositor returns SegWit tx size (68vB) incurred by the depositor
 func SegWitTxSizeDepositor() uint64 {
-	return bytesPerInput + bytesPerWitness
+	return bytesPerInput + bytesPerWitness/blockchain.WitnessScaleFactor
 }
 
-// SegWitTxSizeWithdrawer returns SegWit tx size (254B) incurred by the withdrawer
+// SegWitTxSizeWithdrawer returns SegWit tx size (171vB) incurred by the withdrawer (1 input, 3 outputs)
 func SegWitTxSizeWithdrawer() uint64 {
+	bytesWiredTx := WiredTxSize(1, 3)
 	bytesInput := uint64(1) * bytesPerInput   // nonce mark
 	bytesOutput := uint64(3) * bytesPerOutput // 3 outputs: new nonce mark, payment, change
-	return bytesEmptyTx + bytesInput + bytesOutput + bytes1stWitness
+	return bytesWiredTx + bytesInput + bytesOutput + bytes1stWitness/blockchain.WitnessScaleFactor
 }
 
 // DepositorFee calculates the depositor fee in BTC for a given sat/byte fee rate
@@ -196,26 +213,31 @@ func (ob *EVMChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, last
 	return lastHeight >= confHeight
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited) (types.MsgVoteOnObservedInboundTx, error) {
-	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
-	if bytes.Equal(event.Message, []byte(DonationMessage)) {
-		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-		return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("thank you rich folk for your donation!: %s", event.Raw.TxHash.Hex())
-	}
-	// get the sender of the event's transaction
-	tx, _, err := ob.evmClient.TransactionByHash(context.Background(), event.Raw.TxHash)
+// GetTransactionSender returns the sender of the given transaction
+func (ob *EVMChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHash ethcommon.Hash, txIndex uint) (ethcommon.Address, error) {
+	sender, err := ob.evmClient.TransactionSender(context.Background(), tx, blockHash, txIndex)
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
-		return types.MsgVoteOnObservedInboundTx{}, errors.Wrap(err, fmt.Sprintf("failed to get transaction by hash: %s", event.Raw.TxHash.Hex()))
+		// trying local recovery (assuming LondonSigner dynamic fee tx type) of sender address
+		signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
+		sender, err = signer.Sender(tx)
+		if err != nil {
+			ob.logger.ExternalChainWatcher.Err(err).Msgf("can't recover the sender from tx hash %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+			return ethcommon.Address{}, err
+		}
 	}
-	signer := ethtypes.NewLondonSigner(big.NewInt(ob.chain.ChainId))
-	sender, err := signer.Sender(tx)
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg(fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
-		return types.MsgVoteOnObservedInboundTx{}, errors.Wrap(err, fmt.Sprintf("can't recover the sender from the tx hash: %s", event.Raw.TxHash.Hex()))
+	return sender, nil
+}
 
+func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+	if bytes.Equal(event.Message, []byte(DonationMessage)) {
+		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
+		return nil
 	}
-	return *GetInBoundVoteMessage(
+	message := hex.EncodeToString(event.Message)
+	ob.logger.ExternalChainWatcher.Info().Msgf("ERC20CustodyDeposited inTx detected on chain %d tx %s block %d from %s value %s message %s",
+		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender.Hex(), event.Amount.String(), message)
+
+	return GetInBoundVoteMessage(
 		sender.Hex(),
 		ob.chain.ChainId,
 		"",
@@ -230,35 +252,39 @@ func (ob *EVMChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody
 		event.Asset.String(),
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
-	), nil
+	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) (types.MsgVoteOnObservedInboundTx, error) {
-	ob.logger.ExternalChainWatcher.Info().Msgf("TxBlockNumber %d Transaction Hash: %s Message : %s", event.Raw.BlockNumber, event.Raw.TxHash, event.Message)
+func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
-		return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not supported  %d", event.DestinationChainId.Int64())
+		return nil
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 	if !destChain.IsZetaChain() {
 		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 		if !found {
-			return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+			ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+			return nil
 		}
 		if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
-			return types.MsgVoteOnObservedInboundTx{}, fmt.Errorf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
+			return nil
 		}
 	}
-	return *GetInBoundVoteMessage(
+	message := base64.StdEncoding.EncodeToString(event.Message)
+	ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent inTx detected on chain %d tx %s block %d from %s value %s message %s",
+		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.ZetaTxSenderAddress.Hex(), event.ZetaValueAndGas.String(), message)
+
+	return GetInBoundVoteMessage(
 		event.ZetaTxSenderAddress.Hex(),
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
 		clienttypes.BytesToEthHex(event.DestinationAddress),
 		destChain.ChainId,
 		sdkmath.NewUintFromBigInt(event.ZetaValueAndGas),
-		base64.StdEncoding.EncodeToString(event.Message),
+		message,
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
 		event.DestinationGasLimit.Uint64(),
@@ -266,27 +292,31 @@ func (ob *EVMChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
-	), nil
+	)
 }
 
-func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(txhash ethcommon.Hash, value *big.Int, receipt *ethtypes.Receipt, from ethcommon.Address, data []byte) *types.MsgVoteOnObservedInboundTx {
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected: %s, blocknum %d", txhash.Hex(), receipt.BlockNumber)
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx value: %s", value.String())
-	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx from: %s", from.Hex())
-	message := ""
-	if len(data) != 0 {
-		message = hex.EncodeToString(data)
+func (ob *EVMChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+	if bytes.Equal(tx.Data(), []byte(DonationMessage)) {
+		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
+		return nil
 	}
+	message := ""
+	if len(tx.Data()) != 0 {
+		message = hex.EncodeToString(tx.Data())
+	}
+	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected on chain %d tx %s block %d from %s value %s message %s",
+		ob.chain.ChainId, tx.Hash().Hex(), blockNumber, sender.Hex(), tx.Value().String(), hex.EncodeToString(tx.Data()))
+
 	return GetInBoundVoteMessage(
-		from.Hex(),
+		sender.Hex(),
 		ob.chain.ChainId,
-		from.Hex(),
-		from.Hex(),
+		sender.Hex(),
+		sender.Hex(),
 		ob.zetaClient.ZetaChain().ChainId,
-		sdkmath.NewUintFromBigInt(value),
+		sdkmath.NewUintFromBigInt(tx.Value()),
 		message,
-		txhash.Hex(),
-		receipt.BlockNumber.Uint64(),
+		tx.Hash().Hex(),
+		blockNumber,
 		90_000,
 		common.CoinType_Gas,
 		"",

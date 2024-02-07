@@ -55,6 +55,32 @@ export declare enum CctxStatus {
 }
 
 /**
+ * @generated from enum zetachain.zetacore.crosschain.TxFinalizationStatus
+ */
+export declare enum TxFinalizationStatus {
+  /**
+   * the corresponding tx is not finalized
+   *
+   * @generated from enum value: NotFinalized = 0;
+   */
+  NotFinalized = 0,
+
+  /**
+   * the corresponding tx is finalized but not executed yet
+   *
+   * @generated from enum value: Finalized = 1;
+   */
+  Finalized = 1,
+
+  /**
+   * the corresponding tx is executed
+   *
+   * @generated from enum value: Executed = 2;
+   */
+  Executed = 2,
+}
+
+/**
  * @generated from message zetachain.zetacore.crosschain.InboundTxParams
  */
 export declare class InboundTxParams extends Message<InboundTxParams> {
@@ -113,6 +139,11 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
    * @generated from field: uint64 inbound_tx_finalized_zeta_height = 10;
    */
   inboundTxFinalizedZetaHeight: bigint;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.TxFinalizationStatus tx_finalization_status = 11;
+   */
+  txFinalizationStatus: TxFinalizationStatus;
 
   constructor(data?: PartialMessage<InboundTxParams>);
 
@@ -231,6 +262,11 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
    * @generated from field: string tss_pubkey = 11;
    */
   tssPubkey: string;
+
+  /**
+   * @generated from field: zetachain.zetacore.crosschain.TxFinalizationStatus tx_finalization_status = 12;
+   */
+  txFinalizationStatus: TxFinalizationStatus;
 
   constructor(data?: PartialMessage<OutboundTxParams>);
 

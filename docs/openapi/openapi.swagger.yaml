@@ -27817,7 +27817,7 @@ paths:
           format: int64
       tags:
         - Query
-  /zeta-chain/observer/get_tss_address:
+  /zeta-chain/observer/get_tss_address/{bitcoin_chain_id}:
     get:
       summary: Queries a list of GetTssAddress items.
       operationId: Query_GetTssAddress
@@ -27832,8 +27832,8 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       parameters:
         - name: bitcoin_chain_id
-          in: query
-          required: false
+          in: path
+          required: true
           type: string
           format: int64
       tags:
@@ -50813,6 +50813,8 @@ definitions:
       inbound_tx_finalized_zeta_height:
         type: string
         format: uint64
+      tx_finalization_status:
+        $ref: '#/definitions/crosschainTxFinalizationStatus'
   crosschainLastBlockHeight:
     type: object
     properties:
@@ -50828,6 +50830,8 @@ definitions:
       lastReceiveHeight:
         type: string
         format: uint64
+  crosschainMsgAbortStuckCCTXResponse:
+    type: object
   crosschainMsgAddToInTxTrackerResponse:
     type: object
   crosschainMsgAddToOutTxTrackerResponse:
@@ -50914,6 +50918,8 @@ definitions:
         format: uint64
       tss_pubkey:
         type: string
+      tx_finalization_status:
+        $ref: '#/definitions/crosschainTxFinalizationStatus'
   crosschainQueryAllCctxResponse:
     type: object
     properties:
@@ -51064,6 +51070,17 @@ definitions:
     properties:
       aborted_zeta_amount:
         type: string
+  crosschainTxFinalizationStatus:
+    type: string
+    enum:
+      - NotFinalized
+      - Finalized
+      - Executed
+    default: NotFinalized
+    title: |-
+      - NotFinalized: the corresponding tx is not finalized
+       - Finalized: the corresponding tx is finalized but not executed yet
+       - Executed: the corresponding tx is executed
   crosschainTxHashList:
     type: object
     properties:

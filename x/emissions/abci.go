@@ -1,6 +1,7 @@
 package emissions
 
 import (
+	"fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -11,29 +12,38 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+	emissionPoolBalance := keeper.GetReservesFactor(ctx)
+	blockRewards := types.BlockReward
 
-	reservesFactor, bondFactor, durationFactor := keeper.GetBlockRewardComponents(ctx)
-	blockRewards := reservesFactor.Mul(bondFactor).Mul(durationFactor)
-	if blockRewards.IsZero() {
+	if blockRewards.GT(emissionPoolBalance) {
+		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
 	}
 	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
-	err := DistributeValidatorRewards(ctx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
+	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
+	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
+	tmpCtx, commit := ctx.CacheContext()
+	err := DistributeValidatorRewards(tmpCtx, validatorRewards, keeper.GetBankKeeper(), keeper.GetFeeCollector())
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
+		return
 	}
-	err = DistributeObserverRewards(ctx, observerRewards, keeper)
+	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper)
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
+		return
 	}
-	err = DistributeTssRewards(ctx, tssSignerRewards, keeper.GetBankKeeper())
+	err = DistributeTssRewards(tmpCtx, tssSignerRewards, keeper.GetBankKeeper())
 	if err != nil {
-		panic(err)
+		ctx.Logger().Error(fmt.Sprintf("Error while distributing tss signer rewards %s", err))
+		return
 	}
-	types.EmitValidatorEmissions(ctx, bondFactor.String(), reservesFactor.String(),
-		durationFactor.String(),
+	commit()
+
+	types.EmitValidatorEmissions(ctx, "", "",
+		"",
 		validatorRewards.String(),
 		observerRewards.String(),
 		tssSignerRewards.String())
@@ -44,6 +54,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 // This function uses the distribution module of cosmos-sdk , by directly sending funds to the feecollector.
 func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, feeCollector string) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
+	ctx.Logger().Info(fmt.Sprintf(fmt.Sprintf("Distributing Validator Rewards Total:%s To FeeCollector : %s", amount.String(), feeCollector)))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 
@@ -76,7 +87,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 	if totalRewardsUnits > 0 && amount.IsPositive() {
 		rewardPerUnit = amount.Quo(sdk.NewInt(totalRewardsUnits))
 	}
-
+	ctx.Logger().Debug(fmt.Sprintf("Total Rewards Units : %d , rewards per Unit %s ,number of ballots :%d", totalRewardsUnits, rewardPerUnit.String(), len(ballotIdentifiers)))
 	sortedKeys := make([]string, 0, len(rewardsDistributer))
 	for k := range rewardsDistributer {
 		sortedKeys = append(sortedKeys, k)

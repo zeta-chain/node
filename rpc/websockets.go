@@ -47,7 +47,7 @@ import (
 )
 
 const (
-	messageSizeLimit = 32 * 1024 * 1024 // 32MB
+	messageSizeLimit = 10 * 1024 * 1024 // 10MB
 
 )
 

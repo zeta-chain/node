@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/zeta-chain/zetacore/common"
+
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -17,8 +18,21 @@ const (
 	RemainingFeesToStabilityPoolPercent = 95
 )
 
+// CheckAndUpdateCctxGasPriceFunc is a function type for checking and updating the gas price of a cctx
+type CheckAndUpdateCctxGasPriceFunc func(
+	ctx sdk.Context,
+	k Keeper,
+	cctx types.CrossChainTx,
+	flags observertypes.GasPriceIncreaseFlags,
+) (math.Uint, math.Uint, error)
+
 // IterateAndUpdateCctxGasPrice iterates through all cctx and updates the gas price if pending for too long
-func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
+// The function returns the number of cctxs updated and the gas price increase flags used
+func (k Keeper) IterateAndUpdateCctxGasPrice(
+	ctx sdk.Context,
+	chains []*common.Chain,
+	updateFunc CheckAndUpdateCctxGasPriceFunc,
+) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default
 	gasPriceIncreaseFlags := observertypes.DefaultGasPriceIncreaseFlags
 	crosschainFlags, found := k.zetaObserverKeeper.GetCrosschainFlags(ctx)
@@ -28,38 +42,66 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(ctx sdk.Context) error {
 
 	// skip if haven't reached epoch end
 	if ctx.BlockHeight()%gasPriceIncreaseFlags.EpochLength != 0 {
-		return nil
+		return 0, gasPriceIncreaseFlags
 	}
 
-	// iterate all chains' pending cctx
-	chains := common.DefaultChainsList()
-	for _, chain := range chains {
-		res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
-			ChainId: chain.ChainId,
-			Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
-		})
-		if err != nil {
-			return err
-		}
+	cctxCount := 0
 
-		// iterate through all pending cctx
-		for _, pendingCctx := range res.CrossChainTx {
-			if pendingCctx != nil {
-				_, _, err := k.CheckAndUpdateCctxGasPrice(ctx, *pendingCctx, gasPriceIncreaseFlags)
-				if err != nil {
-					return err
+IterateChains:
+	for _, chain := range chains {
+		// support only external evm chains
+		if common.IsEVMChain(chain.ChainId) && !common.IsZetaChain(chain.ChainId) {
+			res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
+				ChainId: chain.ChainId,
+				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,
+			})
+			if err != nil {
+				ctx.Logger().Info("GasStabilityPool: fetching pending cctx failed",
+					"chainID", chain.ChainId,
+					"err", err.Error(),
+				)
+				continue IterateChains
+			}
+
+			// iterate through all pending cctx
+			for _, pendingCctx := range res.CrossChainTx {
+				if pendingCctx != nil {
+					gasPriceIncrease, additionalFees, err := updateFunc(ctx, k, *pendingCctx, gasPriceIncreaseFlags)
+					if err != nil {
+						ctx.Logger().Info("GasStabilityPool: updating gas price for pending cctx failed",
+							"cctxIndex", pendingCctx.Index,
+							"err", err.Error(),
+						)
+						continue IterateChains
+					}
+					if !gasPriceIncrease.IsNil() && !gasPriceIncrease.IsZero() {
+						// Emit typed event for gas price increase
+						if err := ctx.EventManager().EmitTypedEvent(
+							&types.EventCCTXGasPriceIncreased{
+								CctxIndex:        pendingCctx.Index,
+								GasPriceIncrease: gasPriceIncrease.String(),
+								AdditionalFees:   additionalFees.String(),
+							}); err != nil {
+							ctx.Logger().Error(
+								"GasStabilityPool: failed to emit EventCCTXGasPriceIncreased",
+								"err", err.Error(),
+							)
+						}
+						cctxCount++
+					}
 				}
 			}
 		}
 	}
 
-	return nil
+	return cctxCount, gasPriceIncreaseFlags
 }
 
 // CheckAndUpdateCctxGasPrice checks if the retry interval is reached and updates the gas price if so
 // The function returns the gas price increase and the additional fees paid from the gas stability pool
-func (k Keeper) CheckAndUpdateCctxGasPrice(
+func CheckAndUpdateCctxGasPrice(
 	ctx sdk.Context,
+	k Keeper,
 	cctx types.CrossChainTx,
 	flags observertypes.GasPriceIncreaseFlags,
 ) (math.Uint, math.Uint, error) {
@@ -108,7 +150,7 @@ func (k Keeper) CheckAndUpdateCctxGasPrice(
 	if err := k.fungibleKeeper.WithdrawFromGasStabilityPool(ctx, chainID, additionalFees.BigInt()); err != nil {
 		return math.ZeroUint(), math.ZeroUint(), cosmoserrors.Wrap(
 			types.ErrNotEnoughFunds,
-			fmt.Sprintf("cannot withdraw %s from gas stability pool", additionalFees.String()),
+			fmt.Sprintf("cannot withdraw %s from gas stability pool, error: %s", additionalFees.String(), err.Error()),
 		)
 	}
 
