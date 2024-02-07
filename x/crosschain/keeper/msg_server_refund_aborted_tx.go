@@ -3,6 +3,7 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"golang.org/x/net/context"
@@ -37,5 +38,8 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 	cctx.IsRefunded = true
 	k.SetCrossChainTx(ctx, cctx)
+	if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+		k.RemoveZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
+	}
 	return &types.MsgRefundAbortedCCTXResponse{}, nil
 }

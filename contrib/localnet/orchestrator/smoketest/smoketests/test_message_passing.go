@@ -146,7 +146,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	if receipt.Status != 0 {
 		panic("expected revert tx to fail")
 	}
-	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted_Refundable {
+	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Aborted {
 		panic("expected cctx to be aborted")
 	}
 }

@@ -99,7 +99,7 @@ func WaitCctxsMinedByInTxHash(
 
 func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
 	return status == crosschaintypes.CctxStatus_OutboundMined ||
-		status == crosschaintypes.CctxStatus_Aborted_Refundable ||
+		status == crosschaintypes.CctxStatus_Aborted ||
 		status == crosschaintypes.CctxStatus_Reverted
 }
 

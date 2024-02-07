@@ -32,7 +32,7 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 
 	// There is no liquidity pool, therefore the cctx should abort
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, inTxHash, sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	if cctx.CctxStatus.Status != types.CctxStatus_Aborted_Refundable {
+	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
 		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
 	}
 
