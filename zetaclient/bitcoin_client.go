@@ -73,11 +73,10 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations          = 0
-	maxHeightDiff             = 10000
-	btcBlocksPerDay           = 144
-	bigValueSats              = 200000000
-	bigValueConfirmationCount = 6
+	maxHeightDiff             = 10000     // in case the last block is too old when the observer starts
+	btcBlocksPerDay           = 144       // for LRU block cache size
+	bigValueSats              = 200000000 // 2 BTC
+	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
 )
 
 func (ob *BitcoinChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
