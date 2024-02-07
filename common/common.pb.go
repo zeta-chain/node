@@ -339,7 +339,6 @@ func (m *BlockHeader) GetHeader() HeaderData {
 
 type HeaderData struct {
 	// Types that are valid to be assigned to Data:
-	//
 	//	*HeaderData_EthereumHeader
 	//	*HeaderData_BitcoinHeader
 	Data isHeaderData_Data `protobuf_oneof:"data"`
@@ -425,7 +424,6 @@ func (*HeaderData) XXX_OneofWrappers() []interface{} {
 
 type Proof struct {
 	// Types that are valid to be assigned to Proof:
-	//
 	//	*Proof_EthereumProof
 	//	*Proof_BitcoinProof
 	Proof isProof_Proof `protobuf_oneof:"proof"`

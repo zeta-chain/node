@@ -1,9 +1,9 @@
 # tx crosschain whitelist-erc20
 
-Add a new ERC20 address to whitelist
+Add a new erc20 token to whitelist
 
 ```
-zetacored tx crosschain whitelist-erc20 [erc20Address] [chainId] [name] [symbol] [decimals] [gasLimit] [flags]
+zetacored tx crosschain whitelist-erc20 [erc20Address] [chainID] [name] [symbol] [decimals] [gasLimit] [flags]
 ```
 
 ### Options
@@ -11,7 +11,7 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainId] [name] [symbol]
 ```
   -a, --account-number uint      The account number of the signing account (offline mode only)
       --aux                      Generate aux signer data instead of sending a tx
-  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) (default "sync")
+  -b, --broadcast-mode string    Transaction broadcasting mode (sync|async|block) 
       --dry-run                  ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)
       --fee-granter string       Fee granter grants fees for the transaction
       --fee-payer string         Fee payer pays fees for the transaction instead of deducting from the signer
@@ -21,14 +21,14 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainId] [name] [symbol]
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for add-whitelist-erc20
-      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) (default "os")
+  -h, --help                     help for whitelist-erc20
+      --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
-      --node string              <host>:<port> to tendermint rpc interface for this chain (default "tcp://localhost:26657")
+      --node string              [host]:[port] to tendermint rpc interface for this chain 
       --note string              Note to add a description to the transaction (previously --memo)
       --offline                  Offline mode (does not allow any online functionality)
-  -o, --output string            Output format (text|json) (default "json")
+  -o, --output string            Output format (text|json) 
   -s, --sequence uint            The sequence number of the signing account (offline mode only)
       --sign-mode string         Choose sign mode (direct|amino-json|direct-aux), this is an advanced feature
       --timeout-height uint      Set a block timeout height to prevent the tx from being committed past a certain height
@@ -40,12 +40,13 @@ zetacored tx crosschain whitelist-erc20 [erc20Address] [chainId] [name] [symbol]
 
 ```
       --chain-id string     The network chain ID
-      --home string         directory for config and data
-      --log_format string   The logging format (json|plain) (default "plain")
-      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) (default "info")
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
       --trace               print out full stack trace on errors
 ```
 
 ### SEE ALSO
 
 * [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
+

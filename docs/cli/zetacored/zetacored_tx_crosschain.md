@@ -36,4 +36,5 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain outbound-voter](zetacored_tx_crosschain_outbound-voter.md)	 - Broadcast message receiveConfirmation
 * [zetacored tx crosschain remove-from-out-tx-tracker](zetacored_tx_crosschain_remove-from-out-tx-tracker.md)	 - Remove a out-tx-tracker
 * [zetacored tx crosschain update-tss-address](zetacored_tx_crosschain_update-tss-address.md)	 - Create a new TSSVoter
-* [zetacored tx crosschain whitelist-erc20](zetacored_tx_crosschain-whitelist-erc20.md) - Add a new ERC20 address to whitelist
+* [zetacored tx crosschain whitelist-erc20](zetacored_tx_crosschain_whitelist-erc20.md)	 - Add a new erc20 token to whitelist
+
