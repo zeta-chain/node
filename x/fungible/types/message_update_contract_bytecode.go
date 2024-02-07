@@ -50,10 +50,6 @@ func (msg *MsgUpdateContractBytecode) ValidateBasic() error {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	if msg.ContractAddress == msg.NewCodeHash {
-		return cosmoserror.Wrapf(sdkerrors.ErrInvalidRequest, "contract address and new bytecode address cannot be the same")
-	}
-
 	// check if the contract address is valid
 	if !ethcommon.IsHexAddress(msg.ContractAddress) {
 		return cosmoserror.Wrapf(sdkerrors.ErrInvalidAddress, "invalid contract address (%s)", msg.ContractAddress)

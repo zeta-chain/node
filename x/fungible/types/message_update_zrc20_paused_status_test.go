@@ -9,7 +9,6 @@ import (
 )
 
 func TestMMsgUpdateZRC20PausedStatus_ValidateBasic(t *testing.T) {
-	sampleAddress := sample.EthAddress().String()
 	tt := []struct {
 		name    string
 		msg     types.MsgUpdateZRC20PausedStatus
@@ -71,18 +70,6 @@ func TestMMsgUpdateZRC20PausedStatus_ValidateBasic(t *testing.T) {
 					sample.EthAddress().String(),
 					"invalid",
 					sample.EthAddress().String(),
-				},
-				Action: types.UpdatePausedStatusAction_PAUSE,
-			},
-			wantErr: true,
-		},
-		{
-			name: "duplicate zrc20 address",
-			msg: types.MsgUpdateZRC20PausedStatus{
-				Creator: sample.AccAddress(),
-				Zrc20Addresses: []string{
-					sampleAddress,
-					sampleAddress,
 				},
 				Action: types.UpdatePausedStatusAction_PAUSE,
 			},

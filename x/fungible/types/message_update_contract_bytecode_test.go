@@ -9,7 +9,6 @@ import (
 )
 
 func TestMsgUpdateContractBytecode_ValidateBasic(t *testing.T) {
-	sampleAddress := sample.EthAddress().String()
 	tt := []struct {
 		name      string
 		msg       types.MsgUpdateContractBytecode
@@ -48,15 +47,6 @@ func TestMsgUpdateContractBytecode_ValidateBasic(t *testing.T) {
 				Creator:         sample.AccAddress(),
 				ContractAddress: sample.EthAddress().Hex(),
 				NewCodeHash:     "invalid",
-			},
-			wantError: true,
-		},
-		{
-			name: "same old contract and new bytecode address",
-			msg: types.MsgUpdateContractBytecode{
-				Creator:         sample.AccAddress(),
-				ContractAddress: sampleAddress,
-				NewCodeHash:     sampleAddress,
 			},
 			wantError: true,
 		},

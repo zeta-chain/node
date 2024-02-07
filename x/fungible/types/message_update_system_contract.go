@@ -1,7 +1,6 @@
 package types
 
 import (
-	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -42,14 +41,11 @@ func (msg *MsgUpdateSystemContract) GetSignBytes() []byte {
 func (msg *MsgUpdateSystemContract) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
 	if ethcommon.HexToAddress(msg.NewSystemContractAddress) == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.NewSystemContractAddress)
-	}
-	if !ethcommon.IsHexAddress(msg.NewSystemContractAddress) {
-		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.NewSystemContractAddress)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid system contract address (%s)", msg.NewSystemContractAddress)
 	}
 
 	return nil
