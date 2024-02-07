@@ -180,7 +180,7 @@ func (suite *BitcoinClientTestSuite) Test3() {
 // 	suite.Run(t, new(BitcoinClientTestSuite))
 // }
 
-func TestBitcoinFeeRate(t *testing.T) {
+func LiveTestBitcoinFeeRate(t *testing.T) {
 	// mainnet config
 	connCfg := &rpcclient.ConnConfig{
 		Host:         "127.0.0.1:8332",
