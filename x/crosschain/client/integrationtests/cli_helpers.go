@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
-
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -19,11 +17,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
 )
 
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
@@ -167,7 +165,9 @@ func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string,
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -183,14 +183,16 @@ func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, acco
 	cmd := cli.CmdCreateTSSVoter()
 	inboundVoterArgs := []string{
 		"tsspubkey",
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		"1",
 		"0",
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -231,7 +233,9 @@ func BuildSignedOutboundVote(
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(outboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -244,7 +248,7 @@ func BuildSignedOutboundVote(
 	return WriteToNewTempFile(t, res.String())
 }
 
-func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string) *os.File {
+func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI, message string, eventIndex int) *os.File {
 	cmd := cli.CmdCCTXInboundVoter()
 	inboundVoterArgs := []string{
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
@@ -258,13 +262,15 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 		"100",
 		"Zeta",
 		"",
-		"0",
+		strconv.Itoa(eventIndex),
 	}
 	txArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
-		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(10))).String()),
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "4000000"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasAdjustment, "1.5"),
+		fmt.Sprintf("--%s=%s", flags.FlagGasPrices, fmt.Sprintf("%s%s", "10", denom)),
 	}
 	args := append(inboundVoterArgs, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -276,7 +282,7 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 	return WriteToNewTempFile(t, res.String())
 }
 
-func GetBallotIdentifier(message string) string {
+func GetBallotIdentifier(message string, eventIndex int) string {
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
@@ -291,7 +297,8 @@ func GetBallotIdentifier(message string) string {
 		250_000,
 		common.CoinType_Zeta,
 		"",
-		0,
+		// #nosec G701 always positive
+		uint(eventIndex),
 	)
 	return msg.Digest()
 }

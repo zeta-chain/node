@@ -196,6 +196,15 @@ var (
 		emissionsModuleTypes.UndistributedObserverRewardsPool: nil,
 		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
 	}
+
+	// module accounts that are NOT allowed to receive tokens
+	blockedReceivingModAcc = map[string]bool{
+		distrtypes.ModuleName:          true,
+		authtypes.FeeCollectorName:     true,
+		stakingtypes.BondedPoolName:    true,
+		stakingtypes.NotBondedPoolName: true,
+		govtypes.ModuleName:            true,
+	}
 )
 
 var _ simapp.App = (*App)(nil)
@@ -306,8 +315,9 @@ func New(
 		maccPerms,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 	)
+	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), nil,
+		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
 	)
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
@@ -565,7 +575,7 @@ func New(
 	app.SetBeginBlocker(app.BeginBlocker)
 
 	maxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
-	options := evmante.HandlerOptions{
+	options := ante.HandlerOptions{
 		AccountKeeper:   app.AccountKeeper,
 		BankKeeper:      app.BankKeeper,
 		EvmKeeper:       app.EvmKeeper,
@@ -579,6 +589,7 @@ func New(
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
 		},
+		ObserverKeeper: app.ZetaObserverKeeper,
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)
@@ -779,4 +790,13 @@ func VerifyAddressFormat(bz []byte) error {
 // SimulationManager implements the SimulationApp interface
 func (app *App) SimulationManager() *module.SimulationManager {
 	return app.sm
+}
+
+func (app *App) BlockedAddrs() map[string]bool {
+	blockList := make(map[string]bool)
+	for k, v := range blockedReceivingModAcc {
+		addr := authtypes.NewModuleAddress(k)
+		blockList[addr.String()] = v
+	}
+	return blockList
 }

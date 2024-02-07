@@ -19,19 +19,18 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ethante "github.com/evmos/ethermint/app/ante"
-	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	tmlog "github.com/tendermint/tendermint/libs/log"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errortypes "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tmlog "github.com/tendermint/tendermint/libs/log"
+	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func ValidateHandlerOptions(options ethante.HandlerOptions) error {
+func ValidateHandlerOptions(options HandlerOptions) error {
 	if options.AccountKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "account keeper is required for AnteHandler")
 	}
@@ -47,6 +46,9 @@ func ValidateHandlerOptions(options ethante.HandlerOptions) error {
 	if options.EvmKeeper == nil {
 		return errorsmod.Wrap(errortypes.ErrLogic, "evm keeper is required for AnteHandler")
 	}
+	if options.ObserverKeeper == nil {
+		return errorsmod.Wrap(errortypes.ErrLogic, "observer keeper is required for AnteHandler")
+	}
 	return nil
 }
 
@@ -54,7 +56,7 @@ func ValidateHandlerOptions(options ethante.HandlerOptions) error {
 // Ethereum or SDK transaction to an internal ante handler for performing
 // transaction-level processing (e.g. fee payment, signature verification) before
 // being passed onto it's respective handler.
-func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
+func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	if err := ValidateHandlerOptions(options); err != nil {
 		return nil, err
 	}
@@ -94,28 +96,26 @@ func NewAnteHandler(options ethante.HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			found := false
-			for _, msg := range tx.GetMsgs() {
-				switch msg.(type) {
-				// treat these three msg types differently because they might call EVM which results in massive gas consumption
-				// For these two msg types, we don't check gas limit by using a different ante handler
-				case *cctxtypes.MsgGasPriceVoter, *cctxtypes.MsgVoteOnObservedInboundTx:
-					found = true
-					break
-				case *stakingtypes.MsgCreateValidator:
-					if ctx.BlockHeight() == 0 {
-						found = true
-						break
-					}
+			// default: handle as normal Cosmos SDK tx
+			anteHandler = newCosmosAnteHandler(options)
+
+			// if tx is a system tx, and singer is authorized, use system tx handler
+
+			isAuthorized := func(creator string) bool {
+				return options.ObserverKeeper.IsAuthorized(ctx, creator)
+			}
+			if IsSystemTx(tx, isAuthorized) {
+				anteHandler = newCosmosAnteHandlerForSystemTx(options)
+			}
+
+			// if tx is MsgCreatorValidator, use the newCosmosAnteHandlerForSystemTx handler to
+			// exempt gas fee requirement in genesis because it's not possible to pay gas fee in genesis
+			if len(tx.GetMsgs()) == 1 {
+				if _, ok := tx.GetMsgs()[0].(*stakingtypes.MsgCreateValidator); ok && ctx.BlockHeight() == 0 {
+					anteHandler = newCosmosAnteHandlerForSystemTx(options)
 				}
 			}
-			if len(tx.GetMsgs()) == 1 && found {
-				// this differs newCosmosAnteHandler only in that it doesn't check gas limit
-				// by using an Infinite Gas Meter.
-				anteHandler = newCosmosAnteHandlerNoGasLimit(options)
-			} else {
-				anteHandler = newCosmosAnteHandler(options)
-			}
+
 		default:
 			return ctx, errorsmod.Wrapf(errortypes.ErrUnknownRequest, "invalid transaction type: %T", tx)
 		}
@@ -144,4 +144,42 @@ func Recover(logger tmlog.Logger, err *error) {
 			)
 		}
 	}
+}
+
+// IsSystemTx determines whether tx is a system tx that's signed by an authorized signer
+// system tx are special types of txs (see in the switch below), or such txs wrapped inside a MsgExec
+// the parameter isAuthorizedSigner is a caller specified function that determines whether the signer of
+// the tx is authorized.
+func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
+	// the following determines whether the tx is a system tx which will uses different handler
+	// System txs are always single Msg txs, optionally wrapped by one level of MsgExec
+	if len(tx.GetMsgs()) != 1 { // this is not a system tx
+		return false
+	}
+	msg := tx.GetMsgs()[0]
+
+	// if wrapped inside a MsgExec, unwrap it and reveal the innerMsg.
+	var innerMsg sdk.Msg
+	innerMsg = msg
+	if mm, ok := msg.(*authz.MsgExec); ok { // authz tx; look inside it
+		msgs, err := mm.GetMessages()
+		if err == nil && len(msgs) == 1 {
+			innerMsg = msgs[0]
+		}
+	}
+	switch innerMsg.(type) {
+	case *cctxtypes.MsgGasPriceVoter,
+		*cctxtypes.MsgVoteOnObservedInboundTx,
+		*cctxtypes.MsgVoteOnObservedOutboundTx,
+		*cctxtypes.MsgAddToOutTxTracker,
+		*cctxtypes.MsgCreateTSSVoter,
+		*observertypes.MsgAddBlockHeader,
+		*observertypes.MsgAddBlameVote:
+		signers := innerMsg.GetSigners()
+		if len(signers) == 1 {
+			return isAuthorizedSigner(signers[0].String())
+		}
+	}
+
+	return false
 }

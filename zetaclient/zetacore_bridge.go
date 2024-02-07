@@ -196,28 +196,34 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 		return err
 	}
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
-		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped; please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
+		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
+			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
 		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
 	}
 
-	coreParams, err := b.GetCoreParams()
+	chainParams, err := b.GetChainParams()
 	if err != nil {
 		return err
 	}
 
-	newEVMParams := make(map[int64]*observertypes.CoreParams)
-	var newBTCParams *observertypes.CoreParams
+	newEVMParams := make(map[int64]*observertypes.ChainParams)
+	var newBTCParams *observertypes.ChainParams
 
-	// check and update core params for each chain
-	for _, coreParam := range coreParams {
-		err := config.ValidateCoreParams(coreParam)
+	// check and update chain params for each chain
+	for _, chainParam := range chainParams {
+		err := config.ValidateChainParams(chainParam)
 		if err != nil {
-			b.logger.Debug().Err(err).Msgf("Invalid core params for chain %s", common.GetChainFromChainID(coreParam.ChainId).ChainName)
+			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+			continue
 		}
-		if common.IsBitcoinChain(coreParam.ChainId) {
-			newBTCParams = coreParam
-		} else {
-			newEVMParams[coreParam.ChainId] = coreParam
+		if !chainParam.GetIsSupported() {
+			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+			continue
+		}
+		if common.IsBitcoinChain(chainParam.ChainId) {
+			newBTCParams = chainParam
+		} else if common.IsEVMChain(chainParam.ChainId) {
+			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
 
@@ -233,7 +239,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetacore")
 	}
-	cfg.UpdateCoreParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	cfg.UpdateChainParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {

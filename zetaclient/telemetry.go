@@ -133,6 +133,7 @@ func (t *TelemetryServer) Handlers() http.Handler {
 	router.Handle("/status", http.HandlerFunc(t.statusHandler)).Methods(http.MethodGet)
 	router.Handle("/ip", http.HandlerFunc(t.ipHandler)).Methods(http.MethodGet)
 	router.Handle("/hotkeyburnrate", http.HandlerFunc(t.hotKeyFeeBurnRate)).Methods(http.MethodGet)
+
 	// router.Handle("/debug/pprof/goroutine", pprof.Handler("goroutine"))
 	// router.Handle("/debug/pprof/heap", pprof.Handler("heap"))
 	// router.HandleFunc("/debug/pprof/", pprof.Index)

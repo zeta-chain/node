@@ -8,8 +8,10 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/client/cli"
+	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	emissionscli "github.com/zeta-chain/zetacore/x/emissions/client/cli"
+	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -59,7 +61,7 @@ func (s *CliTestSuite) TestObserverRewards() {
 	// Duration factor is calculated in the same block,so we need to query based from the committed state at which the distribution is done
 	// Would be cleaner to use `--height` flag, but it is not supported by the ExecTestCLICmd function yet
 	emissionFactors.DurationFactor = resFactorsNewBlocks.DurationFactor
-	asertValues := CalculateObserverRewards(s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
+	asertValues := CalculateObserverRewards(&s.Suite, s.ballots, emissionParams.Params.ObserverEmissionPercentage, emissionFactors.ReservesFactor, emissionFactors.BondFactor, emissionFactors.DurationFactor)
 
 	// Assert withdrawable rewards for each validator
 	resAvailable := emissionstypes.QueryShowAvailableEmissionsResponse{}
@@ -72,9 +74,11 @@ func (s *CliTestSuite) TestObserverRewards() {
 
 }
 
-func CalculateObserverRewards(ballots []*observertypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
+func CalculateObserverRewards(s *suite.Suite, ballots []*observertypes.Ballot, observerEmissionPercentage, reservesFactor, bondFactor, durationFactor string) map[string]sdkmath.Int {
 	calculatedDistributer := map[string]sdkmath.Int{}
-	blockRewards := sdk.MustNewDecFromStr(reservesFactor).Mul(sdk.MustNewDecFromStr(bondFactor)).Mul(sdk.MustNewDecFromStr(durationFactor))
+	//blockRewards := sdk.MustNewDecFromStr(reservesFactor).Mul(sdk.MustNewDecFromStr(bondFactor)).Mul(sdk.MustNewDecFromStr(durationFactor))
+	blockRewards, err := emissionskeeper.CalculateFixedValidatorRewards(emissionstypes.AvgBlockTime)
+	s.Require().NoError(err)
 	observerRewards := sdk.MustNewDecFromStr(observerEmissionPercentage).Mul(blockRewards).TruncateInt()
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)

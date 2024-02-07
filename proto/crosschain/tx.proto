@@ -19,6 +19,8 @@ service Msg {
   rpc UpdateTssAddress(MsgUpdateTssAddress) returns (MsgUpdateTssAddressResponse);
   rpc MigrateTssFunds(MsgMigrateTssFunds) returns (MsgMigrateTssFundsResponse);
   rpc CreateTSSVoter(MsgCreateTSSVoter) returns (MsgCreateTSSVoterResponse);
+
+  rpc AbortStuckCCTX(MsgAbortStuckCCTX) returns (MsgAbortStuckCCTXResponse);
 }
 
 message MsgCreateTSSVoter {
@@ -153,3 +155,10 @@ message MsgVoteOnObservedInboundTx {
 }
 
 message MsgVoteOnObservedInboundTxResponse {}
+
+message MsgAbortStuckCCTX {
+  string creator = 1;
+  string cctx_index = 2;
+}
+
+message MsgAbortStuckCCTXResponse {}

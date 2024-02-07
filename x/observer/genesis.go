@@ -10,20 +10,30 @@ import (
 // InitGenesis initializes the observer module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	genesisObservers := genState.Observers
 	observerCount := uint64(0)
-	for _, mapper := range genesisObservers {
-		if mapper != nil {
-			k.SetObserverMapper(ctx, mapper)
-			observerCount += uint64(len(mapper.ObserverList))
-		}
+	if genState.Observers.Len() > 0 {
+		k.SetObserverSet(ctx, genState.Observers)
+		observerCount = uint64(len(genState.Observers.ObserverList))
 	}
 
-	// If core params are defined set them, otherwise set default
-	if len(genState.CoreParamsList.CoreParams) > 0 {
-		k.SetCoreParams(ctx, genState.CoreParamsList)
+	// if chian params are defined set them
+	if len(genState.ChainParamsList.ChainParams) > 0 {
+		k.SetChainParamsList(ctx, genState.ChainParamsList)
 	} else {
-		k.SetCoreParams(ctx, types.GetCoreParams())
+		// if no chain params are defined, set localnet chains for test purposes
+		btcChainParams := types.GetDefaultBtcRegtestChainParams()
+		btcChainParams.IsSupported = true
+		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
+		goerliChainParams.IsSupported = true
+		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
+		zetaPrivnetChainParams.IsSupported = true
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				btcChainParams,
+				goerliChainParams,
+				zetaPrivnetChainParams,
+			},
+		})
 	}
 
 	// Set all the nodeAccount
@@ -84,20 +94,29 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetLastObserverCount(ctx, &types.LastObserverCount{LastChangeHeight: 0, Count: observerCount})
 	}
 
+	tss := types.TSS{}
 	if genState.Tss != nil {
-		tss := *genState.Tss
+		tss = *genState.Tss
 		k.SetTSS(ctx, tss)
-		for _, chain := range common.DefaultChainsList() {
-			k.SetPendingNonces(ctx, types.PendingNonces{
-				NonceLow:  0,
-				NonceHigh: 0,
-				ChainId:   chain.ChainId,
-				Tss:       tss.TssPubkey,
-			})
-		}
 	}
 
-	// Get all chain nonces
+	// Set all the pending nonces
+	if genState.PendingNonces != nil {
+		for _, pendingNonce := range genState.PendingNonces {
+			k.SetPendingNonces(ctx, pendingNonce)
+		}
+	} else {
+		for _, chain := range common.DefaultChainsList() {
+			if genState.Tss != nil {
+				k.SetPendingNonces(ctx, types.PendingNonces{
+					NonceLow:  0,
+					NonceHigh: 0,
+					ChainId:   chain.ChainId,
+					Tss:       tss.TssPubkey,
+				})
+			}
+		}
+	}
 
 	for _, elem := range genState.TssHistory {
 		k.SetTSSHistory(ctx, elem)
@@ -111,10 +130,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		k.SetBlame(ctx, elem)
 	}
 
-	// Set all the pending nonces
-	for _, pendingNonce := range genState.PendingNonces {
-		k.SetPendingNonces(ctx, pendingNonce)
-	}
 	for _, chainNonce := range genState.ChainNonces {
 		k.SetChainNonces(ctx, chainNonce)
 	}
@@ -128,9 +143,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 
-	coreParams, found := k.GetAllCoreParams(ctx)
+	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {
-		coreParams = types.CoreParamsList{}
+		chainParams = types.ChainParamsList{}
 	}
 
 	// Get all node accounts
@@ -172,10 +187,17 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err == nil {
 		pendingNonces = p
 	}
+
+	os := types.ObserverSet{}
+	observers, found := k.GetObserverSet(ctx)
+	if found {
+		os = observers
+	}
+
 	return &types.GenesisState{
 		Ballots:           k.GetAllBallots(ctx),
-		Observers:         k.GetAllObserverMappers(ctx),
-		CoreParamsList:    coreParams,
+		ChainParamsList:   chainParams,
+		Observers:         os,
 		Params:            &params,
 		NodeAccountList:   nodeAccounts,
 		CrosschainFlags:   cf,

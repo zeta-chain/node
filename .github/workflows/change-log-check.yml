@@ -17,7 +17,7 @@ jobs:
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
       run: |
         git fetch origin ${{ github.base_ref }}
-        CHANGELOG_DIFF=$(git diff origin/${{ github.base_ref }} origin/${{ github.head_ref }} -- changelog.md)
+        CHANGELOG_DIFF=$(git diff ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} -- changelog.md)
         echo "${CHANGELOG_DIFF}"
         if [ -z "$CHANGELOG_DIFF" ]; then
           echo "ERROR: No changes detected in CHANGELOG.md. Please update the changelog."

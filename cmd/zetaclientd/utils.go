@@ -15,7 +15,7 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	zetaclient.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaBridge(cfg *config.Config, telemetry *zetaclient.TelemetryServer) (*zetaclient.ZetaCoreBridge, error) {
+func CreateZetaBridge(cfg *config.Config, telemetry *zetaclient.TelemetryServer, hotkeyPassword string) (*zetaclient.ZetaCoreBridge, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
 		hotKey = cfg.HsmHotKey
@@ -23,7 +23,7 @@ func CreateZetaBridge(cfg *config.Config, telemetry *zetaclient.TelemetryServer)
 
 	chainIP := cfg.ZetaCoreURL
 
-	kb, _, err := zetaclient.GetKeyringKeybase(cfg)
+	kb, _, err := zetaclient.GetKeyringKeybase(cfg, hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func CreateZetaBridge(cfg *config.Config, telemetry *zetaclient.TelemetryServer)
 		return nil, err
 	}
 
-	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey)
+	k := zetaclient.NewKeysWithKeybase(kb, granterAddreess, cfg.AuthzHotkey, hotkeyPassword)
 
 	bridge, err := zetaclient.NewZetaCoreBridge(k, chainIP, hotKey, cfg.ChainID, cfg.HsmMode, telemetry)
 	if err != nil {
@@ -55,8 +55,8 @@ func CreateSignerMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		mpiAddress := ethcommon.HexToAddress(evmConfig.CoreParams.ConnectorContractAddress)
-		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.CoreParams.Erc20CustodyContractAddress)
+		mpiAddress := ethcommon.HexToAddress(evmConfig.ChainParams.ConnectorContractAddress)
+		erc20CustodyAddress := ethcommon.HexToAddress(evmConfig.ChainParams.Erc20CustodyContractAddress)
 		signer, err := zetaclient.NewEVMSigner(evmConfig.Chain, evmConfig.Endpoint, tss, config.GetConnectorABI(), config.GetERC20CustodyABI(), mpiAddress, erc20CustodyAddress, logger, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())

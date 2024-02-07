@@ -25,6 +25,7 @@ zetacored tx crosschain [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
+* [zetacored tx crosschain abort-stuck-cctx](zetacored_tx_crosschain_abort-stuck-cctx.md)	 - abort a stuck CCTX
 * [zetacored tx crosschain add-to-in-tx-tracker](zetacored_tx_crosschain_add-to-in-tx-tracker.md)	 - Add a in-tx-tracker 
 				Use 0:Zeta,1:Gas,2:ERC20
 * [zetacored tx crosschain add-to-out-tx-tracker](zetacored_tx_crosschain_add-to-out-tx-tracker.md)	 - Add a out-tx-tracker

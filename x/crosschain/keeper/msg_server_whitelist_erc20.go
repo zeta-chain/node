@@ -25,7 +25,7 @@ import (
 // Authorized: admin policy group 1.
 func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC20) (*types.MsgWhitelistERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group1) {
+	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
@@ -52,7 +52,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		return nil, errorsmod.Wrapf(types.ErrCannotFindTSSKeys, "Cannot create new admin cmd of type whitelistERC20")
 	}
 
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d) not supported", msg.ChainId)
 	}
@@ -90,9 +90,9 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	}
 
 	// get necessary parameters to create the cctx
-	param, found := k.zetaObserverKeeper.GetCoreParamsByChainID(ctx, msg.ChainId)
+	param, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 	if !found {
-		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "core params not found for chain id (%d)", msg.ChainId)
+		return nil, errorsmod.Wrapf(types.ErrInvalidChainID, "chain params not found for chain id (%d)", msg.ChainId)
 	}
 	medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, msg.ChainId)
 	if !isFound {

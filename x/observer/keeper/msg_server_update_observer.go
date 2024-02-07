@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// UpdateObserver handles updating an observer address
 // Authorized: admin policy group 2 (admin update), old observer address (if the
 // reason is that the observer was tombstoned).
 func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
@@ -22,11 +23,9 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
 	}
 
-	chains := k.GetParams(ctx).GetSupportedChains()
-	for _, chain := range chains {
-		if !k.IsObserverPresentInMappers(ctx, msg.OldObserverAddress, chain) {
-			return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized for chain : %s", chain.String()))
-		}
+	// We do not use IsAuthorized here because we want to allow tombstoned observers to be updated
+	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
+		return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
 	}
 
 	err = k.IsValidator(ctx, msg.NewObserverAddress)
@@ -35,7 +34,10 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 	}
 
 	// Update all mappers so that ballots can be created for the new observer address
-	k.UpdateObserverAddress(ctx, msg.OldObserverAddress, msg.NewObserverAddress)
+	err = k.UpdateObserverAddress(ctx, msg.OldObserverAddress, msg.NewObserverAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUpdateObserver, err.Error())
+	}
 
 	// Update the node account with the new operator address
 	nodeAccount, found := k.GetNodeAccount(ctx, msg.OldObserverAddress)
@@ -50,11 +52,11 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 	k.SetNodeAccount(ctx, newNodeAccount)
 
 	// Check LastBlockObserver count just to be safe
-	observerMappers := k.GetAllObserverMappers(ctx)
-	totalObserverCountCurrentBlock := uint64(0)
-	for _, mapper := range observerMappers {
-		totalObserverCountCurrentBlock += uint64(len(mapper.ObserverList))
+	observerSet, found := k.GetObserverSet(ctx)
+	if !found {
+		return nil, errorsmod.Wrap(types.ErrObserverSetNotFound, fmt.Sprintf("Observer set not found"))
 	}
+	totalObserverCountCurrentBlock := observerSet.LenUint()
 	lastBlockCount, found := k.GetLastObserverCount(ctx)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrLastObserverCountNotFound, fmt.Sprintf("Observer count not found"))
@@ -83,14 +85,6 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 		}
 	}
 	return false, nil
-}
-
-func (k Keeper) UpdateObserverAddress(ctx sdk.Context, oldObserverAddress, newObserverAddress string) {
-	observerMappers := k.GetAllObserverMappers(ctx)
-	for _, om := range observerMappers {
-		UpdateObserverList(om.ObserverList, oldObserverAddress, newObserverAddress)
-		k.SetObserverMapper(ctx, om)
-	}
 }
 
 func UpdateObserverList(list []string, oldObserverAddresss, newObserverAddress string) {

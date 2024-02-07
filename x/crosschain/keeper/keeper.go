@@ -23,7 +23,7 @@ type (
 		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
-		zetaObserverKeeper types.ZetaObserverKeeper
+		zetaObserverKeeper types.ObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
 	}
 )
@@ -36,7 +36,7 @@ func NewKeeper(
 	paramstore paramtypes.Subspace,
 	authKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	zetaObserverKeeper types.ZetaObserverKeeper,
+	zetaObserverKeeper types.ObserverKeeper,
 	fungibleKeeper types.FungibleKeeper,
 ) *Keeper {
 	// ensure governance module account is set
@@ -78,7 +78,7 @@ func (k Keeper) GetFungibleKeeper() types.FungibleKeeper {
 	return k.fungibleKeeper
 }
 
-func (k Keeper) GetObserverKeeper() types.ZetaObserverKeeper {
+func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 	return k.zetaObserverKeeper
 }
 

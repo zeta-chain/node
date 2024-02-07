@@ -65,7 +65,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	/* EDGE CASE : Params updated in during the finalization process
 	   i.e Inbound has been finalized but outbound is still pending
 	*/
-	observationChain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.OutTxChain)
+	observationChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.OutTxChain)
 	if observationChain == nil {
 		return nil, observerTypes.ErrSupportedChains
 	}
@@ -74,7 +74,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return nil, err
 	}
 	//Check is msg.Creator is authorized to vote
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, observationChain); !ok {
+	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
 		return nil, observerTypes.ErrNotAuthorizedPolicy
 	}
 
@@ -211,6 +211,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	if err != nil {
 		// do not commit tmpCtx
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		ctx.Logger().Error(err.Error())
 		// #nosec G701 always in range
 		k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
@@ -221,6 +222,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	commit()
 	// Set the ballot index to the finalized ballot
 	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
+	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	// #nosec G701 always in range
 	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tss.TssPubkey, msg.OutTxChain, int64(msg.OutTxTssNonce))
 	k.RemoveOutTxTracker(ctx, msg.OutTxChain, msg.OutTxTssNonce)

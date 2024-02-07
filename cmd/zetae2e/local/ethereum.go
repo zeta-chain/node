@@ -46,23 +46,16 @@ func ethereumTestRoutine(
 		ethereumRunner.Logger.Print("🏃 starting Ethereum tests")
 		startTime := time.Now()
 
-		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserEtherAddress, 1000)
-		ethereumRunner.WaitForTxReceiptOnEvm(txZetaSend)
-
 		// depositing the necessary tokens on ZetaChain
-		txZetaDeposit := ethereumRunner.DepositZeta()
-		txEtherDeposit := ethereumRunner.DepositEther(false)
-		ethereumRunner.WaitForMinedCCTX(txZetaDeposit)
+		txEtherDeposit := ethereumRunner.DepositEther(true)
 		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
-
-		ethereumRunner.SetupContextApp()
 
 		// run ethereum test
 		// Note: due to the extensive block generation in Ethereum localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
+			smoketests.TestEtherWithdrawName,
 			smoketests.TestContextUpgradeName,
 			smoketests.TestEtherDepositAndCallName,
 			smoketests.TestDepositAndCallRefundName,

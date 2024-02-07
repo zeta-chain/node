@@ -24,15 +24,33 @@ import (
 // Authorized: admin policy group 1, observer.
 func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToOutTxTracker) (*types.MsgAddToOutTxTrackerResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	chain := k.zetaObserverKeeper.GetParams(ctx).GetChainFromChainID(msg.ChainId)
+	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
+	}
+
+	// the cctx must exist
+	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+		ChainID: msg.ChainId,
+		Nonce:   msg.Nonce,
+	})
+	if err != nil {
+		return nil, cosmoserrors.Wrap(err, "CcxtByNonce failed")
+	}
+	if cctx == nil || cctx.CrossChainTx == nil {
+		return nil, cosmoserrors.Wrapf(types.ErrCannotFindCctx, "no corresponding cctx found for chain %d, nonce %d", msg.ChainId, msg.Nonce)
+	}
+	// tracker submission is only allowed when the cctx is pending
+	if !IsPending(*cctx.CrossChainTx) {
+		// garbage tracker (for any reason) is harmful to outTx observation and should be removed
+		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
+		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
 
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
 		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
 		isAdmin := msg.Creator == adminPolicyAccount
-		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator, chain)
+		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
 
 		// Sender needs to be either the admin policy account or an observer
 		if !(isAdmin || isObserver) {
@@ -51,18 +69,6 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 			return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
 		}
 		isProven = true
-	}
-
-	cctx, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
-		ChainID: msg.ChainId,
-		Nonce:   msg.Nonce,
-	})
-	if err != nil || cctx == nil || cctx.CrossChainTx == nil {
-		return nil, cosmoserrors.Wrap(types.ErrCannotFindCctx, "cannot add out tx: no corresponding cctx found")
-	}
-	if !IsPending(*cctx.CrossChainTx) {
-		k.RemoveOutTxTracker(ctx, msg.ChainId, msg.Nonce)
-		return &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, nil
 	}
 
 	tracker, found := k.GetOutTxTracker(ctx, msg.ChainId, msg.Nonce)

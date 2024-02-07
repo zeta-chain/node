@@ -53,7 +53,7 @@ func (k Keeper) GasStabilityPoolBalanceAll(
 	ctx := sdk.UnwrapSDKContext(c)
 
 	// iterate supported chains
-	chains := k.observerKeeper.GetParams(ctx).GetSupportedChains()
+	chains := k.observerKeeper.GetSupportedChains(ctx)
 	balances := make([]types.QueryAllGasStabilityPoolBalanceResponse_Balance, 0, len(chains))
 	for _, chain := range chains {
 		if chain == nil {

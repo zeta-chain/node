@@ -4,9 +4,11 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 
 	"github.com/btcsuite/btcutil"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -21,16 +23,24 @@ import (
 )
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
-func (sm *SmokeTestRunner) SetTSSAddresses() {
+func (sm *SmokeTestRunner) SetTSSAddresses() error {
 	sm.Logger.Print("⚙️ setting up TSS address")
 
-	var err error
+	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
+	if err != nil {
+		return err
+	}
+
 	res := &observertypes.QueryGetTssAddressResponse{}
-	for {
-		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{})
+	for i := 0; ; i++ {
+		res, err = sm.ObserverClient.GetTssAddress(sm.Ctx, &observertypes.QueryGetTssAddressRequest{
+			BitcoinChainId: btcChainID,
+		})
 		if err != nil {
-			sm.Logger.Info("cctxClient.TSS error %s", err.Error())
-			sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			if i%10 == 0 {
+				sm.Logger.Info("ObserverClient.TSS error %s", err.Error())
+				sm.Logger.Info("TSS not ready yet, waiting for TSS to be appear in zetacore network...")
+			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -38,13 +48,16 @@ func (sm *SmokeTestRunner) SetTSSAddresses() {
 	}
 
 	tssAddress := ethcommon.HexToAddress(res.Eth)
-	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, common.BitcoinRegnetParams)
+
+	btcTSSAddress, err := btcutil.DecodeAddress(res.Btc, sm.BitcoinParams)
 	if err != nil {
 		panic(err)
 	}
 
 	sm.TSSAddress = tssAddress
 	sm.BTCTSSAddress = btcTSSAddress
+
+	return nil
 }
 
 // SetZEVMContracts set contracts for the ZEVM
@@ -56,7 +69,7 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, usdtZRC20Addr, err := sm.ZetaTxServer.DeploySystemContractsAndZRC20(
+	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, usdtZRC20Addr, err := sm.ZetaTxServer.DeploySystemContractsAndZRC20(
 		utils.FungibleAdminName,
 		sm.USDTERC20Addr.Hex(),
 	)
@@ -85,6 +98,20 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 		panic(err)
 	}
 
+	// ZevmConnectorAddr
+	sm.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
+	sm.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(sm.ConnectorZEVMAddr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+
+	// WZetaAddr
+	sm.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
+	sm.WZeta, err = wzeta.NewWETH9(sm.WZetaAddr, sm.ZevmClient)
+	if err != nil {
+		panic(err)
+	}
+
 	// query system contract address from the chain
 	systemContractRes, err := sm.FungibleClient.SystemContract(
 		sm.Ctx,
@@ -106,12 +133,12 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	sm.SystemContract = SystemContract
 	sm.SystemContractAddr = systemContractAddr
 
+	// set ZRC20 contracts
 	sm.SetupETHZRC20()
 	sm.SetupBTCZRC20()
-}
 
-func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
-	zevmSwapAppAddr, tx, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
+	// deploy ZEVMSwapApp and ContextApp
+	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
 		sm.ZevmAuth,
 		sm.ZevmClient,
 		sm.UniswapV2RouterAddr,
@@ -120,32 +147,28 @@ func (sm *SmokeTestRunner) SetupZEVMSwapApp() {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	if receipt.Status != 1 {
-		panic("ZEVMSwapApp deployment failed")
-	}
-	sm.Logger.Info("ZEVMSwapApp contract address: %s, tx hash: %s", zevmSwapAppAddr.Hex(), tx.Hash().Hex())
-	sm.ZEVMSwapAppAddr = zevmSwapAppAddr
-	sm.ZEVMSwapApp = zevmSwapApp
-}
 
-func (sm *SmokeTestRunner) SetupContextApp() {
-	contextAppAddr, tx, contextApp, err := contextapp.DeployContextApp(sm.ZevmAuth, sm.ZevmClient)
+	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(sm.ZevmAuth, sm.ZevmClient)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txZEVMSwapApp, sm.Logger, sm.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("ZEVMSwapApp deployment failed")
+	}
+	sm.ZEVMSwapAppAddr = zevmSwapAppAddr
+	sm.ZEVMSwapApp = zevmSwapApp
+
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, txContextApp, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
-	sm.Logger.Info("ContextApp contract address: %s, tx hash: %s", contextAppAddr.Hex(), tx.Hash().Hex())
 	sm.ContextAppAddr = contextAppAddr
 	sm.ContextApp = contextApp
 }
 
 func (sm *SmokeTestRunner) SetupETHZRC20() {
-	// TODO: support non testnet chain
-	// https://github.com/zeta-chain/node/issues/1482
 	ethZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
@@ -162,8 +185,6 @@ func (sm *SmokeTestRunner) SetupETHZRC20() {
 }
 
 func (sm *SmokeTestRunner) SetupBTCZRC20() {
-	// TODO: support non testnet chain
-	// https://github.com/zeta-chain/node/issues/1482
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {
 		panic(err)
