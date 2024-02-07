@@ -3,6 +3,7 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
+* `MsgRemoveForeignCoin`: `Name` field has been renamed in to `ZRC20Address`
 
 ### Refactor
 

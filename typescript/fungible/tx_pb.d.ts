@@ -291,9 +291,9 @@ export declare class MsgRemoveForeignCoin extends Message<MsgRemoveForeignCoin> 
   creator: string;
 
   /**
-   * @generated from field: string name = 2;
+   * @generated from field: string zrc20_address = 2;
    */
-  name: string;
+  zrc20Address: string;
 
   constructor(data?: PartialMessage<MsgRemoveForeignCoin>);
 

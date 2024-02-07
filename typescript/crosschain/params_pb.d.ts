@@ -12,11 +12,6 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  * @generated from message zetachain.zetacore.crosschain.Params
  */
 export declare class Params extends Message<Params> {
-  /**
-   * @generated from field: bool enabled = 1;
-   */
-  enabled: boolean;
-
   constructor(data?: PartialMessage<Params>);
 
   static readonly runtime: typeof proto3;

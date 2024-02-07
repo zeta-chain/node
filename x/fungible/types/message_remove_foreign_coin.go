@@ -9,10 +9,10 @@ const TypeMsgRemoveForeignCoin = "remove_foreign_coin"
 
 var _ sdk.Msg = &MsgRemoveForeignCoin{}
 
-func NewMsgRemoveForeignCoin(creator string, name string) *MsgRemoveForeignCoin {
+func NewMsgRemoveForeignCoin(creator string, zrc20Address string) *MsgRemoveForeignCoin {
 	return &MsgRemoveForeignCoin{
 		Creator:      creator,
-		ZRC20Address: name,
+		ZRC20Address: zrc20Address,
 	}
 }
 
