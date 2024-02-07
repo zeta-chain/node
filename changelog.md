@@ -3,6 +3,7 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
+* ([1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 
 ### Refactor
 
