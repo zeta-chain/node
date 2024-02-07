@@ -18,7 +18,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"golang.org/x/net/context"
 )
@@ -26,7 +25,7 @@ import (
 // ExternalChainWatcherForNewInboundTrackerSuggestions At each tick, gets a list of Inbound tracker suggestions from zeta-core and tries to check if the in-tx was confirmed.
 // If it was, it tries to broadcast the confirmation vote. If this zeta client has previously broadcast the vote, the tx would be rejected
 func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker, err := bitcoin.NewDynamicTicker(
+	ticker, err := clienttypes.NewDynamicTicker(
 		fmt.Sprintf("EVM_ExternalChainWatcher_InboundTrackerSuggestions_%d", ob.chain.ChainId),
 		ob.GetChainParams().InTxTicker,
 	)

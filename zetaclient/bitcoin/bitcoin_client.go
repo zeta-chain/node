@@ -306,7 +306,7 @@ func (ob *ChainClient) GetBaseGasPrice() *big.Int {
 }
 
 func (ob *ChainClient) WatchInTx() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx", ob.GetChainParams().InTxTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchInTx", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error")
 		return
@@ -549,7 +549,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ com
 }
 
 func (ob *ChainClient) WatchGasPrice() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("WatchGasPrice error")
 		return
@@ -775,7 +775,7 @@ func GetBtcEvent(
 }
 
 func (ob *ChainClient) WatchUTXOS() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
 		ob.logger.WatchUTXOS.Error().Err(err).Msg("WatchUTXOS error")
 		return
@@ -1057,7 +1057,7 @@ func (ob *ChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParams, erro
 }
 
 func (ob *ChainClient) observeOutTx() {
-	ticker, err := NewDynamicTicker("Bitcoin_observeOutTx", ob.GetChainParams().OutTxTicker)
+	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_observeOutTx", ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error creating ticker")
 		return

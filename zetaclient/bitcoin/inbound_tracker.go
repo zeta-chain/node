@@ -5,11 +5,12 @@ import (
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
 func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
-	ticker, err := NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetChainParams().InTxTicker)
+	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Err(err).Msg("error creating ticker")
 		return

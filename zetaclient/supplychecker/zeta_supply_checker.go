@@ -17,13 +17,14 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 type ZetaSupplyChecker struct {
 	cfg              *config.Config
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
-	ticker           *bitcoin.DynamicTicker
+	ticker           *clienttypes.DynamicTicker
 	stop             chan struct{}
 	logger           zerolog.Logger
 	externalEvmChain []common.Chain
@@ -32,7 +33,7 @@ type ZetaSupplyChecker struct {
 }
 
 func NewZetaSupplyChecker(cfg *config.Config, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
-	dynamicTicker, err := bitcoin.NewDynamicTicker("ZETASupplyTicker", 15)
+	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err
 	}

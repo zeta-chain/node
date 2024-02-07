@@ -2,18 +2,14 @@ package bitcoin
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"math/big"
-	"time"
 
 	"github.com/btcsuite/btcd/blockchain"
 
 	"github.com/btcsuite/btcd/txscript"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
-
 	"github.com/btcsuite/btcd/wire"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -130,40 +126,4 @@ func round(f float64) int64 {
 
 func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
-}
-
-type DynamicTicker struct {
-	name     string
-	interval uint64
-	impl     *time.Ticker
-}
-
-func NewDynamicTicker(name string, interval uint64) (*DynamicTicker, error) {
-	if interval <= 0 {
-		return nil, fmt.Errorf("non-positive ticker interval %d for %s", interval, name)
-	}
-
-	return &DynamicTicker{
-		name:     name,
-		interval: interval,
-		impl:     time.NewTicker(time.Duration(interval) * time.Second),
-	}, nil
-}
-
-func (t *DynamicTicker) C() <-chan time.Time {
-	return t.impl.C
-}
-
-func (t *DynamicTicker) UpdateInterval(newInterval uint64, logger zerolog.Logger) {
-	if newInterval > 0 && t.interval != newInterval {
-		t.impl.Stop()
-		oldInterval := t.interval
-		t.interval = newInterval
-		t.impl = time.NewTicker(time.Duration(t.interval) * time.Second)
-		logger.Info().Msgf("%s ticker interval changed from %d to %d", t.name, oldInterval, newInterval)
-	}
-}
-
-func (t *DynamicTicker) Stop() {
-	t.impl.Stop()
 }

@@ -14,7 +14,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -619,7 +618,7 @@ func (ob *ChainClient) observeOutTx() {
 	}
 	ob.logger.ObserveOutTx.Info().Msgf("observeOutTx: using timeoutNonce %d seconds", timeoutNonce)
 
-	ticker, err := bitcoin.NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_observeOutTx_%d", ob.chain.ChainId), ob.GetChainParams().OutTxTicker)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msg("failed to create ticker")
 		return
@@ -848,7 +847,7 @@ func (ob *ChainClient) GetLastBlockHeight() uint64 {
 }
 
 func (ob *ChainClient) ExternalChainWatcher() {
-	ticker, err := bitcoin.NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_ExternalChainWatcher_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("NewDynamicTicker error")
 		return
@@ -1289,7 +1288,7 @@ func (ob *ChainClient) WatchGasPrice() {
 		}
 	}
 
-	ticker, err := bitcoin.NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
+	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchGasPrice_%d", ob.chain.ChainId), ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("NewDynamicTicker error")
 		return
