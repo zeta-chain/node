@@ -167,6 +167,7 @@ message MsgAbortStuckCCTXResponse {}
 message MsgRefundAbortedCCTX {
   string creator = 1;
   string cctx_index = 2;
+  string receiver_btc_refund = 3;
 }
 
 message MsgRefundAbortedCCTXResponse {}

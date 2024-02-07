@@ -32,10 +32,18 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// refund the amount
-	err := k.RefundAbortedAmountOnZetaChain(ctx, cctx)
-	if err != nil {
-		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+	if common.IsEVMChain(cctx.InboundTxParams.SenderChainId) {
+		err := k.RefundAbortedAmountOnZetaChainForEvmChain(ctx, cctx)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+		}
+	} else if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) {
+		err := k.RefundAbortedAmountOnZetaChainForBitcoinChain(ctx, cctx, msg.ReceiverBtcRefund)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+		}
 	}
+
 	cctx.IsRefunded = true
 	k.SetCrossChainTx(ctx, cctx)
 	if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {

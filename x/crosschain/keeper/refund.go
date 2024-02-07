@@ -12,7 +12,7 @@ import (
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx) error {
+func (k Keeper) RefundAbortedAmountOnZetaChainForEvmChain(ctx sdk.Context, cctx types.CrossChainTx) error {
 	coinType := cctx.InboundTxParams.CoinType
 	switch coinType {
 	case common.CoinType_Gas:
@@ -24,6 +24,16 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.Cross
 	default:
 		return errors.New("unsupported coin type for refund on ZetaChain")
 	}
+}
+
+func (k Keeper) RefundAbortedAmountOnZetaChainForBitcoinChain(ctx sdk.Context, cctx types.CrossChainTx, evmAddressForBtcRefund string) error {
+	refundTo := ethcommon.HexToAddress(evmAddressForBtcRefund)
+	if refundTo == (ethcommon.Address{}) {
+		return errors.New("invalid address for refund")
+	}
+	// Set TxOrigin to the supplied address so that the refund is made to the evm address
+	cctx.InboundTxParams.TxOrigin = refundTo.String()
+	return k.RefundAmountOnZetaChainGas(ctx, cctx)
 }
 
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
