@@ -2,8 +2,29 @@
 
 ## Unreleased
 
+* `zetaclientd start` : 2 inputs required from stdin
+
+### Refactor
+
+* [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
+  Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+
 ### Fixes
 
+* [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
+* [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
+* [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+
+### Tests
+
+* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+
+## Version: v12.2.4
+
+### Fixes
+
+* [1638](https://github.com/zeta-chain/node/issues/1638) - additional check to make sure external chain height always increases
+* [1672](https://github.com/zeta-chain/node/pull/1672) - paying 50% more than base gas price to buffer EIP1559 gas price increase
 * [1642](https://github.com/zeta-chain/node/pull/1642) - Change WhitelistERC20 authorization from group1 to group2
 * [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
 * [1656](https://github.com/zeta-chain/node/issues/1656) - schedule bitcoin keysign with intervals to avoid keysign failures
@@ -15,6 +36,7 @@
 ## Version: v12.1.0
 
 ### Tests
+
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features

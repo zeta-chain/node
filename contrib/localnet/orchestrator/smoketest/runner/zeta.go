@@ -3,12 +3,10 @@ package runner
 import (
 	"fmt"
 	"math/big"
-	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -49,29 +47,36 @@ func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount i
 
 // DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
 func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
-	sm.Logger.Print("⏳ depositing ZETA into ZEVM")
-	startTime := time.Now()
-	defer func() {
-		sm.Logger.Print("✅ ZETA deposited in %s", time.Since(startTime))
-	}()
-
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
+
+	return sm.DepositZetaWithAmount(amount)
+}
+
+// DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
+func (sm *SmokeTestRunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
 	tx, err := sm.ZetaEth.Approve(sm.GoerliAuth, sm.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+
 	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	sm.Logger.EVMReceipt(*receipt, "approve")
 	if receipt.Status != 1 {
 		panic("approve tx failed")
 	}
-	sm.Logger.Info("Approve tx receipt: status %d", receipt.Status)
+
+	// query the chain ID using zevm client
+	zetaChainID, err := sm.ZevmClient.ChainID(sm.Ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
-		DestinationChainId:  big.NewInt(common.ZetaPrivnetChain().ChainId),
+		DestinationChainId:  zetaChainID,
 		DestinationAddress:  sm.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
@@ -81,13 +86,14 @@ func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
 	if err != nil {
 		panic(err)
 	}
-
 	sm.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
+
 	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	sm.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 1 {
 		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
 	}
-	sm.Logger.Info("Send tx receipt: status %d", receipt.Status)
+
 	sm.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
 		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)

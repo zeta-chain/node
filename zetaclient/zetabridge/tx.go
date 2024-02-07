@@ -75,6 +75,8 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
+	// double the gas price to avoid gas price spike
+	gasPrice = gasPrice * 2
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
@@ -103,6 +105,15 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	blockHash string,
 	txIndex int64,
 ) (string, error) {
+	// don't report if the tracker already contains the txHash
+	tracker, err := b.GetOutTxTracker(common.Chain{ChainId: chainID}, nonce)
+	if err == nil {
+		for _, hash := range tracker.HashList {
+			if strings.EqualFold(hash.TxHash, txHash) {
+				return "", nil
+			}
+		}
+	}
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgAddToOutTxTracker(signerAddress, chainID, nonce, txHash, proof, blockHash, txIndex)
 

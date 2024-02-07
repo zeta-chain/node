@@ -291,3 +291,37 @@ export declare class EventOutboundSuccess extends Message<EventOutboundSuccess> 
   static equals(a: EventOutboundSuccess | PlainMessage<EventOutboundSuccess> | undefined, b: EventOutboundSuccess | PlainMessage<EventOutboundSuccess> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.EventCCTXGasPriceIncreased
+ */
+export declare class EventCCTXGasPriceIncreased extends Message<EventCCTXGasPriceIncreased> {
+  /**
+   * @generated from field: string cctx_index = 1;
+   */
+  cctxIndex: string;
+
+  /**
+   * @generated from field: string gas_price_increase = 2;
+   */
+  gasPriceIncrease: string;
+
+  /**
+   * @generated from field: string additional_fees = 3;
+   */
+  additionalFees: string;
+
+  constructor(data?: PartialMessage<EventCCTXGasPriceIncreased>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.EventCCTXGasPriceIncreased";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventCCTXGasPriceIncreased;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventCCTXGasPriceIncreased;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventCCTXGasPriceIncreased;
+
+  static equals(a: EventCCTXGasPriceIncreased | PlainMessage<EventCCTXGasPriceIncreased> | undefined, b: EventCCTXGasPriceIncreased | PlainMessage<EventCCTXGasPriceIncreased> | undefined): boolean;
+}
+

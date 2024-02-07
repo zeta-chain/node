@@ -945,6 +945,9 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	if err != nil {
 		return err
 	}
+	if blockNumber < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTX: block number should not decrease: current %d last %d", blockNumber, ob.GetLastBlockHeight())
+	}
 	ob.SetLastBlockHeight(blockNumber)
 
 	// increment prom counter
