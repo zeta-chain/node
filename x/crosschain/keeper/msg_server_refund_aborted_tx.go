@@ -27,7 +27,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// refund the amount
-	err := k.RefundAmountOnZetaChain(ctx, cctx)
+	err := k.RefundAbortedAmountOnZetaChain(ctx, cctx)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
 	}
