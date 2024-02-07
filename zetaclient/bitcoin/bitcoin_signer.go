@@ -232,7 +232,7 @@ func (signer *BTCSigner) Broadcast(signedTx *wire.MsgTx) error {
 
 func (signer *BTCSigner) TryProcessOutTx(
 	cctx *types.CrossChainTx,
-	outTxMan *outtxprocessor.Manager,
+	outTxMan *outtxprocessor.Processor,
 	outTxID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,

@@ -1,4 +1,4 @@
-package zetasupplychecker
+package supplychecker
 
 import (
 	"fmt"

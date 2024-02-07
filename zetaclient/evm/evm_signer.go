@@ -327,7 +327,7 @@ func (signer *Signer) SignCommandTx(
 
 func (signer *Signer) TryProcessOutTx(
 	cctx *types.CrossChainTx,
-	outTxMan *outtxprocessor.Manager,
+	outTxMan *outtxprocessor.Processor,
 	outTxID string,
 	chainclient interfaces.ChainClient,
 	zetaBridge interfaces.ZetaCoreBridger,

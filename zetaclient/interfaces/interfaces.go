@@ -49,7 +49,7 @@ type ChainClient interface {
 type ChainSigner interface {
 	TryProcessOutTx(
 		send *crosschaintypes.CrossChainTx,
-		outTxMan *outtxprocessor.Manager,
+		outTxMan *outtxprocessor.Processor,
 		outTxID string,
 		evmClient ChainClient,
 		zetaBridge ZetaCoreBridger,

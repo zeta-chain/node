@@ -8,7 +8,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Manager struct {
+type Processor struct {
 	outTxStartTime     map[string]time.Time
 	outTxEndTime       map[string]time.Time
 	outTxActive        map[string]struct{}
@@ -17,8 +17,8 @@ type Manager struct {
 	numActiveProcessor int64
 }
 
-func NewOutTxProcessorManager(logger zerolog.Logger) *Manager {
-	return &Manager{
+func NewOutTxProcessorManager(logger zerolog.Logger) *Processor {
+	return &Processor{
 		outTxStartTime:     make(map[string]time.Time),
 		outTxEndTime:       make(map[string]time.Time),
 		outTxActive:        make(map[string]struct{}),
@@ -28,7 +28,7 @@ func NewOutTxProcessorManager(logger zerolog.Logger) *Manager {
 	}
 }
 
-func (outTxMan *Manager) StartTryProcess(outTxID string) {
+func (outTxMan *Processor) StartTryProcess(outTxID string) {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	outTxMan.outTxStartTime[outTxID] = time.Now()
@@ -37,7 +37,7 @@ func (outTxMan *Manager) StartTryProcess(outTxID string) {
 	outTxMan.Logger.Info().Msgf("StartTryProcess %s, numActiveProcessor %d", outTxID, outTxMan.numActiveProcessor)
 }
 
-func (outTxMan *Manager) EndTryProcess(outTxID string) {
+func (outTxMan *Processor) EndTryProcess(outTxID string) {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	outTxMan.outTxEndTime[outTxID] = time.Now()
@@ -46,14 +46,14 @@ func (outTxMan *Manager) EndTryProcess(outTxID string) {
 	outTxMan.Logger.Info().Msgf("EndTryProcess %s, numActiveProcessor %d, time elapsed %s", outTxID, outTxMan.numActiveProcessor, time.Since(outTxMan.outTxStartTime[outTxID]))
 }
 
-func (outTxMan *Manager) IsOutTxActive(outTxID string) bool {
+func (outTxMan *Processor) IsOutTxActive(outTxID string) bool {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	_, found := outTxMan.outTxActive[outTxID]
 	return found
 }
 
-func (outTxMan *Manager) TimeInTryProcess(outTxID string) time.Duration {
+func (outTxMan *Processor) TimeInTryProcess(outTxID string) time.Duration {
 	outTxMan.mu.Lock()
 	defer outTxMan.mu.Unlock()
 	if _, found := outTxMan.outTxActive[outTxID]; found {

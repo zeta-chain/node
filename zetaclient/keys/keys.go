@@ -12,25 +12,25 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	ckeys "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdkTypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	errors2 "github.com/zeta-chain/zetacore/zetaclient/errors"
+	zetaerrors "github.com/zeta-chain/zetacore/zetaclient/errors"
 )
 
 // Keys manages all the keys used by zeta client
 type Keys struct {
 	signerName      string
 	kb              ckeys.Keyring
-	OperatorAddress sdkTypes.AccAddress
+	OperatorAddress sdk.AccAddress
 	hotkeyPassword  string
 }
 
 // NewKeysWithKeybase create a new instance of Keys
-func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdkTypes.AccAddress, granteeName string, hotkeyPassword string) *Keys {
+func NewKeysWithKeybase(kb ckeys.Keyring, granterAddress sdk.AccAddress, granteeName string, hotkeyPassword string) *Keys {
 	return &Keys{
 		signerName:      granteeName,
 		kb:              kb,
@@ -102,7 +102,7 @@ func getKeybase(zetaCoreHome string, reader io.Reader, keyringBackend config.Key
 		backend = ckeys.BackendFile
 	}
 
-	return ckeys.New(sdkTypes.KeyringServiceName(), backend, cliDir, reader, cdc)
+	return ckeys.New(sdk.KeyringServiceName(), backend, cliDir, reader, cdc)
 }
 
 // GetSignerInfo return signer info
@@ -115,11 +115,11 @@ func (k *Keys) GetSignerInfo() *ckeys.Record {
 	return info
 }
 
-func (k *Keys) GetOperatorAddress() sdkTypes.AccAddress {
+func (k *Keys) GetOperatorAddress() sdk.AccAddress {
 	return k.OperatorAddress
 }
 
-func (k *Keys) GetAddress() sdkTypes.AccAddress {
+func (k *Keys) GetAddress() sdk.AccAddress {
 	signer := GetGranteeKeyName(k.signerName)
 	info, err := k.kb.Key(signer)
 	if err != nil {
@@ -164,11 +164,11 @@ func (k *Keys) GetPubKeySet(password string) (common.PubKeySet, error) {
 
 	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pK.PubKey())
 	if err != nil {
-		return pubkeySet, errors2.ErrBech32ifyPubKey
+		return pubkeySet, zetaerrors.ErrBech32ifyPubKey
 	}
 	pubkey, err := common.NewPubKey(s)
 	if err != nil {
-		return pubkeySet, errors2.ErrNewPubKey
+		return pubkeySet, zetaerrors.ErrNewPubKey
 	}
 	pubkeySet.Secp256k1 = pubkey
 	return pubkeySet, nil
@@ -190,7 +190,7 @@ func SetupConfigForTest() {
 	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)
 	//config.SetCoinType(cmd.MetaChainCoinType)
 	config.SetFullFundraiserPath(cmd.ZetaChainHDPath)
-	sdkTypes.SetCoinDenomRegex(func() string {
+	sdk.SetCoinDenomRegex(func() string {
 		return cmd.DenomRegex
 	})
 }

@@ -225,7 +225,7 @@ func (co *CoreObserver) startCctxScheduler() {
 
 // scheduleCctxEVM schedules evm outtx keysign on each ZetaChain block (the ticker)
 func (co *CoreObserver) scheduleCctxEVM(
-	outTxMan *outtxprocessor.Manager,
+	outTxMan *outtxprocessor.Processor,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,
@@ -311,7 +311,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 // 2. schedule keysign only when nonce-mark UTXO is available
 // 3. stop keysign when lookahead is reached
 func (co *CoreObserver) scheduleCctxBTC(
-	outTxMan *outtxprocessor.Manager,
+	outTxMan *outtxprocessor.Processor,
 	zetaHeight uint64,
 	chainID int64,
 	cctxList []*types.CrossChainTx,

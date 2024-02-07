@@ -32,7 +32,7 @@ import (
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	zetametrics "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 const (
@@ -73,7 +73,7 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	CoreBridge    interfaces.ZetaCoreBridger
-	Metrics       *metricsPkg.ChainMetrics
+	Metrics       *zetametrics.ChainMetrics
 
 	// TODO: support multiple Bitcoin network, not just one network
 	// https://github.com/zeta-chain/node/issues/1397
@@ -88,7 +88,7 @@ func NewTSS(
 	cfg *config.Config,
 	bridge interfaces.ZetaCoreBridger,
 	tssHistoricalList []observertypes.TSS,
-	metrics *metricsPkg.Metrics,
+	metrics *zetametrics.Metrics,
 	bitcoinChainID int64,
 	tssPassword string,
 	hotkeyPassword string,
@@ -427,8 +427,8 @@ func (tss *TSS) InsertPubKey(pk string) error {
 	return nil
 }
 
-func (tss *TSS) RegisterMetrics(metrics *metricsPkg.Metrics) error {
-	tss.Metrics = metricsPkg.NewChainMetrics("tss", metrics)
+func (tss *TSS) RegisterMetrics(metrics *zetametrics.Metrics) error {
+	tss.Metrics = zetametrics.NewChainMetrics("tss", metrics)
 	keygenRes, err := tss.CoreBridge.GetKeyGen()
 	if err != nil {
 		return err
