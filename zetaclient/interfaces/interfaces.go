@@ -5,7 +5,6 @@ import (
 	"math/big"
 
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/klaytn"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	sdkmath "cosmossdk.io/math"
@@ -134,9 +133,4 @@ type EVMRPCClient interface {
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
 	TransactionSender(ctx context.Context, tx *ethtypes.Transaction, block ethcommon.Hash, index uint) (ethcommon.Address, error)
-}
-
-// KlaytnRPCClient is the interface for Klaytn RPC client
-type KlaytnRPCClient interface {
-	BlockByNumber(ctx context.Context, number *big.Int) (*klaytn.RPCBlock, error)
 }

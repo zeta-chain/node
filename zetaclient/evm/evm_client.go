@@ -16,7 +16,6 @@ import (
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/klaytn"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
 	"github.com/ethereum/go-ethereum"
@@ -78,7 +77,6 @@ type ChainClient struct {
 	*metricsPkg.ChainMetrics
 	chain                      common.Chain
 	evmClient                  interfaces.EVMRPCClient
-	KlaytnClient               interfaces.KlaytnRPCClient
 	zetaClient                 interfaces.ZetaCoreBridger
 	Tss                        interfaces.TSSSigner
 	evmClientAlternate         *ethrpc.EthRPC // a fallback rpc client
@@ -174,15 +172,6 @@ func NewEVMChainClient(
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create header cache")
 		return nil, err
-	}
-
-	if ob.chain.IsKlaytnChain() {
-		client, err := klaytn.Dial(evmCfg.Endpoint)
-		if err != nil {
-			ob.logger.ChainLogger.Err(err).Msg("klaytn Client Dial")
-			return nil, err
-		}
-		ob.KlaytnClient = client
 	}
 
 	// create metric counters
