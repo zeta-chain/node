@@ -18,6 +18,15 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+// TestEtherDeposit tests deposit of ethers
+func TestEtherDeposit(sm *runner.SmokeTestRunner) {
+	hash := sm.DepositEtherWithAmount(false, big.NewInt(10000000000000000)) // in wei (0.01 eth)
+
+	// wait for the cctx to be mined
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	sm.Logger.CCTX(*cctx, "deposit")
+}
+
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
 func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("Deploying example contract")

@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc"
 
@@ -33,19 +34,19 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 ) {
 	btcRPCClient, err := getBtcClient(conf.RPCs.Bitcoin)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
 	}
 	goerliClient, goerliAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
 	cctxClient, fungibleClient, authClient, bankClient, observerClient, err := getZetaClients(conf.RPCs.ZetaCoreGRPC)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zeta clients: %w", err)
 	}
 	zevmClient, zevmAuth, err := getEVMClient(ctx, conf.RPCs.Zevm, evmPrivKey)
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
 	}
 	return btcRPCClient,
 		goerliClient,
@@ -61,14 +62,26 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 }
 
 // getBtcClient get btc client
-func getBtcClient(rpc string) (*rpcclient.Client, error) {
+func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
+	var param string
+	switch rpcConf.Params {
+	case config.Regnet:
+	case config.Testnet3:
+		param = "testnet3"
+	case config.Mainnet:
+		param = "mainnet"
+	default:
+		return nil, fmt.Errorf("invalid bitcoin params %s", rpcConf.Params)
+	}
+
 	connCfg := &rpcclient.ConnConfig{
-		Host:         rpc,
-		User:         "smoketest",
-		Pass:         "123",
-		HTTPPostMode: true,
-		DisableTLS:   true,
-		Params:       "testnet3",
+		Host:         rpcConf.Host,
+		User:         rpcConf.User,
+		Pass:         rpcConf.Pass,
+		HTTPPostMode: rpcConf.HTTPPostMode,
+		DisableTLS:   rpcConf.DisableTLS,
+		Params:       param,
+		//Endpoint:     "/wallet/user",
 	}
 	return rpcclient.New(connCfg, nil)
 }

@@ -67,7 +67,7 @@ func bitcoinTestRoutine(
 		if err := bitcoinRunner.RunSmokeTestsFromNames(
 			smoketests.AllSmokeTests,
 			smoketests.TestBitcoinWithdrawName,
-			smoketests.TestSendZetaOutBTCRevertName,
+			smoketests.TestZetaWithdrawBTCRevertName,
 			smoketests.TestCrosschainSwapName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
