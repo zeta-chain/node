@@ -5,8 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common"
 )
+
+const RefundAborted = "RefundAbortedCCTX"
 
 var _ sdk.Msg = &MsgRefundAbortedCCTX{}
 
@@ -23,7 +24,7 @@ func (msg *MsgRefundAbortedCCTX) Route() string {
 }
 
 func (msg *MsgRefundAbortedCCTX) Type() string {
-	return common.RefundAborted.String()
+	return RefundAborted
 }
 
 func (msg *MsgRefundAbortedCCTX) GetSigners() []sdk.AccAddress {

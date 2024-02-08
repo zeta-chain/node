@@ -7,7 +7,6 @@ const (
 	OutboundVoter TxType = "OutboundVoter"
 	NonceVoter    TxType = "NonceVoter"
 	GasPriceVoter TxType = "GasPriceVoter"
-	RefundAborted TxType = "RefundAborted"
 )
 
 func (t TxType) String() string {
