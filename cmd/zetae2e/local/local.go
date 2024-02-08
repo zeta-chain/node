@@ -195,7 +195,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	// query and set the TSS
-	deployerRunner.SetTSSAddresses()
+	if err := deployerRunner.SetTSSAddresses(); err != nil {
+		panic(err)
+	}
 
 	// setting up the networks
 	if !skipSetup {

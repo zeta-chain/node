@@ -142,10 +142,7 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	}
 
 	// if password is needed, set it as input
-	password, err := b.keys.GetHotkeyPassword()
-	if err != nil {
-		return ctx, err
-	}
+	password := b.keys.GetHotkeyPassword()
 	if password != "" {
 		ctx = ctx.WithInput(strings.NewReader(fmt.Sprintf("%[1]s\n%[1]s\n", password)))
 	}

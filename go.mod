@@ -338,6 +338,7 @@ replace (
 	// use cometbft
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
+	github.com/zeta-chain/go-tss => github.com/zeta-chain/go-tss v0.1.1-0.20240115203400-a5b80e5da933
 
 )
 

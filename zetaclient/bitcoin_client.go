@@ -700,7 +700,7 @@ func GetBtcEvent(
 				return nil, err
 			}
 			if wpkhAddress.EncodeAddress() != targetAddress {
-				return nil, err
+				return nil, nil // irrelevant tx to us, skip
 			}
 			// deposit amount has to be no less than the minimum depositor fee
 			if out.Value < BtcDepositorFeeMin {

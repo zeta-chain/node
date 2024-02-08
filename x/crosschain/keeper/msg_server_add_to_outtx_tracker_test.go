@@ -1,6 +1,3 @@
-//go:build TESTNET
-// +build TESTNET
-
 package keeper_test
 
 import (
@@ -283,7 +280,7 @@ func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce in
 	k.GetObserverKeeper().SetTSS(ctx, observerTypes.TSS{
 		TssPubkey: tssPubKey,
 	})
-	k.GetObserverKeeper().SetPendingNonces(ctx, observerTypes.PendingNonces{
+	k.GetObserverKeeper().SetPendingNonces(ctx, observertypes.PendingNonces{
 		Tss:       tssPubKey,
 		NonceLow:  0,
 		NonceHigh: 1,
@@ -297,7 +294,7 @@ func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce in
 		},
 	}
 	k.SetCrossChainTx(ctx, cctx)
-	k.GetObserverKeeper().SetNonceToCctx(ctx, observerTypes.NonceToCctx{
+	k.GetObserverKeeper().SetNonceToCctx(ctx, observertypes.NonceToCctx{
 		ChainId:   chainId,
 		Nonce:     nonce,
 		CctxIndex: "0x123",

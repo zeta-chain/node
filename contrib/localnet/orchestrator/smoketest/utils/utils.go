@@ -8,10 +8,10 @@ import (
 )
 
 // ScriptPKToAddress is a hex string for P2WPKH script
-func ScriptPKToAddress(scriptPKHex string) string {
+func ScriptPKToAddress(scriptPKHex string, params *chaincfg.Params) string {
 	pkh, err := hex.DecodeString(scriptPKHex[4:])
 	if err == nil {
-		addr, err := btcutil.NewAddressWitnessPubKeyHash(pkh, &chaincfg.RegressionNetParams)
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pkh, params)
 		if err == nil {
 			return addr.EncodeAddress()
 		}

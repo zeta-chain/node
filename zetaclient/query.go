@@ -308,9 +308,11 @@ func (b *ZetaCoreBridge) GetEthTssAddress() (string, error) {
 	return resp.Eth, nil
 }
 
-func (b *ZetaCoreBridge) GetBtcTssAddress() (string, error) {
+func (b *ZetaCoreBridge) GetBtcTssAddress(chainID int64) (string, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
-	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{})
+	resp, err := client.GetTssAddress(context.Background(), &observertypes.QueryGetTssAddressRequest{
+		BitcoinChainId: chainID,
+	})
 	if err != nil {
 		return "", err
 	}
