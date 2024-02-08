@@ -26,7 +26,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 	// make sure separate refund address is provided for bitcoin chain as we cannot refund to tx origin or sender in this case
 	if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) && msg.RefundAddress == "" {
-		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
+		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "refund address is required for bitcoin chain")
 	}
 
 	// check if the cctx is aborted
@@ -49,9 +49,12 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 		refundAddress = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 	}
 	if msg.RefundAddress != "" {
+		if !ethcommon.IsHexAddress(msg.RefundAddress) {
+			return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address provided")
+		}
 		refundAddress = ethcommon.HexToAddress(msg.RefundAddress)
 	}
-	// Make sure the refund address is valid
+	// Double check to make sure the refund address is valid
 	if refundAddress == (ethcommon.Address{}) {
 		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
 	}

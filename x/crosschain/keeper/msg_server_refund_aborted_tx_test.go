@@ -201,6 +201,29 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "invalid refund address")
 	})
+	t.Run("Fail refund if address provided is invalid 2 ", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		admin := sample.AccAddress()
+		chainID := getValidEthChainID(t)
+		setAdminPolicies(ctx, zk, admin)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		cctx := sample.CrossChainTx(t, "sample-index")
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
+		cctx.CctxStatus.IsAbortRefunded = false
+		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
+		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
+		k.SetCrossChainTx(ctx, *cctx)
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: "0x0000000000000000000000000000000000000000",
+		})
+		require.ErrorContains(t, err, "invalid refund address")
+	})
 	t.Run("Fail refund if status is not aborted", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
@@ -270,7 +293,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			CctxIndex:     cctx.Index,
 			RefundAddress: "",
 		})
-		require.ErrorContains(t, err, "invalid refund address")
+		require.ErrorContains(t, err, "refund address is required for bitcoin chain")
 	})
 	t.Run("Fail refund tx for coin-type Zeta if zeta accounting object is not present", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
