@@ -55,20 +55,25 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	if refundAddress == (ethcommon.Address{}) {
 		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
 	}
-
+	// Check if aborted amount is available to maintain zeta accounting
+	// NOTE: Need to verify if this check works / is required in athens 3
+	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
+		err := k.RemoveZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+		}
+	}
 	// refund the amount
-	err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, refundAddress)
+	tmpCtx, commit := ctx.CacheContext()
+	err := k.RefundAbortedAmountOnZetaChain(tmpCtx, cctx, refundAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
 	}
+	commit()
 
 	// set the cctx as refunded
 	cctx.CctxStatus.IsAbortRefunded = true
 	k.SetCrossChainTx(ctx, cctx)
 
-	// Include the refunded amount in ZetaAccount, so we can now remove it from the ZetaAbortedAmount counter.
-	if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
-		k.RemoveZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
-	}
 	return &types.MsgRefundAbortedCCTXResponse{}, nil
 }
