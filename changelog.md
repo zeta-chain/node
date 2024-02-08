@@ -16,6 +16,7 @@
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
 * [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
 * [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
+* [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 
 ### Tests
 
