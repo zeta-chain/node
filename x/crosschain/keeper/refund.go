@@ -58,6 +58,11 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
 	// deposit the amount to the tx origin instead of receiver as this is a refund
+	chainID := cctx.InboundTxParams.SenderChainId
+	// check if chain is supported
+	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
+		return zetaObserverTypes.ErrSupportedChains
+	}
 	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
 	}

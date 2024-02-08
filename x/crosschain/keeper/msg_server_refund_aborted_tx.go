@@ -61,7 +61,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	// Check if aborted amount is available to maintain zeta accounting
 	// NOTE: Need to verify if this check works / is required in athens 3
 	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
-		err := k.RemoveZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
+		err := k.RemoveZetaAbortedAmount(ctx, cctx.InboundTxParams.Amount)
 		if err != nil {
 			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
 		}
