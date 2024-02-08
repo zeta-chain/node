@@ -77,6 +77,7 @@ message Status {
   CctxStatus status = 1;
   string status_message = 2;
   int64 lastUpdate_timestamp = 3;
+  bool isAbortRefunded = 4;
 }
 
 message CrossChainTx {
@@ -91,5 +92,4 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundTxParams inbound_tx_params = 9;
   repeated OutboundTxParams outbound_tx_params = 10;
-  bool isRefunded = 11;
 }

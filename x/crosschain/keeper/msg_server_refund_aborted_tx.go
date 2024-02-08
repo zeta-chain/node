@@ -34,7 +34,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 		return nil, errorsmod.Wrap(types.ErrInvalidStatus, "CCTX is not aborted")
 	}
 	// check if the cctx is not refunded
-	if cctx.IsRefunded {
+	if cctx.CctxStatus.IsAbortRefunded {
 		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, "CCTX is already refunded")
 	}
 
@@ -63,7 +63,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// set the cctx as refunded
-	cctx.IsRefunded = true
+	cctx.CctxStatus.IsAbortRefunded = true
 	k.SetCrossChainTx(ctx, cctx)
 
 	// Include the refunded amount in ZetaAccount, so we can now remove it from the ZetaAbortedAmount counter.

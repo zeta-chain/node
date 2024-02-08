@@ -202,7 +202,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 							"amount", cctx.InboundTxParams.Amount.String(),
 						)
 					}
-					cctx.IsRefunded = true
+					cctx.CctxStatus.IsAbortRefunded = true
 				}
 
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
