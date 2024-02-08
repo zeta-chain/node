@@ -1,6 +1,3 @@
-//go:build btc_regtest
-// +build btc_regtest
-
 package zetaclient
 
 import (
@@ -19,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 type BitcoinClientTestSuite struct {
@@ -40,7 +38,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
-	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil)
+	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 	skBytes, err := hex.DecodeString(skHex)
