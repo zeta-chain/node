@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,8 +15,10 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -234,4 +237,22 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 		fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
 		fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
 	}
+}
+
+func TestConfirmationThreshold(t *testing.T) {
+	client := &BitcoinChainClient{Mu: &sync.Mutex{}}
+	t.Run("should return confirmations in chain param", func(t *testing.T) {
+		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
+		require.Equal(t, int64(3), client.ConfirmationsThreshold(big.NewInt(1000)))
+	})
+
+	t.Run("should return big value confirmations", func(t *testing.T) {
+		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: 3})
+		require.Equal(t, int64(bigValueConfirmationCount), client.ConfirmationsThreshold(big.NewInt(bigValueSats)))
+	})
+
+	t.Run("big value confirmations is the upper cap", func(t *testing.T) {
+		client.SetChainParams(observertypes.ChainParams{ConfirmationCount: bigValueConfirmationCount + 1})
+		require.Equal(t, int64(bigValueConfirmationCount), client.ConfirmationsThreshold(big.NewInt(1000)))
+	})
 }
