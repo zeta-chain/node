@@ -3,7 +3,6 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
-* ([1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 
 ### Refactor
 
@@ -15,6 +14,7 @@
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* ([1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 
 ### Tests
 
