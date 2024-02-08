@@ -24,10 +24,6 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	if !found {
 		return nil, types.ErrCannotFindCctx
 	}
-	// make sure separate refund address is provided for bitcoin chain as we cannot refund to tx origin or sender in this case
-	if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) && msg.RefundAddress == "" {
-		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "refund address is required for bitcoin chain")
-	}
 
 	// check if the cctx is aborted
 	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
@@ -38,6 +34,40 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, "CCTX is already refunded")
 	}
 
+	// Check if aborted amount is available to maintain zeta accounting
+	// NOTE: Need to verify if this check works / is required in athens 3
+	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
+		err := k.RemoveZetaAbortedAmount(ctx, cctx.InboundTxParams.Amount)
+		if err != nil {
+			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+		}
+	}
+
+	refundAddress, err := GetRefundAddress(cctx, msg.RefundAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrInvalidAddress, err.Error())
+	}
+	// refund the amount
+	tmpCtx, commit := ctx.CacheContext()
+	err = k.RefundAbortedAmountOnZetaChain(tmpCtx, cctx, refundAddress)
+	if err != nil {
+		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
+	}
+	commit()
+
+	// set the cctx as refunded
+	cctx.CctxStatus.AbortRefunded(ctx.BlockTime().Unix())
+
+	k.SetCrossChainTx(ctx, cctx)
+
+	return &types.MsgRefundAbortedCCTXResponse{}, nil
+}
+
+func GetRefundAddress(cctx types.CrossChainTx, optionalRefundAddress string) (ethcommon.Address, error) {
+	// make sure a separate refund address is provided for a bitcoin chain as we cannot refund to tx origin or sender in this case
+	if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) && optionalRefundAddress == "" {
+		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "refund address is required for bitcoin chain")
+	}
 	// Set the proper refund address.
 	// For BTC sender chain the refund address is the one provided in the message in the RefundAddress field.
 	// For EVM chain with coin type ERC20 the refund address is the sender , but can be overridden by the RefundAddress field in the message.
@@ -48,35 +78,15 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
 		refundAddress = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 	}
-	if msg.RefundAddress != "" {
-		if !ethcommon.IsHexAddress(msg.RefundAddress) {
-			return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address provided")
+	if optionalRefundAddress != "" {
+		if !ethcommon.IsHexAddress(optionalRefundAddress) {
+			return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address provided")
 		}
-		refundAddress = ethcommon.HexToAddress(msg.RefundAddress)
+		refundAddress = ethcommon.HexToAddress(optionalRefundAddress)
 	}
 	// Double check to make sure the refund address is valid
 	if refundAddress == (ethcommon.Address{}) {
-		return nil, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
+		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
 	}
-	// Check if aborted amount is available to maintain zeta accounting
-	// NOTE: Need to verify if this check works / is required in athens 3
-	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
-		err := k.RemoveZetaAbortedAmount(ctx, cctx.InboundTxParams.Amount)
-		if err != nil {
-			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
-		}
-	}
-	// refund the amount
-	tmpCtx, commit := ctx.CacheContext()
-	err := k.RefundAbortedAmountOnZetaChain(tmpCtx, cctx, refundAddress)
-	if err != nil {
-		return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
-	}
-	commit()
-
-	// set the cctx as refunded
-	cctx.CctxStatus.AbortRefunded(ctx.BlockTime().Unix())
-	k.SetCrossChainTx(ctx, cctx)
-
-	return &types.MsgRefundAbortedCCTXResponse{}, nil
+	return refundAddress, nil
 }

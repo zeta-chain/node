@@ -1,6 +1,6 @@
 # tx crosschain refund-aborted
 
-Refund a aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
+Refund an aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
 
 ```
 zetacored tx crosschain refund-aborted [cctx-index] [refund-address] [flags]

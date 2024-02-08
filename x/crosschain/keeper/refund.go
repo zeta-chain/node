@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	cosmoserrors "cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
@@ -40,7 +40,7 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 	}
 	zrc20 := ethcommon.HexToAddress(fcSenderChain.Zrc20ContractAddress)
 	if zrc20 == (ethcommon.Address{}) {
-		return cosmoserrors.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
+		return errorsmod.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
 	// deposit the amount to the tx origin instead of receiver as this is a refund
 	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, amountOfGasTokenLocked.BigInt()); err != nil {

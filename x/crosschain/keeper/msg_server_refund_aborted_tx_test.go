@@ -16,6 +16,95 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
+func Test_GetRefundAddress(t *testing.T) {
+	t.Run("should return refund address if provided coin-type gas", func(t *testing.T) {
+		validEthAddress := sample.EthAddress()
+		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				TxOrigin:      validEthAddress.String(),
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			"")
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+	})
+	t.Run("should return refund address if provided coin-type zeta", func(t *testing.T) {
+		validEthAddress := sample.EthAddress()
+		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				TxOrigin:      validEthAddress.String(),
+				CoinType:      common.CoinType_Zeta,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			"")
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+	})
+	t.Run("should return refund address if provided coin-type erc20", func(t *testing.T) {
+		validEthAddress := sample.EthAddress()
+		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				Sender:        validEthAddress.String(),
+				CoinType:      common.CoinType_ERC20,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			"")
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+	})
+	t.Run("should return refund address if provided coin-type gas for btc chain", func(t *testing.T) {
+		validEthAddress := sample.EthAddress()
+		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: getValidBtcChainID(),
+			}},
+			validEthAddress.String())
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+	})
+	t.Run("fail if refund address is not provided for btc chain", func(t *testing.T) {
+		_, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: getValidBtcChainID(),
+			}},
+			"")
+		require.ErrorContains(t, err, "refund address is required for bitcoin chain")
+	})
+	t.Run("address overridden if optional address is provided", func(t *testing.T) {
+		validEthAddress := sample.EthAddress()
+		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				Sender:        sample.EthAddress().String(),
+				CoinType:      common.CoinType_ERC20,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			validEthAddress.String())
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+		address, err = keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				Sender:        sample.EthAddress().String(),
+				CoinType:      common.CoinType_Zeta,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			validEthAddress.String())
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+		address, err = keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
+			InboundTxParams: &crosschaintypes.InboundTxParams{
+				Sender:        sample.EthAddress().String(),
+				CoinType:      common.CoinType_Gas,
+				SenderChainId: getValidEthChainID(t),
+			}},
+			validEthAddress.String())
+		require.NoError(t, err)
+		require.Equal(t, validEthAddress, address)
+	})
+
+}
 func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 	t.Run("Successfully refund tx for coin-type Gas", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
