@@ -9,7 +9,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
@@ -34,10 +33,6 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 	}
 	chainID := cctx.InboundTxParams.SenderChainId
 	amountOfGasTokenLocked := cctx.InboundTxParams.Amount
-	// check if chain is supported
-	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
-	}
 	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
@@ -57,11 +52,10 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
 func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
-	// deposit the amount to the tx origin instead of receiver as this is a refund
 	chainID := cctx.InboundTxParams.SenderChainId
-	// check if chain is supported
-	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+	// check if chain is an EVM chain
+	if !common.IsEVMChain(chainID) {
+		return errors.New("only EVM chains are supported for refund when coin type is Zeta")
 	}
 	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
