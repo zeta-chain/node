@@ -113,6 +113,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -122,12 +123,14 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
 			RefundAddress: "",
 		})
 		require.NoError(t, err)
+
 		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, refundAddress)
 		require.NoError(t, err)
@@ -143,6 +146,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -152,12 +156,14 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
 			RefundAddress: "",
 		})
 		require.NoError(t, err)
+
 		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
 		balance := sdkk.BankKeeper.GetBalance(ctx, refundAddressCosmos, config.BaseDenom)
@@ -173,6 +179,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -182,6 +189,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		refundAddress := sample.EthAddress()
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
@@ -189,6 +197,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			RefundAddress: refundAddress.String(),
 		})
 		require.NoError(t, err)
+
 		refundAddressCosmos := sdk.AccAddress(refundAddress.Bytes())
 		balance := sdkk.BankKeeper.GetBalance(ctx, refundAddressCosmos, config.BaseDenom)
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Amount.Uint64())
@@ -204,6 +213,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -223,12 +233,14 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			asset,
 			"bar",
 		)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
 			RefundAddress: "",
 		})
 		require.NoError(t, err)
+
 		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, refundAddress)
 		require.NoError(t, err)
@@ -244,6 +256,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -253,12 +266,14 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		zrc20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
 			RefundAddress: cctx.InboundTxParams.TxOrigin,
 		})
 		require.NoError(t, err)
+
 		refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20, refundAddress)
 		require.NoError(t, err)
@@ -274,6 +289,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -283,6 +299,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
@@ -297,6 +314,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -306,6 +324,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.InboundTxParams.Amount})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
@@ -320,6 +339,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -346,6 +366,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -368,6 +389,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -377,6 +399,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
@@ -391,6 +414,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -399,6 +423,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
 		k.SetCrossChainTx(ctx, *cctx)
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
@@ -413,6 +438,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
 		cctx.CctxStatus.IsAbortRefunded = false
@@ -422,6 +448,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.SetCrossChainTx(ctx, *cctx)
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: sdkmath.OneUint()})
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
