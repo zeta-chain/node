@@ -16,6 +16,7 @@
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
 * ([1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
+* [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
 ### Tests
 

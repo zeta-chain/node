@@ -7,9 +7,10 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"github.com/spf13/cobra"
 	"io"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 var encTssCmd = &cobra.Command{
@@ -28,8 +29,8 @@ var tssArgs = TSSArgs{}
 func init() {
 	RootCmd.AddCommand(encTssCmd)
 
-	encTssCmd.Flags().StringVar(&tssArgs.secretKey, "secret", "", "tss-encrpyt --secret p@$$w0rd")
-	encTssCmd.Flags().StringVar(&tssArgs.filePath, "filepath", "", "tss-encrpyt --filepath ./file.json")
+	encTssCmd.Flags().StringVar(&tssArgs.secretKey, "secret", "", "tss-encrypt --secret p@$$w0rd")
+	encTssCmd.Flags().StringVar(&tssArgs.filePath, "filepath", "", "tss-encrypt --filepath ./file.json")
 }
 
 func EncryptTSSFile(_ *cobra.Command, _ []string) error {
