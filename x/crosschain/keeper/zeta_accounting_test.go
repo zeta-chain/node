@@ -51,14 +51,14 @@ func TestKeeper_AddZetaAccounting(t *testing.T) {
 func TestKeeper_RemoveZetaAbortedAmount(t *testing.T) {
 	t.Run("should remove aborted zeta amount", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		originalAmount := sdkmath.NewUint(100)
+		originalAmount := sdkmath.NewUintFromString("100000000000000000000000000000000000000000000000")
 		k.SetZetaAccounting(ctx, types.ZetaAccounting{
 			AbortedZetaAmount: originalAmount,
 		})
 		val, found := k.GetZetaAccounting(ctx)
 		require.True(t, found)
 		require.Equal(t, originalAmount, val.AbortedZetaAmount)
-		removeAmount := originalAmount.Sub(sdkmath.NewUint(50))
+		removeAmount := originalAmount.Sub(sdkmath.NewUintFromString("10000000000000000000000000000000000000000000000"))
 		err := k.RemoveZetaAbortedAmount(ctx, removeAmount)
 		require.NoError(t, err)
 		val, found = k.GetZetaAccounting(ctx)
