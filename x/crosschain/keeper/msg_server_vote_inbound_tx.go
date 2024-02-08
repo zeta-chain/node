@@ -193,9 +193,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 				// gas payment for erc20 type might fail because no liquidity pool is defined to swap the zrc20 token into the gas token
 				// in this gas we should refund the sender on ZetaChain
-				refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 && refundAddress != (ethcommon.Address{}) {
-					if err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, refundAddress); err != nil {
+				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 && ethcommon.IsHexAddress(cctx.InboundTxParams.Sender) {
+					if err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender)); err != nil {
 						// log the error
 						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
 							"error", err,

@@ -28,15 +28,17 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.Cross
 
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
 func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
-	// refund in gas token of a sender chain to the tx origin
+	// refund in gas token to refund address
 	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
 	}
 	chainID := cctx.InboundTxParams.SenderChainId
 	amountOfGasTokenLocked := cctx.InboundTxParams.Amount
+	// check if chain is supported
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
+	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
 		return types.ErrForeignCoinNotFound
@@ -59,6 +61,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
 		return errors.New("no amount to refund")
 	}
+	// deposit the amount to refund address
 	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, cctx.InboundTxParams.Amount.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
@@ -67,6 +70,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 
 // RefundAmountOnZetaChainERC20 refunds the amount of the cctx on ZetaChain in case of aborted cctx
 // NOTE: GetCurrentOutTxParam should contain the last up to date cctx amount
+// Refund address should already be validated before calling this function
 func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	inputAmount := cctx.InboundTxParams.Amount
 	// preliminary checks

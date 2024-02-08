@@ -4,15 +4,17 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
 )
 
 var _ sdk.Msg = &MsgRefundAbortedCCTX{}
 
-func NewMsgRefundAbortedCCTX(creator string, cctxIndex string) *MsgRefundAbortedCCTX {
+func NewMsgRefundAbortedCCTX(creator string, cctxIndex string, refundAddress string) *MsgRefundAbortedCCTX {
 	return &MsgRefundAbortedCCTX{
-		Creator:   creator,
-		CctxIndex: cctxIndex,
+		Creator:       creator,
+		CctxIndex:     cctxIndex,
+		RefundAddress: refundAddress,
 	}
 }
 
@@ -44,6 +46,9 @@ func (msg *MsgRefundAbortedCCTX) ValidateBasic() error {
 	}
 	if len(msg.CctxIndex) != 66 {
 		return ErrInvalidCCTXIndex
+	}
+	if msg.RefundAddress != "" && !ethcommon.IsHexAddress(msg.RefundAddress) {
+		return ErrInvalidAddress
 	}
 	return nil
 }
