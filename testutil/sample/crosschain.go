@@ -75,9 +75,11 @@ func Status(t *testing.T, index string) *types.Status {
 		LastUpdateTimestamp: r.Int63(),
 	}
 }
+
 func GetCctxIndexFromString(index string) string {
 	return crypto.Keccak256Hash([]byte(index)).String()
 }
+
 func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	r := newRandFromStringSeed(t, index)
 
