@@ -195,15 +195,17 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				// in this gas we should refund the sender on ZetaChain
 				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 && ethcommon.IsHexAddress(cctx.InboundTxParams.Sender) {
 					// Sender is verified to be a valid ethereum address
-					if err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender)); err != nil {
+					err := k.RefundAbortedAmountOnZetaChain(ctx, cctx, ethcommon.HexToAddress(cctx.InboundTxParams.Sender))
+					if err != nil {
 						// log the error
 						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
 							"error", err,
 							"sender", cctx.InboundTxParams.Sender,
 							"amount", cctx.InboundTxParams.Amount.String(),
 						)
+					} else {
+						cctx.CctxStatus.AbortRefunded(ctx.BlockTime().Unix())
 					}
-					cctx.CctxStatus.IsAbortRefunded = true
 				}
 
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
