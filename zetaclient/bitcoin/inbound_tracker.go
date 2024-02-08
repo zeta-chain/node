@@ -9,7 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
-func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
+func (ob *BTCChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchInTx_InboundTrackerSuggestions", ob.GetChainParams().InTxTicker)
 	if err != nil {
 		ob.logger.WatchInTx.Err(err).Msg("error creating ticker")
@@ -32,7 +32,7 @@ func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	}
 }
 
-func (ob *ChainClient) ObserveTrackerSuggestions() error {
+func (ob *BTCChainClient) ObserveTrackerSuggestions() error {
 	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -48,7 +48,7 @@ func (ob *ChainClient) ObserveTrackerSuggestions() error {
 	return nil
 }
 
-func (ob *ChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
+func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (string, error) {
 	hash, err := chainhash.NewHashFromStr(txHash)
 	if err != nil {
 		return "", err

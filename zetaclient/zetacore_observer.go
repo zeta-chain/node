@@ -317,7 +317,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 	cctxList []*types.CrossChainTx,
 	ob interfaces.ChainClient,
 	signer interfaces.ChainSigner) {
-	btcClient, ok := ob.(*bitcoin.ChainClient)
+	btcClient, ok := ob.(*bitcoin.BTCChainClient)
 	if !ok { // should never happen
 		co.logger.ZetaChainWatcher.Error().Msgf("scheduleCctxBTC: chain client is not a bitcoin client")
 		return

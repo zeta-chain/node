@@ -72,7 +72,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 	amount float64,
 	gasPrice *big.Int,
 	sizeLimit uint64,
-	btcClient *ChainClient,
+	btcClient *BTCChainClient,
 	height uint64,
 	nonce uint64,
 	chain *common.Chain,
@@ -257,7 +257,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	logger.Info().Msgf("BTC TryProcessOutTx: %s, value %d to %s", cctx.Index, params.Amount.BigInt(), params.Receiver)
-	btcClient, ok := chainclient.(*ChainClient)
+	btcClient, ok := chainclient.(*BTCChainClient)
 	if !ok {
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return

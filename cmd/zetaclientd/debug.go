@@ -164,7 +164,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if common.IsBitcoinChain(chain.ChainId) {
-				obBtc := bitcoin.ChainClient{
+				obBtc := bitcoin.BTCChainClient{
 					Mu: &sync.Mutex{},
 				}
 				obBtc.WithZetaClient(bridge)
