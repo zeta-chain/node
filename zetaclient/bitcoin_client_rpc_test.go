@@ -5,12 +5,17 @@ package zetaclient
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
@@ -68,11 +73,20 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 }
 
 func (suite *BitcoinClientTestSuite) TearDownSuite() {
-
 }
 
-func (suite *BitcoinClientTestSuite) Test0() {
-
+func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjson.EstimateSmartFeeMode) (*big.Int, error) {
+	feeResult, err := client.EstimateSmartFee(confTarget, estimateMode)
+	if err != nil {
+		return nil, err
+	}
+	if feeResult.Errors != nil {
+		return nil, errors.New(strings.Join(feeResult.Errors, ", "))
+	}
+	if feeResult.FeeRate == nil {
+		return nil, errors.New("fee rate is nil")
+	}
+	return new(big.Int).SetInt64(int64(*feeResult.FeeRate * 1e8)), nil
 }
 
 // All methods that begin with "Test" are run as tests within a
@@ -158,6 +172,63 @@ func (suite *BitcoinClientTestSuite) Test3() {
 	suite.Require().NoError(err)
 	suite.T().Logf("block number %d", bn)
 }
-func TestBitcoinChainClient(t *testing.T) {
-	suite.Run(t, new(BitcoinClientTestSuite))
+
+// func TestBitcoinChainClient(t *testing.T) {
+// 	suite.Run(t, new(BitcoinClientTestSuite))
+// }
+
+func LiveTestBitcoinFeeRate(t *testing.T) {
+	// mainnet config
+	connCfg := &rpcclient.ConnConfig{
+		Host:         "127.0.0.1:8332", // mainnet endpoint goes here
+		User:         "username",
+		Pass:         "password",
+		Params:       "mainnet",
+		HTTPPostMode: true,
+		DisableTLS:   true,
+	}
+	client, err := rpcclient.New(connCfg, nil)
+	if err != nil {
+		t.Error(err)
+	}
+	bn, err := client.GetBlockCount()
+	if err != nil {
+		t.Error(err)
+	}
+
+	// get fee rate for 1 block target
+	feeRateConservative1, errCon1 := getFeeRate(client, 1, &btcjson.EstimateModeConservative)
+	if errCon1 != nil {
+		t.Error(errCon1)
+	}
+	feeRateEconomical1, errEco1 := getFeeRate(client, 1, &btcjson.EstimateModeEconomical)
+	if errEco1 != nil {
+		t.Error(errEco1)
+	}
+	// get fee rate for 2 block target
+	feeRateConservative2, errCon2 := getFeeRate(client, 2, &btcjson.EstimateModeConservative)
+	if errCon2 != nil {
+		t.Error(errCon2)
+	}
+	feeRateEconomical2, errEco2 := getFeeRate(client, 2, &btcjson.EstimateModeEconomical)
+	if errEco2 != nil {
+		t.Error(errEco2)
+	}
+	fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
+	fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+
+	// monitor fee rate every 5 minutes
+	for {
+		time.Sleep(time.Duration(5) * time.Minute)
+		bn, err = client.GetBlockCount()
+		feeRateConservative1, errCon1 = getFeeRate(client, 1, &btcjson.EstimateModeConservative)
+		feeRateEconomical1, errEco1 = getFeeRate(client, 1, &btcjson.EstimateModeEconomical)
+		feeRateConservative2, errCon2 = getFeeRate(client, 2, &btcjson.EstimateModeConservative)
+		feeRateEconomical2, errEco2 = getFeeRate(client, 2, &btcjson.EstimateModeEconomical)
+		if err != nil || errCon1 != nil || errEco1 != nil || errCon2 != nil || errEco2 != nil {
+			continue
+		}
+		fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
+		fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
+	}
 }
