@@ -34,6 +34,7 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain inbound-voter](zetacored_tx_crosschain_inbound-voter.md)	 - Broadcast message sendVoter
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address
 * [zetacored tx crosschain outbound-voter](zetacored_tx_crosschain_outbound-voter.md)	 - Broadcast message receiveConfirmation
+* [zetacored tx crosschain refund-aborted](zetacored_tx_crosschain_refund-aborted.md)	 - Refund a aborted tx , the refund address is optional, if not provided, the refund will be sent to the sender/tx origin of the cctx.
 * [zetacored tx crosschain remove-from-out-tx-tracker](zetacored_tx_crosschain_remove-from-out-tx-tracker.md)	 - Remove a out-tx-tracker
 * [zetacored tx crosschain update-tss-address](zetacored_tx_crosschain_update-tss-address.md)	 - Create a new TSSVoter
 

@@ -25,7 +25,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Gas
@@ -44,7 +44,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.True(t, c.IsRefunded)
+		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Successfully refund tx for coin-type Zeta", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -55,7 +55,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
@@ -73,7 +73,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Amount.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.True(t, c.IsRefunded)
+		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Successfully refund to refund address if provided", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -84,7 +84,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
@@ -102,7 +102,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Amount.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.True(t, c.IsRefunded)
+		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Failed refund if address provided is invalid", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -113,7 +113,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
@@ -136,7 +136,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_ERC20
 		cctx.InboundTxParams.Asset = asset
@@ -165,7 +165,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.True(t, c.IsRefunded)
+		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Successfully refund tx for coin-type Gas with BTC sender", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -176,7 +176,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Gas
@@ -195,7 +195,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.Amount.Uint64(), balance.Uint64())
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.True(t, c.IsRefunded)
+		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Fail refund if status is not aborted", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -206,7 +206,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Gas
@@ -221,7 +221,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.ErrorContains(t, err, "CCTX is not aborted")
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		require.False(t, c.IsRefunded)
+		require.False(t, c.CctxStatus.IsAbortRefunded)
 	})
 	t.Run("Fail refund if status cctx not found", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -232,7 +232,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Gas
@@ -254,7 +254,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		cctx := sample.CrossChainTx(t, "sample-index")
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
-		cctx.IsRefunded = false
+		cctx.CctxStatus.IsAbortRefunded = false
 		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
 		cctx.InboundTxParams.SenderChainId = chainID
 		cctx.InboundTxParams.CoinType = common.CoinType_Gas

@@ -778,3 +778,58 @@ export declare class MsgAbortStuckCCTXResponse extends Message<MsgAbortStuckCCTX
   static equals(a: MsgAbortStuckCCTXResponse | PlainMessage<MsgAbortStuckCCTXResponse> | undefined, b: MsgAbortStuckCCTXResponse | PlainMessage<MsgAbortStuckCCTXResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgRefundAbortedCCTX
+ */
+export declare class MsgRefundAbortedCCTX extends Message<MsgRefundAbortedCCTX> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string cctx_index = 2;
+   */
+  cctxIndex: string;
+
+  /**
+   * if not provided, the refund will be sent to the sender/txOrgin
+   *
+   * @generated from field: string refund_address = 3;
+   */
+  refundAddress: string;
+
+  constructor(data?: PartialMessage<MsgRefundAbortedCCTX>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRefundAbortedCCTX";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRefundAbortedCCTX;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRefundAbortedCCTX;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRefundAbortedCCTX;
+
+  static equals(a: MsgRefundAbortedCCTX | PlainMessage<MsgRefundAbortedCCTX> | undefined, b: MsgRefundAbortedCCTX | PlainMessage<MsgRefundAbortedCCTX> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.crosschain.MsgRefundAbortedCCTXResponse
+ */
+export declare class MsgRefundAbortedCCTXResponse extends Message<MsgRefundAbortedCCTXResponse> {
+  constructor(data?: PartialMessage<MsgRefundAbortedCCTXResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.MsgRefundAbortedCCTXResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgRefundAbortedCCTXResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgRefundAbortedCCTXResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgRefundAbortedCCTXResponse;
+
+  static equals(a: MsgRefundAbortedCCTXResponse | PlainMessage<MsgRefundAbortedCCTXResponse> | undefined, b: MsgRefundAbortedCCTXResponse | PlainMessage<MsgRefundAbortedCCTXResponse> | undefined): boolean;
+}
+

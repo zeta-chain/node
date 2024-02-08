@@ -270,3 +270,13 @@ message MsgAbortStuckCCTX {
 }
 ```
 
+## MsgRefundAbortedCCTX
+
+```proto
+message MsgRefundAbortedCCTX {
+	string creator = 1;
+	string cctx_index = 2;
+	string refund_address = 3;
+}
+```
+
