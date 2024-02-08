@@ -3,6 +3,7 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
+
 ### Features
 
 *[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
