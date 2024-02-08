@@ -14,7 +14,9 @@
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
-* ([1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
+* [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
+* [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
+* [1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 
 ### Tests
