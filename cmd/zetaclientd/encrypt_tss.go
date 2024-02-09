@@ -14,8 +14,9 @@ import (
 )
 
 var encTssCmd = &cobra.Command{
-	Use:   "tss-encrypt",
+	Use:   "tss-encrypt [file-path] [secret-key]",
 	Short: "Utility command to encrypt existing tss key-share file",
+	Args:  cobra.ExactArgs(2),
 	RunE:  EncryptTSSFile,
 }
 
@@ -28,12 +29,12 @@ var tssArgs = TSSArgs{}
 
 func init() {
 	RootCmd.AddCommand(encTssCmd)
-
-	encTssCmd.Flags().StringVar(&tssArgs.secretKey, "secret", "", "tss-encrypt --secret p@$$w0rd")
-	encTssCmd.Flags().StringVar(&tssArgs.filePath, "filepath", "", "tss-encrypt --filepath ./file.json")
 }
 
-func EncryptTSSFile(_ *cobra.Command, _ []string) error {
+func EncryptTSSFile(_ *cobra.Command, args []string) error {
+	tssArgs.filePath = args[0]
+	tssArgs.secretKey = args[1]
+
 	data, err := os.ReadFile(tssArgs.filePath)
 	if err != nil {
 		return err
