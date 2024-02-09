@@ -1,13 +1,13 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/contracts/testzrc20"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testzrc20"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -20,7 +20,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
@@ -39,7 +39,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
@@ -85,7 +85,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 		sm.ETHZRC20Addr.Hex(),
 		codeHashRes.CodeHash,
 	)
-	res, err := sm.ZetaTxServer.BroadcastTx(utils2.FungibleAdminName, msg)
+	res, err := sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -145,7 +145,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -162,7 +162,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -187,7 +187,7 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}

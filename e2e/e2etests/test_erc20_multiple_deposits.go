@@ -2,12 +2,12 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
@@ -17,7 +17,7 @@ func TestMultipleERC20Deposit(sm *runner.E2ERunner) {
 		panic(err)
 	}
 	txhash := MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(3))
-	cctxs := utils2.WaitCctxsMinedByInTxHash(sm.Ctx, txhash.Hex(), sm.CctxClient, 3, sm.Logger, sm.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, txhash.Hex(), sm.CctxClient, 3, sm.Logger, sm.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
@@ -47,7 +47,7 @@ func MultipleDeposits(sm *runner.E2ERunner, amount, count *big.Int) ethcommon.Ha
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -58,7 +58,7 @@ func MultipleDeposits(sm *runner.E2ERunner, amount, count *big.Int) ethcommon.Ha
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposits failed")
 	}

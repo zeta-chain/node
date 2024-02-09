@@ -1,9 +1,10 @@
 package e2etests
 
 import (
+	"math/big"
+
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"math/big"
 )
 
 func TestERC20Deposit(sm *runner.E2ERunner) {

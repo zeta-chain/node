@@ -2,14 +2,15 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
+
 	"math/big"
 	"time"
 
 	"golang.org/x/sync/errgroup"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -30,7 +31,7 @@ func TestStressEtherWithdraw(sm *runner.E2ERunner) {
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 		if receipt.Status == 0 {
 			//sm.Logger.Info("index %d: withdraw evm tx failed", index)
 			panic(fmt.Sprintf("index %d: withdraw evm tx %s failed", i, tx.Hash().Hex()))
@@ -52,7 +53,7 @@ func TestStressEtherWithdraw(sm *runner.E2ERunner) {
 
 // MonitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
 func MonitorEtherWithdraw(sm *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: withdraw cctx failed with status %s, message %s, cctx index %s",

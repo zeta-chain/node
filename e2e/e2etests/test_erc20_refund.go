@@ -3,13 +3,13 @@ package e2etests
 import (
 	"errors"
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -31,7 +31,7 @@ func TestERC20DepositAndCallRefund(sm *runner.E2ERunner) {
 	}
 
 	// There is no liquidity pool, therefore the cctx should abort
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, inTxHash, sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, inTxHash, sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	sm.Logger.CCTX(*cctx, "deposit")
 	if cctx.CctxStatus.Status != types.CctxStatus_Aborted {
 		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
@@ -72,7 +72,7 @@ func TestERC20DepositAndCallRefund(sm *runner.E2ERunner) {
 	goerliBalanceAfterSend := big.NewInt(0).Sub(goerliBalance, amount)
 
 	// there is a liquidity pool, therefore the cctx should revert
-	cctx = utils2.WaitCctxMinedByInTxHash(sm.Ctx, inTxHash, sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInTxHash(sm.Ctx, inTxHash, sm.CctxClient, sm.Logger, sm.CctxTimeout)
 
 	// the revert tx creation will fail because the sender, used as the recipient, is not defined in the cctx
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
@@ -124,13 +124,13 @@ func TestERC20DepositAndCallRefund(sm *runner.E2ERunner) {
 func createZetaERC20LiquidityPool(sm *runner.E2ERunner) error {
 	amount := big.NewInt(1e10)
 	txHash := sm.DepositERC20WithAmountAndMessage(amount, []byte{})
-	utils2.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 
 	tx, err := sm.USDTZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e10))
 	if err != nil {
 		return err
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		return errors.New("approve failed")
 	}
@@ -150,7 +150,7 @@ func createZetaERC20LiquidityPool(sm *runner.E2ERunner) error {
 	if err != nil {
 		return err
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		return fmt.Errorf("add liquidity failed")
 	}
@@ -164,7 +164,7 @@ func sendInvalidUSDTDeposit(sm *runner.E2ERunner, amount *big.Int) (string, erro
 	if err != nil {
 		return "", err
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = sm.ERC20Custody.Deposit(
@@ -179,7 +179,7 @@ func sendInvalidUSDTDeposit(sm *runner.E2ERunner, amount *big.Int) (string, erro
 	}
 
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", tx.Hash().String(), tx.To().Hex(), tx.Nonce())
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		return "", errors.New("expected the tx receipt to have status 1; got 0")
 	}

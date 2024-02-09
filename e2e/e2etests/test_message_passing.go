@@ -2,14 +2,14 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -29,7 +29,7 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 	}
 
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -48,7 +48,7 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 	}
 
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -66,7 +66,7 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 
 	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
 	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -110,7 +110,7 @@ func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 		panic(err)
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -128,7 +128,7 @@ func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 		panic(err)
 	}
 	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -145,7 +145,7 @@ func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 	}
 
 	// expect revert tx to fail
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
@@ -175,7 +175,7 @@ func TestMessagePassingRevertSuccess(sm *runner.E2ERunner) {
 	}
 	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -200,10 +200,10 @@ func TestMessagePassingRevertSuccess(sm *runner.E2ERunner) {
 		panic(err)
 	}
 	sm.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}

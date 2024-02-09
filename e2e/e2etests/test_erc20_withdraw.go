@@ -1,11 +1,11 @@
 package e2etests
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -15,7 +15,7 @@ func TestERC20Withdraw(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -26,7 +26,7 @@ func TestERC20Withdraw(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := sm.USDTZRC20.ParseWithdrawal(*log)
@@ -43,7 +43,7 @@ func TestERC20Withdraw(sm *runner.E2ERunner) {
 	}
 
 	// verify the withdraw value
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	verifyTransferAmountFromCCTX(sm, cctx, 1000)
 }
 

@@ -2,8 +2,7 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
+
 	"math/big"
 	"strings"
 
@@ -13,6 +12,8 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -23,7 +24,7 @@ func TestEtherDeposit(sm *runner.E2ERunner) {
 	hash := sm.DepositEtherWithAmount(false, big.NewInt(10000000000000000)) // in wei (0.01 eth)
 
 	// wait for the cctx to be mined
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	sm.Logger.CCTX(*cctx, "deposit")
 }
 
@@ -69,11 +70,11 @@ func TestEtherDepositAndCall(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s", cctx.CctxStatus.Status))
 	}
@@ -118,11 +119,11 @@ func TestEtherDepositAndCall(sm *runner.E2ERunner) {
 		panic(err)
 	}
 
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
-	cctx = utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx = utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -173,7 +174,7 @@ func TestDepositAndCallRefund(sm *runner.E2ERunner) {
 		panic(err)
 	}
 	sm.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	sm.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
 	sm.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	sm.Logger.Info("  to: %s", signedTx.To().String())
@@ -181,7 +182,7 @@ func TestDepositAndCallRefund(sm *runner.E2ERunner) {
 	sm.Logger.Info("  block num: %d", receipt.BlockNumber)
 
 	func() {
-		cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+		cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 		sm.Logger.Info("cctx status message: %s", cctx.CctxStatus.StatusMessage)
 		revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 		sm.Logger.Info("GOERLI revert tx receipt: status %d", receipt.Status)
@@ -247,7 +248,7 @@ func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 		sm.ETHZRC20Addr.Hex(),
 		liquidityCap,
 	)
-	res, err := sm.ZetaTxServer.BroadcastTx(utils2.FungibleAdminName, msg)
+	res, err := sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -258,11 +259,11 @@ func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -277,11 +278,11 @@ func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	expectedBalance := big.NewInt(0).Add(initialBal, big.NewInt(1e15))
 
 	bal, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
@@ -299,7 +300,7 @@ func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 		sm.ETHZRC20Addr.Hex(),
 		math.ZeroUint(),
 	)
-	res, err = sm.ZetaTxServer.BroadcastTx(utils2.FungibleAdminName, msg)
+	res, err = sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -312,11 +313,11 @@ func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	expectedBalance = big.NewInt(0).Add(initialBal, big.NewInt(1e17))
 
 	bal, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)

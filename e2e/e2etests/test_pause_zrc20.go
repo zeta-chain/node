@@ -2,11 +2,11 @@ package e2etests
 
 import (
 	"fmt"
-	"github.com/zeta-chain/zetacore/e2e/contracts/vault"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 
+	"github.com/zeta-chain/zetacore/e2e/contracts/vault"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -24,7 +24,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
@@ -32,7 +32,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
@@ -44,7 +44,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 		[]string{sm.ETHZRC20Addr.Hex()},
 		fungibletypes.UpdatePausedStatusAction_PAUSE,
 	)
-	res, err := sm.ZetaTxServer.BroadcastTx(utils2.FungibleAdminName, msg)
+	res, err := sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -68,7 +68,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 1 {
 		panic("transfer should fail")
 	}
@@ -76,7 +76,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 1 {
 		panic("burn should fail")
 	}
@@ -87,7 +87,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 1 {
 		panic("deposit should fail")
 	}
@@ -99,7 +99,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("USDT transfer should succeed")
 	}
@@ -107,7 +107,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("USDT vault deposit should succeed")
 	}
@@ -117,11 +117,11 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, signedTx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_Reverted {
 		panic(fmt.Sprintf("expected cctx status to be Reverted; got %s", cctx.CctxStatus.Status))
 	}
@@ -134,7 +134,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 		[]string{sm.ETHZRC20Addr.Hex()},
 		fungibletypes.UpdatePausedStatusAction_UNPAUSE,
 	)
-	res, err = sm.ZetaTxServer.BroadcastTx(utils2.FungibleAdminName, msg)
+	res, err = sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
@@ -158,7 +158,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("transfer should succeed")
 	}
@@ -166,7 +166,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("burn should succeed")
 	}
@@ -176,7 +176,7 @@ func TestPauseZRC20(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit should succeed")
 	}

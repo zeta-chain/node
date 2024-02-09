@@ -1,11 +1,12 @@
 package runner
 
 import (
+	"math/big"
+	"time"
+
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
-	"math/big"
-	"time"
 
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"

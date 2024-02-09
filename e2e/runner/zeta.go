@@ -2,8 +2,9 @@ package runner
 
 import (
 	"fmt"
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
+
+	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

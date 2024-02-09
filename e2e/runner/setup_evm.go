@@ -1,12 +1,13 @@
 package runner
 
 import (
+	"math/big"
+	"time"
+
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"math/big"
-	"time"
 
 	"github.com/zeta-chain/zetacore/zetaclient"
 

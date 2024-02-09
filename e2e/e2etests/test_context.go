@@ -2,12 +2,12 @@ package e2etests
 
 import (
 	"bytes"
-	"github.com/zeta-chain/zetacore/e2e/runner"
-	"github.com/zeta-chain/zetacore/e2e/utils"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
