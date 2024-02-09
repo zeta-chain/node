@@ -73,9 +73,10 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 0
-	maxHeightDiff    = 10000
-	btcBlocksPerDay  = 144
+	maxHeightDiff             = 10000     // in case the last block is too old when the observer starts
+	btcBlocksPerDay           = 144       // for LRU block cache size
+	bigValueSats              = 200000000 // 2 BTC
+	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
 )
 
 func (ob *BitcoinChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
@@ -372,10 +373,13 @@ func (ob *BitcoinChainClient) observeInTx() error {
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
-		return fmt.Errorf("observeInTxBTC: error getting block count: %s", err)
+		return fmt.Errorf("observeInTxBTC: error getting block number: %s", err)
 	}
 	if cnt < 0 {
-		return fmt.Errorf("observeInTxBTC: block count is negative: %d", cnt)
+		return fmt.Errorf("observeInTxBTC: block number is negative: %d", cnt)
+	}
+	if cnt < ob.GetLastBlockHeight() {
+		return fmt.Errorf("observeInTxBTC: block number should not decrease: current %d last %d", cnt, ob.GetLastBlockHeight())
 	}
 	ob.SetLastBlockHeight(cnt)
 
@@ -439,7 +443,7 @@ func (ob *BitcoinChainClient) observeInTx() error {
 				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
 				return err // we have to re-scan this block next time
 			} else if zetaHash != "" {
-				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: BTC deposit detected and reported: PostVoteInbound zeta tx: %s ballot %s", zetaHash, ballot)
+				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s", zetaHash, inTx.TxHash, ballot)
 			}
 		}
 
@@ -456,10 +460,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 // ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
-	if amount.Cmp(big.NewInt(200000000)) >= 0 {
-		return 6
+	if amount.Cmp(big.NewInt(bigValueSats)) >= 0 {
+		return bigValueConfirmationCount
 	}
-	return 2
+	if bigValueConfirmationCount < ob.GetChainParams().ConfirmationCount {
+		return bigValueConfirmationCount
+	}
+	// #nosec G701 always in range
+	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
 // IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
@@ -581,7 +589,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 	if err != nil {
 		return err
 	}
@@ -633,11 +641,12 @@ func FilterAndParseIncomingTx(
 		}
 		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
 		if err != nil {
-			logger.Error().Err(err).Msg("error getting btc event")
+			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 			continue
 		}
 		if inTx != nil {
 			inTxs = append(inTxs, inTx)
+			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
 	return inTxs
@@ -696,7 +705,7 @@ func GetBtcEvent(
 				return nil, err
 			}
 			if wpkhAddress.EncodeAddress() != targetAddress {
-				return nil, err
+				return nil, nil // irrelevant tx to us, skip
 			}
 			// deposit amount has to be no less than the minimum depositor fee
 			if out.Value < BtcDepositorFeeMin {

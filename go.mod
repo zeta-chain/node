@@ -57,7 +57,10 @@ require (
 	gorm.io/gorm v1.24.6
 )
 
-require github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+require (
+	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+	github.com/onrik/ethrpc v1.2.0
+)
 
 require (
 	github.com/DataDog/zstd v1.5.2 // indirect
@@ -335,6 +338,7 @@ replace (
 	// use cometbft
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.28
 	github.com/tendermint/tm-db => github.com/BlockPILabs/cosmos-db v0.0.3
+	github.com/zeta-chain/go-tss => github.com/zeta-chain/go-tss v0.1.1-0.20240115203400-a5b80e5da933
 
 )
 

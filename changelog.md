@@ -2,16 +2,55 @@
 
 ## Unreleased
 
+* `zetaclientd start` : 2 inputs required from stdin
+
+### Refactor
+
+* [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
+  Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+
 ### Fixes
+
+* [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
+* [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
+* [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
+* [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
+* [1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
+* [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
+
+### Tests
+
+* [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+
+### Chores
+
+* [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
+
+## Version: v12.2.4
+
+### Fixes
+
+* [1638](https://github.com/zeta-chain/node/issues/1638) - additional check to make sure external chain height always increases
+* [1672](https://github.com/zeta-chain/node/pull/1672) - paying 50% more than base gas price to buffer EIP1559 gas price increase
+* [1642](https://github.com/zeta-chain/node/pull/1642) - Change WhitelistERC20 authorization from group1 to group2
 * [1610](https://github.com/zeta-chain/node/issues/1610) - add pending outtx hash to tracker after monitoring for 10 minutes
+* [1656](https://github.com/zeta-chain/node/issues/1656) - schedule bitcoin keysign with intervals to avoid keysign failures
+* [1662](https://github.com/zeta-chain/node/issues/1662) - skip Goerli BlobTxType transactions introduced in Dencun upgrade
+* [1663](https://github.com/zeta-chain/node/issues/1663) - skip Mumbai empty block if ethclient sanity check fails
+* [1661](https://github.com/zeta-chain/node/issues/1661) - use estimated SegWit tx size for Bitcoin gas fee calculation
+* [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
+* [1675](https://github.com/zeta-chain/node/issues/1675) - use chain param ConfirmationCount for bitcoin confirmation
 
 ## Version: v12.1.0
 
 ### Tests
+
 * [1577](https://github.com/zeta-chain/node/pull/1577) - add chain header tests in E2E tests and fix admin tests
 
 ### Features
-* [1658](https://github.com/zeta-chain/node/pull/1658) - modify emission distribution to use fixed block rewards 
+* [1658](https://github.com/zeta-chain/node/pull/1658) - modify emission distribution to use fixed block rewards
+
 ### Fixes
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
