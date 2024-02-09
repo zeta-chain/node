@@ -1,6 +1,7 @@
 package emissions_test
 
 import (
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +16,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestDistributeObserverRewards(t *testing.T) {
+func TestBeginBlocker(t *testing.T) {
 	// setup the test
 	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
 	observerSet := sample.ObserverSet(10)
@@ -74,4 +75,45 @@ func TestDistributeObserverRewards(t *testing.T) {
 		totalDistributedTillLastBlock = totalDistributedTillCurrentBlock
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	}
+}
+
+func TestDistributeValidatorRewards(t *testing.T) {
+	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
+	observerSet := make([]string, 10)
+	for i := 0; i < 10; i++ {
+		validator := sample.Validator(t, rand.New(rand.NewSource(int64(i))))
+		validator.Tokens = sample.IntInRange(100000, 100000000)
+		sk.StakingKeeper.SetValidator(ctx, validator)
+		observerSet[i] = validator.OperatorAddress
+	}
+	zk.ObserverKeeper.SetObserverSet(ctx, observerTypes.ObserverSet{
+		ObserverList: observerSet,
+	})
+	_ = sk.StakingKeeper.GetAllValidators(ctx)
+
+	// Total block rewards is the fixed amount of rewards that are distributed
+	totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+	rewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+	assert.NoError(t, err)
+	// Fund the emission pool to start the emission process
+	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, rewardCoins)
+	assert.NoError(t, err)
+
+	// Setup module accounts for emission pools
+	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
+	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
+	feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
+	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
+	blockRewards := emissionstypes.BlockReward
+	// Produce blocks and distribute rewards
+	for i := 0; i < 100; i++ {
+		validatorRewards := sdk.MustNewDecFromStr(k.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
+		// produce a block
+		emissionsModule.BeginBlocker(ctx, *k)
+		feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
+		assert.Equal(t, validatorRewards, feeCollecterBalance)
+
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	}
+
 }
