@@ -2,7 +2,7 @@ version: '3'
 
 services:
   bitcoin:
-    image: zetachain/bitcoin:29-mainnet
+    image: zetachain/bitcoin:35-mainnet
     platform: linux/amd64
     environment:
       - bitcoin_username=test
@@ -10,10 +10,12 @@ services:
       - NETWORK_HEIGHT_URL=https://blockstream.info/api/blocks/tip/height
       - WALLET_NAME=tssMainnet
       - WALLET_ADDRESS=bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y
-      - SNAPSHOT_URL=https://storage.googleapis.com/archive-rpc-snapshots-zetachain-dev/bitcoin.tar
+      - SNAPSHOT_URL=https://storage.googleapis.com/bitcoin-rpc-snapshots-prod/bitcoin.tar
       - SNAPSHOT_RESTORE=true
+      - CLEAN_SNAPSHOT=true
+      - DOWNLOAD_SNAPSHOT=true
     volumes:
-      - bitcoin_data:/root/.bitcoin/
+      - bitcoin_data:/root/
     ports:
       - 8332:8332
 
