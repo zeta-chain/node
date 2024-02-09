@@ -5,7 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -22,11 +22,11 @@ func TestMigrateObserverMapper(t *testing.T) {
 			legacyObserverMapperStore.Set(types.KeyPrefix(legacyObserverMapper.Index), k.Codec().MustMarshal(legacyObserverMapper))
 		}
 		err := v5.MigrateObserverMapper(ctx, k.StoreKey(), k.Codec())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		observerSet, found := k.GetObserverSet(ctx)
-		assert.True(t, found)
+		require.True(t, found)
 
-		assert.Equal(t, legacyObserverMapperList[0].ObserverList, observerSet.ObserverList)
+		require.Equal(t, legacyObserverMapperList[0].ObserverList, observerSet.ObserverList)
 		iterator := sdk.KVStorePrefixIterator(legacyObserverMapperStore, []byte{})
 		defer iterator.Close()
 
@@ -38,7 +38,7 @@ func TestMigrateObserverMapper(t *testing.T) {
 				observerMappers = append(observerMappers, &val)
 			}
 		}
-		assert.Equal(t, 0, len(observerMappers))
+		require.Equal(t, 0, len(observerMappers))
 	})
 }
 
@@ -58,13 +58,13 @@ func TestMigrateObserverParams(t *testing.T) {
 
 	// set observer params
 	dec42, err := sdk.NewDecFromStr("0.42")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	dec43, err := sdk.NewDecFromStr("0.43")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	dec1000, err := sdk.NewDecFromStr("1000.0")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	dec1001, err := sdk.NewDecFromStr("1001.0")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	params := types.Params{
 		ObserverParams: []*types.ObserverParams{
 			{
@@ -85,23 +85,23 @@ func TestMigrateObserverParams(t *testing.T) {
 
 	// perform migration
 	err = v5.MigrateObserverParams(ctx, *k)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// check chain params
 	newChainParamsList, found := k.GetChainParamsList(ctx)
-	assert.True(t, found)
+	require.True(t, found)
 
 	// unchanged values
-	assert.EqualValues(t, previousChainParamsList.ChainParams[0], newChainParamsList.ChainParams[0])
-	assert.EqualValues(t, previousChainParamsList.ChainParams[3], newChainParamsList.ChainParams[3])
+	require.EqualValues(t, previousChainParamsList.ChainParams[0], newChainParamsList.ChainParams[0])
+	require.EqualValues(t, previousChainParamsList.ChainParams[3], newChainParamsList.ChainParams[3])
 
 	// changed values
-	assert.EqualValues(t, dec42, newChainParamsList.ChainParams[1].BallotThreshold)
-	assert.EqualValues(t, dec1000, newChainParamsList.ChainParams[1].MinObserverDelegation)
-	assert.EqualValues(t, dec43, newChainParamsList.ChainParams[2].BallotThreshold)
-	assert.EqualValues(t, dec1001, newChainParamsList.ChainParams[2].MinObserverDelegation)
-	assert.True(t, newChainParamsList.ChainParams[1].IsSupported)
-	assert.True(t, newChainParamsList.ChainParams[2].IsSupported)
+	require.EqualValues(t, dec42, newChainParamsList.ChainParams[1].BallotThreshold)
+	require.EqualValues(t, dec1000, newChainParamsList.ChainParams[1].MinObserverDelegation)
+	require.EqualValues(t, dec43, newChainParamsList.ChainParams[2].BallotThreshold)
+	require.EqualValues(t, dec1001, newChainParamsList.ChainParams[2].MinObserverDelegation)
+	require.True(t, newChainParamsList.ChainParams[1].IsSupported)
+	require.True(t, newChainParamsList.ChainParams[2].IsSupported)
 
 	// check remaining values are unchanged
 	previousChainParamsList.ChainParams[1].BallotThreshold = dec42
@@ -110,6 +110,6 @@ func TestMigrateObserverParams(t *testing.T) {
 	previousChainParamsList.ChainParams[2].MinObserverDelegation = dec1001
 	previousChainParamsList.ChainParams[1].IsSupported = true
 	previousChainParamsList.ChainParams[2].IsSupported = true
-	assert.EqualValues(t, previousChainParamsList.ChainParams[1], newChainParamsList.ChainParams[1])
-	assert.EqualValues(t, previousChainParamsList.ChainParams[2], newChainParamsList.ChainParams[2])
+	require.EqualValues(t, previousChainParamsList.ChainParams[1], newChainParamsList.ChainParams[1])
+	require.EqualValues(t, previousChainParamsList.ChainParams[2], newChainParamsList.ChainParams[2])
 }

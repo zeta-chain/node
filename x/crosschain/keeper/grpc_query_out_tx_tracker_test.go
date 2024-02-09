@@ -39,10 +39,10 @@ package keeper_test
 //		t.Run(tc.desc, func(t *testing.T) {
 //			response, err := keeper.OutTxTracker(wctx, tc.request)
 //			if tc.err != nil {
-//				assert.ErrorIs(t, err, tc.err)
+//				require.ErrorIs(t, err, tc.err)
 //			} else {
-//				assert.NoError(t, err)
-//				assert.Equal(t,
+//				require.NoError(t, err)
+//				require.Equal(t,
 //					nullify.Fill(tc.response),
 //					nullify.Fill(response),
 //				)
@@ -70,9 +70,9 @@ package keeper_test
 //		step := 2
 //		for i := 0; i < len(msgs); i += step {
 //			resp, err := keeper.OutTxTrackerAll(wctx, request(nil, uint64(i), uint64(step), false))
-//			assert.NoError(t, err)
-//			assert.LessOrEqual(t, len(resp.OutTxTracker), step)
-//			assert.Subset(t,
+//			require.NoError(t, err)
+//			require.LessOrEqual(t, len(resp.OutTxTracker), step)
+//			require.Subset(t,
 //				nullify.Fill(msgs),
 //				nullify.Fill(resp.OutTxTracker),
 //			)
@@ -83,9 +83,9 @@ package keeper_test
 //		var next []byte
 //		for i := 0; i < len(msgs); i += step {
 //			resp, err := keeper.OutTxTrackerAll(wctx, request(next, 0, uint64(step), false))
-//			assert.NoError(t, err)
-//			assert.LessOrEqual(t, len(resp.OutTxTracker), step)
-//			assert.Subset(t,
+//			require.NoError(t, err)
+//			require.LessOrEqual(t, len(resp.OutTxTracker), step)
+//			require.Subset(t,
 //				nullify.Fill(msgs),
 //				nullify.Fill(resp.OutTxTracker),
 //			)
@@ -94,15 +94,15 @@ package keeper_test
 //	})
 //	t.Run("Total", func(t *testing.T) {
 //		resp, err := keeper.OutTxTrackerAll(wctx, request(nil, 0, 0, true))
-//		assert.NoError(t, err)
-//		assert.Equal(t, len(msgs), int(resp.Pagination.Total))
-//		assert.ElementsMatch(t,
+//		require.NoError(t, err)
+//		require.Equal(t, len(msgs), int(resp.Pagination.Total))
+//		require.ElementsMatch(t,
 //			nullify.Fill(msgs),
 //			nullify.Fill(resp.OutTxTracker),
 //		)
 //	})
 //	t.Run("InvalidRequest", func(t *testing.T) {
 //		_, err := keeper.OutTxTrackerAll(wctx, nil)
-//		assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+//		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 //	})
 //}

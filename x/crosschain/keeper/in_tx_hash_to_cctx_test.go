@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -30,8 +30,8 @@ func TestInTxHashToCctxGet(t *testing.T) {
 		rst, found := keeper.GetInTxHashToCctx(ctx,
 			item.InTxHash,
 		)
-		assert.True(t, found)
-		assert.Equal(t,
+		require.True(t, found)
+		require.Equal(t,
 			nullify.Fill(&item),
 			nullify.Fill(&rst),
 		)
@@ -47,14 +47,14 @@ func TestInTxHashToCctxRemove(t *testing.T) {
 		_, found := keeper.GetInTxHashToCctx(ctx,
 			item.InTxHash,
 		)
-		assert.False(t, found)
+		require.False(t, found)
 	}
 }
 
 func TestInTxHashToCctxGetAll(t *testing.T) {
 	keeper, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	items := createNInTxHashToCctx(keeper, ctx, 10)
-	assert.ElementsMatch(t,
+	require.ElementsMatch(t,
 		nullify.Fill(items),
 		nullify.Fill(keeper.GetAllInTxHashToCctx(ctx)),
 	)

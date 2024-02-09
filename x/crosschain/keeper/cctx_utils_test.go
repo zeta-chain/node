@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -44,12 +44,12 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// check amount deposited in balance
 		balance, err := zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(42), balance.Uint64())
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), balance.Uint64())
 
 		// can refund again
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
@@ -61,10 +61,10 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		balance, err = zk.FungibleKeeper.BalanceOfZRC4(ctx, zrc20Addr, sender)
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(84), balance.Uint64())
+		require.NoError(t, err)
+		require.Equal(t, uint64(84), balance.Uint64())
 	})
 
 	t.Run("should fail with invalid cctx", func(t *testing.T) {
@@ -76,7 +76,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.ErrorContains(t, err, "unsupported coin type")
+		require.ErrorContains(t, err, "unsupported coin type")
 
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -84,7 +84,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.ErrorContains(t, err, "unsupported coin type")
+		require.ErrorContains(t, err, "unsupported coin type")
 
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -93,7 +93,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.ErrorContains(t, err, "only EVM chains are supported")
+		require.ErrorContains(t, err, "only EVM chains are supported")
 
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -103,7 +103,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.ErrorContains(t, err, "invalid sender address")
+		require.ErrorContains(t, err, "invalid sender address")
 
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -114,7 +114,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 		},
 			math.Uint{},
 		)
-		assert.ErrorContains(t, err, "no amount to refund")
+		require.ErrorContains(t, err, "no amount to refund")
 
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -124,7 +124,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.ZeroUint(),
 		)
-		assert.ErrorContains(t, err, "no amount to refund")
+		require.ErrorContains(t, err, "no amount to refund")
 
 		// the foreign coin has not been set
 		err = k.RefundAmountOnZetaChain(ctx, types.CrossChainTx{
@@ -136,7 +136,7 @@ func TestKeeper_RefundAmountOnZetaChain(t *testing.T) {
 			}},
 			math.NewUint(42),
 		)
-		assert.ErrorContains(t, err, "zrc not found")
+		require.ErrorContains(t, err, "zrc not found")
 	})
 }
 
@@ -145,8 +145,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{})
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(0), gasLimit)
+		require.NoError(t, err)
+		require.Equal(t, uint64(0), gasLimit)
 	})
 
 	t.Run("should return 0 if coin type is not gas or erc20", func(t *testing.T) {
@@ -156,8 +156,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: common.CoinType_Zeta,
 			}})
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(0), gasLimit)
+		require.NoError(t, err)
+		require.Equal(t, uint64(0), gasLimit)
 	})
 
 	t.Run("should return the gas limit of the gas token", func(t *testing.T) {
@@ -169,15 +169,15 @@ func TestGetRevertGasLimit(t *testing.T) {
 		gas := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foo", "FOO")
 
 		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, gas, big.NewInt(42))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      common.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(42), gasLimit)
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), gasLimit)
 	})
 
 	t.Run("should return the gas limit of the associated asset", func(t *testing.T) {
@@ -199,7 +199,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		)
 
 		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, zrc20Addr, big.NewInt(42))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
@@ -207,8 +207,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(42), gasLimit)
+		require.NoError(t, err)
+		require.Equal(t, uint64(42), gasLimit)
 	})
 
 	t.Run("should fail if no gas coin found", func(t *testing.T) {
@@ -219,7 +219,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 				CoinType:      common.CoinType_Gas,
 				SenderChainId: 999999,
 			}})
-		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 
 	t.Run("should fail if query gas limit for gas coin fails", func(t *testing.T) {
@@ -240,7 +240,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 				CoinType:      common.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
-		assert.ErrorIs(t, err, fungibletypes.ErrContractCall)
+		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
 	})
 
 	t.Run("should fail if no asset found", func(t *testing.T) {
@@ -251,7 +251,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 				CoinType:      common.CoinType_ERC20,
 				SenderChainId: 999999,
 			}})
-		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 
 	t.Run("should fail if query gas limit for asset fails", func(t *testing.T) {
@@ -275,6 +275,6 @@ func TestGetRevertGasLimit(t *testing.T) {
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
-		assert.ErrorIs(t, err, fungibletypes.ErrContractCall)
+		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
 	})
 }

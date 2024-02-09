@@ -9,7 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -24,10 +24,10 @@ func TestMigrateStore(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		amountZeta := SetRandomCctx(ctx, *k)
 		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		zetaAccounting, found := k.GetZetaAccounting(ctx)
-		assert.True(t, found)
-		assert.Equal(t, amountZeta, zetaAccounting.AbortedZetaAmount)
+		require.True(t, found)
+		require.Equal(t, amountZeta, zetaAccounting.AbortedZetaAmount)
 	})
 	t.Run("test migrate store move tss from cross chain to observer", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -45,15 +45,15 @@ func TestMigrateStore(t *testing.T) {
 		store.Set(observertypes.KeyPrefix(fmt.Sprintf("%d", tss2.FinalizedZetaHeight)), tss2Bytes)
 
 		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		tss, found := zk.ObserverKeeper.GetTSS(ctx)
-		assert.True(t, found)
-		assert.Equal(t, tss1, tss)
+		require.True(t, found)
+		require.Equal(t, tss1, tss)
 		tssHistory := k.GetObserverKeeper().GetAllTSS(ctx)
-		assert.Equal(t, 2, len(tssHistory))
-		assert.Equal(t, tss1, tssHistory[0])
-		assert.Equal(t, tss2, tssHistory[1])
+		require.Equal(t, 2, len(tssHistory))
+		require.Equal(t, tss1, tssHistory[0])
+		require.Equal(t, tss2, tssHistory[1])
 	})
 	t.Run("test migrate store move nonce from cross chain to observer", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
@@ -73,18 +73,18 @@ func TestMigrateStore(t *testing.T) {
 			store.Set(types.KeyPrefix(fmt.Sprintf("%s-%d-%d", nonce.Tss, nonce.ChainId, nonce.Nonce)), k.GetCodec().MustMarshal(&nonce))
 		}
 		err := v4.MigrateStore(ctx, k.GetObserverKeeper(), k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		pn, err := k.GetObserverKeeper().GetAllPendingNonces(ctx)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sort.Slice(pn, func(i, j int) bool {
 			return pn[i].ChainId < pn[j].ChainId
 		})
 		sort.Slice(pendingNonces, func(i, j int) bool {
 			return pendingNonces[i].ChainId < pendingNonces[j].ChainId
 		})
-		assert.Equal(t, pendingNonces, pn)
-		assert.Equal(t, chainNonces, k.GetObserverKeeper().GetAllChainNonces(ctx))
-		assert.Equal(t, nonceToCctxList, k.GetObserverKeeper().GetAllNonceToCctx(ctx))
+		require.Equal(t, pendingNonces, pn)
+		require.Equal(t, chainNonces, k.GetObserverKeeper().GetAllChainNonces(ctx))
+		require.Equal(t, nonceToCctxList, k.GetObserverKeeper().GetAllNonceToCctx(ctx))
 	})
 }
 
@@ -147,13 +147,13 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		assert.False(t, k.IsFinalizedInbound(ctx, "0xaaa", common.GoerliChain().ChainId, 0))
-		assert.False(t, k.IsFinalizedInbound(ctx, "0xbbb", common.EthChain().ChainId, 0))
-		assert.False(t, k.IsFinalizedInbound(ctx, "0xccc", common.MumbaiChain().ChainId, 0))
-		assert.True(t, k.IsFinalizedInbound(ctx, "0x111", common.BtcMainnetChain().ChainId, 0))
-		assert.True(t, k.IsFinalizedInbound(ctx, "0x222", common.BtcTestNetChain().ChainId, 0))
-		assert.True(t, k.IsFinalizedInbound(ctx, "0x333", common.BtcTestNetChain().ChainId, 0))
-		assert.True(t, k.IsFinalizedInbound(ctx, "0x444", common.BtcRegtestChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", common.GoerliChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", common.EthChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", common.MumbaiChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x111", common.BtcMainnetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x222", common.BtcTestNetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x333", common.BtcTestNetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x444", common.BtcRegtestChain().ChainId, 0))
 
 	})
 }

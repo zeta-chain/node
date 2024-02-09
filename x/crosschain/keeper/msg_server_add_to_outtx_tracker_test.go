@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/ethereum"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -25,7 +25,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, 0)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -38,9 +38,9 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   0,
 			Nonce:     0,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		_, found := k.GetOutTxTracker(ctx, chainID, 0)
-		assert.True(t, found)
+		require.True(t, found)
 	})
 	t.Run("unable to add tracker admin exceeding maximum allowed length of hashlist without proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -48,7 +48,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, 0)
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
@@ -77,17 +77,17 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   0,
 			Nonce:     0,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tracker, found := k.GetOutTxTracker(ctx, chainID, 0)
-		assert.True(t, found)
-		assert.Equal(t, 2, len(tracker.HashList))
+		require.True(t, found)
+		require.Equal(t, 2, len(tracker.HashList))
 	})
 
 	t.Run("fail add proof based tracker with wrong chainID", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -100,16 +100,16 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("fail add proof based tracker with wrong nonce", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, 1)
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -122,16 +122,16 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     1,
 		})
-		assert.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, 1)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("fail add proof based tracker with wrong tx_hash", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -144,16 +144,16 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("fail proof based tracker with incorrect proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, _, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -166,15 +166,15 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.ErrorIs(t, err, types.ErrProofVerificationFail)
+		require.ErrorIs(t, err, types.ErrProofVerificationFail)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("add proof based tracker with correct proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -187,15 +187,15 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		_, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.True(t, found)
+		require.True(t, found)
 	})
 	t.Run("add proven txHash even if length of hashList is already 2", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
@@ -224,20 +224,20 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tracker, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.True(t, found)
-		assert.Equal(t, 3, len(tracker.HashList))
+		require.True(t, found)
+		require.Equal(t, 3, len(tracker.HashList))
 		// Proven tracker is prepended to the list
-		assert.True(t, tracker.HashList[0].Proved)
-		assert.False(t, tracker.HashList[1].Proved)
-		assert.False(t, tracker.HashList[2].Proved)
+		require.True(t, tracker.HashList[0].Proved)
+		require.False(t, tracker.HashList[1].Proved)
+		require.False(t, tracker.HashList[2].Proved)
 	})
 	t.Run("add proof for existing txHash", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getEthereumChainID()
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		setupTssAndNonceToCctx(k, ctx, chainID, int64(tx.Nonce()))
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
@@ -252,8 +252,8 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			},
 		})
 		tracker, found := k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.True(t, found)
-		assert.False(t, tracker.HashList[0].Proved)
+		require.True(t, found)
+		require.False(t, tracker.HashList[0].Proved)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
 			Creator:   sample.AccAddress(),
@@ -264,11 +264,11 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 			TxIndex:   txIndex,
 			Nonce:     tx.Nonce(),
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tracker, found = k.GetOutTxTracker(ctx, chainID, tx.Nonce())
-		assert.True(t, found)
-		assert.Equal(t, 1, len(tracker.HashList))
-		assert.True(t, tracker.HashList[0].Proved)
+		require.True(t, found)
+		require.Equal(t, 1, len(tracker.HashList))
+		require.True(t, tracker.HashList[0].Proved)
 	})
 }
 

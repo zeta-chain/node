@@ -8,8 +8,8 @@ import (
 
 	"cosmossdk.io/math"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -41,8 +41,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			nil,
 		)
-		assert.NoError(t, err)
-		assert.False(t, reverted)
+		require.NoError(t, err)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -70,8 +70,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			nil,
 		)
-		assert.ErrorIs(t, err, errDeposit)
-		assert.False(t, reverted)
+		require.ErrorIs(t, err, errDeposit)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -114,8 +114,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.NoError(t, err)
-		assert.False(t, reverted)
+		require.NoError(t, err)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -159,8 +159,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, errDeposit)
-		assert.False(t, reverted)
+		require.ErrorIs(t, err, errDeposit)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -204,8 +204,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, errDeposit)
-		assert.True(t, reverted)
+		require.ErrorIs(t, err, errDeposit)
+		require.True(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -248,8 +248,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, fungibletypes.ErrForeignCoinCapReached)
-		assert.True(t, reverted)
+		require.ErrorIs(t, err, fungibletypes.ErrForeignCoinCapReached)
+		require.True(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -292,8 +292,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, fungibletypes.ErrPausedZRC20)
-		assert.True(t, reverted)
+		require.ErrorIs(t, err, fungibletypes.ErrPausedZRC20)
+		require.True(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -334,8 +334,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, fungibletypes.ErrCallNonContract)
-		assert.True(t, reverted)
+		require.ErrorIs(t, err, fungibletypes.ErrCallNonContract)
+		require.True(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -358,7 +358,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.ErrorIs(t, err, types.ErrUnableToParseAddress)
+		require.ErrorIs(t, err, types.ErrUnableToParseAddress)
 	})
 
 	t.Run("should deposit into address if address is parsed", func(t *testing.T) {
@@ -373,7 +373,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		data, err := hex.DecodeString("DEADBEEF")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
 			ctx,
@@ -399,8 +399,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.NoError(t, err)
-		assert.False(t, reverted)
+		require.NoError(t, err)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 
@@ -416,7 +416,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		amount := big.NewInt(42)
 
 		data, err := hex.DecodeString("DEADBEEF")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		fungibleMock.On(
 			"ZRC20DepositAndCallContract",
 			ctx,
@@ -442,8 +442,8 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			},
 			senderChain,
 		)
-		assert.NoError(t, err)
-		assert.False(t, reverted)
+		require.NoError(t, err)
+		require.False(t, reverted)
 		fungibleMock.AssertExpectations(t)
 	})
 

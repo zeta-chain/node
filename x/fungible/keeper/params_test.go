@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -14,5 +14,5 @@ func TestGetParams(t *testing.T) {
 
 	k.SetParams(ctx, params)
 
-	assert.EqualValues(t, params, k.GetParams(ctx))
+	require.EqualValues(t, params, k.GetParams(ctx))
 }

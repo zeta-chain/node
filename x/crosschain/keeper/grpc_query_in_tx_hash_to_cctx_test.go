@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -58,10 +58,10 @@ func TestInTxHashToCctxQuerySingle(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.InTxHashToCctx(wctx, tc.request)
 			if tc.err != nil {
-				assert.ErrorIs(t, err, tc.err)
+				require.ErrorIs(t, err, tc.err)
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t,
+				require.NoError(t, err)
+				require.Equal(t,
 					nullify.Fill(tc.response),
 					nullify.Fill(response),
 				)
@@ -89,9 +89,9 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.InTxHashToCctxAll(wctx, request(nil, uint64(i), uint64(step), false))
-			assert.NoError(t, err)
-			assert.LessOrEqual(t, len(resp.InTxHashToCctx), step)
-			assert.Subset(t,
+			require.NoError(t, err)
+			require.LessOrEqual(t, len(resp.InTxHashToCctx), step)
+			require.Subset(t,
 				nullify.Fill(msgs),
 				nullify.Fill(resp.InTxHashToCctx),
 			)
@@ -102,9 +102,9 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.InTxHashToCctxAll(wctx, request(next, 0, uint64(step), false))
-			assert.NoError(t, err)
-			assert.LessOrEqual(t, len(resp.InTxHashToCctx), step)
-			assert.Subset(t,
+			require.NoError(t, err)
+			require.LessOrEqual(t, len(resp.InTxHashToCctx), step)
+			require.Subset(t,
 				nullify.Fill(msgs),
 				nullify.Fill(resp.InTxHashToCctx),
 			)
@@ -113,16 +113,16 @@ func TestInTxHashToCctxQueryPaginated(t *testing.T) {
 	})
 	t.Run("Total", func(t *testing.T) {
 		resp, err := keeper.InTxHashToCctxAll(wctx, request(nil, 0, 0, true))
-		assert.NoError(t, err)
-		assert.Equal(t, len(msgs), int(resp.Pagination.Total))
-		assert.ElementsMatch(t,
+		require.NoError(t, err)
+		require.Equal(t, len(msgs), int(resp.Pagination.Total))
+		require.ElementsMatch(t,
 			nullify.Fill(msgs),
 			nullify.Fill(resp.InTxHashToCctx),
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
 		_, err := keeper.InTxHashToCctxAll(wctx, nil)
-		assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }
 
@@ -157,10 +157,10 @@ func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 			InTxHash: inTxHashToCctx.InTxHash,
 		}
 		res, err := keeper.InTxHashToCctxData(wctx, req)
-		assert.NoError(t, err)
-		assert.Equal(t, len(cctxs), len(res.CrossChainTxs))
+		require.NoError(t, err)
+		require.Equal(t, len(cctxs), len(res.CrossChainTxs))
 		for i := range cctxs {
-			assert.Equal(t, nullify.Fill(cctxs[i]), nullify.Fill(res.CrossChainTxs[i]))
+			require.Equal(t, nullify.Fill(cctxs[i]), nullify.Fill(res.CrossChainTxs[i]))
 		}
 	})
 	t.Run("in tx hash not found", func(t *testing.T) {
@@ -168,7 +168,7 @@ func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 			InTxHash: "notfound",
 		}
 		_, err := keeper.InTxHashToCctxData(wctx, req)
-		assert.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
+		require.ErrorIs(t, err, status.Error(codes.NotFound, "not found"))
 	})
 	t.Run("cctx not indexed return internal error", func(t *testing.T) {
 		keeper.SetInTxHashToCctx(ctx, types.InTxHashToCctx{
@@ -180,6 +180,6 @@ func TestKeeper_InTxHashToCctxDataQuery(t *testing.T) {
 			InTxHash: "nocctx",
 		}
 		_, err := keeper.InTxHashToCctxData(wctx, req)
-		assert.ErrorIs(t, err, status.Error(codes.Internal, "cctx indexed notfound doesn't exist"))
+		require.ErrorIs(t, err, status.Error(codes.Internal, "cctx indexed notfound doesn't exist"))
 	})
 }

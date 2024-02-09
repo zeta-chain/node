@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -68,12 +68,12 @@ func TestKeeper_GetGasCoinForForeignCoin(t *testing.T) {
 	)
 
 	fc, found := k.GetGasCoinForForeignCoin(ctx, 1)
-	assert.True(t, found)
-	assert.Equal(t, "bar", fc.Name)
+	require.True(t, found)
+	require.Equal(t, "bar", fc.Name)
 	fc, found = k.GetGasCoinForForeignCoin(ctx, 2)
-	assert.False(t, found)
+	require.False(t, found)
 	fc, found = k.GetGasCoinForForeignCoin(ctx, 3)
-	assert.False(t, found)
+	require.False(t, found)
 }
 
 func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
@@ -122,16 +122,16 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 		)
 
 		fc, found := k.GetForeignCoinFromAsset(ctx, gasAsset, 1)
-		assert.True(t, found)
-		assert.Equal(t, "bar", fc.Name)
+		require.True(t, found)
+		require.Equal(t, "bar", fc.Name)
 		fc, found = k.GetForeignCoinFromAsset(ctx, sample.EthAddress().String(), 1)
-		assert.False(t, found)
+		require.False(t, found)
 		fc, found = k.GetForeignCoinFromAsset(ctx, "invalid_address", 1)
-		assert.False(t, found)
+		require.False(t, found)
 		fc, found = k.GetForeignCoinFromAsset(ctx, gasAsset, 2)
-		assert.False(t, found)
+		require.False(t, found)
 		fc, found = k.GetForeignCoinFromAsset(ctx, gasAsset, 3)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("can get foreign coin with non-checksum address", func(t *testing.T) {
@@ -148,7 +148,7 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 		)
 
 		fc, found := k.GetForeignCoinFromAsset(ctx, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 1)
-		assert.True(t, found)
-		assert.Equal(t, "foo", fc.Name)
+		require.True(t, found)
+		require.Equal(t, "foo", fc.Name)
 	})
 }

@@ -6,7 +6,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCheckEvmTxLog(t *testing.T) {
@@ -92,10 +92,10 @@ func TestCheckEvmTxLog(t *testing.T) {
 				TopicsZetaSent,
 			)
 			if tt.fail {
-				assert.Error(t, err)
+				require.Error(t, err)
 				return
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

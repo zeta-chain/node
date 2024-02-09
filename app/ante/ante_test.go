@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -226,7 +226,7 @@ func TestIsSystemTx(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			is := ante.IsSystemTx(tt.tx, tt.isAuthorized)
-			assert.Equal(t, tt.wantIs, is)
+			require.Equal(t, tt.wantIs, is)
 		})
 	}
 }

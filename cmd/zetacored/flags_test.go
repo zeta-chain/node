@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	zetacore "github.com/zeta-chain/zetacore/cmd/zetacored"
 )
 
@@ -78,14 +78,14 @@ func TestReplaceFlag(t *testing.T) {
 			err := zetacore.ReplaceFlag(tt.cmd, tt.subCommand, tt.flagName, tt.newDefaultValue)
 
 			if tt.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				// Check if the value was replaced correctly
 				c, _, _ := tt.cmd.Find(tt.subCommand)
 				f := c.Flags().Lookup(tt.flagName)
-				assert.Equal(t, tt.expectedValue, f.DefValue)
+				require.Equal(t, tt.expectedValue, f.DefValue)
 			}
 		})
 	}

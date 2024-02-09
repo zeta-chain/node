@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -20,12 +20,12 @@ func TestKeeper_MintZetaToEVMAccount(t *testing.T) {
 
 		acc := sample.Bech32AccAddress()
 		bal := sdkk.BankKeeper.GetBalance(ctx, acc, config.BaseDenom)
-		assert.True(t, bal.IsZero())
+		require.True(t, bal.IsZero())
 
 		err := k.MintZetaToEVMAccount(ctx, acc, big.NewInt(42))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		bal = sdkk.BankKeeper.GetBalance(ctx, acc, config.BaseDenom)
-		assert.True(t, bal.Amount.Equal(sdk.NewInt(42)))
+		require.True(t, bal.Amount.Equal(sdk.NewInt(42)))
 	})
 
 	coins42 := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(42)))
@@ -43,7 +43,7 @@ func TestKeeper_MintZetaToEVMAccount(t *testing.T) {
 		).Return(errors.New("error"))
 
 		err := k.MintZetaToEVMAccount(ctx, sample.Bech32AccAddress(), big.NewInt(42))
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		mockBankKeeper.AssertExpectations(t)
 	})
@@ -70,7 +70,7 @@ func TestKeeper_MintZetaToEVMAccount(t *testing.T) {
 		).Return(errors.New("error"))
 
 		err := k.MintZetaToEVMAccount(ctx, acc, big.NewInt(42))
-		assert.Error(t, err)
+		require.Error(t, err)
 
 		mockBankKeeper.AssertExpectations(t)
 	})

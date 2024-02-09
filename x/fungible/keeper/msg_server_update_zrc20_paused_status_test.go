@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -20,13 +20,13 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 
 		assertUnpaused := func(zrc20 string) {
 			fc, found := k.GetForeignCoins(ctx, zrc20)
-			assert.True(t, found)
-			assert.False(t, fc.Paused)
+			require.True(t, found)
+			require.False(t, fc.Paused)
 		}
 		assertPaused := func(zrc20 string) {
 			fc, found := k.GetForeignCoins(ctx, zrc20)
-			assert.True(t, found)
-			assert.True(t, fc.Paused)
+			require.True(t, found)
+			require.True(t, fc.Paused)
 		}
 
 		// setup zrc20
@@ -49,7 +49,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
@@ -64,7 +64,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
@@ -79,7 +79,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
@@ -94,7 +94,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
@@ -111,7 +111,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertPaused(zrc20A)
 		assertPaused(zrc20B)
 		assertPaused(zrc20C)
@@ -128,7 +128,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assertUnpaused(zrc20A)
 		assertUnpaused(zrc20B)
 		assertUnpaused(zrc20C)
@@ -141,10 +141,10 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		invalidMsg := types.NewMsgUpdateZRC20PausedStatus(admin, []string{}, types.UpdatePausedStatusAction_PAUSE)
-		assert.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
+		require.ErrorIs(t, invalidMsg.ValidateBasic(), sdkerrors.ErrInvalidRequest)
 
 		_, err := msgServer.UpdateZRC20PausedStatus(ctx, invalidMsg)
-		assert.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 
 	t.Run("should fail if not authorized", func(t *testing.T) {
@@ -166,7 +166,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
 
-		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {
@@ -188,6 +188,6 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
-		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 }

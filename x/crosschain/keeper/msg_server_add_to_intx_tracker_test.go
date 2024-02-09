@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -19,7 +19,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := int64(5)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
@@ -31,16 +31,16 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-		assert.True(t, found)
+		require.True(t, found)
 	})
 
 	t.Run("fail to add proof based tracker with wrong tx hash", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getValidEthChainID(t)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
@@ -52,16 +52,16 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		assert.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
+		require.ErrorIs(t, err, types.ErrTxBodyVerificationFail)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-		assert.False(t, found)
+		require.False(t, found)
 	})
 
 	t.Run("fail to add proof based tracker with wrong chain id", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		chainID := getValidEthChainID(t)
 		txIndex, block, header, headerRLP, proof, tx, err := sample.Proof()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		setupVerificationParams(zk, ctx, txIndex, chainID, header, headerRLP, block)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_, err = msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
@@ -73,9 +73,9 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: block.Hash().Hex(),
 			TxIndex:   txIndex,
 		})
-		assert.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 		_, found := k.GetInTxTracker(ctx, chainID, tx.Hash().Hex())
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("fail normal user submit without proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -92,9 +92,9 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		assert.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 	t.Run("admin add  tx tracker", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -113,9 +113,9 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
-		assert.True(t, found)
+		require.True(t, found)
 	})
 	t.Run("admin submit fake tracker", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -134,11 +134,11 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		_, found := k.GetInTxTracker(ctx, chainID, "Malicious TX HASH")
-		assert.True(t, found)
+		require.True(t, found)
 		_, found = k.GetInTxTracker(ctx, chainID, tx_hash)
-		assert.False(t, found)
+		require.False(t, found)
 	})
 }
 

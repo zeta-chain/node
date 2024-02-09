@@ -5,7 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -32,11 +32,11 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.NewUint(42),
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		coin, found := k.GetForeignCoins(ctx, coinAddress)
-		assert.True(t, found)
-		assert.True(t, coin.LiquidityCap.Equal(math.NewUint(42)), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(t, found)
+		require.True(t, coin.LiquidityCap.Equal(math.NewUint(42)), "invalid liquidity cap", coin.LiquidityCap.String())
 
 		// can update liquidity cap again
 		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
@@ -44,11 +44,11 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.NewUint(4200000),
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
-		assert.True(t, found)
-		assert.True(t, coin.LiquidityCap.Equal(math.NewUint(4200000)), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(t, found)
+		require.True(t, coin.LiquidityCap.Equal(math.NewUint(4200000)), "invalid liquidity cap", coin.LiquidityCap.String())
 
 		// can set liquidity cap to 0
 		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
@@ -56,11 +56,11 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.NewUint(0),
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
-		assert.True(t, found)
-		assert.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(t, found)
+		require.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
 
 		// can set liquidity cap to nil
 		_, err = msgServer.UpdateZRC20LiquidityCap(ctx, types.NewMsgUpdateZRC20LiquidityCap(
@@ -68,11 +68,11 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.Uint{},
 		))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		coin, found = k.GetForeignCoins(ctx, coinAddress)
-		assert.True(t, found)
-		assert.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
+		require.True(t, found)
+		require.True(t, coin.LiquidityCap.Equal(math.ZeroUint()), "invalid liquidity cap", coin.LiquidityCap.String())
 	})
 
 	t.Run("should fail if not admin", func(t *testing.T) {
@@ -92,8 +92,8 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.NewUint(42),
 		))
-		assert.Error(t, err)
-		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.Error(t, err)
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {
@@ -109,7 +109,7 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			coinAddress,
 			math.NewUint(42),
 		))
-		assert.Error(t, err)
-		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 }

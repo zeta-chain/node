@@ -3,7 +3,7 @@ package common_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 )
 
@@ -48,10 +48,10 @@ func TestCosmosToEthChainID(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ethChainID, err := common.CosmosToEthChainID(tc.chainID)
 			if tc.isErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
-				assert.Equal(t, tc.expected, ethChainID)
+				require.NoError(t, err)
+				require.Equal(t, tc.expected, ethChainID)
 			}
 		})
 	}

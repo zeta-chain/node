@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,9 +45,9 @@ func TestGasPriceQuerySingle(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.GasPrice(wctx, tc.request)
 			if tc.err != nil {
-				assert.ErrorIs(t, err, tc.err)
+				require.ErrorIs(t, err, tc.err)
 			} else {
-				assert.Equal(t, tc.response, response)
+				require.Equal(t, tc.response, response)
 			}
 		})
 	}
@@ -72,9 +72,9 @@ func TestGasPriceQueryPaginated(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.GasPriceAll(wctx, request(nil, uint64(i), uint64(step), false))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.GasPrice[j-i])
+				require.Equal(t, &msgs[j], resp.GasPrice[j-i])
 			}
 		}
 	})
@@ -83,20 +83,20 @@ func TestGasPriceQueryPaginated(t *testing.T) {
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
 			resp, err := keeper.GasPriceAll(wctx, request(next, 0, uint64(step), false))
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.GasPrice[j-i])
+				require.Equal(t, &msgs[j], resp.GasPrice[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
 		resp, err := keeper.GasPriceAll(wctx, request(nil, 0, 0, true))
-		assert.NoError(t, err)
-		assert.Equal(t, len(msgs), int(resp.Pagination.Total))
+		require.NoError(t, err)
+		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
 		_, err := keeper.GasPriceAll(wctx, nil)
-		assert.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

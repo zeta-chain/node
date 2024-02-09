@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -32,11 +32,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: "cctx_index",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
-		assert.True(t, found)
-		assert.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
-		assert.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
+		require.True(t, found)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
 	t.Run("can abort a cctx in pending outbound", func(t *testing.T) {
@@ -59,11 +59,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: "cctx_index",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
-		assert.True(t, found)
-		assert.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
-		assert.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
+		require.True(t, found)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
 	t.Run("can abort a cctx in pending revert", func(t *testing.T) {
@@ -86,11 +86,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			CctxIndex: "cctx_index",
 		})
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
-		assert.True(t, found)
-		assert.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
-		assert.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
+		require.True(t, found)
+		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
+		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
 	})
 
 	t.Run("cannot abort a cctx in pending outbound if not admin", func(t *testing.T) {
@@ -110,7 +110,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   sample.AccAddress(),
 			CctxIndex: "cctx_index",
 		})
-		assert.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
 	})
 
 	t.Run("cannot abort a cctx if doesn't exist", func(t *testing.T) {
@@ -124,7 +124,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: "cctx_index",
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrCannotFindCctx)
+		require.ErrorIs(t, err, crosschaintypes.ErrCannotFindCctx)
 	})
 
 	t.Run("cannot abort a cctx if not pending", func(t *testing.T) {
@@ -146,6 +146,6 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: "cctx_index",
 		})
-		assert.ErrorIs(t, err, crosschaintypes.ErrStatusNotPending)
+		require.ErrorIs(t, err, crosschaintypes.ErrStatusNotPending)
 	})
 }

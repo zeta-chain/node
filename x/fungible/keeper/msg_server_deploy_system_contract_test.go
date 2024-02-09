@@ -8,7 +8,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -25,8 +25,8 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 
 		res, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
+		require.NoError(t, err)
+		require.NotNil(t, res)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.UniswapV2Factory))
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.Wzeta))
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, ethcommon.HexToAddress(res.UniswapV2Router))
@@ -42,7 +42,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		setAdminPolicies(ctx, zk, nonadmin, observertypes.Policy_Type_group1)
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(nonadmin))
-		assert.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if contract deployment fails", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		).Return(nil, errors.New("failed to estimate gas"))
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to deploy")
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to deploy")
 	})
 }

@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -27,7 +27,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		// check list initially empty
 		_, found := k.GetChainParamsList(ctx)
-		assert.False(t, found)
+		require.False(t, found)
 
 		// a new chain params can be added
 		chainParams1 := sample.ChainParams(chain1)
@@ -35,13 +35,13 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     admin,
 			ChainParams: chainParams1,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// check list has one chain params
 		chainParamsList, found := k.GetChainParamsList(ctx)
-		assert.True(t, found)
-		assert.Len(t, chainParamsList.ChainParams, 1)
-		assert.Equal(t, chainParams1, chainParamsList.ChainParams[0])
+		require.True(t, found)
+		require.Len(t, chainParamsList.ChainParams, 1)
+		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 
 		// a new chian params can be added
 		chainParams2 := sample.ChainParams(chain2)
@@ -49,14 +49,14 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     admin,
 			ChainParams: chainParams2,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// check list has two chain params
 		chainParamsList, found = k.GetChainParamsList(ctx)
-		assert.True(t, found)
-		assert.Len(t, chainParamsList.ChainParams, 2)
-		assert.Equal(t, chainParams1, chainParamsList.ChainParams[0])
-		assert.Equal(t, chainParams2, chainParamsList.ChainParams[1])
+		require.True(t, found)
+		require.Len(t, chainParamsList.ChainParams, 2)
+		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
+		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 
 		// a new chain params can be added
 		chainParams3 := sample.ChainParams(chain3)
@@ -64,15 +64,15 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     admin,
 			ChainParams: chainParams3,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// check list has three chain params
 		chainParamsList, found = k.GetChainParamsList(ctx)
-		assert.True(t, found)
-		assert.Len(t, chainParamsList.ChainParams, 3)
-		assert.Equal(t, chainParams1, chainParamsList.ChainParams[0])
-		assert.Equal(t, chainParams2, chainParamsList.ChainParams[1])
-		assert.Equal(t, chainParams3, chainParamsList.ChainParams[2])
+		require.True(t, found)
+		require.Len(t, chainParamsList.ChainParams, 3)
+		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
+		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
+		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 
 		// chain params can be updated
 		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
@@ -80,15 +80,15 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     admin,
 			ChainParams: chainParams2,
 		})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// check list has three chain params
 		chainParamsList, found = k.GetChainParamsList(ctx)
-		assert.True(t, found)
-		assert.Len(t, chainParamsList.ChainParams, 3)
-		assert.Equal(t, chainParams1, chainParamsList.ChainParams[0])
-		assert.Equal(t, chainParams2, chainParamsList.ChainParams[1])
-		assert.Equal(t, chainParams3, chainParamsList.ChainParams[2])
+		require.True(t, found)
+		require.Len(t, chainParamsList.ChainParams, 3)
+		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
+		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
+		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 	})
 
 	t.Run("cannot update chain params if not authorized", func(t *testing.T) {
@@ -99,7 +99,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     sample.AccAddress(),
 			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
 		})
-		assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 
 		// group 1 should not be able to update chain params
 		admin := sample.AccAddress()
@@ -109,7 +109,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     sample.AccAddress(),
 			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
 		})
-		assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 
 	})
 }

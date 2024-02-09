@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -99,13 +99,13 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 
 			assertUnpaused := func(zrc20 string) {
 				fc, found := k.GetForeignCoins(ctx, zrc20)
-				assert.True(t, found)
-				assert.False(t, fc.Paused)
+				require.True(t, found)
+				require.False(t, fc.Paused)
 			}
 			assertPaused := func(zrc20 string) {
 				fc, found := k.GetForeignCoins(ctx, zrc20)
-				assert.True(t, found)
-				assert.True(t, fc.Paused)
+				require.True(t, found)
+				require.True(t, fc.Paused)
 			}
 
 			// setup ZRC20
@@ -125,9 +125,9 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 			// process test
 			err := k.CheckPausedZRC20(ctx, tc.receipt)
 			if tc.wantErr {
-				assert.ErrorIs(t, err, types.ErrPausedZRC20)
+				require.ErrorIs(t, err, types.ErrPausedZRC20)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

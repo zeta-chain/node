@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"google.golang.org/grpc/codes"
@@ -21,8 +21,8 @@ func TestTSSGet(t *testing.T) {
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
 	tssQueried, found := k.GetTSS(ctx)
-	assert.True(t, found)
-	assert.Equal(t, tss, tssQueried)
+	require.True(t, found)
+	require.Equal(t, tss, tssQueried)
 
 }
 func TestTSSRemove(t *testing.T) {
@@ -31,7 +31,7 @@ func TestTSSRemove(t *testing.T) {
 	k.SetTSS(ctx, tss)
 	k.RemoveTSS(ctx)
 	_, found := k.GetTSS(ctx)
-	assert.False(t, found)
+	require.False(t, found)
 }
 
 func TestTSSQuerySingle(t *testing.T) {
@@ -60,9 +60,9 @@ func TestTSSQuerySingle(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := k.TSS(wctx, tc.request)
 			if tc.err != nil {
-				assert.ErrorIs(t, err, tc.err)
+				require.ErrorIs(t, err, tc.err)
 			} else {
-				assert.Equal(t, tc.response, response)
+				require.Equal(t, tc.response, response)
 			}
 		})
 	}
@@ -100,13 +100,13 @@ func TestTSSQueryHistory(t *testing.T) {
 			request := &types.QueryTssHistoryRequest{}
 			response, err := keeper.TssHistory(wctx, request)
 			if tc.err != nil {
-				assert.ErrorIs(t, err, tc.err)
+				require.ErrorIs(t, err, tc.err)
 			} else {
-				assert.Equal(t, len(tssList), len(response.TssList))
+				require.Equal(t, len(tssList), len(response.TssList))
 				prevTss, found := keeper.GetPreviousTSS(ctx)
-				assert.Equal(t, tc.foundPrevious, found)
+				require.Equal(t, tc.foundPrevious, found)
 				if found {
-					assert.Equal(t, tssList[len(tssList)-2], prevTss)
+					require.Equal(t, tssList[len(tssList)-2], prevTss)
 				}
 			}
 		})
@@ -121,15 +121,15 @@ func TestKeeper_TssHistory(t *testing.T) {
 			k.SetTSSHistory(ctx, tss)
 		}
 		rst, pageRes, err := k.GetAllTSSPaginated(ctx, &query.PageRequest{Limit: 20, CountTotal: true})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sort.Slice(tssList, func(i, j int) bool {
 			return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
 		})
 		sort.Slice(rst, func(i, j int) bool {
 			return rst[i].FinalizedZetaHeight < rst[j].FinalizedZetaHeight
 		})
-		assert.Equal(t, tssList, rst)
-		assert.Equal(t, len(tssList), int(pageRes.Total))
+		require.Equal(t, tssList, rst)
+		require.Equal(t, len(tssList), int(pageRes.Total))
 	})
 	t.Run("Get tss history paginated by offset", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -139,16 +139,16 @@ func TestKeeper_TssHistory(t *testing.T) {
 			k.SetTSSHistory(ctx, tss)
 		}
 		rst, pageRes, err := k.GetAllTSSPaginated(ctx, &query.PageRequest{Offset: uint64(offset), CountTotal: true})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sort.Slice(tssList, func(i, j int) bool {
 			return tssList[i].FinalizedZetaHeight < tssList[j].FinalizedZetaHeight
 		})
 		sort.Slice(rst, func(i, j int) bool {
 			return rst[i].FinalizedZetaHeight < rst[j].FinalizedZetaHeight
 		})
-		assert.Subset(t, tssList, rst)
-		assert.Equal(t, len(tssList)-offset, len(rst))
-		assert.Equal(t, len(tssList), int(pageRes.Total))
+		require.Subset(t, tssList, rst)
+		require.Equal(t, len(tssList)-offset, len(rst))
+		require.Equal(t, len(tssList), int(pageRes.Total))
 	})
 	t.Run("Get all TSS without pagination", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -163,7 +163,7 @@ func TestKeeper_TssHistory(t *testing.T) {
 		sort.Slice(rst, func(i, j int) bool {
 			return rst[i].FinalizedZetaHeight < rst[j].FinalizedZetaHeight
 		})
-		assert.Equal(t, tssList, rst)
+		require.Equal(t, tssList, rst)
 	})
 	t.Run("Get historical TSS", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -173,7 +173,7 @@ func TestKeeper_TssHistory(t *testing.T) {
 		}
 		r := rand.Intn((len(tssList)-1)-0) + 0
 		tss, found := k.GetHistoricalTssByFinalizedHeight(ctx, tssList[r].FinalizedZetaHeight)
-		assert.True(t, found)
-		assert.Equal(t, tssList[r], tss)
+		require.True(t, found)
+		require.Equal(t, tssList[r], tss)
 	})
 }

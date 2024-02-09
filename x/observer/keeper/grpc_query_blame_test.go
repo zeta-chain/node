@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -26,8 +26,8 @@ func TestKeeper_BlameByIdentifier(t *testing.T) {
 	})
 
 	blameRecords, found := k.GetBlame(ctx, index)
-	assert.True(t, found)
-	assert.Equal(t, index, blameRecords.Index)
+	require.True(t, found)
+	require.Equal(t, index, blameRecords.Index)
 }
 
 func TestKeeper_BlameByChainAndNonce(t *testing.T) {
@@ -45,9 +45,9 @@ func TestKeeper_BlameByChainAndNonce(t *testing.T) {
 	})
 
 	blameRecords, found := k.GetBlamesByChainAndNonce(ctx, chainId, int64(nonce))
-	assert.True(t, found)
-	assert.Equal(t, 1, len(blameRecords))
-	assert.Equal(t, index, blameRecords[0].Index)
+	require.True(t, found)
+	require.Equal(t, 1, len(blameRecords))
+	require.Equal(t, index, blameRecords[0].Index)
 }
 
 func TestKeeper_BlameAll(t *testing.T) {
@@ -61,12 +61,12 @@ func TestKeeper_BlameAll(t *testing.T) {
 			return blameList[i].Index < blameList[j].Index
 		})
 		rst, pageRes, err := k.GetAllBlamePaginated(ctx, &query.PageRequest{Limit: 10, CountTotal: true})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sort.Slice(rst, func(i, j int) bool {
 			return rst[i].Index < rst[j].Index
 		})
-		assert.Equal(t, blameList, rst)
-		assert.Equal(t, len(blameList), int(pageRes.Total))
+		require.Equal(t, blameList, rst)
+		require.Equal(t, len(blameList), int(pageRes.Total))
 	})
 	t.Run("GetBlameRecord by offset ", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -79,13 +79,13 @@ func TestKeeper_BlameAll(t *testing.T) {
 			return blameList[i].Index < blameList[j].Index
 		})
 		rst, pageRes, err := k.GetAllBlamePaginated(ctx, &query.PageRequest{Offset: uint64(offset), CountTotal: true})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		sort.Slice(rst, func(i, j int) bool {
 			return rst[i].Index < rst[j].Index
 		})
-		assert.Subset(t, blameList, rst)
-		assert.Equal(t, len(blameList)-offset, len(rst))
-		assert.Equal(t, len(blameList), int(pageRes.Total))
+		require.Subset(t, blameList, rst)
+		require.Equal(t, len(blameList)-offset, len(rst))
+		require.Equal(t, len(blameList), int(pageRes.Total))
 	})
 	t.Run("GetAllBlameRecord", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -100,11 +100,11 @@ func TestKeeper_BlameAll(t *testing.T) {
 		sort.Slice(blameList, func(i, j int) bool {
 			return blameList[i].Index < blameList[j].Index
 		})
-		assert.Equal(t, blameList, rst)
+		require.Equal(t, blameList, rst)
 	})
 	t.Run("Get no records if nothing is set", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
 		rst := k.GetAllBlame(ctx)
-		assert.Len(t, rst, 0)
+		require.Len(t, rst, 0)
 	})
 }

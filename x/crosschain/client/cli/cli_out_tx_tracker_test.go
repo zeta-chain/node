@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -15,7 +15,7 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 	t.Helper()
 	cfg := network.DefaultConfig()
 	state := types.GenesisState{}
-	assert.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
+	require.NoError(t, cfg.Codec.UnmarshalJSON(cfg.GenesisState[types.ModuleName], &state))
 
 	for i := 0; i < n; i++ {
 		outTxTracker := types.OutTxTracker{
@@ -25,7 +25,7 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
 	}
 	buf, err := cfg.Codec.MarshalJSON(&state)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
 	//cfg.GenesisState = network.SetupZetaGenesisState(t, cfg.GenesisState, cfg.Codec)
 	net, err := network.New(t, app.NodeDir, cfg)
@@ -72,14 +72,14 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowOutTxTracker(), args)
 //			if tc.err != nil {
 //				stat, ok := status.FromError(tc.err)
-//				assert.True(t, ok)
-//				assert.ErrorIs(t, stat.Err(), tc.err)
+//				require.True(t, ok)
+//				require.ErrorIs(t, stat.Err(), tc.err)
 //			} else {
-//				assert.NoError(t, err)
+//				require.NoError(t, err)
 //				var resp types.QueryGetOutTxTrackerResponse
-//				assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//				assert.NotNil(t, resp.OutTxTracker)
-//				assert.Equal(t,
+//				require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//				require.NotNil(t, resp.OutTxTracker)
+//				require.Equal(t,
 //					nullify.Fill(&tc.obj),
 //					nullify.Fill(&resp.OutTxTracker),
 //				)
@@ -112,11 +112,11 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 //		for i := 0; i < len(objs); i += step {
 //			args := request(nil, uint64(i), uint64(step), false)
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
-//			assert.NoError(t, err)
+//			require.NoError(t, err)
 //			var resp types.QueryAllOutTxTrackerResponse
-//			assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//			assert.LessOrEqual(t, len(resp.OutTxTracker), step)
-//			assert.Subset(t,
+//			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//			require.LessOrEqual(t, len(resp.OutTxTracker), step)
+//			require.Subset(t,
 //				nullify.Fill(objs),
 //				nullify.Fill(resp.OutTxTracker),
 //			)
@@ -128,11 +128,11 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 //		for i := 0; i < len(objs); i += step {
 //			args := request(next, 0, uint64(step), false)
 //			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
-//			assert.NoError(t, err)
+//			require.NoError(t, err)
 //			var resp types.QueryAllOutTxTrackerResponse
-//			assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//			assert.LessOrEqual(t, len(resp.OutTxTracker), step)
-//			assert.Subset(t,
+//			require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//			require.LessOrEqual(t, len(resp.OutTxTracker), step)
+//			require.Subset(t,
 //				nullify.Fill(objs),
 //				nullify.Fill(resp.OutTxTracker),
 //			)
@@ -142,12 +142,12 @@ func networkWithOutTxTrackerObjects(t *testing.T, n int) (*network.Network, []ty
 //	t.Run("Total", func(t *testing.T) {
 //		args := request(nil, 0, uint64(len(objs)), true)
 //		out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdListOutTxTracker(), args)
-//		assert.NoError(t, err)
+//		require.NoError(t, err)
 //		var resp types.QueryAllOutTxTrackerResponse
-//		assert.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-//		assert.NoError(t, err)
-//		assert.Equal(t, len(objs), int(resp.Pagination.Total))
-//		assert.ElementsMatch(t,
+//		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
+//		require.NoError(t, err)
+//		require.Equal(t, len(objs), int(resp.Pagination.Total))
+//		require.ElementsMatch(t,
 //			nullify.Fill(objs),
 //			nullify.Fill(resp.OutTxTracker),
 //		)

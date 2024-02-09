@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
@@ -34,17 +34,17 @@ func Test_LoadTssFilesFromDirectory(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			tempdir, err := os.MkdirTemp("", "test-tss")
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			err = GenerateKeyshareFiles(tc.n, tempdir)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			tss := TSS{
 				logger:        zerolog.New(os.Stdout),
 				Keys:          map[string]*TSSKey{},
 				CurrentPubkey: "",
 			}
 			err = tss.LoadTssFilesFromDirectory(tempdir)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.n, len(tss.Keys))
+			require.NoError(t, err)
+			require.Equal(t, tc.n, len(tss.Keys))
 		})
 	}
 }

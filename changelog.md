@@ -34,7 +34,7 @@
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
 
 ## Chores
-* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use assert testing package for the entire node folder
+* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use require testing package for the entire node folder
 
 ## Version: v12.1.0
 

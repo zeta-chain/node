@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -18,7 +18,7 @@ func TestGetParams(t *testing.T) {
 
 	k.SetParams(ctx, params)
 
-	assert.EqualValues(t, params, k.GetParams(ctx))
+	require.EqualValues(t, params, k.GetParams(ctx))
 }
 
 func TestGenerateAddress(t *testing.T) {

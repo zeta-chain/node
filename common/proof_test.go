@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -39,21 +39,21 @@ type Blocks struct {
 
 func LoadTestBlocks(t *testing.T) Blocks {
 	file, err := os.Open("./test_data/test_blocks.json")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer file.Close()
 
 	// Decode the JSON into the data struct
 	var blocks Blocks
 	err = json.NewDecoder(file).Decode(&blocks)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	return blocks
 }
 
 func Test_IsErrorInvalidProof(t *testing.T) {
-	assert.False(t, common.IsErrorInvalidProof(nil))
-	assert.False(t, common.IsErrorInvalidProof(errors.New("foo")))
-	assert.True(t, common.IsErrorInvalidProof(common.NewErrInvalidProof(errors.New("foo"))))
+	require.False(t, common.IsErrorInvalidProof(nil))
+	require.False(t, common.IsErrorInvalidProof(errors.New("foo")))
+	require.True(t, common.IsErrorInvalidProof(common.NewErrInvalidProof(errors.New("foo"))))
 }
 
 func TestBitcoinMerkleProof(t *testing.T) {
@@ -62,15 +62,15 @@ func TestBitcoinMerkleProof(t *testing.T) {
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
 		headerBytes, err := base64.StdEncoding.DecodeString(b.HeaderBase64)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		header := unmarshalHeader(t, headerBytes)
 
 		// Deserialize the block bytes from base64
 		blockBytes, err := base64.StdEncoding.DecodeString(b.BlockBase64)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		blockVerbose := &btcjson.GetBlockVerboseTxResult{}
 		err = json.Unmarshal(blockBytes, blockVerbose)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
@@ -80,23 +80,23 @@ func TestBitcoinMerkleProof(t *testing.T) {
 func BitcoinMerkleProofLiveTest(t *testing.T) {
 	client := createBTCClient(t)
 	bn, err := client.GetBlockCount()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	fmt.Printf("Verifying transactions in block range [%d, %d]\n", bn-numBlocksToTest+1, bn)
 
 	// Verify all transactions in the past 'numBlocksToTest' blocks
 	for height := bn - numBlocksToTest + 1; height <= bn; height++ {
 		blockHash, err := client.GetBlockHash(height)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Get the block header
 		header, err := client.GetBlockHeader(blockHash)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		headerBytes := marshalHeader(t, header)
 		target := blockchain.CompactToBig(header.Bits)
 
 		// Get the block with verbose transactions
 		blockVerbose, err := client.GetBlockVerboseTx(blockHash)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, "", "", 0)
@@ -111,9 +111,9 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 	txBodies := [][]byte{}
 	for _, res := range blockVerbose.Tx {
 		txBytes, err := hex.DecodeString(res.Hex)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		tx, err := btcutil.NewTxFromBytes(txBytes)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
@@ -123,7 +123,7 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 				TxHash:  outTxid,
 			}
 			err = keeper.VerifyBTCOutTxBody(msg, txBytes, tssAddress)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		}
 		txns = append(txns, tx)
 		txBodies = append(txBodies, txBytes)
@@ -133,19 +133,19 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 	mk := bitcoin.NewMerkle(txns)
 	for i := range txns {
 		path, index, err := mk.BuildMerkleProof(i)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// True proof should verify
 		proof := common.NewBitcoinProof(txBodies[i], path, index)
 		txBytes, err := proof.Verify(common.NewBitcoinHeader(headerBytes), 0)
-		assert.NoError(t, err)
-		assert.Equal(t, txBytes, txBodies[i])
+		require.NoError(t, err)
+		require.Equal(t, txBytes, txBodies[i])
 
 		// Fake proof should not verify
 		fakeIndex := index ^ 0xffffffff // flip all bits
 		fakeProof := common.NewBitcoinProof(txBodies[i], path, fakeIndex)
 		txBytes, err = fakeProof.Verify(common.NewBitcoinHeader(headerBytes), 0)
-		assert.Error(t, err)
-		assert.Nil(t, txBytes)
+		require.Error(t, err)
+		require.Nil(t, txBytes)
 	}
 }

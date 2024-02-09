@@ -25,10 +25,10 @@ package types
 //		t.Run(tt.name, func(t *testing.T) {
 //			err := tt.msg.ValidateBasic()
 //			if tt.err != nil {
-//				assert.ErrorIs(t, err, tt.err)
+//				require.ErrorIs(t, err, tt.err)
 //				return
 //			}
-//			assert.NoError(t, err)
+//			require.NoError(t, err)
 //		})
 //	}
 //}

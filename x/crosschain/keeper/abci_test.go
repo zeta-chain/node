@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -64,8 +64,8 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength + 1)
 
 	cctxCount, flags := k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
-	assert.Equal(t, 0, cctxCount)
-	assert.Equal(t, *observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags, flags)
+	require.Equal(t, 0, cctxCount)
+	require.Equal(t, *observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags, flags)
 
 	// test that custom crosschain flags are used when set and the epoch length is reached
 	customFlags := observertypes.GasPriceIncreaseFlags{
@@ -80,8 +80,8 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	zk.ObserverKeeper.SetCrosschainFlags(ctx, *crosschainFlags)
 
 	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
-	assert.Equal(t, 0, cctxCount)
-	assert.Equal(t, customFlags, flags)
+	require.Equal(t, 0, cctxCount)
+	require.Equal(t, customFlags, flags)
 
 	// test that cctx are iterated and updated when the epoch length is reached
 
@@ -89,19 +89,19 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 
 	// 2 eth + 5 bsc = 7
-	assert.Equal(t, 7, cctxCount)
-	assert.Equal(t, customFlags, flags)
+	require.Equal(t, 7, cctxCount)
+	require.Equal(t, customFlags, flags)
 
 	// check that the update function was called with the cctx index
-	assert.Equal(t, 7, len(updateFuncMap))
-	assert.Contains(t, updateFuncMap, "1-10")
-	assert.Contains(t, updateFuncMap, "1-11")
+	require.Equal(t, 7, len(updateFuncMap))
+	require.Contains(t, updateFuncMap, "1-10")
+	require.Contains(t, updateFuncMap, "1-11")
 
-	assert.Contains(t, updateFuncMap, "56-30")
-	assert.Contains(t, updateFuncMap, "56-31")
-	assert.Contains(t, updateFuncMap, "56-32")
-	assert.Contains(t, updateFuncMap, "56-33")
-	assert.Contains(t, updateFuncMap, "56-34")
+	require.Contains(t, updateFuncMap, "56-30")
+	require.Contains(t, updateFuncMap, "56-31")
+	require.Contains(t, updateFuncMap, "56-32")
+	require.Contains(t, updateFuncMap, "56-33")
+	require.Contains(t, updateFuncMap, "56-34")
 }
 
 func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
@@ -360,8 +360,8 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 
 				// ensure median gas price is set
 				medianGasPrice, isFound := k.GetMedianGasPriceInUint(ctx, chainID)
-				assert.True(t, isFound)
-				assert.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
+				require.True(t, isFound)
+				require.True(t, medianGasPrice.Equal(math.NewUint(tc.medianGasPrice)))
 			}
 
 			// set block timestamp
@@ -377,23 +377,23 @@ func TestCheckAndUpdateCctxGasPrice(t *testing.T) {
 			gasPriceIncrease, feesPaid, err := keeper.CheckAndUpdateCctxGasPrice(ctx, *k, tc.cctx, tc.flags)
 
 			if tc.isError {
-				assert.Error(t, err)
+				require.Error(t, err)
 				return
 			}
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			// check values
-			assert.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
-			assert.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
+			require.True(t, gasPriceIncrease.Equal(tc.expectedGasPriceIncrease), "expected %s, got %s", tc.expectedGasPriceIncrease.String(), gasPriceIncrease.String())
+			require.True(t, feesPaid.Equal(tc.expectedAdditionalFees), "expected %s, got %s", tc.expectedAdditionalFees.String(), feesPaid.String())
 
 			// check cctx
 			if !tc.expectedGasPriceIncrease.IsZero() {
 				cctx, found := k.GetCrossChainTx(ctx, tc.cctx.Index)
-				assert.True(t, found)
+				require.True(t, found)
 				newGasPrice, err := cctx.GetCurrentOutTxParam().GetGasPrice()
-				assert.NoError(t, err)
-				assert.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
-				assert.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
+				require.NoError(t, err)
+				require.EqualValues(t, tc.expectedGasPriceIncrease.AddUint64(previousGasPrice).Uint64(), newGasPrice, "%d - %d", tc.expectedGasPriceIncrease.Uint64(), previousGasPrice)
+				require.EqualValues(t, tc.blockTimestamp.Unix(), cctx.CctxStatus.LastUpdateTimestamp)
 			}
 		})
 	}

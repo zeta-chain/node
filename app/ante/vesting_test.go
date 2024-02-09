@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/app/ante"
@@ -86,7 +86,7 @@ func TestVesting_AnteHandle(t *testing.T) {
 				[]uint64{0},
 				testPrivKey,
 			)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 
 			mmd := MockAnteHandler{}
 			ctx := sdk.Context{}.WithIsCheckTx(true)
@@ -94,10 +94,10 @@ func TestVesting_AnteHandle(t *testing.T) {
 			_, err = decorator.AnteHandle(ctx, tx, false, mmd.AnteHandle)
 
 			if tt.wantHasErr {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.wantErr)
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.wantErr)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -42,7 +42,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -67,10 +67,10 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		// total fees must be 21000*2+1000=43000
 		// if the input amount of the cctx is 1e16, the output amount must be 1e16-43000=9999999999957000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
-		assert.NoError(t, err)
-		assert.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutTxParam().Amount.Uint64())
-		assert.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		assert.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+		require.NoError(t, err)
+		require.Equal(t, uint64(9999999999957000), cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
 
 	t.Run("should fail if not coin type gas", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
-		assert.ErrorIs(t, err, types.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
@@ -93,7 +93,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasNativeAndUpdateCctx(ctx, 999999, &cctx, math.NewUint(inputAmount))
-		assert.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 	})
 
 	t.Run("should fail if can't query the gas price", func(t *testing.T) {
@@ -124,7 +124,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 		}
 
 		err := k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount))
-		assert.ErrorIs(t, err, types.ErrCannotFindGasParams)
+		require.ErrorIs(t, err, types.ErrCannotFindGasParams)
 	})
 
 	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {
@@ -143,7 +143,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, zrc20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -166,7 +166,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 		// 42999 < 43000
 		err = k.PayGasNativeAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(42999))
-		assert.ErrorIs(t, err, types.ErrNotEnoughGas)
+		require.ErrorIs(t, err, types.ErrNotEnoughGas)
 	})
 }
 
@@ -199,7 +199,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -233,15 +233,15 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// total fees in gas must be 21000*2+1000=43000
 		// we calculate what it represents in erc20
 		expectedInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(43000), gasZRC20)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		expectedInZRC20, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, expectedInZeta, zrc20Addr)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		assert.NoError(t, err)
-		assert.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutTxParam().Amount.Uint64())
-		assert.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		assert.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+		require.NoError(t, err)
+		require.Equal(t, inputAmount-expectedInZRC20.Uint64(), cctx.GetCurrentOutTxParam().Amount.Uint64())
+		require.Equal(t, uint64(21_000), cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+		require.Equal(t, "2", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
 
 	t.Run("should fail if not coin type erc20", func(t *testing.T) {
@@ -253,7 +253,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		assert.ErrorIs(t, err, types.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInERC20AndUpdateCctx(ctx, 999999, &cctx, math.NewUint(inputAmount), false)
-		assert.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 	})
 
 	t.Run("should fail if can't query the gas price", func(t *testing.T) {
@@ -295,7 +295,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		}
 
 		err := k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		assert.ErrorIs(t, err, types.ErrCannotFindGasParams)
+		require.ErrorIs(t, err, types.ErrCannotFindGasParams)
 	})
 
 	t.Run("should fail if can't find the ZRC20", func(t *testing.T) {
@@ -315,7 +315,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -341,7 +341,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		}
 
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		assert.ErrorIs(t, err, types.ErrForeignCoinNotFound)
+		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
 
 	t.Run("should fail if liquidity pool not setup", func(t *testing.T) {
@@ -371,7 +371,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -397,7 +397,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		}
 
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
-		assert.ErrorIs(t, err, types.ErrNoLiquidityPool)
+		require.ErrorIs(t, err, types.ErrNoLiquidityPool)
 	})
 
 	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {
@@ -427,7 +427,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 			sdk.UnwrapSDKContext(ctx),
 			fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), math.Uint{}),
 		)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.SetGasPrice(ctx, types.GasPrice{
 			ChainId:     chainID,
 			MedianIndex: 0,
@@ -461,13 +461,13 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// total fees in gas must be 21000*2+1000=43000
 		// we calculate what it represents in erc20
 		expectedInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(43000), gasZRC20)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		expectedInZRC20, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, expectedInZeta, zrc20Addr)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// Provide expected value minus 1
 		err = k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUintFromBigInt(expectedInZRC20).SubUint64(1), false)
-		assert.ErrorIs(t, err, types.ErrNotEnoughGas)
+		require.ErrorIs(t, err, types.ErrNotEnoughGas)
 	})
 }
 
@@ -504,16 +504,16 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		}
 		// gasLimit * gasPrice * 2 = 1000 * 2 * 2 = 4000
 		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		// the output amount must be input amount - (out tx fee in zeta + protocol flat fee)
 		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
 		inputAmount := expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
-		assert.NoError(t, err)
-		assert.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
-		assert.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
-		assert.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta.Add(math.NewUint(100))), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
+		require.NoError(t, err)
+		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta.Add(math.NewUint(100))), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
 
 		// can call with undefined zeta fees
 		cctx = types.CrossChainTx{
@@ -528,14 +528,14 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 		}
 		expectedOutTxGasFeeInZeta, err = zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		expectedFeeInZeta = types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
 		inputAmount = expectedFeeInZeta.Add(math.NewUint(100000))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
-		assert.NoError(t, err)
-		assert.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
-		assert.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
-		assert.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
+		require.NoError(t, err)
+		require.Equal(t, "100000", cctx.GetCurrentOutTxParam().Amount.String())
+		require.Equal(t, "4", cctx.GetCurrentOutTxParam().OutboundTxGasPrice) // gas price is doubled
+		require.True(t, cctx.ZetaFees.Equal(expectedFeeInZeta), "expected %s, got %s", expectedFeeInZeta.String(), cctx.ZetaFees.String())
 	})
 
 	t.Run("should fail if pay gas in zeta with coin type other than zeta", func(t *testing.T) {
@@ -547,7 +547,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(100000), false)
-		assert.ErrorIs(t, err, types.ErrInvalidCoinType)
+		require.ErrorIs(t, err, types.ErrInvalidCoinType)
 	})
 
 	t.Run("should fail if chain is not supported", func(t *testing.T) {
@@ -558,7 +558,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			},
 		}
 		err := k.PayGasInZetaAndUpdateCctx(ctx, 999999, &cctx, math.NewUint(100000), false)
-		assert.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
 	})
 
 	t.Run("should fail if can't query the gas price", func(t *testing.T) {
@@ -589,7 +589,7 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		}
 
 		err := k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, math.NewUint(100000), false)
-		assert.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
+		require.ErrorIs(t, err, types.ErrUnableToGetGasPrice)
 	})
 
 	t.Run("should fail if not enough amount for the fee", func(t *testing.T) {
@@ -623,12 +623,12 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 			ZetaFees: math.NewUint(100),
 		}
 		expectedOutTxGasFeeInZeta, err := zk.FungibleKeeper.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(4000), zrc20)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		expectedFeeInZeta := types.GetProtocolFee().Add(math.NewUintFromBigInt(expectedOutTxGasFeeInZeta))
 
 		// set input amount lower than total zeta fee
 		inputAmount := expectedFeeInZeta.Sub(math.NewUint(1))
 		err = k.PayGasInZetaAndUpdateCctx(ctx, chainID, &cctx, inputAmount, false)
-		assert.ErrorIs(t, err, types.ErrNotEnoughZetaBurnt)
+		require.ErrorIs(t, err, types.ErrNotEnoughZetaBurnt)
 	})
 }

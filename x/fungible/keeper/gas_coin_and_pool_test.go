@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -32,7 +32,7 @@ func setupGasCoin(
 		8,
 		nil,
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
 	return addr
 }
@@ -57,7 +57,7 @@ func deployZRC20(
 		assetAddress,
 		big.NewInt(21_000),
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assertContractDeployment(t, evmk, ctx, addr)
 	return addr
 }
@@ -76,7 +76,7 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 
 		// can retrieve the gas coin
 		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
-		assert.NoError(t, err)
-		assert.Equal(t, zrc20, found)
+		require.NoError(t, err)
+		require.Equal(t, zrc20, found)
 	})
 }
