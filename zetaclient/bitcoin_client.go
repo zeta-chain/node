@@ -589,7 +589,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 	if err != nil {
 		return err
 	}
