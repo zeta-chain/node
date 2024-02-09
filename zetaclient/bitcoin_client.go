@@ -73,9 +73,10 @@ type BitcoinChainClient struct {
 }
 
 const (
-	minConfirmations = 0
-	maxHeightDiff    = 10000
-	btcBlocksPerDay  = 144
+	maxHeightDiff             = 10000     // in case the last block is too old when the observer starts
+	btcBlocksPerDay           = 144       // for LRU block cache size
+	bigValueSats              = 200000000 // 2 BTC
+	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
 )
 
 func (ob *BitcoinChainClient) WithZetaClient(bridge *ZetaCoreBridge) {
@@ -459,10 +460,14 @@ func (ob *BitcoinChainClient) observeInTx() error {
 
 // ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *BitcoinChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
-	if amount.Cmp(big.NewInt(200000000)) >= 0 {
-		return 6
+	if amount.Cmp(big.NewInt(bigValueSats)) >= 0 {
+		return bigValueConfirmationCount
 	}
-	return 2
+	if bigValueConfirmationCount < ob.GetChainParams().ConfirmationCount {
+		return bigValueConfirmationCount
+	}
+	// #nosec G701 always in range
+	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
 // IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
@@ -584,7 +589,7 @@ func (ob *BitcoinChainClient) PostGasPrice() error {
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 	if err != nil {
 		return err
 	}

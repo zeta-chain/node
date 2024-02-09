@@ -14,6 +14,9 @@
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
+* [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
+* [1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 
 ### Tests
@@ -23,6 +26,10 @@
 ### CI
 
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+
+### Chores
+
+* [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
 
 ## Version: v12.2.4
 
@@ -37,6 +44,7 @@
 * [1663](https://github.com/zeta-chain/node/issues/1663) - skip Mumbai empty block if ethclient sanity check fails
 * [1661](https://github.com/zeta-chain/node/issues/1661) - use estimated SegWit tx size for Bitcoin gas fee calculation
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
+* [1675](https://github.com/zeta-chain/node/issues/1675) - use chain param ConfirmationCount for bitcoin confirmation
 
 ## Version: v12.1.0
 
