@@ -37,7 +37,6 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// Check if aborted amount is available to maintain zeta accounting
-	// NOTE: Need to verify if this check works / is required in athens 3
 	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
 		err := k.RemoveZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 		// if the zeta accounting is not found, it means the zeta accounting is not set yet and the refund should not be processed
@@ -45,7 +44,6 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 			return nil, errorsmod.Wrap(types.ErrUnableProcessRefund, err.Error())
 		}
 		// if the zeta accounting is found but the amount is insufficient, it means the refund can be processed but the zeta accounting is not maintained properly
-		// aborted amounts for zeta accounting would need to be updated in the envionment via a migration script
 		if errors.Is(err, types.ErrInsufficientZetaAmount) {
 			ctx.Logger().Error("Zeta Accounting Error: ", err)
 		}
