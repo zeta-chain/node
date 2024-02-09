@@ -4,25 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"math/big"
 	"os"
 	"sort"
 	"time"
 
-	"github.com/fatih/color"
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/zetacore/app"
+	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
+	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 )
@@ -210,7 +209,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// #nosec G701 smoketest - always in range
+	// #nosec G701 e2e - always in range
 	zevmNonce = big.NewInt(int64(nonce))
 
 	// -------------- TEST BEGINS ------------------
