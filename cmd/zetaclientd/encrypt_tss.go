@@ -20,22 +20,15 @@ var encTssCmd = &cobra.Command{
 	RunE:  EncryptTSSFile,
 }
 
-type TSSArgs struct {
-	secretKey string
-	filePath  string
-}
-
-var tssArgs = TSSArgs{}
-
 func init() {
 	RootCmd.AddCommand(encTssCmd)
 }
 
 func EncryptTSSFile(_ *cobra.Command, args []string) error {
-	tssArgs.filePath = args[0]
-	tssArgs.secretKey = args[1]
+	filePath := args[0]
+	secretKey := args[1]
 
-	data, err := os.ReadFile(tssArgs.filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
@@ -44,7 +37,7 @@ func EncryptTSSFile(_ *cobra.Command, args []string) error {
 		return errors.New("file does not contain valid json, may already be encrypted")
 	}
 
-	block, err := aes.NewCipher(getFragmentSeed(tssArgs.secretKey))
+	block, err := aes.NewCipher(getFragmentSeed(secretKey))
 	if err != nil {
 		return err
 	}
@@ -61,7 +54,7 @@ func EncryptTSSFile(_ *cobra.Command, args []string) error {
 	}
 
 	cipherText := gcm.Seal(nonce, nonce, data, nil)
-	return os.WriteFile(tssArgs.filePath, cipherText, 0o600)
+	return os.WriteFile(filePath, cipherText, 0o600)
 }
 
 func getFragmentSeed(password string) []byte {
