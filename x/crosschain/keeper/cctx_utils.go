@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,4 +89,15 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 func IsPending(cctx types.CrossChainTx) bool {
 	// pending inbound is not considered a "pending" state because it has not reached consensus yet
 	return cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
+}
+
+// GetAbortedAmount returns the amount to refund for a given CCTX .
+// If the CCTX has an outbound transaction, it returns the amount of the outbound transaction.
+// If OutTxParams is nil or the amount is zero, it returns the amount of the inbound transaction.
+// This is because there might be a case where the transaction is set to be aborted before paying gas or creating an outbound transaction.In such a situation we can refund the entire amount that has been locked in connector or TSS
+func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
+	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
+		return cctx.GetCurrentOutTxParam().Amount
+	}
+	return cctx.InboundTxParams.Amount
 }
