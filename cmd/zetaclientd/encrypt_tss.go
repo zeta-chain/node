@@ -9,6 +9,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -28,6 +29,7 @@ func EncryptTSSFile(_ *cobra.Command, args []string) error {
 	filePath := args[0]
 	secretKey := args[1]
 
+	filePath = filepath.Clean(filePath)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
