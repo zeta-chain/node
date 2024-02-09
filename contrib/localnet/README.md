@@ -4,10 +4,6 @@ local ZetaChain network for development and testing purposes.
 The scripts are based on the Docker 
 and [Docker Compose](https://docs.docker.com/compose/).
 
-As a smoke test (sanity integration tests), the setup aims
-at fully automatic, only requiring a few image building steps
-and docker compose launch. 
-
 As a development testing environment, the setup aims to be
 flexible, close to real world, and with fast turnaround
 between edit code -> compile -> test results. 
@@ -21,7 +17,7 @@ The docker-compose.yml file defines a network with:
 * 2 zetaclient nodes
 * 1 go-ethereum private net node (act as GOERLI testnet, with chainid 1337)
 * 1 bitcoin core private node (planned; not yet done)
-* 1 orchestrator node which coordinates smoke tests. 
+* 1 orchestrator node which coordinates E2E tests. 
 
 ## Prerequisites
 - [Docker](https://docs.docker.com/install/)
@@ -43,18 +39,12 @@ This Makefile rule builds the zetanode image. **Rebuild if zetacored/zetaclientd
 $ docker build -t zetanode .
 ```
 
-### Smoke Test Dev & Test Cycle
-The smoke test is in the directory /contrib/localnet/orchestrator/smoketest. 
-It's a Go program that performs various operations on the localnet.
+### Run e2e test
 
-The above `make zetanode` should already produced the orchestrator image.
-
-### Run smoke test
-
-Now we have built all the docker images; we can run the smoke test with make command:
+Now we have built all the docker images; we can run the e2e test with make command:
 ```bash
 # in zeta-node/
-make start-smoketest
+make start-e2etest
 ```
 which does the following docker compose command:
 ```bash
@@ -64,12 +54,12 @@ $ docker compose up -d
 
 The most straightforward log to observe is the orchestrator log.
 If everything works fine, it should finish without panic, and with
-a message "smoketest done". 
+a message "E2E tests done". 
 
 To stop the tests, 
 ```bash
 # in zeta-node/
-make stop-smoketest
+make stop-e2etest
 ```
 which does the following docker compose command:
 ```bash
@@ -103,15 +93,12 @@ $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
 
 ## Useful data
 
-- On GOERLI (private ETH net), the deployer account is pre-funded with Ether. 
-[Deployer Address and Private Key](orchestrator/smoketest/main.go)
-
 - TSS Address (on ETH): 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2
 
 
 
-## Add more smoke tests
-The smoke test (integration tests) are located in the
+## Add more e2e tests
+The e2e test (integration tests) are located in the
 orchestrator/smoketest directory. The orchestrator is a Go program.
 
 ## LocalNet Governance Proposals

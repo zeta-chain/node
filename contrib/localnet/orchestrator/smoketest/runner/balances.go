@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-// AccountBalances is a struct that contains the balances of the accounts used in the smoke test
+// AccountBalances is a struct that contains the balances of the accounts used in the E2E test
 type AccountBalances struct {
 	ZetaETH   *big.Int
 	ZetaZETA  *big.Int
@@ -22,14 +22,14 @@ type AccountBalances struct {
 	BtcBTC    string
 }
 
-// AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the smoke test
+// AccountBalancesDiff is a struct that contains the difference in the balances of the accounts used in the E2E test
 type AccountBalancesDiff struct {
 	ETH   *big.Int
 	ZETA  *big.Int
 	ERC20 *big.Int
 }
 
-// GetAccountBalances returns the account balances of the accounts used in the smoke test
+// GetAccountBalances returns the account balances of the accounts used in the E2E test
 func (sm *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
 	zetaZeta, err := sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
@@ -116,7 +116,7 @@ func (sm *E2ERunner) GetBitcoinBalance() (string, error) {
 	return totalAmount.String(), nil
 }
 
-// PrintAccountBalances shows the account balances of the accounts used in the smoke test
+// PrintAccountBalances shows the account balances of the accounts used in the E2E test
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
 func (sm *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	sm.Logger.Print(" ---💰 Account info %s ---", sm.DeployerAddress.Hex())
@@ -158,7 +158,7 @@ func (sm *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
 	}
 }
 
-// GetAccountBalancesDiff returns the difference in the account balances of the accounts used in the smoke test
+// GetAccountBalancesDiff returns the difference in the account balances of the accounts used in the E2E test
 func GetAccountBalancesDiff(balancesBefore, balancesAfter AccountBalances) AccountBalancesDiff {
 	balancesBeforeZeta := big.NewInt(0).Add(balancesBefore.ZetaZETA, balancesBefore.EvmZETA)
 	balancesBeforeEth := big.NewInt(0).Add(balancesBefore.ZetaETH, balancesBefore.EvmETH)

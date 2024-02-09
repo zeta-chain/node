@@ -39,7 +39,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// ZetaTxServer is a ZetaChain tx server for smoke test
+// ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
 	clientCtx client.Context
 	txFactory tx.Factory

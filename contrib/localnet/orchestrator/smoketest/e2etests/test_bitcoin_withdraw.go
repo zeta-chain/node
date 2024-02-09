@@ -78,7 +78,7 @@ func WithdrawBitcoin(sm *runner.E2ERunner) {
 }
 
 // WithdrawBitcoinMultipleTimes ...
-// TODO: define smoke test
+// TODO: complete and uncomment E2E test
 // https://github.com/zeta-chain/node-private/issues/79
 //func WithdrawBitcoinMultipleTimes(sm *runner.E2ERunner, repeat int64) {
 //	totalAmount := big.NewInt(int64(0.1 * 1e8))

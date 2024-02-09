@@ -73,7 +73,7 @@ documentation for all the messages in that module.
 ## Running tests
 
 To check that the source code is working as expected, refer to the manual on how
-to [run the smoke test](./contrib/localnet/README.md).
+to [run the E2E test](./contrib/localnet/README.md).
 
 ## Community
 

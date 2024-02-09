@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 RUN cp /go/bin/zetaclientd /usr/local/bin
 RUN cp /go/bin/zetacored /usr/local/bin
-RUN cp /go/bin/smoketest /usr/local/bin
+RUN cp /go/bin/zetae2e /usr/local/bin
 
 #BUILD MAIN BINARY IMAGE
 FROM golang:1.20-alpine
