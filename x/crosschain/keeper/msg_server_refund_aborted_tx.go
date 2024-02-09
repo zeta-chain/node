@@ -12,6 +12,11 @@ import (
 	"golang.org/x/net/context"
 )
 
+// RefundAbortedCCTX refunds the aborted CCTX.
+// It verifies if the CCTX is aborted and not refunded, and if the refund address is valid.
+// It refunds the amount to the refund address and sets the CCTX as refunded.
+// Refer to documentation for GetRefundAddress for the refund address logic.
+// Refer to documentation for GetAbortedAmount for the aborted amount logic.
 func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefundAbortedCCTX) (*types.MsgRefundAbortedCCTXResponse, error) {
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
