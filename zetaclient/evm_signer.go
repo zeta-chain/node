@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	OutTxInclusionTimeout     = 10 * time.Minute
+	OutTxInclusionTimeout     = 20 * time.Minute
 	OutTxTrackerReportTimeout = 10 * time.Minute
 	ZetaBlockTime             = 6500 * time.Millisecond
 )
