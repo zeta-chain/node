@@ -14,7 +14,7 @@ Instead, a series of prompts will appear asking for passwords using STDIN during
 
 If your key files are already encrypted, you can use the same passwords you provided in the environment variables.
 
-*****It's extremely important to take note of these passwords or commit them to memory.**
+**It's extremely important to take note of these passwords or commit them to memory.**
 
 ### Hot Key
 
