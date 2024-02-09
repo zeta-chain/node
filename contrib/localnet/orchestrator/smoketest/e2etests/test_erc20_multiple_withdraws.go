@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(sm *runner.SmokeTestRunner) {
+func TestMultipleWithdraws(sm *runner.E2ERunner) {
 	// deploy withdrawer
 	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(sm.ZevmAuth, sm.ZevmClient)
 	if err != nil {

@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestERC20Deposit(sm *runner.SmokeTestRunner) {
+func TestERC20Deposit(sm *runner.E2ERunner) {
 	hash := sm.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
 
 	// wait for the cctx to be mined

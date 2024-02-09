@@ -19,7 +19,7 @@ type Response struct {
 	Amount Amount `json:"amount"`
 }
 
-func (sm *SmokeTestRunner) CheckZRC20ReserveAndSupply() error {
+func (sm *E2ERunner) CheckZRC20ReserveAndSupply() error {
 	sm.Logger.Info("Checking ZRC20 Reserve and Supply")
 	if err := sm.checkEthTSSBalance(); err != nil {
 		return err
@@ -30,7 +30,7 @@ func (sm *SmokeTestRunner) CheckZRC20ReserveAndSupply() error {
 	return sm.checkZetaTSSBalance()
 }
 
-func (sm *SmokeTestRunner) checkEthTSSBalance() error {
+func (sm *E2ERunner) checkEthTSSBalance() error {
 	tssBal, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.TSSAddress, nil)
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (sm *SmokeTestRunner) checkEthTSSBalance() error {
 	return nil
 }
 
-func (sm *SmokeTestRunner) CheckBtcTSSBalance() error {
+func (sm *E2ERunner) CheckBtcTSSBalance() error {
 	utxos, err := sm.BtcRPCClient.ListUnspent()
 	if err != nil {
 		return err
@@ -65,22 +65,22 @@ func (sm *SmokeTestRunner) CheckBtcTSSBalance() error {
 
 	// check the balance in TSS is greater than the total supply on ZetaChain
 	// the amount minted to initialize the pool is subtracted from the total supply
-	// #nosec G701 smoketest - always in range
+	// #nosec G701 test - always in range
 	if int64(btcBalance*1e8) < (zrc20Supply.Int64() - 10000000) {
-		// #nosec G701 smoketest - always in range
+		// #nosec G701 test - always in range
 		return fmt.Errorf(
 			"BTC: TSS Balance (%d) < ZRC20 TotalSupply (%d)",
 			int64(btcBalance*1e8),
 			zrc20Supply.Int64()-10000000,
 		)
 	}
-	// #nosec G701 smoketest - always in range
+	// #nosec G701 test - always in range
 	sm.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply.Int64()-10000000)
 
 	return nil
 }
 
-func (sm *SmokeTestRunner) checkUsdtTSSBalance() error {
+func (sm *E2ERunner) checkUsdtTSSBalance() error {
 	usdtBal, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.ERC20CustodyAddr)
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func (sm *SmokeTestRunner) checkUsdtTSSBalance() error {
 	return nil
 }
 
-func (sm *SmokeTestRunner) checkZetaTSSBalance() error {
+func (sm *E2ERunner) checkZetaTSSBalance() error {
 	zetaLocked, err := sm.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
 	if err != nil {
 		return err

@@ -16,7 +16,7 @@ import (
 var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
-func (sm *SmokeTestRunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
+func (sm *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 	defer func() {
 		sm.Unlock()
 	}()
@@ -30,7 +30,7 @@ func (sm *SmokeTestRunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 
 // MintUSDTOnEvm mints USDT on EVM
 // amountUSDT is a multiple of 1e18
-func (sm *SmokeTestRunner) MintUSDTOnEvm(amountUSDT int64) {
+func (sm *E2ERunner) MintUSDTOnEvm(amountUSDT int64) {
 	defer func() {
 		sm.Unlock()
 	}()
@@ -52,7 +52,7 @@ func (sm *SmokeTestRunner) MintUSDTOnEvm(amountUSDT int64) {
 // SendUSDTOnEvm sends USDT to an address on EVM
 // this allows the USDT contract deployer to funds other accounts on EVM
 // amountUSDT is a multiple of 1e18
-func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
+func (sm *E2ERunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
 	// the deployer might be sending USDT in different goroutines
 	defer func() {
 		sm.Unlock()
@@ -69,13 +69,13 @@ func (sm *SmokeTestRunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT i
 	return tx
 }
 
-func (sm *SmokeTestRunner) DepositERC20() ethcommon.Hash {
+func (sm *E2ERunner) DepositERC20() ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
 	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
 
-func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
+func (sm *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
 	// reset allowance, necessary for USDT
 	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
@@ -122,12 +122,12 @@ func (sm *SmokeTestRunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg
 }
 
 // DepositEther sends Ethers into ZEVM
-func (sm *SmokeTestRunner) DepositEther(testHeader bool) ethcommon.Hash {
+func (sm *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
 	return sm.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
 }
 
 // DepositEtherWithAmount sends Ethers into ZEVM
-func (sm *SmokeTestRunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+func (sm *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
 	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
 
 	signedTx, err := sm.SendEther(sm.TSSAddress, amount, nil)
@@ -152,7 +152,7 @@ func (sm *SmokeTestRunner) DepositEtherWithAmount(testHeader bool, amount *big.I
 }
 
 // SendEther sends ethers to the TSS on Goerli
-func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+func (sm *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
 	goerliClient := sm.GoerliClient
 
 	nonce, err := goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
@@ -190,13 +190,13 @@ func (sm *SmokeTestRunner) SendEther(_ ethcommon.Address, value *big.Int, data [
 }
 
 // ProveEthTransaction proves an ETH transaction on ZetaChain
-func (sm *SmokeTestRunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
+func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	startTime := time.Now()
 
 	txHash := receipt.TxHash
 	blockHash := receipt.BlockHash
 
-	// #nosec G701 smoketest - always in range
+	// #nosec G701 test - always in range
 	txIndex := int(receipt.TransactionIndex)
 
 	block, err := sm.GoerliClient.BlockByHash(sm.Ctx, blockHash)

@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestBitcoinWithdraw(sm *runner.SmokeTestRunner) {
+func TestBitcoinWithdraw(sm *runner.E2ERunner) {
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
 	WithdrawBitcoin(sm)
 }
 
-func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
+func WithdrawBitcoin(sm *runner.E2ERunner) {
 	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
 
 	// approve the ZRC20 contract to spend 1 BTC from the deployer address
@@ -80,10 +80,10 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 // WithdrawBitcoinMultipleTimes ...
 // TODO: define smoke test
 // https://github.com/zeta-chain/node-private/issues/79
-//func WithdrawBitcoinMultipleTimes(sm *runner.SmokeTestRunner, repeat int64) {
+//func WithdrawBitcoinMultipleTimes(sm *runner.E2ERunner, repeat int64) {
 //	totalAmount := big.NewInt(int64(0.1 * 1e8))
 //
-//	// #nosec G701 smoketest - always in range
+//	// #nosec G701 test - always in range
 //	amount := big.NewInt(int64(0.1 * 1e8 / float64(repeat)))
 //
 //	// check if the deposit is successful
@@ -175,7 +175,7 @@ func WithdrawBitcoin(sm *runner.SmokeTestRunner) {
 // DepositBTCRefund ...
 // TODO: define smoke test
 // https://github.com/zeta-chain/node-private/issues/79
-//func DepositBTCRefund(sm *runner.SmokeTestRunner) {
+//func DepositBTCRefund(sm *runner.E2ERunner) {
 //	sm.Logger.InfoLoud("Deposit BTC with invalid memo; should be refunded")
 //	btc := sm.BtcRPCClient
 //	utxos, err := sm.BtcRPCClient.ListUnspent()

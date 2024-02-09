@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -9,7 +9,7 @@ import (
 )
 
 // TestDonationEther tests donation of ether to the tss address
-func TestDonationEther(sm *runner.SmokeTestRunner) {
+func TestDonationEther(sm *runner.E2ERunner) {
 	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(100000000000000000), []byte(zetaclient.DonationMessage))
 	if err != nil {
 		panic(err)

@@ -7,14 +7,14 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/e2etests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 )
 
 // bitcoinTestRoutine runs Bitcoin related smoke tests
 func bitcoinTestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	initBitcoinNetwork bool,
 ) func() error {
@@ -64,11 +64,11 @@ func bitcoinTestRoutine(
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
-		if err := bitcoinRunner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			smoketests.TestBitcoinWithdrawName,
-			smoketests.TestZetaWithdrawBTCRevertName,
-			smoketests.TestCrosschainSwapName,
+		if err := bitcoinRunner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			e2etests.TestBitcoinWithdrawName,
+			e2etests.TestZetaWithdrawBTCRevertName,
+			e2etests.TestCrosschainSwapName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}

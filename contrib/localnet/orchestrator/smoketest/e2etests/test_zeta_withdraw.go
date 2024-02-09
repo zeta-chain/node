@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestZetaWithdraw(sm *runner.SmokeTestRunner) {
+func TestZetaWithdraw(sm *runner.E2ERunner) {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
 
 	sm.ZevmAuth.Value = amount
@@ -90,7 +90,7 @@ func TestZetaWithdraw(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func TestZetaWithdrawBTCRevert(sm *runner.SmokeTestRunner) {
+func TestZetaWithdrawBTCRevert(sm *runner.E2ERunner) {
 	sm.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
 	tx, err := sm.WZeta.Deposit(sm.ZevmAuth)
 	if err != nil {

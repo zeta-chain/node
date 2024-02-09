@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 )
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
-func TestStressEtherWithdraw(sm *runner.SmokeTestRunner) {
+func TestStressEtherWithdraw(sm *runner.E2ERunner) {
 	// number of withdraws to perform
 	numWithdraws := 100
 
@@ -51,7 +51,7 @@ func TestStressEtherWithdraw(sm *runner.SmokeTestRunner) {
 }
 
 // MonitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
-func MonitorEtherWithdraw(sm *runner.SmokeTestRunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+func MonitorEtherWithdraw(sm *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestZRC20Swap(sm *runner.SmokeTestRunner) {
+func TestZRC20Swap(sm *runner.E2ERunner) {
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation

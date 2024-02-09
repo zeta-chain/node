@@ -21,7 +21,7 @@ const (
 )
 
 // SetEVMContractsFromConfig set EVM contracts for smoke test from the config
-func (sm *SmokeTestRunner) SetEVMContractsFromConfig() {
+func (sm *E2ERunner) SetEVMContractsFromConfig() {
 	conf, err := config.ReadConfig(ContractsConfigFile)
 	if err != nil {
 		panic(err)
@@ -43,7 +43,7 @@ func (sm *SmokeTestRunner) SetEVMContractsFromConfig() {
 }
 
 // SetupEVM setup contracts on EVM for smoke test
-func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
+func (sm *E2ERunner) SetupEVM(contractsDeployed bool) {
 	sm.Logger.Print("⚙️ setting up Goerli network")
 	startTime := time.Now()
 	defer func() {

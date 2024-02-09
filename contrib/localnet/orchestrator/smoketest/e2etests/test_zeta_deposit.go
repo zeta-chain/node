@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
-func TestZetaDeposit(sm *runner.SmokeTestRunner) {
+func TestZetaDeposit(sm *runner.E2ERunner) {
 	// Deposit 1 Zeta
 	hash := sm.DepositZetaWithAmount(big.NewInt(1e18))
 

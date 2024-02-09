@@ -45,7 +45,7 @@ func (tr TestReports) String(prefix string) (string, error) {
 }
 
 // PrintTestReports prints the test reports
-func (sm *SmokeTestRunner) PrintTestReports(tr TestReports) {
+func (sm *E2ERunner) PrintTestReports(tr TestReports) {
 	sm.Logger.Print(" ---📈 E2E Test Report ---")
 	table, err := tr.String("")
 	if err != nil {

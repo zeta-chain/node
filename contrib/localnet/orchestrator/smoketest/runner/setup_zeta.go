@@ -23,7 +23,7 @@ import (
 )
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
-func (sm *SmokeTestRunner) SetTSSAddresses() error {
+func (sm *E2ERunner) SetTSSAddresses() error {
 	sm.Logger.Print("⚙️ setting up TSS address")
 
 	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
@@ -61,7 +61,7 @@ func (sm *SmokeTestRunner) SetTSSAddresses() error {
 }
 
 // SetZEVMContracts set contracts for the ZEVM
-func (sm *SmokeTestRunner) SetZEVMContracts() {
+func (sm *E2ERunner) SetZEVMContracts() {
 	sm.Logger.Print("⚙️ deploying system contracts and ZRC20s on ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -168,7 +168,7 @@ func (sm *SmokeTestRunner) SetZEVMContracts() {
 	sm.ContextApp = contextApp
 }
 
-func (sm *SmokeTestRunner) SetupETHZRC20() {
+func (sm *E2ERunner) SetupETHZRC20() {
 	ethZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
@@ -184,7 +184,7 @@ func (sm *SmokeTestRunner) SetupETHZRC20() {
 	sm.ETHZRC20 = ethZRC20
 }
 
-func (sm *SmokeTestRunner) SetupBTCZRC20() {
+func (sm *E2ERunner) SetupBTCZRC20() {
 	BTCZRC20Addr, err := sm.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {
 		panic(err)

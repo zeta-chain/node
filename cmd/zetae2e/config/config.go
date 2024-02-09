@@ -21,7 +21,7 @@ func RunnerFromConfig(
 	zetaUserName string,
 	zetaUserMnemonic string,
 	logger *runner.Logger,
-) (*runner.SmokeTestRunner, error) {
+) (*runner.E2ERunner, error) {
 	// initialize clients
 	btcRPCClient,
 		goerliClient,
@@ -48,8 +48,8 @@ func RunnerFromConfig(
 		return nil, fmt.Errorf("failed to initialize ZetaChain tx server: %w", err)
 	}
 
-	// initialize smoke test runner
-	sm := runner.NewSmokeTestRunner(
+	// initialize E2E test runner
+	sm := runner.NewE2ERunner(
 		ctx,
 		name,
 		ctxCancel,
@@ -87,7 +87,7 @@ func RunnerFromConfig(
 }
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
-func ExportContractsFromRunner(sm *runner.SmokeTestRunner, conf config.Config) config.Config {
+func ExportContractsFromRunner(sm *runner.E2ERunner, conf config.Config) config.Config {
 	// copy contracts from deployer runner
 	conf.Contracts.EVM.ZetaEthAddress = sm.ZetaEthAddr.Hex()
 	conf.Contracts.EVM.ConnectorEthAddr = sm.ConnectorEthAddr.Hex()

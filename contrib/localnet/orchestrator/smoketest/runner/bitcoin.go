@@ -27,7 +27,7 @@ import (
 var blockHeaderBTCTimeout = 5 * time.Minute
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
-func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
+func (sm *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
 	sm.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// fetch utxos
@@ -65,7 +65,7 @@ func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) (txHash *chainha
 }
 
 // DepositBTC deposits BTC on ZetaChain
-func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
+func (sm *E2ERunner) DepositBTC(testHeader bool) {
 	sm.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
@@ -151,7 +151,7 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	}
 }
 
-func (sm *SmokeTestRunner) SendToTSSFromDeployerToDeposit(
+func (sm *E2ERunner) SendToTSSFromDeployerToDeposit(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
@@ -161,7 +161,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerToDeposit(
 	return sm.SendToTSSFromDeployerWithMemo(to, amount, inputUTXOs, btc, sm.DeployerAddress.Bytes(), btcDeployerAddress)
 }
 
-func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
+func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
@@ -289,7 +289,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 
 // MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
-func (sm *SmokeTestRunner) MineBlocks() chan struct{} {
+func (sm *E2ERunner) MineBlocks() chan struct{} {
 	stop := make(chan struct{})
 	go func() {
 		for {
@@ -309,7 +309,7 @@ func (sm *SmokeTestRunner) MineBlocks() chan struct{} {
 }
 
 // ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain
-func (sm *SmokeTestRunner) ProveBTCTransaction(txHash *chainhash.Hash) {
+func (sm *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	// get tx result
 	btc := sm.BtcRPCClient
 	txResult, err := btc.GetTransaction(txHash)

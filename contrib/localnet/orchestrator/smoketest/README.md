@@ -1,23 +1,22 @@
-# `smoketest`
+# `e2e`
 
-`smoketest` is a comprehensive suite of smoke tests designed to validate the integration and functionality of the ZetaChain network, particularly its interactions with Bitcoin and EVM (Ethereum Virtual Machine) networks. This tool is essential for ensuring the robustness and reliability of ZetaChain's cross-chain functionalities.
+`e2e` is a comprehensive suite of E2E tests designed to validate the integration and functionality of the ZetaChain network, particularly its interactions with Bitcoin and EVM (Ethereum Virtual Machine) networks. This tool is essential for ensuring the robustness and reliability of ZetaChain's cross-chain functionalities.
 
 ## Packages
-The smoketest project is organized into several packages, each with a specific role:
+The E2E testing project is organized into several packages, each with a specific role:
 
-- `cmd`: Contains the main commands to execute the smoke tests.
-- `config`: Provides general configuration for smoke tests, including RPC addresses for connected networks, addresses of deployed smart contracts, and account details for test transactions.
+- `config`: Provides general configuration for E2E tests, including RPC addresses for connected networks, addresses of deployed smart contracts, and account details for test transactions.
 - `contracts`: Includes sample Solidity smart contracts used in testing scenarios.
-- `runner`: Responsible for executing smoke tests, handling interactions with various network clients.
-- `smoketests`: Houses a collection of smoke tests that can be run against the ZetaChain network.
+- `runner`: Responsible for executing E2E tests, handling interactions with various network clients.
+- `e2etests`: Houses a collection of E2E tests that can be run against the ZetaChain network.
 - `txserver`: A minimalistic client for interacting with the ZetaChain RPC interface.
 - `utils`: Offers utility functions to facilitate interactions with the different blockchain networks involved in testing.
 
 ## Config
 
-The smoketest suite utilizes a flexible and comprehensive configuration system defined in the config package, which is central to setting up and customizing your test environments. The configuration is structured as follows:
+The E2E testing suite utilizes a flexible and comprehensive configuration system defined in the config package, which is central to setting up and customizing your test environments. The configuration is structured as follows:
 
-A config YAML file can be provided to the smoke test tool via the `--config` flag. If no config file is provided, the tool will use default values for all configuration parameters.
+A config YAML file can be provided to the E2E test tool via the `--config` flag. If no config file is provided, the tool will use default values for all configuration parameters.
 
 ### Config Structure
 - `RPCs`: Defines the RPC endpoints for various networks involved in the testing.
@@ -60,4 +59,4 @@ NOTE: config is in progress, contracts on the zEVM must be added
 
 ## Getting Started
 
-TODO: Add instructions for running the smoketest tool directly from the command line.
+TODO: Add instructions for running the E2E test tool directly from the command line.

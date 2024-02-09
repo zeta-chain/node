@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 // TestStressBTCDeposit tests the stressing deposit of BTC
-func TestStressBTCDeposit(sm *runner.SmokeTestRunner) {
+func TestStressBTCDeposit(sm *runner.E2ERunner) {
 	// number of deposits to perform
 	numDeposits := 100
 
@@ -44,7 +44,7 @@ func TestStressBTCDeposit(sm *runner.SmokeTestRunner) {
 }
 
 // MonitorBTCDeposit monitors the deposit of BTC, returns once the deposit is complete
-func MonitorBTCDeposit(sm *runner.SmokeTestRunner, hash *chainhash.Hash, index int, startTime time.Time) error {
+func MonitorBTCDeposit(sm *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.String(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

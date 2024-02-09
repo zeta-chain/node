@@ -10,7 +10,7 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
+func (sm *E2ERunner) SetupBitcoinAccount(initNetwork bool) {
 	sm.Logger.Print("⚙️ setting up Bitcoin account")
 	startTime := time.Now()
 	defer func() {
@@ -47,7 +47,7 @@ func (sm *SmokeTestRunner) SetupBitcoinAccount(initNetwork bool) {
 }
 
 // GetBtcAddress returns the BTC address of the deployer from its EVM private key
-func (sm *SmokeTestRunner) GetBtcAddress() (string, string, error) {
+func (sm *E2ERunner) GetBtcAddress() (string, string, error) {
 	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
 	if err != nil {
 		return "", "", err
@@ -72,7 +72,7 @@ func (sm *SmokeTestRunner) GetBtcAddress() (string, string, error) {
 }
 
 // SetBtcAddress imports the deployer's private key into the Bitcoin node
-func (sm *SmokeTestRunner) SetBtcAddress(name string, rescan bool) {
+func (sm *E2ERunner) SetBtcAddress(name string, rescan bool) {
 	skBytes, err := hex.DecodeString(sm.DeployerPrivateKey)
 	if err != nil {
 		panic(err)

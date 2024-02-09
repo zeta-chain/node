@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func TestPauseZRC20(sm *runner.SmokeTestRunner) {
+func TestPauseZRC20(sm *runner.E2ERunner) {
 	// Setup vault used to test zrc20 interactions
 	sm.Logger.Info("Deploying vault")
 	vaultAddr, _, vaultContract, err := vault.DeployVault(sm.ZevmAuth, sm.ZevmClient)

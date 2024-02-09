@@ -30,7 +30,7 @@ type AccountBalancesDiff struct {
 }
 
 // GetAccountBalances returns the account balances of the accounts used in the smoke test
-func (sm *SmokeTestRunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
+func (sm *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
 	zetaZeta, err := sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
 	if err != nil {
@@ -89,7 +89,7 @@ func (sm *SmokeTestRunner) GetAccountBalances(skipBTC bool) (AccountBalances, er
 }
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
-func (sm *SmokeTestRunner) GetBitcoinBalance() (string, error) {
+func (sm *E2ERunner) GetBitcoinBalance() (string, error) {
 	addr, _, err := sm.GetBtcAddress()
 	if err != nil {
 		return "", fmt.Errorf("failed to get BTC address: %w", err)
@@ -118,7 +118,7 @@ func (sm *SmokeTestRunner) GetBitcoinBalance() (string, error) {
 
 // PrintAccountBalances shows the account balances of the accounts used in the smoke test
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
-func (sm *SmokeTestRunner) PrintAccountBalances(balances AccountBalances) {
+func (sm *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	sm.Logger.Print(" ---💰 Account info %s ---", sm.DeployerAddress.Hex())
 
 	// zevm
@@ -143,7 +143,7 @@ func (sm *SmokeTestRunner) PrintAccountBalances(balances AccountBalances) {
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
-func (sm *SmokeTestRunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
+func (sm *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
 	sm.Logger.Print(" ---💰 Total gas spent ---")
 
 	// show the value only if it is not zero

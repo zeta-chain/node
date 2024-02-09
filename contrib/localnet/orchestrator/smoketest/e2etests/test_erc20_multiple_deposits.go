@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
+func TestMultipleERC20Deposit(sm *runner.E2ERunner) {
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
 		panic(err)
@@ -33,7 +33,7 @@ func TestMultipleERC20Deposit(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func MultipleDeposits(sm *runner.SmokeTestRunner, amount, count *big.Int) ethcommon.Hash {
+func MultipleDeposits(sm *runner.E2ERunner, amount, count *big.Int) ethcommon.Hash {
 	// deploy depositor
 	depositorAddr, _, depositor, err := testcontract.DeployDepositor(sm.GoerliAuth, sm.GoerliClient, sm.ERC20CustodyAddr)
 	if err != nil {

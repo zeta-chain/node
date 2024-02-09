@@ -48,11 +48,11 @@ func setCosmosConfig() {
 func initTestRunner(
 	name string,
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	userAddress ethcommon.Address,
 	userPrivKey string,
 	logger *runner.Logger,
-) (*runner.SmokeTestRunner, error) {
+) (*runner.E2ERunner, error) {
 	// initialize runner for test
 	testRunner, err := zetae2econfig.RunnerFromConfig(
 		deployerRunner.Ctx,

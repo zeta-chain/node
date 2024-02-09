@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
-func TestContextUpgrade(sm *runner.SmokeTestRunner) {
+func TestContextUpgrade(sm *runner.E2ERunner) {
 	value := big.NewInt(1000000000000000) // in wei (1 eth)
 	data := make([]byte, 0, 32)
 	data = append(data, sm.ContextAppAddr.Bytes()...)

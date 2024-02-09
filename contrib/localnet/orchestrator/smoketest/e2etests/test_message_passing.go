@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessagePassing(sm *runner.SmokeTestRunner) {
+func TestMessagePassing(sm *runner.E2ERunner) {
 	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
 	if err != nil {
 		panic(err)
@@ -96,7 +96,7 @@ func TestMessagePassing(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
+func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
 	if err != nil {
 		panic(err)
@@ -159,7 +159,7 @@ func TestMessagePassingRevertFail(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func TestMessagePassingRevertSuccess(sm *runner.SmokeTestRunner) {
+func TestMessagePassingRevertSuccess(sm *runner.E2ERunner) {
 	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ import (
 )
 
 // TestEtherDeposit tests deposit of ethers
-func TestEtherDeposit(sm *runner.SmokeTestRunner) {
+func TestEtherDeposit(sm *runner.E2ERunner) {
 	hash := sm.DepositEtherWithAmount(false, big.NewInt(10000000000000000)) // in wei (0.01 eth)
 
 	// wait for the cctx to be mined
@@ -28,7 +28,7 @@ func TestEtherDeposit(sm *runner.SmokeTestRunner) {
 }
 
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
-func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
+func TestEtherDepositAndCall(sm *runner.E2ERunner) {
 	sm.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(sm.ZevmAuth, sm.ZevmClient)
 	if err != nil {
@@ -135,7 +135,7 @@ func TestEtherDepositAndCall(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
+func TestDepositAndCallRefund(sm *runner.E2ERunner) {
 	goerliClient := sm.GoerliClient
 
 	// in wei (10 eth)
@@ -233,7 +233,7 @@ func TestDepositAndCallRefund(sm *runner.SmokeTestRunner) {
 }
 
 // TestDepositEtherLiquidityCap tests depositing Ethers in a context where a liquidity cap is set
-func TestDepositEtherLiquidityCap(sm *runner.SmokeTestRunner) {
+func TestDepositEtherLiquidityCap(sm *runner.E2ERunner) {
 	supply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)

@@ -12,7 +12,7 @@ import (
 )
 
 // WaitForMinedCCTX waits for a cctx to be mined from a tx
-func (sm *SmokeTestRunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
+func (sm *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	defer func() {
 		sm.Unlock()
 	}()
@@ -29,7 +29,7 @@ func (sm *SmokeTestRunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 
 // SendZetaOnEvm sends ZETA to an address on EVM
 // this allows the ZETA contract deployer to funds other accounts on EVM
-func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+func (sm *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
 	// the deployer might be sending ZETA in different goroutines
 	defer func() {
 		sm.Unlock()
@@ -46,7 +46,7 @@ func (sm *SmokeTestRunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount i
 }
 
 // DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
-func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
+func (sm *E2ERunner) DepositZeta() ethcommon.Hash {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
@@ -54,7 +54,7 @@ func (sm *SmokeTestRunner) DepositZeta() ethcommon.Hash {
 }
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
-func (sm *SmokeTestRunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
+func (sm *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
 	tx, err := sm.ZetaEth.Approve(sm.GoerliAuth, sm.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)

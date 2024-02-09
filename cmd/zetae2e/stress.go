@@ -59,7 +59,7 @@ func NewStressTestCmd() *cobra.Command {
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
 	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
-	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the smoketest")
+	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the E2E test")
 	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	local.DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
@@ -70,11 +70,11 @@ func NewStressTestCmd() *cobra.Command {
 func StressTest(cmd *cobra.Command, _ []string) {
 	testStartTime := time.Now()
 	defer func() {
-		fmt.Println("Smoke test took", time.Since(testStartTime))
+		fmt.Println("E2E test took", time.Since(testStartTime))
 	}()
 	go func() {
 		time.Sleep(StressTestTimeout)
-		fmt.Println("Smoke test timed out after", StressTestTimeout)
+		fmt.Println("E2E test timed out after", StressTestTimeout)
 		os.Exit(1)
 	}()
 
@@ -83,7 +83,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
 	cosmosConf.Seal()
 
-	// initialize smoke tests config
+	// initialize E2E tests config
 	conf, err := local.GetConfig(cmd)
 	if err != nil {
 		panic(err)
@@ -135,8 +135,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
-	// initialize smoke test runner
-	smokeTest, err := zetae2econfig.RunnerFromConfig(
+	// initialize E2E test runner
+	e2eTest, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
@@ -152,27 +152,27 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// setup TSS addresses
-	if err := smokeTest.SetTSSAddresses(); err != nil {
+	if err := e2eTest.SetTSSAddresses(); err != nil {
 		panic(err)
 	}
 
-	smokeTest.SetupEVM(stressTestArgs.contractsDeployed)
+	e2eTest.SetupEVM(stressTestArgs.contractsDeployed)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.network == "LOCAL" {
 		// deploy and set zevm contract
-		smokeTest.SetZEVMContracts()
+		e2eTest.SetZEVMContracts()
 
 		// deposit on ZetaChain
-		smokeTest.DepositEther(false)
-		smokeTest.DepositZeta()
+		e2eTest.DepositEther(false)
+		e2eTest.DepositZeta()
 	} else if stressTestArgs.network == "TESTNET" {
-		ethZRC20Addr, err := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		ethZRC20Addr, err := e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
 		if err != nil {
 			panic(err)
 		}
-		smokeTest.ETHZRC20Addr = ethZRC20Addr
-		smokeTest.ETHZRC20, err = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.ZevmClient)
+		e2eTest.ETHZRC20Addr = ethZRC20Addr
+		e2eTest.ETHZRC20, err = zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZevmClient)
 		if err != nil {
 			panic(err)
 		}
@@ -182,7 +182,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Check zrc20 balance of Deployer address
-	ethZRC20Balance, err := smokeTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
+	ethZRC20Balance, err := e2eTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -190,22 +190,22 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	//Pre-approve ETH withdraw on ZEVM
 	fmt.Printf("approving ETH ZRC20...\n")
-	ethZRC20 := smokeTest.ETHZRC20
-	tx, err := ethZRC20.Approve(smokeTest.ZevmAuth, smokeTest.ETHZRC20Addr, big.NewInt(1e18))
+	ethZRC20 := e2eTest.ETHZRC20
+	tx, err := ethZRC20.Approve(e2eTest.ZevmAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(ctx, smokeTest.ZevmClient, tx, logger, smokeTest.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZevmClient, tx, logger, e2eTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
-	blockNum, err := smokeTest.ZevmClient.BlockNumber(context.Background())
+	blockNum, err := e2eTest.ZevmClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
-	// #nosec G701 smoketest - always in range
-	nonce, err := smokeTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
+	// #nosec G701 e2eTest - always in range
+	nonce, err := e2eTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
@@ -219,15 +219,15 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM - goerli")
 	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
-	smokeTest.WG.Add(2)
-	go WithdrawCCtx(smokeTest)       // Withdraw USDT from ZEVM to EVM - goerli
-	go EchoNetworkMetrics(smokeTest) // Display Network metrics periodically to monitor performance
+	e2eTest.WG.Add(2)
+	go WithdrawCCtx(e2eTest)       // Withdraw USDT from ZEVM to EVM - goerli
+	go EchoNetworkMetrics(e2eTest) // Display Network metrics periodically to monitor performance
 
-	smokeTest.WG.Wait()
+	e2eTest.WG.Wait()
 }
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
-func WithdrawCCtx(sm *runner.SmokeTestRunner) {
+func WithdrawCCtx(sm *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {
 		select {
@@ -237,7 +237,7 @@ func WithdrawCCtx(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
+func EchoNetworkMetrics(sm *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Second * StatInterval)
 	var queue = make([]uint64, 0)
 	var numTicks = 0
@@ -300,7 +300,7 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func WithdrawETHZRC20(sm *runner.SmokeTestRunner) {
+func WithdrawETHZRC20(sm *runner.E2ERunner) {
 	defer func() {
 		zevmNonce.Add(zevmNonce, big.NewInt(1))
 	}()

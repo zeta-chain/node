@@ -33,7 +33,7 @@ var (
 )
 
 // NewLocalCmd returns the local command
-// which runs the smoketest locally on the machine with localnet for each blockchain
+// which runs the E2E tests locally on the machine with localnet for each blockchain
 func NewLocalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",

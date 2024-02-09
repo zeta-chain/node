@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ import (
 )
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc
-func TestStressBTCWithdraw(sm *runner.SmokeTestRunner) {
+func TestStressBTCWithdraw(sm *runner.E2ERunner) {
 	// number of withdraws to perform
 	numWithdraws := 100
 
@@ -55,7 +55,7 @@ func TestStressBTCWithdraw(sm *runner.SmokeTestRunner) {
 }
 
 // MonitorBTCWithdraw monitors the withdraw of BTC, returns once the withdraw is complete
-func MonitorBTCWithdraw(sm *runner.SmokeTestRunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+func MonitorBTCWithdraw(sm *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

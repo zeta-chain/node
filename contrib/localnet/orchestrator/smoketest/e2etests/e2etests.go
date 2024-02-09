@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import "github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 
@@ -37,8 +37,8 @@ const (
 	TestStressBTCDepositName    = "stress_btc_deposit"
 )
 
-// AllSmokeTests is an ordered list of all smoke tests
-var AllSmokeTests = []runner.SmokeTest{
+// AllE2ETests is an ordered list of all e2e tests
+var AllE2ETests = []runner.E2ETest{
 	{
 		TestContextUpgradeName,
 		"tests sending ETH on ZEVM and check context data using ContextApp",

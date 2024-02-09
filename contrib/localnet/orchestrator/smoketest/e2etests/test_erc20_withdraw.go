@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -9,7 +9,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestERC20Withdraw(sm *runner.SmokeTestRunner) {
+func TestERC20Withdraw(sm *runner.E2ERunner) {
 	// approve
 	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.USDTZRC20Addr, big.NewInt(1e18))
 	if err != nil {
@@ -48,7 +48,7 @@ func TestERC20Withdraw(sm *runner.SmokeTestRunner) {
 }
 
 // verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on Goerli
-func verifyTransferAmountFromCCTX(sm *runner.SmokeTestRunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
+func verifyTransferAmountFromCCTX(sm *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
 	sm.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
 	receipt, err := sm.GoerliClient.TransactionReceipt(

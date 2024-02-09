@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"math/big"
@@ -13,7 +13,7 @@ import (
 )
 
 // TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
-func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
+func TestUpdateBytecode(sm *runner.E2ERunner) {
 	// Random approval
 	approved := sample.EthAddress()
 	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, approved, big.NewInt(1e10))
@@ -31,7 +31,7 @@ func TestUpdateBytecode(sm *runner.SmokeTestRunner) {
 		sm.ZevmAuth,
 		sm.ZevmClient,
 		big.NewInt(5),
-		// #nosec G701 smoketest - always in range
+		// #nosec G701 test - always in range
 		uint8(common.CoinType_Gas),
 	)
 	if err != nil {

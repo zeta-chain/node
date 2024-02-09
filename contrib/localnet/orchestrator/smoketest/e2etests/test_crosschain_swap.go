@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestCrosschainSwap(sm *runner.SmokeTestRunner) {
+func TestCrosschainSwap(sm *runner.E2ERunner) {
 	sm.ZevmAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized

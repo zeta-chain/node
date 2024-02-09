@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ import (
 )
 
 // TestStressEtherDeposit tests the stressing deposit of ether
-func TestStressEtherDeposit(sm *runner.SmokeTestRunner) {
+func TestStressEtherDeposit(sm *runner.E2ERunner) {
 	// number of deposits to perform
 	numDeposits := 100
 
@@ -42,7 +42,7 @@ func TestStressEtherDeposit(sm *runner.SmokeTestRunner) {
 }
 
 // MonitorEtherDeposit monitors the deposit of ether, returns once the deposit is complete
-func MonitorEtherDeposit(sm *runner.SmokeTestRunner, hash ethcommon.Hash, index int, startTime time.Time) error {
+func MonitorEtherDeposit(sm *runner.E2ERunner, hash ethcommon.Hash, index int, startTime time.Time) error {
 	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(

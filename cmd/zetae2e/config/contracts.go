@@ -21,7 +21,7 @@ import (
 )
 
 // setContractsFromConfigs get EVM contracts from config
-func setContractsFromConfig(r *runner.SmokeTestRunner, conf config.Config) error {
+func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	var err error
 
 	// set EVM contracts

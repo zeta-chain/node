@@ -7,11 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
-
 	"github.com/btcsuite/btcd/chaincfg"
-
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,7 +18,9 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
@@ -35,10 +33,10 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// SmokeTestRunner stores all the clients and addresses needed for smoke test
-// Exposes a method to run smoke test
+// E2ERunner stores all the clients and addresses needed for E2E test
+// Exposes a method to run E2E test
 // It also provides some helper functions
-type SmokeTestRunner struct {
+type E2ERunner struct {
 	// accounts
 	DeployerAddress       ethcommon.Address
 	DeployerPrivateKey    string
@@ -112,7 +110,7 @@ type SmokeTestRunner struct {
 	mutex         sync.Mutex
 }
 
-func NewSmokeTestRunner(
+func NewE2ERunner(
 	ctx context.Context,
 	name string,
 	ctxCancel context.CancelFunc,
@@ -131,8 +129,8 @@ func NewSmokeTestRunner(
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
 	logger *Logger,
-) *SmokeTestRunner {
-	return &SmokeTestRunner{
+) *E2ERunner {
+	return &E2ERunner{
 		Name:      name,
 		Ctx:       ctx,
 		CtxCancel: ctxCancel,
@@ -160,25 +158,25 @@ func NewSmokeTestRunner(
 	}
 }
 
-// SmokeTestFunc is a function representing a smoke test
-// It takes a SmokeTestRunner as an argument
-type SmokeTestFunc func(*SmokeTestRunner)
+// E2ETestFunc is a function representing a E2E test
+// It takes a E2ERunner as an argument
+type E2ETestFunc func(*E2ERunner)
 
-// SmokeTest represents a smoke test with a name
-type SmokeTest struct {
+// E2ETest represents a E2E test with a name
+type E2ETest struct {
 	Name        string
 	Description string
-	SmokeTest   SmokeTestFunc
+	E2ETest     E2ETestFunc
 }
 
-// RunSmokeTestsFromNames runs a list of smoke tests by name in a list of smoke tests
-func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeTestNames ...string) error {
-	for _, smokeTestName := range smokeTestNames {
-		smokeTest, ok := findSmokeTest(smokeTestName, smokeTests)
+// RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
+func (sm *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...string) error {
+	for _, e2eTestName := range e2eTestNames {
+		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
 		if !ok {
-			return fmt.Errorf("smoke test %s not found", smokeTestName)
+			return fmt.Errorf("e2e test %s not found", e2eTestName)
 		}
-		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
+		if err := sm.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
@@ -186,21 +184,21 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNames(smokeTests []SmokeTest, smokeT
 	return nil
 }
 
-// RunSmokeTestsFromNamesIntoReport runs a list of smoke tests by name in a list of smoke tests and returns a report
+// RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
-func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTest, smokeTestNames ...string) (TestReports, error) {
+func (sm *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestNames ...string) (TestReports, error) {
 	// get all tests so we can return an error if a test is not found
-	tests := make([]SmokeTest, 0, len(smokeTestNames))
-	for _, smokeTestName := range smokeTestNames {
-		smokeTest, ok := findSmokeTest(smokeTestName, smokeTests)
+	tests := make([]E2ETest, 0, len(e2eTestNames))
+	for _, e2eTestName := range e2eTestNames {
+		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
 		if !ok {
-			return nil, fmt.Errorf("smoke test %s not found", smokeTestName)
+			return nil, fmt.Errorf("e2e test %s not found", e2eTestName)
 		}
-		tests = append(tests, smokeTest)
+		tests = append(tests, e2eTest)
 	}
 
 	// go through all tests
-	reports := make(TestReports, 0, len(smokeTestNames))
+	reports := make(TestReports, 0, len(e2eTestNames))
 	for _, test := range tests {
 		// get info before test
 		balancesBefore, err := sm.GetAccountBalances(true)
@@ -210,7 +208,7 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 		timeBefore := time.Now()
 
 		// run test
-		testErr := sm.RunSmokeTest(test, false)
+		testErr := sm.RunE2ETest(test, false)
 		if testErr != nil {
 			sm.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
 		}
@@ -238,18 +236,18 @@ func (sm *SmokeTestRunner) RunSmokeTestsFromNamesIntoReport(smokeTests []SmokeTe
 	return reports, nil
 }
 
-// RunSmokeTests runs a list of smoke tests
-func (sm *SmokeTestRunner) RunSmokeTests(smokeTests []SmokeTest) (err error) {
-	for _, smokeTest := range smokeTests {
-		if err := sm.RunSmokeTest(smokeTest, true); err != nil {
+// RunE2ETests runs a list of e2e tests
+func (sm *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
+	for _, e2eTest := range e2eTests {
+		if err := sm.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// RunSmokeTest runs a smoke test
-func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest, checkAccounting bool) (err error) {
+// RunE2ETest runs a e2e test
+func (sm *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -257,15 +255,15 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest, checkAccoun
 			// print stack trace
 			stack := make([]byte, 4096)
 			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", smokeTestWithName.Name, r, stack[:n])
+			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTestWithName.Name, r, stack[:n])
 		}
 	}()
 
 	startTime := time.Now()
-	sm.Logger.Print("⏳running - %s", smokeTestWithName.Description)
+	sm.Logger.Print("⏳running - %s", e2eTestWithName.Description)
 
-	// run smoke test
-	smokeTestWithName.SmokeTest(sm)
+	// run e2e test
+	e2eTestWithName.E2ETest(sm)
 
 	//check supplies
 	if checkAccounting {
@@ -274,23 +272,23 @@ func (sm *SmokeTestRunner) RunSmokeTest(smokeTestWithName SmokeTest, checkAccoun
 		}
 	}
 
-	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), smokeTestWithName.Description)
+	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTestWithName.Description)
 
 	return err
 }
 
-// findSmokeTest finds a smoke test by name
-func findSmokeTest(name string, smokeTests []SmokeTest) (SmokeTest, bool) {
-	for _, test := range smokeTests {
+// findE2ETest finds a e2e test by name
+func findE2ETest(name string, e2eTests []E2ETest) (E2ETest, bool) {
+	for _, test := range e2eTests {
 		if test.Name == name {
 			return test, true
 		}
 	}
-	return SmokeTest{}, false
+	return E2ETest{}, false
 }
 
-// CopyAddressesFrom copies addresses from another SmokeTestRunner that initialized the contracts
-func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error) {
+// CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts
+func (sm *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
 	sm.TSSAddress = other.TSSAddress
 	sm.BTCTSSAddress = other.BTCTSSAddress
@@ -374,19 +372,19 @@ func (sm *SmokeTestRunner) CopyAddressesFrom(other *SmokeTestRunner) (err error)
 }
 
 // Lock locks the mutex
-func (sm *SmokeTestRunner) Lock() {
+func (sm *E2ERunner) Lock() {
 	sm.mutex.Lock()
 }
 
 // Unlock unlocks the mutex
-func (sm *SmokeTestRunner) Unlock() {
+func (sm *E2ERunner) Unlock() {
 	sm.mutex.Unlock()
 }
 
 // PrintContractAddresses prints the addresses of the contracts
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
-func (sm *SmokeTestRunner) PrintContractAddresses() {
+func (sm *E2ERunner) PrintContractAddresses() {
 	// zevm contracts
 	sm.Logger.Print(" --- 📜zEVM contracts ---")
 	sm.Logger.Print("SystemContract: %s", sm.SystemContractAddr.Hex())

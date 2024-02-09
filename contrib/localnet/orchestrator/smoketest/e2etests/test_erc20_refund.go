@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
+func TestERC20DepositAndCallRefund(sm *runner.E2ERunner) {
 	// Get the initial balance of the deployer
 	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
 	if err != nil {
@@ -121,7 +121,7 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	sm.Logger.Info("\tbalance after refund: %s", goerliBalanceAfterRefund.String())
 }
 
-func createZetaERC20LiquidityPool(sm *runner.SmokeTestRunner) error {
+func createZetaERC20LiquidityPool(sm *runner.E2ERunner) error {
 	amount := big.NewInt(1e10)
 	txHash := sm.DepositERC20WithAmountAndMessage(amount, []byte{})
 	utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
@@ -158,7 +158,7 @@ func createZetaERC20LiquidityPool(sm *runner.SmokeTestRunner) error {
 	return nil
 }
 
-func sendInvalidUSDTDeposit(sm *runner.SmokeTestRunner, amount *big.Int) (string, error) {
+func sendInvalidUSDTDeposit(sm *runner.E2ERunner, amount *big.Int) (string, error) {
 	USDT := sm.USDTERC20
 	tx, err := USDT.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
 	if err != nil {

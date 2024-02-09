@@ -1,4 +1,4 @@
-package smoketests
+package e2etests
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestBitcoinDeposit(sm *runner.SmokeTestRunner) {
+func TestBitcoinDeposit(sm *runner.E2ERunner) {
 
 	sm.SetBtcAddress(sm.Name, false)
 

@@ -7,14 +7,14 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
+	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/e2etests"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
 )
 
 // ethereumTestRoutine runs Ethereum related smoke tests
 func ethereumTestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 ) func() error {
 	return func() (err error) {
@@ -53,12 +53,12 @@ func ethereumTestRoutine(
 		// run ethereum test
 		// Note: due to the extensive block generation in Ethereum localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
-		if err := ethereumRunner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			smoketests.TestEtherWithdrawName,
-			smoketests.TestContextUpgradeName,
-			smoketests.TestEtherDepositAndCallName,
-			smoketests.TestDepositAndCallRefundName,
+		if err := ethereumRunner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			e2etests.TestEtherWithdrawName,
+			e2etests.TestContextUpgradeName,
+			e2etests.TestEtherDepositAndCallName,
+			e2etests.TestDepositAndCallRefundName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
