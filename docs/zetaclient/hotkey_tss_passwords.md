@@ -1,7 +1,7 @@
 ## Hot Key and TSS key-share Passwords
 
 ### Zetaclient
-Previously there were two environment variables being used to store passwords encrypting the tss key file and local operator keyring file.
+Previously there were two environment variables being used to store passwords encrypting the tss key file and local operator keyring file:
 
 * HOTKEY_PASSWORD
 * TSS_FRAGMENT_SEED
