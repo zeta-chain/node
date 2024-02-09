@@ -23,7 +23,6 @@
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 
-
 ### Features
 
 * [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
