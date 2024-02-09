@@ -4,10 +4,12 @@ import (
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -148,5 +150,44 @@ func TestGetRevertGasLimit(t *testing.T) {
 				Asset:         asset,
 			}})
 		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
+	})
+}
+
+func TestGetAbortedAmount(t *testing.T) {
+	amount := sdkmath.NewUint(100)
+	t.Run("should return the inbound amount if outbound not present", func(t *testing.T) {
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: amount,
+			},
+		}
+		a := crosschainkeeper.GetAbortedAmount(cctx)
+		require.Equal(t, amount, a)
+	})
+	t.Run("should return the amount outbound amount", func(t *testing.T) {
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: amount},
+			},
+		}
+		a := crosschainkeeper.GetAbortedAmount(cctx)
+		require.Equal(t, amount, a)
+	})
+	t.Run("should return the zero if outbound amount is not present and inbound is 0", func(t *testing.T) {
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+		}
+		a := crosschainkeeper.GetAbortedAmount(cctx)
+		require.Equal(t, sdkmath.ZeroUint(), a)
+	})
+	t.Run("should return the zero if no amounts are present", func(t *testing.T) {
+		cctx := types.CrossChainTx{}
+		a := crosschainkeeper.GetAbortedAmount(cctx)
+		require.Equal(t, sdkmath.ZeroUint(), a)
 	})
 }

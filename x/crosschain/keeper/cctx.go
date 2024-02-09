@@ -49,7 +49,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 		})
 	}
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
-		k.AddZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
+		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }
 

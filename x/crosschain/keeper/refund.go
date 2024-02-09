@@ -28,11 +28,12 @@ func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.Cross
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype gas
 func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	// refund in gas token to refund address
-	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
+	// Refund the the amount was previously
+	refundAmount := GetAbortedAmount(cctx)
+	if refundAmount.IsNil() || refundAmount.IsZero() {
 		return errors.New("no amount to refund")
 	}
 	chainID := cctx.InboundTxParams.SenderChainId
-	amountOfGasTokenLocked := cctx.InboundTxParams.Amount
 	// get the zrc20 contract address
 	fcSenderChain, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, chainID)
 	if !found {
@@ -43,7 +44,7 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 		return errorsmod.Wrapf(types.ErrForeignCoinNotFound, "zrc20 contract address not found for chain %d", chainID)
 	}
 	// deposit the amount to the tx origin instead of receiver as this is a refund
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, amountOfGasTokenLocked.BigInt()); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
 	return nil
@@ -52,6 +53,8 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 // RefundAmountOnZetaChainGas refunds the amount of the cctx on ZetaChain in case of aborted cctx with cointype zeta
 func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
+	refundAmount := GetAbortedAmount(cctx)
+	fmt.Println("RefundAmountOnZetaChainZeta: refundAmount: ", refundAmount)
 	chainID := cctx.InboundTxParams.SenderChainId
 	// check if chain is an EVM chain
 	if !common.IsEVMChain(chainID) {
@@ -61,7 +64,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 		return errors.New("no amount to refund")
 	}
 	// deposit the amount to refund address
-	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, cctx.InboundTxParams.Amount.BigInt()); err != nil {
+	if err := k.fungibleKeeper.DepositCoinZeta(ctx, refundAddress, refundAmount.BigInt()); err != nil {
 		return errors.New("failed to refund zeta on ZetaChain" + err.Error())
 	}
 	return nil
@@ -71,7 +74,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 // NOTE: GetCurrentOutTxParam should contain the last up to date cctx amount
 // Refund address should already be validated before calling this function
 func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
-	inputAmount := cctx.InboundTxParams.Amount
+	refundAmount := GetAbortedAmount(cctx)
 	// preliminary checks
 	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")
@@ -80,7 +83,7 @@ func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossCh
 		return errors.New("only EVM chains are supported for refund on ZetaChain")
 	}
 
-	if inputAmount.IsNil() || inputAmount.IsZero() {
+	if refundAmount.IsNil() || refundAmount.IsZero() {
 		return errors.New("no amount to refund")
 	}
 
@@ -95,7 +98,7 @@ func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossCh
 	}
 
 	// deposit the amount to the sender
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, inputAmount.BigInt()); err != nil {
+	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, refundAddress, refundAmount.BigInt()); err != nil {
 		return errors.New("failed to deposit zrc20 on ZetaChain" + err.Error())
 	}
 
