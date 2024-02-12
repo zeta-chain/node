@@ -1,6 +1,7 @@
 package zetaclient
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"math/big"
@@ -9,14 +10,17 @@ import (
 	"time"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
 type BitcoinClientTestSuite struct {
@@ -73,6 +77,33 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 func (suite *BitcoinClientTestSuite) TearDownSuite() {
 }
 
+func getRPCClient(chainID int64) (*rpcclient.Client, error) {
+	var connCfg *rpcclient.ConnConfig
+	// mainnet
+	if chainID == 8332 {
+		connCfg = &rpcclient.ConnConfig{
+			Host:         "127.0.0.1:8332", // mainnet endpoint goes here
+			User:         "user",
+			Pass:         "pass",
+			Params:       "mainnet",
+			HTTPPostMode: true,
+			DisableTLS:   true,
+		}
+	}
+	// testnet3
+	if chainID == 18332 {
+		connCfg = &rpcclient.ConnConfig{
+			Host:         "127.0.0.1:8332", // testnet endpoint goes here
+			User:         "user",
+			Pass:         "pass",
+			Params:       "testnet3",
+			HTTPPostMode: true,
+			DisableTLS:   true,
+		}
+	}
+	return rpcclient.New(connCfg, nil)
+}
+
 func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjson.EstimateSmartFeeMode) (*big.Int, error) {
 	feeResult, err := client.EstimateSmartFee(confTarget, estimateMode)
 	if err != nil {
@@ -113,7 +144,8 @@ func (suite *BitcoinClientTestSuite) Test1() {
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		&log.Logger,
-		common.BtcRegtestChain().ChainId,
+		&chaincfg.TestNet3Params,
+		0.0,
 	)
 
 	suite.Require().Equal(1, len(inTxs))
@@ -149,7 +181,8 @@ func (suite *BitcoinClientTestSuite) Test2() {
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
 		&log.Logger,
-		common.BtcRegtestChain().ChainId,
+		&chaincfg.TestNet3Params,
+		0.0,
 	)
 
 	suite.Require().Equal(0, len(inTxs))
@@ -175,20 +208,11 @@ func (suite *BitcoinClientTestSuite) Test3() {
 // 	suite.Run(t, new(BitcoinClientTestSuite))
 // }
 
+// Remove prefix "Live" to run this live test
 func LiveTestBitcoinFeeRate(t *testing.T) {
-	// mainnet config
-	connCfg := &rpcclient.ConnConfig{
-		Host:         "127.0.0.1:8332", // mainnet endpoint goes here
-		User:         "username",
-		Pass:         "password",
-		Params:       "mainnet",
-		HTTPPostMode: true,
-		DisableTLS:   true,
-	}
-	client, err := rpcclient.New(connCfg, nil)
-	if err != nil {
-		t.Error(err)
-	}
+	// setup Bitcoin client
+	client, err := getRPCClient(8332)
+	require.NoError(t, err)
 	bn, err := client.GetBlockCount()
 	if err != nil {
 		t.Error(err)
@@ -226,7 +250,92 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 		if err != nil || errCon1 != nil || errEco1 != nil || errCon2 != nil || errEco2 != nil {
 			continue
 		}
+		require.True(t, feeRateConservative1.Uint64() >= feeRateEconomical1.Uint64())
+		require.True(t, feeRateConservative2.Uint64() >= feeRateEconomical2.Uint64())
+		require.True(t, feeRateConservative1.Uint64() >= feeRateConservative2.Uint64())
+		require.True(t, feeRateEconomical1.Uint64() >= feeRateEconomical2.Uint64())
 		fmt.Printf("Block: %d, Conservative-1 fee rate: %d, Economical-1 fee rate: %d\n", bn, feeRateConservative1.Uint64(), feeRateEconomical1.Uint64())
 		fmt.Printf("Block: %d, Conservative-2 fee rate: %d, Economical-2 fee rate: %d\n", bn, feeRateConservative2.Uint64(), feeRateEconomical2.Uint64())
 	}
+}
+
+// compare fee rate with mempool.space for blocks [startBlock, endBlock]
+func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, endBlock int, testnet bool) {
+	// mempool.space return 15 blocks [bn-14, bn] per request
+	for bn := startBlock; bn >= endBlock; {
+		// get mempool.space return blocks in descending order [bn, bn-14]
+		mempoolBlocks, err := testutils.GetBlocks(context.Background(), bn, testnet)
+		if err != nil {
+			fmt.Printf("error GetBlocks %d: %s\n", bn, err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+
+		// calculate gas rate for each block
+		for _, mb := range mempoolBlocks {
+			// stop on end block
+			if mb.Height < endBlock {
+				break
+			}
+			bn = int(mb.Height) - 1
+
+			// get block hash
+			blkHash, err := client.GetBlockHash(int64(mb.Height))
+			if err != nil {
+				fmt.Printf("error: %s\n", err)
+				continue
+			}
+			// get block
+			blockVb, err := client.GetBlockVerboseTx(blkHash)
+			if err != nil {
+				fmt.Printf("error: %s\n", err)
+				continue
+			}
+			// calculate gas rate
+			netParams := &chaincfg.MainNetParams
+			if testnet {
+				netParams = &chaincfg.TestNet3Params
+			}
+			gasRate, err := CalcBlockAvgFeeRate(blockVb, netParams)
+			require.NoError(t, err)
+
+			// compare with mempool.space
+			if int(gasRate) == mb.Extras.AvgFeeRate {
+				fmt.Printf("block %d: gas rate %d == mempool.space gas rate\n", mb.Height, gasRate)
+			} else if int(gasRate) > mb.Extras.AvgFeeRate {
+				fmt.Printf("block %d: gas rate %d >  mempool.space gas rate %d, diff: %f percent\n",
+					mb.Height, gasRate, mb.Extras.AvgFeeRate, float64(int(gasRate)-mb.Extras.AvgFeeRate)/float64(mb.Extras.AvgFeeRate)*100)
+			} else {
+				fmt.Printf("block %d: gas rate %d <  mempool.space gas rate %d, diff: %f percent\n",
+					mb.Height, gasRate, mb.Extras.AvgFeeRate, float64(mb.Extras.AvgFeeRate-int(gasRate))/float64(mb.Extras.AvgFeeRate)*100)
+			}
+		}
+	}
+}
+
+// Remove prefix "Live" to run this live test
+func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
+	// setup Bitcoin client
+	client, err := getRPCClient(8332)
+	require.NoError(t, err)
+
+	// test against mempool.space API for 10000 blocks
+	//startBlock := 210000 * 3 // 3rd halving
+	startBlock := 829596
+	endBlock := startBlock - 10000
+
+	compareAvgFeeRate(t, client, startBlock, endBlock, false)
+}
+
+func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
+	// setup Bitcoin client
+	client, err := getRPCClient(18332)
+	require.NoError(t, err)
+
+	// test against mempool.space API for 10000 blocks
+	//startBlock := 210000 * 12 // 12th halving
+	startBlock := 2577600
+	endBlock := startBlock - 10000
+
+	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }

@@ -15,6 +15,7 @@ import (
 
 	cosmosmath "cosmossdk.io/math"
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
@@ -33,6 +34,10 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const (
+	DynamicDepositorFeeHeight = 832000 // Bitcoin block height to switch to dynamic depositor fee
+)
+
 var _ ChainClient = &BitcoinChainClient{}
 
 type BTCLog struct {
@@ -49,6 +54,7 @@ type BitcoinChainClient struct {
 	*ChainMetrics
 
 	chain            common.Chain
+	netParams        *chaincfg.Params
 	rpcClient        BTCRPCClient
 	zetaClient       ZetaCoreBridger
 	Tss              TSSSigner
@@ -137,6 +143,11 @@ func NewBitcoinClient(
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
+	netParams, err := common.BitcoinNetParamsFromChainID(ob.chain.ChainId)
+	if err != nil {
+		return nil, fmt.Errorf("error getting net params for chain %d: %s", ob.chain.ChainId, err)
+	}
+	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
 	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
@@ -425,25 +436,33 @@ func (ob *BitcoinChainClient) observeInTx() error {
 			}
 		}
 
-		tssAddress := ob.Tss.BTCAddress()
-		// #nosec G701 always positive
-		inTxs := FilterAndParseIncomingTx(
-			res.Block.Tx,
-			uint64(res.Block.Height),
-			tssAddress,
-			&ob.logger.WatchInTx,
-			ob.chain.ChainId,
-		)
+		if len(res.Block.Tx) > 1 {
+			// get depositor fee
+			depositorFee := CalcDepositorFee(res.Block, ob.chain.ChainId, ob.netParams, ob.logger.WatchInTx)
 
-		// post inbound vote message to zetacore
-		for _, inTx := range inTxs {
-			msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-			zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
-			if err != nil {
-				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
-				return err // we have to re-scan this block next time
-			} else if zetaHash != "" {
-				ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s", zetaHash, inTx.TxHash, ballot)
+			// filter incoming txs to TSS address
+			tssAddress := ob.Tss.BTCAddress()
+			// #nosec G701 always positive
+			inTxs := FilterAndParseIncomingTx(
+				res.Block.Tx,
+				uint64(res.Block.Height),
+				tssAddress,
+				&ob.logger.WatchInTx,
+				ob.netParams,
+				depositorFee,
+			)
+
+			// post inbound vote message to zetacore
+			for _, inTx := range inTxs {
+				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
+				zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(PostVoteInboundGasLimit, PostVoteInboundExecutionGasLimit, msg)
+				if err != nil {
+					ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+					return err // we have to re-scan this block next time
+				} else if zetaHash != "" {
+					ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+						zetaHash, inTx.TxHash, ballot, depositorFee)
+				}
 			}
 		}
 
@@ -632,14 +651,15 @@ func FilterAndParseIncomingTx(
 	blockNumber uint64,
 	targetAddress string,
 	logger *zerolog.Logger,
-	chainID int64,
+	netParams *chaincfg.Params,
+	depositorFee float64,
 ) []*BTCInTxEvnet {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
-		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, chainID)
+		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 			continue
@@ -681,7 +701,8 @@ func GetBtcEvent(
 	targetAddress string,
 	blockNumber uint64,
 	logger *zerolog.Logger,
-	chainID int64,
+	netParams *chaincfg.Params,
+	depositorFee float64,
 ) (*BTCInTxEvnet, error) {
 	found := false
 	var value float64
@@ -695,12 +716,7 @@ func GetBtcEvent(
 			if err != nil {
 				return nil, err
 			}
-
-			bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
-			if err != nil {
-				return nil, fmt.Errorf("btc: error getting bitcoin net params : %v", err)
-			}
-			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, bitcoinNetParams)
+			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, netParams)
 			if err != nil {
 				return nil, err
 			}
@@ -708,10 +724,10 @@ func GetBtcEvent(
 				return nil, nil // irrelevant tx to us, skip
 			}
 			// deposit amount has to be no less than the minimum depositor fee
-			if out.Value < BtcDepositorFeeMin {
-				return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than minimum depositor fee %v", value, tx.Txid, BtcDepositorFeeMin)
+			if out.Value < depositorFee {
+				return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than depositor fee %v", value, tx.Txid, depositorFee)
 			}
-			value = out.Value - BtcDepositorFeeMin
+			value = out.Value - depositorFee
 
 			out = tx.Vout[1]
 			script = out.ScriptPubKey.Hex
@@ -750,13 +766,7 @@ func GetBtcEvent(
 					return nil, errors.Wrapf(err, "error decoding pubkey")
 				}
 				hash := btcutil.Hash160(pkBytes)
-
-				bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
-				if err != nil {
-					return nil, fmt.Errorf("btc: error getting bitcoin net params : %v", err)
-				}
-
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, bitcoinNetParams)
+				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, netParams)
 				if err != nil {
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
@@ -841,7 +851,7 @@ func (ob *BitcoinChainClient) FetchUTXOS() error {
 	utxosFiltered := make([]btcjson.ListUnspentResult, 0)
 	for _, utxo := range utxos {
 		// UTXOs big enough to cover the cost of spending themselves
-		if utxo.Amount < BtcDepositorFeeMin {
+		if utxo.Amount < DefaultDepositorFee {
 			continue
 		}
 		// we don't want to spend other people's unconfirmed UTXOs as they may not be safe to spend

@@ -54,7 +54,7 @@ func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) (txHash *chainha
 	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
 	sm.Logger.Info("Now sending two txs to TSS address...")
 
-	amount = amount + zetaclient.BtcDepositorFeeMin
+	amount = amount + zetaclient.DefaultDepositorFee
 	txHash, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -100,12 +100,12 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	sm.Logger.Info("Now sending two txs to TSS address...")
 
 	// send two transactions to the TSS address
-	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
+	amount1 := 1.1 + zetaclient.DefaultDepositorFee
 	txHash1, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount1, utxos[:2], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
+	amount2 := 0.05 + zetaclient.DefaultDepositorFee
 	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -265,16 +265,14 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 
-	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
-	if err != nil {
-		panic(err)
-	}
+	depositorFee := zetaclient.DefaultDepositorFee
 	events := zetaclient.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		btcChainID,
+		sm.BitcoinParams,
+		depositorFee,
 	)
 	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
