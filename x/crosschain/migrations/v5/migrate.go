@@ -1,15 +1,11 @@
 package v5
 
 import (
-	"fmt"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -19,6 +15,8 @@ type crosschainKeeper interface {
 	GetCodec() codec.Codec
 	GetAllCrossChainTx(ctx sdk.Context) []types.CrossChainTx
 	AddFinalizedInbound(ctx sdk.Context, inboundTxHash string, senderChainID int64, height uint64)
+
+	SetZetaAccounting(ctx sdk.Context, accounting types.ZetaAccounting)
 }
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 4 to 5
@@ -27,37 +25,27 @@ func MigrateStore(
 	ctx sdk.Context,
 	crosschainKeeper crosschainKeeper,
 ) error {
-	SetZetaAccounting(ctx, crosschainKeeper.GetStoreKey(), crosschainKeeper.GetCodec())
+
+	ccctxList := crosschainKeeper.GetAllCrossChainTx(ctx)
+	abortedAmountZeta := sdkmath.ZeroUint()
+	for _, cctx := range ccctxList {
+		if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+			abortedValue := GetAbortedAmount(cctx)
+			abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
+		}
+	}
+	crosschainKeeper.SetZetaAccounting(ctx, types.ZetaAccounting{AbortedZetaAmount: abortedAmountZeta})
 
 	return nil
 }
 
-func SetZetaAccounting(
-	ctx sdk.Context,
-	crossChainStoreKey storetypes.StoreKey,
-	cdc codec.BinaryCodec,
-) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
-	prefixedStore := prefix.NewStore(ctx.KVStore(crossChainStoreKey), p)
-	abortedAmountZeta := sdkmath.ZeroUint()
-	iterator := sdk.KVStorePrefixIterator(prefixedStore, []byte{})
-	defer func(iterator sdk.Iterator) {
-		err := iterator.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(iterator)
-	for ; iterator.Valid(); iterator.Next() {
-		var val types.CrossChainTx
-		cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
-			abortedValue := keeper.GetAbortedAmount(val)
-			abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
-		}
+func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
+	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
+		return cctx.GetCurrentOutTxParam().Amount
 	}
-	b := cdc.MustMarshal(&types.ZetaAccounting{
-		AbortedZetaAmount: abortedAmountZeta,
-	})
-	store := ctx.KVStore(crossChainStoreKey)
-	store.Set([]byte(types.ZetaAccountingKey), b)
+	if cctx.InboundTxParams != nil {
+		return cctx.InboundTxParams.Amount
+	}
+
+	return sdkmath.ZeroUint()
 }
