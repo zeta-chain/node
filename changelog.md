@@ -18,10 +18,15 @@
 * [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
 * [1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
+* [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+
+### CI
+
+* [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
 
