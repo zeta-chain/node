@@ -41,7 +41,7 @@ func TestConfirmationThreshold(t *testing.T) {
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimed_828440.json"))
+	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimmed_828440.json"))
 	require.NoError(t, err)
 
 	// https://mempool.space/block/000000000000000000025ca01d2c1094b8fd3bacc5468cc3193ced6a14618c27
@@ -57,7 +57,7 @@ func TestAvgFeeRateBlock828440(t *testing.T) {
 func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimed_828440.json"))
+	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimmed_828440.json"))
 	require.NoError(t, err)
 
 	t.Run("block has no transactions", func(t *testing.T) {
@@ -144,7 +144,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func TestCalcDepositorFee828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimed_828440.json"))
+	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimmed_828440.json"))
 	require.NoError(t, err)
 
 	// should return default fee if it's a regtest block
