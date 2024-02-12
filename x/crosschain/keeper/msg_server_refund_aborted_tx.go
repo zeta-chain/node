@@ -75,12 +75,11 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	return &types.MsgRefundAbortedCCTXResponse{}, nil
 }
 
-// Set the proper refund address.
+// GetRefundAddress gets the proper refund address.
 // For BTC sender chain the refund address is the one provided in the message in the RefundAddress field.
 // For EVM chain with coin type ERC20 the refund address is the sender , but can be overridden by the RefundAddress field in the message.
 // For EVM chain with coin type Zeta the refund address is the tx origin, but can be overridden by the RefundAddress field in the message.
 // For EVM chain with coin type Gas the refund address is the tx origin, but can be overridden by the RefundAddress field in the message.
-
 func GetRefundAddress(refundAddress string) (ethcommon.Address, error) {
 	// make sure a separate refund address is provided for a bitcoin chain as we cannot refund to tx origin or sender in this case
 	if refundAddress == "" {
