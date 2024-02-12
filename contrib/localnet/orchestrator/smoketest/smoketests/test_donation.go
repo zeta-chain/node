@@ -5,12 +5,12 @@ import (
 
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 )
 
 // TestDonationEther tests donation of ether to the tss address
 func TestDonationEther(sm *runner.SmokeTestRunner) {
-	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(100000000000000000), []byte(zetaclient.DonationMessage))
+	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(100000000000000000), []byte(evm.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
