@@ -12,13 +12,13 @@ import (
 )
 
 // TestStressBTCDeposit tests the stressing deposit of BTC
-func TestStressBTCDeposit(sm *runner.E2ERunner) {
+func TestStressBTCDeposit(r *runner.E2ERunner) {
 	// number of deposits to perform
 	numDeposits := 100
 
-	sm.SetBtcAddress(sm.Name, false)
+	r.SetBtcAddress(r.Name, false)
 
-	sm.Logger.Print("starting stress test of %d deposits", numDeposits)
+	r.Logger.Print("starting stress test of %d deposits", numDeposits)
 
 	// create a wait group to wait for all the deposits to complete
 	var eg errgroup.Group
@@ -26,11 +26,11 @@ func TestStressBTCDeposit(sm *runner.E2ERunner) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		txHash := sm.DepositBTCWithAmount(0.001)
-		sm.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
+		txHash := r.DepositBTCWithAmount(0.001)
+		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
 
 		eg.Go(func() error {
-			return MonitorBTCDeposit(sm, txHash, i, time.Now())
+			return MonitorBTCDeposit(r, txHash, i, time.Now())
 		})
 	}
 
@@ -39,12 +39,12 @@ func TestStressBTCDeposit(sm *runner.E2ERunner) {
 		panic(err)
 	}
 
-	sm.Logger.Print("all deposits completed")
+	r.Logger.Print("all deposits completed")
 }
 
 // MonitorBTCDeposit monitors the deposit of BTC, returns once the deposit is complete
-func MonitorBTCDeposit(sm *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, hash.String(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
+func MonitorBTCDeposit(r *runner.E2ERunner, hash *chainhash.Hash, index int, startTime time.Time) error {
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.String(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: deposit cctx failed with status %s, message %s, cctx index %s",
@@ -55,7 +55,7 @@ func MonitorBTCDeposit(sm *runner.E2ERunner, hash *chainhash.Hash, index int, st
 		)
 	}
 	timeToComplete := time.Now().Sub(startTime)
-	sm.Logger.Print("index %d: deposit cctx success in %s", index, timeToComplete.String())
+	r.Logger.Print("index %d: deposit cctx success in %s", index, timeToComplete.String())
 
 	return nil
 }

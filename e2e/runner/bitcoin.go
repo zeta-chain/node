@@ -26,11 +26,11 @@ import (
 var blockHeaderBTCTimeout = 5 * time.Minute
 
 // DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
-func (sm *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
-	sm.Logger.Print("⏳ depositing BTC into ZEVM")
+func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
+	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 
 	// fetch utxos
-	utxos, err := sm.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{sm.BTCDeployerAddress})
+	utxos, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{runner.BTCDeployerAddress})
 	if err != nil {
 		panic(err)
 	}
@@ -48,32 +48,32 @@ func (sm *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Has
 		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
 	}
 
-	sm.Logger.Info("ListUnspent:")
-	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
-	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	sm.Logger.Info("Now sending two txs to TSS address...")
+	runner.Logger.Info("ListUnspent:")
+	runner.Logger.Info("  spendableAmount: %f", spendableAmount)
+	runner.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	amount = amount + zetaclient.BtcDepositorFeeMin
-	txHash, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
+	txHash, err = runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount, utxos, runner.BtcRPCClient, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
+	runner.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
 
 	return txHash
 }
 
 // DepositBTC deposits BTC on ZetaChain
-func (sm *E2ERunner) DepositBTC(testHeader bool) {
-	sm.Logger.Print("⏳ depositing BTC into ZEVM")
+func (runner *E2ERunner) DepositBTC(testHeader bool) {
+	runner.Logger.Print("⏳ depositing BTC into ZEVM")
 	startTime := time.Now()
 	defer func() {
-		sm.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
+		runner.Logger.Print("✅ BTC deposited in %s", time.Since(startTime))
 	}()
 
 	// fetch utxos
-	btc := sm.BtcRPCClient
-	utxos, err := sm.BtcRPCClient.ListUnspent()
+	btc := runner.BtcRPCClient
+	utxos, err := runner.BtcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
 	}
@@ -93,40 +93,40 @@ func (sm *E2ERunner) DepositBTC(testHeader bool) {
 		panic(fmt.Errorf("not enough spendable BTC UTXOs to run the test; have %d", spendableUTXOs))
 	}
 
-	sm.Logger.Info("ListUnspent:")
-	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
-	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
-	sm.Logger.Info("Now sending two txs to TSS address...")
+	runner.Logger.Info("ListUnspent:")
+	runner.Logger.Info("  spendableAmount: %f", spendableAmount)
+	runner.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	// send two transactions to the TSS address
 	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
-	txHash1, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount1, utxos[:2], btc, sm.BTCDeployerAddress)
+	txHash1, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount1, utxos[:2], btc, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
-	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
+	txHash2, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount2, utxos[2:4], btc, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	// send a donation to the TSS address to compensate for the funds minted automatically during pool creation
 	// and prevent accounting errors
-	_, err = sm.SendToTSSFromDeployerWithMemo(
-		sm.BTCTSSAddress,
+	_, err = runner.SendToTSSFromDeployerWithMemo(
+		runner.BTCTSSAddress,
 		0.11,
 		utxos[4:5],
 		btc,
 		[]byte(zetaclient.DonationMessage),
-		sm.BTCDeployerAddress,
+		runner.BTCDeployerAddress,
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	sm.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
+	runner.Logger.Info("testing if the deposit into BTC ZRC20 is successful...")
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash2.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(runner.Ctx, txHash2.String(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",
@@ -135,7 +135,7 @@ func (sm *E2ERunner) DepositBTC(testHeader bool) {
 		)
 	}
 
-	balance, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	balance, err := runner.BTCZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -146,21 +146,21 @@ func (sm *E2ERunner) DepositBTC(testHeader bool) {
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
 	if testHeader {
-		sm.ProveBTCTransaction(txHash1)
+		runner.ProveBTCTransaction(txHash1)
 	}
 }
 
-func (sm *E2ERunner) SendToTSSFromDeployerToDeposit(
+func (runner *E2ERunner) SendToTSSFromDeployerToDeposit(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
 	btc *rpcclient.Client,
 	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
-	return sm.SendToTSSFromDeployerWithMemo(to, amount, inputUTXOs, btc, sm.DeployerAddress.Bytes(), btcDeployerAddress)
+	return runner.SendToTSSFromDeployerWithMemo(to, amount, inputUTXOs, btc, runner.DeployerAddress.Bytes(), btcDeployerAddress)
 }
 
-func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
+func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
@@ -194,7 +194,7 @@ func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	// create raw
-	sm.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
+	runner.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
 	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
 	if err != nil {
 		panic(err)
@@ -205,7 +205,7 @@ func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
+	runner.Logger.Info("nulldata (len %d): %x", len(nullData), nullData)
 	if err != nil {
 		panic(err)
 	}
@@ -215,17 +215,17 @@ func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 
 	// make sure that TxOut[0] is sent to "to" address; TxOut[2] is change to oneself. TxOut[1] is memo.
 	if bytes.Compare(tx.TxOut[0].PkScript[2:], to.ScriptAddress()) != 0 {
-		sm.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
-		sm.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
-		sm.Logger.Info("swapping txout[0] with txout[2]")
+		runner.Logger.Info("tx.TxOut[0].PkScript: %x", tx.TxOut[0].PkScript)
+		runner.Logger.Info("to.ScriptAddress():   %x", to.ScriptAddress())
+		runner.Logger.Info("swapping txout[0] with txout[2]")
 		tx.TxOut[0], tx.TxOut[2] = tx.TxOut[2], tx.TxOut[0]
 	}
 
-	sm.Logger.Info("raw transaction: \n")
+	runner.Logger.Info("raw transaction: \n")
 	for idx, txout := range tx.TxOut {
-		sm.Logger.Info("txout %d", idx)
-		sm.Logger.Info("  value: %d", txout.Value)
-		sm.Logger.Info("  PkScript: %x", txout.PkScript)
+		runner.Logger.Info("txout %d", idx)
+		runner.Logger.Info("  value: %d", txout.Value)
+		runner.Logger.Info("  PkScript: %x", txout.PkScript)
 	}
 
 	inputsForSign := make([]btcjson.RawTxWitnessInput, len(inputs))
@@ -249,7 +249,7 @@ func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("txid: %+v", txid)
+	runner.Logger.Info("txid: %+v", txid)
 	_, err = btcRPC.GenerateToAddress(6, btcDeployerAddress, nil)
 	if err != nil {
 		panic(err)
@@ -258,37 +258,37 @@ func (sm *E2ERunner) SendToTSSFromDeployerWithMemo(
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
+	runner.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
 	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
 	if err != nil {
 		panic(err)
 	}
 
-	btcChainID, err := common.GetBTCChainIDFromChainParams(sm.BitcoinParams)
+	btcChainID, err := common.GetBTCChainIDFromChainParams(runner.BitcoinParams)
 	if err != nil {
 		panic(err)
 	}
 	events := zetaclient.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
-		sm.BTCTSSAddress.EncodeAddress(),
+		runner.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
 		btcChainID,
 	)
-	sm.Logger.Info("bitcoin intx events:")
+	runner.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
-		sm.Logger.Info("  TxHash: %s", event.TxHash)
-		sm.Logger.Info("  From: %s", event.FromAddress)
-		sm.Logger.Info("  To: %s", event.ToAddress)
-		sm.Logger.Info("  Amount: %f", event.Value)
-		sm.Logger.Info("  Memo: %x", event.MemoBytes)
+		runner.Logger.Info("  TxHash: %s", event.TxHash)
+		runner.Logger.Info("  From: %s", event.FromAddress)
+		runner.Logger.Info("  To: %s", event.ToAddress)
+		runner.Logger.Info("  Amount: %f", event.Value)
+		runner.Logger.Info("  Memo: %x", event.MemoBytes)
 	}
 	return txid, nil
 }
 
 // MineBlocks mines blocks on the BTC chain at a rate of 1 blocks every 5 seconds
 // and returns a channel that can be used to stop the mining
-func (sm *E2ERunner) MineBlocks() chan struct{} {
+func (runner *E2ERunner) MineBlocks() chan struct{} {
 	stop := make(chan struct{})
 	go func() {
 		for {
@@ -296,7 +296,7 @@ func (sm *E2ERunner) MineBlocks() chan struct{} {
 			case <-stop:
 				return
 			default:
-				_, err := sm.BtcRPCClient.GenerateToAddress(1, sm.BTCDeployerAddress, nil)
+				_, err := runner.BtcRPCClient.GenerateToAddress(1, runner.BTCDeployerAddress, nil)
 				if err != nil {
 					panic(err)
 				}
@@ -308,9 +308,9 @@ func (sm *E2ERunner) MineBlocks() chan struct{} {
 }
 
 // ProveBTCTransaction proves that a BTC transaction is in a block header and that the block header is in ZetaChain
-func (sm *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
+func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	// get tx result
-	btc := sm.BtcRPCClient
+	btc := runner.BtcRPCClient
 	txResult, err := btc.GetTransaction(txHash)
 	if err != nil {
 		panic("should get outTx result")
@@ -375,11 +375,11 @@ func (sm *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 			panic("timed out waiting for block header to show up in observer")
 		}
 
-		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := runner.ObserverClient.GetBlockHeaderByHash(runner.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
 			BlockHash: hash.CloneBytes(),
 		})
 		if err != nil {
-			sm.Logger.Info("waiting for block header to show up in observer... current hash %s; err %s", hash.String(), err.Error())
+			runner.Logger.Info("waiting for block header to show up in observer... current hash %s; err %s", hash.String(), err.Error())
 		}
 		if err == nil {
 			break
@@ -388,7 +388,7 @@ func (sm *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	}
 
 	// verify merkle proof through RPC
-	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
+	res, err := runner.ObserverClient.Prove(runner.Ctx, &observertypes.QueryProveRequest{
 		ChainId:   common.BtcRegtestChain().ChainId,
 		TxHash:    txHash.String(),
 		BlockHash: blockHash.String(),
@@ -401,5 +401,5 @@ func (sm *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 	if !res.Valid {
 		panic("txProof should be valid")
 	}
-	sm.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
+	runner.Logger.Info("OK: txProof verified for inTx: %s", txHash.String())
 }

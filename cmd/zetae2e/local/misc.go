@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// miscTestRoutine runs miscellaneous smoke tests
+// miscTestRoutine runs miscellaneous e2e tests
 func miscTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,

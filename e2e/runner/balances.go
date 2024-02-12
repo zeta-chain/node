@@ -30,39 +30,39 @@ type AccountBalancesDiff struct {
 }
 
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
-func (sm *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
+func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
-	zetaZeta, err := sm.ZevmClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	zetaZeta, err := runner.ZevmClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaWZeta, err := sm.WZeta.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	zetaWZeta, err := runner.WZeta.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaEth, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	zetaEth, err := runner.ETHZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaErc20, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	zetaErc20, err := runner.USDTZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaBtc, err := sm.BTCZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	zetaBtc, err := runner.BTCZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
 
 	// evm
-	evmEth, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.DeployerAddress, nil)
+	evmEth, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	evmZeta, err := sm.ZetaEth.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	evmZeta, err := runner.ZetaEth.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	evmErc20, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	evmErc20, err := runner.USDTERC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -70,7 +70,7 @@ func (sm *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// bitcoin
 	var BtcBTC string
 	if !skipBTC {
-		if BtcBTC, err = sm.GetBitcoinBalance(); err != nil {
+		if BtcBTC, err = runner.GetBitcoinBalance(); err != nil {
 			return AccountBalances{}, err
 		}
 	}
@@ -89,18 +89,18 @@ func (sm *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 }
 
 // GetBitcoinBalance returns the spendable BTC balance of the BTC address
-func (sm *E2ERunner) GetBitcoinBalance() (string, error) {
-	addr, _, err := sm.GetBtcAddress()
+func (runner *E2ERunner) GetBitcoinBalance() (string, error) {
+	addr, _, err := runner.GetBtcAddress()
 	if err != nil {
 		return "", fmt.Errorf("failed to get BTC address: %w", err)
 	}
 
-	address, err := btcutil.DecodeAddress(addr, sm.BitcoinParams)
+	address, err := btcutil.DecodeAddress(addr, runner.BitcoinParams)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode BTC address: %w", err)
 	}
 
-	unspentList, err := sm.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
+	unspentList, err := runner.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{address})
 	if err != nil {
 		return "", fmt.Errorf("failed to list unspent: %w", err)
 	}
@@ -118,43 +118,43 @@ func (sm *E2ERunner) GetBitcoinBalance() (string, error) {
 
 // PrintAccountBalances shows the account balances of the accounts used in the E2E test
 // Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
-func (sm *E2ERunner) PrintAccountBalances(balances AccountBalances) {
-	sm.Logger.Print(" ---💰 Account info %s ---", sm.DeployerAddress.Hex())
+func (runner *E2ERunner) PrintAccountBalances(balances AccountBalances) {
+	runner.Logger.Print(" ---💰 Account info %s ---", runner.DeployerAddress.Hex())
 
 	// zevm
-	sm.Logger.Print("ZetaChain:")
-	sm.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
-	sm.Logger.Print("* WZETA balance: %s", balances.ZetaWZETA.String())
-	sm.Logger.Print("* ETH balance:   %s", balances.ZetaETH.String())
-	sm.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
-	sm.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
+	runner.Logger.Print("ZetaChain:")
+	runner.Logger.Print("* ZETA balance:  %s", balances.ZetaZETA.String())
+	runner.Logger.Print("* WZETA balance: %s", balances.ZetaWZETA.String())
+	runner.Logger.Print("* ETH balance:   %s", balances.ZetaETH.String())
+	runner.Logger.Print("* ERC20 balance: %s", balances.ZetaERC20.String())
+	runner.Logger.Print("* BTC balance:   %s", balances.ZetaBTC.String())
 
 	// evm
-	sm.Logger.Print("EVM:")
-	sm.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
-	sm.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
-	sm.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
+	runner.Logger.Print("EVM:")
+	runner.Logger.Print("* ZETA balance:  %s", balances.EvmZETA.String())
+	runner.Logger.Print("* ETH balance:   %s", balances.EvmETH.String())
+	runner.Logger.Print("* ERC20 balance: %s", balances.EvmERC20.String())
 
 	// bitcoin
-	sm.Logger.Print("Bitcoin:")
-	sm.Logger.Print("* BTC balance: %s", balances.BtcBTC)
+	runner.Logger.Print("Bitcoin:")
+	runner.Logger.Print("* BTC balance: %s", balances.BtcBTC)
 
 	return
 }
 
 // PrintTotalDiff shows the difference in the account balances of the accounts used in the e2e test from two balances structs
-func (sm *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
-	sm.Logger.Print(" ---💰 Total gas spent ---")
+func (runner *E2ERunner) PrintTotalDiff(accoutBalancesDiff AccountBalancesDiff) {
+	runner.Logger.Print(" ---💰 Total gas spent ---")
 
 	// show the value only if it is not zero
 	if accoutBalancesDiff.ZETA.Cmp(big.NewInt(0)) != 0 {
-		sm.Logger.Print("* ZETA spent:  %s", accoutBalancesDiff.ZETA.String())
+		runner.Logger.Print("* ZETA spent:  %s", accoutBalancesDiff.ZETA.String())
 	}
 	if accoutBalancesDiff.ETH.Cmp(big.NewInt(0)) != 0 {
-		sm.Logger.Print("* ETH spent:   %s", accoutBalancesDiff.ETH.String())
+		runner.Logger.Print("* ETH spent:   %s", accoutBalancesDiff.ETH.String())
 	}
 	if accoutBalancesDiff.ERC20.Cmp(big.NewInt(0)) != 0 {
-		sm.Logger.Print("* ERC20 spent: %s", accoutBalancesDiff.ERC20.String())
+		runner.Logger.Print("* ERC20 spent: %s", accoutBalancesDiff.ERC20.String())
 	}
 }
 

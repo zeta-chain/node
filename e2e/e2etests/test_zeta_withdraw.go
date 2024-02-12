@@ -13,43 +13,43 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestZetaWithdraw(sm *runner.E2ERunner) {
+func TestZetaWithdraw(r *runner.E2ERunner) {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
 
-	sm.ZevmAuth.Value = amount
-	tx, err := sm.WZeta.Deposit(sm.ZevmAuth)
+	r.ZevmAuth.Value = amount
+	tx, err := r.WZeta.Deposit(r.ZevmAuth)
 	if err != nil {
 		panic(err)
 	}
-	sm.ZevmAuth.Value = big.NewInt(0)
-	sm.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
+	r.ZevmAuth.Value = big.NewInt(0)
+	r.Logger.Info("wzeta deposit tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "wzeta deposit")
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "wzeta deposit")
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
 
-	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	tx, err = sm.WZeta.Approve(sm.ZevmAuth, sm.ConnectorZEVMAddr, amount)
+	tx, err = r.WZeta.Approve(r.ZevmAuth, r.ConnectorZEVMAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("wzeta approve tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "wzeta approve")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "wzeta approve")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("approve failed, logs: %+v", receipt.Logs))
 	}
 
-	tx, err = sm.ConnectorZEVM.Send(sm.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
+	tx, err = r.ConnectorZEVM.Send(r.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  sm.DeployerAddress.Bytes(),
+		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
@@ -58,28 +58,28 @@ func TestZetaWithdraw(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "send")
+	r.Logger.Info("send tx hash: %s", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status == 0 {
 		panic(fmt.Sprintf("send failed, logs: %+v", receipt.Logs))
 
 	}
 
-	sm.Logger.Info("  Logs:")
+	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
-		sentLog, err := sm.ConnectorZEVM.ParseZetaSent(*log)
+		sentLog, err := r.ConnectorZEVM.ParseZetaSent(*log)
 		if err == nil {
-			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
-	sm.Logger.Info("waiting for cctx status to change to final...")
+	r.Logger.Info("waiting for cctx status to change to final...")
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	sm.Logger.CCTX(*cctx, "zeta withdraw")
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Errorf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -90,36 +90,36 @@ func TestZetaWithdraw(sm *runner.E2ERunner) {
 	}
 }
 
-func TestZetaWithdrawBTCRevert(sm *runner.E2ERunner) {
-	sm.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
-	tx, err := sm.WZeta.Deposit(sm.ZevmAuth)
+func TestZetaWithdrawBTCRevert(r *runner.E2ERunner) {
+	r.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
+	tx, err := r.WZeta.Deposit(r.ZevmAuth)
 	if err != nil {
 		panic(err)
 	}
-	sm.ZevmAuth.Value = big.NewInt(0)
-	sm.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
+	r.ZevmAuth.Value = big.NewInt(0)
+	r.Logger.Info("Deposit tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "Deposit")
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "Deposit")
 	if receipt.Status != 1 {
 		panic("Deposit failed")
 	}
 
-	tx, err = sm.WZeta.Approve(sm.ZevmAuth, sm.ConnectorZEVMAddr, big.NewInt(1e18))
+	tx, err = r.WZeta.Approve(r.ZevmAuth, r.ConnectorZEVMAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("wzeta.approve tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "Approve")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "Approve")
 	if receipt.Status != 1 {
 		panic("Approve failed")
 	}
 
-	tx, err = sm.ConnectorZEVM.Send(sm.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
+	tx, err = r.ConnectorZEVM.Send(r.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
-		DestinationAddress:  sm.DeployerAddress.Bytes(),
+		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     big.NewInt(1e17),
@@ -128,10 +128,10 @@ func TestZetaWithdrawBTCRevert(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("send tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("send tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "send")
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 0 {
 		panic("Was able to send ZETA to BTC")
 	}

@@ -226,23 +226,23 @@ func StressTest(cmd *cobra.Command, _ []string) {
 }
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
-func WithdrawCCtx(sm *runner.E2ERunner) {
+func WithdrawCCtx(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {
 		select {
 		case <-ticker.C:
-			WithdrawETHZRC20(sm)
+			WithdrawETHZRC20(runner)
 		}
 	}
 }
 
-func EchoNetworkMetrics(sm *runner.E2ERunner) {
+func EchoNetworkMetrics(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Second * StatInterval)
 	var queue = make([]uint64, 0)
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
-	chainID, err := getChainID(sm.GoerliClient)
+	chainID, err := getChainID(runner.GoerliClient)
 
 	if err != nil {
 		panic(err)
@@ -253,7 +253,7 @@ func EchoNetworkMetrics(sm *runner.E2ERunner) {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := sm.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
+			cctxResp, err := runner.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
 				ChainId: chainID.Int64(),
 			})
 			if err != nil {
@@ -270,7 +270,7 @@ func EchoNetworkMetrics(sm *runner.E2ERunner) {
 			}
 			//
 			// Get all trackers
-			trackerResp, err := sm.CctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
+			trackerResp, err := runner.CctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
 			if err != nil {
 				continue
 			}
@@ -299,15 +299,15 @@ func EchoNetworkMetrics(sm *runner.E2ERunner) {
 	}
 }
 
-func WithdrawETHZRC20(sm *runner.E2ERunner) {
+func WithdrawETHZRC20(runner *runner.E2ERunner) {
 	defer func() {
 		zevmNonce.Add(zevmNonce, big.NewInt(1))
 	}()
 
-	ethZRC20 := sm.ETHZRC20
+	ethZRC20 := runner.ETHZRC20
 
-	sm.ZevmAuth.Nonce = zevmNonce
-	_, err := ethZRC20.Withdraw(sm.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
+	runner.ZevmAuth.Nonce = zevmNonce
+	_, err := ethZRC20.Withdraw(runner.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}

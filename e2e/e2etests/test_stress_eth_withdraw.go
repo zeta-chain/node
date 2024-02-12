@@ -15,11 +15,11 @@ import (
 )
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
-func TestStressEtherWithdraw(sm *runner.E2ERunner) {
+func TestStressEtherWithdraw(r *runner.E2ERunner) {
 	// number of withdraws to perform
 	numWithdraws := 100
 
-	sm.Logger.Print("starting stress test of %d withdraws", numWithdraws)
+	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete
 	var eg errgroup.Group
@@ -27,19 +27,19 @@ func TestStressEtherWithdraw(sm *runner.E2ERunner) {
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
-		tx, err := sm.ETHZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(100000))
+		tx, err := r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), big.NewInt(100000))
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 		if receipt.Status == 0 {
-			//sm.Logger.Info("index %d: withdraw evm tx failed", index)
+			//r.Logger.Info("index %d: withdraw evm tx failed", index)
 			panic(fmt.Sprintf("index %d: withdraw evm tx %s failed", i, tx.Hash().Hex()))
 		}
-		sm.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
+		r.Logger.Print("index %d: starting withdraw, tx hash: %s", i, tx.Hash().Hex())
 
 		eg.Go(func() error {
-			return MonitorEtherWithdraw(sm, tx, i, time.Now())
+			return MonitorEtherWithdraw(r, tx, i, time.Now())
 		})
 	}
 
@@ -48,12 +48,12 @@ func TestStressEtherWithdraw(sm *runner.E2ERunner) {
 		panic(err)
 	}
 
-	sm.Logger.Print("all withdraws completed")
+	r.Logger.Print("all withdraws completed")
 }
 
 // MonitorEtherWithdraw monitors the withdraw of ether, returns once the withdraw is complete
-func MonitorEtherWithdraw(sm *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, sm.Logger, sm.ReceiptTimeout)
+func MonitorEtherWithdraw(r *runner.E2ERunner, tx *ethtypes.Transaction, index int, startTime time.Time) error {
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.ReceiptTimeout)
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		return fmt.Errorf(
 			"index %d: withdraw cctx failed with status %s, message %s, cctx index %s",
@@ -64,7 +64,7 @@ func MonitorEtherWithdraw(sm *runner.E2ERunner, tx *ethtypes.Transaction, index 
 		)
 	}
 	timeToComplete := time.Now().Sub(startTime)
-	sm.Logger.Print("index %d: withdraw cctx success in %s", index, timeToComplete.String())
+	r.Logger.Print("index %d: withdraw cctx success in %s", index, timeToComplete.String())
 
 	return nil
 }

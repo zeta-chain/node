@@ -13,31 +13,31 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessagePassing(sm *runner.E2ERunner) {
-	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+func TestMessagePassing(r *runner.E2ERunner) {
+	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	sm.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
+	r.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
-	auth := sm.GoerliAuth
-	tx, err := sm.ZetaEth.Approve(auth, sm.ConnectorEthAddr, amount)
+	auth := r.GoerliAuth
+	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 
-	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
-	sm.Logger.Info("Calling ConnectorEth.Send")
-	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
+	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
+	r.Logger.Info("Calling ConnectorEth.Send")
+	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  sm.DeployerAddress.Bytes(),
+		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
@@ -47,26 +47,26 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 		panic(err)
 	}
 
-	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
-	sm.Logger.Info("  Logs:")
+	r.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
+	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
-		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		sentLog, err := r.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
 
-	sm.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
-	sm.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	r.Logger.Info("Waiting for ConnectorEth.Send CCTX to be mined...")
+	r.Logger.Info("  INTX hash: %s", receipt.TxHash.String())
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected cctx status to be %s; got %s, message %s",
@@ -75,7 +75,7 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 			cctx.CctxStatus.StatusMessage,
 		))
 	}
-	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -83,12 +83,12 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 		panic("tx failed")
 	}
 	for _, log := range receipt.Logs {
-		event, err := sm.ConnectorEth.ParseZetaReceived(*log)
+		event, err := r.ConnectorEth.ParseZetaReceived(*log)
 		if err == nil {
-			sm.Logger.Info("Received ZetaSent event:")
-			sm.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
-			sm.Logger.Info("  Zeta Value: %d", event.ZetaValue)
-			sm.Logger.Info("  src chainid: %d", event.SourceChainId)
+			r.Logger.Info("Received ZetaSent event:")
+			r.Logger.Info("  Dest Addr: %s", event.DestinationAddress)
+			r.Logger.Info("  Zeta Value: %d", event.ZetaValue)
+			r.Logger.Info("  src chainid: %d", event.SourceChainId)
 			if event.ZetaValue.Cmp(cctx.GetCurrentOutTxParam().Amount.BigInt()) != 0 {
 				panic("Zeta value mismatch")
 			}
@@ -96,29 +96,29 @@ func TestMessagePassing(sm *runner.E2ERunner) {
 	}
 }
 
-func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
-	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+func TestMessagePassingRevertFail(r *runner.E2ERunner) {
+	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
-	auth := sm.GoerliAuth
-	tx, err := sm.ZetaEth.Approve(auth, sm.ConnectorEthAddr, amount)
+	auth := r.GoerliAuth
+	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
-	sm.Logger.Info("Calling ConnectorEth.Send")
-	tx, err = sm.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
+	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
+	r.Logger.Info("Calling ConnectorEth.Send")
+	tx, err = r.ConnectorEth.Send(auth, zetaconnectoreth.ZetaInterfacesSendInput{
 		DestinationChainId:  chainID,
-		DestinationAddress:  sm.DeployerAddress.Bytes(),
+		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             []byte("revert"), // non-empty message will cause revert, because the dest address is not a contract
 		ZetaValueAndGas:     amount,
@@ -127,26 +127,26 @@ func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	sm.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
-	sm.Logger.Info("  Logs:")
+	r.Logger.Info("ConnectorEth.Send tx receipt: status %d", receipt.Status)
+	r.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
-		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		sentLog, err := r.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			r.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			r.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			r.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			r.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
 		}
 	}
 
 	// expect revert tx to fail
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -159,75 +159,75 @@ func TestMessagePassingRevertFail(sm *runner.E2ERunner) {
 	}
 }
 
-func TestMessagePassingRevertSuccess(sm *runner.E2ERunner) {
-	chainID, err := sm.GoerliClient.ChainID(sm.Ctx)
+func TestMessagePassingRevertSuccess(r *runner.E2ERunner) {
+	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
-	auth := sm.GoerliAuth
+	auth := r.GoerliAuth
 
-	tx, err := sm.ZetaEth.Approve(auth, sm.TestDAppAddr, amount)
+	tx, err := r.ZetaEth.Approve(auth, r.TestDAppAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	sm.Logger.Info("Approve tx receipt: %d", receipt.Status)
+	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
-	sm.Logger.Info("Calling TestDApp.SendHello on contract address %s", sm.TestDAppAddr.Hex())
-	testDApp, err := testdapp.NewTestDApp(sm.TestDAppAddr, sm.GoerliClient)
+	r.Logger.Info("Calling TestDApp.SendHello on contract address %s", r.TestDAppAddr.Hex())
+	testDApp, err := testdapp.NewTestDApp(r.TestDAppAddr, r.GoerliClient)
 	if err != nil {
 		panic(err)
 	}
 
-	res2, err := sm.BankClient.SupplyOf(sm.Ctx, &banktypes.QuerySupplyOfRequest{
+	res2, err := r.BankClient.SupplyOf(r.Ctx, &banktypes.QuerySupplyOfRequest{
 		Denom: "azeta",
 	})
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("$$$ Before: SUPPLY OF AZETA: %d", res2.Amount.Amount)
+	r.Logger.Info("$$$ Before: SUPPLY OF AZETA: %d", res2.Amount.Amount)
 
-	tx, err = testDApp.SendHelloWorld(auth, sm.TestDAppAddr, chainID, amount, true)
+	tx, err = testDApp.SendHelloWorld(auth, r.TestDAppAddr, chainID, amount, true)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
+	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_Reverted {
 		panic("expected cctx to be reverted")
 	}
 	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-	receipt, err = sm.GoerliClient.TransactionReceipt(sm.Ctx, ethcommon.HexToHash(outTxHash))
+	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
 	if err != nil {
 		panic(err)
 	}
 	for _, log := range receipt.Logs {
-		event, err := sm.ConnectorEth.ParseZetaReverted(*log)
+		event, err := r.ConnectorEth.ParseZetaReverted(*log)
 		if err == nil {
-			sm.Logger.Info("ZetaReverted event: ")
-			sm.Logger.Info("  Dest Addr: %s", ethcommon.BytesToAddress(event.DestinationAddress).Hex())
-			sm.Logger.Info("  Dest Chain: %d", event.DestinationChainId)
-			sm.Logger.Info("  RemainingZetaValue: %d", event.RemainingZetaValue)
-			sm.Logger.Info("  Message: %x", event.Message)
+			r.Logger.Info("ZetaReverted event: ")
+			r.Logger.Info("  Dest Addr: %s", ethcommon.BytesToAddress(event.DestinationAddress).Hex())
+			r.Logger.Info("  Dest Chain: %d", event.DestinationChainId)
+			r.Logger.Info("  RemainingZetaValue: %d", event.RemainingZetaValue)
+			r.Logger.Info("  Message: %x", event.Message)
 		}
 	}
-	res3, err := sm.BankClient.SupplyOf(sm.Ctx, &banktypes.QuerySupplyOfRequest{
+	res3, err := r.BankClient.SupplyOf(r.Ctx, &banktypes.QuerySupplyOfRequest{
 		Denom: "azeta",
 	})
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("$$$ After: SUPPLY OF AZETA: %d", res3.Amount.Amount.BigInt())
-	sm.Logger.Info("$$$ Diff: SUPPLY OF AZETA: %d", res3.Amount.Amount.Sub(res2.Amount.Amount).BigInt())
+	r.Logger.Info("$$$ After: SUPPLY OF AZETA: %d", res3.Amount.Amount.BigInt())
+	r.Logger.Info("$$$ Diff: SUPPLY OF AZETA: %d", res3.Amount.Amount.Sub(res2.Amount.Amount).BigInt())
 }

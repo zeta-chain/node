@@ -13,13 +13,13 @@ import (
 )
 
 // WaitForMinedCCTX waits for a cctx to be mined from a tx
-func (sm *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
+func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	defer func() {
-		sm.Unlock()
+		runner.Unlock()
 	}()
-	sm.Lock()
+	runner.Lock()
 
-	cctx := utils2.WaitCctxMinedByInTxHash(sm.Ctx, txHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
+	cctx := utils2.WaitCctxMinedByInTxHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 			cctx.CctxStatus.Status.String(),
@@ -30,16 +30,16 @@ func (sm *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 
 // SendZetaOnEvm sends ZETA to an address on EVM
 // this allows the ZETA contract deployer to funds other accounts on EVM
-func (sm *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
+func (runner *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {
 	// the deployer might be sending ZETA in different goroutines
 	defer func() {
-		sm.Unlock()
+		runner.Unlock()
 	}()
-	sm.Lock()
+	runner.Lock()
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(zetaAmount))
-	tx, err := sm.ZetaEth.Transfer(sm.GoerliAuth, address, amount)
+	tx, err := runner.ZetaEth.Transfer(runner.GoerliAuth, address, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -47,38 +47,38 @@ func (sm *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) 
 }
 
 // DepositZeta deposits ZETA on ZetaChain from the ZETA smart contract on EVM
-func (sm *E2ERunner) DepositZeta() ethcommon.Hash {
+func (runner *E2ERunner) DepositZeta() ethcommon.Hash {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
-	return sm.DepositZetaWithAmount(amount)
+	return runner.DepositZetaWithAmount(amount)
 }
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
-func (sm *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
-	tx, err := sm.ZetaEth.Approve(sm.GoerliAuth, sm.ConnectorEthAddr, amount)
+func (runner *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
+	tx, err := runner.ZetaEth.Approve(runner.GoerliAuth, runner.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "approve")
+	receipt := utils2.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	runner.Logger.EVMReceipt(*receipt, "approve")
 	if receipt.Status != 1 {
 		panic("approve tx failed")
 	}
 
 	// query the chain ID using zevm client
-	zetaChainID, err := sm.ZevmClient.ChainID(sm.Ctx)
+	zetaChainID, err := runner.ZevmClient.ChainID(runner.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	tx, err = sm.ConnectorEth.Send(sm.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
+	tx, err = runner.ConnectorEth.Send(runner.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
 		DestinationChainId:  zetaChainID,
-		DestinationAddress:  sm.DeployerAddress.Bytes(),
+		DestinationAddress:  runner.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
@@ -87,24 +87,24 @@ func (sm *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils2.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "send")
+	receipt = utils2.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	runner.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 1 {
 		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))
 	}
 
-	sm.Logger.Info("  Logs:")
+	runner.Logger.Info("  Logs:")
 	for _, log := range receipt.Logs {
-		sentLog, err := sm.ConnectorEth.ParseZetaSent(*log)
+		sentLog, err := runner.ConnectorEth.ParseZetaSent(*log)
 		if err == nil {
-			sm.Logger.Info("    Connector: %s", sm.ConnectorEthAddr.String())
-			sm.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
-			sm.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
-			sm.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
-			sm.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
-			sm.Logger.Info("    Block Num: %d", log.BlockNumber)
+			runner.Logger.Info("    Connector: %s", runner.ConnectorEthAddr.String())
+			runner.Logger.Info("    Dest Addr: %s", ethcommon.BytesToAddress(sentLog.DestinationAddress).Hex())
+			runner.Logger.Info("    Dest Chain: %d", sentLog.DestinationChainId)
+			runner.Logger.Info("    Dest Gas: %d", sentLog.DestinationGasLimit)
+			runner.Logger.Info("    Zeta Value: %d", sentLog.ZetaValueAndGas)
+			runner.Logger.Info("    Block Num: %d", log.BlockNumber)
 		}
 	}
 

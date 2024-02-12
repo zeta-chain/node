@@ -10,82 +10,82 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestZRC20Swap(sm *runner.E2ERunner) {
+func TestZRC20Swap(r *runner.E2ERunner) {
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	tx, err := sm.UniswapV2Factory.CreatePair(sm.ZevmAuth, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
+	tx, err := r.UniswapV2Factory.CreatePair(r.ZevmAuth, r.USDTZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
-		sm.Logger.Print("ℹ️create pair error")
+		r.Logger.Print("ℹ️create pair error")
 	} else {
-		utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+		utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	}
 
-	usdtEthPair, err := sm.UniswapV2Factory.GetPair(&bind.CallOpts{}, sm.USDTZRC20Addr, sm.ETHZRC20Addr)
+	usdtEthPair, err := r.UniswapV2Factory.GetPair(&bind.CallOpts{}, r.USDTZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("USDT-ETH pair receipt pair addr %s", usdtEthPair.Hex())
+	r.Logger.Info("USDT-ETH pair receipt pair addr %s", usdtEthPair.Hex())
 
-	tx, err = sm.USDTZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err = r.USDTZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("USDT ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("USDT ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	tx, err = sm.ETHZRC20.Approve(sm.ZevmAuth, sm.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("ETH ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("ETH ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// temporarily increase gas limit to 400000
-	previousGasLimit := sm.ZevmAuth.GasLimit
+	previousGasLimit := r.ZevmAuth.GasLimit
 	defer func() {
-		sm.ZevmAuth.GasLimit = previousGasLimit
+		r.ZevmAuth.GasLimit = previousGasLimit
 	}()
 
-	sm.ZevmAuth.GasLimit = 400000
-	tx, err = sm.UniswapV2Router.AddLiquidity(
-		sm.ZevmAuth,
-		sm.USDTZRC20Addr,
-		sm.ETHZRC20Addr,
+	r.ZevmAuth.GasLimit = 400000
+	tx, err = r.UniswapV2Router.AddLiquidity(
+		r.ZevmAuth,
+		r.USDTZRC20Addr,
+		r.ETHZRC20Addr,
 		big.NewInt(90000),
 		big.NewInt(1000),
 		big.NewInt(90000),
 		big.NewInt(1000),
-		sm.DeployerAddress,
+		r.DeployerAddress,
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHBefore, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	ethOutAmout := big.NewInt(1)
-	tx, err = sm.UniswapV2Router.SwapExactTokensForTokens(
-		sm.ZevmAuth,
+	tx, err = r.UniswapV2Router.SwapExactTokensForTokens(
+		r.ZevmAuth,
 		big.NewInt(1000),
 		ethOutAmout,
-		[]ethcommon.Address{sm.USDTZRC20Addr, sm.ETHZRC20Addr},
-		sm.DeployerAddress,
+		[]ethcommon.Address{r.USDTZRC20Addr, r.ETHZRC20Addr},
+		r.DeployerAddress,
 		big.NewInt(time.Now().Add(10*time.Minute).Unix()),
 	)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("Swap USDT for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("Swap USDT for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
-	balETHAfter, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}

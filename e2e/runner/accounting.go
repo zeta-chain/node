@@ -19,46 +19,46 @@ type Response struct {
 	Amount Amount `json:"amount"`
 }
 
-func (sm *E2ERunner) CheckZRC20ReserveAndSupply() error {
-	sm.Logger.Info("Checking ZRC20 Reserve and Supply")
-	if err := sm.checkEthTSSBalance(); err != nil {
+func (runner *E2ERunner) CheckZRC20ReserveAndSupply() error {
+	runner.Logger.Info("Checking ZRC20 Reserve and Supply")
+	if err := runner.checkEthTSSBalance(); err != nil {
 		return err
 	}
-	if err := sm.checkUsdtTSSBalance(); err != nil {
+	if err := runner.checkUsdtTSSBalance(); err != nil {
 		return err
 	}
-	return sm.checkZetaTSSBalance()
+	return runner.checkZetaTSSBalance()
 }
 
-func (sm *E2ERunner) checkEthTSSBalance() error {
-	tssBal, err := sm.GoerliClient.BalanceAt(sm.Ctx, sm.TSSAddress, nil)
+func (runner *E2ERunner) checkEthTSSBalance() error {
+	tssBal, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.TSSAddress, nil)
 	if err != nil {
 		return err
 	}
-	zrc20Supply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := runner.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
 	if tssBal.Cmp(zrc20Supply) < 0 {
 		return fmt.Errorf("ETH: TSS balance (%d) < ZRC20 TotalSupply (%d) ", tssBal, zrc20Supply)
 	}
-	sm.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssBal, zrc20Supply)
+	runner.Logger.Info("ETH: TSS balance (%d) >= ZRC20 TotalSupply (%d)", tssBal, zrc20Supply)
 	return nil
 }
 
-func (sm *E2ERunner) CheckBtcTSSBalance() error {
-	utxos, err := sm.BtcRPCClient.ListUnspent()
+func (runner *E2ERunner) CheckBtcTSSBalance() error {
+	utxos, err := runner.BtcRPCClient.ListUnspent()
 	if err != nil {
 		return err
 	}
 	var btcBalance float64
 	for _, utxo := range utxos {
-		if utxo.Address == sm.BTCTSSAddress.EncodeAddress() {
+		if utxo.Address == runner.BTCTSSAddress.EncodeAddress() {
 			btcBalance += utxo.Amount
 		}
 	}
 
-	zrc20Supply, err := sm.BTCZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := runner.BTCZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
@@ -75,29 +75,29 @@ func (sm *E2ERunner) CheckBtcTSSBalance() error {
 		)
 	}
 	// #nosec G701 test - always in range
-	sm.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply.Int64()-10000000)
+	runner.Logger.Info("BTC: Balance (%d) >= ZRC20 TotalSupply (%d)", int64(btcBalance*1e8), zrc20Supply.Int64()-10000000)
 
 	return nil
 }
 
-func (sm *E2ERunner) checkUsdtTSSBalance() error {
-	usdtBal, err := sm.USDTERC20.BalanceOf(&bind.CallOpts{}, sm.ERC20CustodyAddr)
+func (runner *E2ERunner) checkUsdtTSSBalance() error {
+	usdtBal, err := runner.USDTERC20.BalanceOf(&bind.CallOpts{}, runner.ERC20CustodyAddr)
 	if err != nil {
 		return err
 	}
-	zrc20Supply, err := sm.USDTZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := runner.USDTZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
 	if usdtBal.Cmp(zrc20Supply) < 0 {
 		return fmt.Errorf("USDT: TSS balance (%d) < ZRC20 TotalSupply (%d) ", usdtBal, zrc20Supply)
 	}
-	sm.Logger.Info("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)", usdtBal, zrc20Supply)
+	runner.Logger.Info("USDT: TSS balance (%d) >= ZRC20 TotalSupply (%d)", usdtBal, zrc20Supply)
 	return nil
 }
 
-func (sm *E2ERunner) checkZetaTSSBalance() error {
-	zetaLocked, err := sm.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
+func (runner *E2ERunner) checkZetaTSSBalance() error {
+	zetaLocked, err := runner.ConnectorEth.GetLockedAmount(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
@@ -117,9 +117,9 @@ func (sm *E2ERunner) checkZetaTSSBalance() error {
 	}
 	zetaSupply, _ := big.NewInt(0).SetString(result.Amount.Amount, 10)
 	if zetaLocked.Cmp(zetaSupply) < 0 {
-		sm.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
+		runner.Logger.Info(fmt.Sprintf("ZETA: TSS balance (%d) < ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply))
 	} else {
-		sm.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
+		runner.Logger.Info("ZETA: TSS balance (%d) >= ZRC20 TotalSupply (%d)", zetaLocked, zetaSupply)
 	}
 	return nil
 }

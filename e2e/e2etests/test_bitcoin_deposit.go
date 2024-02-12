@@ -8,15 +8,15 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestBitcoinDeposit(sm *runner.E2ERunner) {
+func TestBitcoinDeposit(r *runner.E2ERunner) {
 
-	sm.SetBtcAddress(sm.Name, false)
+	r.SetBtcAddress(r.Name, false)
 
-	txHash := sm.DepositBTCWithAmount(0.001)
+	txHash := r.DepositBTCWithAmount(0.001)
 
 	// wait for the cctx to be mined
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, txHash.String(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	sm.Logger.CCTX(*cctx, "deposit")
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "deposit")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf(
 			"expected mined status; got %s, message: %s",

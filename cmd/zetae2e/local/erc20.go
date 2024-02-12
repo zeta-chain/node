@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// erc20TestRoutine runs erc20 related smoke tests
+// erc20TestRoutine runs erc20 related e2e tests
 func erc20TestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,

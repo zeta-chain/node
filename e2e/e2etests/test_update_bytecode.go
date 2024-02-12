@@ -13,23 +13,23 @@ import (
 )
 
 // TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
-func TestUpdateBytecode(sm *runner.E2ERunner) {
+func TestUpdateBytecode(r *runner.E2ERunner) {
 	// Random approval
 	approved := sample.EthAddress()
-	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, approved, big.NewInt(1e10))
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, approved, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
 
 	// Deploy the TestZRC20 contract
-	sm.Logger.Info("Deploying contract with new bytecode")
+	r.Logger.Info("Deploying contract with new bytecode")
 	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(
-		sm.ZevmAuth,
-		sm.ZevmClient,
+		r.ZevmAuth,
+		r.ZevmClient,
 		big.NewInt(5),
 		// #nosec G701 test - always in range
 		uint8(common.CoinType_Gas),
@@ -39,96 +39,96 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
 
 	// Get the code hash of the new contract
-	codeHashRes, err := sm.FungibleClient.CodeHash(sm.Ctx, &fungibletypes.QueryCodeHashRequest{
+	codeHashRes, err := r.FungibleClient.CodeHash(r.Ctx, &fungibletypes.QueryCodeHashRequest{
 		Address: newZRC20Address.String(),
 	})
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("New contract code hash: %s", codeHashRes.CodeHash)
+	r.Logger.Info("New contract code hash: %s", codeHashRes.CodeHash)
 
 	// Get current info of the ZRC20
-	name, err := sm.ETHZRC20.Name(&bind.CallOpts{})
+	name, err := r.ETHZRC20.Name(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	symbol, err := sm.ETHZRC20.Symbol(&bind.CallOpts{})
+	symbol, err := r.ETHZRC20.Symbol(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	decimals, err := sm.ETHZRC20.Decimals(&bind.CallOpts{})
+	decimals, err := r.ETHZRC20.Decimals(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	totalSupply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+	totalSupply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
-	balance, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	balance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	approval, err := sm.ETHZRC20.Allowance(&bind.CallOpts{}, sm.DeployerAddress, approved)
+	approval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.DeployerAddress, approved)
 	if err != nil {
 		panic(err)
 	}
 
-	sm.Logger.Info("Updating the bytecode of the ZRC20")
+	r.Logger.Info("Updating the bytecode of the ZRC20")
 	msg := fungibletypes.NewMsgUpdateContractBytecode(
-		sm.ZetaTxServer.GetAccountAddress(0),
-		sm.ETHZRC20Addr.Hex(),
+		r.ZetaTxServer.GetAccountAddress(0),
+		r.ETHZRC20Addr.Hex(),
 		codeHashRes.CodeHash,
 	)
-	res, err := sm.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	res, err := r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Update zrc20 bytecode tx hash: %s", res.TxHash)
+	r.Logger.Info("Update zrc20 bytecode tx hash: %s", res.TxHash)
 
 	// Get new info of the ZRC20
-	sm.Logger.Info("Checking the state of the ZRC20 remains the same")
-	newName, err := sm.ETHZRC20.Name(&bind.CallOpts{})
+	r.Logger.Info("Checking the state of the ZRC20 remains the same")
+	newName, err := r.ETHZRC20.Name(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	if name != newName {
 		panic("name shouldn't change upon bytecode update")
 	}
-	newSymbol, err := sm.ETHZRC20.Symbol(&bind.CallOpts{})
+	newSymbol, err := r.ETHZRC20.Symbol(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	if symbol != newSymbol {
 		panic("symbol shouldn't change upon bytecode update")
 	}
-	newDecimals, err := sm.ETHZRC20.Decimals(&bind.CallOpts{})
+	newDecimals, err := r.ETHZRC20.Decimals(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	if decimals != newDecimals {
 		panic("decimals shouldn't change upon bytecode update")
 	}
-	newTotalSupply, err := sm.ETHZRC20.TotalSupply(&bind.CallOpts{})
+	newTotalSupply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 	if totalSupply.Cmp(newTotalSupply) != 0 {
 		panic("total supply shouldn't change upon bytecode update")
 	}
-	newBalance, err := sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	newBalance, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	if balance.Cmp(newBalance) != 0 {
 		panic("balance shouldn't change upon bytecode update")
 	}
-	newApproval, err := sm.ETHZRC20.Allowance(&bind.CallOpts{}, sm.DeployerAddress, approved)
+	newApproval, err := r.ETHZRC20.Allowance(&bind.CallOpts{}, r.DeployerAddress, approved)
 	if err != nil {
 		panic(err)
 	}
@@ -136,16 +136,16 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 		panic("approval shouldn't change upon bytecode update")
 	}
 
-	sm.Logger.Info("Can interact with the new code of the contract")
-	testZRC20Contract, err := testzrc20.NewTestZRC20(sm.ETHZRC20Addr, sm.ZevmClient)
+	r.Logger.Info("Can interact with the new code of the contract")
+	testZRC20Contract, err := testzrc20.NewTestZRC20(r.ETHZRC20Addr, r.ZevmClient)
 	if err != nil {
 		panic(err)
 	}
-	tx, err = testZRC20Contract.UpdateNewField(sm.ZevmAuth, big.NewInt(1e10))
+	tx, err = testZRC20Contract.UpdateNewField(r.ZevmAuth, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -157,12 +157,12 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 		panic("new field value mismatch")
 	}
 
-	sm.Logger.Info("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
-	tx, err = newZRC20Contract.UpdateNewField(sm.ZevmAuth, big.NewInt(1e5))
+	r.Logger.Info("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
+	tx, err = newZRC20Contract.UpdateNewField(r.ZevmAuth, big.NewInt(1e5))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -182,16 +182,16 @@ func TestUpdateBytecode(sm *runner.E2ERunner) {
 	}
 
 	// can continue to operate the ZRC20
-	sm.Logger.Info("Checking the ZRC20 can continue to operate after state change")
-	tx, err = sm.ETHZRC20.Transfer(sm.ZevmAuth, approved, big.NewInt(1e14))
+	r.Logger.Info("Checking the ZRC20 can continue to operate after state change")
+	tx, err = r.ETHZRC20.Transfer(r.ZevmAuth, approved, big.NewInt(1e14))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}
-	newBalance, err = sm.ETHZRC20.BalanceOf(&bind.CallOpts{}, approved)
+	newBalance, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, approved)
 	if err != nil {
 		panic(err)
 	}

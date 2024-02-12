@@ -9,31 +9,31 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestERC20Withdraw(sm *runner.E2ERunner) {
+func TestERC20Withdraw(r *runner.E2ERunner) {
 	// approve
-	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.USDTZRC20Addr, big.NewInt(1e18))
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.USDTZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
+	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx, err = sm.USDTZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(1000))
+	tx, err = r.USDTZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), big.NewInt(1000))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := sm.USDTZRC20.ParseWithdrawal(*log)
+		event, err := r.USDTZRC20.ParseWithdrawal(*log)
 		if err != nil {
 			continue
 		}
-		sm.Logger.Info(
+		r.Logger.Info(
 			"  logs: from %s, to %x, value %d, gasfee %d",
 			event.From.Hex(),
 			event.To,
@@ -43,28 +43,28 @@ func TestERC20Withdraw(sm *runner.E2ERunner) {
 	}
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	verifyTransferAmountFromCCTX(sm, cctx, 1000)
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	verifyTransferAmountFromCCTX(r, cctx, 1000)
 }
 
 // verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on Goerli
-func verifyTransferAmountFromCCTX(sm *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
-	sm.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
+func verifyTransferAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
+	r.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
-	receipt, err := sm.GoerliClient.TransactionReceipt(
-		sm.Ctx,
+	receipt, err := r.GoerliClient.TransactionReceipt(
+		r.Ctx,
 		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
 	)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := sm.USDTERC20.ParseTransfer(*log)
+		event, err := r.USDTERC20.ParseTransfer(*log)
 		if err != nil {
 			continue
 		}
-		sm.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
+		r.Logger.Info("  logs: from %s, to %s, value %d", event.From.Hex(), event.To.Hex(), event.Value)
 		if event.Value.Int64() != amount {
 			panic("value is not correct")
 		}

@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// zetaTestRoutine runs Zeta transfer and message passing related smoke tests
+// zetaTestRoutine runs Zeta transfer and message passing related e2e tests
 func zetaTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,

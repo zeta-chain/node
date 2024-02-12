@@ -10,41 +10,41 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(sm *runner.E2ERunner) {
+func TestMultipleWithdraws(r *runner.E2ERunner) {
 	// deploy withdrawer
-	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(sm.ZevmAuth, sm.ZevmClient)
+	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZevmAuth, r.ZevmClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// approve
-	tx, err := sm.USDTZRC20.Approve(sm.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
+	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.Info("USDT ZRC20 approve receipt: status %d", receipt.Status)
+	r.Logger.Info("USDT ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
-	tx, err = sm.ETHZRC20.Approve(sm.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
+	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve gas token failed")
 	}
-	sm.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
+	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// check the balance
-	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	bal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
+	r.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 
 	if bal.Int64() < 1000 {
 		panic("not enough USDT ZRC20 balance!")
@@ -52,27 +52,27 @@ func TestMultipleWithdraws(sm *runner.E2ERunner) {
 
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(
-		sm.ZevmAuth,
-		sm.DeployerAddress.Bytes(),
-		sm.USDTZRC20Addr,
+		r.ZevmAuth,
+		r.DeployerAddress.Bytes(),
+		r.USDTZRC20Addr,
 		big.NewInt(100),
 		big.NewInt(3),
 	)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
 
-	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, tx.Hash().Hex(), sm.CctxClient, 3, sm.Logger, sm.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
 	// verify the withdraw value
 	for _, cctx := range cctxs {
-		verifyTransferAmountFromCCTX(sm, cctx, 100)
+		verifyTransferAmountFromCCTX(r, cctx, 100)
 	}
 }

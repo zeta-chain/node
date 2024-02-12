@@ -9,16 +9,16 @@ import (
 )
 
 // TestDonationEther tests donation of ether to the tss address
-func TestDonationEther(sm *runner.E2ERunner) {
-	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(100000000000000000), []byte(zetaclient.DonationMessage))
+func TestDonationEther(r *runner.E2ERunner) {
+	txDonation, err := r.SendEther(r.TSSAddress, big.NewInt(100000000000000000), []byte(zetaclient.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.EVMTransaction(*txDonation, "donation")
+	r.Logger.EVMTransaction(*txDonation, "donation")
 
 	// check contract deployment receipt
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, txDonation, sm.Logger, sm.ReceiptTimeout)
-	sm.Logger.EVMReceipt(*receipt, "donation")
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, txDonation, r.Logger, r.ReceiptTimeout)
+	r.Logger.EVMReceipt(*receipt, "donation")
 	if receipt.Status != 1 {
 		panic("donation tx failed")
 	}

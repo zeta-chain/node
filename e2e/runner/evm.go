@@ -16,13 +16,13 @@ import (
 var blockHeaderETHTimeout = 5 * time.Minute
 
 // WaitForTxReceiptOnEvm waits for a tx receipt on EVM
-func (sm *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
+func (runner *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 	defer func() {
-		sm.Unlock()
+		runner.Unlock()
 	}()
-	sm.Lock()
+	runner.Lock()
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -30,149 +30,149 @@ func (sm *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 
 // MintUSDTOnEvm mints USDT on EVM
 // amountUSDT is a multiple of 1e18
-func (sm *E2ERunner) MintUSDTOnEvm(amountUSDT int64) {
+func (runner *E2ERunner) MintUSDTOnEvm(amountUSDT int64) {
 	defer func() {
-		sm.Unlock()
+		runner.Unlock()
 	}()
-	sm.Lock()
+	runner.Lock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
 
-	tx, err := sm.USDTERC20.Mint(sm.GoerliAuth, amount)
+	tx, err := runner.USDTERC20.Mint(runner.GoerliAuth, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("mint failed")
 	}
-	sm.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 }
 
 // SendUSDTOnEvm sends USDT to an address on EVM
 // this allows the USDT contract deployer to funds other accounts on EVM
 // amountUSDT is a multiple of 1e18
-func (sm *E2ERunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
+func (runner *E2ERunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
 	// the deployer might be sending USDT in different goroutines
 	defer func() {
-		sm.Unlock()
+		runner.Unlock()
 	}()
-	sm.Lock()
+	runner.Lock()
 
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
 
 	// transfer
-	tx, err := sm.USDTERC20.Transfer(sm.GoerliAuth, address, amount)
+	tx, err := runner.USDTERC20.Transfer(runner.GoerliAuth, address, amount)
 	if err != nil {
 		panic(err)
 	}
 	return tx
 }
 
-func (sm *E2ERunner) DepositERC20() ethcommon.Hash {
-	sm.Logger.Print("⏳ depositing ERC20 into ZEVM")
+func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
+	runner.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return sm.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
+	return runner.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
 }
 
-func (sm *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
+func (runner *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
 	// reset allowance, necessary for USDT
-	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, big.NewInt(0))
+	tx, err := runner.USDTERC20.Approve(runner.GoerliAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	tx, err = sm.USDTERC20.Approve(sm.GoerliAuth, sm.ERC20CustodyAddr, amount)
+	tx, err = runner.USDTERC20.Approve(runner.GoerliAuth, runner.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	tx, err = sm.ERC20Custody.Deposit(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, msg)
-	sm.Logger.Print("TX: %v", tx)
+	tx, err = runner.ERC20Custody.Deposit(runner.GoerliAuth, runner.DeployerAddress.Bytes(), runner.USDTERC20Addr, amount, msg)
+	runner.Logger.Print("TX: %v", tx)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
-	sm.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
+	runner.Logger.Info("Deposit receipt tx hash: %s, status %d", receipt.TxHash.Hex(), receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := sm.ERC20Custody.ParseDeposited(*log)
+		event, err := runner.ERC20Custody.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}
-		sm.Logger.Info("Deposited event:")
-		sm.Logger.Info("  Recipient address: %x", event.Recipient)
-		sm.Logger.Info("  ERC20 address: %s", event.Asset.Hex())
-		sm.Logger.Info("  Amount: %d", event.Amount)
-		sm.Logger.Info("  Message: %x", event.Message)
+		runner.Logger.Info("Deposited event:")
+		runner.Logger.Info("  Recipient address: %x", event.Recipient)
+		runner.Logger.Info("  ERC20 address: %s", event.Asset.Hex())
+		runner.Logger.Info("  Amount: %d", event.Amount)
+		runner.Logger.Info("  Message: %x", event.Message)
 	}
 	return tx.Hash()
 }
 
 // DepositEther sends Ethers into ZEVM
-func (sm *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
-	return sm.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
+func (runner *E2ERunner) DepositEther(testHeader bool) ethcommon.Hash {
+	return runner.DepositEtherWithAmount(testHeader, big.NewInt(1000000000000000000)) // in wei (1 eth)
 }
 
 // DepositEtherWithAmount sends Ethers into ZEVM
-func (sm *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
-	sm.Logger.Print("⏳ depositing Ethers into ZEVM")
+func (runner *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int) ethcommon.Hash {
+	runner.Logger.Print("⏳ depositing Ethers into ZEVM")
 
-	signedTx, err := sm.SendEther(sm.TSSAddress, amount, nil)
+	signedTx, err := runner.SendEther(runner.TSSAddress, amount, nil)
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.EVMTransaction(*signedTx, "send to TSS")
+	runner.Logger.EVMTransaction(*signedTx, "send to TSS")
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, signedTx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, signedTx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
-	sm.Logger.EVMReceipt(*receipt, "send to TSS")
+	runner.Logger.EVMReceipt(*receipt, "send to TSS")
 
 	// due to the high block throughput in localnet, ZetaClient might catch up slowly with the blocks
 	// to optimize block header proof test, this test is directly executed here on the first deposit instead of having a separate test
 	if testHeader {
-		sm.ProveEthTransaction(receipt)
+		runner.ProveEthTransaction(receipt)
 	}
 
 	return signedTx.Hash()
 }
 
 // SendEther sends ethers to the TSS on Goerli
-func (sm *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
-	goerliClient := sm.GoerliClient
+func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
+	goerliClient := runner.GoerliClient
 
-	nonce, err := goerliClient.PendingNonceAt(sm.Ctx, sm.DeployerAddress)
+	nonce, err := goerliClient.PendingNonceAt(runner.Ctx, runner.DeployerAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	gasLimit := uint64(30000) // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(sm.Ctx)
+	gasPrice, err := goerliClient.SuggestGasPrice(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	tx := ethtypes.NewTransaction(nonce, sm.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(sm.Ctx)
+	tx := ethtypes.NewTransaction(nonce, runner.TSSAddress, value, gasLimit, gasPrice, data)
+	chainID, err := goerliClient.NetworkID(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	deployerPrivkey, err := crypto.HexToECDSA(sm.DeployerPrivateKey)
+	deployerPrivkey, err := crypto.HexToECDSA(runner.DeployerPrivateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (sm *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte)
 	if err != nil {
 		return nil, err
 	}
-	err = goerliClient.SendTransaction(sm.Ctx, signedTx)
+	err = goerliClient.SendTransaction(runner.Ctx, signedTx)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +190,7 @@ func (sm *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte)
 }
 
 // ProveEthTransaction proves an ETH transaction on ZetaChain
-func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
+func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	startTime := time.Now()
 
 	txHash := receipt.TxHash
@@ -199,7 +199,7 @@ func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	// #nosec G701 test - always in range
 	txIndex := int(receipt.TransactionIndex)
 
-	block, err := sm.GoerliClient.BlockByHash(sm.Ctx, blockHash)
+	block, err := runner.GoerliClient.BlockByHash(runner.Ctx, blockHash)
 	if err != nil {
 		panic(err)
 	}
@@ -209,13 +209,13 @@ func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 			panic("timeout waiting for block header")
 		}
 
-		_, err := sm.ObserverClient.GetBlockHeaderByHash(sm.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
+		_, err := runner.ObserverClient.GetBlockHeaderByHash(runner.Ctx, &observertypes.QueryGetBlockHeaderByHashRequest{
 			BlockHash: blockHash.Bytes(),
 		})
 		if err != nil {
-			sm.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
+			runner.Logger.Info("WARN: block header not found; retrying... error: %s", err.Error())
 		} else {
-			sm.Logger.Info("OK: block header found")
+			runner.Logger.Info("OK: block header found")
 			break
 		}
 
@@ -239,7 +239,7 @@ func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	if err != nil {
 		panic("error unmarshalling txProof'd tx")
 	}
-	res, err := sm.ObserverClient.Prove(sm.Ctx, &observertypes.QueryProveRequest{
+	res, err := runner.ObserverClient.Prove(runner.Ctx, &observertypes.QueryProveRequest{
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),
@@ -252,5 +252,5 @@ func (sm *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	if !res.Valid {
 		panic("txProof invalid") // FIXME: don't do this in production
 	}
-	sm.Logger.Info("OK: txProof verified")
+	runner.Logger.Info("OK: txProof verified")
 }

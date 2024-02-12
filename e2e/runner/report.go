@@ -45,11 +45,11 @@ func (tr TestReports) String(prefix string) (string, error) {
 }
 
 // PrintTestReports prints the test reports
-func (sm *E2ERunner) PrintTestReports(tr TestReports) {
-	sm.Logger.Print(" ---📈 E2E Test Report ---")
+func (runner *E2ERunner) PrintTestReports(tr TestReports) {
+	runner.Logger.Print(" ---📈 E2E Test Report ---")
 	table, err := tr.String("")
 	if err != nil {
-		sm.Logger.Print("Error rendering test report: %s", err)
+		runner.Logger.Print("Error rendering test report: %s", err)
 	}
-	sm.Logger.PrintNoPrefix(table)
+	runner.Logger.PrintNoPrefix(table)
 }

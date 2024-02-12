@@ -9,37 +9,37 @@ import (
 )
 
 // TestEtherWithdraw tests the withdraw of ether
-func TestEtherWithdraw(sm *runner.E2ERunner) {
+func TestEtherWithdraw(r *runner.E2ERunner) {
 	// approve
-	tx, err := sm.ETHZRC20.Approve(sm.ZevmAuth, sm.ETHZRC20Addr, big.NewInt(1e18))
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.EVMTransaction(*tx, "approve")
+	r.Logger.EVMTransaction(*tx, "approve")
 
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.EVMReceipt(*receipt, "approve")
+	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	tx, err = sm.ETHZRC20.Withdraw(sm.ZevmAuth, sm.DeployerAddress.Bytes(), big.NewInt(100000))
+	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), big.NewInt(100000))
 	if err != nil {
 		panic(err)
 	}
-	sm.Logger.EVMTransaction(*tx, "withdraw")
+	r.Logger.EVMTransaction(*tx, "withdraw")
 
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.ZevmClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
-	sm.Logger.EVMReceipt(*receipt, "withdraw")
-	sm.Logger.ZRC20Withdrawal(sm.ETHZRC20, *receipt, "withdraw")
+	r.Logger.EVMReceipt(*receipt, "withdraw")
+	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
 
 	// verify the withdraw value
-	cctx := utils.WaitCctxMinedByInTxHash(sm.Ctx, receipt.TxHash.Hex(), sm.CctxClient, sm.Logger, sm.CctxTimeout)
-	sm.Logger.CCTX(*cctx, "withdraw")
+	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic("cctx status is not outbound mined")
 	}

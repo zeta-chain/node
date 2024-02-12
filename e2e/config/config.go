@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Config contains the configuration for the smoke test
+// Config contains the configuration for the e2e test
 type Config struct {
 	Accounts    Accounts  `yaml:"accounts"`
 	RPCs        RPCs      `yaml:"rpcs"`

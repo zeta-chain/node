@@ -11,19 +11,19 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleERC20Deposit(sm *runner.E2ERunner) {
-	initialBal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+func TestMultipleERC20Deposit(r *runner.E2ERunner) {
+	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	txhash := MultipleDeposits(sm, big.NewInt(1e9), big.NewInt(3))
-	cctxs := utils.WaitCctxsMinedByInTxHash(sm.Ctx, txhash.Hex(), sm.CctxClient, 3, sm.Logger, sm.CctxTimeout)
+	txhash := MultipleDeposits(r, big.NewInt(1e9), big.NewInt(3))
+	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, txhash.Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
 	// check new balance is increased by 1e9 * 3
-	bal, err := sm.USDTZRC20.BalanceOf(&bind.CallOpts{}, sm.DeployerAddress)
+	bal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -33,9 +33,9 @@ func TestMultipleERC20Deposit(sm *runner.E2ERunner) {
 	}
 }
 
-func MultipleDeposits(sm *runner.E2ERunner, amount, count *big.Int) ethcommon.Hash {
+func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Hash {
 	// deploy depositor
-	depositorAddr, _, depositor, err := testcontract.DeployDepositor(sm.GoerliAuth, sm.GoerliClient, sm.ERC20CustodyAddr)
+	depositorAddr, _, depositor, err := testcontract.DeployDepositor(r.GoerliAuth, r.GoerliClient, r.ERC20CustodyAddr)
 	if err != nil {
 		panic(err)
 	}
@@ -43,35 +43,35 @@ func MultipleDeposits(sm *runner.E2ERunner, amount, count *big.Int) ethcommon.Ha
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
 	// approve
-	tx, err := sm.USDTERC20.Approve(sm.GoerliAuth, depositorAddr, fullAmount)
+	tx, err := r.USDTERC20.Approve(r.GoerliAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	sm.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
-	tx, err = depositor.RunDeposits(sm.GoerliAuth, sm.DeployerAddress.Bytes(), sm.USDTERC20Addr, amount, []byte{}, count)
+	tx, err = depositor.RunDeposits(r.GoerliAuth, r.DeployerAddress.Bytes(), r.USDTERC20Addr, amount, []byte{}, count)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(sm.Ctx, sm.GoerliClient, tx, sm.Logger, sm.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposits failed")
 	}
-	sm.Logger.Info("Deposits receipt tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("Deposits receipt tx hash: %s", tx.Hash().Hex())
 
 	for _, log := range receipt.Logs {
-		event, err := sm.ERC20Custody.ParseDeposited(*log)
+		event, err := r.ERC20Custody.ParseDeposited(*log)
 		if err != nil {
 			continue
 		}
-		sm.Logger.Info("Multiple deposit event: ")
-		sm.Logger.Info("  Amount: %d, ", event.Amount)
+		r.Logger.Info("Multiple deposit event: ")
+		r.Logger.Info("  Amount: %d, ", event.Amount)
 	}
-	sm.Logger.Info("gas limit %d", sm.ZevmAuth.GasLimit)
+	r.Logger.Info("gas limit %d", r.ZevmAuth.GasLimit)
 	return tx.Hash()
 }

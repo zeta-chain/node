@@ -171,13 +171,13 @@ type E2ETest struct {
 }
 
 // RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
-func (sm *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...string) error {
+func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...string) error {
 	for _, e2eTestName := range e2eTestNames {
 		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
 		if !ok {
 			return fmt.Errorf("e2e test %s not found", e2eTestName)
 		}
-		if err := sm.RunE2ETest(e2eTest, true); err != nil {
+		if err := runner.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
@@ -187,7 +187,7 @@ func (sm *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...st
 
 // RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
-func (sm *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestNames ...string) (TestReports, error) {
+func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestNames ...string) (TestReports, error) {
 	// get all tests so we can return an error if a test is not found
 	tests := make([]E2ETest, 0, len(e2eTestNames))
 	for _, e2eTestName := range e2eTestNames {
@@ -202,23 +202,23 @@ func (sm *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestN
 	reports := make(TestReports, 0, len(e2eTestNames))
 	for _, test := range tests {
 		// get info before test
-		balancesBefore, err := sm.GetAccountBalances(true)
+		balancesBefore, err := runner.GetAccountBalances(true)
 		if err != nil {
 			return nil, err
 		}
 		timeBefore := time.Now()
 
 		// run test
-		testErr := sm.RunE2ETest(test, false)
+		testErr := runner.RunE2ETest(test, false)
 		if testErr != nil {
-			sm.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
+			runner.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
 		}
 
 		// wait 5 sec to make sure we get updated balances
 		time.Sleep(5 * time.Second)
 
 		// get info after test
-		balancesAfter, err := sm.GetAccountBalances(true)
+		balancesAfter, err := runner.GetAccountBalances(true)
 		if err != nil {
 			return nil, err
 		}
@@ -238,9 +238,9 @@ func (sm *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestN
 }
 
 // RunE2ETests runs a list of e2e tests
-func (sm *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
+func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 	for _, e2eTest := range e2eTests {
-		if err := sm.RunE2ETest(e2eTest, true); err != nil {
+		if err := runner.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
@@ -248,7 +248,7 @@ func (sm *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 }
 
 // RunE2ETest runs a e2e test
-func (sm *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (err error) {
+func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -261,19 +261,19 @@ func (sm *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (
 	}()
 
 	startTime := time.Now()
-	sm.Logger.Print("⏳running - %s", e2eTestWithName.Description)
+	runner.Logger.Print("⏳running - %s", e2eTestWithName.Description)
 
 	// run e2e test
-	e2eTestWithName.E2ETest(sm)
+	e2eTestWithName.E2ETest(runner)
 
 	//check supplies
 	if checkAccounting {
-		if err := sm.CheckZRC20ReserveAndSupply(); err != nil {
+		if err := runner.CheckZRC20ReserveAndSupply(); err != nil {
 			return err
 		}
 	}
 
-	sm.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTestWithName.Description)
+	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTestWithName.Description)
 
 	return err
 }
@@ -289,83 +289,83 @@ func findE2ETest(name string, e2eTests []E2ETest) (E2ETest, bool) {
 }
 
 // CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts
-func (sm *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
+func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	// copy TSS address
-	sm.TSSAddress = other.TSSAddress
-	sm.BTCTSSAddress = other.BTCTSSAddress
+	runner.TSSAddress = other.TSSAddress
+	runner.BTCTSSAddress = other.BTCTSSAddress
 
 	// copy addresses
-	sm.ZetaEthAddr = other.ZetaEthAddr
-	sm.ConnectorEthAddr = other.ConnectorEthAddr
-	sm.ERC20CustodyAddr = other.ERC20CustodyAddr
-	sm.USDTERC20Addr = other.USDTERC20Addr
-	sm.USDTZRC20Addr = other.USDTZRC20Addr
-	sm.ETHZRC20Addr = other.ETHZRC20Addr
-	sm.BTCZRC20Addr = other.BTCZRC20Addr
-	sm.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
-	sm.UniswapV2RouterAddr = other.UniswapV2RouterAddr
-	sm.ConnectorZEVMAddr = other.ConnectorZEVMAddr
-	sm.WZetaAddr = other.WZetaAddr
-	sm.TestDAppAddr = other.TestDAppAddr
-	sm.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
-	sm.ContextAppAddr = other.ContextAppAddr
-	sm.SystemContractAddr = other.SystemContractAddr
+	runner.ZetaEthAddr = other.ZetaEthAddr
+	runner.ConnectorEthAddr = other.ConnectorEthAddr
+	runner.ERC20CustodyAddr = other.ERC20CustodyAddr
+	runner.USDTERC20Addr = other.USDTERC20Addr
+	runner.USDTZRC20Addr = other.USDTZRC20Addr
+	runner.ETHZRC20Addr = other.ETHZRC20Addr
+	runner.BTCZRC20Addr = other.BTCZRC20Addr
+	runner.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
+	runner.UniswapV2RouterAddr = other.UniswapV2RouterAddr
+	runner.ConnectorZEVMAddr = other.ConnectorZEVMAddr
+	runner.WZetaAddr = other.WZetaAddr
+	runner.TestDAppAddr = other.TestDAppAddr
+	runner.ZEVMSwapAppAddr = other.ZEVMSwapAppAddr
+	runner.ContextAppAddr = other.ContextAppAddr
+	runner.SystemContractAddr = other.SystemContractAddr
 
 	// create instances of contracts
-	sm.ZetaEth, err = zetaeth.NewZetaEth(sm.ZetaEthAddr, sm.GoerliClient)
+	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.GoerliClient)
 	if err != nil {
 		return err
 	}
-	sm.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(sm.ConnectorEthAddr, sm.GoerliClient)
+	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.GoerliClient)
 	if err != nil {
 		return err
 	}
-	sm.ERC20Custody, err = erc20custody.NewERC20Custody(sm.ERC20CustodyAddr, sm.GoerliClient)
+	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.GoerliClient)
 	if err != nil {
 		return err
 	}
-	sm.USDTERC20, err = erc20.NewUSDT(sm.USDTERC20Addr, sm.GoerliClient)
+	runner.USDTERC20, err = erc20.NewUSDT(runner.USDTERC20Addr, runner.GoerliClient)
 	if err != nil {
 		return err
 	}
-	sm.USDTZRC20, err = zrc20.NewZRC20(sm.USDTZRC20Addr, sm.ZevmClient)
+	runner.USDTZRC20, err = zrc20.NewZRC20(runner.USDTZRC20Addr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.ETHZRC20, err = zrc20.NewZRC20(sm.ETHZRC20Addr, sm.ZevmClient)
+	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.BTCZRC20, err = zrc20.NewZRC20(sm.BTCZRC20Addr, sm.ZevmClient)
+	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(sm.UniswapV2FactoryAddr, sm.ZevmClient)
+	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(sm.UniswapV2RouterAddr, sm.ZevmClient)
+	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(sm.ConnectorZEVMAddr, sm.ZevmClient)
+	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.WZeta, err = wzeta.NewWETH9(sm.WZetaAddr, sm.ZevmClient)
+	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
 
-	sm.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(sm.ZEVMSwapAppAddr, sm.ZevmClient)
+	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.ContextApp, err = contextapp.NewContextApp(sm.ContextAppAddr, sm.ZevmClient)
+	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
-	sm.SystemContract, err = systemcontract.NewSystemContract(sm.SystemContractAddr, sm.ZevmClient)
+	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
@@ -373,38 +373,38 @@ func (sm *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 }
 
 // Lock locks the mutex
-func (sm *E2ERunner) Lock() {
-	sm.mutex.Lock()
+func (runner *E2ERunner) Lock() {
+	runner.mutex.Lock()
 }
 
 // Unlock unlocks the mutex
-func (sm *E2ERunner) Unlock() {
-	sm.mutex.Unlock()
+func (runner *E2ERunner) Unlock() {
+	runner.mutex.Unlock()
 }
 
 // PrintContractAddresses prints the addresses of the contracts
 // the printed contracts are grouped in a zevm and evm section
 // there is a padding used to print the addresses at the same position
-func (sm *E2ERunner) PrintContractAddresses() {
+func (runner *E2ERunner) PrintContractAddresses() {
 	// zevm contracts
-	sm.Logger.Print(" --- 📜zEVM contracts ---")
-	sm.Logger.Print("SystemContract: %s", sm.SystemContractAddr.Hex())
-	sm.Logger.Print("ETHZRC20:       %s", sm.ETHZRC20Addr.Hex())
-	sm.Logger.Print("USDTZRC20:      %s", sm.USDTZRC20Addr.Hex())
-	sm.Logger.Print("BTCZRC20:       %s", sm.BTCZRC20Addr.Hex())
-	sm.Logger.Print("UniswapFactory: %s", sm.UniswapV2FactoryAddr.Hex())
-	sm.Logger.Print("UniswapRouter:  %s", sm.UniswapV2RouterAddr.Hex())
-	sm.Logger.Print("ConnectorZEVM:  %s", sm.ConnectorZEVMAddr.Hex())
-	sm.Logger.Print("WZeta:          %s", sm.WZetaAddr.Hex())
+	runner.Logger.Print(" --- 📜zEVM contracts ---")
+	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())
+	runner.Logger.Print("ETHZRC20:       %s", runner.ETHZRC20Addr.Hex())
+	runner.Logger.Print("USDTZRC20:      %s", runner.USDTZRC20Addr.Hex())
+	runner.Logger.Print("BTCZRC20:       %s", runner.BTCZRC20Addr.Hex())
+	runner.Logger.Print("UniswapFactory: %s", runner.UniswapV2FactoryAddr.Hex())
+	runner.Logger.Print("UniswapRouter:  %s", runner.UniswapV2RouterAddr.Hex())
+	runner.Logger.Print("ConnectorZEVM:  %s", runner.ConnectorZEVMAddr.Hex())
+	runner.Logger.Print("WZeta:          %s", runner.WZetaAddr.Hex())
 
-	sm.Logger.Print("ZEVMSwapApp:    %s", sm.ZEVMSwapAppAddr.Hex())
-	sm.Logger.Print("ContextApp:     %s", sm.ContextAppAddr.Hex())
-	sm.Logger.Print("TestDapp:       %s", sm.TestDAppAddr.Hex())
+	runner.Logger.Print("ZEVMSwapApp:    %s", runner.ZEVMSwapAppAddr.Hex())
+	runner.Logger.Print("ContextApp:     %s", runner.ContextAppAddr.Hex())
+	runner.Logger.Print("TestDapp:       %s", runner.TestDAppAddr.Hex())
 
 	// evm contracts
-	sm.Logger.Print(" --- 📜EVM contracts ---")
-	sm.Logger.Print("ZetaEth:        %s", sm.ZetaEthAddr.Hex())
-	sm.Logger.Print("ConnectorEth:   %s", sm.ConnectorEthAddr.Hex())
-	sm.Logger.Print("ERC20Custody:   %s", sm.ERC20CustodyAddr.Hex())
-	sm.Logger.Print("USDTERC20:      %s", sm.USDTERC20Addr.Hex())
+	runner.Logger.Print(" --- 📜EVM contracts ---")
+	runner.Logger.Print("ZetaEth:        %s", runner.ZetaEthAddr.Hex())
+	runner.Logger.Print("ConnectorEth:   %s", runner.ConnectorEthAddr.Hex())
+	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
+	runner.Logger.Print("USDTERC20:      %s", runner.USDTERC20Addr.Hex())
 }

@@ -49,7 +49,7 @@ func RunnerFromConfig(
 	}
 
 	// initialize E2E test runner
-	sm := runner.NewE2ERunner(
+	newRunner := runner.NewE2ERunner(
 		ctx,
 		name,
 		ctxCancel,
@@ -71,7 +71,7 @@ func RunnerFromConfig(
 	)
 
 	// set contracts
-	err = setContractsFromConfig(sm, conf)
+	err = setContractsFromConfig(newRunner, conf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to set contracts from config: %w", err)
 	}
@@ -81,28 +81,28 @@ func RunnerFromConfig(
 	if err != nil {
 		return nil, fmt.Errorf("failed to get bitcoin params: %w", err)
 	}
-	sm.BitcoinParams = &chainParams
+	newRunner.BitcoinParams = &chainParams
 
-	return sm, err
+	return newRunner, err
 }
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
-func ExportContractsFromRunner(sm *runner.E2ERunner, conf config.Config) config.Config {
+func ExportContractsFromRunner(oldRunner *runner.E2ERunner, conf config.Config) config.Config {
 	// copy contracts from deployer runner
-	conf.Contracts.EVM.ZetaEthAddress = sm.ZetaEthAddr.Hex()
-	conf.Contracts.EVM.ConnectorEthAddr = sm.ConnectorEthAddr.Hex()
-	conf.Contracts.EVM.CustodyAddr = sm.ERC20CustodyAddr.Hex()
-	conf.Contracts.EVM.USDT = sm.USDTERC20Addr.Hex()
+	conf.Contracts.EVM.ZetaEthAddress = oldRunner.ZetaEthAddr.Hex()
+	conf.Contracts.EVM.ConnectorEthAddr = oldRunner.ConnectorEthAddr.Hex()
+	conf.Contracts.EVM.CustodyAddr = oldRunner.ERC20CustodyAddr.Hex()
+	conf.Contracts.EVM.USDT = oldRunner.USDTERC20Addr.Hex()
 
-	conf.Contracts.ZEVM.SystemContractAddr = sm.SystemContractAddr.Hex()
-	conf.Contracts.ZEVM.ETHZRC20Addr = sm.ETHZRC20Addr.Hex()
-	conf.Contracts.ZEVM.USDTZRC20Addr = sm.USDTZRC20Addr.Hex()
-	conf.Contracts.ZEVM.BTCZRC20Addr = sm.BTCZRC20Addr.Hex()
-	conf.Contracts.ZEVM.UniswapFactoryAddr = sm.UniswapV2FactoryAddr.Hex()
-	conf.Contracts.ZEVM.UniswapRouterAddr = sm.UniswapV2RouterAddr.Hex()
-	conf.Contracts.ZEVM.ZEVMSwapAppAddr = sm.ZEVMSwapAppAddr.Hex()
-	conf.Contracts.ZEVM.ContextAppAddr = sm.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = sm.TestDAppAddr.Hex()
+	conf.Contracts.ZEVM.SystemContractAddr = oldRunner.SystemContractAddr.Hex()
+	conf.Contracts.ZEVM.ETHZRC20Addr = oldRunner.ETHZRC20Addr.Hex()
+	conf.Contracts.ZEVM.USDTZRC20Addr = oldRunner.USDTZRC20Addr.Hex()
+	conf.Contracts.ZEVM.BTCZRC20Addr = oldRunner.BTCZRC20Addr.Hex()
+	conf.Contracts.ZEVM.UniswapFactoryAddr = oldRunner.UniswapV2FactoryAddr.Hex()
+	conf.Contracts.ZEVM.UniswapRouterAddr = oldRunner.UniswapV2RouterAddr.Hex()
+	conf.Contracts.ZEVM.ZEVMSwapAppAddr = oldRunner.ZEVMSwapAppAddr.Hex()
+	conf.Contracts.ZEVM.ContextAppAddr = oldRunner.ContextAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = oldRunner.TestDAppAddr.Hex()
 
 	return conf
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// bitcoinTestRoutine runs Bitcoin related smoke tests
+// bitcoinTestRoutine runs Bitcoin related e2e tests
 func bitcoinTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,

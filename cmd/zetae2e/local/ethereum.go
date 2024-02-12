@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// ethereumTestRoutine runs Ethereum related smoke tests
+// ethereumTestRoutine runs Ethereum related e2e tests
 func ethereumTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
