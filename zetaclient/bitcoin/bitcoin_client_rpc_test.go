@@ -3,11 +3,12 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"math/big"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
