@@ -76,10 +76,11 @@ type BTCChainClient struct {
 }
 
 const (
-	minConfirmations = 0
-	maxHeightDiff    = 10000
-	btcBlocksPerDay  = 144
-	DonationMessage  = "I am rich!"
+	maxHeightDiff             = 10000     // in case the last block is too old when the observer starts
+	btcBlocksPerDay           = 144       // for LRU block cache size
+	bigValueSats              = 200000000 // 2 BTC
+	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
+	DonationMessage           = "I am rich!"
 )
 
 func (ob *BTCChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
@@ -463,10 +464,14 @@ func (ob *BTCChainClient) observeInTx() error {
 
 // ConfirmationsThreshold returns number of required Bitcoin confirmations depending on sent BTC amount.
 func (ob *BTCChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
-	if amount.Cmp(big.NewInt(200000000)) >= 0 {
-		return 6
+	if amount.Cmp(big.NewInt(bigValueSats)) >= 0 {
+		return bigValueConfirmationCount
 	}
-	return 2
+	if bigValueConfirmationCount < ob.GetChainParams().ConfirmationCount {
+		return bigValueConfirmationCount
+	}
+	// #nosec G701 always in range
+	return int64(ob.GetChainParams().ConfirmationCount)
 }
 
 // IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
@@ -588,7 +593,7 @@ func (ob *BTCChainClient) PostGasPrice() error {
 		return nil
 	}
 	// EstimateSmartFee returns the fees per kilobyte (BTC/kb) targeting given block confirmation
-	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
+	feeResult, err := ob.rpcClient.EstimateSmartFee(1, &btcjson.EstimateModeEconomical)
 	if err != nil {
 		return err
 	}
@@ -704,7 +709,7 @@ func GetBtcEvent(
 				return nil, err
 			}
 			if wpkhAddress.EncodeAddress() != targetAddress {
-				return nil, err
+				return nil, nil // irrelevant tx to us, skip
 			}
 			// deposit amount has to be no less than the minimum depositor fee
 			if out.Value < BtcDepositorFeeMin {

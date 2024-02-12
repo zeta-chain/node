@@ -65,7 +65,7 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 	if err != nil {
 		return "", err
 	}
-	tss, err := ob.zetaClient.GetBtcTssAddress()
+	tss, err := ob.zetaClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +85,7 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 	if err != nil {
 		ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
-	} else if ballot == "" {
+	} else if zetaHash != "" {
 		ob.logger.WatchInTx.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx: %s ballot %s", zetaHash, ballot)
 	}
 	return msg.Digest(), nil

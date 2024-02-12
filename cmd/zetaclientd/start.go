@@ -333,9 +333,9 @@ func promptPasswords() (string, string, error) {
 		return "", "", err
 	}
 
-	if TSSKeyPass == "" {
-		return "", "", errors.New("tss password is required to start zetaclient")
-	}
+	//trim delimiters
+	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
+	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
 }
