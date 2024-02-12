@@ -3,6 +3,7 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
+* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
 
 ### Refactor
 
