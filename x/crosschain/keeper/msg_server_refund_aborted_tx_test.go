@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
@@ -19,89 +20,19 @@ import (
 func Test_GetRefundAddress(t *testing.T) {
 	t.Run("should return refund address if provided coin-type gas", func(t *testing.T) {
 		validEthAddress := sample.EthAddress()
-		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				TxOrigin:      validEthAddress.String(),
-				CoinType:      common.CoinType_Gas,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			"")
+		address, err := keeper.GetRefundAddress(validEthAddress.String())
 		require.NoError(t, err)
 		require.Equal(t, validEthAddress, address)
 	})
-	t.Run("should return refund address if provided coin-type zeta", func(t *testing.T) {
-		validEthAddress := sample.EthAddress()
-		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				TxOrigin:      validEthAddress.String(),
-				CoinType:      common.CoinType_Zeta,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			"")
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
+	t.Run("should fail if refund address is empty", func(t *testing.T) {
+		address, err := keeper.GetRefundAddress("")
+		require.ErrorIs(t, crosschaintypes.ErrInvalidAddress, err)
+		assert.Equal(t, ethcommon.Address{}, address)
 	})
-	t.Run("should return refund address if provided coin-type erc20", func(t *testing.T) {
-		validEthAddress := sample.EthAddress()
-		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				Sender:        validEthAddress.String(),
-				CoinType:      common.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			"")
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
-	})
-	t.Run("should return refund address if provided coin-type gas for btc chain", func(t *testing.T) {
-		validEthAddress := sample.EthAddress()
-		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
-				SenderChainId: getValidBtcChainID(),
-			}},
-			validEthAddress.String())
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
-	})
-	t.Run("fail if refund address is not provided for btc chain", func(t *testing.T) {
-		_, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
-				SenderChainId: getValidBtcChainID(),
-			}},
-			"")
-		require.ErrorContains(t, err, "refund address is required for bitcoin chain")
-	})
-	t.Run("address overridden if optional address is provided", func(t *testing.T) {
-		validEthAddress := sample.EthAddress()
-		address, err := keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				Sender:        sample.EthAddress().String(),
-				CoinType:      common.CoinType_ERC20,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			validEthAddress.String())
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
-		address, err = keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				Sender:        sample.EthAddress().String(),
-				CoinType:      common.CoinType_Zeta,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			validEthAddress.String())
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
-		address, err = keeper.GetRefundAddress(crosschaintypes.CrossChainTx{
-			InboundTxParams: &crosschaintypes.InboundTxParams{
-				Sender:        sample.EthAddress().String(),
-				CoinType:      common.CoinType_Gas,
-				SenderChainId: getValidEthChainID(t),
-			}},
-			validEthAddress.String())
-		require.NoError(t, err)
-		require.Equal(t, validEthAddress, address)
+	t.Run("should fail if refund address is invalid", func(t *testing.T) {
+		address, err := keeper.GetRefundAddress("invalid-address")
+		require.ErrorIs(t, crosschaintypes.ErrInvalidAddress, err)
+		assert.Equal(t, ethcommon.Address{}, address)
 	})
 
 }
@@ -127,7 +58,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.NoError(t, err)
 
@@ -160,7 +91,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.NoError(t, err)
 
@@ -194,7 +125,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.NoError(t, err)
 
@@ -271,7 +202,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.NoError(t, err)
 
@@ -416,7 +347,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "cannot find cctx")
 	})
-	t.Run("fail refund if refund address not provided for BTC chain", func(t *testing.T) {
+	t.Run("fail refund if refund address not provided", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		admin := sample.AccAddress()
 		chainID := getValidBtcChainID()
@@ -439,7 +370,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			CctxIndex:     cctx.Index,
 			RefundAddress: "",
 		})
-		require.ErrorContains(t, err, "refund address is required for bitcoin chain")
+		require.ErrorContains(t, err, "refund address is required")
 	})
 	t.Run("fail refund tx for coin-type Zeta if zeta accounting object is not present", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
@@ -461,7 +392,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       admin,
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.ErrorContains(t, err, "unable to find zeta accounting")
 	})
@@ -486,7 +417,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
 			Creator:       sample.AccAddress(),
 			CctxIndex:     cctx.Index,
-			RefundAddress: "",
+			RefundAddress: cctx.InboundTxParams.Sender,
 		})
 		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
 	})

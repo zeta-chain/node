@@ -54,7 +54,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 		}
 	}
 
-	refundAddress, err := GetRefundAddress(cctx, msg.RefundAddress)
+	refundAddress, err := GetRefundAddress(msg.RefundAddress)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidAddress, err.Error())
 	}
@@ -81,24 +81,19 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 // For EVM chain with coin type Zeta the refund address is the tx origin, but can be overridden by the RefundAddress field in the message.
 // For EVM chain with coin type Gas the refund address is the tx origin, but can be overridden by the RefundAddress field in the message.
 
-func GetRefundAddress(cctx types.CrossChainTx, optionalRefundAddress string) (ethcommon.Address, error) {
+func GetRefundAddress(refundAddress string) (ethcommon.Address, error) {
 	// make sure a separate refund address is provided for a bitcoin chain as we cannot refund to tx origin or sender in this case
-	if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) && optionalRefundAddress == "" {
-		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "refund address is required for bitcoin chain")
+	if refundAddress == "" {
+		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "refund address is required")
 	}
-	refundAddress := ethcommon.HexToAddress(cctx.InboundTxParams.TxOrigin)
-	if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
-		refundAddress = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
+	if !ethcommon.IsHexAddress(refundAddress) {
+		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address provided")
 	}
-	if optionalRefundAddress != "" {
-		if !ethcommon.IsHexAddress(optionalRefundAddress) {
-			return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address provided")
-		}
-		refundAddress = ethcommon.HexToAddress(optionalRefundAddress)
-	}
+	ethRefundAddress := ethcommon.HexToAddress(refundAddress)
 	// Double check to make sure the refund address is valid
-	if refundAddress == (ethcommon.Address{}) {
+	if ethRefundAddress == (ethcommon.Address{}) {
 		return ethcommon.Address{}, errorsmod.Wrap(types.ErrInvalidAddress, "invalid refund address")
 	}
-	return refundAddress, nil
+	return ethRefundAddress, nil
+
 }
