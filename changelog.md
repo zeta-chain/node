@@ -28,6 +28,10 @@
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 
+### CI
+
+* [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+
 ### Chores
 
 * [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
@@ -81,6 +85,7 @@
 ### Refactoring
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+* [1640](https://github.com/zeta-chain/node/pull/1640) reorganize zetaclient into subpackages
 
 ### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains

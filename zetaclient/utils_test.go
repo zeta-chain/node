@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
@@ -81,7 +83,7 @@ func TestCheckEvmTxLog(t *testing.T) {
 		},
 	}
 
-	evmClient := EVMChainClient{}
+	evmClient := evm.ChainClient{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fmt.Printf("check test: %s\n", tt.name)
@@ -89,7 +91,7 @@ func TestCheckEvmTxLog(t *testing.T) {
 				tt.vLog,
 				connectorAddr,
 				"0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626",
-				TopicsZetaSent,
+				evm.TopicsZetaSent,
 			)
 			if tt.fail {
 				require.Error(t, err)
