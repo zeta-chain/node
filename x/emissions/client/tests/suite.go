@@ -78,14 +78,16 @@ func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerT
 	ballotStatus := []observerTypes.BallotStatus{observerTypes.BallotStatus_BallotFinalized_FailureObservation, observerTypes.BallotStatus_BallotFinalized_SuccessObservation}
 	min := 0
 	max := len(ballotStatus) - 1
+	// #nosec G404 randomness is not a security issue here
 	for i := 0; i < numberOfBallots; i++ {
 		ballots[i] = &observerTypes.Ballot{
-			Index:                "",
-			BallotIdentifier:     "TestBallot" + strconv.Itoa(i),
-			VoterList:            voterList,
-			Votes:                CreateRandomVoteList(len(voterList)),
-			ObservationType:      observerTypes.ObservationType_InBoundTx,
-			BallotThreshold:      sdk.MustNewDecFromStr("0.66"),
+			Index:            "",
+			BallotIdentifier: "TestBallot" + strconv.Itoa(i),
+			VoterList:        voterList,
+			Votes:            CreateRandomVoteList(len(voterList)),
+			ObservationType:  observerTypes.ObservationType_InBoundTx,
+			BallotThreshold:  sdk.MustNewDecFromStr("0.66"),
+			// #nosec G404 randomness used for testing
 			BallotStatus:         ballotStatus[rand.Intn(max-min)+min], // #nosec G404 randomness used for testing
 			BallotCreationHeight: 0,
 		}
