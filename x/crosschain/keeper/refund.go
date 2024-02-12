@@ -54,7 +54,6 @@ func (k Keeper) RefundAmountOnZetaChainGas(ctx sdk.Context, cctx types.CrossChai
 func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	// if coin type is Zeta, handle this as a deposit ZETA to zEVM.
 	refundAmount := GetAbortedAmount(cctx)
-	fmt.Println("RefundAmountOnZetaChainZeta: refundAmount: ", refundAmount)
 	chainID := cctx.InboundTxParams.SenderChainId
 	// check if chain is an EVM chain
 	if !common.IsEVMChain(chainID) {

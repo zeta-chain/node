@@ -133,6 +133,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		Status:              s,
 		StatusMessage:       "",
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
+		IsAbortRefunded:     false,
 	}
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,

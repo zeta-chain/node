@@ -272,6 +272,12 @@ message MsgAbortStuckCCTX {
 
 ## MsgRefundAbortedCCTX
 
+RefundAbortedCCTX refunds the aborted CCTX.
+It verifies if the CCTX is aborted and not refunded, and if the refund address is valid.
+It refunds the amount to the refund address and sets the CCTX as refunded.
+Refer to documentation for GetRefundAddress for the refund address logic.
+Refer to documentation for GetAbortedAmount for the aborted amount logic.
+
 ```proto
 message MsgRefundAbortedCCTX {
 	string creator = 1;
