@@ -327,6 +327,7 @@ func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	compareAvgFeeRate(t, client, startBlock, endBlock, false)
 }
 
+// Remove prefix "Live" to run this live test
 func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	// setup Bitcoin client
 	client, err := getRPCClient(18332)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"github.com/btcsuite/btcd/btcjson"
 )
 
 const (
@@ -34,4 +36,17 @@ func LoadObjectFromJSONFile(obj interface{}, filename string) error {
 	// read the struct from the file
 	decoder := json.NewDecoder(file)
 	return decoder.Decode(&obj)
+}
+
+// SaveTrimedBTCBlockTrimTx trims tx data from a block and saves it to a file
+func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename string) error {
+	for i := range blockVb.Tx {
+		// reserve one coinbase tx and one non-coinbase tx
+		if i >= 2 {
+			blockVb.Tx[i].Hex = ""
+			blockVb.Tx[i].Vin = nil
+			blockVb.Tx[i].Vout = nil
+		}
+	}
+	return SaveObjectToJSONFile(blockVb, filename)
 }
