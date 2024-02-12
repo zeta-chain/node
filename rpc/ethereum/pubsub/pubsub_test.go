@@ -7,24 +7,24 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 )
 
 func TestAddTopic(t *testing.T) {
 	q := NewEventBus()
 	err := q.AddTopic("kek", make(<-chan coretypes.ResultEvent))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = q.AddTopic("lol", make(<-chan coretypes.ResultEvent))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = q.AddTopic("lol", make(<-chan coretypes.ResultEvent))
-	assert.Error(t, err)
+	require.Error(t, err)
 
 	topics := q.Topics()
 	sort.Strings(topics)
-	assert.EqualValues(t, []string{"kek", "lol"}, topics)
+	require.EqualValues(t, []string{"kek", "lol"}, topics)
 }
 
 func TestSubscribe(t *testing.T) {
@@ -38,13 +38,13 @@ func TestSubscribe(t *testing.T) {
 	q.AddTopic("lol", lolSrc)
 
 	kekSubC, _, err := q.Subscribe("kek")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	lolSubC, _, err := q.Subscribe("lol")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	lol2SubC, _, err := q.Subscribe("lol")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	wg := new(sync.WaitGroup)
 	wg.Add(4)
@@ -54,21 +54,21 @@ func TestSubscribe(t *testing.T) {
 		defer wg.Done()
 		msg := <-kekSubC
 		log.Println("kek:", msg)
-		assert.EqualValues(t, emptyMsg, msg)
+		require.EqualValues(t, emptyMsg, msg)
 	}()
 
 	go func() {
 		defer wg.Done()
 		msg := <-lolSubC
 		log.Println("lol:", msg)
-		assert.EqualValues(t, emptyMsg, msg)
+		require.EqualValues(t, emptyMsg, msg)
 	}()
 
 	go func() {
 		defer wg.Done()
 		msg := <-lol2SubC
 		log.Println("lol2:", msg)
-		assert.EqualValues(t, emptyMsg, msg)
+		require.EqualValues(t, emptyMsg, msg)
 	}()
 
 	go func() {

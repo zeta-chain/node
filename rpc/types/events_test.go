@@ -6,7 +6,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 
@@ -232,19 +232,19 @@ func TestParseTxResult(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			parsed, err := ParseTxResult(&tc.response, nil)
 			if tc.expTxs == nil {
-				assert.Error(t, err)
+				require.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				for msgIndex, expTx := range tc.expTxs {
-					assert.Equal(t, expTx, parsed.GetTxByMsgIndex(msgIndex))
-					assert.Equal(t, expTx, parsed.GetTxByHash(expTx.Hash))
-					assert.Equal(t, expTx, parsed.GetTxByTxIndex(int(expTx.EthTxIndex)))
+					require.Equal(t, expTx, parsed.GetTxByMsgIndex(msgIndex))
+					require.Equal(t, expTx, parsed.GetTxByHash(expTx.Hash))
+					require.Equal(t, expTx, parsed.GetTxByTxIndex(int(expTx.EthTxIndex)))
 				}
 				// non-exists tx hash
-				assert.Nil(t, parsed.GetTxByHash(common.Hash{}))
+				require.Nil(t, parsed.GetTxByHash(common.Hash{}))
 				// out of range
-				assert.Nil(t, parsed.GetTxByMsgIndex(len(tc.expTxs)))
-				assert.Nil(t, parsed.GetTxByTxIndex(99999999))
+				require.Nil(t, parsed.GetTxByMsgIndex(len(tc.expTxs)))
+				require.Nil(t, parsed.GetTxByTxIndex(99999999))
 			}
 		})
 	}

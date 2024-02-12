@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnmarshalBlockNumberOrHash(t *testing.T) {
@@ -21,8 +21,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"JSON input with block hash",
 			[]byte("{\"blockHash\": \"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\"}"),
 			func() {
-				assert.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
-				assert.Nil(t, bnh.BlockNumber)
+				require.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
+				require.Nil(t, bnh.BlockNumber)
 			},
 			true,
 		},
@@ -30,8 +30,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"JSON input with block number",
 			[]byte("{\"blockNumber\": \"0x35\"}"),
 			func() {
-				assert.Equal(t, *bnh.BlockNumber, BlockNumber(0x35))
-				assert.Nil(t, bnh.BlockHash)
+				require.Equal(t, *bnh.BlockNumber, BlockNumber(0x35))
+				require.Nil(t, bnh.BlockHash)
 			},
 			true,
 		},
@@ -39,8 +39,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"JSON input with block number latest",
 			[]byte("{\"blockNumber\": \"latest\"}"),
 			func() {
-				assert.Equal(t, *bnh.BlockNumber, EthLatestBlockNumber)
-				assert.Nil(t, bnh.BlockHash)
+				require.Equal(t, *bnh.BlockNumber, EthLatestBlockNumber)
+				require.Nil(t, bnh.BlockHash)
 			},
 			true,
 		},
@@ -55,8 +55,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"String input with block hash",
 			[]byte("\"0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739\""),
 			func() {
-				assert.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
-				assert.Nil(t, bnh.BlockNumber)
+				require.Equal(t, *bnh.BlockHash, common.HexToHash("0x579917054e325746fda5c3ee431d73d26255bc4e10b51163862368629ae19739"))
+				require.Nil(t, bnh.BlockNumber)
 			},
 			true,
 		},
@@ -64,8 +64,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"String input with block number",
 			[]byte("\"0x35\""),
 			func() {
-				assert.Equal(t, *bnh.BlockNumber, BlockNumber(0x35))
-				assert.Nil(t, bnh.BlockHash)
+				require.Equal(t, *bnh.BlockNumber, BlockNumber(0x35))
+				require.Nil(t, bnh.BlockHash)
 			},
 			true,
 		},
@@ -73,8 +73,8 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 			"String input with block number latest",
 			[]byte("\"latest\""),
 			func() {
-				assert.Equal(t, *bnh.BlockNumber, EthLatestBlockNumber)
-				assert.Nil(t, bnh.BlockHash)
+				require.Equal(t, *bnh.BlockNumber, EthLatestBlockNumber)
+				require.Nil(t, bnh.BlockHash)
 			},
 			true,
 		},
@@ -94,9 +94,9 @@ func TestUnmarshalBlockNumberOrHash(t *testing.T) {
 		err := bnh.UnmarshalJSON(tc.input)
 		tc.malleate()
 		if tc.expPass {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		} else {
-			assert.Error(t, err)
+			require.Error(t, err)
 		}
 	}
 }
