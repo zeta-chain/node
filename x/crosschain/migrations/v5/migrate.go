@@ -56,7 +56,7 @@ func MigrateStore(
 			case common.CoinType_Zeta:
 				{
 					// add the required amount into the zeta accounting.
-					// GetAbortedAmount replaces using Putbound Amount directly , to make sure we refund the amount deposited by the user if the outbound is never created and the cctx is aborted.
+					// GetAbortedAmount replaces using Outbound Amount directly, to make sure we refund the amount deposited by the user if the outbound is never created and the cctx is aborted.
 					// For these cctx's we allow the refund to be processed later and the Aborted amount would be adjusted when the refund is processed.
 					abortedValue := GetAbortedAmount(cctx)
 					abortedAmountZeta = abortedAmountZeta.Add(abortedValue)
