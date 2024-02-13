@@ -73,6 +73,10 @@ jobs:
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
 
+      - name: Install Docker
+        run: |
+          brew install --cask docker
+        
       - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
         uses: ./.github/actions/build-docker-images-generic
         with:
