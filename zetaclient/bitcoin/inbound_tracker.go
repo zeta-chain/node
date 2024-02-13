@@ -2,6 +2,7 @@ package bitcoin
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/zeta-chain/zetacore/common"
@@ -61,16 +62,20 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 	if err != nil {
 		return "", err
 	}
-	block, err := ob.rpcClient.GetBlockVerbose(blockHash)
+	blockVb, err := ob.rpcClient.GetBlockVerboseTx(blockHash)
 	if err != nil {
 		return "", err
 	}
+	if len(blockVb.Tx) <= 1 {
+		return "", fmt.Errorf("block %d has no transactions", blockVb.Height)
+	}
+	depositorFee := CalcDepositorFee(blockVb, ob.chain.ChainId, ob.netParams, ob.logger.WatchInTx)
 	tss, err := ob.zetaClient.GetBtcTssAddress(ob.chain.ChainId)
 	if err != nil {
 		return "", err
 	}
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(*tx, tss, uint64(block.Height), &ob.logger.WatchInTx, ob.chain.ChainId)
+	event, err := GetBtcEvent(*tx, tss, uint64(blockVb.Height), &ob.logger.WatchInTx, ob.netParams, depositorFee)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +91,8 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 		ob.logger.WatchInTx.Error().Err(err).Msg("error posting to zeta core")
 		return "", err
 	} else if zetaHash != "" {
-		ob.logger.WatchInTx.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx: %s ballot %s", zetaHash, ballot)
+		ob.logger.WatchInTx.Info().Msgf("BTC deposit detected and reported: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+			zetaHash, txHash, ballot, depositorFee)
 	}
 	return msg.Digest(), nil
 }

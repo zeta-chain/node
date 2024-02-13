@@ -76,7 +76,7 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	// double the gas price to avoid gas price spike
-	gasPrice = gasPrice * 2
+	gasPrice = gasPrice * common.DefaultGasPriceMultiplier
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
