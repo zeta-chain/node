@@ -6,7 +6,6 @@ import (
 	"math"
 	"math/big"
 	"path"
-	"strings"
 	"sync"
 	"testing"
 
@@ -16,6 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -64,7 +64,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		emptyVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{}}
 		_, err := CalcBlockAvgFeeRate(&emptyVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.Equal(t, "block has no transactions", err.Error())
+		require.ErrorContains(t, err, "block has no transactions")
 	})
 	t.Run("it's okay if block has only coinbase tx", func(t *testing.T) {
 		coinbaseVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{
@@ -78,26 +78,26 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		invalidVb.Weight = 3
 		_, err := CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.Equal(t, "block weight 3 too small", err.Error())
+		require.ErrorContains(t, err, "block weight 3 too small")
 	})
 	t.Run("block weight should not be less than coinbase tx weight", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Weight = blockVb.Tx[0].Weight - 1
 		_, err := CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "less than coinbase tx weight"))
+		require.ErrorContains(t, err, "less than coinbase tx weight")
 	})
 	t.Run("invalid block height should fail", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Height = 0
 		_, err := CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "invalid block height"))
+		require.ErrorContains(t, err, "invalid block height")
 
 		invalidVb.Height = math.MaxInt32 + 1
 		_, err = CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "invalid block height"))
+		require.ErrorContains(t, err, "invalid block height")
 	})
 	t.Run("failed to decode coinbase tx", func(t *testing.T) {
 		invalidVb := blockVb
@@ -105,14 +105,14 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		invalidVb.Tx[0].Hex = "invalid hex"
 		_, err := CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "failed to decode coinbase tx"))
+		require.ErrorContains(t, err, "failed to decode coinbase tx")
 	})
 	t.Run("1st tx is not coinbase", func(t *testing.T) {
 		invalidVb := blockVb
 		invalidVb.Tx = []btcjson.TxRawResult{blockVb.Tx[1], blockVb.Tx[0]}
 		_, err := CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "not coinbase tx"))
+		require.ErrorContains(t, err, "not coinbase tx")
 	})
 	t.Run("miner earned less than subsidy", func(t *testing.T) {
 		invalidVb := blockVb
@@ -137,7 +137,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 		invalidVb.Tx[0].Hex = hex.EncodeToString(buf.Bytes())
 		_, err = CalcBlockAvgFeeRate(&invalidVb, &chaincfg.MainNetParams)
 		require.Error(t, err)
-		require.True(t, strings.Contains(err.Error(), "less than subsidy"))
+		require.ErrorContains(t, err, "less than subsidy")
 	})
 }
 
@@ -146,6 +146,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	var blockVb btcjson.GetBlockVerboseTxResult
 	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join(testutils.TestDataPath, "bitcoin_block_trimmed_828440.json"))
 	require.NoError(t, err)
+	dynamicFee828440 := DepositorFee(32 * common.DefaultGasPriceMultiplier)
 
 	// should return default fee if it's a regtest block
 	fee := CalcDepositorFee(&blockVb, 18444, &chaincfg.RegressionNetParams, log.Logger)
@@ -154,6 +155,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	// should return dynamic fee if it's a testnet block
 	fee = CalcDepositorFee(&blockVb, 18332, &chaincfg.TestNet3Params, log.Logger)
 	require.NotEqual(t, DefaultDepositorFee, fee)
+	require.Equal(t, dynamicFee828440, fee)
 
 	// mainnet should return default fee before upgrade height
 	blockVb.Height = DynamicDepositorFeeHeight - 1
@@ -164,4 +166,5 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	blockVb.Height = DynamicDepositorFeeHeight
 	fee = CalcDepositorFee(&blockVb, 8332, &chaincfg.MainNetParams, log.Logger)
 	require.NotEqual(t, DefaultDepositorFee, fee)
+	require.Equal(t, dynamicFee828440, fee)
 }

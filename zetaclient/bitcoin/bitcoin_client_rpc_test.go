@@ -261,7 +261,7 @@ func LiveTestBitcoinFeeRate(t *testing.T) {
 	}
 }
 
-// compare fee rate with mempool.space for blocks [startBlock, endBlock]
+// compareAvgFeeRate compares fee rate with mempool.space for blocks [startBlock, endBlock]
 func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, endBlock int, testnet bool) {
 	// mempool.space return 15 blocks [bn-14, bn] per request
 	for bn := startBlock; bn >= endBlock; {
