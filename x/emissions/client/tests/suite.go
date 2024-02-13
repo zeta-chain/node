@@ -1,8 +1,10 @@
 package querytests
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"strconv"
+	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcfg "github.com/evmos/ethermint/cmd/config"
@@ -52,7 +54,7 @@ func (s *CliTestSuite) SetupSuite() {
 		"zeta1e9fyaulgntkrnqnl0es4nyxghp3petpn2ntu3t",
 	}
 	network.SetupZetaGenesisState(s.T(), s.cfg.GenesisState, s.cfg.Codec, observerList, false)
-	s.ballots = RandomBallotGenerator(20, observerList)
+	s.ballots = RandomBallotGenerator(s.T(), 20, observerList)
 	network.AddObserverData(s.T(), 2, s.cfg.GenesisState, s.cfg.Codec, s.ballots)
 
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
@@ -63,30 +65,42 @@ func (s *CliTestSuite) SetupSuite() {
 
 }
 
-func CreateRandomVoteList(numberOfVotes int) []observerTypes.VoteType {
+func CreateRandomVoteList(t *testing.T, numberOfVotes int) []observerTypes.VoteType {
 	voteOptions := []observerTypes.VoteType{observerTypes.VoteType_SuccessObservation, observerTypes.VoteType_FailureObservation, observerTypes.VoteType_NotYetVoted}
-	min := 0
-	max := len(voteOptions) - 1
+	minVoterOptions := 0
+	maxBoterOptions := len(voteOptions) - 1
+
+	randomVoteOptions, err := rand.Int(rand.Reader, big.NewInt(int64(maxBoterOptions-minVoterOptions)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	voteList := make([]observerTypes.VoteType, numberOfVotes)
 	for i := 0; i < numberOfVotes; i++ {
-		voteList[i] = voteOptions[rand.Intn(max-min)+min] // #nosec G404
+		voteList[i] = voteOptions[randomVoteOptions.Int64()]
 	}
 	return voteList
 }
-func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerTypes.Ballot {
+func RandomBallotGenerator(t *testing.T, numberOfBallots int, voterList []string) []*observerTypes.Ballot {
 	ballots := make([]*observerTypes.Ballot, numberOfBallots)
 	ballotStatus := []observerTypes.BallotStatus{observerTypes.BallotStatus_BallotFinalized_FailureObservation, observerTypes.BallotStatus_BallotFinalized_SuccessObservation}
-	min := 0
-	max := len(ballotStatus) - 1
+	minBallotStatus := 0
+	maxBallotStatus := len(ballotStatus) - 1
+
+	randomBallotStatus, err := rand.Int(rand.Reader, big.NewInt(int64(maxBallotStatus-minBallotStatus)))
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for i := 0; i < numberOfBallots; i++ {
 		ballots[i] = &observerTypes.Ballot{
 			Index:                "",
 			BallotIdentifier:     "TestBallot" + strconv.Itoa(i),
 			VoterList:            voterList,
-			Votes:                CreateRandomVoteList(len(voterList)),
+			Votes:                CreateRandomVoteList(t, len(voterList)),
 			ObservationType:      observerTypes.ObservationType_InBoundTx,
 			BallotThreshold:      sdk.MustNewDecFromStr("0.66"),
-			BallotStatus:         ballotStatus[rand.Intn(max-min)+min], // #nosec G404 randomness used for testing
+			BallotStatus:         ballotStatus[randomBallotStatus.Int64()],
 			BallotCreationHeight: 0,
 		}
 	}
