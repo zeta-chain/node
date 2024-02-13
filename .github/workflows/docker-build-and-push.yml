@@ -57,7 +57,7 @@ jobs:
 
   docker_build_mac:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v3
         with:
@@ -83,7 +83,7 @@ jobs:
           ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
           
           colima start
-          
+
       - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
         uses: ./.github/actions/build-docker-images-generic
         with:
