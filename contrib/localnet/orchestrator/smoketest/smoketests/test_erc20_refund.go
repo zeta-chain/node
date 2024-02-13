@@ -38,7 +38,7 @@ func TestERC20DepositAndCallRefund(sm *runner.SmokeTestRunner) {
 	}
 
 	if cctx.CctxStatus.IsAbortRefunded != false {
-		panic(fmt.Sprintf("expected cctx status to be not refunded; got %s", cctx.CctxStatus.IsAbortRefunded))
+		panic(fmt.Sprintf("expected cctx status to be not refunded; got %t", cctx.CctxStatus.IsAbortRefunded))
 	}
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
