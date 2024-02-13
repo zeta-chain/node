@@ -5,6 +5,10 @@
 * `zetaclientd start` : 2 inputs required from stdin
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 
+### Docs
+
+* [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
+
 ### Refactor
 
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
