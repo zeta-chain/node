@@ -1,0 +1,71 @@
+name: 'Build Docker Images'
+description: 'Builds Docker images and pushes them to any repository.'
+inputs:
+  DOCKER_FILENAME:  
+    description: 'Name of the docker file to use for the build'
+    required: true
+  REPOSITORY_NAME:  
+    description: 'Name of the Repository'
+    required: true
+  IMAGE_TAG:  
+    description: 'Image Tag'
+    required: true
+  REGISTRY:
+    description: 'Docker or ORG you want to push to.'
+    required: true
+  DOCKER_ORG:
+    description: 'Docker ORG you want to push to.'
+    required: false
+  USERNAME:
+    description: 'Username for GitHub Container Registry'
+    required: true
+  TOKEN:
+    description: 'Token for GitHub Container Registry'
+    required: true
+  DOCKER_FILE_DIRECTORY:
+    description: 'Directory for your Dockerfile'
+    required: true
+  DOCKER_BUILD_KIT:
+    description: "whether or not to use docker build kit."
+    required: true
+  TAG_LATEST:
+    description: "should the pipeline tag latest"
+    required: true
+runs:
+  using: "composite"
+
+  steps:
+    - name: Set Environment Variables"
+      run: |
+        echo "DOCKER_BUILDKIT=${{ inputs.DOCKER_BUILD_KIT }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Log in to the Docker Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ inputs.REGISTRY }}
+        username: ${{ inputs.USERNAME }}
+        password: ${{ inputs.TOKEN }}
+
+    - name: Build, tag, and push images
+      shell: bash
+      working-directory: ${{ inputs.DOCKER_FILE_DIRECTORY }}
+      run: |
+        if [ ! -z "${{ inputs.DOCKER_ORG }}" ]; then
+          echo "DOCKER ORG SPECIFIED SO USE DOCKER HUB"
+          docker build -f ${{ inputs.DOCKER_FILENAME }} -t ${{ inputs.DOCKER_ORG }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }} . 
+          docker push ${{ inputs.DOCKER_ORG }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }}
+          
+          if [ "${{ inputs.TAG_LATEST }}" == "true" ]; then
+            docker tag ${{ inputs.DOCKER_ORG }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }} ${{ inputs.DOCKER_ORG }}/${{ inputs.REPOSITORY_NAME }}:latest
+            docker push ${{ inputs.DOCKER_ORG }}/${{ inputs.REPOSITORY_NAME }}:latest 
+          fi
+        else
+          echo "DOCKER REGISTRY SPECIFIED WITH NO DOCKER_ORG USE NON ORG REGISTRIES"
+          docker build -f ${{ inputs.DOCKER_FILENAME }} -t ${{ inputs.REGISTRY }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }} . 
+          docker push ${{ inputs.REGISTRY }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }}
+          if [ "${{ inputs.TAG_LATEST }}" == "true" ]; then
+            docker tag ${{ inputs.REGISTRY }}/${{ inputs.REPOSITORY_NAME }}:${{ inputs.IMAGE_TAG }} ${{ inputs.REGISTRY }}/${{ inputs.REPOSITORY_NAME }}:latest
+            docker push ${{ inputs.REGISTRY }}/${{ inputs.REPOSITORY_NAME }}:latest 
+          fi
+        fi
