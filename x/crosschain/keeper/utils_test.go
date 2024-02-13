@@ -32,6 +32,15 @@ func getValidEthChain(_ *testing.T) *zetacommon.Chain {
 	return &goerli
 }
 
+func getValidBTCChain() *zetacommon.Chain {
+	btcRegNet := zetacommon.BtcRegtestChain()
+	return &btcRegNet
+}
+
+func getValidBtcChainID() int64 {
+	return getValidBTCChain().ChainId
+}
+
 // getValidEthChainIDWithIndex get a valid eth chain id with index
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {

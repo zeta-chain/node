@@ -12,6 +12,10 @@
 
 * [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
 
+### Features
+
+*[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+
 ### Refactor
 
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient

@@ -29,11 +29,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   admin,
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 
 		require.NoError(t, err)
-		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
+		cctxFound, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("cctx_index"))
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
@@ -56,11 +56,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   admin,
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 
 		require.NoError(t, err)
-		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
+		cctxFound, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("cctx_index"))
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
@@ -83,11 +83,11 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   admin,
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 
 		require.NoError(t, err)
-		cctxFound, found := k.GetCrossChainTx(ctx, "cctx_index")
+		cctxFound, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("cctx_index"))
 		require.True(t, found)
 		require.Equal(t, crosschaintypes.CctxStatus_Aborted, cctxFound.CctxStatus.Status)
 		require.Equal(t, crosschainkeeper.AbortMessage, cctxFound.CctxStatus.StatusMessage)
@@ -108,7 +108,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   sample.AccAddress(),
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
 	})
@@ -122,7 +122,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   admin,
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 		require.ErrorIs(t, err, crosschaintypes.ErrCannotFindCctx)
 	})
@@ -144,7 +144,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
 			Creator:   admin,
-			CctxIndex: "cctx_index",
+			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
 		require.ErrorIs(t, err, crosschaintypes.ErrStatusNotPending)
 	})

@@ -28,7 +28,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 			cctx := sample.CrossChainTx(t, index)
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
@@ -60,7 +60,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 			cctx := sample.CrossChainTx(t, index)
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
@@ -91,7 +91,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 			cctx := sample.CrossChainTx(t, index)
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
@@ -128,7 +128,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 		index := chain.ChainName.String() + "_migration_tx_index"
 		k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 			ChainId:            chain.ChainId,
-			MigrationCctxIndex: index,
+			MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 		})
 		cctx := sample.CrossChainTx(t, index)
 		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_OutboundMined
@@ -165,7 +165,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 			cctx := sample.CrossChainTx(t, index)
 			cctx.CctxStatus.Status = crosschaintypes.CctxStatus_PendingOutbound
@@ -202,7 +202,7 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 			index := chain.ChainName.String() + "_migration_tx_index"
 			k.GetObserverKeeper().SetFundMigrator(ctx, types.TssFundMigratorInfo{
 				ChainId:            chain.ChainId,
-				MigrationCctxIndex: index,
+				MigrationCctxIndex: sample.GetCctxIndexFromString(index),
 			})
 		}
 		assert.Equal(t, len(k.GetObserverKeeper().GetAllTssFundMigrators(ctx)), len(k.GetObserverKeeper().GetSupportedChains(ctx)))
