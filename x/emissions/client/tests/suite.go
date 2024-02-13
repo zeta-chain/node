@@ -86,7 +86,7 @@ func RandomBallotGenerator(numberOfBallots int, voterList []string) []*observerT
 			ObservationType:  observerTypes.ObservationType_InBoundTx,
 			BallotThreshold:  sdk.MustNewDecFromStr("0.66"),
 			// #nosec G404 randomness used for testing
-			BallotStatus:         ballotStatus[rand.Intn(2)],
+			BallotStatus:         ballotStatus[i%2],
 			BallotCreationHeight: 0,
 		}
 	}
