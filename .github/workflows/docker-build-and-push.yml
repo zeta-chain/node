@@ -87,4 +87,34 @@ jobs:
           DOCKER_BUILD_KIT: "0"
           TAG_LATEST: "false"
 
+  docker_build_arm:
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
+
+      - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
+        uses: ./.github/actions/build-docker-images-generic
+        with:
+          DOCKER_FILENAME: "Dockerfile"
+          REPOSITORY_NAME: "${{ env.DOCKER_REPO }}"
+          IMAGE_TAG: "arm-${{ env.GITHUB_TAG_MAJOR_VERSION }}"
+          REGISTRY: "${{ env.DOCKER_REGISTRY }}"
+          DOCKER_ORG: "${{ env.DOCKER_ORG }}"
+          USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+          DOCKER_FILE_DIRECTORY: "./"
+          DOCKER_BUILD_KIT: "0"
+          TAG_LATEST: "false"

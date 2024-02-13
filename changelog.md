@@ -3,8 +3,6 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
-* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
-* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 
 ### Refactor
 
@@ -28,6 +26,8 @@
 
 ### CI
 
+* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
