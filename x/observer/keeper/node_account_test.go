@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -25,8 +25,8 @@ func TestNodeAccountGet(t *testing.T) {
 	items := createNNodeAccount(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetNodeAccount(ctx, item.Operator)
-		assert.True(t, found)
-		assert.Equal(t, item, rst)
+		require.True(t, found)
+		require.Equal(t, item, rst)
 	}
 }
 func TestNodeAccountRemove(t *testing.T) {
@@ -35,12 +35,12 @@ func TestNodeAccountRemove(t *testing.T) {
 	for _, item := range items {
 		keeper.RemoveNodeAccount(ctx, item.Operator)
 		_, found := keeper.GetNodeAccount(ctx, item.Operator)
-		assert.False(t, found)
+		require.False(t, found)
 	}
 }
 
 func TestNodeAccountGetAll(t *testing.T) {
 	keeper, ctx := SetupKeeper(t)
 	items := createNNodeAccount(keeper, ctx, 10)
-	assert.Equal(t, items, keeper.GetAllNodeAccount(ctx))
+	require.Equal(t, items, keeper.GetAllNodeAccount(ctx))
 }

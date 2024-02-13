@@ -28,11 +28,11 @@ func (k msgServer) UpdateZRC20PausedStatus(
 
 	// check if the sender is the admin
 	// unpausing requires group2 admin
-	requirePolicyAccount := zetaObserverTypes.Policy_Type_group1
+	requiredPolicyAccount := zetaObserverTypes.Policy_Type_group1
 	if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
-		requirePolicyAccount = zetaObserverTypes.Policy_Type_group2
+		requiredPolicyAccount = zetaObserverTypes.Policy_Type_group2
 	}
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(requirePolicyAccount) {
+	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(requiredPolicyAccount) {
 		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 

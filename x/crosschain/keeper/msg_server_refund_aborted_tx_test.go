@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
@@ -27,12 +26,12 @@ func Test_GetRefundAddress(t *testing.T) {
 	t.Run("should fail if refund address is empty", func(t *testing.T) {
 		address, err := keeper.GetRefundAddress("")
 		require.ErrorIs(t, crosschaintypes.ErrInvalidAddress, err)
-		assert.Equal(t, ethcommon.Address{}, address)
+		require.Equal(t, ethcommon.Address{}, address)
 	})
 	t.Run("should fail if refund address is invalid", func(t *testing.T) {
 		address, err := keeper.GetRefundAddress("invalid-address")
 		require.ErrorIs(t, crosschaintypes.ErrInvalidAddress, err)
-		assert.Equal(t, ethcommon.Address{}, address)
+		require.Equal(t, ethcommon.Address{}, address)
 	})
 
 }

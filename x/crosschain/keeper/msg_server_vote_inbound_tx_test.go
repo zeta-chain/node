@@ -7,7 +7,7 @@ import (
 	//"github.com/zeta-chain/zetacore/common"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -23,9 +23,9 @@ func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest
 	validatorAddressListFormatted := make([]string, len(validators))
 	for i, validator := range validators {
 		valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		addressTmp, err := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		validatorAddressListFormatted[i] = addressTmp.String()
 	}
 
@@ -57,14 +57,14 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 				ctx,
 				&msg,
 			)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		}
 		ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
-		assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
+		require.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
-		assert.True(t, found)
-		assert.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
-		assert.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		require.True(t, found)
+		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
+		require.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 	// TODO : https://github.com/zeta-chain/node/issues/1542
 }
@@ -117,12 +117,12 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		ctx,
 		msg,
 	)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Check that the vote passed
 	ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
-	assert.True(t, found)
-	assert.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
+	require.True(t, found)
+	require.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
 		Creator:       validatorAddr,
@@ -145,9 +145,9 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		ctx,
 		msg2,
 	)
-	assert.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
+	require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
 	_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
-	assert.False(t, found)
+	require.False(t, found)
 }
 func TestStatus_StatusTransition(t *testing.T) {
 	tt := []struct {
@@ -188,9 +188,9 @@ func TestStatus_StatusTransition(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			test.Status.ChangeStatus(test.NonErrStatus, test.Msg)
 			if test.IsErr {
-				assert.Equal(t, test.ErrStatus, test.Status.Status)
+				require.Equal(t, test.ErrStatus, test.Status.Status)
 			} else {
-				assert.Equal(t, test.NonErrStatus, test.Status.Status)
+				require.Equal(t, test.NonErrStatus, test.Status.Status)
 			}
 		})
 	}

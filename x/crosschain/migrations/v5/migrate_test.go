@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -30,7 +29,7 @@ func TestMigrateStore(t *testing.T) {
 			v4ZetaAccountingAmount = v4ZetaAccountingAmount.Add(cctx.GetCurrentOutTxParam().Amount)
 		}
 
-		assert.True(t, v5ZetaAccountingAmount.GT(v4ZetaAccountingAmount))
+		require.True(t, v5ZetaAccountingAmount.GT(v4ZetaAccountingAmount))
 		// Previously set the zeta accounting
 		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{
 			AbortedZetaAmount: v4ZetaAccountingAmount,
