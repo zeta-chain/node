@@ -799,6 +799,7 @@ func (ob *ChainClient) checkTxInclusion(tx *ethtypes.Transaction, blockNumber ui
 		}
 		txAtIndex := block.Transactions()[txIndex]
 		if txAtIndex.Hash() != tx.Hash() {
+			ob.RemoveCachedBlock(blockNumber) // clean stale block from cache
 			return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
 				txIndex, txAtIndex.Hash().Hex(), tx.Hash(), tx.Nonce(), blockNumber)
 		}
@@ -810,6 +811,7 @@ func (ob *ChainClient) checkTxInclusion(tx *ethtypes.Transaction, blockNumber ui
 		}
 		txAtIndex := blockRPC.Transactions[txIndex]
 		if ethcommon.HexToHash(txAtIndex.Hash) != tx.Hash() {
+			ob.RemoveCachedBlock(blockNumber) // clean stale block from cache
 			return fmt.Errorf("transaction at index %d has different hash %s, txHash %s nonce %d block %d",
 				txIndex, txAtIndex.Hash, tx.Hash(), tx.Nonce(), blockNumber)
 		}
@@ -1519,4 +1521,10 @@ func (ob *ChainClient) GetBlockByNumberCached(blockNumber uint64) (*ethtypes.Blo
 	}
 	ob.blockCache.Add(blockNumber, block)
 	return block, nil, false, false, nil
+}
+
+// RemoveCachedBlock remove block from cache
+func (ob *ChainClient) RemoveCachedBlock(blockNumber uint64) {
+	ob.blockCache.Remove(blockNumber)
+	ob.blockCacheV3.Remove(blockNumber)
 }

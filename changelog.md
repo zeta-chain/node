@@ -5,7 +5,12 @@
 * `zetaclientd start` : 2 inputs required from stdin
 
 ### Features
+
 * [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+
+### Docs
+
+* [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
 
 ### Refactor
 
@@ -14,6 +19,7 @@
 
 ### Fixes
 
+* [1678](https://github.com/zeta-chain/node/issues/1678) - clean cached stale block to fix evm outtx hash mismatch
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
@@ -29,6 +35,8 @@
 
 ### CI
 
+* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
