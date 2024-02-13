@@ -76,7 +76,9 @@ jobs:
       - name: Install Docker
         run: |
           brew install --cask docker
-        
+          open /Applications/Docker.app
+          docker version
+
       - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
         uses: ./.github/actions/build-docker-images-generic
         with:
