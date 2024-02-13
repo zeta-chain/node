@@ -416,7 +416,7 @@ func TestP2WPHSizeBreakdown(t *testing.T) {
 	require.Equal(t, uint64(171), txSizeWithdrawer)
 	require.Equal(t, txSize2In3Out, txSizeDepositor+txSizeWithdrawer) // 239 = 68 + 171
 
-	depositFee := DepositorFee(20)
+	depositFee := DepositorFee(defaultDepositorFeeRate)
 	require.Equal(t, depositFee, 0.00001360)
 }
 

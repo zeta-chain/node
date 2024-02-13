@@ -1,4 +1,4 @@
-package zetaclient
+package bitcoin
 
 import (
 	"fmt"
