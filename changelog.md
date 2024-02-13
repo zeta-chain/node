@@ -3,6 +3,7 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 
 ### Refactor
 
