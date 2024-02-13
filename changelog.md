@@ -4,6 +4,10 @@
 
 * `zetaclientd start` : 2 inputs required from stdin
 
+### Features
+
+* [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+
 ### Docs
 
 * [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
@@ -32,6 +36,7 @@
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
 
 ### CI
 
