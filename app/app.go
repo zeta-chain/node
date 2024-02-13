@@ -475,7 +475,7 @@ func New(
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
 		crosschainmodule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper, app.AccountKeeper),
-		observermodule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
+		observermodule.NewAppModule(appCodec, *app.ZetaObserverKeeper),
 		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
 		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
