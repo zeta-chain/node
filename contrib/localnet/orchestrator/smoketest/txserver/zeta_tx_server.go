@@ -121,6 +121,11 @@ func (zts ZetaTxServer) GetAccountAddress(index int) string {
 	return zts.address[index]
 }
 
+func (zts ZetaTxServer) GetAllAccountAddress() []string {
+	return zts.address
+
+}
+
 // GetAccountMnemonic returns the account name from the given index
 // returns empty string if index is out of bound, error should be handled by caller
 func (zts ZetaTxServer) GetAccountMnemonic(index int) string {

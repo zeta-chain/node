@@ -2,6 +2,8 @@ package smoketests
 
 import "github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 
+// TODO : Add smoke test for abort refund
+// https://github.com/zeta-chain/node/issues/1745
 const (
 	TestContextUpgradeName              = "context_upgrade"
 	TestDepositAndCallRefundName        = "deposit_and_call_refund"

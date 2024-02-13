@@ -170,7 +170,7 @@ func (c *Config) UpdateChainParams(
 	c.cfgLock.Lock()
 	defer c.cfgLock.Unlock()
 
-	// Ignore whatever order zetacore organizes chain list in state
+	// Ignore whatever order zetabridge organizes chain list in state
 	sort.SliceStable(newChains, func(i, j int) bool {
 		return newChains[i].ChainId < newChains[j].ChainId
 	})

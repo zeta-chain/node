@@ -4,6 +4,18 @@
 
 * `zetaclientd start` : 2 inputs required from stdin
 
+### Features
+
+* [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+
+### Docs
+
+* [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
+
+### Features
+
+*[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+
 ### Refactor
 
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
@@ -11,21 +23,26 @@
 
 ### Fixes
 
+* [1678](https://github.com/zeta-chain/node/issues/1678) - clean cached stale block to fix evm outtx hash mismatch
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* [1706](https://github.com/zeta-chain/node/pull/1706) - fix CLI crosschain show-out-tx-tracker
 * [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
 * [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
-* [1733](https://github.com/zeta-chain/node/pull/1733)) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
+* [1733](https://github.com/zeta-chain/node/pull/1733) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 * [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
 
 ### CI
 
+* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
@@ -85,6 +102,7 @@
 ### Refactoring
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+* [1640](https://github.com/zeta-chain/node/pull/1640) reorganize zetaclient into subpackages
 
 ### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
