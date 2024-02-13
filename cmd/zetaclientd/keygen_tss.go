@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
 	"github.com/rs/zerolog"
 	"github.com/tendermint/crypto/sha3"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -15,17 +18,16 @@ import (
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 func GenerateTss(logger zerolog.Logger,
 	cfg *config.Config,
-	zetaBridge *mc.ZetaCoreBridge,
+	zetaBridge *zetabridge.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
-	ts *mc.TelemetryServer,
+	ts *metrics.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
 	metrics *metrics.Metrics,
 	tssPassword string,
@@ -63,7 +65,7 @@ func GenerateTss(logger zerolog.Logger,
 	// Set TSS block to 0 using genesis file to disable this feature
 	// Note : The TSS generation is done through the "hotkey" or "Zeta-clientGrantee" This key needs to be present on the machine for the TSS signing to happen .
 	// "ZetaClientGrantee" key is different from the "operator" key .The "Operator" key gives all zetaclient related permissions such as TSS generation ,reporting and signing, INBOUND and OUTBOUND vote signing, to the "ZetaClientGrantee" key.
-	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetacore by the zetcalientGrantee key on behalf of the operator .
+	// The votes to signify a successful TSS generation (Or unsuccessful) is signed by the operator key and broadcast to zetabridge by the zetcalientGrantee key on behalf of the operator .
 	ticker := time.NewTicker(time.Second * 1)
 	triedKeygenAtBlock := false
 	lastBlock := int64(0)

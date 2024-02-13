@@ -4,6 +4,7 @@
 
 * `zetaclientd start` : 2 inputs required from stdin
 * CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 
 ### Refactor
 
@@ -82,6 +83,7 @@
 ### Refactoring
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+* [1640](https://github.com/zeta-chain/node/pull/1640) reorganize zetaclient into subpackages
 
 ### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
