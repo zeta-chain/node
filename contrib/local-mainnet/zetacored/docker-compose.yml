@@ -2,10 +2,10 @@ version: '3.8'
 services:
   zetachain_mainnet_rpc:
     platform: linux/amd64
-    build:
-      context: ../..
-      dockerfile: Dockerfile
-    #image: zetachain/zeatcored:ubuntu-test5
+    #build:
+    #  context: ../..
+    #  dockerfile: Dockerfile
+    image: local/test:latest
     container_name: zetachain_mainnet_rpc
     environment:
       CHAIN_ID: "zetachain_7000-1"
