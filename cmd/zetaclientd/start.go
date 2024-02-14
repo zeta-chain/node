@@ -23,6 +23,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -57,7 +58,7 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	params := config.NewParams()
+	params := coreparams.NewCoreParams()
 	log.Logger = InitLogger(cfg)
 	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {

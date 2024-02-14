@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -151,7 +152,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) ParamsUpdater(cfg *config.Config, params *config.Params) {
+func (b *ZetaCoreBridge) ParamsUpdater(cfg *config.Config, params *coreparams.CoreParams) {
 	b.logger.Info().Msg("ParamsUpdater started")
 	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {

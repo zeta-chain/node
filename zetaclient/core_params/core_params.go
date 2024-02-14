@@ -1,4 +1,4 @@
-package config
+package coreparams
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 // TODO: update name and package
-type Params struct {
+type CoreParams struct {
 	paramsLock         *sync.RWMutex
 	Keygen             *observertypes.Keygen
 	ChainsEnabled      []common.Chain
@@ -20,8 +20,8 @@ type Params struct {
 	CurrentTssPubkey   string
 }
 
-func NewParams() *Params {
-	return &Params{
+func NewCoreParams() *CoreParams {
+	return &CoreParams{
 		paramsLock:         new(sync.RWMutex),
 		ChainsEnabled:      []common.Chain{},
 		EVMChainParams:     make(map[int64]*observertypes.ChainParams),
@@ -29,7 +29,7 @@ func NewParams() *Params {
 	}
 }
 
-func (c *Params) GetKeygen() observertypes.Keygen {
+func (c *CoreParams) GetKeygen() observertypes.Keygen {
 	c.paramsLock.RLock()
 	defer c.paramsLock.RUnlock()
 	copiedPubkeys := make([]string, len(c.Keygen.GranteePubkeys))
@@ -42,7 +42,7 @@ func (c *Params) GetKeygen() observertypes.Keygen {
 	}
 }
 
-func (c *Params) GetEnabledChains() []common.Chain {
+func (c *CoreParams) GetEnabledChains() []common.Chain {
 	c.paramsLock.RLock()
 	defer c.paramsLock.RUnlock()
 	copiedChains := make([]common.Chain, len(c.ChainsEnabled))
@@ -50,14 +50,14 @@ func (c *Params) GetEnabledChains() []common.Chain {
 	return copiedChains
 }
 
-func (c *Params) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
+func (c *CoreParams) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.paramsLock.RLock()
 	defer c.paramsLock.RUnlock()
 	evmChainParams, found := c.EVMChainParams[chainID]
 	return evmChainParams, found
 }
 
-func (c *Params) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
+func (c *CoreParams) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
 	c.paramsLock.RLock()
 	defer c.paramsLock.RUnlock()
 
@@ -70,7 +70,7 @@ func (c *Params) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
 	return copied
 }
 
-func (c *Params) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, bool) {
+func (c *CoreParams) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, bool) {
 	c.paramsLock.RLock()
 	defer c.paramsLock.RUnlock()
 
@@ -86,7 +86,7 @@ func (c *Params) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, 
 
 // UpdateChainParams updates core params for all chains
 // this must be the ONLY function that writes to core params
-func (c *Params) UpdateChainParams(
+func (c *CoreParams) UpdateChainParams(
 	keygen *observertypes.Keygen,
 	newChains []common.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,

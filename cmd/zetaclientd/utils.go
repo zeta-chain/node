@@ -9,6 +9,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -53,7 +54,7 @@ func CreateSignerMap(
 	tss interfaces.TSSSigner,
 	logger zerolog.Logger,
 	cfg *config.Config,
-	params *config.Params,
+	coreParams *coreparams.CoreParams,
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainSigner, error) {
 	signerMap := make(map[common.Chain]interfaces.ChainSigner)
@@ -62,7 +63,7 @@ func CreateSignerMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		evmChainParams, found := params.GetEVMChainParams(evmConfig.Chain.ChainId)
+		evmChainParams, found := coreParams.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			// TODO: error?
 			continue
@@ -97,7 +98,7 @@ func CreateChainClientMap(
 	metrics *metrics.Metrics,
 	logger zerolog.Logger,
 	cfg *config.Config,
-	params *config.Params,
+	coreParams *coreparams.CoreParams,
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainClient, error) {
 	clientMap := make(map[common.Chain]interfaces.ChainClient)
@@ -106,7 +107,7 @@ func CreateChainClientMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		co, err := evm.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, *evmConfig, params, ts)
+		co, err := evm.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, *evmConfig, coreParams, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
 			continue
@@ -116,7 +117,7 @@ func CreateChainClientMap(
 	// BTC client
 	btcChain, btcConfig, enabled := cfg.GetBTCConfig()
 	if enabled {
-		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, params, ts)
+		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, coreParams, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
 

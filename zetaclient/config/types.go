@@ -69,7 +69,6 @@ type Config struct {
 	HsmMode             bool           `json:"HsmMode"`
 	HsmHotKey           string         `json:"HsmHotKey"`
 
-	// chain specific fields are updatable at runtime and shared across threads
 	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
 }

@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -95,7 +96,7 @@ type ChainClient struct {
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
 	cfg                        *config.Config
-	params                     *config.Params
+	params                     *coreparams.CoreParams
 	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
 
@@ -115,7 +116,7 @@ func NewEVMChainClient(
 	logger zerolog.Logger,
 	cfg *config.Config,
 	evmCfg config.EVMConfig,
-	params *config.Params,
+	coreParams *coreparams.CoreParams,
 	ts *metricsPkg.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
@@ -131,8 +132,8 @@ func NewEVMChainClient(
 	}
 	ob.cfg = cfg
 	// TODO: fix this
-	ob.params = params
-	ob.chainParams = *params.EVMChainParams[evmCfg.Chain.ChainId]
+	ob.params = coreParams
+	ob.chainParams = *coreParams.EVMChainParams[evmCfg.Chain.ChainId]
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}

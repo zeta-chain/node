@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -189,7 +190,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateParamsFromCore(params *config.Params, init bool) error {
+func (b *ZetaCoreBridge) UpdateParamsFromCore(params *coreparams.CoreParams, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -24,7 +25,7 @@ import (
 
 func GenerateTss(logger zerolog.Logger,
 	cfg *config.Config,
-	params *config.Params,
+	params *coreparams.CoreParams,
 	zetaBridge *zetabridge.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
@@ -152,7 +153,7 @@ func GenerateTss(logger zerolog.Logger,
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
-func keygenTss(params *config.Params, tss *mc.TSS, keygenLogger zerolog.Logger) error {
+func keygenTss(params *coreparams.CoreParams, tss *mc.TSS, keygenLogger zerolog.Logger) error {
 	keyGen := params.GetKeygen()
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request

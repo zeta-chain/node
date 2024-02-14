@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
@@ -86,7 +87,7 @@ func NewTSS(
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
 	cfg *config.Config,
-	params *config.Params,
+	coreParams *coreparams.CoreParams,
 	bridge interfaces.ZetaCoreBridger,
 	tssHistoricalList []observertypes.TSS,
 	metrics *zetametrics.Metrics,
@@ -101,7 +102,7 @@ func NewTSS(
 	newTss := TSS{
 		Server:         server,
 		Keys:           make(map[string]*Key),
-		CurrentPubkey:  params.CurrentTssPubkey,
+		CurrentPubkey:  coreParams.CurrentTssPubkey,
 		logger:         log.With().Str("module", "tss_signer").Logger(),
 		CoreBridge:     bridge,
 		BitcoinChainID: bitcoinChainID,

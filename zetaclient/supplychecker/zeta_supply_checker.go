@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -22,7 +23,7 @@ import (
 
 type ZetaSupplyChecker struct {
 	cfg              *config.Config
-	params           *config.Params
+	coreParams       *coreparams.CoreParams
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
 	ticker           *clienttypes.DynamicTicker
@@ -33,7 +34,7 @@ type ZetaSupplyChecker struct {
 	genesisSupply    sdkmath.Int
 }
 
-func NewZetaSupplyChecker(cfg *config.Config, params *config.Params, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+func NewZetaSupplyChecker(cfg *config.Config, coreParams *coreparams.CoreParams, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err
@@ -47,7 +48,7 @@ func NewZetaSupplyChecker(cfg *config.Config, params *config.Params, zetaClient 
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
 		cfg:        cfg,
-		params:     params,
+		coreParams: coreParams,
 		zetaClient: zetaClient,
 	}
 	for _, evmConfig := range cfg.GetAllEVMConfigs() {
@@ -108,12 +109,12 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
-		externalEvmChainConfig, ok := zs.params.GetEVMChainParams(chain.ChainId)
+		externalEvmChainConfig, ok := zs.coreParams.GetEVMChainParams(chain.ChainId)
 		if !ok {
 			return fmt.Errorf("externalEvmChainConfig not found for chain id %d", chain.ChainId)
 		}
 
-		zs.params.GetEVMChainParams(chain.ChainId)
+		zs.coreParams.GetEVMChainParams(chain.ChainId)
 		zetaTokenAddressString := externalEvmChainConfig.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
 		zetatokenNonEth, err := evm.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
@@ -132,7 +133,7 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		externalChainTotalSupply = externalChainTotalSupply.Add(totalSupplyInt)
 	}
 
-	ethConfig, ok := zs.params.GetEVMChainParams(zs.ethereumChain.ChainId)
+	ethConfig, ok := zs.coreParams.GetEVMChainParams(zs.ethereumChain.ChainId)
 	if !ok {
 		return fmt.Errorf("eth config not found for chain id %d", zs.ethereumChain.ChainId)
 	}
