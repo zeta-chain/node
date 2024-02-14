@@ -26,8 +26,10 @@
 
 ### CI
 
-* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Added pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the pipeline for building and pushing docker images for MacOS to install and run docker.
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
+* Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
