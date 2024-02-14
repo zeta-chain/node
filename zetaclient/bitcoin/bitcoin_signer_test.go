@@ -22,7 +22,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -501,7 +500,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// 		output: [0.00002001, 0.01, 0.12, 0.18, 0.24, 0.5], 1.05002001
 	result, amount, _, _, err = ob.SelectUTXOs(1.0, 5, 2, math.MaxUint16, true)
 	require.Nil(t, err)
-	assert.InEpsilon(t, 1.05002001, amount, 1e-8)
+	require.InEpsilon(t, 1.05002001, amount, 1e-8)
 	require.Equal(t, ob.utxos[0:6], result)
 	mineTxNSetNonceMark(ob, 2, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 2
 
@@ -510,7 +509,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// 		output: [0.00002002, 0.24, 0.5, 1.26, 2.97, 3.28], 8.25002002
 	result, amount, _, _, err = ob.SelectUTXOs(8.05, 5, 3, math.MaxUint16, true)
 	require.Nil(t, err)
-	assert.InEpsilon(t, 8.25002002, amount, 1e-8)
+	require.InEpsilon(t, 8.25002002, amount, 1e-8)
 	expected := append([]btcjson.ListUnspentResult{ob.utxos[0]}, ob.utxos[4:9]...)
 	require.Equal(t, expected, result)
 	mineTxNSetNonceMark(ob, 24105431, dummyTxID, 0) // mine a transaction and set nonce-mark utxo for nonce 24105431
@@ -520,7 +519,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// 		output: [0.24107432, 0.01, 0.12, 0.18, 0.24], 0.55002002
 	result, amount, _, _, err = ob.SelectUTXOs(0.503, 5, 24105432, math.MaxUint16, true)
 	require.Nil(t, err)
-	assert.InEpsilon(t, 0.79107431, amount, 1e-8)
+	require.InEpsilon(t, 0.79107431, amount, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:4]...)
 	require.Equal(t, expected, result)
 	mineTxNSetNonceMark(ob, 24105432, dummyTxID, 4) // mine a transaction and set nonce-mark utxo for nonce 24105432
@@ -530,7 +529,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// 		output: [0.24107432, 0.12, 0.18, 0.24, 0.5], 1.28107432
 	result, amount, _, _, err = ob.SelectUTXOs(1.0, 5, 24105433, math.MaxUint16, true)
 	require.Nil(t, err)
-	assert.InEpsilon(t, 1.28107432, amount, 1e-8)
+	require.InEpsilon(t, 1.28107432, amount, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[1:4]...)
 	expected = append(expected, ob.utxos[5])
 	require.Equal(t, expected, result)
@@ -540,7 +539,7 @@ func TestSelectUTXOs(t *testing.T) {
 	// 		output: [0.24107432, 1.26, 2.97, 3.28, 5.16, 8.72], 21.63107432
 	result, amount, _, _, err = ob.SelectUTXOs(16.03, 5, 24105433, math.MaxUint16, true)
 	require.Nil(t, err)
-	assert.InEpsilon(t, 21.63107432, amount, 1e-8)
+	require.InEpsilon(t, 21.63107432, amount, 1e-8)
 	expected = append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[6:11]...)
 	require.Equal(t, expected, result)
 
@@ -631,7 +630,7 @@ func TestUTXOConsolidation(t *testing.T) {
 		// output: [0.24107431, 0.01, 0.12, 1.26, 0.5, 0.24], 2.37107431
 		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(0.13, 5, 24105432, 5, true)
 		require.Nil(t, err)
-		assert.InEpsilon(t, 2.37107431, amount, 1e-8)
+		require.InEpsilon(t, 2.37107431, amount, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:2]...)
 		expected = append(expected, ob.utxos[6])
 		expected = append(expected, ob.utxos[5])
@@ -649,7 +648,7 @@ func TestUTXOConsolidation(t *testing.T) {
 		// output: [0.24107431, 0.01, 0.12, 8.72, 5.16, 3.28, 2.97, 1.26, 0.5, 0.24, 0.18], 22.68107431
 		result, amount, clsdtUtxo, clsdtValue, err := ob.SelectUTXOs(0.13, 12, 24105432, 1, true)
 		require.Nil(t, err)
-		assert.InEpsilon(t, 22.68107431, amount, 1e-8)
+		require.InEpsilon(t, 22.68107431, amount, 1e-8)
 		expected := append([]btcjson.ListUnspentResult{ob.utxos[4]}, ob.utxos[0:2]...)
 		for i := 10; i >= 5; i-- { // append consolidated utxos in descending order
 			expected = append(expected, ob.utxos[i])

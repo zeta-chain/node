@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -26,8 +26,8 @@ func TestGasPriceGet(t *testing.T) {
 	items := createNGasPrice(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetGasPrice(ctx, item.ChainId)
-		assert.True(t, found)
-		assert.Equal(t, item, rst)
+		require.True(t, found)
+		require.Equal(t, item, rst)
 	}
 }
 func TestGasPriceRemove(t *testing.T) {
@@ -36,12 +36,12 @@ func TestGasPriceRemove(t *testing.T) {
 	for _, item := range items {
 		keeper.RemoveGasPrice(ctx, item.Index)
 		_, found := keeper.GetGasPrice(ctx, item.ChainId)
-		assert.False(t, found)
+		require.False(t, found)
 	}
 }
 
 func TestGasPriceGetAll(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNGasPrice(keeper, ctx, 10)
-	assert.Equal(t, items, keeper.GetAllGasPrice(ctx))
+	require.Equal(t, items, keeper.GetAllGasPrice(ctx))
 }
