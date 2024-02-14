@@ -54,10 +54,10 @@ func TestDecodeBtcAddress(t *testing.T) {
 
 	t.Run("non legacy valid address with incorrect params", func(t *testing.T) {
 		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcMainnetChain().ChainId)
-		require.ErrorContains(t, err, "address is not for network main-net")
+		require.ErrorContains(t, err, "address is not for network mainnet")
 	})
 	t.Run("non legacy valid address with correct params", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcTestNetChain().ChainId)
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcRegtestChain().ChainId)
 		require.NoError(t, err)
 	})
 }
