@@ -2,10 +2,12 @@ version: '3.8'
 services:
   zetachain_mainnet_rpc:
     platform: linux/amd64
-    #build:
-    #  context: ../..
-    #  dockerfile: Dockerfile
-    image: local/test:latest
+    #This will build the binary from the GIT_REF you are locally on.
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    #If you want to use the pre-built docker images you would comment out Build lines, and uncomment this line with the correct docker tag.
+    #image: zetachain/zeatcored:ubuntu-{CURRENT_RELEASE_VERSION}
     container_name: zetachain_mainnet_rpc
     environment:
       CHAIN_ID: "zetachain_7000-1"
