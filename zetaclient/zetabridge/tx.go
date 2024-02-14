@@ -152,19 +152,19 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) ParamsUpdater(cfg *config.Config, params *coreparams.CoreParams) {
-	b.logger.Info().Msg("ParamsUpdater started")
+func (b *ZetaCoreBridge) CoreParamsUpdater(cfg *config.Config, params *coreparams.CoreParams) {
+	b.logger.Info().Msg("CoreParamsUpdater started")
 	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateParamsFromCore(params, false)
+			err := b.UpdateCoreParams(params, false)
 			if err != nil {
-				b.logger.Err(err).Msg("ParamsUpdater failed to update config")
+				b.logger.Err(err).Msg("CoreParamsUpdater failed to update config")
 			}
 		case <-b.stop:
-			b.logger.Info().Msg("ParamsUpdater stopped")
+			b.logger.Info().Msg("CoreParamsUpdater stopped")
 			return
 		}
 	}

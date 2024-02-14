@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -45,7 +45,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
-	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, &coreparams.CoreParams{}, nil)
+	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, &observertypes.ChainParams{}, nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 	skBytes, err := hex.DecodeString(skHex)

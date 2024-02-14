@@ -65,7 +65,7 @@ func CreateSignerMap(
 		}
 		evmChainParams, found := coreParams.GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
-			// TODO: error?
+			logger.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
@@ -117,7 +117,7 @@ func CreateChainClientMap(
 	// BTC client
 	btcChain, btcConfig, enabled := cfg.GetBTCConfig()
 	if enabled {
-		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, coreParams, ts)
+		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, coreParams.BitcoinChainParams, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
 

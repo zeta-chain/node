@@ -190,7 +190,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateParamsFromCore(params *coreparams.CoreParams, init bool) error {
+func (b *ZetaCoreBridge) UpdateCoreParams(params *coreparams.CoreParams, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err

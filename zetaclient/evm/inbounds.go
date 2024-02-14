@@ -330,9 +330,9 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
 	if !destChain.IsZetaChain() {
-		paramsDest, found := ob.params.GetEVMChainParams(destChain.ChainId)
+		paramsDest, found := ob.coreParams.GetEVMChainParams(destChain.ChainId)
 		if !found {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+			ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
 			return nil
 		}
 

@@ -96,7 +96,7 @@ type ChainClient struct {
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
 	cfg                        *config.Config
-	params                     *coreparams.CoreParams
+	coreParams                 *coreparams.CoreParams
 	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
 
@@ -131,8 +131,7 @@ func NewEVMChainClient(
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
 	ob.cfg = cfg
-	// TODO: fix this
-	ob.params = coreParams
+	ob.coreParams = coreParams
 	ob.chainParams = *coreParams.EVMChainParams[evmCfg.Chain.ChainId]
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain

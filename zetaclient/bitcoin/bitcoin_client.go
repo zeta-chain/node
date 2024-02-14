@@ -13,7 +13,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -140,7 +139,7 @@ func NewBitcoinClient(
 	metrics *metricsPkg.Metrics,
 	logger zerolog.Logger,
 	btcCfg config.BTCConfig,
-	coreParams *coreparams.CoreParams,
+	params *observertypes.ChainParams,
 	ts *metricsPkg.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -169,7 +168,7 @@ func NewBitcoinClient(
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-	ob.params = *coreParams.BitcoinChainParams
+	ob.params = *params
 
 	// initialize the Client
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
