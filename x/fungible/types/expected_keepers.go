@@ -1,7 +1,7 @@
 package types
 
 import (
-	context "context"
+	"context"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
