@@ -34,6 +34,11 @@ func TestDecodeBtcAddress(t *testing.T) {
 		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18332)
 		require.ErrorContains(t, err, "runtime error: invalid memory address or nil pointer dereference")
 	})
+	t.Run("legacy address", func(t *testing.T) {
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", 18332)
+		require.ErrorContains(t, err, "decode address failed")
+
+	})
 	t.Run("valid address", func(t *testing.T) {
 		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18444)
 		require.NoError(t, err)

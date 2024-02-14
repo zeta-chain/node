@@ -72,6 +72,15 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 				return err
 			}
 		}
+		// We were unable to parse the ZRC20 withdrawal event
+		if err != nil && eventWithdrawal == nil {
+			ctx.Logger().Error("Error parsing ZRC20 withdrawal event: %s", err.Error())
+		}
+		// We were able to parse the ZRC20 withdrawal event, but we were unable to process it as the information was incorrect
+		if err != nil && eventWithdrawal != nil {
+			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
+				eventWithdrawal.From.Hex(), string(eventWithdrawal.To), eventWithdrawal.Value.String(), eventWithdrawal.Gasfee.String(), eventWithdrawal.ProtocolFlatFee.String(), err.Error()))
+		}
 		eZeta, err := ParseZetaSentEvent(*log, connectorZEVMAddr)
 		if err == nil {
 			if err := k.ProcessZetaSentEvent(ctx, eZeta, emittingContract, txOrigin); err != nil {
@@ -257,23 +266,25 @@ func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*z
 	if err != nil {
 		return nil, err
 	}
-
+	// The event was parsed; that means the user has deposited tokens to the contract.
+	// We still need to check if the information entered by the user is correct.
+	// If the information is not correct, the outbound cctx will not be created.
 	coin, found := k.fungibleKeeper.GetForeignCoins(ctx, event.Raw.Address.Hex())
 	if !found {
-		return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
+		return event, fmt.Errorf("ParseZRC20WithdrawalEvent: cannot find foreign coin with contract address %s", event.Raw.Address.Hex())
 	}
 	chainID := coin.ForeignChainId
 	if common.IsBitcoinChain(chainID) {
 		if event.Value.Cmp(big.NewInt(0)) <= 0 {
-			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
+			return event, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
 		}
 		addr, err := common.DecodeBtcAddress(string(event.To), chainID)
 		if err != nil {
-			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
+			return event, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
 		}
 		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 		if !ok {
-			return nil, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
+			return event, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
 		}
 	}
 	return event, nil
