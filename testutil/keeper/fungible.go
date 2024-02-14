@@ -8,7 +8,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
@@ -149,24 +148,24 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Zeta
 
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
 	fak, ok := keeper.GetAuthKeeper().(*fungiblemocks.FungibleAccountKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fak
 }
 
 func GetFungibleBankMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleBankKeeper {
 	fbk, ok := keeper.GetBankKeeper().(*fungiblemocks.FungibleBankKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fbk
 }
 
 func GetFungibleObserverMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleObserverKeeper {
 	fok, ok := keeper.GetObserverKeeper().(*fungiblemocks.FungibleObserverKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fok
 }
 
 func GetFungibleEVMMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleEVMKeeper {
 	fek, ok := keeper.GetEVMKeeper().(*fungiblemocks.FungibleEVMKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fek
 }
