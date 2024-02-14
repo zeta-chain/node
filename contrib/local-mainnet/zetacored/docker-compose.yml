@@ -5,7 +5,7 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile
-    #image: golang:1.21
+    #image: zetachain/zeatcored:ubuntu-test5
     container_name: zetachain_mainnet_rpc
     environment:
       CHAIN_ID: "zetachain_7000-1"

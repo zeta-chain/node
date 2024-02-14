@@ -94,8 +94,8 @@ fi
 logt "Setup script variables."
 export STATE_SYNC_SERVER="${STATE_SYNC_SERVER}"
 export TRUST_HEIGHT=$(curl -s http://${STATE_SYNC_SERVER}/block | jq -r '.result.block.header.height')
-#export HEIGHT=$((TRUST_HEIGHT-40000))
-export HEIGHT=$((TRUST_HEIGHT-100))
+export HEIGHT=$((TRUST_HEIGHT-40000))
+#export HEIGHT=$((TRUST_HEIGHT-100))
 export TRUST_HASH=$(curl -s "http://${STATE_SYNC_SERVER}/block?height=${HEIGHT}" | jq -r '.result.block_id.hash')
 export RPC_STATE_SYNC_SERVERS="${RPC_STATE_SYNC_SERVERS}"
 export SEED="${SEED_NODE}"

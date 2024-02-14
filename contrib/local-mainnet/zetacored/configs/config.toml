@@ -75,8 +75,8 @@ ttl-num-blocks = 0
 [statesync]
 enable = "true"
 rpc_servers = "34.69.20.168:26657,34.69.20.168:26657"
-trust_height = "1542228"
-trust_hash = "5B3377FE8F1D2A64E56D203C205AA68C64BB95269C9BD1B199B79225B4373BB0"
+trust_height = "1720046"
+trust_hash = "D5CEF8351C80A03AA8065D2B6171D3B6EEB81183A16F3B34FD919B7110DBF809"
 trust_period = "168h0m0s"
 discovery_time = "15s"
 temp_dir = ""
