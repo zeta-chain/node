@@ -3,12 +3,12 @@
 ## Unreleased
 
 * `zetaclientd start` : 2 inputs required from stdin
-* `MsgRemoveForeignCoin`: `Name` field has been renamed in to `ZRC20Address`
 
 ### Refactor
 
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+* `MsgRemoveForeignCoin`: `Name` field has been renamed in to `ZRC20Address`
 
 ### Fixes
 
