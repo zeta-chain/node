@@ -72,16 +72,24 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 				return err
 			}
 		}
-		// We were able to parse the ZRC20 withdrawal event, but we were unable to process it as the information was incorrect
+		// We were able to parse the ZRC20 withdrawal event. However, we were unable to process it as the information was incorrect
+		// This means that there are some funds locked in the contract which cannot have a outbound , this can be a candidate for a refund
+		// TODO : Consider returning error or auto refunding the funds to the user
 		if err != nil && eventWithdrawal != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
 				eventWithdrawal.From.Hex(), string(eventWithdrawal.To), eventWithdrawal.Value.String(), eventWithdrawal.Gasfee.String(), eventWithdrawal.ProtocolFlatFee.String(), err.Error()))
 		}
+
 		eZeta, err := ParseZetaSentEvent(*log, connectorZEVMAddr)
 		if err == nil {
 			if err := k.ProcessZetaSentEvent(ctx, eZeta, emittingContract, txOrigin); err != nil {
 				return err
 			}
+		}
+		// We were able to parse the ZetaSent event. However, we were unable to process it as the information was incorrect
+		if err != nil && eZeta != nil {
+			ctx.Logger().Error(fmt.Sprintf("Error processing Zeta Sent event , from Address: %s ,to : %s,value %s, err %s",
+				eZeta.Raw.Address.Hex(), string(eZeta.DestinationAddress), eZeta.ZetaValueAndGas.String(), err.Error()))
 		}
 	}
 	return nil
@@ -93,7 +101,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return types.ErrNotEnoughPermissions
 	}
-	ctx.Logger().Info("ZRC20 withdrawal to %s amount %d\n", hex.EncodeToString(event.To), event.Value)
+	ctx.Logger().Info(fmt.Sprintf("ZRC20 withdrawal to %s amount %d", hex.EncodeToString(event.To), event.Value))
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return errorsmod.Wrap(types.ErrCannotFindTSSKeys, "ProcessZRC20WithdrawalEvent: cannot be processed without TSS keys")
@@ -142,7 +150,6 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
-		fmt.Printf("gasprice not found for %s\n", receiverChain)
 		return fmt.Errorf("gasprice not found for %s", receiverChain)
 	}
 	cctx.GetCurrentOutTxParam().OutboundTxGasPrice = fmt.Sprintf("%d", gasprice.Prices[gasprice.MedianIndex])
@@ -282,6 +289,7 @@ func (k Keeper) ParseZRC20WithdrawalEvent(ctx sdk.Context, log ethtypes.Log) (*z
 		if !ok {
 			return event, fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
 		}
+
 	}
 	return event, nil
 }
@@ -300,7 +308,7 @@ func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*con
 	}
 
 	if event.Raw.Address != connectorZEVM {
-		return nil, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
+		return event, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
 	}
 	return event, nil
 }
