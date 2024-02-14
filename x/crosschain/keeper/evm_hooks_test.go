@@ -55,7 +55,7 @@ func TestTransactionReceipt(t *testing.T) {
 			ForeignChainId:       zetacommon.BtcTestNetChain().ChainId,
 		})
 		// logs 1, 2, 3 are not valid
-		// log 4 is valid , but the to address is not valid
+		// log 4 is valid , but the `to` address is not valid
 		for i, log := range receipt.Logs {
 			eventWithdrawal, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
 			if i < 3 {
@@ -84,7 +84,7 @@ func TestTransactionReceipt(t *testing.T) {
 			ForeignChainId:       zetacommon.BtcRegtestChain().ChainId,
 		})
 		// logs 1, 2, 3 are not valid
-		// log 4 is valid , but the to address is not valid
+		// log 4 is valid , but the `to` address is not valid
 		for i, log := range receipt.Logs {
 			eventWithdrawal, err := k.ParseZRC20WithdrawalEvent(ctx, *log)
 			if i < 3 {
