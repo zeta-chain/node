@@ -101,19 +101,16 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        emissionskeeper.Keeper
-	accountKeeper types.AccountKeeper
+	keeper emissionskeeper.Keeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	keeper emissionskeeper.Keeper,
-	accountKeeper types.AccountKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
-		accountKeeper:  accountKeeper,
 	}
 }
 
@@ -154,9 +151,9 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 
 	InitGenesis(ctx, am.keeper, genState)
 
-	am.accountKeeper.GetModuleAccount(ctx, types.ModuleName)
-	am.accountKeeper.GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
-	am.accountKeeper.GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)
+	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.UndistributedTssRewardsPool)
+	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.UndistributedObserverRewardsPool)
 
 	return []abci.ValidatorUpdate{}
 }
