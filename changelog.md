@@ -263,4 +263,3 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 * [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
 * [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
-

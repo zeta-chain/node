@@ -6,7 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func MustNewIntFromString(val string) sdkmath.Int {
@@ -25,7 +25,7 @@ func TestZetaSupplyChecker_ValidateZetaSupply(t *testing.T) {
 		externalChainTotalSupply sdkmath.Int
 		zetaTokenSupplyOnNode    sdkmath.Int
 		ethLockedAmount          sdkmath.Int
-		validate                 assert.BoolAssertionFunc
+		validate                 require.BoolAssertionFunc
 	}{
 		{
 			name:                     "1 zeta cctx in progress",
@@ -35,8 +35,8 @@ func TestZetaSupplyChecker_ValidateZetaSupply(t *testing.T) {
 			genesisAmounts:           MustNewIntFromString("1000000000000000000"),
 			zetaTokenSupplyOnNode:    MustNewIntFromString("1000000000000000000"),
 			ethLockedAmount:          MustNewIntFromString("10000000000000000000"),
-			validate: func(t assert.TestingT, b bool, i ...interface{}) bool {
-				return assert.True(t, b, i...)
+			validate: func(t require.TestingT, b bool, i ...interface{}) {
+				require.True(t, b, i...)
 			},
 		},
 		// Todo add more scenarios

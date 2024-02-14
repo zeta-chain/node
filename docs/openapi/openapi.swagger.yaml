@@ -53588,7 +53588,7 @@ definitions:
        - OutboundMined: the corresponding outbound tx is mined
        - PendingRevert: outbound cannot succeed; should revert inbound
        - Reverted: inbound reverted.
-       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort
+       - Aborted: inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
   crosschainCrossChainTx:
     type: object
     properties:
@@ -53717,6 +53717,8 @@ definitions:
   crosschainMsgGasPriceVoterResponse:
     type: object
   crosschainMsgMigrateTssFundsResponse:
+    type: object
+  crosschainMsgRefundAbortedCCTXResponse:
     type: object
   crosschainMsgRemoveFromOutTxTrackerResponse:
     type: object
@@ -54717,6 +54719,8 @@ definitions:
       lastUpdate_timestamp:
         type: string
         format: int64
+      isAbortRefunded:
+        type: boolean
   zetacoreemissionsParams:
     type: object
     properties:

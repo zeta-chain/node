@@ -25,3 +25,13 @@ func BitcoinNetParamsFromChainID(chainID int64) (*chaincfg.Params, error) {
 		return nil, fmt.Errorf("no Bitcoin net params for chain ID: %d", chainID)
 	}
 }
+
+// IsBitcoinRegnet returns true if the chain id is for the regnet
+func IsBitcoinRegnet(chainID int64) bool {
+	return chainID == BtcRegtestChain().ChainId
+}
+
+// IsBitcoinMainnet returns true if the chain id is for the mainnet
+func IsBitcoinMainnet(chainID int64) bool {
+	return chainID == BtcMainnetChain().ChainId
+}

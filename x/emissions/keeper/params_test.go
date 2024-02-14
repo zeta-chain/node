@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
@@ -235,9 +235,9 @@ func TestKeeper_GetParams(t *testing.T) {
 			}, tt.isPanic)
 
 			if tt.isPanic != "" {
-				assert.Equal(t, defaultParams, k.GetParams(ctx))
+				require.Equal(t, defaultParams, k.GetParams(ctx))
 			} else {
-				assert.Equal(t, tt.params, k.GetParams(ctx))
+				require.Equal(t, tt.params, k.GetParams(ctx))
 			}
 		})
 	}
@@ -247,7 +247,7 @@ func assertPanic(t *testing.T, f func(), errorLog string) {
 	defer func() {
 		r := recover()
 		if r != nil {
-			assert.Contains(t, r, errorLog)
+			require.Contains(t, r, errorLog)
 		}
 	}()
 	f()

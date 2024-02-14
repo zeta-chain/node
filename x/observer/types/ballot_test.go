@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBallot_AddVote(t *testing.T) {
@@ -206,9 +206,9 @@ func TestBallot_AddVote(t *testing.T) {
 			}
 
 			finalBallot, isFinalized := ballot.IsFinalizingVote()
-			assert.Equal(t, test.finalStatus, finalBallot.BallotStatus)
-			assert.Equal(t, test.finalVotes, finalBallot.Votes)
-			assert.Equal(t, test.isFinalized, isFinalized)
+			require.Equal(t, test.finalStatus, finalBallot.BallotStatus)
+			require.Equal(t, test.finalVotes, finalBallot.Votes)
+			require.Equal(t, test.isFinalized, isFinalized)
 		})
 	}
 }
@@ -336,10 +336,10 @@ func TestBallot_IsFinalizingVote(t *testing.T) {
 				ballot.Votes = append(ballot.Votes, vote)
 				ballot, isFinalizingVote = ballot.IsFinalizingVote()
 				if isFinalizingVote {
-					assert.Equal(t, test.finalizingVote, index)
+					require.Equal(t, test.finalizingVote, index)
 				}
 			}
-			assert.Equal(t, test.finalStatus, ballot.BallotStatus)
+			require.Equal(t, test.finalStatus, ballot.BallotStatus)
 		})
 	}
 }
@@ -391,7 +391,7 @@ func Test_BuildRewardsDistribution(t *testing.T) {
 			}
 			rewardsMap := map[string]int64{}
 			ballot.BuildRewardsDistribution(rewardsMap)
-			assert.Equal(t, test.expectedMap, rewardsMap)
+			require.Equal(t, test.expectedMap, rewardsMap)
 		})
 	}
 
