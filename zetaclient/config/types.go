@@ -3,12 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -32,14 +30,12 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	observertypes.ChainParams
 	Chain    common.Chain
 	Endpoint string
 }
 
 type BTCConfig struct {
-	observertypes.ChainParams
-
+	ChainID int64
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
 	RPCPassword string
@@ -51,6 +47,8 @@ type BTCConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
+	cfgLock *sync.RWMutex `json:"-"`
+
 	Peer                string         `json:"Peer"`
 	PublicIP            string         `json:"PublicIP"`
 	LogFormat           string         `json:"LogFormat"`
@@ -67,15 +65,11 @@ type Config struct {
 	P2PDiagnosticTicker uint64         `json:"P2PDiagnosticTicker"`
 	TssPath             string         `json:"TssPath"`
 	TestTssKeysign      bool           `json:"TestTssKeysign"`
-	CurrentTssPubkey    string         `json:"CurrentTssPubkey"`
 	KeyringBackend      KeyringBackend `json:"KeyringBackend"`
 	HsmMode             bool           `json:"HsmMode"`
 	HsmHotKey           string         `json:"HsmHotKey"`
 
 	// chain specific fields are updatable at runtime and shared across threads
-	cfgLock         *sync.RWMutex        `json:"-"`
-	Keygen          observertypes.Keygen `json:"Keygen"`
-	ChainsEnabled   []common.Chain       `json:"ChainsEnabled"`
 	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
 }
@@ -94,27 +88,6 @@ func (c *Config) String() string {
 		return ""
 	}
 	return string(s)
-}
-
-func (c *Config) GetKeygen() observertypes.Keygen {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	copiedPubkeys := make([]string, len(c.Keygen.GranteePubkeys))
-	copy(copiedPubkeys, c.Keygen.GranteePubkeys)
-
-	return observertypes.Keygen{
-		Status:         c.Keygen.Status,
-		GranteePubkeys: copiedPubkeys,
-		BlockNumber:    c.Keygen.BlockNumber,
-	}
-}
-
-func (c *Config) GetEnabledChains() []common.Chain {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	copiedChains := make([]common.Chain, len(c.ChainsEnabled))
-	copy(copiedChains, c.ChainsEnabled)
-	return copiedChains
 }
 
 func (c *Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
@@ -137,6 +110,7 @@ func (c *Config) GetAllEVMConfigs() map[int64]*EVMConfig {
 	return copied
 }
 
+// TODO: get chain from params chainId, and only return config here?
 func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
@@ -144,9 +118,9 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 	if c.BitcoinConfig == nil { // bitcoin is not enabled
 		return common.Chain{}, BTCConfig{}, false
 	}
-	chain := common.GetChainFromChainID(c.BitcoinConfig.ChainId)
+	chain := common.GetChainFromChainID(c.BitcoinConfig.ChainID)
 	if chain == nil {
-		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.ChainId))
+		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.ChainID))
 	}
 	return *chain, *c.BitcoinConfig, true
 }
@@ -155,103 +129,6 @@ func (c *Config) GetKeyringBackend() KeyringBackend {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 	return c.KeyringBackend
-}
-
-// UpdateChainParams updates core params for all chains
-// this must be the ONLY function that writes to core params
-func (c *Config) UpdateChainParams(
-	keygen *observertypes.Keygen,
-	newChains []common.Chain,
-	evmChainParams map[int64]*observertypes.ChainParams,
-	btcChainParams *observertypes.ChainParams,
-	init bool,
-	logger zerolog.Logger,
-) {
-	c.cfgLock.Lock()
-	defer c.cfgLock.Unlock()
-
-	// Ignore whatever order zetabridge organizes chain list in state
-	sort.SliceStable(newChains, func(i, j int) bool {
-		return newChains[i].ChainId < newChains[j].ChainId
-	})
-	if len(newChains) == 0 {
-		logger.Warn().Msg("UpdateChainParams: No chains enabled in ZeroCore")
-	}
-
-	// Add some warnings if chain list changes at runtime
-	if !init {
-		if len(c.ChainsEnabled) != len(newChains) {
-			logger.Warn().Msgf(
-				"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-				c.ChainsEnabled,
-				newChains,
-			)
-		} else {
-			for i, chain := range newChains {
-				if chain != c.ChainsEnabled[i] {
-					logger.Warn().Msgf(
-						"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-						c.ChainsEnabled,
-						newChains,
-					)
-				}
-			}
-		}
-	}
-	c.Keygen = *keygen
-	c.ChainsEnabled = newChains
-	// update chain params for bitcoin if it has config in file
-	if c.BitcoinConfig != nil && btcChainParams != nil {
-		c.BitcoinConfig.ChainParams = *btcChainParams
-	}
-	// update core params for evm chains we have configs in file
-	for _, params := range evmChainParams {
-		curCfg, found := c.EVMChainConfigs[params.ChainId]
-		if found {
-			curCfg.ChainParams = *params
-		}
-	}
-}
-
-// Clone makes a separate (deep) copy of the config
-func (c *Config) Clone() *Config {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	copied := &Config{
-		Peer:                c.Peer,
-		PublicIP:            c.PublicIP,
-		LogFormat:           c.LogFormat,
-		LogLevel:            c.LogLevel,
-		LogSampler:          c.LogSampler,
-		PreParamsPath:       c.PreParamsPath,
-		ChainID:             c.ChainID,
-		ZetaCoreURL:         c.ZetaCoreURL,
-		AuthzGranter:        c.AuthzGranter,
-		AuthzHotkey:         c.AuthzHotkey,
-		P2PDiagnostic:       c.P2PDiagnostic,
-		ConfigUpdateTicker:  c.ConfigUpdateTicker,
-		P2PDiagnosticTicker: c.P2PDiagnosticTicker,
-		TssPath:             c.TssPath,
-		TestTssKeysign:      c.TestTssKeysign,
-		KeyringBackend:      c.KeyringBackend,
-
-		cfgLock:         &sync.RWMutex{},
-		Keygen:          c.GetKeygen(),
-		ChainsEnabled:   c.GetEnabledChains(),
-		EVMChainConfigs: make(map[int64]*EVMConfig, len(c.EVMChainConfigs)),
-		BitcoinConfig:   nil,
-	}
-	// deep copy evm & btc configs
-	for chainID, evmConfig := range c.EVMChainConfigs {
-		copied.EVMChainConfigs[chainID] = &EVMConfig{}
-		*copied.EVMChainConfigs[chainID] = *evmConfig
-	}
-	if c.BitcoinConfig != nil {
-		copied.BitcoinConfig = &BTCConfig{}
-		*copied.BitcoinConfig = *c.BitcoinConfig
-	}
-
-	return copied
 }
 
 // ValidateChainParams performs some basic checks on core params

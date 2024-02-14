@@ -41,6 +41,7 @@ type CoreObserver struct {
 	metrics             *metrics.Metrics
 	logger              ZetaCoreLog
 	cfg                 *config.Config
+	params              *config.Params
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
 	lastOperatorBalance sdkmath.Int
@@ -94,6 +95,10 @@ func NewCoreObserver(
 
 func (co *CoreObserver) Config() *config.Config {
 	return co.cfg
+}
+
+func (co *CoreObserver) Params() *config.Params {
+	return co.params
 }
 
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
@@ -178,7 +183,7 @@ func (co *CoreObserver) startCctxScheduler() {
 					gauge.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// schedule keysign for pending cctxs on each chain
-					supportedChains := co.Config().GetEnabledChains()
+					supportedChains := co.Params().GetEnabledChains()
 					for _, c := range supportedChains {
 						if c.ChainId == co.bridge.ZetaChain().ChainId {
 							continue
@@ -373,22 +378,23 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient
 	// update chain client core parameters
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
-		evmCfg, found := co.cfg.GetEVMConfig(chainID)
-		if found && !observertypes.ChainParamsEqual(curParams, evmCfg.ChainParams) {
-			chainOb.SetChainParams(evmCfg.ChainParams)
+		evmParams, found := co.params.GetEVMChainParams(chainID)
+		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
+			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v",
 				chainID,
-				evmCfg.ChainParams,
+				*evmParams,
 			)
 		}
 	} else if common.IsBitcoinChain(chainID) {
-		_, btcCfg, found := co.cfg.GetBTCConfig()
-		if found && !observertypes.ChainParamsEqual(curParams, btcCfg.ChainParams) {
-			chainOb.SetChainParams(btcCfg.ChainParams)
+		_, btcParams, found := co.params.GetBTCChainParams()
+
+		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
+			chainOb.SetChainParams(*btcParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for Bitcoin, new params: %v",
-				btcCfg.ChainParams,
+				*btcParams,
 			)
 		}
 	}

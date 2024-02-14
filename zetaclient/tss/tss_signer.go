@@ -86,6 +86,7 @@ func NewTSS(
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
 	cfg *config.Config,
+	params *config.Params,
 	bridge interfaces.ZetaCoreBridger,
 	tssHistoricalList []observertypes.TSS,
 	metrics *zetametrics.Metrics,
@@ -100,7 +101,7 @@ func NewTSS(
 	newTss := TSS{
 		Server:         server,
 		Keys:           make(map[string]*Key),
-		CurrentPubkey:  cfg.CurrentTssPubkey,
+		CurrentPubkey:  params.CurrentTssPubkey,
 		logger:         log.With().Str("module", "tss_signer").Logger(),
 		CoreBridge:     bridge,
 		BitcoinChainID: bitcoinChainID,

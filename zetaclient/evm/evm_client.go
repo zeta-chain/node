@@ -95,7 +95,8 @@ type ChainClient struct {
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
 	cfg                        *config.Config
-	params                     observertypes.ChainParams
+	params                     *config.Params
+	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
 
 	blockCache   *lru.Cache
@@ -114,6 +115,7 @@ func NewEVMChainClient(
 	logger zerolog.Logger,
 	cfg *config.Config,
 	evmCfg config.EVMConfig,
+	params *config.Params,
 	ts *metricsPkg.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
@@ -128,7 +130,9 @@ func NewEVMChainClient(
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
 	ob.cfg = cfg
-	ob.params = evmCfg.ChainParams
+	// TODO: fix this
+	ob.params = params
+	ob.chainParams = *params.EVMChainParams[evmCfg.Chain.ChainId]
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
@@ -227,7 +231,7 @@ func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
 func (ob *ChainClient) WithParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.params = params
+	ob.chainParams = params
 }
 
 func (ob *ChainClient) SetConfig(cfg *config.Config) {
@@ -239,13 +243,13 @@ func (ob *ChainClient) SetConfig(cfg *config.Config) {
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.params = params
+	ob.chainParams = params
 }
 
 func (ob *ChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.params
+	return ob.chainParams
 }
 
 func (ob *ChainClient) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {

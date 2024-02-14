@@ -189,7 +189,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) error {
+func (b *ZetaCoreBridge) UpdateParamsFromCore(params *config.Params, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err
@@ -243,13 +243,13 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
 	}
-	cfg.UpdateChainParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	params.UpdateChainParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetabridge")
 	} else {
-		cfg.CurrentTssPubkey = tss.GetTssPubkey()
+		params.CurrentTssPubkey = tss.GetTssPubkey()
 	}
 	return nil
 }

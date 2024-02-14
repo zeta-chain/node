@@ -139,6 +139,7 @@ func NewBitcoinClient(
 	metrics *metricsPkg.Metrics,
 	logger zerolog.Logger,
 	btcCfg config.BTCConfig,
+	params *config.Params,
 	ts *metricsPkg.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -167,7 +168,7 @@ func NewBitcoinClient(
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-	ob.params = btcCfg.ChainParams
+	ob.params = *params.BitcoinChainParams
 
 	// initialize the Client
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)

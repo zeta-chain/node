@@ -128,7 +128,8 @@ func DebugCmd() *cobra.Command {
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
 							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
+						// TODO: fix this
+						// cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						ob.SetConfig(cfg)
 						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta
