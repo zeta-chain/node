@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -49,6 +50,7 @@ func EmissionsKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		bankkeeper.BaseKeeper{},
 		stakingkeeper.Keeper{},
 		observerkeeper.Keeper{},
+		authkeeper.AccountKeeper{},
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

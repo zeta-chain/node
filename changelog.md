@@ -49,6 +49,7 @@
 ### Chores
 
 * [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
+* [1754](https://github.com/zeta-chain/node/pull/1754) - cleanup expected keepers
 
 ## Version: v12.2.4
 
