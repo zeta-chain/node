@@ -72,10 +72,6 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 				return err
 			}
 		}
-		// We were unable to parse the ZRC20 withdrawal event
-		if err != nil && eventWithdrawal == nil {
-			ctx.Logger().Error("Error parsing ZRC20 withdrawal event: %s", err.Error())
-		}
 		// We were able to parse the ZRC20 withdrawal event, but we were unable to process it as the information was incorrect
 		if err != nil && eventWithdrawal != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
