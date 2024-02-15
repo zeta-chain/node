@@ -400,9 +400,9 @@ jobs:
         run: |
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
-  publish-release:
-    runs-on: buildjet-4vcpu-ubuntu-2004
-    timeout-minutes: 60
+  approval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs:
       - gosec
       - gosec-cosmos
@@ -412,6 +412,23 @@ jobs:
       - check-upgrade-handler-updated
       - smoke-test
       - build-test
+    steps:
+
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: gzukel
+          minimum-approvals: 1
+          issue-title: "Release Approval for version: ${{ github.event.inputs.version }}"
+          issue-body: "Please approve the release. Once approved the release pipeline will continue."
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: ''
+          additional-denied-words: ''
+  publish-release:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 60
+    needs:
+      - approval
 
     steps:
       - uses: actions/checkout@v3
@@ -446,17 +463,6 @@ jobs:
             echo "Unsupported architecture" >&2
             exit 1
           fi
-
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.TOKEN }}
-          approvers: gzukel
-          minimum-approvals: 1
-          issue-title: "Release Approval for version: ${{ github.event.inputs.version }}"
-          issue-body: "Please approve the release. Once approved the release pipeline will continue."
-          exclude-workflow-initiator-as-approver: false
-          additional-approved-words: ''
-          additional-denied-words: ''
 
       - name: Create Release Tag
         shell: bash
