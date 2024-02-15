@@ -424,6 +424,7 @@ jobs:
           exclude-workflow-initiator-as-approver: true
           additional-approved-words: ''
           additional-denied-words: ''
+
   publish-release:
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
