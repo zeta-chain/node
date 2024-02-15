@@ -33,12 +33,12 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcTestNetChain().ChainId)
 		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
 	})
-	t.Run("invalid address typ", func(t *testing.T) {
+	t.Run("invalid address type", func(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*GetValidSampleBlock(t).Logs[3])
 		require.NoError(t, err)
 		btcMainNetWithdrawalEvent.To = []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3")
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcTestNetChain().ChainId)
-		require.ErrorContains(t, err, "not P2WPKH address")
+		require.ErrorContains(t, err, "decode address failed: unknown address type")
 	})
 }
 func TestParseZRC20WithdrawalEvent(t *testing.T) {

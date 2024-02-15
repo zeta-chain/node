@@ -304,7 +304,7 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 		}
 		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 		if !ok {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address),address type not supported", event.To)
+			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
 		}
 	}
 	return nil

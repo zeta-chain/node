@@ -17,7 +17,7 @@
 *[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
 
 ### Refactor
-
+* [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
 
@@ -33,7 +33,7 @@
 * [1733](https://github.com/zeta-chain/node/pull/1733) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 * [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
-* [1758](https://github.com/zeta-chain/node/pull/1758) - add error check for BTC decode function
+
 
 ### Tests
 
