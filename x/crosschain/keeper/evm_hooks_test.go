@@ -31,7 +31,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*GetValidSampleBlock(t).Logs[3])
 		require.NoError(t, err)
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcTestNetChain().ChainId)
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
+		require.ErrorContains(t, err, "address is not for network testnet3")
 	})
 	t.Run("invalid address type", func(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*GetValidSampleBlock(t).Logs[3])
