@@ -625,7 +625,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 	})
 }
 
-func setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, applyMessageExpectedCounter int) {
+func setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
 	gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
 	mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(mock.Anything)
 	mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -634,7 +634,7 @@ func setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper *fungiblemocks.
 		mock.Anything,
 		mock.Anything,
 	).Return(gasRes, nil)
-	mockEVMSuccessCallOnce(mockEVMKeeper)
+	mockEVMSuccessCallTimes(mockEVMKeeper, 5)
 	mockEVMKeeper.On(
 		"GetAccount",
 		mock.Anything,
@@ -651,6 +651,10 @@ func setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper *fungiblemocks.
 
 func mockEVMSuccessCallOnce(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
 	mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{})
+}
+
+func mockEVMSuccessCallTimes(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, times int) {
+	mockEVMSuccessCallTimesWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{}, times)
 }
 
 func mockEVMSuccessCallOnceWithReturn(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, ret *evmtypes.MsgEthereumTxResponse) {

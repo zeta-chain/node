@@ -154,7 +154,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 9)
+		setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -172,6 +172,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		uniswapMock := &evmtypes.MsgEthereumTxResponse{
 			Ret: encodedAddress[:],
 		}
+		mockEVMSuccessCallTimes(mockEVMKeeper, 4)
 		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, uniswapMock)
 		mockEVMSuccessCallOnce(mockEVMKeeper)
 
@@ -203,7 +204,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on third evm call
-		mockEVMSuccessCallTimesWithReturn(mockEVMKeeper, nil, 2)
+		mockEVMSuccessCallTimes(mockEVMKeeper, 2)
 		mockEVMFailCallOnce(mockEVMKeeper)
 
 		// can update the system contract

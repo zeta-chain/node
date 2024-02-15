@@ -70,7 +70,7 @@ func TestKeeper_SetGasPriceReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
 	mockEVMFailCallOnce(mockEVMKeeper)
@@ -120,7 +120,7 @@ func TestKeeper_SetGasCoinReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
 	mockEVMFailCallOnce(mockEVMKeeper)
@@ -180,7 +180,7 @@ func TestKeeper_SetGasZetaPoolReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
 	mockEVMFailCallOnce(mockEVMKeeper)
