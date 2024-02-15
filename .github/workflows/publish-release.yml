@@ -385,7 +385,7 @@ jobs:
           fi
 
       - name: Stop Private Network
-        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        if: ${{ always() && github.event.inputs.skip_checks != 'true' }}
         run: |
           cd contrib/localnet/
           docker compose down
