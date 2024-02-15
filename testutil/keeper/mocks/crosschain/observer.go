@@ -143,26 +143,6 @@ func (_m *CrosschainObserverKeeper) FindBallot(ctx types.Context, index string, 
 	return r0, r1, r2
 }
 
-// GetAllBallots provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetAllBallots(ctx types.Context) []*observertypes.Ballot {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllBallots")
-	}
-
-	var r0 []*observertypes.Ballot
-	if rf, ok := ret.Get(0).(func(types.Context) []*observertypes.Ballot); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*observertypes.Ballot)
-		}
-	}
-
-	return r0
-}
-
 // GetAllChainNonces provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) GetAllChainNonces(ctx types.Context) []observertypes.ChainNonces {
 	ret := _m.Called(ctx)
@@ -621,34 +601,6 @@ func (_m *CrosschainObserverKeeper) GetPendingNonces(ctx types.Context, tss stri
 	return r0, r1
 }
 
-// GetPreviousTSS provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetPreviousTSS(ctx types.Context) (observertypes.TSS, bool) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetPreviousTSS")
-	}
-
-	var r0 observertypes.TSS
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.TSS, bool)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context) observertypes.TSS); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(observertypes.TSS)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
 // GetSupportedChainFromChainID provides a mock function with given fields: ctx, chainID
 func (_m *CrosschainObserverKeeper) GetSupportedChainFromChainID(ctx types.Context, chainID int64) *common.Chain {
 	ret := _m.Called(ctx, chainID)
@@ -788,24 +740,9 @@ func (_m *CrosschainObserverKeeper) RemoveAllExistingMigrators(ctx types.Context
 	_m.Called(ctx)
 }
 
-// RemoveChainNonces provides a mock function with given fields: ctx, index
-func (_m *CrosschainObserverKeeper) RemoveChainNonces(ctx types.Context, index string) {
-	_m.Called(ctx, index)
-}
-
 // RemoveFromPendingNonces provides a mock function with given fields: ctx, tss, chainID, nonce
 func (_m *CrosschainObserverKeeper) RemoveFromPendingNonces(ctx types.Context, tss string, chainID int64, nonce int64) {
 	_m.Called(ctx, tss, chainID, nonce)
-}
-
-// RemoveNonceToCctx provides a mock function with given fields: ctx, cctx
-func (_m *CrosschainObserverKeeper) RemoveNonceToCctx(ctx types.Context, cctx observertypes.NonceToCctx) {
-	_m.Called(ctx, cctx)
-}
-
-// SetBallot provides a mock function with given fields: ctx, ballot
-func (_m *CrosschainObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
-	_m.Called(ctx, ballot)
 }
 
 // SetChainNonces provides a mock function with given fields: ctx, chainNonces

@@ -31,64 +31,6 @@ func (_m *CrosschainBankKeeper) BurnCoins(ctx types.Context, name string, amt ty
 	return r0
 }
 
-// GetAllBalances provides a mock function with given fields: ctx, addr
-func (_m *CrosschainBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress) types.Coins {
-	ret := _m.Called(ctx, addr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllBalances")
-	}
-
-	var r0 types.Coins
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) types.Coins); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Coins)
-		}
-	}
-
-	return r0
-}
-
-// GetBalance provides a mock function with given fields: ctx, addr, denom
-func (_m *CrosschainBankKeeper) GetBalance(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
-	ret := _m.Called(ctx, addr, denom)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetBalance")
-	}
-
-	var r0 types.Coin
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, string) types.Coin); ok {
-		r0 = rf(ctx, addr, denom)
-	} else {
-		r0 = ret.Get(0).(types.Coin)
-	}
-
-	return r0
-}
-
-// LockedCoins provides a mock function with given fields: ctx, addr
-func (_m *CrosschainBankKeeper) LockedCoins(ctx types.Context, addr types.AccAddress) types.Coins {
-	ret := _m.Called(ctx, addr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for LockedCoins")
-	}
-
-	var r0 types.Coins
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) types.Coins); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Coins)
-		}
-	}
-
-	return r0
-}
-
 // MintCoins provides a mock function with given fields: ctx, moduleName, amt
 func (_m *CrosschainBankKeeper) MintCoins(ctx types.Context, moduleName string, amt types.Coins) error {
 	ret := _m.Called(ctx, moduleName, amt)
@@ -102,62 +44,6 @@ func (_m *CrosschainBankKeeper) MintCoins(ctx types.Context, moduleName string, 
 		r0 = rf(ctx, moduleName, amt)
 	} else {
 		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SendCoinsFromAccountToModule provides a mock function with given fields: ctx, senderAddr, recipientModule, amt
-func (_m *CrosschainBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
-	ret := _m.Called(ctx, senderAddr, recipientModule, amt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendCoinsFromAccountToModule")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, string, types.Coins) error); ok {
-		r0 = rf(ctx, senderAddr, recipientModule, amt)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SendCoinsFromModuleToAccount provides a mock function with given fields: ctx, senderModule, recipientAddr, amt
-func (_m *CrosschainBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
-	ret := _m.Called(ctx, senderModule, recipientAddr, amt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendCoinsFromModuleToAccount")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, string, types.AccAddress, types.Coins) error); ok {
-		r0 = rf(ctx, senderModule, recipientAddr, amt)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SpendableCoins provides a mock function with given fields: ctx, addr
-func (_m *CrosschainBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
-	ret := _m.Called(ctx, addr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SpendableCoins")
-	}
-
-	var r0 types.Coins
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) types.Coins); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Coins)
-		}
 	}
 
 	return r0

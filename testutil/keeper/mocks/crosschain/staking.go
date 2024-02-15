@@ -35,34 +35,6 @@ func (_m *CrosschainStakingKeeper) GetAllValidators(ctx types.Context) []staking
 	return r0
 }
 
-// GetValidator provides a mock function with given fields: ctx, addr
-func (_m *CrosschainStakingKeeper) GetValidator(ctx types.Context, addr types.ValAddress) (stakingtypes.Validator, bool) {
-	ret := _m.Called(ctx, addr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetValidator")
-	}
-
-	var r0 stakingtypes.Validator
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, types.ValAddress) (stakingtypes.Validator, bool)); ok {
-		return rf(ctx, addr)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, types.ValAddress) stakingtypes.Validator); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		r0 = ret.Get(0).(stakingtypes.Validator)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, types.ValAddress) bool); ok {
-		r1 = rf(ctx, addr)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
 // NewCrosschainStakingKeeper creates a new instance of CrosschainStakingKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewCrosschainStakingKeeper(t interface {
