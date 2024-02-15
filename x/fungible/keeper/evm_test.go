@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -33,7 +32,7 @@ func getValidChainID(t *testing.T) int64 {
 }
 
 // require that a contract has been deployed by checking stored code is non-empty.
-func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
+func assertContractDeployment(t *testing.T, k types.EVMKeeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
 	require.NotNil(t, acc)
 
@@ -46,7 +45,7 @@ func deploySystemContracts(
 	t *testing.T,
 	ctx sdk.Context,
 	k *fungiblekeeper.Keeper,
-	evmk *evmkeeper.Keeper,
+	evmk types.EVMKeeper,
 ) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
 	var err error
 

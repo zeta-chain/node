@@ -12,6 +12,9 @@ import (
 
 // SetGasPrice sets gas price on the system contract in zEVM; return the gasUsed and error code
 func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int) (uint64, error) {
+	if gasPrice == nil {
+		return 0, sdkerrors.Wrapf(types.ErrNilGasPrice, "gas price param should be set")
+	}
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return 0, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
@@ -27,9 +30,6 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, false, "setGasPrice", chainid, gasPrice)
 	if err != nil {
 		return 0, sdkerrors.Wrapf(types.ErrContractCall, err.Error())
-	}
-	if res.Failed() {
-		return res.GasUsed, sdkerrors.Wrapf(types.ErrContractCall, "setGasPrice tx failed")
 	}
 
 	return res.GasUsed, nil
@@ -48,12 +48,9 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasCoinZRC20", chainid, address)
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasCoinZRC20", chainid, address)
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrContractCall, err.Error())
-	}
-	if res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "setGasCoinZRC20 tx failed")
 	}
 
 	return nil
@@ -72,12 +69,9 @@ func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Ad
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
-	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasZetaPool", chainid, pool)
+	_, err = k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasZetaPool", chainid, pool)
 	if err != nil {
 		return sdkerrors.Wrapf(types.ErrContractCall, err.Error())
-	}
-	if res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "setGasZetaPool tx failed")
 	}
 
 	return nil

@@ -65,5 +65,6 @@ type EVMKeeper interface {
 		commit bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
+	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
 }
