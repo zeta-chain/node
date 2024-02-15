@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -42,7 +42,7 @@ type CoreObserver struct {
 	metrics             *metrics.Metrics
 	logger              ZetaCoreLog
 	cfg                 *config.Config
-	coreParams          *coreparams.CoreParams
+	coreContext         *clientcontext.ZeraCoreContext
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
 	lastOperatorBalance sdkmath.Int
@@ -98,8 +98,8 @@ func (co *CoreObserver) Config() *config.Config {
 	return co.cfg
 }
 
-func (co *CoreObserver) CoreParams() *coreparams.CoreParams {
-	return co.coreParams
+func (co *CoreObserver) CoreContext() *clientcontext.ZeraCoreContext {
+	return co.coreContext
 }
 
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
@@ -184,7 +184,7 @@ func (co *CoreObserver) startCctxScheduler() {
 					gauge.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// schedule keysign for pending cctxs on each chain
-					supportedChains := co.CoreParams().GetEnabledChains()
+					supportedChains := co.CoreContext().GetEnabledChains()
 					for _, c := range supportedChains {
 						if c.ChainId == co.bridge.ZetaChain().ChainId {
 							continue
@@ -379,7 +379,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient
 	// update chain client core parameters
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
-		evmParams, found := co.coreParams.GetEVMChainParams(chainID)
+		evmParams, found := co.coreContext.GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
@@ -389,7 +389,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient
 			)
 		}
 	} else if common.IsBitcoinChain(chainID) {
-		_, btcParams, found := co.coreParams.GetBTCChainParams()
+		_, btcParams, found := co.coreContext.GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
 			chainOb.SetChainParams(*btcParams)

@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/math"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -152,19 +152,19 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) CoreParamsUpdater(cfg *config.Config, params *coreparams.CoreParams) {
-	b.logger.Info().Msg("CoreParamsUpdater started")
+func (b *ZetaCoreBridge) CoreContextUpdater(cfg *config.Config, coreContext *clientcontext.ZeraCoreContext) {
+	b.logger.Info().Msg("CoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateCoreParams(params, false)
+			err := b.UpdateZetaCoreContext(coreContext, false)
 			if err != nil {
-				b.logger.Err(err).Msg("CoreParamsUpdater failed to update config")
+				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
 			}
 		case <-b.stop:
-			b.logger.Info().Msg("CoreParamsUpdater stopped")
+			b.logger.Info().Msg("CoreContextUpdater stopped")
 			return
 		}
 	}

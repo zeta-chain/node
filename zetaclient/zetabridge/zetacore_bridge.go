@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -190,7 +190,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateCoreParams(params *coreparams.CoreParams, init bool) error {
+func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *clientcontext.ZeraCoreContext, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err
@@ -244,13 +244,13 @@ func (b *ZetaCoreBridge) UpdateCoreParams(params *coreparams.CoreParams, init bo
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
 	}
-	params.UpdateChainParams(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	coreContext.UpdateCoreContext(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetabridge")
 	} else {
-		params.CurrentTssPubkey = tss.GetTssPubkey()
+		coreContext.CurrentTssPubkey = tss.GetTssPubkey()
 	}
 	return nil
 }

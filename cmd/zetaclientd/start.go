@@ -22,8 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -114,8 +114,8 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	coreParams := coreparams.NewCoreParams()
-	err = zetaBridge.UpdateCoreParams(coreParams, true)
+	coreContext := clientcontext.NewZeraCoreContext()
+	err = zetaBridge.UpdateZetaCoreContext(coreContext, true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
@@ -123,7 +123,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
 	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
-	go zetaBridge.CoreParamsUpdater(cfg, coreParams)
+	go zetaBridge.CoreContextUpdater(cfg, coreContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -169,7 +169,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, coreParams, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(masterLogger, cfg, coreContext, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -184,8 +184,8 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		if coreParams.Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", coreParams.Keygen.Status)
+		if coreContext.Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
+			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", coreContext.Keygen.Status)
 			continue
 		}
 		break
@@ -203,7 +203,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(coreParams.ChainsEnabled) == 0 {
+	if len(coreContext.ChainsEnabled) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
@@ -221,7 +221,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, coreParams, telemetryServer)
+	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, coreContext, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -235,7 +235,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, coreParams, telemetryServer)
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, coreContext, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err

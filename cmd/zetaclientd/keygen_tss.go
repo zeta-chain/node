@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	coreparams "github.com/zeta-chain/zetacore/zetaclient/core_params"
+	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -25,7 +25,7 @@ import (
 
 func GenerateTss(logger zerolog.Logger,
 	cfg *config.Config,
-	coreParams *coreparams.CoreParams,
+	coreContext *clientcontext.ZeraCoreContext,
 	zetaBridge *zetabridge.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
@@ -49,7 +49,7 @@ func GenerateTss(logger zerolog.Logger,
 		priKey,
 		preParams,
 		cfg,
-		coreParams.CurrentTssPubkey,
+		coreContext.CurrentTssPubkey,
 		zetaBridge,
 		tssHistoricalList,
 		metrics,
@@ -77,7 +77,7 @@ func GenerateTss(logger zerolog.Logger,
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := coreParams.GetKeygen()
+		keyGen := coreContext.GetKeygen()
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
@@ -109,7 +109,7 @@ func GenerateTss(logger zerolog.Logger,
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				err = keygenTss(coreParams, tss, keygenLogger)
+				err = keygenTss(coreContext, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
 					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, common.ReceiveStatus_Failed)
@@ -153,8 +153,8 @@ func GenerateTss(logger zerolog.Logger,
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
-func keygenTss(params *coreparams.CoreParams, tss *mc.TSS, keygenLogger zerolog.Logger) error {
-	keyGen := params.GetKeygen()
+func keygenTss(coreContext *clientcontext.ZeraCoreContext, tss *mc.TSS, keygenLogger zerolog.Logger) error {
+	keyGen := coreContext.GetKeygen()
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
 	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")
