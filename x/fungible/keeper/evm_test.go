@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -17,7 +16,6 @@ import (
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
-	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
@@ -449,7 +447,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			&evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap},
 		).Return(gasRes, nil)
-		mockEVMSuccessCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -492,7 +490,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			sdk.AccAddress(fromAddr.Bytes()),
 		).Return(uint64(1), nil)
-		mockEVMSuccessCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -605,7 +603,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			&evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap},
 		).Return(gasRes, nil)
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -623,63 +621,4 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 		)
 		require.ErrorIs(t, err, sample.ErrSample)
 	})
-}
-
-func setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
-	gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
-	mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(mock.Anything)
-	mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
-	mockEVMKeeper.On(
-		"EstimateGas",
-		mock.Anything,
-		mock.Anything,
-	).Return(gasRes, nil)
-	mockEVMSuccessCallTimes(mockEVMKeeper, 5)
-	mockEVMKeeper.On(
-		"GetAccount",
-		mock.Anything,
-		mock.Anything,
-	).Return(&statedb.Account{
-		Nonce: 1,
-	})
-	mockEVMKeeper.On(
-		"GetCode",
-		mock.Anything,
-		mock.Anything,
-	).Return([]byte{1, 2, 3})
-}
-
-func mockEVMSuccessCallOnce(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
-	mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{})
-}
-
-func mockEVMSuccessCallTimes(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, times int) {
-	mockEVMSuccessCallTimesWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{}, times)
-}
-
-func mockEVMSuccessCallOnceWithReturn(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, ret *evmtypes.MsgEthereumTxResponse) {
-	mockEVMSuccessCallTimesWithReturn(mockEVMKeeper, ret, 1)
-}
-
-func mockEVMSuccessCallTimesWithReturn(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper, ret *evmtypes.MsgEthereumTxResponse, times int) {
-	if ret == nil {
-		ret = &evmtypes.MsgEthereumTxResponse{}
-	}
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(ret, nil).Times(times)
-}
-
-func mockEVMFailCallOnce(mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample).Once()
 }

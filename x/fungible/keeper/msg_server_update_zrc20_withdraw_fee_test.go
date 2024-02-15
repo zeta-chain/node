@@ -175,14 +175,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
 
 		// this is the update call (commit == true)
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
@@ -220,14 +220,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
 
 		// this is the update call (commit == true)
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,

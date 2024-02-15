@@ -154,7 +154,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper)
+		mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -172,40 +172,40 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		uniswapMock := &evmtypes.MsgEthereumTxResponse{
 			Ret: encodedAddress[:],
 		}
-		mockEVMSuccessCallTimes(mockEVMKeeper, 4)
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, uniswapMock)
-		mockEVMSuccessCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallTimes(4)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(uniswapMock)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 
 		addLiqMockReturn := &evmtypes.MsgEthereumTxResponse{
 			Ret: make([]byte, 3*32),
 		}
-		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, addLiqMockReturn)
+		mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(addLiqMockReturn)
 
 		setupGasCoin(t, ctx, k, mockEVMKeeper, chainID1, "foo", "foo")
 
 		// deploy a new system contracts
-		mockEVMSuccessCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 		newSystemContract, err := k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
 		require.NoError(t, err)
 
 		// fail on first evm call
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		// can update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on second evm call
-		mockEVMSuccessCallOnce(mockEVMKeeper)
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		// can update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.ErrorIs(t, err, types.ErrContractCall)
 
 		// fail on third evm call
-		mockEVMSuccessCallTimes(mockEVMKeeper, 2)
-		mockEVMFailCallOnce(mockEVMKeeper)
+		mockEVMKeeper.MockEVMSuccessCallTimes(2)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		// can update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
