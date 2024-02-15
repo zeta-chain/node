@@ -56,6 +56,7 @@ func NewCoreObserver(
 	metrics *metrics.Metrics,
 	logger zerolog.Logger,
 	cfg *config.Config,
+	coreContext *clientcontext.ZeraCoreContext,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
 	co := CoreObserver{
@@ -63,6 +64,7 @@ func NewCoreObserver(
 		stop: make(chan struct{}),
 	}
 	co.cfg = cfg
+	co.coreContext = coreContext
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()
