@@ -55,7 +55,8 @@ func (k Keeper) PostTxProcessing(
 // ProcessLogs post-processes logs emitted by a zEVM contract; if the log contains Withdrawal event
 // from registered ZRC20 contract, new CCTX will be created to trigger and track outbound
 // transaction.
-// TODO : https://github.com/zeta-chain/node/issues/1759
+// TODO: implement unit tests
+// https://github.com/zeta-chain/node/issues/1759
 func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContract ethcommon.Address, txOrigin string) error {
 	system, found := k.fungibleKeeper.GetSystemContract(ctx)
 	if !found {
