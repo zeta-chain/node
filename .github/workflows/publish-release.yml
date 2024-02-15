@@ -243,9 +243,10 @@ jobs:
         if: ${{ github.event.inputs.skip_checks != 'true' }}
         run: |
           UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f 1 | tr -d '\n')
-          echo "Upgrade Handler Major Version: $UPGRADE_HANDLER_MAJOR_VERSION"
-          echo "User Inputted Release Version: ${{ github.event.inputs.version }}"
-          if [ ${{ inputs.version }} != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
+          USER_INPUT_VERSION=$(echo "${{ github.event.inputs.version }}" | cut -d '.' -f 1 | tr -d '\n')
+          echo "Upgrade Handler Major Version: ${UPGRADE_HANDLER_MAJOR_VERSION}"
+          echo "User Inputted Release Version: ${USER_INPUT_VERSION}"
+          if [ ${USER_INPUT_VERSION} != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
             echo "ERROR: The input version doesn't match the release handler for the branch selected. Please ensure the upgrade handler of the branch you selected when you ran the pipeline matches the input version."
             echo "Did you forget to update the 'releaseVersion' in app/setup_handlers.go?" 
             exit 1
