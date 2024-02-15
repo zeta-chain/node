@@ -417,7 +417,7 @@ jobs:
       - uses: trstringer/manual-approval@v1
         with:
           secret: ${{ github.TOKEN }}
-          approvers: kingpinXD,lumtis,brewmaster012
+          approvers: kingpinXD,lumtis,brewmaster012,CharlieMc0
           minimum-approvals: 1
           issue-title: "Release Approval for version: ${{ github.event.inputs.version }}"
           issue-body: "Please approve the release. Once approved the release pipeline will continue."
