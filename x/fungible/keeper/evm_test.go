@@ -17,7 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -38,6 +37,16 @@ func assertContractDeployment(t *testing.T, k types.EVMKeeper, ctx sdk.Context, 
 
 	code := k.GetCode(ctx, common.BytesToHash(acc.CodeHash))
 	require.NotEmpty(t, code)
+}
+
+func deploySystemContractsWithMockEvmKeeper(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	mockEVMKeeper *testkeeper.FungibleMockEVMKeeper,
+) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
+	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
+	return deploySystemContracts(t, ctx, k, mockEVMKeeper)
 }
 
 // deploySystemContracts deploys the system contracts and returns their addresses.
@@ -81,7 +90,7 @@ func deploySystemContracts(
 func assertExampleBarValue(
 	t *testing.T,
 	ctx sdk.Context,
-	k *keeper.Keeper,
+	k *fungiblekeeper.Keeper,
 	address common.Address,
 	expected int64,
 ) {
@@ -98,6 +107,7 @@ func assertExampleBarValue(
 		false,
 		"bar",
 	)
+	require.NoError(t, err)
 	unpacked, err := exampleABI.Unpack("bar", res.Ret)
 	require.NoError(t, err)
 	require.NotZero(t, len(unpacked))
@@ -262,6 +272,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 			false,
 			"bar",
 		)
+		require.NoError(t, err)
 		unpacked, err := exampleABI.Unpack("bar", res.Ret)
 		require.NoError(t, err)
 		require.NotZero(t, len(unpacked))

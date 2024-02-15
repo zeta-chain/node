@@ -154,7 +154,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		msgServer := keeper.NewMsgServerImpl(*k)
-		mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
@@ -165,7 +164,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.NotNil(t, chains[1])
 		chainID1 := chains[0].ChainId
 
-		wzeta, factory, router, _, _ := deploySystemContracts(t, ctx, k, mockEVMKeeper)
+		wzeta, factory, router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 		// setup mocks and setup gas coin
 		var encodedAddress [32]byte
 		copy(encodedAddress[12:], router[:])

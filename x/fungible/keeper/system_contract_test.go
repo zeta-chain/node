@@ -63,8 +63,7 @@ func TestKeeper_GetWZetaContractAddressFails(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.GetWZetaContractAddress(ctx)
@@ -82,8 +81,7 @@ func TestKeeper_GetWZetaContractAddressFailsToUnpack(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.GetWZetaContractAddress(ctx)
@@ -115,8 +113,7 @@ func TestKeeper_GetUniswapV2FactoryAddressFails(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.GetUniswapV2FactoryAddress(ctx)
@@ -134,8 +131,7 @@ func TestKeeper_GetUniswapV2FactoryAddressFailsToUnpack(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.GetUniswapV2FactoryAddress(ctx)
@@ -167,8 +163,7 @@ func TestKeeper_GetUniswapV2Router02AddressFails(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.GetUniswapV2Router02Address(ctx)
@@ -186,8 +181,7 @@ func TestKeeper_GetUniswapV2Router02AddressFailsToUnpack(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.GetUniswapV2Router02Address(ctx)
@@ -242,8 +236,7 @@ func TestKeeper_CallWZetaDepositFails(t *testing.T) {
 	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
 	require.Error(t, err)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	// deposit
 	mockEVMKeeper.MockEVMFailCallOnce()
@@ -271,8 +264,7 @@ func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
 	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
 	require.Error(t, err)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	// deposit
 	mockEVMKeeper.MockEVMFailCallOnce()
@@ -300,8 +292,7 @@ func TestKeeper_QueryWZetaBalanceOfFailsToUnpack(t *testing.T) {
 	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
 	require.Error(t, err)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	// deposit
 	mockEVMKeeper.MockEVMSuccessCallOnce()
@@ -339,8 +330,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20Fails(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
@@ -360,8 +350,7 @@ func TestKeeper_QuerySystemContractGasCoinZRC20FailsToUnpack(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
