@@ -190,7 +190,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// fail on first evm call
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		// can update the system contract
+		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -198,7 +198,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMSuccessCallOnce()
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		// can update the system contract
+		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.ErrorIs(t, err, types.ErrContractCall)
 
@@ -206,7 +206,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		mockEVMKeeper.MockEVMSuccessCallTimes(2)
 		mockEVMKeeper.MockEVMFailCallOnce()
 
-		// can update the system contract
+		// can't update the system contract
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.ErrorIs(t, err, types.ErrContractCall)
 	})

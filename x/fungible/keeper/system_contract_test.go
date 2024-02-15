@@ -266,7 +266,7 @@ func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
 
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
-	// deposit
+	// query
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.QueryWZetaBalanceOf(ctx, ethAddr)
 	require.ErrorIs(t, err, types.ErrContractCall)
@@ -294,7 +294,7 @@ func TestKeeper_QueryWZetaBalanceOfFailsToUnpack(t *testing.T) {
 
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
-	// deposit
+	// query
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.QueryWZetaBalanceOf(ctx, ethAddr)
 	require.ErrorIs(t, err, types.ErrABIUnpack)
