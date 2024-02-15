@@ -73,11 +73,10 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			if err := k.ProcessZRC20WithdrawalEvent(ctx, eventWithdrawal, emittingContract, txOrigin); err != nil {
 				return err
 			}
-		}
-		// We were able to parse the ZRC20 withdrawal event. However, we were unable to process it as the information was incorrect
-		// This means that there are some funds locked in the contract which cannot have an outbound , this can be a candidate for a refund
-		// TODO : Consider returning error or auto refunding the funds to the user
-		if eventWithdrawal != nil {
+			// We were able to parse the ZRC20 withdrawal event. However, we were unable to process it as the information was incorrect
+			// This means that there are some funds locked in the contract which cannot have an outbound , this can be a candidate for a refund
+			// TODO : Consider returning error or auto refunding the funds to the user
+		} else if eventWithdrawal != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
 				eventWithdrawal.From.Hex(), string(eventWithdrawal.To), eventWithdrawal.Value.String(), eventWithdrawal.Gasfee.String(), eventWithdrawal.ProtocolFlatFee.String(), err.Error()))
 		}
@@ -87,11 +86,6 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			if err := k.ProcessZetaSentEvent(ctx, eZeta, emittingContract, txOrigin); err != nil {
 				return err
 			}
-		}
-		// We were able to parse the ZetaSent event. However, we were unable to process it as the information was incorrect
-		if eZeta != nil {
-			ctx.Logger().Error(fmt.Sprintf("Error processing Zeta Sent event , from Address: %s ,to : %s,value %s, err %s",
-				eZeta.Raw.Address.Hex(), string(eZeta.DestinationAddress), eZeta.ZetaValueAndGas.String(), err.Error()))
 		}
 	}
 	return nil
@@ -310,7 +304,7 @@ func ParseZetaSentEvent(log ethtypes.Log, connectorZEVM ethcommon.Address) (*con
 	}
 
 	if event.Raw.Address != connectorZEVM {
-		return event, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
+		return nil, fmt.Errorf("ParseZetaSentEvent: event address %s does not match connectorZEVM %s", event.Raw.Address.Hex(), connectorZEVM.Hex())
 	}
 	return event, nil
 }
