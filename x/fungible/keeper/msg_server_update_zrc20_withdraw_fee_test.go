@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"errors"
 	"math/big"
 	"testing"
 
@@ -176,32 +175,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			false,
-		).Return(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee}, nil)
+		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			false,
-		).Return(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit}, nil)
+		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
 
 		// this is the update call (commit == true)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			true,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("transaction failed"))
+		mockEVMFailCallOnce(mockEVMKeeper)
 
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,
@@ -239,32 +220,14 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 		require.NoError(t, err)
 		protocolFlatFee, err := zrc20ABI.Methods["PROTOCOL_FLAT_FEE"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			false,
-		).Return(&evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee}, nil)
+		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: protocolFlatFee})
 
 		gasLimit, err := zrc20ABI.Methods["GAS_LIMIT"].Outputs.Pack(big.NewInt(42))
 		require.NoError(t, err)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			false,
-		).Return(&evmtypes.MsgEthereumTxResponse{Ret: gasLimit}, nil)
+		mockEVMSuccessCallOnceWithReturn(mockEVMKeeper, &evmtypes.MsgEthereumTxResponse{Ret: gasLimit})
 
 		// this is the update call (commit == true)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-			true,
-		).Return(&evmtypes.MsgEthereumTxResponse{}, errors.New("transaction failed"))
+		mockEVMFailCallOnce(mockEVMKeeper)
 
 		_, err = msgServer.UpdateZRC20WithdrawFee(ctx, types.NewMsgUpdateZRC20WithdrawFee(
 			admin,

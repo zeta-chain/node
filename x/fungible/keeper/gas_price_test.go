@@ -5,13 +5,9 @@ import (
 	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/evmos/ethermint/x/evm/statedb"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
-	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -74,40 +70,10 @@ func TestKeeper_SetGasPriceReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample)
-	_, err := k.SetGasPrice(ctx, big.NewInt(1), big.NewInt(1))
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_SetGasPriceRevertsOnVmError(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
-
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{
-		VmError: "test error",
-	}, nil)
+	mockEVMFailCallOnce(mockEVMKeeper)
 	_, err := k.SetGasPrice(ctx, big.NewInt(1), big.NewInt(1))
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
@@ -154,39 +120,10 @@ func TestKeeper_SetGasCoinReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample)
-	err := k.SetGasCoin(ctx, big.NewInt(1), sample.EthAddress())
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_SetGasCoinRevertsOnVmError(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{
-		VmError: "test error",
-	}, sample.ErrSample)
+	mockEVMFailCallOnce(mockEVMKeeper)
 	err := k.SetGasCoin(ctx, big.NewInt(1), sample.EthAddress())
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
@@ -243,71 +180,10 @@ func TestKeeper_SetGasZetaPoolReverts(t *testing.T) {
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
+	setupMockEVMKeeperForSystemContractDeployment(mockEVMKeeper, 5)
 	deploySystemContracts(t, ctx, k, mockEVMKeeper)
 
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample)
+	mockEVMFailCallOnce(mockEVMKeeper)
 	err := k.SetGasZetaPool(ctx, big.NewInt(1), sample.EthAddress())
 	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_SetGasZetaPoolRevertsOnVmError(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	setupMockEVMKeeperForSystemContractDeployment(t, mockEVMKeeper)
-	deploySystemContracts(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		ctx,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(&evmtypes.MsgEthereumTxResponse{
-		VmError: "test error",
-	}, sample.ErrSample)
-	err := k.SetGasZetaPool(ctx, big.NewInt(1), sample.EthAddress())
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func setupMockEVMKeeperForSystemContractDeployment(t *testing.T, mockEVMKeeper *fungiblemocks.FungibleEVMKeeper) {
-	gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
-	msgRes := &evmtypes.MsgEthereumTxResponse{}
-
-	mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(mock.Anything)
-	mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
-	mockEVMKeeper.On(
-		"EstimateGas",
-		mock.Anything,
-		mock.Anything,
-	).Return(gasRes, nil)
-	mockEVMKeeper.On(
-		"ApplyMessage",
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-		mock.Anything,
-	).Return(msgRes, nil).Times(5)
-	mockEVMKeeper.On(
-		"GetAccount",
-		mock.Anything,
-		mock.Anything,
-	).Return(&statedb.Account{
-		Nonce: 1,
-	})
-	mockEVMKeeper.On(
-		"GetCode",
-		mock.Anything,
-		mock.Anything,
-	).Return([]byte{1, 2, 3})
 }
