@@ -74,7 +74,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			}
 		}
 		// We were able to parse the ZRC20 withdrawal event. However, we were unable to process it as the information was incorrect
-		// This means that there are some funds locked in the contract which cannot have a outbound , this can be a candidate for a refund
+		// This means that there are some funds locked in the contract which cannot have an outbound , this can be a candidate for a refund
 		// TODO : Consider returning error or auto refunding the funds to the user
 		if err != nil && eventWithdrawal != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
