@@ -77,7 +77,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 		// We were able to parse the ZRC20 withdrawal event. However, we were unable to process it as the information was incorrect
 		// This means that there are some funds locked in the contract which cannot have an outbound , this can be a candidate for a refund
 		// TODO : Consider returning error or auto refunding the funds to the user
-		if err != nil && eventWithdrawal != nil {
+		if eventWithdrawal != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing ZRC20 withdrawal event , from Address: %s m ,to : %s,value %s,gasfee %s, protocolfee %s, err %s",
 				eventWithdrawal.From.Hex(), string(eventWithdrawal.To), eventWithdrawal.Value.String(), eventWithdrawal.Gasfee.String(), eventWithdrawal.ProtocolFlatFee.String(), err.Error()))
 		}
@@ -89,7 +89,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 			}
 		}
 		// We were able to parse the ZetaSent event. However, we were unable to process it as the information was incorrect
-		if err != nil && eZeta != nil {
+		if eZeta != nil {
 			ctx.Logger().Error(fmt.Sprintf("Error processing Zeta Sent event , from Address: %s ,to : %s,value %s, err %s",
 				eZeta.Raw.Address.Hex(), string(eZeta.DestinationAddress), eZeta.ZetaValueAndGas.String(), err.Error()))
 		}
