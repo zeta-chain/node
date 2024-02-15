@@ -4,6 +4,18 @@
 
 * `zetaclientd start` : 2 inputs required from stdin
 
+### Features
+
+* [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+
+### Docs
+
+* [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
+
+### Features
+
+*[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+
 ### Refactor
 
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
@@ -11,9 +23,11 @@
 
 ### Fixes
 
+* [1678](https://github.com/zeta-chain/node/issues/1678) - clean cached stale block to fix evm outtx hash mismatch
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* [1706](https://github.com/zeta-chain/node/pull/1706) - fix CLI crosschain show-out-tx-tracker
 * [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
 * [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
 * [1733](https://github.com/zeta-chain/node/pull/1733) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
@@ -23,6 +37,7 @@
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
 
 ### CI
 
@@ -52,6 +67,9 @@
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
 * [1675](https://github.com/zeta-chain/node/issues/1675) - use chain param ConfirmationCount for bitcoin confirmation
 
+## Chores
+* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use require testing package for the entire node folder
+
 ## Version: v12.1.0
 
 ### Tests
@@ -77,6 +95,7 @@
 
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
+
 
 ### Features
 
