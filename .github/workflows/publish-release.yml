@@ -11,6 +11,7 @@ on:
         type: boolean
         required: false
         default: false
+        description: 'Use this to skip: gosec, gosec-cosmos, nosec_alert,check-changelog, check-upgrade-uandler-updated, build-test, smoke-test and go straight to approval step.'
 
 concurrency:
   group: publish-release
@@ -419,8 +420,8 @@ jobs:
           secret: ${{ github.TOKEN }}
           approvers: kingpinXD,lumtis,brewmaster012,CharlieMc0
           minimum-approvals: 1
-          issue-title: "Release Approval for version: ${{ github.event.inputs.version }}"
-          issue-body: "Please approve the release. Once approved the release pipeline will continue."
+          issue-title: "[Release] Approval, version: ${{ github.event.inputs.version }}"
+          issue-body: "Once approved the release pipeline will continue."
           exclude-workflow-initiator-as-approver: true
           additional-approved-words: ''
           additional-denied-words: ''
@@ -481,7 +482,7 @@ jobs:
             git push --tags      
           fi
 
-      - name: Create GitHub Release on Pull Request
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
