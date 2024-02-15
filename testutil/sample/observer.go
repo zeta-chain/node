@@ -248,7 +248,7 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 			Index:                identifier.Hex(),
 			BallotIdentifier:     identifier.Hex(),
 			VoterList:            observerSet,
-			Votes:                Votes(len(observerSet)),
+			Votes:                VotesSuccessOnly(len(observerSet)),
 			ObservationType:      types.ObservationType_InBoundTx,
 			BallotThreshold:      sdk.OneDec(),
 			BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
@@ -264,6 +264,14 @@ func Votes(voteCount int) []types.VoteType {
 	voteTypes := []types.VoteType{types.VoteType_FailureObservation, types.VoteType_SuccessObservation, types.VoteType_NotYetVoted}
 	for i := 0; i < voteCount; i++ {
 		votes[i] = voteTypes[r.Intn(len(voteTypes))]
+	}
+	return votes
+}
+
+func VotesSuccessOnly(voteCount int) []types.VoteType {
+	votes := make([]types.VoteType, voteCount)
+	for i := 0; i < voteCount; i++ {
+		votes[i] = types.VoteType_SuccessObservation
 	}
 	return votes
 }

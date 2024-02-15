@@ -93,7 +93,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 		sortedKeys = append(sortedKeys, k)
 	}
 	sort.Strings(sortedKeys)
-
 	var finalDistributionList []*types.ObserverEmission
 	for _, key := range sortedKeys {
 		observerAddress, err := sdk.AccAddressFromBech32(key)
@@ -123,6 +122,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			})
 			continue
 		}
+
 		// Defensive check
 		if rewardPerUnit.GT(sdk.ZeroInt()) {
 			rewardAmount := rewardPerUnit.Mul(sdkmath.NewInt(observerRewardUnits))

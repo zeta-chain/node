@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -17,6 +18,9 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
+	t.Run("no distribution happens if emissions module account is emty", func(t *testing.T) {})
+}
+func TestObserverRewards(t *testing.T) {
 	// setup the test
 	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
 	observerSet := sample.ObserverSet(10)
@@ -36,10 +40,10 @@ func TestBeginBlocker(t *testing.T) {
 
 	// Total block rewards is the fixed amount of rewards that are distributed
 	totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-	rewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
 	assert.NoError(t, err)
 	// Fund the emission pool to start the emission process
-	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, rewardCoins)
+	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
 	assert.NoError(t, err)
 
 	// Setup module accounts for emission pools
@@ -47,37 +51,46 @@ func TestBeginBlocker(t *testing.T) {
 	undistributedTssPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
 	feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 	emissionPool := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
-	totalDistributedTillLastBlock := sdk.ZeroInt()
+
 	blockRewards := emissionstypes.BlockReward
+	observerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).ObserverEmissionPercentage)).TruncateInt()
+	validatorRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).ValidatorEmissionPercentage)).TruncateInt()
+	tssSignerRewardsForABlock := blockRewards.Mul(sdk.MustNewDecFromStr(k.GetParams(ctx).TssSignerEmissionPercentage)).TruncateInt()
+	distributedRewards := observerRewardsForABlock.Add(validatorRewardsForABlock).Add(tssSignerRewardsForABlock)
+	assert.True(t, blockRewards.TruncateInt().GT(distributedRewards))
+
 	for i := 0; i < 100; i++ {
-		balanceEmissionPoolBeforeBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
+		emissionPoolBeforeBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
 		// produce a block
 		emissionsModule.BeginBlocker(ctx, *k)
 
-		feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
-		observerPoolBalance := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount
-		tssPoolBalance := sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount
+		// Assert distribution amount
 		emissionPoolBalanceAfterBlockDistribution := sk.BankKeeper.GetBalance(ctx, emissionPool, config.BaseDenom).Amount
+		assert.True(t, emissionPoolBeforeBlockDistribution.Sub(emissionPoolBalanceAfterBlockDistribution).Equal(distributedRewards))
 
-		// Assert the rewards pool has enough balance to distribute rewards
-		rewardsDistributedAndLeftInPool := emissionPoolBalanceAfterBlockDistribution.Sub(rewardCoins.AmountOf(config.BaseDenom))
-		assert.True(t, balanceEmissionPoolBeforeBlockDistribution.Sub(rewardsDistributedAndLeftInPool).GTE(sdk.ZeroInt()))
-
-		// totalDistributedTillCurrentBlock is the net amount of rewards distributed till the current block , this works in a unit test as the fees are not being collected by validators
-		totalDistributedTillCurrentBlock := feeCollecterBalance.Add(observerPoolBalance).Add(tssPoolBalance)
-
-		// Assert that a maximum of value of block rewards is distributed in each block
-		assert.True(t, totalDistributedTillCurrentBlock.Sub(totalDistributedTillLastBlock).LTE(blockRewards.TruncateInt()))
-
+		// totalDistributedTillCurrentBlock is the net amount of rewards distributed till the current block, this works in a unit test as the fees are not being collected by validators
+		totalDistributedTillCurrentBlock := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount.
+			Add(sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount).
+			Add(sk.BankKeeper.GetBalance(ctx, undistributedTssPoolAddress, config.BaseDenom).Amount)
 		// Assert we are always under the max limit of block rewards
-		assert.True(t, rewardCoins.AmountOf(config.BaseDenom).Sub(totalDistributedTillCurrentBlock).GTE(sdk.ZeroInt()))
+		assert.True(t, totalRewardCoins.AmountOf(config.BaseDenom).
+			Sub(totalDistributedTillCurrentBlock).GTE(sdk.ZeroInt()))
 
-		totalDistributedTillLastBlock = totalDistributedTillCurrentBlock
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	}
+
+	// We can simplify the calculation as the rewards are distributed equally among all the observers
+	rewardPerUnit := observerRewardsForABlock.Quo(sdk.NewInt(int64(len(ballotList) * len(observerSet.ObserverList))))
+	emissionAmount := rewardPerUnit.Mul(sdk.NewInt(int64(len(ballotList))))
+
+	for _, observer := range observerSet.ObserverList {
+		observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
+		require.True(t, found)
+		require.Equal(t, emissionAmount, observerEmission.Amount)
 	}
 }
 
-func TestDistributeValidatorRewards(t *testing.T) {
+func TestValidatorRewards(t *testing.T) {
 	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
 	observerSet := make([]string, 10)
 	for i := 0; i < 10; i++ {
@@ -89,7 +102,6 @@ func TestDistributeValidatorRewards(t *testing.T) {
 	zk.ObserverKeeper.SetObserverSet(ctx, observerTypes.ObserverSet{
 		ObserverList: observerSet,
 	})
-	_ = sk.StakingKeeper.GetAllValidators(ctx)
 
 	// Total block rewards is the fixed amount of rewards that are distributed
 	totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
@@ -106,14 +118,12 @@ func TestDistributeValidatorRewards(t *testing.T) {
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 	blockRewards := emissionstypes.BlockReward
 	// Produce blocks and distribute rewards
+	validatorRewards := sdk.MustNewDecFromStr(k.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 	for i := 0; i < 100; i++ {
-		validatorRewards := sdk.MustNewDecFromStr(k.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
 		// produce a block
 		emissionsModule.BeginBlocker(ctx, *k)
-		feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
-		assert.Equal(t, validatorRewards, feeCollecterBalance)
-
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	}
-
+	feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
+	assert.Equal(t, feeCollecterBalance, validatorRewards.Mul(sdk.NewInt(100)))
 }
