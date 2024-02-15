@@ -41,6 +41,7 @@
 
 ### CI
 
+* Adjusted the release pipeline to be a manually executed pipeline with an approver step. The pipeline now executes all the required tests run before the approval step unless skipped. 
 * Added pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
 * Adjusted the pipeline for building and pushing docker images for MacOS to install and run docker.
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`

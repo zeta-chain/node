@@ -417,11 +417,11 @@ jobs:
       - uses: trstringer/manual-approval@v1
         with:
           secret: ${{ github.TOKEN }}
-          approvers: gzukel
+          approvers: kingpinXD,lumtis,brewmaster012
           minimum-approvals: 1
           issue-title: "Release Approval for version: ${{ github.event.inputs.version }}"
           issue-body: "Please approve the release. Once approved the release pipeline will continue."
-          exclude-workflow-initiator-as-approver: false
+          exclude-workflow-initiator-as-approver: true
           additional-approved-words: ''
           additional-denied-words: ''
   publish-release:
