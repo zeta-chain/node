@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version for manual hotfix release.'
+        description: 'Version for Release.'
         required: false
         default: ''
       skip_checks:
