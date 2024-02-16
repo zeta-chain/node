@@ -18,9 +18,57 @@ import (
 )
 
 func TestBeginBlocker(t *testing.T) {
-	t.Run("no distribution happens if emissions module account is empty", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
-		emissionsModule.BeginBlocker(ctx, *k)
+	t.Run("no observer distribution happens if emissions module account is empty", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.EmissionsKeeper(t)
+		var ballotIdentifiers []string
+
+		observerSet := sample.ObserverSet(10)
+		zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
+
+		ballotList := sample.BallotList(10, observerSet.ObserverList)
+		for _, ballot := range ballotList {
+			zk.ObserverKeeper.SetBallot(ctx, &ballot)
+			ballotIdentifiers = append(ballotIdentifiers, ballot.BallotIdentifier)
+		}
+		zk.ObserverKeeper.SetBallotList(ctx, &observerTypes.BallotListForHeight{
+			Height:           0,
+			BallotsIndexList: ballotIdentifiers,
+		})
+		for i := 0; i < 100; i++ {
+			emissionsModule.BeginBlocker(ctx, *k)
+			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+		}
+		for _, observer := range observerSet.ObserverList {
+			_, found := k.GetWithdrawableEmission(ctx, observer)
+			require.False(t, found)
+		}
+	})
+	t.Run("no validator distribution happens if emissions module account is empty", func(t *testing.T) {
+		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
+		feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
+		for i := 0; i < 100; i++ {
+			emissionsModule.BeginBlocker(ctx, *k)
+			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+		}
+		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
+	})
+	t.Run("tmp ctx is not committed if any of the distribution fails", func(t *testing.T) {
+		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
+		// Fund the emission pool to start the emission process
+		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewInt(1000000000000))))
+		require.NoError(t, err)
+		// Setup module accounts for emission pools except for observer pool , so that the observer distribution fails
+		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
+		feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
+		_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
+
+		for i := 0; i < 100; i++ {
+			// produce a block
+			emissionsModule.BeginBlocker(ctx, *k)
+			ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+		}
+		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
+		require.True(t, sk.BankKeeper.GetBalance(ctx, emissionstypes.EmissionsModuleAddress, config.BaseDenom).Amount.Equal(sdk.NewInt(1000000000000)))
 	})
 }
 func TestObserverRewards(t *testing.T) {
@@ -95,7 +143,6 @@ func TestObserverRewards(t *testing.T) {
 
 func TestValidatorRewards(t *testing.T) {
 	k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
-	k.SetParams(ctx, emissionstypes.DefaultParams())
 	observerSet := make([]string, 10)
 	for i := 0; i < 10; i++ {
 		validator := sample.Validator(t, rand.New(rand.NewSource(int64(i))))
@@ -118,7 +165,7 @@ func TestValidatorRewards(t *testing.T) {
 	// Setup module accounts for emission pools
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
-	feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
+	feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 	blockRewards := emissionstypes.BlockReward
 	// Produce blocks and distribute rewards
@@ -128,6 +175,6 @@ func TestValidatorRewards(t *testing.T) {
 		emissionsModule.BeginBlocker(ctx, *k)
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	}
-	feeCollectorBalance := sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount
+	feeCollectorBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
 	assert.Equal(t, feeCollectorBalance, validatorRewards.Mul(sdk.NewInt(100)))
 }
