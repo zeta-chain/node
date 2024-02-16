@@ -75,17 +75,12 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		require.Equal(t, newSystemContract.Hex(), queryZRC20SystemContract(gas2))
 	})
 
-	t.Run("can update the system contract if system contract not found", func(t *testing.T) {
+	t.Run("can update and overwrite the system contract if system contract not found", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.FungibleKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
-
-		chains := zetacommon.DefaultChainsList()
-		require.True(t, len(chains) > 1)
-		require.NotNil(t, chains[0])
-		require.NotNil(t, chains[1])
 
 		wzeta, err := k.DeployWZETA(ctx)
 		require.NoError(t, err)
@@ -106,6 +101,19 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 
 		// can retrieve the system contract
 		sc, found := k.GetSystemContract(ctx)
+		require.True(t, found)
+		require.Equal(t, newSystemContract.Hex(), sc.SystemContract)
+
+		// deploy a new system contracts
+		newSystemContract, err = k.DeployContract(ctx, systemcontract.SystemContractMetaData, wzeta, factory, router)
+		require.NoError(t, err)
+
+		// can overwrite the previous system contract
+		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
+		require.NoError(t, err)
+
+		// can retrieve the system contract
+		sc, found = k.GetSystemContract(ctx)
 		require.True(t, found)
 		require.Equal(t, newSystemContract.Hex(), sc.SystemContract)
 	})
@@ -161,7 +169,6 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		chains := zetacommon.DefaultChainsList()
 		require.True(t, len(chains) > 1)
 		require.NotNil(t, chains[0])
-		require.NotNil(t, chains[1])
 		chainID1 := chains[0].ChainId
 
 		wzeta, factory, router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
