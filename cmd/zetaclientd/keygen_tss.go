@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	mc "github.com/zeta-chain/zetacore/zetaclient/tss"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -20,12 +19,13 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 func GenerateTss(logger zerolog.Logger,
 	cfg *config.Config,
-	coreContext *clientcontext.ZeraCoreContext,
+	coreContext *corecontext.ZeraCoreContext,
 	zetaBridge *zetabridge.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
@@ -153,7 +153,7 @@ func GenerateTss(logger zerolog.Logger,
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
-func keygenTss(coreContext *clientcontext.ZeraCoreContext, tss *mc.TSS, keygenLogger zerolog.Logger) error {
+func keygenTss(coreContext *corecontext.ZeraCoreContext, tss *mc.TSS, keygenLogger zerolog.Logger) error {
 	keyGen := coreContext.GetKeygen()
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request

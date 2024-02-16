@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -18,12 +17,13 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 type ZetaSupplyChecker struct {
 	cfg              *config.Config
-	coreContext      *clientcontext.ZeraCoreContext
+	coreContext      *corecontext.ZeraCoreContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
 	ticker           *clienttypes.DynamicTicker
@@ -34,7 +34,7 @@ type ZetaSupplyChecker struct {
 	genesisSupply    sdkmath.Int
 }
 
-func NewZetaSupplyChecker(cfg *config.Config, coreContext *clientcontext.ZeraCoreContext, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+func NewZetaSupplyChecker(cfg *config.Config, coreContext *corecontext.ZeraCoreContext, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err

@@ -5,7 +5,6 @@ import (
 	"sync"
 	"time"
 
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -23,6 +22,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"google.golang.org/grpc"
 )
 
@@ -190,7 +190,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *clientcontext.ZeraCoreContext, init bool) error {
+func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZeraCoreContext, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err

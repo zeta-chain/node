@@ -8,13 +8,13 @@ import (
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 )
 
@@ -54,7 +54,7 @@ func CreateSignerMap(
 	tss interfaces.TSSSigner,
 	logger zerolog.Logger,
 	cfg *config.Config,
-	coreContext *clientcontext.ZeraCoreContext,
+	coreContext *corecontext.ZeraCoreContext,
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainSigner, error) {
 	signerMap := make(map[common.Chain]interfaces.ChainSigner)
@@ -98,7 +98,7 @@ func CreateChainClientMap(
 	metrics *metrics.Metrics,
 	logger zerolog.Logger,
 	cfg *config.Config,
-	coreContext *clientcontext.ZeraCoreContext,
+	coreContext *corecontext.ZeraCoreContext,
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainClient, error) {
 	clientMap := make(map[common.Chain]interfaces.ChainClient)

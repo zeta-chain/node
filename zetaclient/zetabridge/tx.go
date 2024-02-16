@@ -8,7 +8,6 @@ import (
 
 	"cosmossdk.io/math"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -18,6 +17,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
 
 const (
@@ -152,7 +152,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) CoreContextUpdater(cfg *config.Config, coreContext *clientcontext.ZeraCoreContext) {
+func (b *ZetaCoreBridge) CoreContextUpdater(cfg *config.Config, coreContext *corecontext.ZeraCoreContext) {
 	b.logger.Info().Msg("CoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
 	for {
@@ -302,7 +302,6 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 	b.logger.Error().Err(lastErr).Msgf(
 		"MonitorInboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
-	return
 }
 
 // PostVoteOutbound posts a vote on an observed outbound tx
@@ -428,5 +427,4 @@ func (b *ZetaCoreBridge) MonitorVoteOutboundTxResult(zetaTxHash string, retryGas
 	b.logger.Error().Err(lastErr).Msgf(
 		"MonitorVoteOutboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
-	return
 }

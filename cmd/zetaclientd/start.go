@@ -22,8 +22,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -114,7 +114,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	coreContext := clientcontext.NewZeraCoreContext()
+	coreContext := corecontext.NewZeraCoreContext()
 	err = zetaBridge.UpdateZetaCoreContext(coreContext, true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")

@@ -1,4 +1,4 @@
-package clientcontext
+package corecontext
 
 import (
 	"fmt"

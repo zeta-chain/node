@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -42,7 +42,7 @@ type CoreObserver struct {
 	metrics             *metrics.Metrics
 	logger              ZetaCoreLog
 	cfg                 *config.Config
-	coreContext         *clientcontext.ZeraCoreContext
+	coreContext         *corecontext.ZeraCoreContext
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
 	lastOperatorBalance sdkmath.Int
@@ -56,7 +56,7 @@ func NewCoreObserver(
 	metrics *metrics.Metrics,
 	logger zerolog.Logger,
 	cfg *config.Config,
-	coreContext *clientcontext.ZeraCoreContext,
+	coreContext *corecontext.ZeraCoreContext,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
 	co := CoreObserver{
@@ -100,7 +100,7 @@ func (co *CoreObserver) Config() *config.Config {
 	return co.cfg
 }
 
-func (co *CoreObserver) CoreContext() *clientcontext.ZeraCoreContext {
+func (co *CoreObserver) CoreContext() *corecontext.ZeraCoreContext {
 	return co.coreContext
 }
 

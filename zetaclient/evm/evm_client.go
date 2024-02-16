@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	clientcontext "github.com/zeta-chain/zetacore/zetaclient/client_context"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -96,7 +96,7 @@ type ChainClient struct {
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
 	cfg                        *config.Config
-	coreContext                *clientcontext.ZeraCoreContext
+	coreContext                *corecontext.ZeraCoreContext
 	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
 
@@ -116,7 +116,7 @@ func NewEVMChainClient(
 	logger zerolog.Logger,
 	cfg *config.Config,
 	evmCfg config.EVMConfig,
-	coreContext *clientcontext.ZeraCoreContext,
+	coreContext *corecontext.ZeraCoreContext,
 	ts *metricsPkg.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
