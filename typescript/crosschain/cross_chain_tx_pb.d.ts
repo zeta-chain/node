@@ -47,7 +47,7 @@ export declare enum CctxStatus {
   Reverted = 5,
 
   /**
-   * inbound tx error or invalid paramters and cannot revert; just abort
+   * inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
    *
    * @generated from enum value: Aborted = 6;
    */
@@ -301,6 +301,11 @@ export declare class Status extends Message<Status> {
    * @generated from field: int64 lastUpdate_timestamp = 3;
    */
   lastUpdateTimestamp: bigint;
+
+  /**
+   * @generated from field: bool isAbortRefunded = 4;
+   */
+  isAbortRefunded: boolean;
 
   constructor(data?: PartialMessage<Status>);
 

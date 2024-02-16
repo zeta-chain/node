@@ -30,7 +30,6 @@ func NewKeeper(
 	ps paramtypes.Subspace,
 	stakingKeeper types.StakingKeeper,
 	slashinKeeper types.SlashingKeeper,
-
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {

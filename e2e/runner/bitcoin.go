@@ -20,7 +20,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
@@ -53,7 +53,7 @@ func (runner *E2ERunner) DepositBTCWithAmount(amount float64) (txHash *chainhash
 	runner.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
-	amount = amount + zetaclient.BtcDepositorFeeMin
+	amount = amount + zetabitcoin.DefaultDepositorFee
 	txHash, err = runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount, utxos, runner.BtcRPCClient, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -99,12 +99,12 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 	runner.Logger.Info("Now sending two txs to TSS address...")
 
 	// send two transactions to the TSS address
-	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
+	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
 	txHash1, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount1, utxos[:2], btc, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
+	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
 	txHash2, err := runner.SendToTSSFromDeployerToDeposit(runner.BTCTSSAddress, amount2, utxos[2:4], btc, runner.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -117,7 +117,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		0.11,
 		utxos[4:5],
 		btc,
-		[]byte(zetaclient.DonationMessage),
+		[]byte(zetabitcoin.DonationMessage),
 		runner.BTCDeployerAddress,
 	)
 	if err != nil {
@@ -264,16 +264,14 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		panic(err)
 	}
 
-	btcChainID, err := common.GetBTCChainIDFromChainParams(runner.BitcoinParams)
-	if err != nil {
-		panic(err)
-	}
-	events := zetaclient.FilterAndParseIncomingTx(
+	depositorFee := zetabitcoin.DefaultDepositorFee
+	events := zetabitcoin.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		runner.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		btcChainID,
+		runner.BitcoinParams,
+		depositorFee,
 	)
 	runner.Logger.Info("bitcoin intx events:")
 	for _, event := range events {

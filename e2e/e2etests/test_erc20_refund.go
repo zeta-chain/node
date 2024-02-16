@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
@@ -37,6 +38,20 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
 		panic(fmt.Sprintf("expected cctx status to be Aborted; got %s", cctx.CctxStatus.Status))
 	}
 
+	if cctx.CctxStatus.IsAbortRefunded != false {
+		panic(fmt.Sprintf("expected cctx status to be not refunded; got %t", cctx.CctxStatus.IsAbortRefunded))
+	}
+
+	r.Logger.Info("Refunding the cctx via admin")
+	msg := crosschaintypes.NewMsgRefundAbortedCCTX(
+		r.ZetaTxServer.GetAccountAddress(0),
+		cctx.Index,
+		r.DeployerAddress.String())
+	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, msg)
+	if err != nil {
+		panic(err)
+	}
+
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
 	newBalance, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
@@ -46,7 +61,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
 	if newBalance.Cmp(expectedBalance) != 0 {
 		panic(fmt.Sprintf("expected balance to be %s after refund; got %s", expectedBalance.String(), newBalance.String()))
 	}
-	r.Logger.Info("CCTX has been aborted and the erc20 has been refunded on ZetaChain")
+	r.Logger.Info("CCTX has been aborted on ZetaChain")
 
 	// test refund when there is a liquidity pool
 	r.Logger.Info("Sending a deposit that should revert with a liquidity pool")

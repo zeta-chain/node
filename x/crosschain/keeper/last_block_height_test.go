@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -24,8 +24,8 @@ func TestLastBlockHeightGet(t *testing.T) {
 	items := createNLastBlockHeight(keeper, ctx, 10)
 	for _, item := range items {
 		rst, found := keeper.GetLastBlockHeight(ctx, item.Index)
-		assert.True(t, found)
-		assert.Equal(t, item, rst)
+		require.True(t, found)
+		require.Equal(t, item, rst)
 	}
 }
 func TestLastBlockHeightRemove(t *testing.T) {
@@ -34,12 +34,12 @@ func TestLastBlockHeightRemove(t *testing.T) {
 	for _, item := range items {
 		keeper.RemoveLastBlockHeight(ctx, item.Index)
 		_, found := keeper.GetLastBlockHeight(ctx, item.Index)
-		assert.False(t, found)
+		require.False(t, found)
 	}
 }
 
 func TestLastBlockHeightGetAll(t *testing.T) {
 	keeper, ctx := setupKeeper(t)
 	items := createNLastBlockHeight(keeper, ctx, 10)
-	assert.Equal(t, items, keeper.GetAllLastBlockHeight(ctx))
+	require.Equal(t, items, keeper.GetAllLastBlockHeight(ctx))
 }

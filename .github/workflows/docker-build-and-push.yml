@@ -1,0 +1,131 @@
+name: Zetacored-Docker-Build
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - 'main'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docker Tag Version For Manual Execution'
+        required: false
+        default: ''
+
+concurrency:
+  group: Zetacored-Docker-Build
+  cancel-in-progress: false
+
+env:
+  DOCKER_REPO: "zeatcored"
+  DOCKER_ORG: "zetachain"
+  DOCKER_REGISTRY: "https://index.docker.io/v1/"
+
+jobs:
+  docker_build_ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
+
+      - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
+        uses: ./.github/actions/build-docker-images-generic
+        with:
+          DOCKER_FILENAME: "Dockerfile"
+          REPOSITORY_NAME: "${{ env.DOCKER_REPO }}"
+          IMAGE_TAG: "ubuntu-${{ env.GITHUB_TAG_MAJOR_VERSION }}"
+          REGISTRY: "${{ env.DOCKER_REGISTRY }}"
+          DOCKER_ORG: "${{ env.DOCKER_ORG }}"
+          USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+          DOCKER_FILE_DIRECTORY: "./"
+          DOCKER_BUILD_KIT: "0"
+          TAG_LATEST: "true"
+
+  docker_build_mac:
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
+
+      - name: Setup docker and docker-compose (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker docker-compose
+          
+          # Link the Docker Compose v2 plugin so it's understood by the docker CLI
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+          
+          colima start
+
+      - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
+        uses: ./.github/actions/build-docker-images-generic
+        with:
+          DOCKER_FILENAME: "Dockerfile"
+          REPOSITORY_NAME: "${{ env.DOCKER_REPO }}"
+          IMAGE_TAG: "mac-${{ env.GITHUB_TAG_MAJOR_VERSION }}"
+          REGISTRY: "${{ env.DOCKER_REGISTRY }}"
+          DOCKER_ORG: "${{ env.DOCKER_ORG }}"
+          USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+          DOCKER_FILE_DIRECTORY: "./"
+          DOCKER_BUILD_KIT: "0"
+          TAG_LATEST: "false"
+
+  docker_build_arm:
+    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set Version from the PR title.
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+
+      - name: Set Version for Hotfix Release from Input.
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
+
+      - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
+        uses: ./.github/actions/build-docker-images-generic
+        with:
+          DOCKER_FILENAME: "Dockerfile"
+          REPOSITORY_NAME: "${{ env.DOCKER_REPO }}"
+          IMAGE_TAG: "arm-${{ env.GITHUB_TAG_MAJOR_VERSION }}"
+          REGISTRY: "${{ env.DOCKER_REGISTRY }}"
+          DOCKER_ORG: "${{ env.DOCKER_ORG }}"
+          USERNAME: "${{ secrets.DOCKER_HUB_USERNAME }}"
+          TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+          DOCKER_FILE_DIRECTORY: "./"
+          DOCKER_BUILD_KIT: "0"
+          TAG_LATEST: "false"

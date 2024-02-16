@@ -33,3 +33,16 @@ func (k Keeper) AddZetaAbortedAmount(ctx sdk.Context, amount sdkmath.Uint) {
 	}
 	k.SetZetaAccounting(ctx, zetaAccounting)
 }
+
+func (k Keeper) RemoveZetaAbortedAmount(ctx sdk.Context, amount sdkmath.Uint) error {
+	zetaAccounting, found := k.GetZetaAccounting(ctx)
+	if !found {
+		return types.ErrUnableToFindZetaAccounting
+	}
+	if zetaAccounting.AbortedZetaAmount.LT(amount) {
+		return types.ErrInsufficientZetaAmount
+	}
+	zetaAccounting.AbortedZetaAmount = zetaAccounting.AbortedZetaAmount.Sub(amount)
+	k.SetZetaAccounting(ctx, zetaAccounting)
+	return nil
+}

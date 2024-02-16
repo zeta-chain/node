@@ -1,71 +1,369 @@
 name: Publish Release
 
 on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - 'main'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version for manual hotfix release.'
+        description: 'Version for Release.'
         required: false
         default: ''
+      skip_checks:
+        type: boolean
+        required: false
+        default: false
+        description: 'Use this to skip: gosec, gosec-cosmos, check-changelog, check-upgrade-uandler-updated, build-test, smoke-test and go straight to approval step.'
 
 concurrency:
   group: publish-release
   cancel-in-progress: false
 
 jobs:
-  pre-release-checks:
+  gosec:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    env:
+      GO111MODULE: on
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Source
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
+      - name: Set up Go
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Run Gosec Security Scanner
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+
+  gosec-cosmos:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Run Cosmos Gosec Security Scanner
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        run: make lint-cosmos-gosec
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout Source
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.20'
+
+      - name: Run golangci-lint
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
+          skip-cache: true
+          args: --out-format=json
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  check-changelog:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get latest commit SHA of Develop & Current Branch
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        id: get-develop-sha
+        run: |
+          SHA=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/git/ref/heads/develop | jq -r '.object.sha')
+          echo "DEVELOP_SHA=${SHA}" >> ${GITHUB_ENV}
+          echo "CURRENT_BRANCH_SHA=${{ github.sha }}" >> ${GITHUB_ENV}
+  
+
+      - name: Check for CHANGELOG.md changes
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        run: |
+          echo "Check the changelog has actually been updated from whats in develop"
+          echo "DEVELOP BRANCH SHA: ${DEVELOP_SHA}"
+          echo "CURRENT BRANCH SHA: ${CURRENT_BRANCH_SHA}"
+          CHANGELOG_DIFF=$(git diff ${DEVELOP_SHA}..${CURRENT_BRANCH_SHA} -- changelog.md)
+          echo "${CHANGELOG_DIFF}"
+          if [ -z "$CHANGELOG_DIFF" ]; then
+            echo "ERROR: No changes detected in CHANGELOG.md. Please update the changelog."
+            exit 1
+          else
+            echo "CHANGELOG.md has been updated."
+          fi
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  check-upgrade-handler-updated:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+
+      - uses: actions/checkout@v3
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        with:
+          fetch-depth: 0
 
       - name: Major Version in Upgrade Handler Must Match Tag
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
         run: |
-          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"')
-          echo $UPGRADE_HANDLER_MAJOR_VERSION
-          echo $GITHUB_TAG_MAJOR_VERSION
-          if [ $GITHUB_TAG_MAJOR_VERSION != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
-            echo "ERROR: The major version of this release (${{ github.ref_name }}) does not match the major version in the releaseVersion constant ($UPGRADE_HANDLER_MAJOR_VERSION) found in app/setup_handlers.go"
+          UPGRADE_HANDLER_MAJOR_VERSION=$(cat app/setup_handlers.go | grep "const releaseVersion" | cut -d ' ' -f4 | tr -d '"' | cut -d '.' -f 1 | tr -d '\n')
+          USER_INPUT_VERSION=$(echo "${{ github.event.inputs.version }}" | cut -d '.' -f 1 | tr -d '\n')
+          echo "Upgrade Handler Major Version: ${UPGRADE_HANDLER_MAJOR_VERSION}"
+          echo "User Inputted Release Version: ${USER_INPUT_VERSION}"
+          if [ ${USER_INPUT_VERSION} != $UPGRADE_HANDLER_MAJOR_VERSION ]; then
+            echo "ERROR: The input version doesn't match the release handler for the branch selected. Please ensure the upgrade handler of the branch you selected when you ran the pipeline matches the input version."
             echo "Did you forget to update the 'releaseVersion' in app/setup_handlers.go?" 
             exit 1
           fi
           echo "The major version found in 'releaseVersion' in app/setup_handlers.go matches this tagged release - Moving Forward!"
 
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  build-test:
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    timeout-minutes: 15
+    concurrency:
+      group: "build-test"
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+
+      - name: Test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 20
+          max_attempts: 2
+          retry_on: error
+          command: |
+            echo "Running Build Tests"
+            make clean
+            make test
+
+      - name: Build zetacored and zetaclientd
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        env:
+          CGO_ENABLED: 1
+          GOOS: linux
+          GOARCH: ${{ env.CPU_ARCH }}
+        run: |
+          make install
+          cp "$HOME"/go/bin/* ./
+          chmod a+x ./zetacored
+          ./zetacored version
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: rm -rf *
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  smoke-test:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 25
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Set CPU Architecture
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          if [ "$(uname -m)" == "aarch64" ]; then
+            echo "CPU_ARCH=arm64" >> $GITHUB_ENV
+          elif [ "$(uname -m)" == "x86_64" ]; then
+            echo "CPU_ARCH=amd64" >> $GITHUB_ENV
+          else
+            echo "Unsupported architecture" >&2
+            exit 1
+          fi
+
+      - name: Install Pipeline Dependencies
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "false"
+          skip_aws_cli: "true"
+          skip_docker_compose: "false"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        if:  ${{ github.event.repository.full_name == 'zetachain-chain/node' && github.event.inputs.skip_checks != 'true' }}
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_READ_ONLY }}
+
+      - name: Build zetanode
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        run: |
+          make zetanode
+
+      - name: Start Private Network
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        run: |
+          cd contrib/localnet/ 
+          docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
+
+      - name: Run Smoke Test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        run: |
+          cd contrib/localnet
+          docker-compose up orchestrator --exit-code-from orchestrator
+          if [ $? -ne 0 ]; then
+            echo "Smoke Test Failed"
+            exit 1
+          fi
+
+      - name: Stop Private Network
+        if: ${{ always() && github.event.inputs.skip_checks != 'true' }}
+        run: |
+          cd contrib/localnet/
+          docker compose down
+
+      - name: Clean Up Workspace
+        if: always()
+        shell: bash
+        run: sudo rm -rf *
+
+      - name: Skip Checks Succeed for Needs.
+        if: ${{ github.event.inputs.skip_checks == 'true' }}
+        run: |
+          echo "Check Skipped, Mark Green for Pipeline Execution"
+
+  approval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs:
+      - gosec
+      - gosec-cosmos
+      - lint
+      - check-changelog
+      - check-upgrade-handler-updated
+      - smoke-test
+      - build-test
+    steps:
+
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: kingpinXD,lumtis,brewmaster012,CharlieMc0
+          minimum-approvals: 1
+          issue-title: "[Release] Approval, version: ${{ github.event.inputs.version }}"
+          issue-body: "Once approved the release pipeline will continue."
+          exclude-workflow-initiator-as-approver: true
+          additional-approved-words: ''
+          additional-denied-words: ''
+
   publish-release:
     runs-on: buildjet-4vcpu-ubuntu-2004
     timeout-minutes: 60
     needs:
-      - pre-release-checks
+      - approval
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Echo Release Notes from PR Message.
-        if: github.event_name == 'pull_request'
+      - name: Install Pipeline Dependencies
+        uses: ./.github/actions/install-dependencies
+        timeout-minutes: 8
+        with:
+          cpu_architecture: ${{ env.CPU_ARCH }}
+          skip_python: "true"
+          skip_aws_cli: "true"
+          skip_docker_compose: "true"
+
+      - name: Change Log Release Notes.
         id: release_notes
         run: |
           cat changelog.md > ${{ github.workspace }}-CHANGELOG.txt
           cat ${{ github.workspace }}-CHANGELOG.txt
 
-      - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
-
-      - name: Set Version for Hotfix Release from Input.
-        if: github.event_name != 'pull_request'
+      - name: Set Version
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
 
@@ -80,15 +378,6 @@ jobs:
             echo "Unsupported architecture" >&2
             exit 1
           fi
-
-      - name: Install Pipeline Dependencies
-        uses: ./.github/actions/install-dependencies
-        timeout-minutes: 8
-        with:
-          cpu_architecture: ${{ env.CPU_ARCH }}
-          skip_python: "true"
-          skip_aws_cli: "true"
-          skip_docker_compose: "true"
 
       - name: Create Release Tag
         shell: bash
@@ -106,20 +395,11 @@ jobs:
             git push --tags      
           fi
 
-      - name: Create GitHub Release on Pull Request
-        if: github.event_name == 'pull_request'
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
-          tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
-
-      - name: Create GitHub Release Hot Fix
-        if: github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
-        with:
-          token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
-          generate_release_notes: true
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
 
       - name: Publish Release Files

@@ -4,17 +4,15 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/zeta-chain/zetacore/e2e/config"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
-	"github.com/zeta-chain/zetacore/e2e/utils"
-
-	"github.com/zeta-chain/zetacore/zetaclient"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	zetaeth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zeta.eth.sol"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/testdapp"
+	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 )
 
 const (
@@ -64,7 +62,7 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 
 	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
 	// gas token on ZetaChain to initialize the pool
-	txDonation, err := runner.SendEther(runner.TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
+	txDonation, err := runner.SendEther(runner.TSSAddress, big.NewInt(101000000000000000), []byte(evm.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
