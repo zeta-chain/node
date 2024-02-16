@@ -41,8 +41,11 @@
 
 ### CI
 
-* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the release pipeline to be a manually executed pipeline with an approver step. The pipeline now executes all the required tests run before the approval step unless skipped. 
+* Added pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the pipeline for building and pushing docker images for MacOS to install and run docker.
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
+* Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
 ### Chores
@@ -281,4 +284,3 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 * [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
 * [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
-
