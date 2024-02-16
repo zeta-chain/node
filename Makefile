@@ -197,10 +197,6 @@ start-e2etest:
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
-start-e2etest-upgrade:
-	@echo "--> Starting e2e test with upgrade proposal"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
-
 stop-e2etest:
 	@echo "--> Stopping e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
@@ -223,7 +219,7 @@ start-upgrade-test:
 	@echo "--> Starting upgrade test"
 	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
 
 stop-upgrade-test:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans

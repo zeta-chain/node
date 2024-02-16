@@ -15,6 +15,18 @@ KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
 
+export DAEMON_HOME=$HOME/.zetacored
+export DAEMON_NAME=zetacored
+export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
+export DAEMON_RESTART_AFTER_UPGRADE=true
+export CLIENT_DAEMON_NAME=zetaclientd
+export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,operator"
+export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
+export CLIENT_SKIP_UPGRADE=true
+export CLIENT_START_PROCESS=false
+export UNSAFE_SKIP_BACKUP=true
+export UpgradeName=${NEW_VERSION}
+
 # generate node list
 START=1
 # shellcheck disable=SC2100
@@ -46,7 +58,7 @@ source ~/os-info.sh
 if [ $HOSTNAME != "zetacore0" ]
 then
   echo "Waiting for zetacore0 to create genesis.json"
-  sleep $((7*NUMOFNODES))
+  sleep 10
   echo "genesis.json created"
 fi
 
@@ -79,7 +91,7 @@ then
 
 # 2. Add the observers , authorizations and required params to the genesis.json
   zetacored collect-observer-info
-  zetacored add-observer-list
+  zetacored add-observer-list --keygen-block 55
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["staking"]["params"]["bond_denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["crisis"]["constant_fee"]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["deposit_params"]["min_deposit"][0]["denom"]="azeta"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
@@ -88,11 +100,22 @@ then
   cat $HOME/.zetacored/config/genesis.json | jq '.consensus_params["block"]["max_gas"]="500000000"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["gov"]["voting_params"]["voting_period"]="100s"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
 
-  # set admin account
+# set fungible admin account as admin for fungible token
   zetacored add-genesis-account zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk 100000000000000000000000000azeta
   zetacored add-genesis-account zeta1n0rn6sne54hv7w2uu93fl48ncyqz97d3kty6sh 100000000000000000000000000azeta # Funds the localnet_gov_admin account
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][0]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
   cat $HOME/.zetacored/config/genesis.json | jq '.app_state["observer"]["params"]["admin_policy"][1]["address"]="zeta1srsq755t654agc0grpxj4y3w0znktrpr9tcdgk"' > $HOME/.zetacored/config/tmp_genesis.json && mv $HOME/.zetacored/config/tmp_genesis.json $HOME/.zetacored/config/genesis.json
+
+# give balance to deployer account to deploy contracts directly on zEVM
+  zetacored add-genesis-account zeta1uhznv7uzyjq84s3q056suc8pkme85lkvhrz3dd 100000000000000000000000000azeta
+# erc20 tester
+  zetacored add-genesis-account zeta1datate7xmwm4uk032f9rmcu0cwy7ch7kg6y6zv 100000000000000000000000000azeta
+# zeta tester
+  zetacored add-genesis-account zeta1tnp0hvsq4y5mxuhrq9h3jfwulxywpq0ads0rer 100000000000000000000000000azeta
+# bitcoin tester
+  zetacored add-genesis-account zeta19q7czqysah6qg0n4y3l2a08gfzqxydla492v80 100000000000000000000000000azeta
+# ethers tester
+  zetacored add-genesis-account zeta134rakuus43xn63yucgxhn88ywj8ewcv6ezn2ga 100000000000000000000000000azeta
 
 # 3. Copy the genesis.json to all the nodes .And use it to create a gentx for every node
   zetacored gentx operator 1000000000000000000000azeta --chain-id=$CHAINID --keyring-backend=$KEYRING
@@ -139,7 +162,36 @@ then
   sed -i -e "/persistent_peers =/s/=.*/= \"$pps\"/" "$HOME"/.zetacored/config/config.toml
 fi
 
-/root/zetacored-proposal.sh &
+mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
+mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
+
+# Setup cosmovisor
+# Genesis
+cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
+cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
+
+#Upgrades
+cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
+
+#Permissions
+chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
+chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
+chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
+
 
 # 7 Start the nodes
-exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
+sleep 20
+echo
+
+if [ $HOSTNAME = "zetacore0" ]
+then
+/root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 200 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+fi
+
+sleep 8
+/root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+sleep 7
+/root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
+
+tail -f zetanode.log

@@ -63,7 +63,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
@@ -79,7 +79,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file

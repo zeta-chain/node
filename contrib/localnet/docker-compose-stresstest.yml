@@ -74,7 +74,7 @@ services:
     ports:
       - "8123:8123"
 
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
@@ -88,7 +88,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
@@ -102,7 +102,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.23
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
@@ -116,7 +116,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.24
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
 
