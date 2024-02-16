@@ -6,7 +6,6 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -17,19 +16,19 @@ import (
 
 func TestMsgServer_AddBlockHeader(t *testing.T) {
 	header, header2, header3, err := sample.EthHeader()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	header1RLP, err := rlp.EncodeToBytes(header)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	header2RLP, err := rlp.EncodeToBytes(header2)
 	_ = header2RLP
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	header3RLP, err := rlp.EncodeToBytes(header3)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	r := rand.New(rand.NewSource(9))
 	validator := sample.Validator(t, r)
 	observerAddress, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	// Add tests for btc headers : https://github.com/zeta-chain/node/issues/1336
 	tt := []struct {
 		name                  string
@@ -66,7 +65,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
 			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				assert.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
+				require.ErrorIs(t, err, types.ErrBlockHeaderVerificationDisabled)
 			},
 		},
 		{
@@ -82,7 +81,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
 			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				assert.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+				require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 			},
 		},
 		{

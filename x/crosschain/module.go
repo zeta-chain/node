@@ -105,22 +105,16 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper        keeper.Keeper
-	stakingKeeper types.StakingKeeper
-	authKeeper    types.AccountKeeper
+	keeper keeper.Keeper
 }
 
 func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
-	stakingKeeper types.StakingKeeper,
-	authKeeper types.AccountKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
-		stakingKeeper:  stakingKeeper,
-		authKeeper:     authKeeper,
 	}
 }
 
@@ -157,6 +151,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 3, m.Migrate3to4); err != nil {
 		panic(err)
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the crosschain module's invariants.
@@ -172,7 +169,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	InitGenesis(ctx, am.keeper, genState)
 
 	// ensure account is created
-	am.authKeeper.GetModuleAccount(ctx, types.ModuleName)
+	am.keeper.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	return []abci.ValidatorUpdate{}
 }

@@ -97,12 +97,12 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ctx, _, _ := keepertest.FungibleKeeper(t)
 
-			requireUnpaused := func(zrc20 string) {
+			assertUnpaused := func(zrc20 string) {
 				fc, found := k.GetForeignCoins(ctx, zrc20)
 				require.True(t, found)
 				require.False(t, fc.Paused)
 			}
-			requirePaused := func(zrc20 string) {
+			assertPaused := func(zrc20 string) {
 				fc, found := k.GetForeignCoins(ctx, zrc20)
 				require.True(t, found)
 				require.True(t, fc.Paused)
@@ -117,10 +117,10 @@ func TestKeeper_CheckPausedZRC20(t *testing.T) {
 			k.SetForeignCoins(ctx, pausedZRC20)
 
 			// check paused status
-			requireUnpaused(addrUnpausedZRC20A.Hex())
-			requireUnpaused(addrUnpausedZRC20B.Hex())
-			requireUnpaused(addrUnpausedZRC20C.Hex())
-			requirePaused(addrPausedZRC20.Hex())
+			assertUnpaused(addrUnpausedZRC20A.Hex())
+			assertUnpaused(addrUnpausedZRC20B.Hex())
+			assertUnpaused(addrUnpausedZRC20C.Hex())
+			assertPaused(addrPausedZRC20.Hex())
 
 			// process test
 			err := k.CheckPausedZRC20(ctx, tc.receipt)
