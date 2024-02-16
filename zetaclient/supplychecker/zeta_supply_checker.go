@@ -3,6 +3,7 @@ package supplychecker
 import (
 	"fmt"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
@@ -16,13 +17,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 type ZetaSupplyChecker struct {
-	cfg              *config.Config
 	coreContext      *corecontext.ZeraCoreContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
@@ -34,7 +33,7 @@ type ZetaSupplyChecker struct {
 	genesisSupply    sdkmath.Int
 }
 
-func NewZetaSupplyChecker(cfg *config.Config, coreContext *corecontext.ZeraCoreContext, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+func NewZetaSupplyChecker(appContext *appcontext.AppContext, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err
@@ -47,11 +46,10 @@ func NewZetaSupplyChecker(cfg *config.Config, coreContext *corecontext.ZeraCoreC
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		cfg:         cfg,
-		coreContext: coreContext,
+		coreContext: appContext.ZetaCoreContext(),
 		zetaClient:  zetaClient,
 	}
-	for _, evmConfig := range cfg.GetAllEVMConfigs() {
+	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}

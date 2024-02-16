@@ -19,8 +19,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -42,8 +40,6 @@ type CoreObserver struct {
 	clientMap           map[common.Chain]interfaces.ChainClient
 	metrics             *metrics.Metrics
 	logger              ZetaCoreLog
-	cfg                 *config.Config
-	coreContext         *corecontext.ZeraCoreContext
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
 	lastOperatorBalance sdkmath.Int
@@ -62,11 +58,7 @@ func NewCoreObserver(
 		ts:   ts,
 		stop: make(chan struct{}),
 	}
-	// TODO: can be simplified probably
-	co.cfg = appContext.Config()
-	co.coreContext = appContext.ZetaCoreContext()
-	logger := appContext.MasterLogger()
-	chainLogger := logger.With().
+	chainLogger := appContext.MasterLogger().With().
 		Str("chain", "ZetaChain").
 		Logger()
 	co.logger = ZetaCoreLog{
@@ -97,14 +89,6 @@ func NewCoreObserver(
 	return &co
 }
 
-func (co *CoreObserver) Config() *config.Config {
-	return co.cfg
-}
-
-func (co *CoreObserver) CoreContext() *corecontext.ZeraCoreContext {
-	return co.coreContext
-}
-
 func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
 	cnt, found := metrics.Counters[name]
 	if !found {
@@ -121,10 +105,10 @@ func (co *CoreObserver) GetPromGauge(name string) (prom.Gauge, error) {
 	return gauge, nil
 }
 
-func (co *CoreObserver) MonitorCore() {
+func (co *CoreObserver) MonitorCore(appContext *appcontext.AppContext) {
 	myid := co.bridge.GetKeys().GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
-	go co.startCctxScheduler()
+	go co.startCctxScheduler(appContext)
 
 	go func() {
 		// bridge queries UpgradePlan from zetabridge and send to its pause channel if upgrade height is reached
@@ -138,7 +122,7 @@ func (co *CoreObserver) MonitorCore() {
 }
 
 // startCctxScheduler schedules keysigns for cctxs on each ZetaChain block (the ticker)
-func (co *CoreObserver) startCctxScheduler() {
+func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 	outTxMan := outtxprocessor.NewOutTxProcessorManager(co.logger.ChainLogger)
 	observeTicker := time.NewTicker(3 * time.Second)
 	var lastBlockNum int64
@@ -187,7 +171,7 @@ func (co *CoreObserver) startCctxScheduler() {
 					gauge.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// schedule keysign for pending cctxs on each chain
-					supportedChains := co.CoreContext().GetEnabledChains()
+					supportedChains := appContext.ZetaCoreContext().GetEnabledChains()
 					for _, c := range supportedChains {
 						if c.ChainId == co.bridge.ZetaChain().ChainId {
 							continue
@@ -199,7 +183,7 @@ func (co *CoreObserver) startCctxScheduler() {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := co.getUpdatedChainOb(c.ChainId)
+						ob, err := co.getUpdatedChainOb(appContext, c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
@@ -374,7 +358,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 	}
 }
 
-func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient, error) {
+func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, chainID int64) (interfaces.ChainClient, error) {
 	chainOb, err := co.getTargetChainOb(chainID)
 	if err != nil {
 		return nil, err
@@ -382,7 +366,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient
 	// update chain client core parameters
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
-		evmParams, found := co.coreContext.GetEVMChainParams(chainID)
+		evmParams, found := appContext.ZetaCoreContext().GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
@@ -392,7 +376,7 @@ func (co *CoreObserver) getUpdatedChainOb(chainID int64) (interfaces.ChainClient
 			)
 		}
 	} else if common.IsBitcoinChain(chainID) {
-		_, btcParams, found := co.coreContext.GetBTCChainParams()
+		_, btcParams, found := appContext.ZetaCoreContext().GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
 			chainOb.SetChainParams(*btcParams)
