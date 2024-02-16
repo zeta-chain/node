@@ -273,7 +273,7 @@ func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverCh
 // ParseZRC20WithdrawalEvent tries extracting Withdrawal event from registered ZRC20 contract;
 // returns error if the log entry is not a Withdrawal event, or is not emitted from a
 // registered ZRC20 contract
-// It only returns a not-nil event if all the error checks pass
+// It only returns a not-nil event if the event has been correctly validated as a valid withdraw event
 func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error) {
 	zrc20ZEVM, err := zrc20.NewZRC20Filterer(log.Address, bind.ContractFilterer(nil))
 	if err != nil {
