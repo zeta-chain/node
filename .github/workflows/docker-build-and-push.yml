@@ -57,7 +57,7 @@ jobs:
 
   docker_build_mac:
     runs-on: macos-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v3
         with:
@@ -72,6 +72,17 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.inputs.version }}" >> ${GITHUB_ENV}
+
+      - name: Setup docker and docker-compose (missing on MacOS)
+        if: runner.os == 'macos'
+        run: |
+          brew install docker docker-compose
+          
+          # Link the Docker Compose v2 plugin so it's understood by the docker CLI
+          mkdir -p ~/.docker/cli-plugins
+          ln -sfn /usr/local/opt/docker-compose/bin/docker-compose ~/.docker/cli-plugins/docker-compose
+          
+          colima start
 
       - name: "BUILD:PUSH:MONITORING:DOCKER:IMAGE"
         uses: ./.github/actions/build-docker-images-generic
