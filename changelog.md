@@ -38,6 +38,7 @@
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
+* [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
 
 ### CI
 
