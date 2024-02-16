@@ -94,7 +94,7 @@ Currently, raising the proposal to deploy to testnet is a manual process via Gov
 
 ## Creating a Release / Hotfix Release
 
-To create a release yous simply execute the publish-release workflow and follow the steps below.
+To create a release simply execute the publish-release workflow and follow the steps below.
 
 ### Steps
  - Step 1. Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
