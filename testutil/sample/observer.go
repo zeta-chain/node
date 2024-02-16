@@ -258,16 +258,6 @@ func BallotList(n int, observerSet []string) []types.Ballot {
 	return ballotList
 }
 
-func Votes(voteCount int) []types.VoteType {
-	r := newRandFromSeed(int64(voteCount))
-	votes := make([]types.VoteType, voteCount)
-	voteTypes := []types.VoteType{types.VoteType_FailureObservation, types.VoteType_SuccessObservation, types.VoteType_NotYetVoted}
-	for i := 0; i < voteCount; i++ {
-		votes[i] = voteTypes[r.Intn(len(voteTypes))]
-	}
-	return votes
-}
-
 func VotesSuccessOnly(voteCount int) []types.VoteType {
 	votes := make([]types.VoteType, voteCount)
 	for i := 0; i < voteCount; i++ {
