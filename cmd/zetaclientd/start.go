@@ -115,9 +115,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	coreContext := corecontext.NewZeraCoreContext()
-
-	appContext := appcontext.NewAppContext(coreContext, cfg, masterLogger)
+	appContext := appcontext.NewAppContext(corecontext.NewZeraCoreContext(), cfg, masterLogger)
 	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
@@ -187,8 +185,8 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		if coreContext.Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", coreContext.Keygen.Status)
+		if appContext.ZetaCoreContext().Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
+			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", appContext.ZetaCoreContext().Keygen.Status)
 			continue
 		}
 		break
@@ -206,7 +204,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(coreContext.ChainsEnabled) == 0 {
+	if len(appContext.ZetaCoreContext().ChainsEnabled) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 

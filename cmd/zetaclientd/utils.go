@@ -76,10 +76,8 @@ func CreateSignerMap(
 		signerMap[evmConfig.Chain] = signer
 	}
 	// BTC signer
-	btcConfig, configEnabled := appContext.Config().GetBTCConfig()
-	btcChain, _, paramsEnabled := appContext.ZetaCoreContext().GetBTCChainParams()
-
-	if configEnabled && paramsEnabled {
+	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
+	if enabled {
 		signer, err := bitcoin.NewBTCSigner(btcConfig, tss, logger, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
@@ -114,9 +112,8 @@ func CreateChainClientMap(
 		clientMap[evmConfig.Chain] = co
 	}
 	// BTC client
-	btcConfig, configEnabled := appContext.Config().GetBTCConfig()
-	btcChain, _, paramsEnabled := appContext.ZetaCoreContext().GetBTCChainParams()
-	if configEnabled && paramsEnabled {
+	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
+	if enabled {
 		co, err := bitcoin.NewBitcoinClient(appContext, btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
