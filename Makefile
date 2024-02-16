@@ -201,14 +201,6 @@ stop-e2etest:
 	@echo "--> Stopping e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
 
-start-e2etest-p2p-diag:
-	@echo "--> Starting e2e test in p2p diagnostic mode"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
-
-stop-e2etest-p2p-diag:
-	@echo "--> Stopping e2e test in p2p diagnostic mode"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
-
 stress-test: zetanode
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
 
