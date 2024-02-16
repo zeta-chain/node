@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# This script is used to create a variety of proposals for testing purposes
+# It creates proposals with different deposit amounts, voting periods, and content
+# It also creates proposals with different voting options and votes on them
+# It is intended to be run after the network has been started and the zetacored client is running
+# It is intended to be run from the root of the zetacored repository
+# It is intended to be run with the following command
+# docker exec -it zetacore0 bash
+# #/root/gov-proposals-testing.sh
+
 SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR" || exit
 
@@ -32,10 +41,3 @@ zetacored tx gov vote 6 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend te
 
 zetacored tx gov submit-proposal proposals/proposal_for_deposit.json --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
 zetacored tx gov vote 7 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
-
-# Consensus param test
-#zetacored tx gov submit-legacy-proposal param-change proposals/proposal_for_consensus_params.json --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
-#zetacored tx gov vote 1 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
-
-#zetacored tx gov submit-legacy-proposal param-change proposals/emissions_change.json --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --gas 1000000 --yes && sleep 12
-#zetacored tx gov vote 1 VOTE_OPTION_YES --from $WALLET_NAME --keyring-backend test --chain-id athens_101-1 --fees 2000000000000000azeta --yes && sleep 12
