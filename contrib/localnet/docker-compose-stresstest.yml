@@ -22,7 +22,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis.sh", "4"]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
 
 
   zetacore1:
@@ -35,7 +35,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/genesis.sh", "4"]
+    entrypoint: ["/root/start-zetacored.sh", "4"]
 
   zetacore2:
     image: zetanode:latest
@@ -47,7 +47,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.13
-    entrypoint: [ "/root/genesis.sh", "4" ]
+    entrypoint: [ "/root/start-zetacored.sh", "4" ]
 
   zetacore3:
     image: zetanode:latest
@@ -59,7 +59,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.14
-    entrypoint: [ "/root/genesis.sh", "4" ]
+    entrypoint: [ "/root/start-zetacored.sh", "4" ]
 
   zetaclient0:
     image: zetanode:latest

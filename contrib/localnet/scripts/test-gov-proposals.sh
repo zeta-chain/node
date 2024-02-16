@@ -7,7 +7,7 @@
 # It is intended to be run from the root of the zetacored repository
 # It is intended to be run with the following command
 # docker exec -it zetacore0 bash
-# #/root/gov-proposals-testing.sh
+# #/root/test-gov-proposals.sh
 
 SCRIPT_DIR=$(dirname "$0")
 cd "$SCRIPT_DIR" || exit

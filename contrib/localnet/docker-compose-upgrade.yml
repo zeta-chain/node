@@ -22,7 +22,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis-upgrade.sh", "2"] # Need to specify that there are 2 nodes
+    entrypoint: ["/root/start-zetacored-with-upgrade-proposal.sh", "2"] # Need to specify that there are 2 nodes
 
 
   zetacore1:
@@ -35,7 +35,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/genesis-upgrade.sh", "2"]
+    entrypoint: ["/root/start-zetacored-with-upgrade-proposal.sh", "2"]
 
   zetaclient0:
     image: zetanode:latest
