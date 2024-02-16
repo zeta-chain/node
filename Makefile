@@ -201,13 +201,13 @@ start-e2etest-upgrade:
 	@echo "--> Starting e2e test with upgrade proposal"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
 
-start-e2etest-p2p-diag:
-	@echo "--> Starting e2e test in p2p diagnostic mode"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
-
 stop-e2etest:
 	@echo "--> Stopping e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
+
+start-e2etest-p2p-diag:
+	@echo "--> Starting e2e test in p2p diagnostic mode"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
 
 stop-e2etest-p2p-diag:
 	@echo "--> Stopping e2e test in p2p diagnostic mode"
@@ -219,19 +219,13 @@ stress-test: zetanode
 stop-stress-test:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans
 
-stateful-upgrade:
-	@echo "--> Starting stateful e2e-test"
-	$(DOCKER) build --build-arg old_version=mock-mainnet-01-5-ga66d0b77 --build-arg new_version=v10.0.0-30 -t zetanode -f ./Dockerfile-versioned .
+start-upgrade-test:
+	@echo "--> Starting upgrade test"
+	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
-stateful-upgrade-source:
-	@echo "--> Starting stateful e2e-test"
-	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-versioned-source .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
-
-stop-stateful-upgrade:
+stop-upgrade-test:
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
 
 ###############################################################################
