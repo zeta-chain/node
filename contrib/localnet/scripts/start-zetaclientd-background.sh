@@ -10,7 +10,6 @@ if [ "$HOTKEY_BACKEND" == "file" ]; then
     BACKEND="file"
 fi
 
-
 cp  /root/preparams/PreParams_$HOSTNAME.json /root/preParams.json
 num=$(echo $HOSTNAME | tr -dc '0-9')
 node="zetacore$num"

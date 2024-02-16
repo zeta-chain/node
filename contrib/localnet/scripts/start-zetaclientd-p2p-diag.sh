@@ -8,7 +8,6 @@ mv  /root/zetacored/zetacored_$node /root/.zetacored
 
 mv /root/tss/$HOSTNAME /root/.tss
 
-
 if [ $HOSTNAME == "zetaclient0" ]
 then
     rm ~/.tss/address_book.seed
