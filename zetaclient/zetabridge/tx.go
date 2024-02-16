@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,8 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
 
 const (
@@ -152,14 +151,14 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) CoreContextUpdater(cfg *config.Config, coreContext *corecontext.ZeraCoreContext) {
+func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
 	b.logger.Info().Msg("CoreContextUpdater started")
-	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
+	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateZetaCoreContext(coreContext, false)
+			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false)
 			if err != nil {
 				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
 			}

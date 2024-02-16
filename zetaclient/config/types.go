@@ -35,7 +35,6 @@ type EVMConfig struct {
 }
 
 type BTCConfig struct {
-	ChainID int64
 	// the following are rpcclient ConnConfig fields
 	RPCUsername string
 	RPCPassword string
@@ -109,19 +108,14 @@ func (c *Config) GetAllEVMConfigs() map[int64]*EVMConfig {
 	return copied
 }
 
-// TODO: get chain from params chainId, and only return config here?
-func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
+func (c *Config) GetBTCConfig() (BTCConfig, bool) {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 
 	if c.BitcoinConfig == nil { // bitcoin is not enabled
-		return common.Chain{}, BTCConfig{}, false
+		return BTCConfig{}, false
 	}
-	chain := common.GetChainFromChainID(c.BitcoinConfig.ChainID)
-	if chain == nil {
-		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.ChainID))
-	}
-	return *chain, *c.BitcoinConfig, true
+	return *c.BitcoinConfig, true
 }
 
 func (c *Config) GetKeyringBackend() KeyringBackend {

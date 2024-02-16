@@ -19,7 +19,6 @@ import (
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
@@ -39,8 +38,8 @@ func GenerateTss(
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
 	bitcoinChainID := common.BtcRegtestChain().ChainId
-	if appContext.Config().BitcoinConfig != nil {
-		bitcoinChainID = appContext.Config().BitcoinConfig.ChainID
+	if appContext.ZetaCoreContext().BitcoinChainParams != nil {
+		bitcoinChainID = appContext.ZetaCoreContext().BitcoinChainParams.ChainId
 	}
 
 	tss, err := mc.NewTSS(
@@ -107,7 +106,7 @@ func GenerateTss(
 				}
 				// Try keygen only once at a particular block, irrespective of whether it is successful or failure
 				triedKeygenAtBlock = true
-				err = keygenTss(appContext.ZetaCoreContext(), tss, keygenLogger)
+				err = keygenTss(keyGen, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
 					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, common.ReceiveStatus_Failed)
@@ -151,8 +150,7 @@ func GenerateTss(
 	return nil, errors.New("unexpected state for TSS generation")
 }
 
-func keygenTss(coreContext *corecontext.ZeraCoreContext, tss *mc.TSS, keygenLogger zerolog.Logger) error {
-	keyGen := coreContext.GetKeygen()
+func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Logger) error {
 	keygenLogger.Info().Msgf("Keygen at blocknum %d , TSS signers %s ", keyGen.BlockNumber, keyGen.GranteePubkeys)
 	var req keygen.Request
 	req = keygen.NewRequest(keyGen.GranteePubkeys, keyGen.BlockNumber, "0.14.0")

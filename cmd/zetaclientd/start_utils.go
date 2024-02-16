@@ -68,6 +68,7 @@ func maskCfg(cfg *config.Config) string {
 	maskedCfg.EVMChainConfigs = map[int64]*config.EVMConfig{}
 	for key, val := range cfg.EVMChainConfigs {
 		maskedCfg.EVMChainConfigs[key] = &config.EVMConfig{
+			Chain:    val.Chain,
 			Endpoint: val.Endpoint,
 		}
 	}

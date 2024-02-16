@@ -126,7 +126,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
 	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
-	go zetaBridge.CoreContextUpdater(cfg, appContext.ZetaCoreContext())
+	go zetaBridge.CoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
