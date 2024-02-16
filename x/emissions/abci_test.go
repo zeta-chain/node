@@ -118,7 +118,7 @@ func TestValidatorRewards(t *testing.T) {
 	// Setup module accounts for emission pools
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedTssRewardsPool).GetAddress()
-	feeCollecterAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
+	feeCollectorAddress := sk.AuthKeeper.GetModuleAccount(ctx, types.FeeCollectorName).GetAddress()
 	_ = sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.ModuleName).GetAddress()
 	blockRewards := emissionstypes.BlockReward
 	// Produce blocks and distribute rewards
@@ -128,6 +128,6 @@ func TestValidatorRewards(t *testing.T) {
 		emissionsModule.BeginBlocker(ctx, *k)
 		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	}
-	feeCollecterBalance := sk.BankKeeper.GetBalance(ctx, feeCollecterAddress, config.BaseDenom).Amount
-	assert.Equal(t, feeCollecterBalance, validatorRewards.Mul(sdk.NewInt(100)))
+	feeCollectorBalance := sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount
+	assert.Equal(t, feeCollectorBalance, validatorRewards.Mul(sdk.NewInt(100)))
 }
