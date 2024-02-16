@@ -11,7 +11,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
@@ -43,7 +42,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
 	}
 
 	r.Logger.Info("Refunding the cctx via admin")
-	msg := crosschaintypes.NewMsgRefundAbortedCCTX(
+	msg := types.NewMsgRefundAbortedCCTX(
 		r.ZetaTxServer.GetAccountAddress(0),
 		cctx.Index,
 		r.DeployerAddress.String())
