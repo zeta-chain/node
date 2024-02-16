@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -50,21 +51,21 @@ type CoreObserver struct {
 
 // NewCoreObserver creates a new CoreObserver
 func NewCoreObserver(
+	appContext *appcontext.AppContext,
 	bridge interfaces.ZetaCoreBridger,
 	signerMap map[common.Chain]interfaces.ChainSigner,
 	clientMap map[common.Chain]interfaces.ChainClient,
 	metrics *metrics.Metrics,
-	logger zerolog.Logger,
-	cfg *config.Config,
-	coreContext *corecontext.ZeraCoreContext,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
 	}
-	co.cfg = cfg
-	co.coreContext = coreContext
+	// TODO: can be simplified probably
+	co.cfg = appContext.Config()
+	co.coreContext = appContext.ZetaCoreContext()
+	logger := appContext.MasterLogger()
 	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()

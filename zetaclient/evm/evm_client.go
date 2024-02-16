@@ -111,12 +111,11 @@ var _ interfaces.ChainClient = (*ChainClient)(nil)
 
 // NewEVMChainClient returns a new configuration based on supplied target chain
 func NewEVMChainClient(
-	appcontext *appcontext.AppContext,
+	appContext *appcontext.AppContext,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	metrics *metricsPkg.Metrics,
-	logger zerolog.Logger,
 	evmCfg config.EVMConfig,
 	ts *metricsPkg.TelemetryServer,
 ) (*ChainClient, error) {
@@ -124,7 +123,7 @@ func NewEVMChainClient(
 		ChainMetrics: metricsPkg.NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
 	}
-	chainLogger := logger.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
+	chainLogger := appContext.MasterLogger().With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Log{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
@@ -132,9 +131,9 @@ func NewEVMChainClient(
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
 	// TODO: simplify this now when there is appcontext
-	ob.cfg = appcontext.Config()
-	ob.coreContext = appcontext.ZetaCoreContext()
-	chainParams, found := appcontext.ZetaCoreContext().GetEVMChainParams(evmCfg.Chain.ChainId)
+	ob.cfg = appContext.Config()
+	ob.coreContext = appContext.ZetaCoreContext()
+	chainParams, found := appContext.ZetaCoreContext().GetEVMChainParams(evmCfg.Chain.ChainId)
 	if found {
 		ob.chainParams = *chainParams
 	}
