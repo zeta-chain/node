@@ -18,7 +18,7 @@ import (
 )
 
 func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest.ZetaKeepers) []string {
-	validators := k.StakingKeeper.GetAllValidators(ctx)
+	validators := k.GetStakingKeeper().GetAllValidators(ctx)
 
 	validatorAddressListFormatted := make([]string, len(validators))
 	for i, validator := range validators {
@@ -85,7 +85,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	)
 
 	// Convert the validator address into a user address.
-	validators := k.StakingKeeper.GetAllValidators(ctx)
+	validators := k.GetStakingKeeper().GetAllValidators(ctx)
 	validatorAddress := validators[0].OperatorAddress
 	valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
 	addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
