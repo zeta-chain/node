@@ -6,18 +6,35 @@
 
 /usr/sbin/sshd
 
-if [ $# -ne 1 ]
+if [ $# -lt 1 ]
 then
-  echo "Usage: genesis.sh <num of nodes>"
+  echo "Usage: genesis.sh <num of nodes> [option]"
   exit 1
 fi
 NUMOFNODES=$1
+OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"
 KEYRING="test"
 HOSTNAME=$(hostname)
 INDEX=${HOSTNAME:0-1}
+
+# Environment variables used for upgrade testing
+export DAEMON_HOME=$HOME/.zetacored
+export DAEMON_NAME=zetacored
+export DAEMON_ALLOW_DOWNLOAD_BINARIES=true
+export DAEMON_RESTART_AFTER_UPGRADE=true
+export CLIENT_DAEMON_NAME=zetaclientd
+export CLIENT_DAEMON_ARGS="-enable-chains,GOERLI,-val,operator"
+export DAEMON_DATA_BACKUP_DIR=$DAEMON_HOME
+export CLIENT_SKIP_UPGRADE=true
+export CLIENT_START_PROCESS=false
+export UNSAFE_SKIP_BACKUP=true
+export UpgradeName=${NEW_VERSION}
+
+# upgrade name used for upgrade testing
+export UpgradeName=${NEW_VERSION}
 
 # generate node list
 START=1
@@ -160,4 +177,48 @@ then
 fi
 
 # 7 Start the nodes
-exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+# If upgrade option is passed, use cosmovisor to start the nodes and create a governance proposal for upgrade
+if [ "$OPTION" != "upgrade" ]; then
+
+  exec zetacored start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored
+
+else
+
+  # Setup cosmovisor
+  mkdir -p $DAEMON_HOME/cosmovisor/genesis/bin
+  mkdir -p $DAEMON_HOME/cosmovisor/upgrades/"$UpgradeName"/bin
+
+  # Genesis
+  cp $GOPATH/bin/old/zetacored $DAEMON_HOME/cosmovisor/genesis/bin
+  cp $GOPATH/bin/zetaclientd $DAEMON_HOME/cosmovisor/genesis/bin
+
+  #Upgrades
+  cp $GOPATH/bin/new/zetacored $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/
+
+  #Permissions
+  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetacored
+  chmod +x $DAEMON_HOME/cosmovisor/genesis/bin/zetaclientd
+  chmod +x $DAEMON_HOME/cosmovisor/upgrades/$UpgradeName/bin/zetacored
+
+  # Start the node using cosmovisor
+  cosmovisor run start --pruning=nothing --minimum-gas-prices=0.0001azeta --json-rpc.api eth,txpool,personal,net,debug,web3,miner --api.enable --home /root/.zetacored >> zetanode.log 2>&1  &
+  sleep 20
+  echo
+
+  # If this is the first node, create a governance proposal for upgrade
+  if [ $HOSTNAME = "zetacore0" ]
+  then
+  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 200 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+  fi
+
+  # Wait for the proposal to be voted on
+  sleep 8
+  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+  sleep 7
+  /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
+
+  # We use tail -f to keep the container running
+  tail -f zetanode.log
+
+fi
+

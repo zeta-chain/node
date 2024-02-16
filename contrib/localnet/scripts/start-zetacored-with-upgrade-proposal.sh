@@ -6,12 +6,13 @@
 
 /usr/sbin/sshd
 
-if [ $# -ne 1 ]
+if [ $# -lt 10 ]
 then
-  echo "Usage: genesis.sh <num of nodes>"
+  echo "Usage: genesis.sh <num of nodes> [option]"
   exit 1
 fi
 NUMOFNODES=$1
+OPTION=$2
 
 # create keys
 CHAINID="athens_101-1"

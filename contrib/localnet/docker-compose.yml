@@ -1,5 +1,14 @@
 version: "3"
 
+# This docker-compose file configures the localnet environment
+# it contains the following services:
+# - ZetaChain with 2 nodes (zetacore0, zetacore1)
+# - A observer set with 2 clients (zetaclient0, zetaclient1)
+# - An Ethereum node (eth)
+# - A Bitcoin node (bitcoin)
+# - A Rosetta API (rosetta)
+# - An orchestrator to manage interaction with the localnet (orchestrator)
+
 networks:
   mynetwork:
     ipam:
