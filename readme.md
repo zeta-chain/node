@@ -92,23 +92,15 @@ Creating a release candidate for testing is a straightforward process. Here are 
 By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
 
-## Creating a Release
-After the Release Candidate has been fully tested, creating a final release for use on public networks is a straightforward process. Here are the steps to follow:
+## Creating a Release / Hotfix Release
+
+To create a release simply execute the publish-release workflow and follow the steps below.
 
 ### Steps
- - Step 1. Open a Pull Request (PR): Begin by opening a PR from the release candidate branch (e.g., vx.x.x-rc) to the main branch.
- - Step 2. Testing and Validation: Allow the automated tests, including E2E tests, linting, and upgrade path testing, to run. Ensure that these tests pass successfully.
- - Step 3. Approval Process: Obtain the necessary approvals from relevant stakeholders or team members.
- - Step 4. Merging PR: Once all requirements have been met and the PR has received the required approvals, merge the PR. The automation will then be triggered to proceed with the release.
+ - Step 1. Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
+ - Step 2. Select the dropdown branch / tag you want to create the release with.
+ - Step 3. In the version input, include the version of your release. Note. The major version must match what is in the upgrade handler.
+ - Step 4. Select if you want to skip the tests by checking the checkbox for skip tests.
+ - Step 5. Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
 
-By following these steps, you can efficiently create a release, ensuring that the code has been thoroughly tested and validated before deployment to public networks.
-
-## Creating a Hotfix Release
-Creating a hotfix release is a straightforward process. Here are the steps to follow:
-
-### Steps
- - Step 1. Execute pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml 
- - Step 2. select branch when running pipeline manually your hotfix lives on.
- - Step 3. specify the version in the input field and run workflow. ex. vx.x.x-hotfix recommended.
-
-Wheny ou execute with hotfix it will build and publish the binaries to the releases. 
+Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.

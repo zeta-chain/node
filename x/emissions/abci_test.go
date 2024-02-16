@@ -19,13 +19,13 @@ import (
 
 func TestBeginBlocker(t *testing.T) {
 	t.Run("no distribution happens if emissions module account is empty", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.EmisionKeeper(t)
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		emissionsModule.BeginBlocker(ctx, *k)
 	})
 }
 func TestObserverRewards(t *testing.T) {
 	// setup the test
-	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
+	k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
 	observerSet := sample.ObserverSet(10)
 	zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
 	ballotList := sample.BallotList(10, observerSet.ObserverList)
@@ -94,7 +94,8 @@ func TestObserverRewards(t *testing.T) {
 }
 
 func TestValidatorRewards(t *testing.T) {
-	k, ctx, sk, zk := keepertest.EmisionKeeper(t)
+	k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
+	k.SetParams(ctx, emissionstypes.DefaultParams())
 	observerSet := make([]string, 10)
 	for i := 0; i < 10; i++ {
 		validator := sample.Validator(t, rand.New(rand.NewSource(int64(i))))

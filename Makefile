@@ -183,7 +183,7 @@ generate: proto openapi specs typescript docs-zetacored
 ###############################################################################
 
 install-zetae2e: go.sum
-	@echo "--> Installing orchestrator"
+	@echo "--> Installing zetae2e"
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
@@ -240,7 +240,7 @@ stateful-upgrade:
 
 stateful-upgrade-source:
 	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v12.0.0 -t zetanode -f ./Dockerfile-versioned-source .
+	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-versioned-source .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
 
@@ -294,3 +294,13 @@ release:
 		-w /go/src/$(PACKAGE_NAME) \
 		ghcr.io/goreleaser/goreleaser-cross:${GOLANG_CROSS_VERSION} \
 		release --clean --skip-validate
+
+###############################################################################
+###                     Local Mainnet Development                           ###
+###############################################################################
+
+mainnet-zetarpc-node:
+	cd contrib/local-mainnet/zetacored && docker-compose up
+
+mainnet-bitcoind-node:
+	cd contrib/local-mainnet/bitcoind && docker-compose up

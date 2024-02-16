@@ -32,7 +32,7 @@ func getValidChainID(t *testing.T) int64 {
 	return list[0].ChainId
 }
 
-// assert that a contract has been deployed by checking stored code is non-empty.
+// require that a contract has been deployed by checking stored code is non-empty.
 func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
 	require.NotNil(t, acc)

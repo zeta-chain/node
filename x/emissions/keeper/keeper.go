@@ -22,6 +22,7 @@ type (
 		bankKeeper       types.BankKeeper
 		stakingKeeper    types.StakingKeeper
 		observerKeeper   types.ObserverKeeper
+		authKeeper       types.AccountKeeper
 	}
 )
 
@@ -34,7 +35,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
 	observerKeeper types.ObserverKeeper,
-
+	authKeeper types.AccountKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -42,7 +43,6 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-
 		cdc:              cdc,
 		storeKey:         storeKey,
 		memKey:           memKey,
@@ -51,6 +51,7 @@ func NewKeeper(
 		bankKeeper:       bankKeeper,
 		stakingKeeper:    stakingKeeper,
 		observerKeeper:   observerKeeper,
+		authKeeper:       authKeeper,
 	}
 }
 
@@ -72,4 +73,8 @@ func (k Keeper) GetStakingKeeper() types.StakingKeeper {
 
 func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 	return k.observerKeeper
+}
+
+func (k Keeper) GetAuthKeeper() types.AccountKeeper {
+	return k.authKeeper
 }

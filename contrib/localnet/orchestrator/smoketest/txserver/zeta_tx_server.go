@@ -121,6 +121,11 @@ func (zts ZetaTxServer) GetAccountAddress(index int) string {
 	return zts.address[index]
 }
 
+func (zts ZetaTxServer) GetAllAccountAddress() []string {
+	return zts.address
+
+}
+
 // GetAccountMnemonic returns the account name from the given index
 // returns empty string if index is out of bound, error should be handled by caller
 func (zts ZetaTxServer) GetAccountMnemonic(index int) string {
@@ -168,42 +173,54 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
 // returns the addresses of uniswap factory, router and usdt zrc20
-func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr string) (string, string, string, error) {
+func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr string) (string, string, string, string, string, error) {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", "", err
 	}
 	addr, err := acc.GetAddress()
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", "", err
 	}
 
 	// deploy new system contracts
 	res, err := zts.BroadcastTx(account, fungibletypes.NewMsgDeploySystemContracts(addr.String()))
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to deploy system contracts: %s", err.Error())
 	}
 
 	systemContractAddress, err := fetchAttribute(res, "system_contract")
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
+		return "", "", "", "", "", fmt.Errorf("failed to fetch system contract address: %s; rawlog %s", err.Error(), res.RawLog)
 	}
 
-	// set system contract
+	// get system contract
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgUpdateSystemContract(addr.String(), systemContractAddress))
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to set system contract: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to set system contract: %s", err.Error())
 	}
 
-	// set uniswap contract addresses
+	// get uniswap contract addresses
 	uniswapV2FactoryAddr, err := fetchAttribute(res, "uniswap_v2_factory")
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 factory address: %s", err.Error())
 	}
 	uniswapV2RouterAddr, err := fetchAttribute(res, "uniswap_v2_router")
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to fetch uniswap v2 router address: %s", err.Error())
+	}
+
+	// get zevm connector address
+	zevmConnectorAddr, err := fetchAttribute(res, "connector_zevm")
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to fetch zevm connector address: %s, txResponse: %s", err.Error(), res.String())
+	}
+
+	// get wzeta address
+	wzetaAddr, err := fetchAttribute(res, "wzeta")
+	if err != nil {
+		return "", "", "", "", "", fmt.Errorf("failed to fetch wzeta address: %s, txResponse: %s", err.Error(), res.String())
 	}
 
 	// deploy eth zrc20
@@ -218,7 +235,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		100000,
 	))
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to deploy eth zrc20: %s", err.Error())
 	}
 
 	// deploy btc zrc20
@@ -233,7 +250,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		100000,
 	))
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
 	// deploy usdt zrc20
@@ -248,18 +265,18 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		100000,
 	))
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to deploy usdt zrc20: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to deploy usdt zrc20: %s", err.Error())
 	}
 
 	// fetch the usdt zrc20 contract address and remove the quotes
 	usdtZRC20Addr, err := fetchAttribute(res, "Contract")
 	if err != nil {
-		return "", "", "", fmt.Errorf("failed to fetch usdt zrc20 contract address: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to fetch usdt zrc20 contract address: %s", err.Error())
 	}
 	if !ethcommon.IsHexAddress(usdtZRC20Addr) {
-		return "", "", "", fmt.Errorf("invalid address in event: %s", usdtZRC20Addr)
+		return "", "", "", "", "", fmt.Errorf("invalid address in event: %s", usdtZRC20Addr)
 	}
-	return uniswapV2FactoryAddr, uniswapV2RouterAddr, usdtZRC20Addr, nil
+	return uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, usdtZRC20Addr, nil
 }
 
 // newCodec returns the codec for msg server

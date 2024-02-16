@@ -15,26 +15,6 @@ type EmissionObserverKeeper struct {
 	mock.Mock
 }
 
-// GetAllBallots provides a mock function with given fields: ctx
-func (_m *EmissionObserverKeeper) GetAllBallots(ctx types.Context) []*observertypes.Ballot {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetAllBallots")
-	}
-
-	var r0 []*observertypes.Ballot
-	if rf, ok := ret.Get(0).(func(types.Context) []*observertypes.Ballot); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*observertypes.Ballot)
-		}
-	}
-
-	return r0
-}
-
 // GetBallot provides a mock function with given fields: ctx, index
 func (_m *EmissionObserverKeeper) GetBallot(ctx types.Context, index string) (observertypes.Ballot, bool) {
 	ret := _m.Called(ctx, index)
@@ -63,36 +43,6 @@ func (_m *EmissionObserverKeeper) GetBallot(ctx types.Context, index string) (ob
 	return r0, r1
 }
 
-// GetChainParamsByChainID provides a mock function with given fields: ctx, chainID
-func (_m *EmissionObserverKeeper) GetChainParamsByChainID(ctx types.Context, chainID int64) (*observertypes.ChainParams, bool) {
-	ret := _m.Called(ctx, chainID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetChainParamsByChainID")
-	}
-
-	var r0 *observertypes.ChainParams
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, int64) (*observertypes.ChainParams, bool)); ok {
-		return rf(ctx, chainID)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, int64) *observertypes.ChainParams); ok {
-		r0 = rf(ctx, chainID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*observertypes.ChainParams)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
-		r1 = rf(ctx, chainID)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
 // GetMaturedBallotList provides a mock function with given fields: ctx
 func (_m *EmissionObserverKeeper) GetMaturedBallotList(ctx types.Context) []string {
 	ret := _m.Called(ctx)
@@ -111,57 +61,6 @@ func (_m *EmissionObserverKeeper) GetMaturedBallotList(ctx types.Context) []stri
 	}
 
 	return r0
-}
-
-// GetObserverSet provides a mock function with given fields: ctx
-func (_m *EmissionObserverKeeper) GetObserverSet(ctx types.Context) (observertypes.ObserverSet, bool) {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetObserverSet")
-	}
-
-	var r0 observertypes.ObserverSet
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context) (observertypes.ObserverSet, bool)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context) observertypes.ObserverSet); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(observertypes.ObserverSet)
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context) bool); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
-// GetParams provides a mock function with given fields: ctx
-func (_m *EmissionObserverKeeper) GetParams(ctx types.Context) observertypes.Params {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetParams")
-	}
-
-	var r0 observertypes.Params
-	if rf, ok := ret.Get(0).(func(types.Context) observertypes.Params); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(observertypes.Params)
-	}
-
-	return r0
-}
-
-// SetBallot provides a mock function with given fields: ctx, ballot
-func (_m *EmissionObserverKeeper) SetBallot(ctx types.Context, ballot *observertypes.Ballot) {
-	_m.Called(ctx, ballot)
 }
 
 // NewEmissionObserverKeeper creates a new instance of EmissionObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

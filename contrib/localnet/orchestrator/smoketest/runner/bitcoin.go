@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/zeta-chain/zetacore/common/bitcoin"
+
 	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -19,12 +21,49 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
+	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 )
 
 var blockHeaderBTCTimeout = 5 * time.Minute
+
+// DepositBTCWithAmount deposits BTC on ZetaChain with a specific amount
+func (sm *SmokeTestRunner) DepositBTCWithAmount(amount float64) (txHash *chainhash.Hash) {
+	sm.Logger.Print("⏳ depositing BTC into ZEVM")
+
+	// fetch utxos
+	utxos, err := sm.BtcRPCClient.ListUnspentMinMaxAddresses(1, 9999999, []btcutil.Address{sm.BTCDeployerAddress})
+	if err != nil {
+		panic(err)
+	}
+
+	spendableAmount := 0.0
+	spendableUTXOs := 0
+	for _, utxo := range utxos {
+		if utxo.Spendable {
+			spendableAmount += utxo.Amount
+			spendableUTXOs++
+		}
+	}
+
+	if spendableAmount < amount {
+		panic(fmt.Errorf("not enough spendable BTC to run the test; have %f", spendableAmount))
+	}
+
+	sm.Logger.Info("ListUnspent:")
+	sm.Logger.Info("  spendableAmount: %f", spendableAmount)
+	sm.Logger.Info("  spendableUTXOs: %d", spendableUTXOs)
+	sm.Logger.Info("Now sending two txs to TSS address...")
+
+	amount = amount + zetabitcoin.DefaultDepositorFee
+	txHash, err = sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount, utxos, sm.BtcRPCClient, sm.BTCDeployerAddress)
+	if err != nil {
+		panic(err)
+	}
+	sm.Logger.Info("send BTC to TSS txHash: %s", txHash.String())
+
+	return txHash
+}
 
 // DepositBTC deposits BTC on ZetaChain
 func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
@@ -62,12 +101,12 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 	sm.Logger.Info("Now sending two txs to TSS address...")
 
 	// send two transactions to the TSS address
-	amount1 := 1.1 + zetaclient.BtcDepositorFeeMin
+	amount1 := 1.1 + zetabitcoin.DefaultDepositorFee
 	txHash1, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount1, utxos[:2], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	amount2 := 0.05 + zetaclient.BtcDepositorFeeMin
+	amount2 := 0.05 + zetabitcoin.DefaultDepositorFee
 	txHash2, err := sm.SendToTSSFromDeployerToDeposit(sm.BTCTSSAddress, amount2, utxos[2:4], btc, sm.BTCDeployerAddress)
 	if err != nil {
 		panic(err)
@@ -80,7 +119,7 @@ func (sm *SmokeTestRunner) DepositBTC(testHeader bool) {
 		0.11,
 		utxos[4:5],
 		btc,
-		[]byte(zetaclient.DonationMessage),
+		[]byte(zetabitcoin.DonationMessage),
 		sm.BTCDeployerAddress,
 	)
 	if err != nil {
@@ -127,7 +166,7 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 	to btcutil.Address,
 	amount float64,
 	inputUTXOs []btcjson.ListUnspentResult,
-	btc *rpcclient.Client,
+	btcRPC *rpcclient.Client,
 	memo []byte,
 	btcDeployerAddress *btcutil.AddressWitnessPubKeyHash,
 ) (*chainhash.Hash, error) {
@@ -156,8 +195,9 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		btcDeployerAddress: change,
 	}
 
-	// create raw transaction
-	tx, err := btc.CreateRawTransaction(inputs, amountMap, nil)
+	// create raw
+	sm.Logger.Info("ADDRESS: %s, %s", btcDeployerAddress.EncodeAddress(), to.EncodeAddress())
+	tx, err := btcRPC.CreateRawTransaction(inputs, amountMap, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -200,38 +240,40 @@ func (sm *SmokeTestRunner) SendToTSSFromDeployerWithMemo(
 		}
 	}
 
-	stx, signed, err := btc.SignRawTransactionWithWallet2(tx, inputsForSign)
+	stx, signed, err := btcRPC.SignRawTransactionWithWallet2(tx, inputsForSign)
 	if err != nil {
 		panic(err)
 	}
 	if !signed {
 		panic("btc transaction not signed")
 	}
-	txid, err := btc.SendRawTransaction(stx, true)
+	txid, err := btcRPC.SendRawTransaction(stx, true)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("txid: %+v", txid)
-	_, err = btc.GenerateToAddress(6, btcDeployerAddress, nil)
+	_, err = btcRPC.GenerateToAddress(6, btcDeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
-	gtx, err := btc.GetTransaction(txid)
+	gtx, err := btcRPC.GetTransaction(txid)
 	if err != nil {
 		panic(err)
 	}
 	sm.Logger.Info("rawtx confirmation: %d", gtx.BlockIndex)
-	rawtx, err := btc.GetRawTransactionVerbose(txid)
+	rawtx, err := btcRPC.GetRawTransactionVerbose(txid)
 	if err != nil {
 		panic(err)
 	}
 
-	events := zetaclient.FilterAndParseIncomingTx(
+	depositorFee := zetabitcoin.DefaultDepositorFee
+	events := zetabitcoin.FilterAndParseIncomingTx(
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		sm.BTCTSSAddress.EncodeAddress(),
 		&log.Logger,
-		common.BtcRegtestChain().ChainId,
+		sm.BitcoinParams,
+		depositorFee,
 	)
 	sm.Logger.Info("bitcoin intx events:")
 	for _, event := range events {

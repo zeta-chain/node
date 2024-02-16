@@ -486,36 +486,6 @@ func (_m *CrosschainFungibleKeeper) QuerySystemContractGasCoinZRC20(ctx types.Co
 	return r0, r1
 }
 
-// QueryUniswapV2RouterGetZRC4AmountsIn provides a mock function with given fields: ctx, amountOut, inZRC4
-func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx types.Context, amountOut *big.Int, inZRC4 common.Address) (*big.Int, error) {
-	ret := _m.Called(ctx, amountOut, inZRC4)
-
-	if len(ret) == 0 {
-		panic("no return value specified for QueryUniswapV2RouterGetZRC4AmountsIn")
-	}
-
-	var r0 *big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, common.Address) (*big.Int, error)); ok {
-		return rf(ctx, amountOut, inZRC4)
-	}
-	if rf, ok := ret.Get(0).(func(types.Context, *big.Int, common.Address) *big.Int); ok {
-		r0 = rf(ctx, amountOut, inZRC4)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(types.Context, *big.Int, common.Address) error); ok {
-		r1 = rf(ctx, amountOut, inZRC4)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn provides a mock function with given fields: ctx, amountOut, inZRC4, outZRC4
 func (_m *CrosschainFungibleKeeper) QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx types.Context, amountOut *big.Int, inZRC4 common.Address, outZRC4 common.Address) (*big.Int, error) {
 	ret := _m.Called(ctx, amountOut, inZRC4, outZRC4)

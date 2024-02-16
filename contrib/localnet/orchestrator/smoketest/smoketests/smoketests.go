@@ -2,14 +2,15 @@ package smoketests
 
 import "github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
 
+// TODO : Add smoke test for abort refund
+// https://github.com/zeta-chain/node/issues/1745
 const (
 	TestContextUpgradeName              = "context_upgrade"
 	TestDepositAndCallRefundName        = "deposit_and_call_refund"
 	TestMultipleERC20DepositName        = "erc20_multiple_deposit"
-	TestWithdrawERC20Name               = "erc20_withdraw"
 	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
-	TestSendZetaOutName                 = "send_zeta_out"
-	TestSendZetaOutBTCRevertName        = "send_zeta_out_btc_revert" // #nosec G101 - not a hardcoded password
+	TestZetaWithdrawName                = "zeta_withdraw"
+	TestZetaWithdrawBTCRevertName       = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 	TestMessagePassingName              = "message_passing"
 	TestZRC20SwapName                   = "zrc20_swap"
 	TestBitcoinWithdrawName             = "bitcoin_withdraw"
@@ -23,8 +24,19 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
-	TestERC20DepositName = "erc20_deposit"
-	TestEtherDepositName = "eth_deposit"
+	TestERC20WithdrawName  = "erc20_withdraw"
+	TestERC20DepositName   = "erc20_deposit"
+	TestEtherDepositName   = "eth_deposit"
+	TestEtherWithdrawName  = "eth_withdraw"
+	TestBitcoinDepositName = "bitcoin_deposit"
+	TestZetaDepositName    = "zeta_deposit"
+
+	TestDonationEtherName = "donation_ether"
+
+	TestStressEtherWithdrawName = "stress_eth_withdraw"
+	TestStressBTCWithdrawName   = "stress_btc_withdraw"
+	TestStressEtherDepositName  = "stress_eth_deposit"
+	TestStressBTCDepositName    = "stress_btc_deposit"
 )
 
 // AllSmokeTests is an ordered list of all smoke tests
@@ -45,24 +57,29 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestMultipleERC20Deposit,
 	},
 	{
-		TestWithdrawERC20Name,
-		"withdraw USDT ERC20 from ZEVM",
-		TestWithdrawERC20,
+		TestERC20WithdrawName,
+		"withdraw ERC20 from ZEVM",
+		TestERC20Withdraw,
 	},
 	{
 		TestMultipleWithdrawsName,
-		"withdraw USDT ERC20 from ZEVM in multiple deposits",
+		"withdraw ERC20 from ZEVM in multiple deposits",
 		TestMultipleWithdraws,
 	},
 	{
-		TestSendZetaOutName,
-		"sending ZETA from ZEVM to Ethereum",
-		TestSendZetaOut,
+		TestZetaWithdrawName,
+		"withdraw ZETA from ZEVM to Ethereum",
+		TestZetaWithdraw,
 	},
 	{
-		TestSendZetaOutBTCRevertName,
-		"sending ZETA from ZEVM to Bitcoin; should revert when ",
-		TestSendZetaOutBTCRevert,
+		TestZetaDepositName,
+		"deposit ZETA from Ethereum to ZEVM",
+		TestZetaDeposit,
+	},
+	{
+		TestZetaWithdrawBTCRevertName,
+		"sending ZETA from ZEVM to Bitcoin with a message that should revert cctxs",
+		TestZetaWithdrawBTCRevert,
 	},
 	{
 		TestMessagePassingName,
@@ -101,7 +118,7 @@ var AllSmokeTests = []runner.SmokeTest{
 	},
 	{
 		TestERC20DepositAndCallRefundName,
-		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts; should refund on ZetaChain if no liquidity pool, should refund on origin if liquidity pool",
+		"deposit a non-gas ZRC20 into ZEVM and call a contract that reverts",
 		TestERC20DepositAndCallRefund,
 	},
 	{
@@ -133,5 +150,40 @@ var AllSmokeTests = []runner.SmokeTest{
 		TestEtherDepositName,
 		"deposit Ether into ZEVM",
 		TestEtherDeposit,
+	},
+	{
+		TestEtherWithdrawName,
+		"withdraw Ether from ZEVM",
+		TestEtherWithdraw,
+	},
+	{
+		TestBitcoinDepositName,
+		"deposit Bitcoin into ZEVM",
+		TestBitcoinDeposit,
+	},
+	{
+		TestDonationEtherName,
+		"donate Ether to the TSS",
+		TestDonationEther,
+	},
+	{
+		TestStressEtherWithdrawName,
+		"stress test Ether withdrawal",
+		TestStressEtherWithdraw,
+	},
+	{
+		TestStressBTCWithdrawName,
+		"stress test BTC withdrawal",
+		TestStressBTCWithdraw,
+	},
+	{
+		TestStressEtherDepositName,
+		"stress test Ether deposit",
+		TestStressEtherDeposit,
+	},
+	{
+		TestStressBTCDepositName,
+		"stress test BTC deposit",
+		TestStressBTCDeposit,
 	},
 }

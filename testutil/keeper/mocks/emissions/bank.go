@@ -31,42 +31,6 @@ func (_m *EmissionBankKeeper) GetBalance(ctx types.Context, addr types.AccAddres
 	return r0
 }
 
-// SendCoinsFromAccountToModule provides a mock function with given fields: ctx, senderAddr, recipientModule, amt
-func (_m *EmissionBankKeeper) SendCoinsFromAccountToModule(ctx types.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
-	ret := _m.Called(ctx, senderAddr, recipientModule, amt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendCoinsFromAccountToModule")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, string, types.Coins) error); ok {
-		r0 = rf(ctx, senderAddr, recipientModule, amt)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SendCoinsFromModuleToAccount provides a mock function with given fields: ctx, senderModule, recipientAddr, amt
-func (_m *EmissionBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
-	ret := _m.Called(ctx, senderModule, recipientAddr, amt)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SendCoinsFromModuleToAccount")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, string, types.AccAddress, types.Coins) error); ok {
-		r0 = rf(ctx, senderModule, recipientAddr, amt)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // SendCoinsFromModuleToModule provides a mock function with given fields: ctx, senderModule, recipientModule, amt
 func (_m *EmissionBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderModule string, recipientModule string, amt types.Coins) error {
 	ret := _m.Called(ctx, senderModule, recipientModule, amt)
@@ -80,26 +44,6 @@ func (_m *EmissionBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, sen
 		r0 = rf(ctx, senderModule, recipientModule, amt)
 	} else {
 		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SpendableCoins provides a mock function with given fields: ctx, addr
-func (_m *EmissionBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
-	ret := _m.Called(ctx, addr)
-
-	if len(ret) == 0 {
-		panic("no return value specified for SpendableCoins")
-	}
-
-	var r0 types.Coins
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress) types.Coins); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Coins)
-		}
 	}
 
 	return r0
