@@ -218,7 +218,7 @@ stop-stress-test:
 start-upgrade-test:
 	@echo "--> Starting upgrade test"
 	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-upgrade .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
 
 stop-upgrade-test:

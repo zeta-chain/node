@@ -95,8 +95,6 @@ $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
 
 - TSS Address (on ETH): 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2
 
-
-
 ## Add more e2e tests
 The e2e test (integration tests) are located in the
 orchestrator/smoketest directory. The orchestrator is a Go program.
