@@ -22,6 +22,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -115,7 +116,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Initialize core parameters from zetacore
 	coreContext := corecontext.NewZeraCoreContext()
-	err = zetaBridge.UpdateZetaCoreContext(coreContext, true)
+
+	appContext := appcontext.NewAppContext(coreContext, cfg)
+	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
@@ -123,7 +126,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
 	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
-	go zetaBridge.CoreContextUpdater(cfg, coreContext)
+	go zetaBridge.CoreContextUpdater(cfg, appContext.ZetaCoreContext())
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -169,7 +172,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, coreContext, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(appContext, masterLogger, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -221,7 +224,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, coreContext, telemetryServer)
+	signerMap, err := CreateSignerMap(appContext, tss, masterLogger, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -235,7 +238,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, coreContext, telemetryServer)
+	chainClientMap, err := CreateChainClientMap(appContext, zetaBridge, tss, dbpath, metrics, masterLogger, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err

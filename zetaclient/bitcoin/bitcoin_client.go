@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -132,6 +133,7 @@ func (ob *BTCChainClient) GetChainParams() observertypes.ChainParams {
 
 // NewBitcoinClient returns a new configuration based on supplied target chain
 func NewBitcoinClient(
+	appcontext *appcontext.AppContext,
 	chain common.Chain,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
@@ -139,7 +141,6 @@ func NewBitcoinClient(
 	metrics *metricsPkg.Metrics,
 	logger zerolog.Logger,
 	btcCfg config.BTCConfig,
-	params *observertypes.ChainParams,
 	ts *metricsPkg.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -168,8 +169,10 @@ func NewBitcoinClient(
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-	ob.params = *params
-
+	_, chainParams, found := appcontext.ZetaCoreContext().GetBTCChainParams()
+	if found {
+		ob.params = *chainParams
+	}
 	// initialize the Client
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{

@@ -14,7 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
@@ -109,14 +111,13 @@ var _ interfaces.ChainClient = (*ChainClient)(nil)
 
 // NewEVMChainClient returns a new configuration based on supplied target chain
 func NewEVMChainClient(
+	appcontext *appcontext.AppContext,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	metrics *metricsPkg.Metrics,
 	logger zerolog.Logger,
-	cfg *config.Config,
 	evmCfg config.EVMConfig,
-	coreContext *corecontext.ZeraCoreContext,
 	ts *metricsPkg.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
@@ -130,9 +131,13 @@ func NewEVMChainClient(
 		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
-	ob.cfg = cfg
-	ob.coreContext = coreContext
-	ob.chainParams = *coreContext.EVMChainParams[evmCfg.Chain.ChainId]
+	// TODO: simplify this now when there is appcontext
+	ob.cfg = appcontext.Config()
+	ob.coreContext = appcontext.ZetaCoreContext()
+	chainParams, found := appcontext.ZetaCoreContext().GetEVMChainParams(evmCfg.Chain.ChainId)
+	if found {
+		ob.chainParams = *chainParams
+	}
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}

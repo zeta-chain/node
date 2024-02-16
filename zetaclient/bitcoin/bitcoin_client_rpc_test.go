@@ -9,7 +9,8 @@ import (
 	"testing"
 	"time"
 
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/common"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -21,7 +22,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -45,7 +45,8 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
-	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, &observertypes.ChainParams{}, nil)
+	// TODO: check tests
+	client, err := NewBitcoinClient(&appcontext.AppContext{}, common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 	skBytes, err := hex.DecodeString(skHex)
