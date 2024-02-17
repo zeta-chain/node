@@ -197,24 +197,17 @@ start-e2etest:
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
-stop-e2etest:
-	@echo "--> Stopping e2e test"
-	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
-
 stress-test: zetanode
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
-
-stop-stress-test:
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
 start-upgrade-test:
 	@echo "--> Starting upgrade test"
 	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-stop-upgrade-test:
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
+stop-test:
+	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
 
 ###############################################################################
 ###                              Monitoring                                 ###

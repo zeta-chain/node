@@ -1,12 +1,5 @@
 version: "3"
 
-networks:
-  mynetwork:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
-
-
 services:
   zetacore0:
     image: zetanode:latest
@@ -23,7 +16,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.11
     entrypoint: ["/root/start-zetacored.sh", "4"]
-
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetacore1:
     image: zetanode:latest
@@ -36,6 +30,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.12
     entrypoint: ["/root/start-zetacored.sh", "4"]
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetacore2:
     image: zetanode:latest
@@ -48,6 +44,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.13
     entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetacore3:
     image: zetanode:latest
@@ -60,6 +58,8 @@ services:
       mynetwork:
         ipv4_address: 172.20.0.14
     entrypoint: [ "/root/start-zetacored.sh", "4" ]
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetaclient0:
     image: zetanode:latest
@@ -73,10 +73,10 @@ services:
         ipv4_address: 172.20.0.21
     ports:
       - "8123:8123"
-
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
+      - HOTKEY_BACKEND=test
 
   zetaclient1:
     image: zetanode:latest
@@ -91,6 +91,7 @@ services:
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
+      - HOTKEY_BACKEND=test
 
   zetaclient2:
     image: zetanode:latest
@@ -105,6 +106,7 @@ services:
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
+      - HOTKEY_BACKEND=test
 
   zetaclient3:
     image: zetanode:latest
@@ -119,34 +121,7 @@ services:
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
-
-  eth:
-    image: ethereum/client-go:v1.10.26
-    container_name: eth
-    hostname: eth
-    ports:
-      - "8545:8545"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.100
-    entrypoint: [ "geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2" ]
-
-  bitcoin:
-    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
-    container_name: bitcoin
-    hostname: bitcoin
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.101
-    ports:
-      - "18443:18443"
-    command:
-      -printtoconsole
-      -regtest=1
-      -rpcallowip=172.20.0.0/16
-      -rpcbind=0.0.0.0
-      -rpcauth=e2e:63acf9b8dccecce914d85ff8c044b78b$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
-      -txindex=1
+      - HOTKEY_BACKEND=test
 
   orchestrator:
     image: orchestrator:latest
