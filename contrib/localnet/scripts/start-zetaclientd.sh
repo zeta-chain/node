@@ -1,8 +1,13 @@
 #!/bin/bash
 
+# This script is used to start ZetaClient for the localnet
+# An optional argument can be passed and can have the following value:
+# background: start the ZetaClient in the background
+
 /usr/sbin/sshd
 
 HOSTNAME=$(hostname)
+OPTION=$1
 
 # read HOTKEY_BACKEND env var for hotkey keyring backend and set default to test
 BACKEND="test"
@@ -39,3 +44,9 @@ else
   zetaclientd init --peer /ip4/172.20.0.21/tcp/6668/p2p/"$SEED" --zetacore-url "$node" --chain-id athens_101-1 --operator "$operatorAddress" --log-format=text --public-ip "$MYIP" --log-level 1 --keyring-backend "$BACKEND"
   zetaclientd start < /root/password.file
 fi
+
+if [ "$OPTION" == "background" ]; then
+    sleep 3
+    tail -f $HOME/zetaclient.log
+fi
+

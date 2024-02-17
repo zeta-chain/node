@@ -3,6 +3,9 @@
 # This script is used to start the zetacored nodes
 # It initializes the nodes and creates the genesis.json file
 # It also starts the nodes
+# The number of nodes is passed as an first argument to the script
+# The second argument is optional and can have the following value:
+# 1. upgrade : This is used to test the upgrade process, a proposal is created for the upgrade and the nodes are started using cosmovisor
 
 /usr/sbin/sshd
 
@@ -208,12 +211,12 @@ else
   # If this is the first node, create a governance proposal for upgrade
   if [ $HOSTNAME = "zetacore0" ]
   then
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 200 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=200azeta --broadcast-mode block
+  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height 200 --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=2000000000000000azeta --broadcast-mode block
   fi
 
   # Wait for the proposal to be voted on
   sleep 8
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=200azeta --broadcast-mode block
+  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov vote 1 yes --from operator --keyring-backend test --chain-id $CHAINID --yes --fees=2000000000000000azeta --broadcast-mode block
   sleep 7
   /root/.zetacored/cosmovisor/genesis/bin/zetacored query gov proposal 1
 
