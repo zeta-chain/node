@@ -179,7 +179,7 @@ generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
-###                            E2E tests                                    ###
+###                         E2E tests and localnet                          ###
 ###############################################################################
 
 zetanode:
@@ -205,6 +205,10 @@ start-upgrade-test:
 	$(DOCKER) build --build-arg -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
+
+start-localnet:
+	@echo "--> Starting localnet"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
 
 stop-test:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans

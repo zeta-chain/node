@@ -75,7 +75,6 @@ The logs can be observed with the following command:
 $ docker logs -f orchestrator
 ```
 
-
 ### Stop tests
 
 To stop the tests,
@@ -120,14 +119,98 @@ which does the following docker compose command:
 $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
 ```
 
+## Test with localnet
+
+In addition to running automated tests, you can also interact with the localnet directly for more specific testing.
+
+The localnet can be started without running tests with the following command:
+
+```bash
+# in zeta-node/
+make start-localnet
+```
+
+The localnet takes a few minutes to start. Printing the logs of the orchestrator will show when the localnet is ready. Once setup, it will display:
+```
+✅ the localnet has been setup
+```
+
+### Interaction with ZetaChain
+
+ZetaChain
+The user can connect to the `zetacore0` and directly use the node CLI with the zetacored binary with a funded account:
+
+The account is named `operator` in the keyring and has the address: `zeta1amcsn7ja3608dj74xt93pcu5guffsyu2xfdcyp`
+
+```bash
+docker exec -it zetacore0 sh
+```
+
+Performing a query:
+
+```bash
+zetacored q bank balances zeta1amcsn7ja3608dj74xt93pcu5guffsyu2xfdcyp
+```
+
+Sending a transaction:
+
+```bash
+zetacored tx bank send operator zeta172uf5cwptuhllf6n4qsncd9v6xh59waxnu83kq 5000azeta --from operator --fees 2000000000000000azeta
+```
+
+### Interaction with EVM
+
+The user can interact with the local Ethereum node with the exposed RPC on `http://0.0.0.0:8545`. The following testing account is funded:
+
+```
+Address: 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC
+Private key: d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263
+```
+
+Examples with the [cast](https://book.getfoundry.sh/cast/) CLI:
+
+```bash
+cast balance 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC --rpc-url http://0.0.0.0:8545
+98897999997945970464
+
+cast send 0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c --value 42 --rpc-url http://0.0.0.0:8545 --private-key "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+```
+
 ## Useful data
 
 - TSS Address (on ETH): 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2
 
 ## Add more e2e tests
 
-The e2e test (integration tests) are located in the
-orchestrator/smoketest directory. The orchestrator is a Go program.
+The e2e tests are located in the e2e/e2etests package. New tests can be added. The process:
+
+1. Add a new test file in the e2e/e2etests package, the `test_` prefix should be used for the file name.
+2. Implement a method that satisfies the interface:
+```go
+type E2ETestFunc func(*E2ERunner)
+```
+3. Add the test to list in the `e2e/e2etests/e2etests.go` file.
+
+The test can interact with the different networks using the runned object:
+```go
+type E2ERunner struct {
+	ZevmClient   *ethclient.Client
+	GoerliClient *ethclient.Client
+	BtcRPCClient *rpcclient.Client
+
+	CctxClient     crosschaintypes.QueryClient
+	FungibleClient fungibletypes.QueryClient
+	AuthClient     authtypes.QueryClient
+	BankClient     banktypes.QueryClient
+	ObserverClient observertypes.QueryClient
+	ZetaTxServer   txserver.ZetaTxServer
+	
+	GoerliAuth *bind.TransactOpts
+	ZevmAuth   *bind.TransactOpts
+	
+	// ...
+}
+```
 
 ## Localnet Governance Proposals
 

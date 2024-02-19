@@ -229,6 +229,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// if setup only, quit
 	if setupOnly {
+		logger.Print("✅ the localnet has been setup", time.Since(testStartTime).String())
 		os.Exit(0)
 	}
 
