@@ -27,4 +27,5 @@ var (
 	ErrCallNonContract         = sdkerrors.Register(ModuleName, 1124, "can't call a non-contract address")
 	ErrForeignCoinAlreadyExist = sdkerrors.Register(ModuleName, 1125, "foreign coin already exist")
 	ErrInvalidHash             = sdkerrors.Register(ModuleName, 1126, "invalid hash")
+	ErrNilGasPrice             = sdkerrors.Register(ModuleName, 1127, "nil gas price")
 )

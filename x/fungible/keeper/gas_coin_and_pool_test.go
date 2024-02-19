@@ -19,7 +19,7 @@ func setupGasCoin(
 	t *testing.T,
 	ctx sdk.Context,
 	k *fungiblekeeper.Keeper,
-	evmk *evmkeeper.Keeper,
+	evmk types.EVMKeeper,
 	chainID int64,
 	assetName string,
 	symbol string,
