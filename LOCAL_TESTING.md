@@ -119,7 +119,7 @@ which does the following docker compose command:
 $ docker compose -f docker-compose-monitoring.yml down --remove-orphans
 ```
 
-## Test with localnet
+## Interacting with the Localnet
 
 In addition to running automated tests, you can also interact with the localnet directly for more specific testing.
 
