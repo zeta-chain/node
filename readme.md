@@ -29,7 +29,7 @@ EVM-compatibility.
 ## Building the zetacored/zetaclientd binaries
 For the Athens 3 testnet, clone this repository, checkout the latest release tag, and type the following command to build the binaries:
 ```
-make install-testnet
+make install
 ```
 to build. 
 
@@ -73,7 +73,7 @@ documentation for all the messages in that module.
 ## Running tests
 
 To check that the source code is working as expected, refer to the manual on how
-to [run the E2E test](./contrib/localnet/README.md).
+to [run the E2E test](./LOCAL_TESTING.md).
 
 ## Community
 

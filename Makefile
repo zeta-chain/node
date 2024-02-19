@@ -193,16 +193,16 @@ install-zetae2e: go.sum
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
-start-e2etest:
+start-e2e-test:
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
-stress-test: zetanode
+start-stress-test: zetanode
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
 start-upgrade-test:
 	@echo "--> Starting upgrade test"
-	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build --build-arg -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
