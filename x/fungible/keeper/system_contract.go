@@ -6,6 +6,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
@@ -87,6 +88,10 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "wZetaContractAddress", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack wZetaContractAddress: %s", err.Error())
 	}
+
+	if wzetaResponse.Value == ethcommon.HexToAddress("0x0") {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "wzeta contract invalid address")
+	}
 	return wzetaResponse.Value, nil
 }
 
@@ -119,11 +124,15 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
-	var wzetaResponse AddressResponse
-	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "uniswapv2FactoryAddress", res.Ret); err != nil {
+	var uniswapFactoryResponse AddressResponse
+	if err := sysABI.UnpackIntoInterface(&uniswapFactoryResponse, "uniswapv2FactoryAddress", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2FactoryAddress: %s", err.Error())
 	}
-	return wzetaResponse.Value, nil
+
+	if uniswapFactoryResponse.Value == ethcommon.HexToAddress("0x0") {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "uniswap factory contract invalid address")
+	}
+	return uniswapFactoryResponse.Value, nil
 }
 
 // GetUniswapV2Router02Address returns the uniswapv2 router02 address on ZetaChain
@@ -158,6 +167,10 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 	var routerResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&routerResponse, "uniswapv2Router02Address", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2Router02Address: %s", err.Error())
+	}
+
+	if routerResponse.Value == ethcommon.HexToAddress("0x0") {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "uniswap router contract invalid address")
 	}
 	return routerResponse.Value, nil
 }

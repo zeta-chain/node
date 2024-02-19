@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
-	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -55,39 +54,17 @@ func TestKeeper_GetWZetaContractAddress(t *testing.T) {
 }
 
 func TestKeeper_GetWZetaContractAddressFails(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
 	_, err := k.GetWZetaContractAddress(ctx)
 	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMFailCallOnce()
-	_, err = k.GetWZetaContractAddress(ctx)
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_GetWZetaContractAddressFailsToUnpack(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	_, err := k.GetWZetaContractAddress(ctx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMSuccessCallOnce()
-	_, err = k.GetWZetaContractAddress(ctx)
-	require.ErrorIs(t, err, types.ErrABIUnpack)
+	wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	found, err := k.GetWZetaContractAddress(ctx)
+	require.NoError(t, err)
+	require.Equal(t, wzeta, found)
 }
 
 func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
@@ -104,42 +81,6 @@ func TestKeeper_GetUniswapV2FactoryAddress(t *testing.T) {
 	require.Equal(t, factory, found)
 }
 
-func TestKeeper_GetUniswapV2FactoryAddressFails(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	_, err := k.GetUniswapV2FactoryAddress(ctx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMFailCallOnce()
-	_, err = k.GetUniswapV2FactoryAddress(ctx)
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_GetUniswapV2FactoryAddressFailsToUnpack(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	_, err := k.GetUniswapV2FactoryAddress(ctx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMSuccessCallOnce()
-	_, err = k.GetUniswapV2FactoryAddress(ctx)
-	require.ErrorIs(t, err, types.ErrABIUnpack)
-}
-
 func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -152,42 +93,6 @@ func TestKeeper_GetUniswapV2Router02Address(t *testing.T) {
 	found, err := k.GetUniswapV2Router02Address(ctx)
 	require.NoError(t, err)
 	require.Equal(t, router, found)
-}
-
-func TestKeeper_GetUniswapV2Router02AddressFails(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	_, err := k.GetUniswapV2Router02Address(ctx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMFailCallOnce()
-	_, err = k.GetUniswapV2Router02Address(ctx)
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_GetUniswapV2Router02AddressFailsToUnpack(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	_, err := k.GetUniswapV2Router02Address(ctx)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMSuccessCallOnce()
-	_, err = k.GetUniswapV2Router02Address(ctx)
-	require.ErrorIs(t, err, types.ErrABIUnpack)
 }
 
 func TestKeeper_CallWZetaDeposit(t *testing.T) {
@@ -218,99 +123,55 @@ func TestKeeper_CallWZetaDeposit(t *testing.T) {
 	require.Equal(t, big.NewInt(42), balance)
 }
 
-func TestKeeper_CallWZetaDepositFails(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	// mint tokens
-	addr := sample.Bech32AccAddress()
-	ethAddr := common.BytesToAddress(addr.Bytes())
-	coins := sample.Coins()
-	err := sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sample.Coins())
-	require.NoError(t, err)
-	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
-	require.NoError(t, err)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	// deposit
-	mockEVMKeeper.MockEVMFailCallOnce()
-	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_QueryWZetaBalanceOfFailsToReturnSystemContract(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	// mint tokens
-	addr := sample.Bech32AccAddress()
-	ethAddr := common.BytesToAddress(addr.Bytes())
-	coins := sample.Coins()
-	err := sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sample.Coins())
-	require.NoError(t, err)
-	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
-	require.NoError(t, err)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	// query
-	mockEVMKeeper.MockEVMFailCallOnce()
-	_, err = k.QueryWZetaBalanceOf(ctx, ethAddr)
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
 func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k, ctx, _, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-	// mint tokens
-
-	wzeta, factory, router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-	var encodedAddress [32]byte
-	copy(encodedAddress[12:], router[:])
-	addLiqMockReturn := &evmtypes.MsgEthereumTxResponse{
-		Ret: make([]byte, 3*32),
-	}
-	mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(addLiqMockReturn)
-
-	// query
-	mockEVMKeeper.MockEVMFailCallOnce()
+	// fail if no system contract
 	_, err := k.QueryWZetaBalanceOf(ctx, sample.EthAddress())
-	require.ErrorIs(t, err, types.ErrContractCall)
+	require.Error(t, err)
 }
 
-func TestKeeper_QueryWZetaBalanceOfFailsToUnpack(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+func TestKeeper_GetWZetaFailsIfNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-	// mint tokens
-	addr := sample.Bech32AccAddress()
-	ethAddr := common.BytesToAddress(addr.Bytes())
-	coins := sample.Coins()
-	err := sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sample.Coins())
-	require.NoError(t, err)
-	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
-	require.NoError(t, err)
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Router:  true,
+		DeployUniswapV2Factory: true,
+	})
 
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+	_, err := k.GetWZetaContractAddress(ctx)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
 
-	// query
-	mockEVMKeeper.MockEVMSuccessCallOnce()
-	_, err = k.QueryWZetaBalanceOf(ctx, ethAddr)
-	require.ErrorIs(t, err, types.ErrABIUnpack)
+func TestKeeper_GetUniswapFactoryFailsIfNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Router:  true,
+		DeployUniswapV2Factory: false,
+	})
+
+	_, err := k.GetUniswapV2FactoryAddress(ctx)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_GetUniswapRouterFailsIfNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Router:  false,
+		DeployUniswapV2Factory: true,
+	})
+
+	_, err := k.GetUniswapV2Router02Address(ctx)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
 func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
@@ -328,46 +189,6 @@ func TestKeeper_QuerySystemContractGasCoinZRC20(t *testing.T) {
 	found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	require.NoError(t, err)
 	require.Equal(t, zrc20, found)
-}
-
-func TestKeeper_QuerySystemContractGasCoinZRC20Fails(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	chainID := getValidChainID(t)
-
-	_, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMFailCallOnce()
-	_, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
-	require.ErrorIs(t, err, types.ErrContractCall)
-}
-
-func TestKeeper_QuerySystemContractGasCoinZRC20FailsToUnpack(t *testing.T) {
-	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-		UseEVMMock: true,
-	})
-	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
-	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
-
-	chainID := getValidChainID(t)
-
-	_, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
-
-	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
-
-	mockEVMKeeper.MockEVMSuccessCallOnce()
-	_, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
-	require.ErrorIs(t, err, types.ErrABIUnpack)
 }
 
 func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
@@ -413,6 +234,36 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFails(t *testing.T) {
 	_, err = k.CallUniswapV2RouterSwapExactETHForToken(
 		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
 	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+
+	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+
+	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
 func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
@@ -461,6 +312,36 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFails(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
+func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+
+	_, err := k.CallUniswapV2RouterSwapEthForExactToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+
+	_, err := k.CallUniswapV2RouterSwapEthForExactToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
 func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -496,6 +377,34 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	require.Equal(t, 2, len(amounts))
 	require.Equal(t, ethAmount, amounts[0])
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
 func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFails(t *testing.T) {
@@ -561,6 +470,48 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 	require.Equal(t, amounts[2], tokenAmount)
 }
 
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts except router
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployUniswapV2Router:  false,
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+	})
+
+	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFailsIfWzetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts except router
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployUniswapV2Router:  true,
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+	})
+
+	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
 func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFails(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
 	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
@@ -581,6 +532,90 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFails(t *testing.T) {
 	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
 		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, inzrc20, outzrc20, true)
 	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsInFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZRC4AmountsInFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZetaAmountsInFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZetaAmountsInFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(1), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsInFailsIfWZetaContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            false,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  true,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress(), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
+}
+
+func TestKeeper_QueryUniswapV2RouterGetZRC4ToZRC4AmountsInFailsIfRouterContractNotSet(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsConfigurable(t, ctx, k, sdkk.EvmKeeper, &SystemContractDeployConfig{
+		DeployWZeta:            true,
+		DeployUniswapV2Factory: true,
+		DeployUniswapV2Router:  false,
+	})
+
+	_, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, big.NewInt(1), sample.EthAddress(), sample.EthAddress())
+	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
 func TestKeeper_CallZRC20BurnFails(t *testing.T) {

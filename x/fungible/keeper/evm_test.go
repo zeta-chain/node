@@ -86,6 +86,56 @@ func deploySystemContracts(
 	return
 }
 
+type SystemContractDeployConfig struct {
+	DeployWZeta            bool
+	DeployUniswapV2Factory bool
+	DeployUniswapV2Router  bool
+}
+
+// deploySystemContracts deploys the system contracts and returns their addresses.
+func deploySystemContractsConfigurable(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	evmk types.EVMKeeper,
+	config *SystemContractDeployConfig,
+) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
+	var err error
+
+	if config.DeployWZeta {
+		wzeta, err = k.DeployWZETA(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, wzeta)
+		assertContractDeployment(t, evmk, ctx, wzeta)
+	}
+
+	if config.DeployUniswapV2Factory {
+		uniswapV2Factory, err = k.DeployUniswapV2Factory(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, uniswapV2Factory)
+		assertContractDeployment(t, evmk, ctx, uniswapV2Factory)
+	}
+
+	if config.DeployUniswapV2Router {
+		uniswapV2Router, err = k.DeployUniswapV2Router02(ctx, uniswapV2Factory, wzeta)
+		require.NoError(t, err)
+		require.NotEmpty(t, uniswapV2Router)
+		assertContractDeployment(t, evmk, ctx, uniswapV2Router)
+	}
+
+	connector, err = k.DeployConnectorZEVM(ctx, wzeta)
+	require.NoError(t, err)
+	require.NotEmpty(t, connector)
+	assertContractDeployment(t, evmk, ctx, connector)
+
+	systemContract, err = k.DeploySystemContract(ctx, wzeta, uniswapV2Factory, uniswapV2Router)
+	require.NoError(t, err)
+	require.NotEmpty(t, systemContract)
+	assertContractDeployment(t, evmk, ctx, systemContract)
+
+	return
+}
+
 // assertExampleBarValue asserts value Bar of the contract Example, used to test onCrossChainCall
 func assertExampleBarValue(
 	t *testing.T,
