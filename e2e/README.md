@@ -56,7 +56,3 @@ zeta_chain_id: "zetachain-1"
 ```
 
 NOTE: config is in progress, contracts on the zEVM must be added
-
-## Getting Started
-
-TODO: Add instructions for running the E2E test tool directly from the command line.

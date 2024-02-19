@@ -1,5 +1,10 @@
 version: "3"
 
+# This docker-compose redefine the services:
+# - ZetaChain with 4 nodes to test performance
+# - ZetaChain observer set with 4 clients to test performance
+# - Orchestrator call stress commands
+
 services:
   zetacore0:
     image: zetanode:latest
