@@ -4,7 +4,9 @@ import (
 	"math/big"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -232,10 +234,6 @@ func TestKeeper_CallWZetaDepositFails(t *testing.T) {
 	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	require.NoError(t, err)
 
-	// fail if no system contract
-	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
-	require.Error(t, err)
-
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	// deposit
@@ -244,7 +242,7 @@ func TestKeeper_CallWZetaDepositFails(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
-func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
+func TestKeeper_QueryWZetaBalanceOfFailsToReturnSystemContract(t *testing.T) {
 	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 		UseEVMMock: true,
 	})
@@ -260,15 +258,34 @@ func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
 	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	require.NoError(t, err)
 
-	// fail if no system contract
-	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
-	require.Error(t, err)
-
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
 	// query
 	mockEVMKeeper.MockEVMFailCallOnce()
 	_, err = k.QueryWZetaBalanceOf(ctx, ethAddr)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+		UseEVMMock: true,
+	})
+	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	// mint tokens
+
+	wzeta, factory, router, _, _ := deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+	var encodedAddress [32]byte
+	copy(encodedAddress[12:], router[:])
+	addLiqMockReturn := &evmtypes.MsgEthereumTxResponse{
+		Ret: make([]byte, 3*32),
+	}
+	mockEVMKeeper.MockEVMSuccessCallOnceWithReturn(addLiqMockReturn)
+
+	// query
+	mockEVMKeeper.MockEVMFailCallOnce()
+	_, err := k.QueryWZetaBalanceOf(ctx, sample.EthAddress())
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
@@ -287,10 +304,6 @@ func TestKeeper_QueryWZetaBalanceOfFailsToUnpack(t *testing.T) {
 	require.NoError(t, err)
 	err = sdkk.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, coins)
 	require.NoError(t, err)
-
-	// fail if no system contract
-	err = k.CallWZetaDeposit(ctx, ethAddr, big.NewInt(42))
-	require.Error(t, err)
 
 	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
 
@@ -355,4 +368,259 @@ func TestKeeper_QuerySystemContractGasCoinZRC20FailsToUnpack(t *testing.T) {
 	mockEVMKeeper.MockEVMSuccessCallOnce()
 	_, err = k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 	require.ErrorIs(t, err, types.ErrABIUnpack)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts and swap exact eth for 1 token
+	tokenAmount := big.NewInt(1)
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, tokenAmount, zrc20)
+	require.NoError(t, err)
+	err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))))
+	require.NoError(t, err)
+
+	amounts, err := k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+	require.NoError(t, err)
+
+	require.Equal(t, 2, len(amounts))
+	require.Equal(t, tokenAmount, amounts[1])
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFails(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// deploy system contracts and swap 1 token fails because of missing wrapped balance
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, big.NewInt(1), zrc20)
+	require.NoError(t, err)
+
+	_, err = k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts and swap exact 1 token
+	tokenAmount := big.NewInt(1)
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, tokenAmount, zrc20)
+	require.NoError(t, err)
+	err = sdkk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("azeta", sdk.NewIntFromBigInt(amountToSwap))))
+	require.NoError(t, err)
+
+	amounts, err := k.CallUniswapV2RouterSwapEthForExactToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, tokenAmount, zrc20)
+	require.NoError(t, err)
+
+	require.Equal(t, 2, len(amounts))
+	require.Equal(t, big.NewInt(1), amounts[1])
+}
+
+func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFails(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// deploy system contracts and swap 1 token fails because of missing wrapped balance
+	tokenAmount := big.NewInt(1)
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZetaAmountsIn(ctx, tokenAmount, zrc20)
+	require.NoError(t, err)
+
+	_, err = k.CallUniswapV2RouterSwapEthForExactToken(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, tokenAmount, zrc20)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts and swap exact eth for 1 token
+	ethAmount := big.NewInt(1)
+	_, _, router, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, ethAmount, zrc20)
+	require.NoError(t, err)
+
+	_, err = k.DepositZRC20(ctx, zrc20, types.ModuleAddressEVM, amountToSwap)
+	require.NoError(t, err)
+	k.CallZRC20Approve(
+		ctx,
+		types.ModuleAddressEVM,
+		zrc20,
+		router,
+		amountToSwap,
+		false,
+	)
+
+	amounts, err := k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+	require.NoError(t, err)
+
+	require.Equal(t, 2, len(amounts))
+	require.Equal(t, ethAmount, amounts[0])
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFails(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts and swap fails because of missing balance
+	ethAmount := big.NewInt(1)
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+	zrc20 := setupGasCoin(t, ctx, k, sdkk.EvmKeeper, chainID, "foobar", "foobar")
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZRC4AmountsIn(ctx, ethAmount, zrc20)
+	require.NoError(t, err)
+
+	_, err = k.CallUniswapV2RouterSwapExactTokensForETH(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// fail if no system contract
+	_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+	require.Error(t, err)
+
+	// deploy system contracts and swap exact token for 1 token
+	tokenAmount := big.NewInt(1)
+	_, _, router, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+	inzrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", sample.EthAddress().String(), "foo")
+	outzrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "bar", sample.EthAddress().String(), "bar")
+	setupZRC20Pool(t, ctx, k, sdkk.BankKeeper, inzrc20)
+	setupZRC20Pool(t, ctx, k, sdkk.BankKeeper, outzrc20)
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, tokenAmount, inzrc20, outzrc20)
+	require.NoError(t, err)
+
+	_, err = k.DepositZRC20(ctx, inzrc20, types.ModuleAddressEVM, amountToSwap)
+	require.NoError(t, err)
+	k.CallZRC20Approve(
+		ctx,
+		types.ModuleAddressEVM,
+		inzrc20,
+		router,
+		amountToSwap,
+		false,
+	)
+
+	amounts, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, inzrc20, outzrc20, true)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(amounts))
+	require.Equal(t, amounts[2], tokenAmount)
+}
+
+func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFails(t *testing.T) {
+	k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+	chainID := getValidChainID(t)
+
+	// deploy system contracts and swap fails because of missing balance
+	tokenAmount := big.NewInt(1)
+	deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+	inzrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "foo", sample.EthAddress().String(), "foo")
+	outzrc20 := deployZRC20(t, ctx, k, sdkk.EvmKeeper, chainID, "bar", sample.EthAddress().String(), "bar")
+	setupZRC20Pool(t, ctx, k, sdkk.BankKeeper, inzrc20)
+	setupZRC20Pool(t, ctx, k, sdkk.BankKeeper, outzrc20)
+
+	amountToSwap, err := k.QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx, tokenAmount, inzrc20, outzrc20)
+	require.NoError(t, err)
+
+	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
+		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, inzrc20, outzrc20, true)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallZRC20BurnFails(t *testing.T) {
+	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+		UseEVMMock: true,
+	})
+	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+	mockEVMKeeper.MockEVMFailCallOnce()
+	err := k.CallZRC20Burn(ctx, types.ModuleAddressEVM, sample.EthAddress(), big.NewInt(1), false)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallZRC20ApproveFails(t *testing.T) {
+	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+		UseEVMMock: true,
+	})
+	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+	mockEVMKeeper.MockEVMFailCallOnce()
+	err := k.CallZRC20Approve(ctx, types.ModuleAddressEVM, sample.EthAddress(), types.ModuleAddressEVM, big.NewInt(1), false)
+	require.ErrorIs(t, err, types.ErrContractCall)
+}
+
+func TestKeeper_CallZRC20DepositFails(t *testing.T) {
+	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+		UseEVMMock: true,
+	})
+	mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
+	k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+	deploySystemContractsWithMockEvmKeeper(t, ctx, k, mockEVMKeeper)
+
+	mockEVMKeeper.MockEVMFailCallOnce()
+	err := k.CallZRC20Deposit(ctx, types.ModuleAddressEVM, sample.EthAddress(), types.ModuleAddressEVM, big.NewInt(1))
+	require.ErrorIs(t, err, types.ErrContractCall)
 }
