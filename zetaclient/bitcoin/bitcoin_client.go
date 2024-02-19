@@ -30,7 +30,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
@@ -139,8 +138,6 @@ func NewBitcoinClient(
 	tss interfaces.TSSSigner,
 	dbpath string,
 	metrics *metricsPkg.Metrics,
-	logger zerolog.Logger,
-	btcCfg config.BTCConfig,
 	ts *metricsPkg.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -155,7 +152,7 @@ func NewBitcoinClient(
 	}
 	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
-	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := appcontext.MasterLogger().With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
 		ChainLogger:   chainLogger,
 		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),
@@ -174,6 +171,7 @@ func NewBitcoinClient(
 		ob.params = *chainParams
 	}
 	// initialize the Client
+	btcCfg := appcontext.Config().BitcoinConfig
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         btcCfg.RPCHost,

@@ -38,8 +38,9 @@ func GenerateTss(
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
 	bitcoinChainID := common.BtcRegtestChain().ChainId
-	if appContext.ZetaCoreContext().BitcoinChainParams != nil {
-		bitcoinChainID = appContext.ZetaCoreContext().BitcoinChainParams.ChainId
+	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
+	if btcEnabled {
+		bitcoinChainID = btcChain.ChainId
 	}
 
 	tss, err := mc.NewTSS(

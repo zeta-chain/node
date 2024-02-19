@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -51,6 +52,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			coreContext := corecontext.NewZeraCoreContext()
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -128,8 +130,7 @@ func DebugCmd() *cobra.Command {
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
 							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						// TODO: fix this
-						// cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
+						coreContext.EVMChainParams[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						ob.SetConfig(cfg)
 						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta

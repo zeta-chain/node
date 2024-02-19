@@ -112,9 +112,9 @@ func CreateChainClientMap(
 		clientMap[evmConfig.Chain] = co
 	}
 	// BTC client
-	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
+	btcChain, _, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := bitcoin.NewBitcoinClient(appContext, btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, ts)
+		co, err := bitcoin.NewBitcoinClient(appContext, btcChain, bridge, tss, dbpath, metrics, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
 
