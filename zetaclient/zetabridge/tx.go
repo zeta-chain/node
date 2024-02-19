@@ -151,8 +151,8 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
-	b.logger.Info().Msg("CoreContextUpdater started")
+func (b *ZetaCoreBridge) UpdateAppContext(appContext *appcontext.AppContext) {
+	b.logger.Info().Msg("UpdateAppContext started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
 	for {
 		select {
@@ -160,10 +160,10 @@ func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
 			b.logger.Debug().Msg("Running Updater")
 			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false)
 			if err != nil {
-				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
+				b.logger.Err(err).Msg("UpdateAppContext failed to update config")
 			}
 		case <-b.stop:
-			b.logger.Info().Msg("CoreContextUpdater stopped")
+			b.logger.Info().Msg("UpdateAppContext stopped")
 			return
 		}
 	}

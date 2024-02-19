@@ -152,7 +152,7 @@ func NewBitcoinClient(
 	}
 	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
-	chainLogger := appcontext.MasterLogger().With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := appcontext.Logger().With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
 		ChainLogger:   chainLogger,
 		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),

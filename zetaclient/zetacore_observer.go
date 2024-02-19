@@ -58,7 +58,7 @@ func NewCoreObserver(
 		ts:   ts,
 		stop: make(chan struct{}),
 	}
-	chainLogger := appContext.MasterLogger().With().
+	chainLogger := appContext.Logger().With().
 		Str("chain", "ZetaChain").
 		Logger()
 	co.logger = ZetaCoreLog{

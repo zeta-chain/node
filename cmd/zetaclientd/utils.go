@@ -55,7 +55,7 @@ func CreateSignerMap(
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainSigner, error) {
 	signerMap := make(map[common.Chain]interfaces.ChainSigner)
-	logger := appContext.MasterLogger()
+	logger := appContext.Logger()
 	// EVM signers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
@@ -98,7 +98,7 @@ func CreateChainClientMap(
 	ts *metrics.TelemetryServer,
 ) (map[common.Chain]interfaces.ChainClient, error) {
 	clientMap := make(map[common.Chain]interfaces.ChainClient)
-	logger := appContext.MasterLogger()
+	logger := appContext.Logger()
 	// EVM clients
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {

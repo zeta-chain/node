@@ -8,20 +8,20 @@ import (
 )
 
 type AppContext struct {
-	coreContext  *corecontext.ZeraCoreContext
-	config       *config.Config
-	masterLogger zerolog.Logger
+	coreContext *corecontext.ZeraCoreContext
+	config      *config.Config
+	logger      zerolog.Logger
 }
 
 func NewAppContext(
 	coreContext *corecontext.ZeraCoreContext,
 	config *config.Config,
-	masterLogger zerolog.Logger,
+	logger zerolog.Logger,
 ) *AppContext {
 	return &AppContext{
-		coreContext:  coreContext,
-		config:       config,
-		masterLogger: masterLogger,
+		coreContext: coreContext,
+		config:      config,
+		logger:      logger,
 	}
 }
 
@@ -33,8 +33,8 @@ func (a *AppContext) ZetaCoreContext() *corecontext.ZeraCoreContext {
 	return a.coreContext
 }
 
-func (a *AppContext) MasterLogger() zerolog.Logger {
-	return a.masterLogger
+func (a *AppContext) Logger() zerolog.Logger {
+	return a.logger
 }
 
 func (a *AppContext) GetBTCChainAndConfig() (common.Chain, config.BTCConfig, bool) {

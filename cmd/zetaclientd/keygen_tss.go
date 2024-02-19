@@ -32,7 +32,7 @@ func GenerateTss(
 	metrics *metrics.Metrics,
 	tssPassword string,
 	hotkeyPassword string) (*mc.TSS, error) {
-	keygenLogger := appContext.MasterLogger().With().Str("module", "keygen").Logger()
+	keygenLogger := appContext.Logger().With().Str("module", "keygen").Logger()
 
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format

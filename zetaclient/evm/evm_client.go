@@ -97,7 +97,6 @@ type ChainClient struct {
 	stop                       chan struct{}
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
-	cfg                        *config.Config
 	coreContext                *corecontext.ZeraCoreContext
 	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
@@ -123,15 +122,13 @@ func NewEVMChainClient(
 		ChainMetrics: metricsPkg.NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
 		ts:           ts,
 	}
-	chainLogger := appContext.MasterLogger().With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
+	chainLogger := appContext.Logger().With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Log{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
 		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 	}
-	// TODO: simplify this now when there is appcontext
-	ob.cfg = appContext.Config()
 	ob.coreContext = appContext.ZetaCoreContext()
 	chainParams, found := appContext.ZetaCoreContext().GetEVMChainParams(evmCfg.Chain.ChainId)
 	if found {
@@ -236,12 +233,6 @@ func (ob *ChainClient) WithParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chainParams = params
-}
-
-func (ob *ChainClient) SetConfig(cfg *config.Config) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	ob.cfg = cfg
 }
 
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
