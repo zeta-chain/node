@@ -191,7 +191,7 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	case 8332:
 		return &chaincfg.MainNetParams, nil
 	default:
-		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
 }
 
@@ -204,7 +204,7 @@ func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	case chaincfg.MainNetParams.Name:
 		return 8332, nil
 	default:
-		return 0, fmt.Errorf("error chain %s is not a Bitcoin chain", params.Name)
+		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}
 }
 

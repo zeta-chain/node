@@ -583,7 +583,6 @@ func (k Keeper) CallEVM(
 		if ok {
 			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
 		}
-
 		return resp, cosmoserrors.Wrapf(err, errMes)
 	}
 	return resp, nil
