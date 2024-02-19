@@ -59,7 +59,15 @@ jobs:
           command: |
             echo "Running Build Tests"
             make clean
-            make test
+            make test-coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          file: coverage.out
+        env:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: zeta-chain/node
 
       - name: Build zetacored and zetaclientd
         env:
