@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
@@ -63,7 +63,7 @@ func (sm *SmokeTestRunner) SetupEVM(contractsDeployed bool) {
 
 	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
 	// gas token on ZetaChain to initialize the pool
-	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(101000000000000000), []byte(zetaclient.DonationMessage))
+	txDonation, err := sm.SendEther(sm.TSSAddress, big.NewInt(101000000000000000), []byte(evm.DonationMessage))
 	if err != nil {
 		panic(err)
 	}

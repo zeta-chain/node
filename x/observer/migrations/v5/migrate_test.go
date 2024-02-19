@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -23,11 +22,11 @@ func TestMigrateObserverMapper(t *testing.T) {
 			legacyObserverMapperStore.Set(types.KeyPrefix(legacyObserverMapper.Index), k.Codec().MustMarshal(legacyObserverMapper))
 		}
 		err := v5.MigrateObserverMapper(ctx, k.StoreKey(), k.Codec())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		observerSet, found := k.GetObserverSet(ctx)
-		assert.True(t, found)
+		require.True(t, found)
 
-		assert.Equal(t, legacyObserverMapperList[0].ObserverList, observerSet.ObserverList)
+		require.Equal(t, legacyObserverMapperList[0].ObserverList, observerSet.ObserverList)
 		iterator := sdk.KVStorePrefixIterator(legacyObserverMapperStore, []byte{})
 		defer iterator.Close()
 
@@ -39,7 +38,7 @@ func TestMigrateObserverMapper(t *testing.T) {
 				observerMappers = append(observerMappers, &val)
 			}
 		}
-		assert.Equal(t, 0, len(observerMappers))
+		require.Equal(t, 0, len(observerMappers))
 	})
 }
 

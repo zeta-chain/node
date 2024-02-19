@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 )
@@ -14,8 +14,8 @@ func TestKeeper_GetTssFundMigrator(t *testing.T) {
 		chain := sample.TssFundsMigrator(1)
 		k.SetFundMigrator(ctx, chain)
 		tfm, found := k.GetFundMigrator(ctx, chain.ChainId)
-		assert.True(t, found)
-		assert.Equal(t, chain, tfm)
+		require.True(t, found)
+		require.Equal(t, chain, tfm)
 	})
 	t.Run("Verify only one migrator can be created for a chain", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -25,8 +25,8 @@ func TestKeeper_GetTssFundMigrator(t *testing.T) {
 		tfm2.MigrationCctxIndex = "sampleIndex2"
 		k.SetFundMigrator(ctx, tfm2)
 		migratorList := k.GetAllTssFundMigrators(ctx)
-		assert.Equal(t, 1, len(migratorList))
-		assert.Equal(t, tfm2, migratorList[0])
+		require.Equal(t, 1, len(migratorList))
+		require.Equal(t, tfm2, migratorList[0])
 	})
 
 }

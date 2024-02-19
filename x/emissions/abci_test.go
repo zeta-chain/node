@@ -142,27 +142,27 @@ package emissions_test
 //		t.Run(tt.name, func(t *testing.T) {
 //			app, ctx, _, minter := SetupApp(t, tt.params, getaZetaFromString(tt.startingEmissionPool))
 //			err := app.BankKeeper.SendCoinsFromAccountToModule(ctx, minter.GetAddress(), emissionsModuleTypes.ModuleName, getaZetaFromString(tt.startingEmissionPool))
-//			assert.NoError(t, err)
+//			require.NoError(t, err)
 //			GenerateTestDataMaths(app, ctx, tt.testMaxHeight, tt.inputFilename)
 //			defer func(t *testing.T, fp string) {
 //				err := os.RemoveAll(fp)
-//				assert.NoError(t, err)
+//				require.NoError(t, err)
 //			}(t, tt.inputFilename)
 //
 //			if tt.generateOnly {
 //				return
 //			}
 //			inputTestData, err := GetInputData(tt.inputFilename)
-//			assert.NoError(t, err)
+//			require.NoError(t, err)
 //			sort.SliceStable(inputTestData, func(i, j int) bool { return inputTestData[i].BlockHeight < inputTestData[j].BlockHeight })
 //			startHeight := ctx.BlockHeight()
-//			assert.Equal(t, startHeight, inputTestData[0].BlockHeight, "starting block height should be equal to the first block height in the input data")
+//			require.Equal(t, startHeight, inputTestData[0].BlockHeight, "starting block height should be equal to the first block height in the input data")
 //			for i := startHeight; i < tt.testMaxHeight; i++ {
 //				//The First distribution will occur only when begin-block is triggered
 //				reservesFactor, bondFactor, durationFactor := app.EmissionsKeeper.GetBlockRewardComponents(ctx)
-//				assert.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-//				assert.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
-//				assert.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
+//				require.Equal(t, inputTestData[i-1].ReservesFactor, reservesFactor, "reserves factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
+//				require.Equal(t, inputTestData[i-1].BondFactor, bondFactor, "bond factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
+//				require.Equal(t, inputTestData[i-1].DurationFactor, durationFactor.String(), "duration factor should be equal to the input data"+fmt.Sprintf(" , block height: %d", i))
 //				emissionsModule.BeginBlocker(ctx, app.EmissionsKeeper)
 //				ctx = ctx.WithBlockHeight(i + 1)
 //			}

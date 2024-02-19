@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	v6 "github.com/zeta-chain/zetacore/x/observer/migrations/v6"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -49,12 +49,12 @@ func TestMigrateObserverParams(t *testing.T) {
 			FinalizedZetaHeight: finalizedZetaHeight,
 		})
 		err := v6.MigrateStore(ctx, k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		keygen, found := k.GetKeygen(ctx)
-		assert.True(t, found)
-		assert.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
-		assert.Equal(t, keygenHeight, keygenHeight)
-		assert.Equal(t, participantList, participantList)
+		require.True(t, found)
+		require.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
+		require.Equal(t, keygenHeight, keygenHeight)
+		require.Equal(t, participantList, participantList)
 	})
 	t.Run("Migrate when keygen is not Pending", func(t *testing.T) {
 		k, ctx := keepertest.ObserverKeeper(t)
@@ -76,12 +76,12 @@ func TestMigrateObserverParams(t *testing.T) {
 			GranteePubkeys: participantList,
 		})
 		err := v6.MigrateStore(ctx, k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		keygen, found := k.GetKeygen(ctx)
-		assert.True(t, found)
-		assert.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
-		assert.Equal(t, keygen.BlockNumber, keygenHeight)
-		assert.Equal(t, keygen.GranteePubkeys, participantList)
+		require.True(t, found)
+		require.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
+		require.Equal(t, keygen.BlockNumber, keygenHeight)
+		require.Equal(t, keygen.GranteePubkeys, participantList)
 	})
 
 }

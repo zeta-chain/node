@@ -114,10 +114,6 @@ func IsHeaderSupportedEvmChain(chainID int64) bool {
 		chainID == 56 // bsc mainnet
 }
 
-func (chain Chain) IsKlaytnChain() bool {
-	return chain.ChainId == 1001
-}
-
 // SupportMerkleProof returns true if the chain supports block header-based verification
 func (chain Chain) SupportMerkleProof() bool {
 	return IsEVMChain(chain.ChainId) || IsBitcoinChain(chain.ChainId)
@@ -195,7 +191,7 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	case 8332:
 		return &chaincfg.MainNetParams, nil
 	default:
-		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
 }
 
@@ -208,7 +204,7 @@ func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	case chaincfg.MainNetParams.Name:
 		return 8332, nil
 	default:
-		return 0, fmt.Errorf("error chain %s is not a Bitcoin chain", params.Name)
+		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}
 }
 

@@ -226,27 +226,27 @@ type App struct {
 	memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper      authkeeper.AccountKeeper
-	BankKeeper         bankkeeper.Keeper
-	StakingKeeper      stakingkeeper.Keeper
-	SlashingKeeper     slashingkeeper.Keeper
-	DistrKeeper        distrkeeper.Keeper
-	GovKeeper          govkeeper.Keeper
-	CrisisKeeper       crisiskeeper.Keeper
-	UpgradeKeeper      upgradekeeper.Keeper
-	ParamsKeeper       paramskeeper.Keeper
-	EvidenceKeeper     evidencekeeper.Keeper
-	ZetaCoreKeeper     crosschainkeeper.Keeper
-	ZetaObserverKeeper *observerkeeper.Keeper
-	mm                 *module.Manager
-	sm                 *module.SimulationManager
-	configurator       module.Configurator
-	EvmKeeper          *evmkeeper.Keeper
-	FeeMarketKeeper    feemarketkeeper.Keeper
-	FungibleKeeper     fungibleModuleKeeper.Keeper
-	EmissionsKeeper    emissionsModuleKeeper.Keeper
-	GroupKeeper        groupkeeper.Keeper
-	AuthzKeeper        authzkeeper.Keeper
+	AccountKeeper    authkeeper.AccountKeeper
+	BankKeeper       bankkeeper.Keeper
+	StakingKeeper    stakingkeeper.Keeper
+	SlashingKeeper   slashingkeeper.Keeper
+	DistrKeeper      distrkeeper.Keeper
+	GovKeeper        govkeeper.Keeper
+	CrisisKeeper     crisiskeeper.Keeper
+	UpgradeKeeper    upgradekeeper.Keeper
+	ParamsKeeper     paramskeeper.Keeper
+	EvidenceKeeper   evidencekeeper.Keeper
+	CrosschainKeeper crosschainkeeper.Keeper
+	ObserverKeeper   *observerkeeper.Keeper
+	mm               *module.Manager
+	sm               *module.SimulationManager
+	configurator     module.Configurator
+	EvmKeeper        *evmkeeper.Keeper
+	FeeMarketKeeper  feemarketkeeper.Keeper
+	FungibleKeeper   fungibleModuleKeeper.Keeper
+	EmissionsKeeper  emissionsModuleKeeper.Keeper
+	GroupKeeper      groupkeeper.Keeper
+	AuthzKeeper      authzkeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -336,7 +336,7 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
-	app.ZetaObserverKeeper = observerkeeper.NewKeeper(
+	app.ObserverKeeper = observerkeeper.NewKeeper(
 		appCodec,
 		keys[observertypes.StoreKey],
 		keys[observertypes.MemStoreKey],
@@ -348,7 +348,7 @@ func New(
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
 	app.StakingKeeper = *stakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ZetaObserverKeeper.Hooks()),
+		stakingtypes.NewMultiStakingHooks(app.DistrKeeper.Hooks(), app.SlashingKeeper.Hooks(), app.ObserverKeeper.Hooks()),
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
@@ -365,7 +365,8 @@ func New(
 		authtypes.FeeCollectorName,
 		app.BankKeeper,
 		app.StakingKeeper,
-		app.ZetaObserverKeeper,
+		app.ObserverKeeper,
+		app.AccountKeeper,
 	)
 	// Create Ethermint keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
@@ -391,10 +392,10 @@ func New(
 		app.AccountKeeper,
 		app.EvmKeeper,
 		app.BankKeeper,
-		app.ZetaObserverKeeper,
+		app.ObserverKeeper,
 	)
 
-	app.ZetaCoreKeeper = *crosschainkeeper.NewKeeper(
+	app.CrosschainKeeper = *crosschainkeeper.NewKeeper(
 		appCodec,
 		keys[crosschaintypes.StoreKey],
 		keys[crosschaintypes.MemStoreKey],
@@ -402,7 +403,7 @@ func New(
 		app.GetSubspace(crosschaintypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.ZetaObserverKeeper,
+		app.ObserverKeeper,
 		&app.FungibleKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
@@ -442,7 +443,7 @@ func New(
 	app.EvidenceKeeper = *evidenceKeeper
 
 	app.EvmKeeper = app.EvmKeeper.SetHooks(evmkeeper.NewMultiEvmHooks(
-		app.ZetaCoreKeeper.Hooks(),
+		app.CrosschainKeeper.Hooks(),
 		app.FungibleKeeper.EVMHooks(),
 	))
 
@@ -474,10 +475,10 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
-		crosschainmodule.NewAppModule(appCodec, app.ZetaCoreKeeper, app.StakingKeeper, app.AccountKeeper),
-		observermodule.NewAppModule(appCodec, *app.ZetaObserverKeeper, app.AccountKeeper, app.BankKeeper),
-		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper, app.AccountKeeper, app.BankKeeper),
-		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper, app.AccountKeeper),
+		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
+		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
+		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper),
+		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
@@ -589,7 +590,7 @@ func New(
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
 		},
-		ObserverKeeper: app.ZetaObserverKeeper,
+		ObserverKeeper: app.ObserverKeeper,
 	}
 
 	anteHandler, err := ante.NewAnteHandler(options)
