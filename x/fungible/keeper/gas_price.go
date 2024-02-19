@@ -12,6 +12,9 @@ import (
 
 // SetGasPrice sets gas price on the system contract in zEVM; return the gasUsed and error code
 func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int) (uint64, error) {
+	if gasPrice == nil {
+		return 0, sdkerrors.Wrapf(types.ErrNilGasPrice, "gas price param should be set")
+	}
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return 0, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
