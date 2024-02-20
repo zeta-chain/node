@@ -32,7 +32,7 @@ var (
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
 
-// CrosschainKeeper initializes a crosschain keeper for testing purposes with option to mock specific keepers
+// CrosschainKeeperWithMocks initializes a crosschain keeper for testing purposes with option to mock specific keepers
 func CrosschainKeeperWithMocks(
 	t testing.TB,
 	mockOptions CrosschainMockOptions,

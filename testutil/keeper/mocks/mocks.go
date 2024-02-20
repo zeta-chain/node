@@ -3,6 +3,7 @@ package mocks
 import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 /**
@@ -56,4 +57,18 @@ type FungibleObserverKeeper interface {
 //go:generate mockery --name FungibleEVMKeeper --filename evm.go --case underscore --output ./fungible
 type FungibleEVMKeeper interface {
 	fungibletypes.EVMKeeper
+}
+
+/**
+ * Observer Mocks
+ */
+
+//go:generate mockery --name ObserverStakingKeeper --filename staking.go --case underscore --output ./observer
+type ObserverStakingKeeper interface {
+	observertypes.StakingKeeper
+}
+
+//go:generate mockery --name ObserverSlashingKeeper --filename slashing.go --case underscore --output ./observer
+type ObserverSlashingKeeper interface {
+	observertypes.SlashingKeeper
 }
