@@ -17,38 +17,22 @@ import (
 
 type StakingKeeper interface {
 	GetAllValidators(ctx sdk.Context) (validators []stakingtypes.Validator)
-	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 }
 
 // AccountKeeper defines the expected account keeper (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
-
-	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx sdk.Context, name string) types.ModuleAccountI
-
-	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
-	SetModuleAccount(sdk.Context, types.ModuleAccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	LockedCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
 }
 
 type ObserverKeeper interface {
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
-	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
-	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetChainParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.ChainParams, found bool)
 	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount observertypes.NodeAccount, found bool)
@@ -67,7 +51,6 @@ type ObserverKeeper interface {
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
 	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (observertypes.TSS, bool)
-	GetPreviousTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
 	GetAllTSS(ctx sdk.Context) (list []observertypes.TSS)
 	GetTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
 	SetTSS(ctx sdk.Context, tss observertypes.TSS)
@@ -80,11 +63,9 @@ type ObserverKeeper interface {
 	RemoveAllExistingMigrators(ctx sdk.Context)
 	SetChainNonces(ctx sdk.Context, chainNonces observertypes.ChainNonces)
 	GetChainNonces(ctx sdk.Context, index string) (val observertypes.ChainNonces, found bool)
-	RemoveChainNonces(ctx sdk.Context, index string)
 	GetAllChainNonces(ctx sdk.Context) (list []observertypes.ChainNonces)
 	SetNonceToCctx(ctx sdk.Context, nonceToCctx observertypes.NonceToCctx)
 	GetNonceToCctx(ctx sdk.Context, tss string, chainID int64, nonce int64) (val observertypes.NonceToCctx, found bool)
-	RemoveNonceToCctx(ctx sdk.Context, cctx observertypes.NonceToCctx)
 	GetAllPendingNonces(ctx sdk.Context) (list []observertypes.PendingNonces, err error)
 	GetPendingNonces(ctx sdk.Context, tss string, chainID int64) (val observertypes.PendingNonces, found bool)
 	SetPendingNonces(ctx sdk.Context, pendingNonces observertypes.PendingNonces)
@@ -122,7 +103,6 @@ type FungibleKeeper interface {
 	QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainID *big.Int) (eth.Address, error)
 	GetUniswapV2Router02Address(ctx sdk.Context) (eth.Address, error)
 	QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut *big.Int, outZRC4 eth.Address) (*big.Int, error)
-	QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4 eth.Address) (*big.Int, error)
 	QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amountOut *big.Int, inZRC4, outZRC4 eth.Address) (*big.Int, error)
 	QueryGasLimit(ctx sdk.Context, contract eth.Address) (*big.Int, error)
 	QueryProtocolFlatFee(ctx sdk.Context, contract eth.Address) (*big.Int, error)

@@ -6,7 +6,7 @@ import (
 	"os"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/zeta-chain/zetacore/app"
 
@@ -18,14 +18,14 @@ func TestParsefileToObserverMapper(t *testing.T) {
 	file := "tmp.json"
 	defer func(t *testing.T, fp string) {
 		err := os.RemoveAll(fp)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 	}(t, file)
 	app.SetConfig()
 	createObserverList(file)
 	obsListReadFromFile, err := ParsefileToObserverDetails(file)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	for _, obs := range obsListReadFromFile {
-		assert.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
+		require.Equal(t, obs.ZetaClientGranteeAddress, sdk.AccAddress(crypto.AddressHash([]byte("ObserverGranteeAddress"))).String())
 	}
 }
 

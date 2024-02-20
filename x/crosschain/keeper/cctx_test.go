@@ -15,8 +15,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -125,14 +123,14 @@ func TestSends(t *testing.T) {
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Aborted, types.CctxStatus_Aborted)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.OutboundMined, types.CctxStatus_OutboundMined)...)
 			sends = append(sends, createNCctxWithStatus(keeper, ctx, tt.Reverted, types.CctxStatus_Reverted)...)
-			//assert.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
-			//assert.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
-			//assert.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
-			assert.Equal(t, len(sends), len(keeper.GetAllCrossChainTx(ctx)))
+			//require.Equal(t, tt.PendingOutbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound})))
+			//require.Equal(t, tt.PendingInbound, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingInbound})))
+			//require.Equal(t, tt.PendingOutbound+tt.PendingRevert, len(keeper.GetAllCctxByStatuses(ctx, []types.CctxStatus{types.CctxStatus_PendingOutbound, types.CctxStatus_PendingRevert})))
+			require.Equal(t, len(sends), len(keeper.GetAllCrossChainTx(ctx)))
 			for _, s := range sends {
 				send, found := keeper.GetCrossChainTx(ctx, s.Index)
-				assert.True(t, found)
-				assert.Equal(t, s, send)
+				require.True(t, found)
+				require.Equal(t, s, send)
 			}
 
 		})
@@ -148,7 +146,7 @@ func TestSendGetAll(t *testing.T) {
 	for i, val := range cctx {
 		c[i] = val
 	}
-	assert.Equal(t, items, c)
+	require.Equal(t, items, c)
 }
 
 // Querier Tests
@@ -218,7 +216,7 @@ func TestSendQueryPaginated(t *testing.T) {
 			resp, err := keeper.CctxAll(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
+				require.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
 			}
 		}
 	})
@@ -229,7 +227,7 @@ func TestSendQueryPaginated(t *testing.T) {
 			resp, err := keeper.CctxAll(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			for j := i; j < len(msgs) && j < i+step; j++ {
-				assert.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
+				require.Equal(t, &msgs[j], resp.CrossChainTx[j-i])
 			}
 			next = resp.Pagination.NextKey
 		}

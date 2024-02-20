@@ -162,22 +162,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 				return k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
 			}()
 			if err != nil {
-				// do not commit anything here as the CCTX should be aborted
-
-				// gas payment for erc20 type might fail because no liquidity pool is defined to swap the zrc20 token into the gas token
-				// in this gas we should refund the sender on ZetaChain
-				if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
-
-					if err := k.RefundAmountOnZetaChain(ctx, cctx, cctx.InboundTxParams.Amount); err != nil {
-						// log the error
-						k.Logger(ctx).Error("failed to refund amount of aborted cctx on ZetaChain",
-							"error", err,
-							"sender", cctx.InboundTxParams.Sender,
-							"amount", cctx.InboundTxParams.Amount.String(),
-						)
-					}
-				}
-
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
 				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 			}

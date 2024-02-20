@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -22,8 +21,8 @@ func TestTSSGet(t *testing.T) {
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
 	tssQueried, found := k.GetTSS(ctx)
-	assert.True(t, found)
-	assert.Equal(t, tss, tssQueried)
+	require.True(t, found)
+	require.Equal(t, tss, tssQueried)
 
 }
 func TestTSSRemove(t *testing.T) {
@@ -32,7 +31,7 @@ func TestTSSRemove(t *testing.T) {
 	k.SetTSS(ctx, tss)
 	k.RemoveTSS(ctx)
 	_, found := k.GetTSS(ctx)
-	assert.False(t, found)
+	require.False(t, found)
 }
 
 func TestTSSQuerySingle(t *testing.T) {
@@ -105,9 +104,9 @@ func TestTSSQueryHistory(t *testing.T) {
 			} else {
 				require.Equal(t, len(tssList), len(response.TssList))
 				prevTss, found := keeper.GetPreviousTSS(ctx)
-				assert.Equal(t, tc.foundPrevious, found)
+				require.Equal(t, tc.foundPrevious, found)
 				if found {
-					assert.Equal(t, tssList[len(tssList)-2], prevTss)
+					require.Equal(t, tssList[len(tssList)-2], prevTss)
 				}
 			}
 		})

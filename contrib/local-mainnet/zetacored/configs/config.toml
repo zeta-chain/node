@@ -1,0 +1,116 @@
+proxy_app = "tcp://127.0.0.1:26658"
+moniker = "main-rpc"
+fast_sync = true
+db_backend = "pebbledb"
+db_dir = "data"
+log_level = "info"
+log_format = "plain"
+genesis_file = "config/genesis.json"
+priv_validator_key_file = "config/priv_validator_key.json"
+priv_validator_state_file = "data/priv_validator_state.json"
+priv_validator_laddr = ""
+node_key_file = "config/node_key.json"
+abci = "socket"
+filter_peers = false
+
+[rpc]
+laddr = "tcp://0.0.0.0:26657"
+cors_allowed_origins = []
+cors_allowed_methods = ["HEAD", "GET", "POST", ]
+cors_allowed_headers = ["Origin", "Accept", "Content-Type", "X-Requested-With", "X-Server-Time", ]
+grpc_laddr = ""
+grpc_max_open_connections = 900
+unsafe = false
+max_open_connections = 900
+max_subscription_clients = 100
+max_subscriptions_per_client = 5
+experimental_subscription_buffer_size = 200
+experimental_websocket_write_buffer_size = 200
+experimental_close_on_slow_client = false
+timeout_broadcast_tx_commit = "10s"
+max_body_bytes = 1000000
+max_header_bytes = 1048576
+tls_cert_file = ""
+tls_key_file = ""
+pprof_laddr = "localhost:6060"
+
+[p2p]
+laddr = "tcp://0.0.0.0:26656"
+external_address = "72.19.172.89:26656"
+seeds = "8d93468c6022fb3b263963bdea46b0a131d247cd@34.28.196.79:26656"
+persistent_peers = "e04ee1d6b5cc1aa24f7c1ab55139d1cec9962e39@52.45.59.77:26656"
+upnp = false
+addr_book_file = "config/addrbook.json"
+addr_book_strict = true
+max_num_inbound_peers = 120
+max_num_outbound_peers = 60
+unconditional_peer_ids = ""
+persistent_peers_max_dial_period = "0s"
+flush_throttle_timeout = "100ms"
+max_packet_msg_payload_size = 1024
+send_rate = 5120000
+recv_rate = 5120000
+pex = true
+seed_mode = false
+private_peer_ids = ""
+allow_duplicate_ip = true
+handshake_timeout = "20s"
+dial_timeout = "3s"
+
+[mempool]
+version = "v0"
+recheck = true
+broadcast = true
+wal_dir = ""
+
+size = 5000
+max_txs_bytes = 1073741824
+cache_size = 10000
+keep-invalid-txs-in-cache = false
+max_tx_bytes = 1048576
+max_batch_bytes = 0
+ttl-duration = "0s"
+ttl-num-blocks = 0
+
+[statesync]
+enable = "true"
+rpc_servers = "34.69.20.168:26657,34.69.20.168:26657"
+trust_height = "1721170"
+trust_hash = "249AF38ABF9934F8D8CCFCEAA46997AB30C1F6AD14E1C70183B2CE7B16485B2C"
+trust_period = "168h0m0s"
+discovery_time = "15s"
+temp_dir = ""
+chunk_request_timeout = "10s"
+chunk_fetchers = "4"
+
+[fastsync]
+version = "v0"
+
+[consensus]
+wal_file = "data/cs.wal/wal"
+timeout_propose = "3s"
+timeout_propose_delta = "500ms"
+timeout_prevote = "1s"
+timeout_prevote_delta = "500ms"
+timeout_precommit = "1s"
+timeout_precommit_delta = "500ms"
+timeout_commit = "5s"
+double_sign_check_height = 0
+skip_timeout_commit = false
+create_empty_blocks = true
+create_empty_blocks_interval = "0s"
+peer_gossip_sleep_duration = "100ms"
+peer_query_maj23_sleep_duration = "2s"
+
+[storage]
+discard_abci_responses = false
+
+[tx_index]
+indexer = "kv"
+psql-conn = ""
+
+[instrumentation]
+prometheus = true
+prometheus_listen_addr = ":26660"
+max_open_connections = 3
+namespace = "tendermint"
