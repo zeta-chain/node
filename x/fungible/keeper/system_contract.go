@@ -77,7 +77,8 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		"wZetaContractAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call wZetaContractAddress")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wZetaContractAddress (%s)", err.Error())
+
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -113,7 +114,7 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 		"uniswapv2FactoryAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call uniswapv2FactoryAddress")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2FactoryAddress (%s)", err.Error())
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -149,7 +150,7 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		"uniswapv2Router02Address",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call uniswapv2Router02Address")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2Router02Address (%s)", err.Error())
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -185,7 +186,7 @@ func (k *Keeper) CallWZetaDeposit(ctx sdk.Context, sender ethcommon.Address, amo
 		"deposit",
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(err, "failed to call wzeta deposit")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wzeta deposit (%s)", err.Error())
 	}
 	return nil
 }
@@ -215,7 +216,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 		addr,
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to call balanceOf")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call balanceOf (%s)", err.Error())
 	}
 
 	type BigIntResponse struct {
@@ -254,7 +255,7 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 		chainid,
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call gasCoinZRC20ByChainId")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call gasCoinZRC20ByChainId (%s)", err.Error())
 	}
 
 	type AddressResponse struct {
