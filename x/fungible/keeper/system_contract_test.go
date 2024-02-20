@@ -115,7 +115,7 @@ func TestKeeper_QueryWZetaBalanceOfFails(t *testing.T) {
 
 	// fail if no system contract
 	_, err := k.QueryWZetaBalanceOf(ctx, sample.EthAddress())
-	require.Error(t, err)
+	require.ErrorIs(t, err, types.ErrStateVariableNotFound)
 }
 
 func TestKeeper_GetWZetaFailsIfNotSet(t *testing.T) {
@@ -235,7 +235,7 @@ func TestKeeper_GetUniswapRouterFails(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
-func TestKeeper_TestKeeper_TestKeeper_GetUniswapRouterFailsToUnpack(t *testing.T) {
+func TestKeeper_GetUniswapRouterFailsToUnpack(t *testing.T) {
 	k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 		UseEVMMock: true,
 	})
@@ -319,7 +319,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 
 	// fail if no system contract
 	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.Error(t, err)
 
 	// deploy system contracts and swap exact eth for 1 token
@@ -333,7 +339,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForToken(t *testing.T) {
 	require.NoError(t, err)
 
 	amounts, err := k.CallUniswapV2RouterSwapExactETHForToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		zrc20,
+		true,
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(amounts))
@@ -353,7 +365,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFails(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = k.CallUniswapV2RouterSwapExactETHForToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		zrc20,
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
@@ -368,7 +386,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFailsIfWZetaContractNotSe
 	})
 
 	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -383,7 +407,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactETHForTokenFailsIfRouterContractNotS
 	})
 
 	_, err := k.CallUniswapV2RouterSwapExactETHForToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -408,7 +438,13 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactToken(t *testing.T) {
 	require.NoError(t, err)
 
 	amounts, err := k.CallUniswapV2RouterSwapEthForExactToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, tokenAmount, zrc20)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		tokenAmount,
+		zrc20,
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(amounts))
@@ -429,7 +465,13 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFails(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = k.CallUniswapV2RouterSwapEthForExactToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, tokenAmount, zrc20)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		tokenAmount,
+		zrc20,
+	)
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
@@ -444,7 +486,13 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFailsIfWZetaContractNotSe
 	})
 
 	_, err := k.CallUniswapV2RouterSwapEthForExactToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), big.NewInt(1), sample.EthAddress())
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		big.NewInt(1),
+		sample.EthAddress(),
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -459,7 +507,13 @@ func TestKeeper_CallUniswapV2RouterSwapEthForExactTokenFailsIfRouterContractNotS
 	})
 
 	_, err := k.CallUniswapV2RouterSwapEthForExactToken(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), big.NewInt(1), sample.EthAddress())
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		big.NewInt(1),
+		sample.EthAddress(),
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -470,7 +524,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 
 	// fail if no system contract
 	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.Error(t, err)
 
 	// deploy system contracts and swap exact eth for 1 token
@@ -493,7 +553,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETH(t *testing.T) {
 	)
 
 	amounts, err := k.CallUniswapV2RouterSwapExactTokensForETH(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, zrc20, true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		zrc20,
+		true,
+	)
 	require.NoError(t, err)
 
 	require.Equal(t, 2, len(amounts))
@@ -510,7 +576,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFailsIfWZetaContractNotS
 		DeployUniswapV2Router:  true,
 	})
 	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -524,7 +596,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFailsIfRouterContractNot
 		DeployUniswapV2Router:  false,
 	})
 	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -535,7 +613,13 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForETHFails(t *testing.T) {
 
 	// fail if no system contract
 	_, err := k.CallUniswapV2RouterSwapExactTokensForETH(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		true,
+	)
 	require.Error(t, err)
 
 	// deploy system contracts and swap fails because of missing balance
@@ -558,7 +642,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokens(t *testing.T) {
 
 	// fail if no system contract
 	_, err := k.CallUniswapV2RouterSwapExactTokensForTokens(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		sample.EthAddress(),
+		true,
+	)
 	require.Error(t, err)
 
 	// deploy system contracts and swap exact token for 1 token
@@ -608,7 +699,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFailsIfRouterContract
 	})
 
 	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -629,7 +727,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFailsIfWzetaContractN
 	})
 
 	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, big.NewInt(1), sample.EthAddress(), sample.EthAddress(), true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		big.NewInt(1),
+		sample.EthAddress(),
+		sample.EthAddress(),
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractNotFound)
 }
 
@@ -651,7 +756,14 @@ func TestKeeper_CallUniswapV2RouterSwapExactTokensForTokensFails(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = k.CallUniswapV2RouterSwapExactTokensForTokens(
-		ctx, types.ModuleAddressEVM, types.ModuleAddressEVM, amountToSwap, inzrc20, outzrc20, true)
+		ctx,
+		types.ModuleAddressEVM,
+		types.ModuleAddressEVM,
+		amountToSwap,
+		inzrc20,
+		outzrc20,
+		true,
+	)
 	require.ErrorIs(t, err, types.ErrContractCall)
 }
 
