@@ -92,7 +92,8 @@ type SystemContractDeployConfig struct {
 	DeployUniswapV2Router  bool
 }
 
-// deploySystemContracts deploys the system contracts and returns their addresses.
+// deploySystemContractsConfigurable deploys the system contracts and returns their addresses
+// while having a possibility to skip some deployments to test different scenarios
 func deploySystemContractsConfigurable(
 	t *testing.T,
 	ctx sdk.Context,

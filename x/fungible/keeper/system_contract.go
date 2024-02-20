@@ -79,7 +79,6 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 	)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wZetaContractAddress (%s)", err.Error())
-
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -277,6 +276,9 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	var zrc20Res AddressResponse
 	if err := sysABI.UnpackIntoInterface(&zrc20Res, "gasCoinZRC20ByChainId", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack gasCoinZRC20ByChainId: %s", err.Error())
+	}
+	if zrc20Res.Value == ethcommon.HexToAddress("0x0") {
+		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "gas coin contract invalid address")
 	}
 	return zrc20Res.Value, nil
 }
