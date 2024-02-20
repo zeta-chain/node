@@ -23,7 +23,7 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 type Multiaddr = core.Multiaddr
@@ -73,7 +73,7 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
-	telemetryServer := metrics2.NewTelemetryServer()
+	telemetryServer := metrics.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {
@@ -153,7 +153,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	metrics, err := metrics2.NewMetrics()
+	metrics, err := metrics.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
 		return err
@@ -167,7 +167,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, masterLogger, cfg, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err
@@ -249,7 +249,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, masterLogger, cfg, telemetryServer)
 	mo1.MonitorCore()
 
 	// start zeta supply checker

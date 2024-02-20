@@ -2,11 +2,12 @@ package metrics
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 )
@@ -15,19 +16,36 @@ type Metrics struct {
 	s *http.Server
 }
 
-type MetricName int
-
-const (
-	//GAUGE_PENDING_TX MetricName = iota
-	//
-	//COUNTER_NUM_RPCS
-	PendingTxs = "pending_txs"
-)
-
 var (
-	Counters = map[string]prometheus.Counter{}
+	PendingTxsPerChain = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "pending_txs_total",
+		Help:      "Number of pending transactions per chain",
+	}, []string{"chain"})
 
-	Gauges = map[string]prometheus.Gauge{}
+	GetFilterLogsPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "zetaclient",
+		Name:      "rpc_getFilterLogs_count",
+		Help:      "Count of getLogs per chain",
+	}, []string{"chain"})
+
+	GetBlockByNumberPerChain = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "zetaclient",
+		Name:      "rpc_getBlockByNumber_count",
+		Help:      "Count of getLogs per chain",
+	}, []string{"chain"})
+
+	TssNodeBlamePerPubKey = promauto.NewCounterVec(prometheus.CounterOpts{
+		Namespace: "zetaclient",
+		Name:      "tss_node_blame_count",
+		Help:      "Tss node blame counter per pubkey",
+	}, []string{"pubkey"})
+
+	HotKeyBurnRate = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "hotkey_burn_rate",
+		Help:      "Fee burn rate of the hotkey",
+	})
 )
 
 func NewMetrics() (*Metrics, error) {
@@ -43,7 +61,7 @@ func NewMetrics() (*Metrics, error) {
 	)
 
 	s := &http.Server{
-		Addr:              fmt.Sprintf(":8886"),
+		Addr:              ":8886",
 		Handler:           server,
 		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
@@ -52,33 +70,6 @@ func NewMetrics() (*Metrics, error) {
 	return &Metrics{
 		s,
 	}, nil
-}
-
-func (m *Metrics) RegisterCounter(name string, help string) error {
-	if _, found := Counters[name]; found {
-		return fmt.Errorf("counter %s already registered", name)
-	}
-	counter := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: name,
-		Help: help,
-	})
-	prometheus.MustRegister(counter)
-	Counters[name] = counter
-	return nil
-}
-
-func (m *Metrics) RegisterGauge(name string, help string) error {
-	if _, found := Gauges[name]; found {
-		return fmt.Errorf("gauge %s already registered", name)
-	}
-
-	var gauge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: name,
-		Help: help,
-	})
-	prometheus.MustRegister(gauge)
-	Gauges[name] = gauge
-	return nil
 }
 
 func (m *Metrics) Start() {
