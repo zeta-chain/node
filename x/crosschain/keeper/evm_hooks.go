@@ -69,7 +69,6 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 	if connectorZEVMAddr == (ethcommon.Address{}) {
 		return fmt.Errorf("connectorZEVM address is empty")
 	}
-
 	for _, log := range logs {
 		eventZrc20Withdrawal, errZrc20 := ParseZRC20WithdrawalEvent(*log)
 		eventZetaSent, errZetaSent := ParseZetaSentEvent(*log, connectorZEVMAddr)
@@ -103,6 +102,7 @@ func (k Keeper) ProcessLogs(ctx sdk.Context, logs []*ethtypes.Log, emittingContr
 				ctx.Logger().Info(fmt.Sprintf("cannot find foreign coin with contract address %s", eventZrc20Withdrawal.Raw.Address.Hex()))
 				continue
 			}
+
 			// If Validation fails, we will not process the event and return and error. This condition means that the event was correct, and emitted from a registered ZRC20 contract
 			// But the information entered by the user is incorrect. In this case we can return an error and roll back the transaction
 			if err := ValidateZrc20WithdrawEvent(eventZrc20Withdrawal, coin.ForeignChainId); err != nil {

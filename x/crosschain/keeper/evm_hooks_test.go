@@ -2,13 +2,17 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/big"
 	"testing"
 
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 //
@@ -77,6 +81,38 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 			require.Nil(t, event)
 		}
 	})
+}
+
+func TestKeeper_ProcessLogs(t *testing.T) {
+	t.Run("valid logs", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+		admin := sample.AccAddress()
+		setAdminPolicies(ctx, zk, admin)
+
+		// deploy gas coin, erc20 and set fee params
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+		//assetAddress := sample.EthAddress().String()
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+
+		block := GetValidSampleBlock(t)
+		for _, chain := range zk.ObserverKeeper.GetSupportedChains(ctx) {
+			fmt.Println(chain.String())
+		}
+
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = gasZRC20
+		}
+
+		err := k.ProcessLogs(ctx, GetValidSampleBlock(t).Logs, sample.EthAddress(), "")
+		require.NoError(t, err)
+
+	})
+
 }
 
 // receiver is 1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3
