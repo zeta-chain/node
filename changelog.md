@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+### Refactor
+
+* [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
+
 ## Version: v13.0.0
 
 ### Breaking Changes
@@ -24,7 +30,6 @@
 * [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
 * [1630](https://github.com/zeta-chain/node/pull/1630) - added password prompts for hotkey and tss keyshare in zetaclient
 * [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
-* [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
 
 ### Fixes
 
