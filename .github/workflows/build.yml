@@ -65,7 +65,6 @@ jobs:
         uses: codecov/codecov-action@v4.0.1
         with:
           file: coverage.out
-        env:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: zeta-chain/node
 
