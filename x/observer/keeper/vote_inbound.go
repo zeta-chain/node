@@ -6,8 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // VoteOnInboundBallot casts a vote on an inbound transaction observed on a connected chain. If this
@@ -23,7 +22,7 @@ func (k Keeper) VoteOnInboundBallot(
 	inTxHash string,
 ) (bool, error) {
 	if !k.IsInboundEnabled(ctx) {
-		return false, types.ErrNotEnoughPermissions
+		return false, types.ErrInboundDisabled
 	}
 
 	// makes sure we are getting only supported chains
@@ -31,25 +30,25 @@ func (k Keeper) VoteOnInboundBallot(
 	// this function returns nil
 	senderChain := k.GetSupportedChainFromChainID(ctx, senderChainID)
 	if senderChain == nil {
-		return false, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf(
+		return false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			senderChainID,
-			observertypes.ObservationType_InBoundTx.String()),
+			types.ObservationType_InBoundTx.String()),
 		)
 	}
 
 	// checks the voter is authorized to vote on the observation chain
 	if ok := k.IsAuthorized(ctx, voter); !ok {
-		return false, observertypes.ErrNotAuthorizedPolicy
+		return false, types.ErrNotObserver
 	}
 
 	// makes sure we are getting only supported chains
 	receiverChain := k.GetSupportedChainFromChainID(ctx, receiverChainID)
 	if receiverChain == nil {
-		return false, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf(
+		return false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			receiverChain.ChainId,
-			observertypes.ObservationType_InBoundTx.String()),
+			types.ObservationType_InBoundTx.String()),
 		)
 	}
 
@@ -57,15 +56,15 @@ func (k Keeper) VoteOnInboundBallot(
 	if receiverChain.IsExternalChain() {
 		coreParams, found := k.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 		if !found {
-			return false, types.ErrNotFoundChainParams
+			return false, types.ErrChainParamsNotFound
 		}
 		if coreParams.ZetaTokenContractAddress == "" && coinType == common.CoinType_Zeta {
-			return false, types.ErrUnableToSendCoinType
+			return false, types.ErrInvalidZetaCoinTypes
 		}
 	}
 
 	// checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, observertypes.ObservationType_InBoundTx)
+	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InBoundTx)
 	if err != nil {
 		return false, err
 	}
@@ -74,7 +73,7 @@ func (k Keeper) VoteOnInboundBallot(
 	}
 
 	// adds a vote and sets the ballot
-	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, observertypes.VoteType_SuccessObservation)
+	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, types.VoteType_SuccessObservation)
 	if err != nil {
 		return false, err
 	}

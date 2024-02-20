@@ -216,7 +216,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
 	chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
-		return types.ErrNotFoundChainParams
+		return observertypes.ErrChainParamsNotFound
 	}
 	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
 		return types.ErrUnableToSendCoinType
