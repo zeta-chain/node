@@ -339,6 +339,7 @@ func (m *BlockHeader) GetHeader() HeaderData {
 
 type HeaderData struct {
 	// Types that are valid to be assigned to Data:
+	//
 	//	*HeaderData_EthereumHeader
 	//	*HeaderData_BitcoinHeader
 	Data isHeaderData_Data `protobuf_oneof:"data"`
