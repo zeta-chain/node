@@ -14,7 +14,7 @@ import (
 
 func TestMsgServer_RemoveChainParams(t *testing.T) {
 	t.Run("can update chain params", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		chain1 := common.ExternalChainList()[0].ChainId
@@ -75,7 +75,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot remove chain params if not authorized", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
@@ -97,7 +97,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot remove if chain ID not found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		// set admin

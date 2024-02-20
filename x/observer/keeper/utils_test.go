@@ -43,7 +43,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 
 func TestKeeper_IsAuthorized(t *testing.T) {
 	t.Run("authorized observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
@@ -69,7 +69,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 	})
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
@@ -95,7 +95,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 
 	})
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 

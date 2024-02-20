@@ -14,7 +14,7 @@ import (
 
 func TestMsgServer_UpdateChainParams(t *testing.T) {
 	t.Run("can update chain params", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		chain1 := common.ExternalChainList()[0].ChainId
@@ -92,7 +92,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot update chain params if not authorized", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{

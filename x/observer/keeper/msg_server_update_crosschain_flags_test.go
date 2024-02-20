@@ -26,7 +26,7 @@ func setAdminCrossChainFlags(ctx sdk.Context, k *keeper.Keeper, admin string, gr
 
 func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 	t.Run("can update crosschain flags", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 
@@ -157,7 +157,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 	})
 
 	t.Run("cannot update crosschain flags if not authorized", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		_, err := srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{

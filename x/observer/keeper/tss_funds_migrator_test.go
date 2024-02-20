@@ -10,7 +10,7 @@ import (
 
 func TestKeeper_GetTssFundMigrator(t *testing.T) {
 	t.Run("Successfully set funds migrator for chain", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		chain := sample.TssFundsMigrator(1)
 		k.SetFundMigrator(ctx, chain)
 		tfm, found := k.GetFundMigrator(ctx, chain.ChainId)
@@ -18,7 +18,7 @@ func TestKeeper_GetTssFundMigrator(t *testing.T) {
 		require.Equal(t, chain, tfm)
 	})
 	t.Run("Verify only one migrator can be created for a chain", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		tfm1 := sample.TssFundsMigrator(1)
 		k.SetFundMigrator(ctx, tfm1)
 		tfm2 := tfm1

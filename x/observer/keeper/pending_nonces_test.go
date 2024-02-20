@@ -12,7 +12,7 @@ import (
 
 func TestKeeper_PendingNoncesAll(t *testing.T) {
 	t.Run("Get all pending nonces paginated by limit", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonces := sample.PendingNoncesList(t, "sample", 10)
 		sort.SliceStable(nonces, func(i, j int) bool {
 			return nonces[i].ChainId < nonces[j].ChainId
@@ -29,7 +29,7 @@ func TestKeeper_PendingNoncesAll(t *testing.T) {
 		require.Equal(t, len(nonces), int(pageRes.Total))
 	})
 	t.Run("Get all pending nonces paginated by offset", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonces := sample.PendingNoncesList(t, "sample", 42)
 		sort.SliceStable(nonces, func(i, j int) bool {
 			return nonces[i].ChainId < nonces[j].ChainId
@@ -48,7 +48,7 @@ func TestKeeper_PendingNoncesAll(t *testing.T) {
 		require.Equal(t, len(nonces), int(pageRes.Total))
 	})
 	t.Run("Get all pending nonces ", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonces := sample.PendingNoncesList(t, "sample", 10)
 		sort.SliceStable(nonces, func(i, j int) bool {
 			return nonces[i].ChainId < nonces[j].ChainId

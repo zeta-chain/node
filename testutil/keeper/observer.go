@@ -41,7 +41,7 @@ func initObserverKeeper(
 }
 
 // ObserverKeeper instantiates an observer keeper for testing purposes
-func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
+func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -77,5 +77,5 @@ func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx
+	return k, ctx, sdkKeepers
 }

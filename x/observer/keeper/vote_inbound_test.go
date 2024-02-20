@@ -13,7 +13,7 @@ import (
 func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 
 	t.Run("fail if inbound not enabled", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: false,
@@ -34,7 +34,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if sender chain not supported", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -77,7 +77,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if not authorized", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
 			IsInboundEnabled: true,
@@ -106,7 +106,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if receiver chain not supported", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		observer := sample.AccAddress()
 
@@ -165,7 +165,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if inbound contain ZETA but receiver chain doesn't support ZETA", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		observer := sample.AccAddress()
 
