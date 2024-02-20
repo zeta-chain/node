@@ -47,7 +47,7 @@ func (k Keeper) VoteOnInboundBallot(
 	if receiverChain == nil {
 		return false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
-			receiverChain.ChainId,
+			receiverChainID,
 			types.ObservationType_InBoundTx.String()),
 		)
 	}

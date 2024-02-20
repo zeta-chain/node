@@ -17,7 +17,7 @@ import (
 )
 
 func TestTSSGet(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
 	tssQueried, found := k.GetTSS(ctx)
@@ -26,7 +26,7 @@ func TestTSSGet(t *testing.T) {
 
 }
 func TestTSSRemove(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
 	k.RemoveTSS(ctx)
@@ -35,7 +35,7 @@ func TestTSSRemove(t *testing.T) {
 }
 
 func TestTSSQuerySingle(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	//msgs := createTSS(keeper, ctx, 1)
 	tss := sample.Tss()
@@ -69,7 +69,7 @@ func TestTSSQuerySingle(t *testing.T) {
 }
 
 func TestTSSQueryHistory(t *testing.T) {
-	keeper, ctx := keepertest.ObserverKeeper(t)
+	keeper, ctx, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	for _, tc := range []struct {
 		desc          string
@@ -115,7 +115,7 @@ func TestTSSQueryHistory(t *testing.T) {
 
 func TestKeeper_TssHistory(t *testing.T) {
 	t.Run("Get tss history paginated by limit", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		tssList := sample.TssList(10)
 		for _, tss := range tssList {
 			k.SetTSSHistory(ctx, tss)
@@ -132,7 +132,7 @@ func TestKeeper_TssHistory(t *testing.T) {
 		require.Equal(t, len(tssList), int(pageRes.Total))
 	})
 	t.Run("Get tss history paginated by offset", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		tssList := sample.TssList(100)
 		offset := 20
 		for _, tss := range tssList {
@@ -151,7 +151,7 @@ func TestKeeper_TssHistory(t *testing.T) {
 		require.Equal(t, len(tssList), int(pageRes.Total))
 	})
 	t.Run("Get all TSS without pagination", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		tssList := sample.TssList(100)
 		for _, tss := range tssList {
 			k.SetTSSHistory(ctx, tss)
@@ -166,7 +166,7 @@ func TestKeeper_TssHistory(t *testing.T) {
 		require.Equal(t, tssList, rst)
 	})
 	t.Run("Get historical TSS", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		tssList := sample.TssList(100)
 		for _, tss := range tssList {
 			k.SetTSSHistory(ctx, tss)
