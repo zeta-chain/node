@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -8,9 +9,13 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	"github.com/evmos/ethermint/x/evm/statedb"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -164,8 +169,73 @@ func GetFungibleObserverMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks
 	return fok
 }
 
-func GetFungibleEVMMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleEVMKeeper {
+func GetFungibleEVMMock(t testing.TB, keeper *keeper.Keeper) *FungibleMockEVMKeeper {
 	fek, ok := keeper.GetEVMKeeper().(*fungiblemocks.FungibleEVMKeeper)
 	require.True(t, ok)
-	return fek
+	return &FungibleMockEVMKeeper{
+		FungibleEVMKeeper: fek,
+	}
+}
+
+type FungibleMockEVMKeeper struct {
+	*fungiblemocks.FungibleEVMKeeper
+}
+
+func (m *FungibleMockEVMKeeper) SetupMockEVMKeeperForSystemContractDeployment() {
+	gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
+	m.On("WithChainID", mock.Anything).Maybe().Return(mock.Anything)
+	m.On("ChainID").Maybe().Return(big.NewInt(1))
+	m.On(
+		"EstimateGas",
+		mock.Anything,
+		mock.Anything,
+	).Return(gasRes, nil)
+	m.MockEVMSuccessCallTimes(5)
+	m.On(
+		"GetAccount",
+		mock.Anything,
+		mock.Anything,
+	).Return(&statedb.Account{
+		Nonce: 1,
+	})
+	m.On(
+		"GetCode",
+		mock.Anything,
+		mock.Anything,
+	).Return([]byte{1, 2, 3})
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallOnce() {
+	m.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{})
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimes(times int) {
+	m.MockEVMSuccessCallTimesWithReturn(&evmtypes.MsgEthereumTxResponse{}, times)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallOnceWithReturn(ret *evmtypes.MsgEthereumTxResponse) {
+	m.MockEVMSuccessCallTimesWithReturn(ret, 1)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimesWithReturn(ret *evmtypes.MsgEthereumTxResponse, times int) {
+	if ret == nil {
+		ret = &evmtypes.MsgEthereumTxResponse{}
+	}
+	m.On(
+		"ApplyMessage",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(ret, nil).Times(times)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMFailCallOnce() {
+	m.On(
+		"ApplyMessage",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample).Once()
 }

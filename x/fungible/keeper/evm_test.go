@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -18,7 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -33,7 +31,7 @@ func getValidChainID(t *testing.T) int64 {
 }
 
 // require that a contract has been deployed by checking stored code is non-empty.
-func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
+func assertContractDeployment(t *testing.T, k types.EVMKeeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
 	require.NotNil(t, acc)
 
@@ -41,12 +39,22 @@ func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context
 	require.NotEmpty(t, code)
 }
 
+func deploySystemContractsWithMockEvmKeeper(
+	t *testing.T,
+	ctx sdk.Context,
+	k *fungiblekeeper.Keeper,
+	mockEVMKeeper *testkeeper.FungibleMockEVMKeeper,
+) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
+	mockEVMKeeper.SetupMockEVMKeeperForSystemContractDeployment()
+	return deploySystemContracts(t, ctx, k, mockEVMKeeper)
+}
+
 // deploySystemContracts deploys the system contracts and returns their addresses.
 func deploySystemContracts(
 	t *testing.T,
 	ctx sdk.Context,
 	k *fungiblekeeper.Keeper,
-	evmk *evmkeeper.Keeper,
+	evmk types.EVMKeeper,
 ) (wzeta, uniswapV2Factory, uniswapV2Router, connector, systemContract common.Address) {
 	var err error
 
@@ -82,7 +90,7 @@ func deploySystemContracts(
 func assertExampleBarValue(
 	t *testing.T,
 	ctx sdk.Context,
-	k *keeper.Keeper,
+	k *fungiblekeeper.Keeper,
 	address common.Address,
 	expected int64,
 ) {
@@ -99,6 +107,7 @@ func assertExampleBarValue(
 		false,
 		"bar",
 	)
+	require.NoError(t, err)
 	unpacked, err := exampleABI.Unpack("bar", res.Ret)
 	require.NoError(t, err)
 	require.NotZero(t, len(unpacked))
@@ -263,6 +272,7 @@ func TestKeeper_DepositZRC20AndCallContract(t *testing.T) {
 			false,
 			"bar",
 		)
+		require.NoError(t, err)
 		unpacked, err := exampleABI.Unpack("bar", res.Ret)
 		require.NoError(t, err)
 		require.NotZero(t, len(unpacked))
@@ -448,13 +458,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			&evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap},
 		).Return(gasRes, nil)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			ctx,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-		).Return(msgRes, nil)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -497,13 +501,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			sdk.AccAddress(fromAddr.Bytes()),
 		).Return(uint64(1), nil)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			ctx,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-		).Return(msgRes, nil)
+		mockEVMKeeper.MockEVMSuccessCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))
@@ -604,7 +602,6 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			Data: (*hexutil.Bytes)(&data),
 		})
 		gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
-		msgRes := &evmtypes.MsgEthereumTxResponse{}
 
 		// Set up mocked methods
 		mockAuthKeeper.On(
@@ -617,13 +614,7 @@ func TestKeeper_CallEVMWithData(t *testing.T) {
 			mock.Anything,
 			&evmtypes.EthCallRequest{Args: args, GasCap: config.DefaultGasCap},
 		).Return(gasRes, nil)
-		mockEVMKeeper.On(
-			"ApplyMessage",
-			ctx,
-			mock.Anything,
-			mock.Anything,
-			mock.Anything,
-		).Return(msgRes, sample.ErrSample)
+		mockEVMKeeper.MockEVMFailCallOnce()
 
 		mockEVMKeeper.On("WithChainID", mock.Anything).Maybe().Return(ctx)
 		mockEVMKeeper.On("ChainID").Maybe().Return(big.NewInt(1))

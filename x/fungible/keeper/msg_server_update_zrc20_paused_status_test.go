@@ -156,12 +156,13 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
+		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 
 		admin := sample.AccAddress()
 		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group1)
 
 		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
-			sample.AccAddress(),
+			admin,
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
