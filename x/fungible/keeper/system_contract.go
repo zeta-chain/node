@@ -6,7 +6,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/wzeta.sol"
@@ -88,8 +87,8 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack wZetaContractAddress: %s", err.Error())
 	}
 
-	if wzetaResponse.Value == ethcommon.HexToAddress("0x0") {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "wzeta contract invalid address")
+	if wzetaResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "wzeta contract invalid address")
 	}
 	return wzetaResponse.Value, nil
 }
@@ -128,8 +127,8 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2FactoryAddress: %s", err.Error())
 	}
 
-	if uniswapFactoryResponse.Value == ethcommon.HexToAddress("0x0") {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "uniswap factory contract invalid address")
+	if uniswapFactoryResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap factory contract invalid address")
 	}
 	return uniswapFactoryResponse.Value, nil
 }
@@ -168,8 +167,8 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2Router02Address: %s", err.Error())
 	}
 
-	if routerResponse.Value == ethcommon.HexToAddress("0x0") {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "uniswap router contract invalid address")
+	if routerResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap router contract invalid address")
 	}
 	return routerResponse.Value, nil
 }
@@ -277,8 +276,8 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	if err := sysABI.UnpackIntoInterface(&zrc20Res, "gasCoinZRC20ByChainId", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack gasCoinZRC20ByChainId: %s", err.Error())
 	}
-	if zrc20Res.Value == ethcommon.HexToAddress("0x0") {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "gas coin contract invalid address")
+	if zrc20Res.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "gas coin contract invalid address")
 	}
 	return zrc20Res.Value, nil
 }
