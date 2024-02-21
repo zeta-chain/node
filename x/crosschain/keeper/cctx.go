@@ -49,7 +49,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 		})
 	}
 	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
-		k.AddZetaAbortedAmount(ctx, cctx.GetCurrentOutTxParam().Amount)
+		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }
 
@@ -133,6 +133,7 @@ func (k Keeper) CreateNewCCTX(ctx sdk.Context, msg *types.MsgVoteOnObservedInbou
 		Status:              s,
 		StatusMessage:       "",
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
+		IsAbortRefunded:     false,
 	}
 	newCctx := types.CrossChainTx{
 		Creator:          msg.Creator,

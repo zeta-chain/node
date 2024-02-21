@@ -73,7 +73,7 @@ func start(_ *cobra.Command, _ []string) error {
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
-	telemetryServer := mc.NewTelemetryServer()
+	telemetryServer := metrics2.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {
@@ -333,9 +333,9 @@ func promptPasswords() (string, string, error) {
 		return "", "", err
 	}
 
-	if TSSKeyPass == "" {
-		return "", "", errors.New("tss password is required to start zetaclient")
-	}
+	//trim delimiters
+	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
+	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
 }
