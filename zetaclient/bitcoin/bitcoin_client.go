@@ -29,6 +29,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -49,6 +50,7 @@ type BTCLog struct {
 	ObserveOutTx  zerolog.Logger
 	WatchUTXOS    zerolog.Logger
 	WatchGasPrice zerolog.Logger
+	Compliance    zerolog.Logger
 }
 
 // BTCChainClient represents a chain configuration for Bitcoin
@@ -137,7 +139,7 @@ func NewBitcoinClient(
 	tss interfaces.TSSSigner,
 	dbpath string,
 	metrics *metricsPkg.Metrics,
-	logger zerolog.Logger,
+	loggers clientcommon.ClientLogger,
 	btcCfg config.BTCConfig,
 	ts *metricsPkg.TelemetryServer,
 ) (*BTCChainClient, error) {
@@ -153,13 +155,14 @@ func NewBitcoinClient(
 	}
 	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
-	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := loggers.Std.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
 		ChainLogger:   chainLogger,
 		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),
 		ObserveOutTx:  chainLogger.With().Str("module", "observeOutTx").Logger(),
 		WatchUTXOS:    chainLogger.With().Str("module", "WatchUTXOS").Logger(),
 		WatchGasPrice: chainLogger.With().Str("module", "WatchGasPrice").Logger(),
+		Compliance:    loggers.Compliance,
 	}
 
 	ob.zetaClient = bridge
@@ -459,13 +462,15 @@ func (ob *BTCChainClient) observeInTx() error {
 			// post inbound vote message to zetacore
 			for _, inTx := range inTxs {
 				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-				zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
-				if err != nil {
-					ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
-					return err // we have to re-scan this block next time
-				} else if zetaHash != "" {
-					ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
-						zetaHash, inTx.TxHash, ballot, depositorFee)
+				if msg != nil {
+					zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
+					if err != nil {
+						ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+						return err // we have to re-scan this block next time
+					} else if zetaHash != "" {
+						ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+							zetaHash, inTx.TxHash, ballot, depositorFee)
+					}
 				}
 			}
 		}
@@ -494,7 +499,12 @@ func (ob *BTCChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
-func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+	params := *cctx.GetCurrentOutTxParam()
+	sendHash := cctx.Index
+	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+
+	// get broadcasted outtx and tx result
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
@@ -503,11 +513,11 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ 
 	res, included := ob.includedTxResults[outTxID]
 	ob.Mu.Unlock()
 
-	// Get original cctx parameters
-	params, err := ob.GetCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
+	// compliance check, special handling the cancelled cctx
+	banned := clientcommon.IsCctxBanned(cctx)
+	if banned {
+		params.Amount = cosmosmath.ZeroUint() // use 0 to bypass the amount check
+		logger.Warn().Msgf("IsSendOutTxProcessed: special handling banned outTx %s", outTxID)
 	}
 
 	if !included {
@@ -525,9 +535,8 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ 
 
 		// Try including this outTx broadcasted by myself
 		txResult, inMempool := ob.checkIncludedTx(txnHash, params)
-		if txResult == nil {
-			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkIncludedTx failed")
-			return false, false, err
+		if txResult == nil { // check failed, try again next time
+			return false, false, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
@@ -682,6 +691,20 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 	amount = amount.Mul(amount, big.NewFloat(1e8))
 	amountInt, _ := amount.Int(nil)
 	message := hex.EncodeToString(inTx.MemoBytes)
+
+	// compliance check
+	receiver := ""
+	if parsedAddress, _, err := common.ParseAddressAndData(message); err == nil {
+		receiver = parsedAddress.Hex()
+	}
+	if config.AnyBannedAddress(inTx.FromAddress, receiver) {
+		logMsg := fmt.Sprintf("Banned address detected in token sent to TSS: sender %s receiver %s tx %s chain %d",
+			inTx.FromAddress, receiver, inTx.TxHash, ob.chain.ChainId)
+		ob.logger.WatchInTx.Warn().Msg(logMsg)
+		ob.logger.Compliance.Warn().Msg(logMsg)
+		return nil
+	}
+
 	return zetabridge.GetInBoundVoteMessage(
 		inTx.FromAddress,
 		ob.chain.ChainId,
@@ -1060,17 +1083,6 @@ func (ob *BTCChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 	ob.logger.ObserveOutTx.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outTx %s", txHash, outTxID)
 }
 
-func (ob *BTCChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParams, error) {
-	send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
-	if err != nil {
-		return types.OutboundTxParams{}, err
-	}
-	if send.GetCurrentOutTxParam() == nil { // never happen
-		return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: nil outbound tx params")
-	}
-	return *send.GetCurrentOutTxParam(), nil
-}
-
 func (ob *BTCChainClient) observeOutTx() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_observeOutTx", ob.GetChainParams().OutTxTicker)
 	if err != nil {
@@ -1090,10 +1102,18 @@ func (ob *BTCChainClient) observeOutTx() {
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				params, err := ob.GetCctxParams(tracker.Nonce)
+				cctx, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
 				if err != nil {
 					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find cctx for nonce %d", tracker.Nonce)
 					break
+				}
+				params := *cctx.GetCurrentOutTxParam()
+
+				// compliance check, special handling the cancelled cctx
+				banned := clientcommon.IsCctxBanned(cctx)
+				if banned {
+					params.Amount = cosmosmath.ZeroUint() // use 0 to bypass the amount check
+					ob.logger.ObserveOutTx.Warn().Msgf("observeOutTx: special handling banned outTx %s", outTxID)
 				}
 				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check
 					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: tracker nonce %d not match cctx nonce %d", tracker.Nonce, params.OutboundTxTssNonce)

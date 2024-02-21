@@ -6,10 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
 const (
-	TestDataPath = "testdata"
+	TestDataPathEVM  = "testdata/evm"
+	TestDataPathBTC  = "testdata/btc"
+	TestDataPathCctx = "testdata/cctx"
 )
 
 // SaveObjectToJSONFile saves an object to a file in JSON format
@@ -49,4 +54,15 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 		}
 	}
 	return SaveObjectToJSONFile(blockVb, filename)
+}
+
+func DummyCoreBridge() *zetabridge.ZetaCoreBridge {
+	bridge, _ := zetabridge.NewZetaCoreBridge(
+		&keys.Keys{OperatorAddress: types.AccAddress{}},
+		"127.0.0.1",
+		"",
+		"zetachain_7000-1",
+		false,
+		nil)
+	return bridge
 }

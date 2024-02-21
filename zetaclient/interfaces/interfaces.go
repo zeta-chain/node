@@ -37,7 +37,7 @@ const (
 type ChainClient interface {
 	Start()
 	Stop()
-	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
+	IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetPromGauge(name string) (prometheus.Gauge, error)
@@ -49,7 +49,7 @@ type ChainClient interface {
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
 	TryProcessOutTx(
-		send *crosschaintypes.CrossChainTx,
+		cctx *crosschaintypes.CrossChainTx,
 		outTxMan *outtxprocessor.Processor,
 		outTxID string,
 		evmClient ChainClient,

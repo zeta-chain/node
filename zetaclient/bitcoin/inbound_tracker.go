@@ -83,6 +83,9 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 		return "", errors.New("no btc deposit event found")
 	}
 	msg := ob.GetInboundVoteMessageFromBtcEvent(event)
+	if msg == nil {
+		return "", errors.New("no message built for btc sent to TSS")
+	}
 	if !vote {
 		return msg.Digest(), nil
 	}

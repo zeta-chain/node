@@ -13,6 +13,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -296,6 +297,21 @@ func (ob *ChainClient) GetTransactionSender(tx *ethtypes.Transaction, blockHash 
 }
 
 func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+	// compliance check
+	maybeReceiver := ""
+	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(event.Message))
+	if err == nil && parsedAddress != (ethcommon.Address{}) {
+		maybeReceiver = parsedAddress.Hex()
+	}
+	if config.AnyBannedAddress(sender.Hex(), maybeReceiver) {
+		logMsg := fmt.Sprintf("Banned address detected in ERC20 Deposited event: sender %s receiver %s tx %s chain %d",
+			sender, maybeReceiver, event.Raw.TxHash, ob.chain.ChainId)
+		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
+		ob.logger.Compliance.Warn().Msg(logMsg)
+		return nil
+	}
+
+	// donation check
 	if bytes.Equal(event.Message, []byte(DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil
@@ -329,6 +345,17 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 		return nil
 	}
 	destAddr := clienttypes.BytesToEthHex(event.DestinationAddress)
+
+	// compliance check
+	sender := event.ZetaTxSenderAddress.Hex()
+	if config.AnyBannedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
+		logMsg := fmt.Sprintf("Banned address detected in ZetaSent event: sender %s receiver %s origin %s tx %s chain %d",
+			sender, destAddr, event.SourceTxOriginAddress, event.Raw.TxHash, ob.chain.ChainId)
+		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
+		ob.logger.Compliance.Warn().Msg(logMsg)
+		return nil
+	}
+
 	if !destChain.IsZetaChain() {
 		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
 		if !found {
@@ -342,13 +369,13 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	}
 	message := base64.StdEncoding.EncodeToString(event.Message)
 	ob.logger.ExternalChainWatcher.Info().Msgf("ZetaSent inTx detected on chain %d tx %s block %d from %s value %s message %s",
-		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, event.ZetaTxSenderAddress.Hex(), event.ZetaValueAndGas.String(), message)
+		ob.chain.ChainId, event.Raw.TxHash.Hex(), event.Raw.BlockNumber, sender, event.ZetaValueAndGas.String(), message)
 
 	return zetabridge.GetInBoundVoteMessage(
-		event.ZetaTxSenderAddress.Hex(),
+		sender,
 		ob.chain.ChainId,
 		event.SourceTxOriginAddress.Hex(),
-		clienttypes.BytesToEthHex(event.DestinationAddress),
+		destAddr,
 		destChain.ChainId,
 		sdkmath.NewUintFromBigInt(event.ZetaValueAndGas),
 		message,
@@ -363,16 +390,28 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 }
 
 func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+	message := hex.EncodeToString(tx.Data())
+
+	// compliance check
+	maybeReceiver := ""
+	parsedAddress, _, err := common.ParseAddressAndData(message)
+	if err == nil && parsedAddress != (ethcommon.Address{}) {
+		maybeReceiver = parsedAddress.Hex()
+	}
+	if config.AnyBannedAddress(sender.Hex(), maybeReceiver) {
+		logMsg := fmt.Sprintf("Banned address detected in token sent to TSS: sender %s tx %s chain %d", sender, tx.Hash(), ob.chain.ChainId)
+		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
+		ob.logger.Compliance.Warn().Msg(logMsg)
+		return nil
+	}
+
+	// donation check
 	if bytes.Equal(tx.Data(), []byte(DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash().Hex(), ob.chain.ChainId)
 		return nil
 	}
-	message := ""
-	if len(tx.Data()) != 0 {
-		message = hex.EncodeToString(tx.Data())
-	}
 	ob.logger.ExternalChainWatcher.Info().Msgf("TSS inTx detected on chain %d tx %s block %d from %s value %s message %s",
-		ob.chain.ChainId, tx.Hash().Hex(), blockNumber, sender.Hex(), tx.Value().String(), hex.EncodeToString(tx.Data()))
+		ob.chain.ChainId, tx.Hash().Hex(), blockNumber, sender.Hex(), tx.Value().String(), message)
 
 	return zetabridge.GetInBoundVoteMessage(
 		sender.Hex(),

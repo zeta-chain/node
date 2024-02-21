@@ -1,10 +1,15 @@
 package main
 
 import (
+	"path/filepath"
+
+	"github.com/rs/zerolog/log"
+
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/rs/zerolog"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/cmd"
@@ -18,6 +23,10 @@ import (
 	"time"
 
 	"github.com/zeta-chain/zetacore/app"
+)
+
+const (
+	ComplianceLogFile = "compliance.log"
 )
 
 var (
@@ -51,19 +60,53 @@ func SetupConfigForTest() {
 
 }
 
-func InitLogger(cfg *config.Config) zerolog.Logger {
+func InitLogger(cfg *config.Config) (clientcommon.ClientLogger, error) {
+	// open compliance log file
+	file, err := OpenComplianceLogFile(cfg)
+	if err != nil {
+		return clientcommon.DefaultLoggers(), err
+	}
+
 	var logger zerolog.Logger
+	var loggerCompliance zerolog.Logger
 	switch cfg.LogFormat {
 	case "json":
 		logger = zerolog.New(os.Stdout).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		loggerCompliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	case "text":
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
+		loggerCompliance = zerolog.New(file).Level(zerolog.Level(cfg.LogLevel)).With().Timestamp().Logger()
 	default:
 		logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339})
+		loggerCompliance = zerolog.New(file).With().Timestamp().Logger()
 	}
 
 	if cfg.LogSampler {
 		logger = logger.Sample(&zerolog.BasicSampler{N: 5})
 	}
-	return logger
+	log.Logger = logger // set global logger
+
+	return clientcommon.ClientLogger{
+		Std:        log.Logger,
+		Compliance: loggerCompliance,
+	}, nil
+}
+
+func OpenComplianceLogFile(cfg *config.Config) (*os.File, error) {
+	// use zetacore home as default
+	logPath := cfg.ZetaCoreHome
+	if cfg.ComplianceConfig != nil && cfg.ComplianceConfig.LogPath != "" {
+		logPath = cfg.ComplianceConfig.LogPath
+	}
+
+	// clean file name
+	name := filepath.Join(logPath, ComplianceLogFile)
+	name, err := filepath.Abs(name)
+	if err != nil {
+		return nil, err
+	}
+	name = filepath.Clean(name)
+
+	// open (or create) compliance log file
+	return os.OpenFile(name, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 }

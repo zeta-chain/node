@@ -47,6 +47,11 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+type ComplianceConfig struct {
+	LogPath         string   `json:"LogPath"`
+	BannedAddresses []string `json:"BannedAddresses"`
+}
+
 // Config is the config for ZetaClient
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
@@ -78,6 +83,9 @@ type Config struct {
 	ChainsEnabled   []common.Chain       `json:"ChainsEnabled"`
 	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
+
+	// compliance config
+	ComplianceConfig *ComplianceConfig `json:"ComplianceConfig"`
 }
 
 func NewConfig() *Config {
@@ -149,6 +157,18 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinConfig.ChainId))
 	}
 	return *chain, *c.BitcoinConfig, true
+}
+
+func (c *Config) GetBannedAddressBook() map[string]bool {
+	bannedAddresses := make(map[string]bool)
+	if c.ComplianceConfig != nil {
+		for _, address := range c.ComplianceConfig.BannedAddresses {
+			if ethcommon.IsHexAddress(address) {
+				bannedAddresses[strings.ToLower(address)] = true
+			}
+		}
+	}
+	return bannedAddresses
 }
 
 func (c *Config) GetKeyringBackend() KeyringBackend {

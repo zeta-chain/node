@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// bannedAddressBook is a map of banned addresses
+var bannedAddressBook = map[string]bool{}
+
 const filename string = "zetaclient_config.json"
 const folder string = "config"
 
@@ -67,7 +70,14 @@ func Load(path string) (*Config, error) {
 	cfg.CurrentTssPubkey = ""
 	cfg.ZetaCoreHome = path
 
+	// load compliance config
+	LoadComplianceConfig(cfg)
+
 	return cfg, nil
+}
+
+func LoadComplianceConfig(cfg *Config) {
+	bannedAddressBook = cfg.GetBannedAddressBook()
 }
 
 func GetPath(inputPath string) string {
@@ -82,4 +92,13 @@ func GetPath(inputPath string) string {
 		}
 	}
 	return filepath.Join(path...)
+}
+
+func AnyBannedAddress(addrs ...string) bool {
+	for _, addr := range addrs {
+		if addr != "" && bannedAddressBook[strings.ToLower(addr)] {
+			return true
+		}
+	}
+	return false
 }

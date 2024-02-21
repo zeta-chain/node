@@ -257,7 +257,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 		}
 
 		// try confirming the outtx
-		included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
+		included, _, err := ob.IsSendOutTxProcessed(cctx, co.logger.ZetaChainWatcher)
 		if err != nil {
 			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
@@ -337,7 +337,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 			continue
 		}
 		// try confirming the outtx
-		included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx.Index, nonce, params.CoinType, co.logger.ZetaChainWatcher)
+		included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx, co.logger.ZetaChainWatcher)
 		if err != nil {
 			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxBTC: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue

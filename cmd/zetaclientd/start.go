@@ -57,7 +57,12 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	log.Logger = InitLogger(cfg)
+	loggers, err := InitLogger(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("InitLogger failed")
+		return err
+	}
+
 	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
 		err := validatePeer(cfg.Peer)
@@ -67,9 +72,10 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	masterLogger := log.Logger
+	masterLogger := loggers.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
+	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
@@ -218,8 +224,8 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
+	// CreateSignerMap: This creates a map of all signers for each chain. Each signer is responsible for signing transactions for a particular chain
+	signerMap, err := CreateSignerMap(tss, loggers, cfg, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -232,8 +238,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
-	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
+	// CreateChainClientMap : This creates a map of all chain clients. Each chain client is responsible for listening to events on the chain and processing them
+	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, loggers, cfg, telemetryServer)
 	if err != nil {
 		startLogger.Err(err).Msg("CreateSignerMap")
 		return err

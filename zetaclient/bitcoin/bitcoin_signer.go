@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -34,15 +35,20 @@ const (
 )
 
 type BTCSigner struct {
-	tssSigner interfaces.TSSSigner
-	rpcClient interfaces.BTCRPCClient
-	logger    zerolog.Logger
-	ts        *metrics.TelemetryServer
+	tssSigner        interfaces.TSSSigner
+	rpcClient        interfaces.BTCRPCClient
+	logger           zerolog.Logger
+	loggerCompliance zerolog.Logger
+	ts               *metrics.TelemetryServer
 }
 
 var _ interfaces.ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(cfg config.BTCConfig, tssSigner interfaces.TSSSigner, logger zerolog.Logger, ts *metrics.TelemetryServer) (*BTCSigner, error) {
+func NewBTCSigner(
+	cfg config.BTCConfig,
+	tssSigner interfaces.TSSSigner,
+	loggers clientcommon.ClientLogger,
+	ts *metrics.TelemetryServer) (*BTCSigner, error) {
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,
@@ -57,12 +63,11 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner interfaces.TSSSigner, logger z
 	}
 
 	return &BTCSigner{
-		tssSigner: tssSigner,
-		rpcClient: client,
-		logger: logger.With().
-			Str("chain", "BTC").
-			Str("module", "BTCSigner").Logger(),
-		ts: ts,
+		tssSigner:        tssSigner,
+		rpcClient:        client,
+		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
+		loggerCompliance: loggers.Compliance,
+		ts:               ts,
 	}, nil
 }
 
@@ -305,6 +310,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
 		return
 	}
+	amount := float64(params.Amount.Uint64()) / 1e8
 
 	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
 	networkInfo, err := signer.rpcClient.GetNetworkInfo()
@@ -315,12 +321,21 @@ func (signer *BTCSigner) TryProcessOutTx(
 	satPerByte := FeeRateToSatPerByte(networkInfo.RelayFee)
 	gasprice.Add(gasprice, satPerByte)
 
+	// compliance check
+	if clientcommon.IsCctxBanned(cctx) {
+		logMsg := fmt.Sprintf("Banned address detected in cctx: sender %s receiver %s chain %d nonce %d",
+			cctx.InboundTxParams.Sender, to, params.ReceiverChainId, outboundTxTssNonce)
+		logger.Warn().Msg(logMsg)
+		signer.loggerCompliance.Warn().Msg(logMsg)
+		amount = 0 // zero out the amount to cancel the tx
+	}
+
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 
 	tx, err := signer.SignWithdrawTx(
 		to,
-		float64(params.Amount.Uint64())/1e8,
+		amount,
 		gasprice,
 		sizelimit,
 		btcClient,
