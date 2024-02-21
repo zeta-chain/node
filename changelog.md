@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## Version: v13.0.0
 
 * `zetaclientd start` : 2 inputs required from stdin
 
@@ -51,6 +51,10 @@
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+
+### Features
+
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
 
 ### Chores
 
