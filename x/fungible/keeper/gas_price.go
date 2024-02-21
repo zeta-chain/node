@@ -5,7 +5,6 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -20,7 +19,7 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	if !found {
 		return 0, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
+	oracle := ethcommon.HexToAddress(system.SystemContract)
 	if oracle == (ethcommon.Address{}) {
 		return 0, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
@@ -39,12 +38,12 @@ func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int
 	return res.GasUsed, nil
 }
 
-func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Address) error {
+func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address ethcommon.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
+	oracle := ethcommon.HexToAddress(system.SystemContract)
 	if oracle == (ethcommon.Address{}) {
 		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
@@ -63,12 +62,12 @@ func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Add
 	return nil
 }
 
-func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Address) error {
+func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool ethcommon.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
 		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
+	oracle := ethcommon.HexToAddress(system.SystemContract)
 	if oracle == (ethcommon.Address{}) {
 		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
