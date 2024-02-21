@@ -1,6 +1,7 @@
 package cli
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -8,23 +9,30 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func CmdUpdateContractBytecode() *cobra.Command {
+func CmdUpdateZRC20WithdrawFee() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-contract-bytecode [contract-address] [new-code-hash]",
-		Short: "Broadcast message UpdateContractBytecode",
-		Args:  cobra.ExactArgs(2),
+		Use:   "update-zrc20-withdraw-fee [contractAddress] [newWithdrawFee] [newGasLimit]",
+		Short: "Broadcast message UpdateZRC20WithdrawFee",
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgUpdateContractBytecode(
+			contractAddress := args[0]
+
+			newWithdrawFee := sdkmath.NewUintFromString(args[1])
+
+			newGasLimit := sdkmath.NewUintFromString(args[2])
+
+			msg := types.NewMsgUpdateZRC20WithdrawFee(
 				clientCtx.GetFromAddress().String(),
-				args[0],
-				args[1],
+				contractAddress,
+				newWithdrawFee,
+				newGasLimit,
 			)
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
