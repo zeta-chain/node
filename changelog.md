@@ -51,6 +51,10 @@
 * Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
 
+### Features
+
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
+
 ### Chores
 
 * [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
