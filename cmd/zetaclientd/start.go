@@ -115,7 +115,7 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	appContext := appcontext.NewAppContext(corecontext.NewZeraCoreContext(), cfg, masterLogger)
+	appContext := appcontext.NewAppContext(corecontext.NewZetaCoreContext(), cfg, masterLogger)
 	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
@@ -123,8 +123,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
-	// UpdateAppContext: A polling goroutine checks and updates core context at every height. Zetacore stores core context for all clients
-	go zetaBridge.UpdateAppContext(appContext)
+	// CoreContextUpdater: A polling goroutine checks and updates core context at every height. Zetacore stores core context for all clients
+	go zetaBridge.CoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -185,8 +185,8 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		if appContext.ZetaCoreContext().Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", appContext.ZetaCoreContext().Keygen.Status)
+		if appContext.ZetaCoreContext().GetKeygen().Status != observerTypes.KeygenStatus_KeyGenSuccess {
+			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", appContext.ZetaCoreContext().GetKeygen().Status)
 			continue
 		}
 		break
@@ -204,7 +204,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(appContext.ZetaCoreContext().ChainsEnabled) == 0 {
+	if len(appContext.ZetaCoreContext().GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
@@ -238,7 +238,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
 	chainClientMap, err := CreateChainClientMap(appContext, zetaBridge, tss, dbpath, metrics, telemetryServer)
 	if err != nil {
-		startLogger.Err(err).Msg("CreateSignerMap")
+		startLogger.Err(err).Msg("CreateChainClientMap")
 		return err
 	}
 

@@ -97,7 +97,7 @@ type ChainClient struct {
 	stop                       chan struct{}
 	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
-	coreContext                *corecontext.ZeraCoreContext
+	coreContext                *corecontext.ZetaCoreContext
 	chainParams                observertypes.ChainParams
 	ts                         *metricsPkg.TelemetryServer
 

@@ -8,13 +8,13 @@ import (
 )
 
 type AppContext struct {
-	coreContext *corecontext.ZeraCoreContext
+	coreContext *corecontext.ZetaCoreContext
 	config      *config.Config
 	logger      zerolog.Logger
 }
 
 func NewAppContext(
-	coreContext *corecontext.ZeraCoreContext,
+	coreContext *corecontext.ZetaCoreContext,
 	config *config.Config,
 	logger zerolog.Logger,
 ) *AppContext {
@@ -29,7 +29,7 @@ func (a *AppContext) Config() *config.Config {
 	return a.config
 }
 
-func (a *AppContext) ZetaCoreContext() *corecontext.ZeraCoreContext {
+func (a *AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
 	return a.coreContext
 }
 

@@ -52,7 +52,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreContext := corecontext.NewZeraCoreContext()
+			coreContext := corecontext.NewZetaCoreContext()
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -130,7 +130,11 @@ func DebugCmd() *cobra.Command {
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
 							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						coreContext.EVMChainParams[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
+						evmChainParams, found := coreContext.GetEVMChainParams(chainID)
+						if !found {
+							return fmt.Errorf("missing chain params for chain %s", chainID)
+						}
+						evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta
 						} else if strings.EqualFold(tx.To().Hex(), chainParams.Erc20CustodyContractAddress) {

@@ -10,7 +10,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-type ZeraCoreContext struct {
+type ZetaCoreContext struct {
 	coreContextLock    *sync.RWMutex
 	Keygen             *observertypes.Keygen
 	ChainsEnabled      []common.Chain
@@ -19,8 +19,8 @@ type ZeraCoreContext struct {
 	CurrentTssPubkey   string
 }
 
-func NewZeraCoreContext() *ZeraCoreContext {
-	return &ZeraCoreContext{
+func NewZetaCoreContext() *ZetaCoreContext {
+	return &ZetaCoreContext{
 		coreContextLock:    new(sync.RWMutex),
 		ChainsEnabled:      []common.Chain{},
 		EVMChainParams:     make(map[int64]*observertypes.ChainParams),
@@ -28,7 +28,7 @@ func NewZeraCoreContext() *ZeraCoreContext {
 	}
 }
 
-func (c *ZeraCoreContext) GetKeygen() observertypes.Keygen {
+func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	copiedPubkeys := make([]string, len(c.Keygen.GranteePubkeys))
@@ -41,7 +41,13 @@ func (c *ZeraCoreContext) GetKeygen() observertypes.Keygen {
 	}
 }
 
-func (c *ZeraCoreContext) GetEnabledChains() []common.Chain {
+func (c *ZetaCoreContext) GetCurrentTssPubkey() string {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	return c.CurrentTssPubkey
+}
+
+func (c *ZetaCoreContext) GetEnabledChains() []common.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	copiedChains := make([]common.Chain, len(c.ChainsEnabled))
@@ -49,14 +55,14 @@ func (c *ZeraCoreContext) GetEnabledChains() []common.Chain {
 	return copiedChains
 }
 
-func (c *ZeraCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
+func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 	evmChainParams, found := c.EVMChainParams[chainID]
 	return evmChainParams, found
 }
 
-func (c *ZeraCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
+func (c *ZetaCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainParams {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -69,7 +75,7 @@ func (c *ZeraCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 	return copied
 }
 
-func (c *ZeraCoreContext) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, bool) {
+func (c *ZetaCoreContext) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
@@ -83,9 +89,9 @@ func (c *ZeraCoreContext) GetBTCChainParams() (common.Chain, *observertypes.Chai
 	return *chain, c.BitcoinChainParams, true
 }
 
-// UpdateCoreContext updates core context and params for all chains
+// Update updates core context and params for all chains
 // this must be the ONLY function that writes to core context
-func (c *ZeraCoreContext) UpdateCoreContext(
+func (c *ZetaCoreContext) Update(
 	keygen *observertypes.Keygen,
 	newChains []common.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,

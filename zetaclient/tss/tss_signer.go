@@ -101,7 +101,7 @@ func NewTSS(
 	newTss := TSS{
 		Server:         server,
 		Keys:           make(map[string]*Key),
-		CurrentPubkey:  appContext.ZetaCoreContext().CurrentTssPubkey,
+		CurrentPubkey:  appContext.ZetaCoreContext().GetCurrentTssPubkey(),
 		logger:         log.With().Str("module", "tss_signer").Logger(),
 		CoreBridge:     bridge,
 		BitcoinChainID: bitcoinChainID,

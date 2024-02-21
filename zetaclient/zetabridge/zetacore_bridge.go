@@ -190,7 +190,7 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
-func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZeraCoreContext, init bool) error {
+func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCoreContext, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {
 		return err
@@ -244,7 +244,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZeraCore
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
 	}
-	coreContext.UpdateCoreContext(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
+	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {

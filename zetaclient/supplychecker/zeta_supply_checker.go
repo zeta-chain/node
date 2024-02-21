@@ -22,7 +22,7 @@ import (
 )
 
 type ZetaSupplyChecker struct {
-	coreContext      *corecontext.ZeraCoreContext
+	coreContext      *corecontext.ZetaCoreContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
 	ticker           *clienttypes.DynamicTicker
