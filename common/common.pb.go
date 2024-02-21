@@ -425,6 +425,7 @@ func (*HeaderData) XXX_OneofWrappers() []interface{} {
 
 type Proof struct {
 	// Types that are valid to be assigned to Proof:
+	//
 	//	*Proof_EthereumProof
 	//	*Proof_BitcoinProof
 	Proof isProof_Proof `protobuf_oneof:"proof"`
