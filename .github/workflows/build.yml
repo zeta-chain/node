@@ -77,7 +77,7 @@ jobs:
         shell: bash
         run: rm -rf *
 
-  smoke-test:
+  e2e-test:
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 25
     steps:
@@ -120,12 +120,12 @@ jobs:
           cd contrib/localnet/ 
           docker compose up -d zetacore0 zetacore1 zetaclient0 zetaclient1 eth bitcoin
 
-      - name: Run Smoke Test
+      - name: Run E2E Test
         run: |
           cd contrib/localnet
           docker-compose up orchestrator --exit-code-from orchestrator
           if [ $? -ne 0 ]; then
-            echo "Smoke Test Failed"
+            echo "E2E Test Failed"
             exit 1
           fi
 

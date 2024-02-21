@@ -2,19 +2,20 @@ package local
 
 import (
 	"fmt"
+
 	"runtime"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
 // adminTestRoutine runs admin functions tests
 func adminTestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 ) func() error {
 	return func() (err error) {
@@ -60,11 +61,11 @@ func adminTestRoutine(
 		adminRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		// run erc20 advanced test
-		if err := adminRunner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			smoketests.TestPauseZRC20Name,
-			smoketests.TestUpdateBytecodeName,
-			smoketests.TestDepositEtherLiquidityCapName,
+		if err := adminRunner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			e2etests.TestPauseZRC20Name,
+			e2etests.TestUpdateBytecodeName,
+			e2etests.TestDepositEtherLiquidityCapName,
 		); err != nil {
 			return fmt.Errorf("admin tests failed: %v", err)
 		}
