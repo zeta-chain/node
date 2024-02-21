@@ -4,18 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"google.golang.org/grpc"
-
 	"github.com/btcsuite/btcd/rpcclient"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
+	"github.com/zeta-chain/zetacore/e2e/config"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"google.golang.org/grpc"
 )
 
 // getClientsFromConfig get clients from config

@@ -1088,9 +1088,9 @@ type MsgVoteOnObservedInboundTx struct {
 	SenderChainId int64  `protobuf:"varint,3,opt,name=sender_chain_id,json=senderChainId,proto3" json:"sender_chain_id,omitempty"`
 	Receiver      string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
 	ReceiverChain int64  `protobuf:"varint,5,opt,name=receiver_chain,json=receiverChain,proto3" json:"receiver_chain,omitempty"`
-	//  string zeta_burnt = 6;
+	// string zeta_burnt = 6;
 	Amount github_com_cosmos_cosmos_sdk_types.Uint `protobuf:"bytes,6,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Uint" json:"amount"`
-	//  string mMint = 7;
+	// string mMint = 7;
 	Message       string          `protobuf:"bytes,8,opt,name=message,proto3" json:"message,omitempty"`
 	InTxHash      string          `protobuf:"bytes,9,opt,name=in_tx_hash,json=inTxHash,proto3" json:"in_tx_hash,omitempty"`
 	InBlockHeight uint64          `protobuf:"varint,10,opt,name=in_block_height,json=inBlockHeight,proto3" json:"in_block_height,omitempty"`

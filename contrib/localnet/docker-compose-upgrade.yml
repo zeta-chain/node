@@ -1,24 +1,11 @@
 version: "3"
 
-networks:
-  mynetwork:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/24
-
+# This docker-compose redefine the services:
+# - ZetaChain with 2 nodes (zetacore0, zetacore1) using the upgrade option for cosmovisor
+# - ZetaChain observer set with 2 clients (zetaclient0, zetaclient1) using the background option
+# - Orchestrator with upgrade option
 
 services:
-  rosetta:
-    image: zetanode:latest
-    container_name: rosetta
-    hostname: rosetta
-    ports:
-      - "8080:8080"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.200
-    entrypoint: ["zetacored", "rosetta", "--tendermint", "zetacore0:26657", "--grpc", "zetacore0:9090", "--network", "athens_101-1", "--blockchain",  "zetacore"]
-
   zetacore0:
     image: zetanode:latest
     container_name: zetacore0
@@ -33,8 +20,9 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis-upgrade.sh", "2"]
-
+    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetacore1:
     image: zetanode:latest
@@ -46,8 +34,9 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/genesis-upgrade.sh", "2"]
-
+    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
+    environment:
+      - HOTKEY_BACKEND=test
 
   zetaclient0:
     image: zetanode:latest
@@ -59,8 +48,9 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: ["/root/start-zetaclientd.sh", "background"]
     environment:
+      - HOTKEY_BACKEND=test
       - ETHDEV_ENDPOINT=http://eth:8545
 
   zetaclient1:
@@ -73,37 +63,10 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: ["/root/start-zetaclientd.sh", "background"]
     environment:
+      - HOTKEY_BACKEND=test
       - ETHDEV_ENDPOINT=http://eth:8545
-
-  eth:
-    image: ethereum/client-go:v1.10.26
-    container_name: eth
-    hostname: eth
-    ports:
-      - "8545:8545"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
-
-  bitcoin:
-    image: ruimarinho/bitcoin-core:22 # version 23 is not working with btcd 0.22.0 due to change in createwallet rpc
-    container_name: bitcoin
-    hostname: bitcoin
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.101
-    ports:
-      - "18443:18443"
-    command:
-      -printtoconsole
-      -regtest=1
-      -rpcallowip=172.20.0.0/16
-      -rpcbind=0.0.0.0
-      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
-      -txindex=1
 
   orchestrator:
     image: orchestrator:latest
@@ -118,5 +81,4 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: ["/work/start.sh", "local"]
-
+    entrypoint: ["/work/start.sh", "local", "upgrade"]
