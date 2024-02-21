@@ -13,15 +13,15 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/erc20"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
 // setContractsFromConfigs get EVM contracts from config
-func setContractsFromConfig(r *runner.SmokeTestRunner, conf config.Config) error {
+func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 	var err error
 
 	// set EVM contracts

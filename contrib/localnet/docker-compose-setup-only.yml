@@ -1,0 +1,22 @@
+version: "3"
+
+# This docker-compose file overrides the orcherstrator service to use the setup only option
+# It is used to setup the localnet environment without running tests
+
+services:
+  orchestrator:
+    image: orchestrator:latest
+    tty: true
+    container_name: orchestrator
+    build:
+      context: ../../.
+      dockerfile: contrib/localnet/orchestrator/Dockerfile
+    depends_on:
+      - zetacore0
+      - eth
+    hostname: orchestrator
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.2
+    entrypoint: ["/work/start.sh", "local", "setup-only"]
+
