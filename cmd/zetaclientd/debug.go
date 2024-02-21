@@ -132,7 +132,7 @@ func DebugCmd() *cobra.Command {
 						})
 						evmChainParams, found := coreContext.GetEVMChainParams(chainID)
 						if !found {
-							return fmt.Errorf("missing chain params for chain %s", chainID)
+							return fmt.Errorf("missing chain params for chain %d", chainID)
 						}
 						evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
