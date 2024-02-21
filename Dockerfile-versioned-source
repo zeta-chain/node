@@ -17,7 +17,7 @@ WORKDIR /go/delivery/zeta-node
 RUN mkdir -p  $GOPATH/bin/old
 RUN mkdir -p  $GOPATH/bin/new
 
-ENV NEW_VERSION=v12.3.0
+ENV NEW_VERSION=v13
 
 # Build new release from the current source
 COPY go.mod /go/delivery/zeta-node/

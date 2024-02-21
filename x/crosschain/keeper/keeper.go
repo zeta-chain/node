@@ -19,7 +19,7 @@ type (
 		storeKey storetypes.StoreKey
 		memKey   storetypes.StoreKey
 
-		StakingKeeper      types.StakingKeeper
+		stakingKeeper      types.StakingKeeper
 		paramstore         paramtypes.Subspace
 		authKeeper         types.AccountKeeper
 		bankKeeper         types.BankKeeper
@@ -49,7 +49,7 @@ func NewKeeper(
 		cdc:                cdc,
 		storeKey:           storeKey,
 		memKey:             memKey,
-		StakingKeeper:      stakingKeeper,
+		stakingKeeper:      stakingKeeper,
 		paramstore:         paramstore,
 		authKeeper:         authKeeper,
 		bankKeeper:         bankKeeper,
@@ -71,7 +71,7 @@ func (k Keeper) GetBankKeeper() types.BankKeeper {
 }
 
 func (k Keeper) GetStakingKeeper() types.StakingKeeper {
-	return k.StakingKeeper
+	return k.stakingKeeper
 }
 
 func (k Keeper) GetFungibleKeeper() types.FungibleKeeper {
