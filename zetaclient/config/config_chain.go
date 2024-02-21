@@ -40,7 +40,7 @@ func New() Config {
 }
 
 var bitcoinConfigRegnet = &BTCConfig{
-	RPCUsername: "smoketest",
+	RPCUsername: "e2e",
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",

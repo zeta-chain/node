@@ -146,6 +146,26 @@ func (_m *FungibleEVMKeeper) GetBlockBloomTransient(ctx types.Context) *big.Int 
 	return r0
 }
 
+// GetCode provides a mock function with given fields: ctx, codeHash
+func (_m *FungibleEVMKeeper) GetCode(ctx types.Context, codeHash common.Hash) []byte {
+	ret := _m.Called(ctx, codeHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCode")
+	}
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func(types.Context, common.Hash) []byte); ok {
+		r0 = rf(ctx, codeHash)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	return r0
+}
+
 // GetLogSizeTransient provides a mock function with given fields: ctx
 func (_m *FungibleEVMKeeper) GetLogSizeTransient(ctx types.Context) uint64 {
 	ret := _m.Called(ctx)

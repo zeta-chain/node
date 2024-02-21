@@ -37,4 +37,6 @@ var (
 	ErrMinDelegationNotFound           = errorsmod.Register(ModuleName, 1129, "min delegation not found")
 	ErrObserverSetNotFound             = errorsmod.Register(ModuleName, 1130, "observer set not found")
 	ErrTssNotFound                     = errorsmod.Register(ModuleName, 1131, "tss not found")
+
+	ErrInboundDisabled = errorsmod.Register(ModuleName, 1132, "inbound tx processing is disabled")
 )
