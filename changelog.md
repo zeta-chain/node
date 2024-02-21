@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## Version: v13.0.0
 
 * `zetaclientd start` : 2 inputs required from stdin
 
@@ -17,9 +17,10 @@
 *[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
 
 ### Refactor
-
+* [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+* [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
 
 ### Fixes
 
@@ -34,16 +35,25 @@
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 * [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
+
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
+* [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
 
 ### CI
 
-* CI: adding pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the release pipeline to be a manually executed pipeline with an approver step. The pipeline now executes all the required tests run before the approval step unless skipped. 
+* Added pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the pipeline for building and pushing docker images for MacOS to install and run docker.
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
+* Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+
+### Features
+
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
 
 ### Chores
 
@@ -281,4 +291,3 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 * [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
 * [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
-
