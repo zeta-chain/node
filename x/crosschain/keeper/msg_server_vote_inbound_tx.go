@@ -59,8 +59,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	index := msg.Digest()
 
 	// vote on inbound ballot
+	// use a temporary context to not commit any ballot state change in case of error
+	tmpCtx, commit := ctx.CacheContext()
 	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
-		ctx,
+		tmpCtx,
 		msg.SenderChainId,
 		msg.ReceiverChain,
 		msg.CoinType,
@@ -77,9 +79,13 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// This check prevents double spending
 	if isNew {
 		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-			return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+			return nil, errorsmod.Wrap(
+				types.ErrObservedTxAlreadyFinalized,
+				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
+			)
 		}
 	}
+	commit()
 
 	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
@@ -181,7 +187,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	// Receiver is not ZetaChain: Cross Chain SWAP
-	tmpCtx, commit := ctx.CacheContext()
+	tmpCtx, commit = ctx.CacheContext()
 	err = func() error {
 		err := k.PayGasAndUpdateCctx(
 			tmpCtx,

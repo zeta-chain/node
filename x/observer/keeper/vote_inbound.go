@@ -75,10 +75,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, types.VoteType_SuccessObservation)
 	if err != nil {
-		return false, false, err
+		return false, isNew, err
 	}
 
 	// checks if the ballot is finalized
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
-	return isFinalized, false, nil
+	return isFinalized, isNew, nil
 }

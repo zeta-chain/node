@@ -123,6 +123,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
 	require.True(t, found)
 	require.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
+
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
 		Creator:       validatorAddr,
@@ -145,6 +146,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 		ctx,
 		msg2,
 	)
+	require.Error(t, err)
 	require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
 	_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
 	require.False(t, found)
