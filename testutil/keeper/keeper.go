@@ -56,7 +56,7 @@ import (
 func NewContext(stateStore sdk.CommitMultiStore) sdk.Context {
 	header := tmproto.Header{
 		Height:  1,
-		ChainID: "test_1-1",
+		ChainID: "test_7000-1",
 		Time:    time.Now().UTC(),
 		LastBlockId: tmproto.BlockID{
 			Hash: tmhash.Sum([]byte("block_id")),

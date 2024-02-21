@@ -2,17 +2,20 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 //
@@ -84,35 +87,166 @@ func TestParseZRC20WithdrawalEvent(t *testing.T) {
 }
 
 func TestKeeper_ProcessLogs(t *testing.T) {
-	t.Run("valid logs", func(t *testing.T) {
+	t.Run("create ZRC20Withdrawal to BTC chain", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
 
-		// deploy gas coin, erc20 and set fee params
 		chainID := common.BtcMainnetChain().ChainId
 		setSupportedChain(ctx, zk, chainID)
-		//assetAddress := sample.EthAddress().String()
-		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 
-		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
 
 		block := GetValidSampleBlock(t)
-		for _, chain := range zk.ObserverKeeper.GetSupportedChains(ctx) {
-			fmt.Println(chain.String())
-		}
-
 		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
 		for _, log := range block.Logs {
 			log.Address = gasZRC20
 		}
 
-		err := k.ProcessLogs(ctx, GetValidSampleBlock(t).Logs, sample.EthAddress(), "")
+		emittingContract := sample.EthAddress()
+		txOrigin := sample.EthAddress()
+		err := k.ProcessLogs(ctx, block.Logs, emittingContract, txOrigin.Hex())
 		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 1)
+		require.Equal(t, "bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", cctxList[0].GetCurrentOutTxParam().Receiver)
+		require.Equal(t, emittingContract.Hex(), cctxList[0].InboundTxParams.Sender)
+		require.Equal(t, txOrigin.Hex(), cctxList[0].InboundTxParams.TxOrigin)
+	})
+	t.Run("unable to process logs if system contract not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
+		err := k.ProcessLogs(ctx, GetValidSampleBlock(t).Logs, sample.EthAddress(), "")
+		require.ErrorContains(t, err, "cannot find system contract")
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+	t.Run("no cctx created for logs containing no events", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
+
+		block := GetValidSampleBlock(t)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = gasZRC20
+		}
+		block.Logs = block.Logs[:3]
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+	t.Run("no cctx created for logs containing proper event but not emitted from a known ZRC20 contract", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
+
+		block := GetValidSampleBlock(t)
+		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = sample.EthAddress()
+		}
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
+		require.NoError(t, err)
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+	t.Run("no cctx created for for valid logs if Inbound is disabled", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
+
+		block := GetValidSampleBlock(t)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = gasZRC20
+		}
+		zk.ObserverKeeper.SetCrosschainFlags(ctx, observertypes.CrosschainFlags{
+			IsInboundEnabled: false,
+		})
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
+		require.ErrorContains(t, err, observertypes.ErrInboundDisabled.Error())
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+	t.Run("error returned for invalid event data", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
+
+		block := GetSampleBlockLegacyToAddress(t)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = gasZRC20
+		}
+
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
+		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+	t.Run("error returned if unable to process an event", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		chainID := common.BtcMainnetChain().ChainId
+		setSupportedChain(ctx, zk, chainID)
+
+		SetupProcessLogsTest(t, ctx, k, zk, sdkk, chainID)
+
+		block := GetValidSampleBlock(t)
+		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
+		for _, log := range block.Logs {
+			log.Address = gasZRC20
+		}
+		ctx = ctx.WithChainID("test-21-1")
+		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
+		require.ErrorContains(t, err, "ProcessZRC20WithdrawalEvent: failed to convert chainID")
+		cctxList := k.GetAllCrossChainTx(ctx)
+		require.Len(t, cctxList, 0)
+	})
+}
+
+func SetupProcessLogsTest(t *testing.T, ctx sdk.Context, k *keeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chainID int64) {
+
+	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+		ChainId: chainID,
+		Prices:  []uint64{100},
 	})
 
+	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+		Index:   common.BtcMainnetChain().ChainName.String(),
+		ChainId: chainID,
+		Nonce:   0,
+	})
+	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+		NonceLow:  0,
+		NonceHigh: 0,
+		ChainId:   chainID,
+		Tss:       tss.TssPubkey,
+	})
 }
 
 // receiver is 1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3
