@@ -20,7 +20,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			IsInboundEnabled: false,
 		})
 
-		_, err := k.VoteOnInboundBallot(
+		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -42,7 +42,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		})
 		k.SetChainParamsList(ctx, types.ChainParamsList{})
 
-		_, err := k.VoteOnInboundBallot(
+		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -64,7 +64,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			},
 		})
 
-		_, err = k.VoteOnInboundBallot(
+		_, _, err = k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -93,7 +93,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		})
 		k.SetObserverSet(ctx, types.ObserverSet{})
 
-		_, err := k.VoteOnInboundBallot(
+		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -130,7 +130,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
 		slashingMock.MockIsTombstoned(false)
 
-		_, err := k.VoteOnInboundBallot(
+		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -158,7 +158,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
 		slashingMock.MockIsTombstoned(false)
 
-		_, err = k.VoteOnInboundBallot(
+		_, _, err = k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			common.ZetaPrivnetChain().ChainId,
@@ -200,7 +200,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
 		slashingMock.MockIsTombstoned(false)
 
-		_, err := k.VoteOnInboundBallot(
+		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
@@ -241,7 +241,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
 		slashingMock.MockIsTombstoned(false)
 
-		isFinalized, err := k.VoteOnInboundBallot(
+		isFinalized, isNew, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
@@ -254,6 +254,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 
 		// ballot should be finalized since there is only one observer
 		require.True(t, isFinalized)
+		require.True(t, isNew)
 	})
 
 	t.Run("can add vote to an existing ballot", func(t *testing.T) {
@@ -304,7 +305,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		}
 		k.SetBallot(ctx, &ballot)
 
-		isFinalized, err := k.VoteOnInboundBallot(
+		isFinalized, isNew, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
@@ -317,5 +318,6 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 
 		// ballot should not be finalized as the threshold is not reached
 		require.False(t, isFinalized)
+		require.False(t, isNew)
 	})
 }

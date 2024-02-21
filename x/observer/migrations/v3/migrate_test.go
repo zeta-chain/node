@@ -11,7 +11,7 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 
 	// nothing if no admin policy
 	params := types.DefaultParams()

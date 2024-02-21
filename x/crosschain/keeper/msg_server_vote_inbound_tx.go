@@ -58,13 +58,8 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	index := msg.Digest()
 
-	// Check if the inbound has already been processed.
-	if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-		return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
-	}
-
 	// vote on inbound ballot
-	finalized, err := k.zetaObserverKeeper.VoteOnInboundBallot(
+	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
 		ctx,
 		msg.SenderChainId,
 		msg.ReceiverChain,
@@ -76,8 +71,18 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if err != nil {
 		return nil, err
 	}
+
+	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
+	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
+	// This check prevents double spending
+	if isNew {
+		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+			return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
+		}
+	}
+
+	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
-		// Return nil here to add vote to ballot and commit state
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
 

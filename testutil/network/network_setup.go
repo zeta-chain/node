@@ -528,6 +528,8 @@ func (n *Network) WaitForHeightWithTimeout(h int64, t time.Duration) (int64, err
 				if latestHeight >= h {
 					return latestHeight, nil
 				}
+			} else if err != nil {
+				fmt.Printf("error trying to fetch block height: %v\n", err)
 			}
 		}
 	}

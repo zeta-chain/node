@@ -80,7 +80,7 @@ type ObserverKeeper interface {
 		voter string,
 		ballotIndex string,
 		inTxHash string,
-	) (bool, error)
+	) (bool, bool, error)
 	VoteOnOutboundBallot(
 		ctx sdk.Context,
 		ballotIndex string,

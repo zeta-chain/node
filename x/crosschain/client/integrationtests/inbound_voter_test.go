@@ -261,7 +261,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 					message = message + "falseVote"
 				}
 				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message, i)
-				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
+				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "block"})
 				s.Require().NoError(err)
 				fmt.Println(out.String())
 			}
@@ -275,7 +275,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
 
 			// Check the vote in the ballot
-			s.Assert().Equal(len(test.votes), len(ballot.Voters))
+			s.Require().Equal(len(test.votes), len(ballot.Voters))
 			for _, vote := range ballot.Voters {
 				if test.votes[vote.VoterAddress] == observerTypes.VoteType_FailureObservation {
 					s.Assert().Equal(observerTypes.VoteType_NotYetVoted.String(), vote.VoteType.String())

@@ -20,9 +20,9 @@ func (k Keeper) VoteOnInboundBallot(
 	voter string,
 	ballotIndex string,
 	inTxHash string,
-) (bool, error) {
+) (bool, bool, error) {
 	if !k.IsInboundEnabled(ctx) {
-		return false, types.ErrInboundDisabled
+		return false, false, types.ErrInboundDisabled
 	}
 
 	// makes sure we are getting only supported chains
@@ -30,7 +30,7 @@ func (k Keeper) VoteOnInboundBallot(
 	// this function returns nil
 	senderChain := k.GetSupportedChainFromChainID(ctx, senderChainID)
 	if senderChain == nil {
-		return false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			senderChainID,
 			types.ObservationType_InBoundTx.String()),
@@ -39,13 +39,13 @@ func (k Keeper) VoteOnInboundBallot(
 
 	// checks the voter is authorized to vote on the observation chain
 	if ok := k.IsAuthorized(ctx, voter); !ok {
-		return false, types.ErrNotObserver
+		return false, false, types.ErrNotObserver
 	}
 
 	// makes sure we are getting only supported chains
 	receiverChain := k.GetSupportedChainFromChainID(ctx, receiverChainID)
 	if receiverChain == nil {
-		return false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
+		return false, false, sdkerrors.Wrap(types.ErrSupportedChains, fmt.Sprintf(
 			"ChainID %d, Observation %s",
 			receiverChainID,
 			types.ObservationType_InBoundTx.String()),
@@ -56,17 +56,17 @@ func (k Keeper) VoteOnInboundBallot(
 	if receiverChain.IsExternalChain() {
 		coreParams, found := k.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 		if !found {
-			return false, types.ErrChainParamsNotFound
+			return false, false, types.ErrChainParamsNotFound
 		}
 		if coreParams.ZetaTokenContractAddress == "" && coinType == common.CoinType_Zeta {
-			return false, types.ErrInvalidZetaCoinTypes
+			return false, false, types.ErrInvalidZetaCoinTypes
 		}
 	}
 
 	// checks against the supported chains list before querying for Ballot
 	ballot, isNew, err := k.FindBallot(ctx, ballotIndex, senderChain, types.ObservationType_InBoundTx)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	if isNew {
 		EmitEventBallotCreated(ctx, ballot, inTxHash, senderChain.String())
@@ -75,10 +75,10 @@ func (k Keeper) VoteOnInboundBallot(
 	// adds a vote and sets the ballot
 	ballot, err = k.AddVoteToBallot(ctx, ballot, voter, types.VoteType_SuccessObservation)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	// checks if the ballot is finalized
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
-	return isFinalized, nil
+	return isFinalized, false, nil
 }
