@@ -52,7 +52,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coreContext := corecontext.NewZetaCoreContext()
+			coreContext := corecontext.NewZetaCoreContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err

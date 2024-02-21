@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 type ZetaCoreContext struct {
@@ -19,11 +20,15 @@ type ZetaCoreContext struct {
 	CurrentTssPubkey   string
 }
 
-func NewZetaCoreContext() *ZetaCoreContext {
+func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
+	evmChainParams := make(map[int64]*observertypes.ChainParams)
+	for _, e := range cfg.EVMChainConfigs {
+		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
+	}
 	return &ZetaCoreContext{
 		coreContextLock:    new(sync.RWMutex),
 		ChainsEnabled:      []common.Chain{},
-		EVMChainParams:     make(map[int64]*observertypes.ChainParams),
+		EVMChainParams:     evmChainParams,
 		BitcoinChainParams: &observertypes.ChainParams{},
 	}
 }
