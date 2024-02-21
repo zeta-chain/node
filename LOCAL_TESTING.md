@@ -23,7 +23,7 @@ $ docker build -t zetanode .
 
 ### Run e2e tests
 
-Now we have built all the docker images; we can run the e2e test with make command:
+Now we have built all the docker images, we can run the e2e test with make command:
 ```bash
 # in zeta-node/
 make start-e2e-test
@@ -39,13 +39,15 @@ $ docker compose up -d
 Upgrade tests run the E2E tests with an older version, upgrade the nodes to the new version, and run the E2E tests again.
 This allows testing the upgrade process with a populated state.
 
-Before running the upagrade tests, the versions must be specified in `Dockefile-upgrade`:
+Before running the upgrade tests, the versions must be specified in `Dockefile-upgrade`:
 
 ```dockerfile
-ARG OLD_VERSION=vx.y.z
-ENV NEW_VERSION=vxx.y.z
+ARG OLD_VERSION=v{old_major_version}.{old_minor_version}.{old_patch_version}
+ENV NEW_VERSION=v{new_major_version}
 ```
 The new version must match the version specified in `app/setup_handlers.go`
+
+NOTE: We only specify the major version for `NEW_VERSION` since we use major version only for chain upgrade. Semver is needed for `OLD_VERSION` because we use this value to fetch the release tag from the GitHub repository.
 
 The upgrade tests can be run with the following command:
 ```bash
