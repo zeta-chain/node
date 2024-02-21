@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// erc20TestRoutine runs erc20 related smoke tests
+// erc20TestRoutine runs erc20 related e2e tests
 func erc20TestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 ) func() error {
 	return func() (err error) {
@@ -60,12 +60,12 @@ func erc20TestRoutine(
 		//erc20Runner.DepositBTC()
 
 		// run erc20 test
-		if err := erc20Runner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			smoketests.TestERC20WithdrawName,
-			smoketests.TestMultipleWithdrawsName,
-			smoketests.TestERC20DepositAndCallRefundName,
-			smoketests.TestZRC20SwapName,
+		if err := erc20Runner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			e2etests.TestERC20WithdrawName,
+			e2etests.TestMultipleWithdrawsName,
+			e2etests.TestERC20DepositAndCallRefundName,
+			e2etests.TestZRC20SwapName,
 		); err != nil {
 			return fmt.Errorf("erc20 tests failed: %v", err)
 		}

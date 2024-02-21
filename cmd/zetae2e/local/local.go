@@ -9,9 +9,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,7 +33,7 @@ var (
 )
 
 // NewLocalCmd returns the local command
-// which runs the smoketest locally on the machine with localnet for each blockchain
+// which runs the E2E tests locally on the machine with localnet for each blockchain
 func NewLocalCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",
@@ -229,6 +229,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 
 	// if setup only, quit
 	if setupOnly {
+		logger.Print("✅ the localnet has been setup")
 		os.Exit(0)
 	}
 

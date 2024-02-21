@@ -55,7 +55,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 
 	btc := client.rpcClient
 
-	_, err = btc.CreateWallet("smoketest")
+	_, err = btc.CreateWallet("e2e")
 	suite.Require().NoError(err)
 	addr, err := btc.GetNewAddress("test")
 	suite.Require().NoError(err)
