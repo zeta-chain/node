@@ -87,22 +87,22 @@ func RunnerFromConfig(
 }
 
 // ExportContractsFromRunner export contracts from the runner to config using a source config
-func ExportContractsFromRunner(oldRunner *runner.E2ERunner, conf config.Config) config.Config {
+func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.Config {
 	// copy contracts from deployer runner
-	conf.Contracts.EVM.ZetaEthAddress = oldRunner.ZetaEthAddr.Hex()
-	conf.Contracts.EVM.ConnectorEthAddr = oldRunner.ConnectorEthAddr.Hex()
-	conf.Contracts.EVM.CustodyAddr = oldRunner.ERC20CustodyAddr.Hex()
-	conf.Contracts.EVM.USDT = oldRunner.USDTERC20Addr.Hex()
+	conf.Contracts.EVM.ZetaEthAddress = r.ZetaEthAddr.Hex()
+	conf.Contracts.EVM.ConnectorEthAddr = r.ConnectorEthAddr.Hex()
+	conf.Contracts.EVM.CustodyAddr = r.ERC20CustodyAddr.Hex()
+	conf.Contracts.EVM.USDT = r.USDTERC20Addr.Hex()
 
-	conf.Contracts.ZEVM.SystemContractAddr = oldRunner.SystemContractAddr.Hex()
-	conf.Contracts.ZEVM.ETHZRC20Addr = oldRunner.ETHZRC20Addr.Hex()
-	conf.Contracts.ZEVM.USDTZRC20Addr = oldRunner.USDTZRC20Addr.Hex()
-	conf.Contracts.ZEVM.BTCZRC20Addr = oldRunner.BTCZRC20Addr.Hex()
-	conf.Contracts.ZEVM.UniswapFactoryAddr = oldRunner.UniswapV2FactoryAddr.Hex()
-	conf.Contracts.ZEVM.UniswapRouterAddr = oldRunner.UniswapV2RouterAddr.Hex()
-	conf.Contracts.ZEVM.ZEVMSwapAppAddr = oldRunner.ZEVMSwapAppAddr.Hex()
-	conf.Contracts.ZEVM.ContextAppAddr = oldRunner.ContextAppAddr.Hex()
-	conf.Contracts.ZEVM.TestDappAddr = oldRunner.TestDAppAddr.Hex()
+	conf.Contracts.ZEVM.SystemContractAddr = r.SystemContractAddr.Hex()
+	conf.Contracts.ZEVM.ETHZRC20Addr = r.ETHZRC20Addr.Hex()
+	conf.Contracts.ZEVM.USDTZRC20Addr = r.USDTZRC20Addr.Hex()
+	conf.Contracts.ZEVM.BTCZRC20Addr = r.BTCZRC20Addr.Hex()
+	conf.Contracts.ZEVM.UniswapFactoryAddr = r.UniswapV2FactoryAddr.Hex()
+	conf.Contracts.ZEVM.UniswapRouterAddr = r.UniswapV2RouterAddr.Hex()
+	conf.Contracts.ZEVM.ZEVMSwapAppAddr = r.ZEVMSwapAppAddr.Hex()
+	conf.Contracts.ZEVM.ContextAppAddr = r.ContextAppAddr.Hex()
+	conf.Contracts.ZEVM.TestDappAddr = r.TestDAppAddr.Hex()
 
 	return conf
 }
