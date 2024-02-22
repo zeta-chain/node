@@ -5,18 +5,5 @@ version: "3"
 
 services:
   orchestrator:
-    image: orchestrator:latest
-    tty: true
-    container_name: orchestrator
-    build:
-      context: ../../.
-      dockerfile: contrib/localnet/orchestrator/Dockerfile
-    depends_on:
-      - zetacore0
-      - eth
-    hostname: orchestrator
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.2
     entrypoint: ["/work/start.sh", "local", "setup-only"]
 

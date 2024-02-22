@@ -7,36 +7,10 @@ version: "3"
 
 services:
   zetacore0:
-    image: zetanode:latest
-    container_name: zetacore0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetacore0
-    ports:
-      - "1317:1317"
-      - "9545:8545"
-      - "9546:8546"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.11
     entrypoint: ["/root/start-zetacored.sh", "4"]
-    environment:
-      - HOTKEY_BACKEND=test
 
   zetacore1:
-    image: zetanode:latest
-    container_name: zetacore1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetacore1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.12
     entrypoint: ["/root/start-zetacored.sh", "4"]
-    environment:
-      - HOTKEY_BACKEND=test
 
   zetacore2:
     image: zetanode:latest
@@ -50,7 +24,8 @@ services:
         ipv4_address: 172.20.0.13
     entrypoint: [ "/root/start-zetacored.sh", "4" ]
     environment:
-      - HOTKEY_BACKEND=test
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetacore3:
     image: zetanode:latest
@@ -64,39 +39,16 @@ services:
         ipv4_address: 172.20.0.14
     entrypoint: [ "/root/start-zetacored.sh", "4" ]
     environment:
-      - HOTKEY_BACKEND=test
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetaclient0:
-    image: zetanode:latest
-    container_name: zetaclient0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetaclient0
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.21
     ports:
       - "8123:8123"
     entrypoint: /root/start-zetaclientd.sh
-    environment:
-      - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=test
 
   zetaclient1:
-    image: zetanode:latest
-    container_name: zetaclient1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetaclient1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.22
     entrypoint: /root/start-zetaclientd.sh
-    environment:
-      - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=test
 
   zetaclient2:
     image: zetanode:latest
@@ -111,7 +63,8 @@ services:
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=test
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   zetaclient3:
     image: zetanode:latest
@@ -126,19 +79,10 @@ services:
     entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
-      - HOTKEY_BACKEND=test
+      - HOTKEY_BACKEND=file
+      - HOTKEY_PASSWORD=password # test purposes only
 
   orchestrator:
-    image: orchestrator:latest
-    container_name: orchestrator
     build:
-      context: ../../.
       dockerfile: contrib/localnet/orchestrator/Dockerfile.fastbuild
-    depends_on:
-      - zetacore0
-      - eth
-    hostname: orchestrator
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.2
     entrypoint: ["/work/start.sh", "stress"]

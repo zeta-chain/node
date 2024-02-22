@@ -7,78 +7,16 @@ version: "3"
 
 services:
   zetacore0:
-    image: zetanode:latest
-    container_name: zetacore0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetacore0
-    ports:
-      - "1317:1317"
-      - "9545:8545"
-      - "9546:8546"
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.11
     entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
-    environment:
-      - HOTKEY_BACKEND=test
 
   zetacore1:
-    image: zetanode:latest
-    container_name: zetacore1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetacore1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.12
     entrypoint: ["/root/start-zetacored.sh", "2", "upgrade"]
-    environment:
-      - HOTKEY_BACKEND=test
 
   zetaclient0:
-    image: zetanode:latest
-    container_name: zetaclient0
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetaclient0
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.21
     entrypoint: ["/root/start-zetaclientd.sh", "background"]
-    environment:
-      - HOTKEY_BACKEND=test
-      - ETHDEV_ENDPOINT=http://eth:8545
 
   zetaclient1:
-    image: zetanode:latest
-    container_name: zetaclient1
-    build:
-      context: ../../.
-      dockerfile: Dockerfile
-    hostname: zetaclient1
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.22
     entrypoint: ["/root/start-zetaclientd.sh", "background"]
-    environment:
-      - HOTKEY_BACKEND=test
-      - ETHDEV_ENDPOINT=http://eth:8545
 
   orchestrator:
-    image: orchestrator:latest
-    container_name: orchestrator
-    build:
-      context: ../../.
-      dockerfile: contrib/localnet/orchestrator/Dockerfile
-    depends_on:
-      - zetacore0
-      - eth
-    hostname: orchestrator
-    networks:
-      mynetwork:
-        ipv4_address: 172.20.0.2
     entrypoint: ["/work/start.sh", "local", "upgrade"]
