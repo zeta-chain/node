@@ -81,6 +81,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 	height uint64,
 	nonce uint64,
 	chain *common.Chain,
+	cancelTx bool,
 ) (*wire.MsgTx, error) {
 	estimateFee := float64(gasPrice.Uint64()*outTxBytesMax) / 1e8
 	nonceMark := common.NonceMarkAmount(nonce)
@@ -160,12 +161,14 @@ func (signer *BTCSigner) SignWithdrawTx(
 	tx.AddTxOut(txOut1)
 
 	// 2nd output: the payment to the recipient
-	pkScript, err := PayToWitnessPubKeyHashScript(to.WitnessProgram())
-	if err != nil {
-		return nil, err
+	if !cancelTx {
+		pkScript, err := PayToWitnessPubKeyHashScript(to.WitnessProgram())
+		if err != nil {
+			return nil, err
+		}
+		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+		tx.AddTxOut(txOut2)
 	}
-	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
-	tx.AddTxOut(txOut2)
 
 	// 3rd output: the remaining btc to TSS self
 	if remainingSats > 0 {
@@ -322,12 +325,13 @@ func (signer *BTCSigner) TryProcessOutTx(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	if clientcommon.IsCctxBanned(cctx) {
+	cancelTx := clientcommon.IsCctxBanned(cctx)
+	if cancelTx {
 		logMsg := fmt.Sprintf("Banned address detected in cctx: sender %s receiver %s chain %d nonce %d",
 			cctx.InboundTxParams.Sender, to, params.ReceiverChainId, outboundTxTssNonce)
 		logger.Warn().Msg(logMsg)
 		signer.loggerCompliance.Warn().Msg(logMsg)
-		amount = 0 // zero out the amount to cancel the tx
+		amount = 0.0 // zero out the amount to cancel the tx
 	}
 
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
@@ -342,6 +346,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		height,
 		outboundTxTssNonce,
 		&btcClient.chain,
+		cancelTx,
 	)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)

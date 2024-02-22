@@ -15,6 +15,7 @@
 ### Features
 
 *[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+*[1789] (https://github.com/zeta-chain/node/pull/1789) - block cross-chain transactions that involved banned addresses
 
 ### Refactor
 * [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events

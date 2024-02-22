@@ -163,7 +163,7 @@ func (c *Config) GetBannedAddressBook() map[string]bool {
 	bannedAddresses := make(map[string]bool)
 	if c.ComplianceConfig != nil {
 		for _, address := range c.ComplianceConfig.BannedAddresses {
-			if ethcommon.IsHexAddress(address) {
+			if address != "" {
 				bannedAddresses[strings.ToLower(address)] = true
 			}
 		}

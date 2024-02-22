@@ -303,7 +303,7 @@ func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ER
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
-	if config.AnyBannedAddress(sender.Hex(), maybeReceiver) {
+	if config.AnyBannedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
 		logMsg := fmt.Sprintf("Banned address detected in ERC20 Deposited event: sender %s receiver %s tx %s chain %d",
 			sender, maybeReceiver, event.Raw.TxHash, ob.chain.ChainId)
 		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
