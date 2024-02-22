@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -49,17 +50,17 @@ func (msg *MsgWhitelistERC20) GetSignBytes() []byte {
 func (msg *MsgWhitelistERC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// check if the system contract address is valid
 	if ethcommon.HexToAddress(msg.Erc20Address) == (ethcommon.Address{}) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
 	}
 	if msg.Decimals > 128 {
-		return sdkerrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
+		return cosmoserrors.Wrapf(types.ErrInvalidDecimals, "invalid decimals (%d)", msg.Decimals)
 	}
 	if msg.GasLimit <= 0 {
-		return sdkerrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
+		return cosmoserrors.Wrapf(types.ErrInvalidGasLimit, "invalid gas limit (%d)", msg.GasLimit)
 	}
 	return nil
 }
