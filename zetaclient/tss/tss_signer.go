@@ -116,6 +116,13 @@ func NewTSS(
 	if err != nil {
 		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
+	keygenRes, err := newTss.CoreBridge.GetKeyGen()
+	if err != nil {
+		return nil, err
+	}
+	for _, key := range keygenRes.GranteePubkeys {
+		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
+	}
 	return &newTss, nil
 }
 
