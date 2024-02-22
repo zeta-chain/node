@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -235,4 +236,32 @@ func LegacyObserverMapperList(t *testing.T, n int, index string) []*types.Observ
 		observerMapperList[i] = LegacyObserverMapper(t, fmt.Sprintf("%d-%s", r.Int63(), index), observerList)
 	}
 	return observerMapperList
+}
+
+func BallotList(n int, observerSet []string) []types.Ballot {
+	r := newRandFromSeed(int64(n))
+	ballotList := make([]types.Ballot, n)
+
+	for i := 0; i < n; i++ {
+		identifier := crypto.Keccak256Hash([]byte(fmt.Sprintf("%d-%d-%d", r.Int63(), r.Int63(), r.Int63())))
+		ballotList[i] = types.Ballot{
+			Index:                identifier.Hex(),
+			BallotIdentifier:     identifier.Hex(),
+			VoterList:            observerSet,
+			Votes:                VotesSuccessOnly(len(observerSet)),
+			ObservationType:      types.ObservationType_InBoundTx,
+			BallotThreshold:      sdk.OneDec(),
+			BallotStatus:         types.BallotStatus_BallotFinalized_SuccessObservation,
+			BallotCreationHeight: 0,
+		}
+	}
+	return ballotList
+}
+
+func VotesSuccessOnly(voteCount int) []types.VoteType {
+	votes := make([]types.VoteType, voteCount)
+	for i := 0; i < voteCount; i++ {
+		votes[i] = types.VoteType_SuccessObservation
+	}
+	return votes
 }
