@@ -60,13 +60,16 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 }
 
 func DummyCoreBridge() *zetabridge.ZetaCoreBridge {
-	bridge, _ := zetabridge.NewZetaCoreBridge(
+	bridge, err := zetabridge.NewZetaCoreBridge(
 		&keys.Keys{OperatorAddress: types.AccAddress{}},
 		"127.0.0.1",
 		"",
 		"zetachain_7000-1",
 		false,
 		nil)
+	if err != nil {
+		panic(err)
+	}
 	return bridge
 }
 
