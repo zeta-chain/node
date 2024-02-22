@@ -1,5 +1,14 @@
 version: "3"
 
+# This docker-compose file configures the localnet environment
+# it contains the following services:
+# - ZetaChain with 2 nodes (zetacore0, zetacore1)
+# - A observer set with 2 clients (zetaclient0, zetaclient1)
+# - An Ethereum node (eth)
+# - A Bitcoin node (bitcoin)
+# - A Rosetta API (rosetta)
+# - An orchestrator to manage interaction with the localnet (orchestrator)
+
 networks:
   mynetwork:
     ipam:
@@ -33,7 +42,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
-    entrypoint: ["/root/genesis.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh", "2"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -48,7 +57,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.12
-    entrypoint: ["/root/genesis.sh", "2"]
+    entrypoint: ["/root/start-zetacored.sh", "2"]
     environment:
       - HOTKEY_BACKEND=file
       - HOTKEY_PASSWORD=password # test purposes only
@@ -63,7 +72,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.21
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
@@ -79,7 +88,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.22
-    entrypoint: /root/start-zetaclientd-genesis.sh
+    entrypoint: /root/start-zetaclientd.sh
     environment:
       - ETHDEV_ENDPOINT=http://eth:8545
       - HOTKEY_BACKEND=file
@@ -110,7 +119,7 @@ services:
       -regtest=1
       -rpcallowip=172.20.0.0/16
       -rpcbind=0.0.0.0
-      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
+      -rpcauth=e2e:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
       -txindex=1
 
   orchestrator:
