@@ -166,7 +166,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	setCosmosConfig()
 
 	// wait for Genesis
-	// if setup is skipp, we assume that the genesis is already created
+	// if setup is skip, we assume that the genesis is already created
 	if !skipSetup {
 		logger.Print("⏳ wait 70s for genesis")
 		time.Sleep(70 * time.Second)
