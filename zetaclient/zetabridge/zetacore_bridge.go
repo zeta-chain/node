@@ -202,14 +202,14 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
 		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
+		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObserver itself
 	}
 
 	chainParams, err := b.GetChainParams()
 	if err != nil {
 		return err
 	}
-
+	
 	newEVMParams := make(map[int64]*observertypes.ChainParams)
 	var newBTCParams *observertypes.ChainParams
 

@@ -98,7 +98,7 @@ func (runner *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg [
 	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = runner.ERC20Custody.Deposit(runner.GoerliAuth, runner.DeployerAddress.Bytes(), runner.USDTERC20Addr, amount, msg)
-	runner.Logger.Print("TX: %v", tx)
+	runner.Logger.Info("TX: %v", tx)
 	if err != nil {
 		panic(err)
 	}

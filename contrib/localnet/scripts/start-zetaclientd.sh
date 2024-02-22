@@ -2,7 +2,7 @@
 
 # This script is used to start ZetaClient for the localnet
 # An optional argument can be passed and can have the following value:
-# background: start the ZetaClient in the background
+# background: start the ZetaClient in the background, this prevent the image from being stopped when ZetaClient must be restarted
 
 /usr/sbin/sshd
 
