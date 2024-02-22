@@ -62,6 +62,7 @@ func erc20TestRoutine(
 		// run erc20 test
 		if err := erc20Runner.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
+			e2etests.TestERC20DepositName,
 			e2etests.TestERC20WithdrawName,
 			e2etests.TestMultipleWithdrawsName,
 			e2etests.TestERC20DepositAndCallRefundName,

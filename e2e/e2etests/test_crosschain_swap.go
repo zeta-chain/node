@@ -89,7 +89,7 @@ func TestCrosschainSwap(r *runner.E2ERunner) {
 
 	r.Logger.Info("***** First test: USDT -> BTC")
 	// Should deposit USDT for swap, swap for BTC and withdraw BTC
-	txHash := r.DepositERC20WithAmountAndMessage(big.NewInt(8e7), msg)
+	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	// check the cctx status

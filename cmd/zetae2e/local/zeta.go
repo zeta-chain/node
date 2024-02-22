@@ -59,6 +59,7 @@ func zetaTestRoutine(
 		// run zeta test
 		if err := zetaRunner.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
+			e2etests.TestZetaDepositName,
 			e2etests.TestZetaWithdrawName,
 			e2etests.TestMessagePassingName,
 			e2etests.TestMessagePassingRevertFailName,

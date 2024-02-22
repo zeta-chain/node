@@ -26,12 +26,13 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
-	TestERC20WithdrawName  = "erc20_withdraw"
-	TestERC20DepositName   = "erc20_deposit"
-	TestEtherDepositName   = "eth_deposit"
-	TestEtherWithdrawName  = "eth_withdraw"
-	TestBitcoinDepositName = "bitcoin_deposit"
-	TestZetaDepositName    = "zeta_deposit"
+	TestERC20WithdrawName       = "erc20_withdraw"
+	TestERC20DepositName        = "erc20_deposit"
+	TestEtherDepositName        = "eth_deposit"
+	TestEtherWithdrawName       = "eth_withdraw"
+	TestEtherWithdrawBannedName = "eth_withdraw_banned"
+	TestBitcoinDepositName      = "bitcoin_deposit"
+	TestZetaDepositName         = "zeta_deposit"
 
 	TestDonationEtherName = "donation_ether"
 
@@ -157,6 +158,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestEtherWithdrawName,
 		"withdraw Ether from ZEVM",
 		TestEtherWithdraw,
+	},
+	{
+		TestEtherWithdrawBannedName,
+		"withdraw Ether from ZEVM to banned address",
+		TestEtherWithdrawBanned,
 	},
 	{
 		TestBitcoinDepositName,

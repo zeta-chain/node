@@ -51,11 +51,11 @@ func (runner *E2ERunner) DepositZeta() ethcommon.Hash {
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(100)) // 100 Zeta
 
-	return runner.DepositZetaWithAmount(amount)
+	return runner.DepositZetaWithAmount(runner.DeployerAddress, amount)
 }
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
-func (runner *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
+func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
 	tx, err := runner.ZetaEth.Approve(runner.GoerliAuth, runner.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
@@ -78,7 +78,7 @@ func (runner *E2ERunner) DepositZetaWithAmount(amount *big.Int) ethcommon.Hash {
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
 		DestinationChainId:  zetaChainID,
-		DestinationAddress:  runner.DeployerAddress.Bytes(),
+		DestinationAddress:  to.Bytes(),
 		DestinationGasLimit: big.NewInt(250_000),
 		Message:             nil,
 		ZetaValueAndGas:     amount,
