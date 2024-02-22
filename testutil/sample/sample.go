@@ -147,3 +147,8 @@ func UintInRange(low, high uint64) sdkmath.Uint {
 	u := Uint64InRange(low, high)
 	return sdkmath.NewUint(u)
 }
+
+func IntInRange(low, high int64) sdkmath.Int {
+	i := Int64InRange(low, high)
+	return sdkmath.NewInt(i)
+}
