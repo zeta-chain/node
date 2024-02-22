@@ -130,11 +130,11 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		externalChainTotalSupply = externalChainTotalSupply.Add(totalSupplyInt)
 	}
 
-	ethConfig, ok := zs.coreContext.GetEVMChainParams(zs.ethereumChain.ChainId)
+	evmChainParams, ok := zs.coreContext.GetEVMChainParams(zs.ethereumChain.ChainId)
 	if !ok {
 		return fmt.Errorf("eth config not found for chain id %d", zs.ethereumChain.ChainId)
 	}
-	ethConnectorAddressString := ethConfig.ConnectorContractAddress
+	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
 	ethConnectorContract, err := evm.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
 	if err != nil {

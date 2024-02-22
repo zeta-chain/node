@@ -229,12 +229,6 @@ func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
 	ob.zetaClient = bridge
 }
 
-func (ob *ChainClient) WithParams(params observertypes.ChainParams) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	ob.chainParams = params
-}
-
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()

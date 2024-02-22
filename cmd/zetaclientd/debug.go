@@ -124,7 +124,7 @@ func DebugCmd() *cobra.Command {
 
 				for _, chainParams := range chainParams {
 					if chainParams.ChainId == chainID {
-						ob.WithParams(observertypes.ChainParams{
+						ob.SetChainParams(observertypes.ChainParams{
 							ChainId:                     chainID,
 							ConnectorContractAddress:    chainParams.ConnectorContractAddress,
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,

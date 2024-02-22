@@ -13,11 +13,11 @@ import (
 
 type ZetaCoreContext struct {
 	coreContextLock    *sync.RWMutex
-	Keygen             *observertypes.Keygen
-	ChainsEnabled      []common.Chain
-	EVMChainParams     map[int64]*observertypes.ChainParams
-	BitcoinChainParams *observertypes.ChainParams
-	CurrentTssPubkey   string
+	keygen             *observertypes.Keygen
+	chainsEnabled      []common.Chain
+	evmChainParams     map[int64]*observertypes.ChainParams
+	bitcoinChainParams *observertypes.ChainParams
+	currentTssPubkey   string
 }
 
 func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
@@ -25,45 +25,50 @@ func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
 	}
+	var bitcoinChainParams *observertypes.ChainParams
+	_, found := cfg.GetBTCConfig()
+	if found {
+		bitcoinChainParams = &observertypes.ChainParams{}
+	}
 	return &ZetaCoreContext{
 		coreContextLock:    new(sync.RWMutex),
-		ChainsEnabled:      []common.Chain{},
-		EVMChainParams:     evmChainParams,
-		BitcoinChainParams: &observertypes.ChainParams{},
+		chainsEnabled:      []common.Chain{},
+		evmChainParams:     evmChainParams,
+		bitcoinChainParams: bitcoinChainParams,
 	}
 }
 
 func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	copiedPubkeys := make([]string, len(c.Keygen.GranteePubkeys))
-	copy(copiedPubkeys, c.Keygen.GranteePubkeys)
+	copiedPubkeys := make([]string, len(c.keygen.GranteePubkeys))
+	copy(copiedPubkeys, c.keygen.GranteePubkeys)
 
 	return observertypes.Keygen{
-		Status:         c.Keygen.Status,
+		Status:         c.keygen.Status,
 		GranteePubkeys: copiedPubkeys,
-		BlockNumber:    c.Keygen.BlockNumber,
+		BlockNumber:    c.keygen.BlockNumber,
 	}
 }
 
 func (c *ZetaCoreContext) GetCurrentTssPubkey() string {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	return c.CurrentTssPubkey
+	return c.currentTssPubkey
 }
 
 func (c *ZetaCoreContext) GetEnabledChains() []common.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	copiedChains := make([]common.Chain, len(c.ChainsEnabled))
-	copy(copiedChains, c.ChainsEnabled)
+	copiedChains := make([]common.Chain, len(c.chainsEnabled))
+	copy(copiedChains, c.chainsEnabled)
 	return copiedChains
 }
 
 func (c *ZetaCoreContext) GetEVMChainParams(chainID int64) (*observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	evmChainParams, found := c.EVMChainParams[chainID]
+	evmChainParams, found := c.evmChainParams[chainID]
 	return evmChainParams, found
 }
 
@@ -72,8 +77,8 @@ func (c *ZetaCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 	defer c.coreContextLock.RUnlock()
 
 	// deep copy evm chain params
-	copied := make(map[int64]*observertypes.ChainParams, len(c.EVMChainParams))
-	for chainID, evmConfig := range c.EVMChainParams {
+	copied := make(map[int64]*observertypes.ChainParams, len(c.evmChainParams))
+	for chainID, evmConfig := range c.evmChainParams {
 		copied[chainID] = &observertypes.ChainParams{}
 		*copied[chainID] = *evmConfig
 	}
@@ -84,14 +89,14 @@ func (c *ZetaCoreContext) GetBTCChainParams() (common.Chain, *observertypes.Chai
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
-	if c.BitcoinChainParams == nil { // bitcoin is not enabled
+	if c.bitcoinChainParams == nil { // bitcoin is not enabled
 		return common.Chain{}, &observertypes.ChainParams{}, false
 	}
-	chain := common.GetChainFromChainID(c.BitcoinChainParams.ChainId)
+	chain := common.GetChainFromChainID(c.bitcoinChainParams.ChainId)
 	if chain == nil {
-		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.BitcoinChainParams.ChainId))
+		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.bitcoinChainParams.ChainId))
 	}
-	return *chain, c.BitcoinChainParams, true
+	return *chain, c.bitcoinChainParams, true
 }
 
 // Update updates core context and params for all chains
@@ -101,6 +106,7 @@ func (c *ZetaCoreContext) Update(
 	newChains []common.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,
 	btcChainParams *observertypes.ChainParams,
+	tssPubKey string,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -117,36 +123,40 @@ func (c *ZetaCoreContext) Update(
 
 	// Add some warnings if chain list changes at runtime
 	if !init {
-		if len(c.ChainsEnabled) != len(newChains) {
+		if len(c.chainsEnabled) != len(newChains) {
 			logger.Warn().Msgf(
 				"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-				c.ChainsEnabled,
+				c.chainsEnabled,
 				newChains,
 			)
 		} else {
 			for i, chain := range newChains {
-				if chain != c.ChainsEnabled[i] {
+				if chain != c.chainsEnabled[i] {
 					logger.Warn().Msgf(
 						"UpdateChainParams: ChainsEnabled changed at runtime!! current: %v, new: %v",
-						c.ChainsEnabled,
+						c.chainsEnabled,
 						newChains,
 					)
 				}
 			}
 		}
 	}
-	c.Keygen = keygen
-	c.ChainsEnabled = newChains
+	c.keygen = keygen
+	c.chainsEnabled = newChains
 	// update chain params for bitcoin if it has config in file
-	if c.BitcoinChainParams != nil && btcChainParams != nil {
-		c.BitcoinChainParams = btcChainParams
+	if c.bitcoinChainParams != nil && btcChainParams != nil {
+		c.bitcoinChainParams = btcChainParams
 	}
 	// update core params for evm chains we have configs in file
 	for _, params := range evmChainParams {
-		_, found := c.EVMChainParams[params.ChainId]
+		_, found := c.evmChainParams[params.ChainId]
 		if !found {
 			continue
 		}
-		c.EVMChainParams[params.ChainId] = params
+		c.evmChainParams[params.ChainId] = params
+	}
+
+	if tssPubKey != "" {
+		c.currentTssPubkey = tssPubKey
 	}
 }

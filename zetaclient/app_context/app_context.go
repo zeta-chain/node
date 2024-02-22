@@ -13,6 +13,8 @@ type AppContext struct {
 	logger      zerolog.Logger
 }
 
+// NewAppContext creates a new AppContext, containing global app structs
+// like config, core context and logger
 func NewAppContext(
 	coreContext *corecontext.ZetaCoreContext,
 	config *config.Config,
@@ -37,6 +39,7 @@ func (a *AppContext) Logger() zerolog.Logger {
 	return a.logger
 }
 
+// GetBTCChainAndConfig returns btc chain and config if enabled
 func (a *AppContext) GetBTCChainAndConfig() (common.Chain, config.BTCConfig, bool) {
 	btcConfig, configEnabled := a.Config().GetBTCConfig()
 	btcChain, _, paramsEnabled := a.ZetaCoreContext().GetBTCChainParams()

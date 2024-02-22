@@ -244,14 +244,16 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
 	}
-	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, init, b.logger)
 
+	tssPubKey := ""
 	tss, err := b.GetCurrentTss()
 	if err != nil {
 		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetabridge")
 	} else {
-		coreContext.CurrentTssPubkey = tss.GetTssPubkey()
+		tssPubKey = tss.GetTssPubkey()
 	}
+
+	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, tssPubKey, init, b.logger)
 	return nil
 }
 
