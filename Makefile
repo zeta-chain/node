@@ -202,7 +202,7 @@ start-stress-test: zetanode
 
 start-upgrade-test:
 	@echo "--> Starting upgrade test"
-	$(DOCKER) build --build-arg -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
