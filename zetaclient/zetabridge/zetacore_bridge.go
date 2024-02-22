@@ -209,7 +209,7 @@ func (b *ZetaCoreBridge) UpdateConfigFromCore(cfg *config.Config, init bool) err
 	if err != nil {
 		return err
 	}
-	
+
 	newEVMParams := make(map[int64]*observertypes.ChainParams)
 	var newBTCParams *observertypes.ChainParams
 

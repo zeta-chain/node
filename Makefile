@@ -206,6 +206,12 @@ start-upgrade-test:
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
+start-upgrade-test-light:
+	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
+
 start-localnet:
 	@echo "--> Starting localnet"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d

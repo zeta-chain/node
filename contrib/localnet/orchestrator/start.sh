@@ -8,6 +8,7 @@
 ZETAE2E_CMD=$1
 OPTION=$2
 
+
 echo "waiting for geth RPC to start..."
 sleep 2
 
@@ -51,8 +52,17 @@ if [ "$OPTION" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
 
-  echo "running E2E command to setup the networks and populate the state..."
-  zetae2e "$ZETAE2E_CMD" --config-out deployed.yml
+  # Fetch the height of the upgrade, default is 200, if arg3 is passed, use that value
+  UPGRADE_HEIGHT=${3:-200}
+
+  # Run zetae2e, if the upgrade height is lower than 100, we use the setup-only flag
+  if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
+    echo "running E2E command to setup the networks..."
+    zetae2e "$ZETAE2E_CMD" --setup-only --config-out deployed.yml
+  else
+    echo "running E2E command to setup the networks and populate the state..."
+    zetae2e "$ZETAE2E_CMD" --config-out deployed.yml
+ fi
   ZETAE2E_EXIT_CODE=$?
 
   if [ $ZETAE2E_EXIT_CODE -ne 0 ]; then
@@ -63,7 +73,7 @@ if [ "$OPTION" == "upgrade" ]; then
   echo "E2E setup passed, waiting for upgrade height..."
 
   # Restart zetaclients at upgrade height
-  /work/restart-zetaclientd.sh -u 200 -n 2
+  /work/restart-zetaclientd.sh -u "$UPGRADE_HEIGHT" -n 2
 
   echo "waiting 10 seconds for node to restart..."
 
