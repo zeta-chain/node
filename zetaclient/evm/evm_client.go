@@ -360,7 +360,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zer
 	logger = logger.With().Str("sendID", sendID).Logger()
 
 	// compliance check, special handling the cancelled cctx
-	if clientcommon.IsCctxBanned(cctx) {
+	if clientcommon.IsCctxRestricted(cctx) {
 		recvStatus := common.ReceiveStatus_Failed
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success

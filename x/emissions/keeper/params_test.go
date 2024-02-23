@@ -228,14 +228,13 @@ func TestKeeper_GetParams(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			k, ctx := keepertest.EmissionsKeeper(t)
-			defaultParams := k.GetParams(ctx)
+			k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 			assertPanic(t, func() {
 				k.SetParams(ctx, tt.params)
 			}, tt.isPanic)
 
 			if tt.isPanic != "" {
-				require.Equal(t, defaultParams, k.GetParams(ctx))
+				require.Equal(t, emissionstypes.DefaultParams(), k.GetParams(ctx))
 			} else {
 				require.Equal(t, tt.params, k.GetParams(ctx))
 			}

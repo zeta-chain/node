@@ -108,5 +108,5 @@ func OpenComplianceLogFile(cfg *config.Config) (*os.File, error) {
 	name = filepath.Clean(name)
 
 	// open (or create) compliance log file
-	return os.OpenFile(name, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	return os.OpenFile(name, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 }

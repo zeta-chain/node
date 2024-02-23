@@ -223,3 +223,30 @@ func round(f float64) int64 {
 func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
 }
+
+// DecodeP2WPKHVout decodes receiver and amount from P2WPKH output
+func DecodeP2WPKHVout(vout btcjson.Vout, chain common.Chain) (string, int64, error) {
+	amount, err := GetSatoshis(vout.Value)
+	if err != nil {
+		return "", 0, errors.Wrap(err, "error getting satoshis")
+	}
+	// decode P2WPKH scriptPubKey
+	scriptPubKey := vout.ScriptPubKey.Hex
+	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+	if err != nil {
+		return "", 0, errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+	}
+	if len(decodedScriptPubKey) != 22 { // P2WPKH script
+		return "", 0, fmt.Errorf("unsupported scriptPubKey: %s", scriptPubKey)
+	}
+	witnessVersion := decodedScriptPubKey[0]
+	witnessProgram := decodedScriptPubKey[2:]
+	if witnessVersion != 0 {
+		return "", 0, fmt.Errorf("unsupported witness in scriptPubKey %s", scriptPubKey)
+	}
+	recvAddress, err := chain.BTCAddressFromWitnessProgram(witnessProgram)
+	if err != nil {
+		return "", 0, errors.Wrapf(err, "error getting receiver from witness program %s", witnessProgram)
+	}
+	return recvAddress, amount, nil
+}

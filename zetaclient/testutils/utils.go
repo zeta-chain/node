@@ -6,18 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
 const (
-	TestDataPathEVM      = "testdata/evm"
-	TestDataPathBTC      = "testdata/btc"
-	TestDataPathCctx     = "testdata/cctx"
-	BannedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
-	BannedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
+	TestDataPathEVM          = "testdata/evm"
+	TestDataPathBTC          = "testdata/btc"
+	TestDataPathCctx         = "testdata/cctx"
+	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
+	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 )
 
 // SaveObjectToJSONFile saves an object to a file in JSON format
@@ -59,19 +56,8 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 	return SaveObjectToJSONFile(blockVb, filename)
 }
 
-func DummyCoreBridge() *zetabridge.ZetaCoreBridge {
-	bridge, _ := zetabridge.NewZetaCoreBridge(
-		&keys.Keys{OperatorAddress: types.AccAddress{}},
-		"127.0.0.1",
-		"",
-		"zetachain_7000-1",
-		false,
-		nil)
-	return bridge
-}
-
 func ComplianceConfigTest() *config.ComplianceConfig {
 	return &config.ComplianceConfig{
-		BannedAddresses: []string{BannedEVMAddressTest, BannedBtcAddressTest},
+		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
 	}
 }

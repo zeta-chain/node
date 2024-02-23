@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,10 +65,10 @@ func (msg *MsgVoteOnObservedOutboundTx) GetSignBytes() []byte {
 func (msg *MsgVoteOnObservedOutboundTx) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if msg.OutTxChain < 0 {
-		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
+		return cosmoserrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.OutTxChain)
 	}
 
 	return nil

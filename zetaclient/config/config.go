@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// bannedAddressBook is a map of banned addresses
-var bannedAddressBook = map[string]bool{}
+// restrictedAddressBook is a map of restricted addresses
+var restrictedAddressBook = map[string]bool{}
 
 const filename string = "zetaclient_config.json"
 const folder string = "config"
@@ -77,7 +77,7 @@ func Load(path string) (*Config, error) {
 }
 
 func LoadComplianceConfig(cfg *Config) {
-	bannedAddressBook = cfg.GetBannedAddressBook()
+	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 
 func GetPath(inputPath string) string {
@@ -94,9 +94,11 @@ func GetPath(inputPath string) string {
 	return filepath.Join(path...)
 }
 
-func AnyBannedAddress(addrs ...string) bool {
+// ContainRestrictedAddress returns true if any one of the addresses is restricted
+// Note: the addrs can contains both ETH and BTC addresses
+func ContainRestrictedAddress(addrs ...string) bool {
 	for _, addr := range addrs {
-		if addr != "" && bannedAddressBook[strings.ToLower(addr)] {
+		if addr != "" && restrictedAddressBook[strings.ToLower(addr)] {
 			return true
 		}
 	}
