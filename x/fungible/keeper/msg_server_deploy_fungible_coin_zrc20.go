@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	cosmoserrors "cosmossdk.io/errors"
 	"github.com/ethereum/go-ethereum/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,14 +43,14 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	}
 
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 
 	if msg.CoinType == zetacommon.CoinType_Gas {
 		// #nosec G701 always in range
 		address, err = k.SetupChainGasCoinAndPool(ctx, msg.ForeignChainId, msg.Name, msg.Symbol, uint8(msg.Decimals), big.NewInt(msg.GasLimit))
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
+			return nil, cosmoserrors.Wrapf(err, "failed to setupChainGasCoinAndPool")
 		}
 	} else {
 		// #nosec G701 always in range
@@ -74,7 +75,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 		},
 	)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "failed to emit event")
+		return nil, cosmoserrors.Wrapf(err, "failed to emit event")
 	}
 
 	return &types.MsgDeployFungibleCoinZRC20Response{
