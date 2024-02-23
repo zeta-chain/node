@@ -16,6 +16,6 @@ func TestERC20Deposit(r *runner.E2ERunner) {
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 
-	// deposit ERC20 to banned address
-	r.DepositERC20WithAmountAndMessage(ethcommon.HexToAddress(testutils.BannedEVMAddressTest), big.NewInt(100000), []byte{})
+	// deposit ERC20 to restricted address
+	r.DepositERC20WithAmountAndMessage(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest), big.NewInt(100000), []byte{})
 }

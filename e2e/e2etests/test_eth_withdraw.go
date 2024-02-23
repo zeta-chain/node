@@ -47,8 +47,8 @@ func TestEtherWithdraw(r *runner.E2ERunner) {
 	}
 }
 
-// TestEtherWithdrawBanned tests the withdrawal to a banned receiver address
-func TestEtherWithdrawBanned(r *runner.E2ERunner) {
+// TestEtherWithdrawRestricted tests the withdrawal to a restricted receiver address
+func TestEtherWithdrawRestricted(r *runner.E2ERunner) {
 	// approve
 	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
@@ -63,12 +63,12 @@ func TestEtherWithdrawBanned(r *runner.E2ERunner) {
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	bannedAddress := ethcommon.HexToAddress(testutils.BannedEVMAddressTest)
-	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, bannedAddress.Bytes(), big.NewInt(100000))
+	restrictedAddress := ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest)
+	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, restrictedAddress.Bytes(), big.NewInt(100000))
 	if err != nil {
 		panic(err)
 	}
-	r.Logger.EVMTransaction(*tx, "withdraw to banned address")
+	r.Logger.EVMTransaction(*tx, "withdraw to restricted address")
 
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {

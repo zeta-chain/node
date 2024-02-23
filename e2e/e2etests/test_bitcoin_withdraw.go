@@ -20,8 +20,8 @@ func TestBitcoinWithdraw(r *runner.E2ERunner) {
 	// withdraw 0.01 BTC from ZRC20 to BTC address
 	WithdrawBitcoin(r)
 
-	// withdraw 0.01 BTC from ZRC20 to BTC banned address
-	WithdrawBitcoinBanned(r)
+	// withdraw 0.01 BTC from ZRC20 to BTC restricted address
+	WithdrawBitcoinRestricted(r)
 
 	// stop mining
 	stop <- struct{}{}
@@ -87,17 +87,17 @@ func WithdrawBitcoin(r *runner.E2ERunner) {
 	withdrawBTCZRC20(r, r.BTCDeployerAddress, amount)
 }
 
-func WithdrawBitcoinBanned(r *runner.E2ERunner) {
+func WithdrawBitcoinRestricted(r *runner.E2ERunner) {
 	amount := big.NewInt(0.01 * btcutil.SatoshiPerBitcoin)
 
-	// use banned BTC P2WPKH address
-	addressBanned, err := common.DecodeBtcAddress(testutils.BannedBtcAddressTest, common.BtcRegtestChain().ChainId)
+	// use restricted BTC P2WPKH address
+	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
 	if err != nil {
 		panic(err)
 	}
 
 	// the cctx should be cancelled
-	rawTx := withdrawBTCZRC20(r, addressBanned, amount)
+	rawTx := withdrawBTCZRC20(r, addressRestricted, amount)
 	if len(rawTx.Vout) != 2 {
 		panic(fmt.Errorf("BTC cancelled outtx rawTx.Vout should have 2 outputs"))
 	}

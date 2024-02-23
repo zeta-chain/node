@@ -57,7 +57,7 @@ func ethereumTestRoutine(
 			e2etests.AllE2ETests,
 			e2etests.TestEtherDepositName,
 			e2etests.TestEtherWithdrawName,
-			e2etests.TestEtherWithdrawBannedName,
+			e2etests.TestEtherWithdrawRestrictedName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
 			e2etests.TestDepositAndCallRefundName,
