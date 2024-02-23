@@ -151,6 +151,7 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
+// CoreContextUpdater is a polling goroutine that checks and updates core context at every height
 func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
 	b.logger.Info().Msg("CoreContextUpdater started")
 	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)

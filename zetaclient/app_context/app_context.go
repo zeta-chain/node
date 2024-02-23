@@ -7,14 +7,14 @@ import (
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
 
+// AppContext contains global app structs like config, core context and logger
 type AppContext struct {
 	coreContext *corecontext.ZetaCoreContext
 	config      *config.Config
 	logger      zerolog.Logger
 }
 
-// NewAppContext creates a new AppContext, containing global app structs
-// like config, core context and logger
+// NewAppContext creates and returns new AppContext
 func NewAppContext(
 	coreContext *corecontext.ZetaCoreContext,
 	config *config.Config,

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Refactor
+
+* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
@@ -27,7 +31,6 @@
 * [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
 * [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
-* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 
 ### Fixes
 

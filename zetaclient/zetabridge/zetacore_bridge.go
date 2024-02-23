@@ -190,6 +190,8 @@ func (b *ZetaCoreBridge) GetKeys() *keys.Keys {
 	return b.keys
 }
 
+// UpdateZetaCoreContext updates core context
+// zetacore stores core context for all clients
 func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCoreContext, init bool) error {
 	bn, err := b.GetZetaBlockHeight()
 	if err != nil {

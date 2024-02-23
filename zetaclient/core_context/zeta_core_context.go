@@ -11,6 +11,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
+// ZetaCoreContext contains core context params
+// these are initialized and updated at runtime at every height
 type ZetaCoreContext struct {
 	coreContextLock    *sync.RWMutex
 	keygen             *observertypes.Keygen
@@ -20,6 +22,8 @@ type ZetaCoreContext struct {
 	currentTssPubkey   string
 }
 
+// NewZetaCoreContext creates and returns new ZetaCoreContext
+// it is initializing chain params from provided config
 func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
 	evmChainParams := make(map[int64]*observertypes.ChainParams)
 	for _, e := range cfg.EVMChainConfigs {

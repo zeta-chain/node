@@ -123,7 +123,6 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
-	// CoreContextUpdater: A polling goroutine checks and updates core context at every height. Zetacore stores core context for all clients
 	go zetaBridge.CoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
