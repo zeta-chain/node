@@ -19,8 +19,9 @@ func DefaultLoggers() ClientLogger {
 	}
 }
 
-func IsCctxBanned(cctx *crosschaintypes.CrossChainTx) bool {
+// IsCctxRestricted returns true if the cctx involves restricted addresses
+func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
 	sender := cctx.InboundTxParams.Sender
 	receiver := cctx.GetCurrentOutTxParam().Receiver
-	return config.AnyBannedAddress(sender, receiver)
+	return config.ContainRestrictedAddress(sender, receiver)
 }

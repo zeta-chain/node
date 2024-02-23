@@ -325,9 +325,9 @@ func (signer *BTCSigner) TryProcessOutTx(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := clientcommon.IsCctxBanned(cctx)
+	cancelTx := clientcommon.IsCctxRestricted(cctx)
 	if cancelTx {
-		logMsg := fmt.Sprintf("Banned address detected in cctx: sender %s receiver %s chain %d nonce %d",
+		logMsg := fmt.Sprintf("Restricted address detected in cctx: sender %s receiver %s chain %d nonce %d",
 			cctx.InboundTxParams.Sender, to, params.ReceiverChainId, outboundTxTssNonce)
 		logger.Warn().Msg(logMsg)
 		signer.loggerCompliance.Warn().Msg(logMsg)

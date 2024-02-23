@@ -15,14 +15,14 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-func DummyEVMClient(chain common.Chain) *ChainClient {
+func MockEVMClient(chain common.Chain) *ChainClient {
 	return &ChainClient{
 		chain:      chain,
-		zetaClient: testutils.DummyCoreBridge(),
+		zetaClient: testutils.MockCoreBridge(),
 	}
 }
 
-func DummyConnectorNonEth() *zetaconnector.ZetaConnectorNonEth {
+func MockConnectorNonEth() *zetaconnector.ZetaConnectorNonEth {
 	connector, err := zetaconnector.NewZetaConnectorNonEth(ethcommon.Address{}, &ethclient.Client{})
 	if err != nil {
 		panic(err)
@@ -53,9 +53,9 @@ func TestEthereum_GetInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	err := testutils.LoadObjectFromJSONFile(&receipt, path.Join("../", testutils.TestDataPathEVM, name))
 	require.NoError(t, err)
 
-	// create dummy client and connector
-	ob := DummyEVMClient(common.EthChain())
-	connector := DummyConnectorNonEth()
+	// create mock client and connector
+	ob := MockEVMClient(common.EthChain())
+	connector := MockConnectorNonEth()
 
 	// parse ZetaSent event
 	msg := ParseReceiptZetaSent(&receipt, ob, connector)
@@ -67,22 +67,22 @@ func TestEthereum_GetInboundVoteMsgForZetaSentEvent(t *testing.T) {
 		ComplianceConfig: &config.ComplianceConfig{},
 	}
 
-	t.Run("should return nil msg if sender is banned", func(t *testing.T) {
-		cfg.ComplianceConfig.BannedAddresses = []string{msg.Sender}
+	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {
+		cfg.ComplianceConfig.RestrictedAddresses = []string{msg.Sender}
 		config.LoadComplianceConfig(cfg)
-		msgBanned := ParseReceiptZetaSent(&receipt, ob, connector)
-		require.Nil(t, msgBanned)
+		msgRestricted := ParseReceiptZetaSent(&receipt, ob, connector)
+		require.Nil(t, msgRestricted)
 	})
-	t.Run("should return nil msg if receiver is banned", func(t *testing.T) {
-		cfg.ComplianceConfig.BannedAddresses = []string{msg.Receiver}
+	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
+		cfg.ComplianceConfig.RestrictedAddresses = []string{msg.Receiver}
 		config.LoadComplianceConfig(cfg)
-		msgBanned := ParseReceiptZetaSent(&receipt, ob, connector)
-		require.Nil(t, msgBanned)
+		msgRestricted := ParseReceiptZetaSent(&receipt, ob, connector)
+		require.Nil(t, msgRestricted)
 	})
-	t.Run("should return nil msg if txOrigin is banned", func(t *testing.T) {
-		cfg.ComplianceConfig.BannedAddresses = []string{msg.TxOrigin}
+	t.Run("should return nil msg if txOrigin is restricted", func(t *testing.T) {
+		cfg.ComplianceConfig.RestrictedAddresses = []string{msg.TxOrigin}
 		config.LoadComplianceConfig(cfg)
-		msgBanned := ParseReceiptZetaSent(&receipt, ob, connector)
-		require.Nil(t, msgBanned)
+		msgRestricted := ParseReceiptZetaSent(&receipt, ob, connector)
+		require.Nil(t, msgRestricted)
 	})
 }

@@ -1,0 +1,32 @@
+{
+  "index": "0xb3f5f3cf2ed2e0c3fa64c8297c9e50fbc07351fb2d26d8eae4cfbbd45e47a524",
+  "zeta_fees": "0",
+  "cctx_status": { "status": 3, "lastUpdate_timestamp": 1708608895 },
+  "inbound_tx_params": {
+    "sender": "0x13A0c5930C028511Dc02665E7285134B6d11A5f4",
+    "sender_chain_id": 7000,
+    "tx_origin": "0xe99174F08e1186134830f8511De06bd010978533",
+    "coin_type": 1,
+    "amount": "12000",
+    "inbound_tx_observed_hash": "0x06455013319acb1b027461134853c77b003d8eab162b1f37673da5ad8a50b74f",
+    "inbound_tx_observed_external_height": 1870408,
+    "inbound_tx_ballot_index": "0xb3f5f3cf2ed2e0c3fa64c8297c9e50fbc07351fb2d26d8eae4cfbbd45e47a524"
+  },
+  "outbound_tx_params": [
+    {
+      "receiver": "bc1qpsdlklfcmlcfgm77c43x65ddtrt7n0z57hsyjp",
+      "receiver_chainId": 8332,
+      "coin_type": 1,
+      "amount": "12000",
+      "outbound_tx_tss_nonce": 148,
+      "outbound_tx_gas_limit": 254,
+      "outbound_tx_gas_price": "46",
+      "outbound_tx_hash": "030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0",
+      "outbound_tx_ballot_index": "0x43845693f799b7a5e84dcf11321ae681ec018d709ecc919773968018f93e21c1",
+      "outbound_tx_observed_external_height": 150,
+      "outbound_tx_effective_gas_price": "0",
+      "tss_pubkey": "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
+      "tx_finalization_status": 2
+    }
+  ]
+}

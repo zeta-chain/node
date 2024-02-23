@@ -23,6 +23,7 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -686,15 +687,7 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 	message := hex.EncodeToString(inTx.MemoBytes)
 
 	// compliance check
-	receiver := ""
-	if parsedAddress, _, err := common.ParseAddressAndData(message); err == nil {
-		receiver = parsedAddress.Hex()
-	}
-	if config.AnyBannedAddress(inTx.FromAddress, receiver) {
-		logMsg := fmt.Sprintf("Banned address detected in token sent to TSS: sender %s receiver %s tx %s chain %d",
-			inTx.FromAddress, receiver, inTx.TxHash, ob.chain.ChainId)
-		ob.logger.WatchInTx.Warn().Msg(logMsg)
-		ob.logger.Compliance.Warn().Msg(logMsg)
+	if ob.IsInTxRestricted(inTx) {
 		return nil
 	}
 
@@ -714,6 +707,23 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		0,
 	)
+}
+
+// IsInTxRestricted returns true if the inTx contains restricted addresses
+func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
+	receiver := ""
+	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
+	if err == nil && parsedAddress != (ethcommon.Address{}) {
+		receiver = parsedAddress.Hex()
+	}
+	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
+		logMsg := fmt.Sprintf("Restricted address detected in token sent to TSS: sender %s receiver %s tx %s chain %d",
+			inTx.FromAddress, receiver, inTx.TxHash, ob.chain.ChainId)
+		ob.logger.WatchInTx.Warn().Msg(logMsg)
+		ob.logger.Compliance.Warn().Msg(logMsg)
+		return true
+	}
+	return false
 }
 
 func GetBtcEvent(
@@ -1226,14 +1236,17 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vin in outTx %s nonce %d", hash, nonce)
 	}
 
-	// differentiate between normal and banned cctx
-	if clientcommon.IsCctxBanned(cctx) {
+	// differentiate between normal and restricted cctx
+	if clientcommon.IsCctxRestricted(cctx) {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)
+		}
 	} else {
 		err = ob.checkTSSVout(params, rawResult.Vout)
-	}
-	if err != nil {
-		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
+		}
 	}
 	return nil
 }
@@ -1310,33 +1323,6 @@ func (ob *BTCChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 	return nil
 }
 
-// DecodeP2WPKHVout decodes receiver and amount from P2WPKH output
-func (ob *BTCChainClient) DecodeP2WPKHVout(vout btcjson.Vout) (string, int64, error) {
-	amount, err := GetSatoshis(vout.Value)
-	if err != nil {
-		return "", 0, errors.Wrap(err, "error getting satoshis")
-	}
-	// decode P2WPKH scriptPubKey
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
-	if err != nil {
-		return "", 0, errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
-	}
-	if len(decodedScriptPubKey) != 22 { // P2WPKH script
-		return "", 0, fmt.Errorf("unsupported scriptPubKey: %s", scriptPubKey)
-	}
-	witnessVersion := decodedScriptPubKey[0]
-	witnessProgram := decodedScriptPubKey[2:]
-	if witnessVersion != 0 {
-		return "", 0, fmt.Errorf("unsupported witness in scriptPubKey %s", scriptPubKey)
-	}
-	recvAddress, err := ob.chain.BTCAddressFromWitnessProgram(witnessProgram)
-	if err != nil {
-		return "", 0, errors.Wrapf(err, "error getting receiver from witness program %s", witnessProgram)
-	}
-	return recvAddress, amount, nil
-}
-
 // checkTSSVout vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
@@ -1350,7 +1336,7 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 	nonce := params.OutboundTxTssNonce
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		recvAddress, amount, err := ob.DecodeP2WPKHVout(vout)
+		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVout: error decoding P2WPKH vout")
 		}
@@ -1395,7 +1381,7 @@ func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, 
 	nonce := params.OutboundTxTssNonce
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		recvAddress, amount, err := ob.DecodeP2WPKHVout(vout)
+		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}

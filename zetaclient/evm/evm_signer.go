@@ -455,8 +455,8 @@ func (signer *Signer) TryProcessOutTx(
 	var tx *ethtypes.Transaction
 
 	// compliance check goes first
-	if clientcommon.IsCctxBanned(cctx) {
-		logMsg := fmt.Sprintf("Banned address detected in cctx: sender %s receiver %s chain %d nonce %d", cctx.InboundTxParams.Sender, to, toChain.ChainId, nonce)
+	if clientcommon.IsCctxRestricted(cctx) {
+		logMsg := fmt.Sprintf("Restricted address detected in cctx: sender %s receiver %s chain %d nonce %d", cctx.InboundTxParams.Sender, to, toChain.ChainId, nonce)
 		logger.Warn().Msg(logMsg)
 		signer.logger.Compliance.Warn().Msg(logMsg)
 		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx

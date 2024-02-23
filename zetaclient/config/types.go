@@ -48,8 +48,8 @@ type BTCConfig struct {
 }
 
 type ComplianceConfig struct {
-	LogPath         string   `json:"LogPath"`
-	BannedAddresses []string `json:"BannedAddresses"`
+	LogPath             string   `json:"LogPath"`
+	RestrictedAddresses []string `json:"RestrictedAddresses"`
 }
 
 // Config is the config for ZetaClient
@@ -159,16 +159,18 @@ func (c *Config) GetBTCConfig() (common.Chain, BTCConfig, bool) {
 	return *chain, *c.BitcoinConfig, true
 }
 
-func (c *Config) GetBannedAddressBook() map[string]bool {
-	bannedAddresses := make(map[string]bool)
+// GetRestrictedAddressBook returns a map of restricted addresses
+// Note: the restricted address book contains both ETH and BTC addresses
+func (c *Config) GetRestrictedAddressBook() map[string]bool {
+	restrictedAddresses := make(map[string]bool)
 	if c.ComplianceConfig != nil {
-		for _, address := range c.ComplianceConfig.BannedAddresses {
+		for _, address := range c.ComplianceConfig.RestrictedAddresses {
 			if address != "" {
-				bannedAddresses[strings.ToLower(address)] = true
+				restrictedAddresses[strings.ToLower(address)] = true
 			}
 		}
 	}
-	return bannedAddresses
+	return restrictedAddresses
 }
 
 func (c *Config) GetKeyringBackend() KeyringBackend {
