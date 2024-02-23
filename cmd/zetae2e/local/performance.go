@@ -5,12 +5,13 @@ package local
 
 import (
 	"fmt"
+	"runtime"
+	"time"
+
 	"github.com/fatih/color"
 	"github.com/zeta-chain/zetacore/e2e/config"
 	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"runtime"
-	"time"
 )
 
 // ethereumDepositPerformanceRoutine runs Ethereum withdraw stress tests
@@ -37,8 +38,8 @@ func ethereumDepositPerformanceRoutine(
 			"ether",
 			conf,
 			deployerRunner,
-			UserEtherAddress,
-			UserEtherPrivateKey,
+			UserERC20Address,
+			UserERC20PrivateKey,
 			runner.NewLogger(verbose, color.FgMagenta, "perf_eth_deposit"),
 		)
 		if err != nil {
