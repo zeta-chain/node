@@ -201,6 +201,10 @@ start-e2e-admin-test: zetanode
 	@echo "--> Starting e2e admin test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-admin.yml up -d
 
+start-e2e-performance-test: zetanode
+	@echo "--> Starting e2e performance test"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-performance.yml up -d
+
 start-stress-test: zetanode
 	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d

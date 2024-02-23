@@ -21,6 +21,7 @@ const (
 	FlagConfigFile        = "config"
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
+	flagTestPerformance   = "test-performance"
 	flagTestCustom        = "test-custom"
 	flagSkipRegular       = "skip-regular"
 	flagSetupOnly         = "setup-only"
@@ -64,6 +65,11 @@ func NewLocalCmd() *cobra.Command {
 		flagTestAdmin,
 		false,
 		"set to true to run admin tests",
+	)
+	cmd.Flags().Bool(
+		flagTestPerformance,
+		false,
+		"set to true to run performance tests",
 	)
 	cmd.Flags().Bool(
 		flagTestCustom,
@@ -110,6 +116,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 	testAdmin, err := cmd.Flags().GetBool(flagTestAdmin)
+	if err != nil {
+		panic(err)
+	}
+	testPerformance, err := cmd.Flags().GetBool(flagTestPerformance)
 	if err != nil {
 		panic(err)
 	}
@@ -243,6 +253,9 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
+	}
+	if testPerformance {
+		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose))
 	}
 	if testCustom {
 		eg.Go(miscTestRoutine(conf, deployerRunner, verbose))

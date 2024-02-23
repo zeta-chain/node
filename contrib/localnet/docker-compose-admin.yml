@@ -1,6 +1,6 @@
 version: "3"
 
-# This docker-compose file overrides the orcherstrator service to specify the flag to test the admin functions
+# This docker-compose file overrides the orchestrator service to specify the flag to test the admin functions
 # and skip the regular tests
 
 services:
