@@ -5,5 +5,5 @@ version: "3"
 
 services:
   orchestrator:
-    entrypoint: ["/work/start.sh", "local", "setup-only"]
+    entrypoint: ["/work/start.sh", "local --setup-only"]
 

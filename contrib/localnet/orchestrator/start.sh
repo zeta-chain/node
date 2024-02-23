@@ -92,27 +92,13 @@ if [ "$OPTION" == "upgrade" ]; then
     exit 1
   fi
 
-elif [ "$OPTION" == "setup-only" ]; then
-
-  # Setup localnet with the --setup-only flag
-
-  zetae2e "$ZETAE2E_CMD" --setup-only
-
-  ZETAE2E_EXIT_CODE=$?
-  if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
-    echo "Localnet setup"
-    exit 0
-  else
-    echo "Localnet failed to start"
-    exit 1
-  fi
-
 else
 
   # Run the e2e tests normally
 
   echo "running e2e tests..."
-  zetae2e "$ZETAE2E_CMD"
+  #  zetae2e "$ZETAE2E_CMD"
+  eval "zetae2e $ZETAE2E_CMD"
   ZETAE2E_EXIT_CODE=$?
 
   # if e2e passed, exit with 0, otherwise exit with 1

@@ -1,0 +1,9 @@
+version: "3"
+
+# This docker-compose file overrides the orcherstrator service to specify the flag to test the admin functions
+# and skip the regular tests
+
+services:
+  orchestrator:
+    entrypoint: ["/work/start.sh", "local --skip-regular --test-admin"]
+
