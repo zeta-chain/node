@@ -327,9 +327,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 	// compliance check
 	cancelTx := clientcommon.IsCctxRestricted(cctx)
 	if cancelTx {
-		logMsg := fmt.Sprintf("Restricted address detected in cctx %s", cctx.Index)
-		clientcommon.PrintComplianceLog(logger, cctx.InboundTxParams.Sender, params.Receiver, "BTC", logMsg)
-		clientcommon.PrintComplianceLog(signer.loggerCompliance, cctx.InboundTxParams.Sender, params.Receiver, "BTC", logMsg)
+		clientcommon.PrintComplianceLog(logger, signer.loggerCompliance,
+			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
 

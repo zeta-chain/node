@@ -717,9 +717,8 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		logMsg := fmt.Sprintf("Restricted address detected in intx %s", inTx.TxHash)
-		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, inTx.FromAddress, receiver, "BTC", logMsg)
-		clientcommon.PrintComplianceLog(ob.logger.Compliance, inTx.FromAddress, receiver, "BTC", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
 	return false

@@ -456,9 +456,8 @@ func (signer *Signer) TryProcessOutTx(
 
 	// compliance check goes first
 	if clientcommon.IsCctxRestricted(cctx) {
-		logMsg := fmt.Sprintf("Restricted address detected in cctx %s", cctx.Index)
-		clientcommon.PrintComplianceLog(logger, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String(), logMsg)
-		clientcommon.PrintComplianceLog(signer.logger.Compliance, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String(), logMsg)
+		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
+			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
 		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx
 	} else if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
