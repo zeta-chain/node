@@ -5,6 +5,7 @@
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks
 
 ## Version: v13.0.0
 
