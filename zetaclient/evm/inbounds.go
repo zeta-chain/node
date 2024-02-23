@@ -13,6 +13,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 
@@ -304,10 +305,9 @@ func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ER
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
-		logMsg := fmt.Sprintf("Restricted address detected, token: ERC20 sender: %s receiver: %s intx: %s chain: %d",
-			sender, clienttypes.BytesToEthHex(event.Recipient), event.Raw.TxHash, ob.chain.ChainId)
-		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
-		ob.logger.Compliance.Warn().Msg(logMsg)
+		logMsg := fmt.Sprintf("Restricted address detected in intx %s", event.Raw.TxHash)
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20", logMsg)
 		return nil
 	}
 
@@ -349,10 +349,9 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	// compliance check
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
-		logMsg := fmt.Sprintf("Restricted address detected, token: Zeta sender: %s receiver: %s origin: %s intx: %s chain: %d",
-			sender, destAddr, event.SourceTxOriginAddress, event.Raw.TxHash, ob.chain.ChainId)
-		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
-		ob.logger.Compliance.Warn().Msg(logMsg)
+		logMsg := fmt.Sprintf("Restricted address detected in intx %s", event.Raw.TxHash)
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender, destAddr, "Zeta", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender, destAddr, "Zeta", logMsg)
 		return nil
 	}
 
@@ -399,9 +398,9 @@ func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transacti
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
-		logMsg := fmt.Sprintf("Restricted address detected, token: Gas sender: %s intx: %s chain: %d", sender, tx.Hash(), ob.chain.ChainId)
-		ob.logger.ExternalChainWatcher.Warn().Msg(logMsg)
-		ob.logger.Compliance.Warn().Msg(logMsg)
+		logMsg := fmt.Sprintf("Restricted address detected in intx %s", tx.Hash())
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender.Hex(), sender.Hex(), "Gas", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender.Hex(), sender.Hex(), "Gas", logMsg)
 		return nil
 	}
 

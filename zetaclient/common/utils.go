@@ -25,3 +25,9 @@ func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
 	receiver := cctx.GetCurrentOutTxParam().Receiver
 	return config.ContainRestrictedAddress(sender, receiver)
 }
+
+// PrintComplianceLog prints compliance log with fields [sender, receiver, token]
+func PrintComplianceLog(logger zerolog.Logger, sender, receiver, token, msg string) {
+	logWithFields := logger.With().Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+	logWithFields.Warn().Msg(msg)
+}
