@@ -27,6 +27,16 @@ Now we have built all the docker images, we can run the e2e test with make comma
 make start-e2e-test
 ```
 
+#### Run admin functions e2e tests
+
+We define e2e tests allowing to test admin functionalities (emergency network pause for example).
+Since these tests interact with the network functionalities, these can't be run concurrently with the regular e2e tests.
+Moreover, these tests test scoped functionalities of the protocol, and won't be tested in the same pipeline as the regular e2e tests.
+Therefore, we provide a separate command to run e2e admin functions tests:
+```bash
+make start-e2e-admin-test
+```
+
 ### Run upgrade tests
 
 Upgrade tests run the E2E tests with an older version, upgrade the nodes to the new version, and run the E2E tests again.

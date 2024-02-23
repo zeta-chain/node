@@ -214,7 +214,7 @@ else
   # If this is the first node, create a governance proposal for upgrade
   if [ $HOSTNAME = "zetacore0" ]
   then
-  /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from hotkey --deposit 100000000azeta --upgrade-height "$UPGRADE_HEIGHT" --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=2000000000000000azeta --broadcast-mode block
+    /root/.zetacored/cosmovisor/genesis/bin/zetacored tx gov submit-legacy-proposal software-upgrade $UpgradeName --from operator --deposit 100000000azeta --upgrade-height "$UPGRADE_HEIGHT" --title $UpgradeName --description $UpgradeName --keyring-backend test --chain-id $CHAINID --yes --no-validate --fees=2000000000000000azeta --broadcast-mode block
   fi
 
   # Wait for the proposal to be voted on
