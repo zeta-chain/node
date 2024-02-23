@@ -6,13 +6,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -376,11 +377,11 @@ func setupGas(cctx *types.CrossChainTx,
 		if common.IsEthereumChain(chain.ChainId) {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
-				return errors.Join(err, errors.New(fmt.Sprintf("cannot get gas price from chain %s ", chain)))
+				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
 			}
 			txData.gasPrice = roundUpToNearestGwei(suggested)
 		} else {
-			return errors.New(fmt.Sprintf("cannot convert gas price  %s ", cctx.GetCurrentOutTxParam().OutboundTxGasPrice))
+			return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 		}
 	} else {
 		txData.gasPrice = specified
@@ -394,7 +395,7 @@ func setTransactionData(
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
 	zetaBridge interfaces.ZetaCoreBridger,
-	txData *TransactionData) (error, bool) {
+	txData *TransactionData) (bool, error) {
 
 	txData.outboundParams = cctx.GetCurrentOutTxParam()
 	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
@@ -405,36 +406,36 @@ func setTransactionData(
 
 	skipTx := setChainAndSender(cctx, logger, txData)
 	if skipTx {
-		return nil, true
+		return true, nil
 	}
 
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 	if toChain == nil {
-		return errors.New(fmt.Sprintf("Unknown chain: %d", txData.toChainID.Int64())), true
+		return true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx.Index, nonce, cctx.GetCurrentOutTxParam().CoinType, logger)
 	if err != nil {
-		return errors.New("IsSendOutTxProcessed failed"), true
+		return true, errors.New("IsSendOutTxProcessed failed")
 	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
-		return nil, true
+		return true, nil
 	}
 
 	// Set up gas limit and gas price
 	err = setupGas(cctx, logger, evmRPC, toChain, txData)
 	if err != nil {
-		return err, true
+		return true, err
 	}
 
 	// Get sendHash
 	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
 	sendHash, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
-		return errors.New(fmt.Sprintf("decode CCTX %s error", cctx.Index)), true
+		return true, fmt.Errorf("decode CCTX %s error", cctx.Index)
 	}
 	copy(txData.sendHash[:32], sendHash[:32])
 
@@ -445,7 +446,7 @@ func setTransactionData(
 			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
 		} else {
 			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
-			return nil, true
+			return true, nil
 		}
 	}
 
@@ -460,10 +461,10 @@ func setTransactionData(
 	// Get cross-chain flags
 	txData.flags, err = zetaBridge.GetCrosschainFlags()
 	if err != nil {
-		return errors.New("cannot get crosschain flags"), true
+		return true, errors.New("cannot get crosschain flags")
 	}
 
-	return nil, false
+	return false, nil
 }
 
 func (signer *Signer) TryProcessOutTx(
@@ -495,7 +496,7 @@ func (signer *Signer) TryProcessOutTx(
 	// Setup Transaction input
 	txData := TransactionData{}
 	txData.height = height
-	err, skipTx := setTransactionData(cctx, evmClient, signer.client, logger, zetaBridge, &txData)
+	skipTx, err := setTransactionData(cctx, evmClient, signer.client, logger, zetaBridge, &txData)
 	if err != nil {
 		logger.Error().Msg(err.Error())
 		return
