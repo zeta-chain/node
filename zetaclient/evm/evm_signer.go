@@ -456,7 +456,8 @@ func (signer *Signer) TryProcessOutTx(
 
 	// compliance check goes first
 	if clientcommon.IsCctxRestricted(cctx) {
-		logMsg := fmt.Sprintf("Restricted address detected in cctx: sender %s receiver %s chain %d nonce %d", cctx.InboundTxParams.Sender, to, toChain.ChainId, nonce)
+		logMsg := fmt.Sprintf("Restricted address detected, token: %s sender: %s receiver: %s cctx: %s",
+			cctx.GetCurrentOutTxParam().CoinType, cctx.InboundTxParams.Sender, to, cctx.Index)
 		logger.Warn().Msg(logMsg)
 		signer.logger.Compliance.Warn().Msg(logMsg)
 		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx
