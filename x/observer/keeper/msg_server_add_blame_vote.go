@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -16,7 +16,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
 	if observationChain == nil {
-		return nil, sdkerrors.Wrap(crosschainTypes.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId))
+		return nil, cosmoserrors.Wrap(crosschainTypes.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId))
 	}
 	// IsAuthorized does various checks against the list of observer mappers
 	if ok := k.IsAuthorized(ctx, vote.Creator); !ok {
