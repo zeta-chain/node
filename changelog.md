@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Features
+
+* [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+
+### Refactor
+
+* [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker

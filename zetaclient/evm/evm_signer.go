@@ -15,6 +15,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -70,7 +71,7 @@ type Signer struct {
 	erc20CustodyABI             abi.ABI
 	metaContractAddress         ethcommon.Address
 	erc20CustodyContractAddress ethcommon.Address
-	logger                      zerolog.Logger
+	logger                      clientcommon.ClientLogger
 	ts                          *metrics.TelemetryServer
 
 	// for outTx tracker report only
@@ -88,7 +89,7 @@ func NewEVMSigner(
 	erc20CustodyABIString string,
 	metaContract ethcommon.Address,
 	erc20CustodyContract ethcommon.Address,
-	logger zerolog.Logger,
+	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
 	client, err := ethclient.Dial(endpoint)
@@ -120,9 +121,10 @@ func NewEVMSigner(
 		erc20CustodyABI:             erc20CustodyABI,
 		metaContractAddress:         metaContract,
 		erc20CustodyContractAddress: erc20CustodyContract,
-		logger: logger.With().
-			Str("chain", chain.ChainName.String()).
-			Str("module", "EVMSigner").Logger(),
+		logger: clientcommon.ClientLogger{
+			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
+			Compliance: loggers.Compliance,
+		},
 		ts:                     ts,
 		mu:                     &sync.Mutex{},
 		outTxHashBeingReported: make(map[string]bool),
@@ -150,10 +152,10 @@ func (signer *Signer) Sign(
 	log.Debug().Msgf("Sign: Signature: %s", hex.EncodeToString(sig[:]))
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SigToPub error")
+		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
 	}
 	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, nil, nil, err
@@ -259,10 +261,10 @@ func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint6
 	}
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SigToPub error")
+		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
 	}
 	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, err
@@ -280,10 +282,10 @@ func (signer *Signer) SignWithdrawTx(txData *TransactionData) (*ethtypes.Transac
 	}
 	pubk, err := crypto.SigToPub(hashBytes, sig[:])
 	if err != nil {
-		signer.logger.Error().Err(err).Msgf("SigToPub error")
+		signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
 	}
 	addr := crypto.PubkeyToAddress(*pubk)
-	signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+	signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 	signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 	if err != nil {
 		return nil, err
@@ -322,10 +324,10 @@ func (signer *Signer) SignCommandTx(txData *TransactionData) (*ethtypes.Transact
 		}
 		pubk, err := crypto.SigToPub(hashBytes, sig[:])
 		if err != nil {
-			signer.logger.Error().Err(err).Msgf("SigToPub error")
+			signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
 		}
 		addr := crypto.PubkeyToAddress(*pubk)
-		signer.logger.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
+		signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
 		signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
 		if err != nil {
 			return nil, err
@@ -476,7 +478,7 @@ func (signer *Signer) TryProcessOutTx(
 	zetaBridge interfaces.ZetaCoreBridger,
 	height uint64,
 ) {
-	logger := signer.logger.With().
+	logger := signer.logger.Std.With().
 		Str("outTxID", outTxID).
 		Str("SendHash", cctx.Index).
 		Logger()
@@ -510,8 +512,12 @@ func (signer *Signer) TryProcessOutTx(
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 
 	var tx *ethtypes.Transaction
-	// Sign transaction
-	if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
+	// compliance check goes first
+	if clientcommon.IsCctxRestricted(cctx) {
+		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
+			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
+		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx
+	} else if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 		if to == (ethcommon.Address{}) {
 			logger.Error().Msgf("invalid receiver %s", cctx.GetCurrentOutTxParam().Receiver)
