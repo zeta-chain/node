@@ -419,7 +419,7 @@ func setTransactionData(
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx.Index, nonce, cctx.GetCurrentOutTxParam().CoinType, logger)
+	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx, logger)
 	if err != nil {
 		return true, errors.New("IsSendOutTxProcessed failed")
 	}
@@ -515,8 +515,8 @@ func (signer *Signer) TryProcessOutTx(
 	// compliance check goes first
 	if clientcommon.IsCctxRestricted(cctx) {
 		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
-			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
-		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx
+			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
+		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
 	} else if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 		if to == (ethcommon.Address{}) {
