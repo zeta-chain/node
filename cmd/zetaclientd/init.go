@@ -4,6 +4,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
 var InitCmd = &cobra.Command{
@@ -95,6 +96,7 @@ func Initialize(_ *cobra.Command, _ []string) error {
 	configData.KeyringBackend = config.KeyringBackend(initArgs.KeyringBackend)
 	configData.HsmMode = initArgs.HsmMode
 	configData.HsmHotKey = initArgs.HsmHotKey
+	configData.ComplianceConfig = testutils.ComplianceConfigTest()
 
 	//Save config file
 	return config.Save(&configData, rootArgs.zetaCoreHome)

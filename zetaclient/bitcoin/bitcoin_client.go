@@ -23,12 +23,14 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -49,6 +51,7 @@ type BTCLog struct {
 	ObserveOutTx  zerolog.Logger
 	WatchUTXOS    zerolog.Logger
 	WatchGasPrice zerolog.Logger
+	Compliance    zerolog.Logger
 }
 
 // BTCChainClient represents a chain configuration for Bitcoin
@@ -134,7 +137,7 @@ func NewBitcoinClient(
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	logger zerolog.Logger,
+	loggers clientcommon.ClientLogger,
 	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
@@ -149,13 +152,14 @@ func NewBitcoinClient(
 	}
 	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
-	chainLogger := logger.With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := loggers.Std.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
 		ChainLogger:   chainLogger,
 		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),
 		ObserveOutTx:  chainLogger.With().Str("module", "observeOutTx").Logger(),
 		WatchUTXOS:    chainLogger.With().Str("module", "WatchUTXOS").Logger(),
 		WatchGasPrice: chainLogger.With().Str("module", "WatchGasPrice").Logger(),
+		Compliance:    loggers.Compliance,
 	}
 
 	ob.zetaClient = bridge
@@ -450,13 +454,15 @@ func (ob *BTCChainClient) observeInTx() error {
 			// post inbound vote message to zetacore
 			for _, inTx := range inTxs {
 				msg := ob.GetInboundVoteMessageFromBtcEvent(inTx)
-				zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
-				if err != nil {
-					ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
-					return err // we have to re-scan this block next time
-				} else if zetaHash != "" {
-					ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
-						zetaHash, inTx.TxHash, ballot, depositorFee)
+				if msg != nil {
+					zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, zetabridge.PostVoteInboundExecutionGasLimit, msg)
+					if err != nil {
+						ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error posting to zeta core for tx %s", inTx.TxHash)
+						return err // we have to re-scan this block next time
+					} else if zetaHash != "" {
+						ob.logger.WatchInTx.Info().Msgf("observeInTxBTC: PostVoteInbound zeta tx hash: %s inTx %s ballot %s fee %v",
+							zetaHash, inTx.TxHash, ballot, depositorFee)
+					}
 				}
 			}
 		}
@@ -485,7 +491,12 @@ func (ob *BTCChainClient) ConfirmationsThreshold(amount *big.Int) int64 {
 }
 
 // IsSendOutTxProcessed returns isIncluded(or inMempool), isConfirmed, Error
-func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+	params := *cctx.GetCurrentOutTxParam()
+	sendHash := cctx.Index
+	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+
+	// get broadcasted outtx and tx result
 	outTxID := ob.GetTxID(nonce)
 	logger.Info().Msgf("IsSendOutTxProcessed %s", outTxID)
 
@@ -493,13 +504,6 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ 
 	txnHash, broadcasted := ob.broadcastedTx[outTxID]
 	res, included := ob.includedTxResults[outTxID]
 	ob.Mu.Unlock()
-
-	// Get original cctx parameters
-	params, err := ob.GetCctxParams(nonce)
-	if err != nil {
-		ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: can't find pending cctx for nonce %d", nonce)
-		return false, false, err
-	}
 
 	if !included {
 		if !broadcasted {
@@ -515,10 +519,9 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, _ 
 		}
 
 		// Try including this outTx broadcasted by myself
-		txResult, inMempool := ob.checkIncludedTx(txnHash, params)
-		if txResult == nil {
-			ob.logger.ObserveOutTx.Error().Err(err).Msg("IsSendOutTxProcessed: checkIncludedTx failed")
-			return false, false, err
+		txResult, inMempool := ob.checkIncludedTx(cctx, txnHash)
+		if txResult == nil { // check failed, try again next time
+			return false, false, nil
 		} else if inMempool { // still in mempool (should avoid unnecessary Tss keysign)
 			ob.logger.ObserveOutTx.Info().Msgf("IsSendOutTxProcessed: outTx %s is still in mempool", outTxID)
 			return true, false, nil
@@ -673,6 +676,12 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 	amount = amount.Mul(amount, big.NewFloat(1e8))
 	amountInt, _ := amount.Int(nil)
 	message := hex.EncodeToString(inTx.MemoBytes)
+
+	// compliance check
+	if ob.IsInTxRestricted(inTx) {
+		return nil
+	}
+
 	return zetabridge.GetInBoundVoteMessage(
 		inTx.FromAddress,
 		ob.chain.ChainId,
@@ -689,6 +698,21 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		0,
 	)
+}
+
+// IsInTxRestricted returns true if the inTx contains restricted addresses
+func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
+	receiver := ""
+	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
+	if err == nil && parsedAddress != (ethcommon.Address{}) {
+		receiver = parsedAddress.Hex()
+	}
+	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
+		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
+		return true
+	}
+	return false
 }
 
 func GetBtcEvent(
@@ -1051,17 +1075,6 @@ func (ob *BTCChainClient) SaveBroadcastedTx(txHash string, nonce uint64) {
 	ob.logger.ObserveOutTx.Info().Msgf("SaveBroadcastedTx: saved broadcasted txHash %s for outTx %s", txHash, outTxID)
 }
 
-func (ob *BTCChainClient) GetCctxParams(nonce uint64) (types.OutboundTxParams, error) {
-	send, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, nonce)
-	if err != nil {
-		return types.OutboundTxParams{}, err
-	}
-	if send.GetCurrentOutTxParam() == nil { // never happen
-		return types.OutboundTxParams{}, fmt.Errorf("GetPendingCctx: nil outbound tx params")
-	}
-	return *send.GetCurrentOutTxParam(), nil
-}
-
 func (ob *BTCChainClient) observeOutTx() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_observeOutTx", ob.GetChainParams().OutTxTicker)
 	if err != nil {
@@ -1081,13 +1094,14 @@ func (ob *BTCChainClient) observeOutTx() {
 			for _, tracker := range trackers {
 				// get original cctx parameters
 				outTxID := ob.GetTxID(tracker.Nonce)
-				params, err := ob.GetCctxParams(tracker.Nonce)
+				cctx, err := ob.zetaClient.GetCctxByNonce(ob.chain.ChainId, tracker.Nonce)
 				if err != nil {
 					ob.logger.ObserveOutTx.Info().Err(err).Msgf("observeOutTx: can't find cctx for nonce %d", tracker.Nonce)
 					break
 				}
-				if tracker.Nonce != params.OutboundTxTssNonce { // Tanmay: it doesn't hurt to check
-					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: tracker nonce %d not match cctx nonce %d", tracker.Nonce, params.OutboundTxTssNonce)
+				nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+				if tracker.Nonce != nonce { // Tanmay: it doesn't hurt to check
+					ob.logger.ObserveOutTx.Error().Msgf("observeOutTx: tracker nonce %d not match cctx nonce %d", tracker.Nonce, nonce)
 					break
 				}
 				if len(tracker.HashList) > 1 {
@@ -1098,7 +1112,7 @@ func (ob *BTCChainClient) observeOutTx() {
 				txCount := 0
 				var txResult *btcjson.GetTransactionResult
 				for _, txHash := range tracker.HashList {
-					result, inMempool := ob.checkIncludedTx(txHash.TxHash, params)
+					result, inMempool := ob.checkIncludedTx(cctx, txHash.TxHash)
 					if result != nil && !inMempool { // included
 						txCount++
 						txResult = result
@@ -1126,8 +1140,8 @@ func (ob *BTCChainClient) observeOutTx() {
 
 // checkIncludedTx checks if a txHash is included and returns (txResult, inMempool)
 // Note: if txResult is nil, then inMempool flag should be ignored.
-func (ob *BTCChainClient) checkIncludedTx(txHash string, params types.OutboundTxParams) (*btcjson.GetTransactionResult, bool) {
-	outTxID := ob.GetTxID(params.OutboundTxTssNonce)
+func (ob *BTCChainClient) checkIncludedTx(cctx *types.CrossChainTx, txHash string) (*btcjson.GetTransactionResult, bool) {
+	outTxID := ob.GetTxID(cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
@@ -1138,7 +1152,7 @@ func (ob *BTCChainClient) checkIncludedTx(txHash string, params types.OutboundTx
 		return nil, false
 	}
 	if getTxResult.Confirmations >= 0 { // check included tx only
-		err = ob.checkTssOutTxResult(hash, getTxResult, params, params.OutboundTxTssNonce)
+		err = ob.checkTssOutTxResult(cctx, hash, getTxResult)
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkIncludedTx: error verify bitcoin outTx %s outTxID %s", txHash, outTxID)
 			return nil, false
@@ -1199,7 +1213,9 @@ func (ob *BTCChainClient) removeIncludedTx(nonce uint64) {
 //   - check if all inputs are segwit && TSS inputs
 //
 // Returns: true if outTx passes basic checks.
-func (ob *BTCChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult, params types.OutboundTxParams, nonce uint64) error {
+func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
+	params := cctx.GetCurrentOutTxParam()
+	nonce := params.OutboundTxTssNonce
 	rawResult, err := ob.getRawTxResult(hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTxResultByHash %s", hash.String())
@@ -1208,9 +1224,18 @@ func (ob *BTCChainClient) checkTssOutTxResult(hash *chainhash.Hash, res *btcjson
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vin in outTx %s nonce %d", hash, nonce)
 	}
-	err = ob.checkTSSVout(rawResult.Vout, params, nonce)
-	if err != nil {
-		return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
+
+	// differentiate between normal and restricted cctx
+	if clientcommon.IsCctxRestricted(cctx) {
+		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)
+		}
+	} else {
+		err = ob.checkTSSVout(params, rawResult.Vout)
+		if err != nil {
+			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
+		}
 	}
 	return nil
 }
@@ -1291,37 +1316,19 @@ func (ob *BTCChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)
-func (ob *BTCChainClient) checkTSSVout(vouts []btcjson.Vout, params types.OutboundTxParams, nonce uint64) error {
+func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
 	if !(len(vouts) == 2 || len(vouts) == 3) {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
 	}
 
+	nonce := params.OutboundTxTssNonce
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		amount, err := GetSatoshis(vout.Value)
+		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
 		if err != nil {
-			return errors.Wrap(err, "checkTSSVout: error getting satoshis")
+			return errors.Wrap(err, "checkTSSVout: error decoding P2WPKH vout")
 		}
-		// decode P2WPKH scriptPubKey
-		scriptPubKey := vout.ScriptPubKey.Hex
-		decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
-		if err != nil {
-			return errors.Wrapf(err, "checkTSSVout: error decoding scriptPubKey %s", scriptPubKey)
-		}
-		if len(decodedScriptPubKey) != 22 { // P2WPKH script
-			return fmt.Errorf("checkTSSVout: unsupported scriptPubKey: %s", scriptPubKey)
-		}
-		witnessVersion := decodedScriptPubKey[0]
-		witnessProgram := decodedScriptPubKey[2:]
-		if witnessVersion != 0 {
-			return fmt.Errorf("checkTSSVout: unsupported witness in scriptPubKey %s", scriptPubKey)
-		}
-		recvAddress, err := ob.chain.BTCAddressFromWitnessProgram(witnessProgram)
-		if err != nil {
-			return errors.Wrapf(err, "checkTSSVout: error getting receiver from witness program %s", witnessProgram)
-		}
-
 		// 1st vout: nonce-mark
 		if vout.N == 0 {
 			if recvAddress != tssAddress {
@@ -1345,6 +1352,41 @@ func (ob *BTCChainClient) checkTSSVout(vouts []btcjson.Vout, params types.Outbou
 		if vout.N == 2 {
 			if recvAddress != tssAddress {
 				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", recvAddress, tssAddress)
+			}
+		}
+	}
+	return nil
+}
+
+// checkTSSVoutCancelled vout is valid if:
+//   - The first output is the nonce-mark
+//   - The second output is the change to TSS (optional)
+func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
+	// vouts: [nonce-mark, change to TSS (optional)]
+	if !(len(vouts) == 1 || len(vouts) == 2) {
+		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
+	}
+
+	nonce := params.OutboundTxTssNonce
+	tssAddress := ob.Tss.BTCAddress()
+	for _, vout := range vouts {
+		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
+		if err != nil {
+			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
+		}
+		// 1st vout: nonce-mark
+		if vout.N == 0 {
+			if recvAddress != tssAddress {
+				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
+			}
+			if amount != common.NonceMarkAmount(nonce) {
+				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
+			}
+		}
+		// 2nd vout: change to TSS (optional)
+		if vout.N == 2 {
+			if recvAddress != tssAddress {
+				return fmt.Errorf("checkTSSVoutCancelled: change address %s not match TSS address %s", recvAddress, tssAddress)
 			}
 		}
 	}
