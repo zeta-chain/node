@@ -614,7 +614,7 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
 	})
-	t.Run("no cctx created  for valid logs if Inbound is disabled", func(t *testing.T) {
+	t.Run("no cctx created for valid logs if Inbound is disabled", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
