@@ -228,7 +228,7 @@ func (signer *Signer) SignRevertTx(txData *TransactionData) (*ethtypes.Transacti
 	data, err = signer.abi.Pack("onRevert",
 		txData.sender,
 		txData.srcChainID,
-		txData.to,
+		txData.to.Bytes(),
 		txData.toChainID,
 		txData.amount,
 		txData.message,
