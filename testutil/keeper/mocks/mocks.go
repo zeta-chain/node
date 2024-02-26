@@ -2,6 +2,7 @@ package mocks
 
 import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -56,4 +57,24 @@ type FungibleObserverKeeper interface {
 //go:generate mockery --name FungibleEVMKeeper --filename evm.go --case underscore --output ./fungible
 type FungibleEVMKeeper interface {
 	fungibletypes.EVMKeeper
+}
+
+//go:generate mockery --name EmissionAccountKeeper --filename account.go --case underscore --output ./emissions
+type EmissionAccountKeeper interface {
+	emissionstypes.AccountKeeper
+}
+
+//go:generate mockery --name EmissionBankKeeper --filename bank.go --case underscore --output ./emissions
+type EmissionBankKeeper interface {
+	emissionstypes.BankKeeper
+}
+
+//go:generate mockery --name EmissionStakingKeeper --filename staking.go --case underscore --output ./emissions
+type EmissionStakingKeeper interface {
+	emissionstypes.StakingKeeper
+}
+
+//go:generate mockery --name EmissionObserverKeeper --filename observer.go --case underscore --output ./emissions
+type EmissionObserverKeeper interface {
+	emissionstypes.ObserverKeeper
 }
