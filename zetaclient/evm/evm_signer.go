@@ -352,7 +352,8 @@ func setChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger, txData *
 	return false
 }
 
-func setupGas(cctx *types.CrossChainTx,
+func setupGas(
+	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
 	chain *common.Chain,
@@ -567,7 +568,6 @@ func (signer *Signer) TryProcessOutTx(
 	_, err = zetaBridge.GetObserverList()
 	if err != nil {
 		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
-
 	}
 
 	// Broadcast Signed Tx
