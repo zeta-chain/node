@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/common"
@@ -40,8 +39,6 @@ type ChainClient interface {
 	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
-	GetPromGauge(name string) (prometheus.Gauge, error)
-	GetPromCounter(name string) (prometheus.Counter, error)
 	GetTxID(nonce uint64) string
 	ExternalChainWatcherForNewInboundTrackerSuggestions()
 }

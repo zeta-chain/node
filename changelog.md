@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Refactor
+* [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
