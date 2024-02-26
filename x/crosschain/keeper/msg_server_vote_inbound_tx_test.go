@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"testing"
 
-	//"github.com/zeta-chain/zetacore/common"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -13,7 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -59,8 +57,13 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 			)
 			require.NoError(t, err)
 		}
-		ballot, _, _ := zk.ObserverKeeper.FindBallot(ctx, msg.Digest(), zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId), observerTypes.ObservationType_InBoundTx)
-		require.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
+		ballot, _, _ := zk.ObserverKeeper.FindBallot(
+			ctx,
+			msg.Digest(),
+			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
+			observertypes.ObservationType_InBoundTx,
+		)
+		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		cctx, found := k.GetCrossChainTx(ctx, msg.Digest())
 		require.True(t, found)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
@@ -122,8 +125,7 @@ func TestNoDoubleEventProtections(t *testing.T) {
 	// Check that the vote passed
 	ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
 	require.True(t, found)
-	require.Equal(t, ballot.BallotStatus, observerTypes.BallotStatus_BallotFinalized_SuccessObservation)
-
+	require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 	//Perform the SAME event. Except, this time, we resubmit the event.
 	msg2 := &types.MsgVoteOnObservedInboundTx{
 		Creator:       validatorAddr,

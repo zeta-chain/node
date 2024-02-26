@@ -179,23 +179,8 @@ generate: proto openapi specs typescript docs-zetacored
 .PHONY: generate
 
 ###############################################################################
-###                            E2E tests                                    ###
+###                         E2E tests and localnet                          ###
 ###############################################################################
-
-install-zetae2e: go.sum
-	@echo "--> Installing zetae2e"
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
-.PHONY: install-zetae2e
-
-###############################################################################
-###                            Smoke tests                                  ###
-###############################################################################
-
-# Note: smoke tests are deprecated and will be removed in the future, replaced with e2e tests
-
-install-smoketest: go.sum
-	@echo "--> Installing orchestrator"
-	@go install -mod=readonly $(BUILD_FLAGS) ./contrib/localnet/orchestrator/smoketest/cmd/smoketest
 
 zetanode:
 	@echo "Building zetanode"
@@ -203,49 +188,30 @@ zetanode:
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
-smoketest:
-	@echo "DEPRECATED: NO-OP: Building smoketest"
+install-zetae2e: go.sum
+	@echo "--> Installing zetae2e"
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
+.PHONY: install-zetae2e
 
-start-smoketest:
-	@echo "--> Starting smoketest"
+start-e2e-test:
+	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
-start-smoketest-upgrade:
-	@echo "--> Starting smoketest with upgrade proposal"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-upgrade.yml up -d
+start-stress-test: zetanode
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
-start-smoketest-p2p-diag:
-	@echo "--> Starting smoketest in p2p diagnostic mode"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml up -d
+start-upgrade-test:
+	@echo "--> Starting upgrade test"
+	$(DOCKER) build --build-arg -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-stop-smoketest:
-	@echo "--> Stopping smoketest"
+start-localnet:
+	@echo "--> Starting localnet"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
+
+stop-test:
 	cd contrib/localnet/ && $(DOCKER) compose down --remove-orphans
-
-stop-smoketest-p2p-diag:
-	@echo "--> Stopping smoketest in p2p diagnostic mode"
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-p2p-diag.yml down --remove-orphans
-
-stress-test: zetanode
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml up -d
-
-stop-stress-test:
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stresstest.yml down --remove-orphans
-
-stateful-upgrade:
-	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=mock-mainnet-01-5-ga66d0b77 --build-arg new_version=v10.0.0-30 -t zetanode -f ./Dockerfile-versioned .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
-
-stateful-upgrade-source:
-	@echo "--> Starting stateful smoketest"
-	$(DOCKER) build --build-arg old_version=v12.2.1 -t zetanode -f ./Dockerfile-versioned-source .
-	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile-upgrade.fastbuild .
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml up -d
-
-stop-stateful-upgrade:
-	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose-stateful.yml down --remove-orphans
 
 ###############################################################################
 ###                              Monitoring                                 ###

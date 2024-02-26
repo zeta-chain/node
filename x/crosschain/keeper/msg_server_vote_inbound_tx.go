@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
-
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -79,7 +78,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// This check prevents double spending
 	if isNew {
 		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-			return nil, errorsmod.Wrap(
+			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
 				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
 			)

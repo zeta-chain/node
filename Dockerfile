@@ -1,3 +1,9 @@
+# Purpose: This Dockerfile creates an environment for running ZetaChain
+# It contains:
+# - zetacored: the ZetaChain node binary
+# - zetaclientd: the ZetaChain client binary for observers
+# - zetae2e: the ZetaChain end-to-end tests CLI
+
 FROM golang:1.20-alpine3.18
 
 ENV GOPATH /go

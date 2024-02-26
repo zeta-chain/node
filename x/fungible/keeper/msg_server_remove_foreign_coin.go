@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -16,12 +17,12 @@ import (
 func (k msgServer) RemoveForeignCoin(goCtx context.Context, msg *types.MsgRemoveForeignCoin) (*types.MsgRemoveForeignCoinResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Removal can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Removal can only be executed by the correct policy account")
 	}
 	index := msg.Name
 	_, found := k.GetForeignCoins(ctx, index)
 	if !found {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "foreign coin not found")
+		return nil, cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "foreign coin not found")
 	}
 	k.RemoveForeignCoins(ctx, index)
 	return &types.MsgRemoveForeignCoinResponse{}, nil

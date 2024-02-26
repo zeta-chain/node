@@ -432,7 +432,7 @@ func (k Keeper) QueryZRC20Data(
 
 	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return types.ZRC20Data{}, sdkerrors.Wrapf(
+		return types.ZRC20Data{}, cosmoserrors.Wrapf(
 			types.ErrABIUnpack, "failed to get ABI: %s", err.Error(),
 		)
 	}

@@ -1,0 +1,74 @@
+coverage:
+  round: down
+  precision: 2
+  status:
+    project:
+      default:
+        threshold: 1% # allow this much decrease on project
+      zetacore:
+        if_ci_failed: error
+        target: 60%
+        flags:
+          - zetacore
+      zetaclient:
+        if_ci_failed: error
+        target: 60%
+        flags:
+          - zetaclient
+      common:
+        if_ci_failed: error
+        target: 60%
+        flags:
+          - common
+
+comment:
+  layout: "reach, diff, files"
+  behavior: default
+  require_changes: true
+
+flags:
+  zetacore:
+    carryforward: true
+    paths:
+      - "x/"
+  zetaclient:
+    carryforward: true
+    paths:
+      - "zetaclient/"
+  common:
+    carryforward: true
+    paths:
+      - "common/"
+
+ignore:
+  - "x/**/client/"
+  - "x/**/keeper/keeper.go"
+  - "x/**/keeper/msg_server.go"
+  - "x/**/keeper/grpc_query_params.go"
+  - "x/**/types/codec.go"
+  - "x/**/types/errors.go"
+  - "x/**/types/keys.go"
+  - "x/**/types/key_*.go"
+  - "x/**/types/types.go"
+  - "x/**/types/expected_keepers.go"
+  - "x/**/module.go"
+  - "x/**/module_simulation.go"
+  - "x/**/simulation/"
+  - "*.proto"
+  - "*.md"
+  - "*.yml"
+  - "*.yaml"
+  - "*.pb.go"
+  - "*.pb.gw.go"
+  - "*.json"
+  - ".github/"
+  - "app/"
+  - "cmd/"
+  - "contrib/"
+  - "docs/"
+  - "rpc/"
+  - "proto/"
+  - "scripts/"
+  - "server/"
+  - "testutil/"
+  - "typescript/"

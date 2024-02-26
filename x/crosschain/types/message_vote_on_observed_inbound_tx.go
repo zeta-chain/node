@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -74,19 +75,19 @@ func (msg *MsgVoteOnObservedInboundTx) GetSignBytes() []byte {
 func (msg *MsgVoteOnObservedInboundTx) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s): %s", err, msg.Creator)
 	}
 
 	if msg.SenderChainId < 0 {
-		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.SenderChainId)
+		return cosmoserrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.SenderChainId)
 	}
 
 	if msg.ReceiverChain < 0 {
-		return sdkerrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ReceiverChain)
+		return cosmoserrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ReceiverChain)
 	}
 
 	if len(msg.Message) > MaxMessageLength {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "message is too long: %d", len(msg.Message))
 	}
 
 	return nil

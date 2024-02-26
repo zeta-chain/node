@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script is used to restart zetaclientd after an upgrade
+# It waits for the upgrade height to be reached and then restarts the zetaclientd on all nodes in the network
+# It interacts with the network using the zetaclientd binary
+
 clibuilder()
 {
    echo ""

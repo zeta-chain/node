@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -30,10 +31,10 @@ func (m *MsgAddBlameVote) Type() string {
 func (m *MsgAddBlameVote) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if common.GetChainFromChainID(m.ChainId) == nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", m.ChainId)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", m.ChainId)
 	}
 	return nil
 }

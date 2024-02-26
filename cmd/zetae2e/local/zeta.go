@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// zetaTestRoutine runs Zeta transfer and message passing related smoke tests
+// zetaTestRoutine runs Zeta transfer and message passing related e2e tests
 func zetaTestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 ) func() error {
 	return func() (err error) {
@@ -57,12 +57,12 @@ func zetaTestRoutine(
 		zetaRunner.WaitForMinedCCTX(txEtherDeposit)
 
 		// run zeta test
-		if err := zetaRunner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			smoketests.TestZetaWithdrawName,
-			smoketests.TestMessagePassingName,
-			smoketests.TestMessagePassingRevertFailName,
-			smoketests.TestMessagePassingRevertSuccessName,
+		if err := zetaRunner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestMessagePassingName,
+			e2etests.TestMessagePassingRevertFailName,
+			e2etests.TestMessagePassingRevertSuccessName,
 		); err != nil {
 			return fmt.Errorf("zeta tests failed: %v", err)
 		}

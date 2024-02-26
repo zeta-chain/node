@@ -4,14 +4,15 @@ import (
 	"context"
 	"errors"
 
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
 )
 
 // NewShowTSSCmd returns the show TSS command

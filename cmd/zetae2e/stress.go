@@ -4,25 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"math/big"
 	"os"
 	"sort"
 	"time"
 
-	"github.com/fatih/color"
-	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	"github.com/zeta-chain/zetacore/app"
+	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
+	"github.com/zeta-chain/zetacore/cmd/zetae2e/local"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc"
 )
@@ -59,7 +58,7 @@ func NewStressTestCmd() *cobra.Command {
 	StressCmd.Flags().StringVar(&stressTestArgs.network, "network", "LOCAL", "--network TESTNET")
 	StressCmd.Flags().Int64Var(&stressTestArgs.txnInterval, "tx-interval", 500, "--tx-interval [TIME_INTERVAL_MILLISECONDS]")
 	StressCmd.Flags().BoolVar(&stressTestArgs.contractsDeployed, "contracts-deployed", false, "--contracts-deployed=false")
-	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the smoketest")
+	StressCmd.Flags().StringVar(&stressTestArgs.config, local.FlagConfigFile, "", "config file to use for the E2E test")
 	StressCmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 
 	local.DeployerAddress = ethcommon.HexToAddress(stressTestArgs.deployerAddress)
@@ -70,11 +69,11 @@ func NewStressTestCmd() *cobra.Command {
 func StressTest(cmd *cobra.Command, _ []string) {
 	testStartTime := time.Now()
 	defer func() {
-		fmt.Println("Smoke test took", time.Since(testStartTime))
+		fmt.Println("E2E test took", time.Since(testStartTime))
 	}()
 	go func() {
 		time.Sleep(StressTestTimeout)
-		fmt.Println("Smoke test timed out after", StressTestTimeout)
+		fmt.Println("E2E test timed out after", StressTestTimeout)
 		os.Exit(1)
 	}()
 
@@ -83,7 +82,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
 	cosmosConf.Seal()
 
-	// initialize smoke tests config
+	// initialize E2E tests config
 	conf, err := local.GetConfig(cmd)
 	if err != nil {
 		panic(err)
@@ -135,8 +134,8 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
-	// initialize smoke test runner
-	smokeTest, err := zetae2econfig.RunnerFromConfig(
+	// initialize E2E test runner
+	e2eTest, err := zetae2econfig.RunnerFromConfig(
 		ctx,
 		"deployer",
 		cancel,
@@ -152,27 +151,27 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// setup TSS addresses
-	if err := smokeTest.SetTSSAddresses(); err != nil {
+	if err := e2eTest.SetTSSAddresses(); err != nil {
 		panic(err)
 	}
 
-	smokeTest.SetupEVM(stressTestArgs.contractsDeployed)
+	e2eTest.SetupEVM(stressTestArgs.contractsDeployed)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.network == "LOCAL" {
 		// deploy and set zevm contract
-		smokeTest.SetZEVMContracts()
+		e2eTest.SetZEVMContracts()
 
 		// deposit on ZetaChain
-		smokeTest.DepositEther(false)
-		smokeTest.DepositZeta()
+		e2eTest.DepositEther(false)
+		e2eTest.DepositZeta()
 	} else if stressTestArgs.network == "TESTNET" {
-		ethZRC20Addr, err := smokeTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
+		ethZRC20Addr, err := e2eTest.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(5))
 		if err != nil {
 			panic(err)
 		}
-		smokeTest.ETHZRC20Addr = ethZRC20Addr
-		smokeTest.ETHZRC20, err = zrc20.NewZRC20(smokeTest.ETHZRC20Addr, smokeTest.ZevmClient)
+		e2eTest.ETHZRC20Addr = ethZRC20Addr
+		e2eTest.ETHZRC20, err = zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZevmClient)
 		if err != nil {
 			panic(err)
 		}
@@ -182,7 +181,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Check zrc20 balance of Deployer address
-	ethZRC20Balance, err := smokeTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
+	ethZRC20Balance, err := e2eTest.ETHZRC20.BalanceOf(nil, local.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -190,27 +189,27 @@ func StressTest(cmd *cobra.Command, _ []string) {
 
 	//Pre-approve ETH withdraw on ZEVM
 	fmt.Printf("approving ETH ZRC20...\n")
-	ethZRC20 := smokeTest.ETHZRC20
-	tx, err := ethZRC20.Approve(smokeTest.ZevmAuth, smokeTest.ETHZRC20Addr, big.NewInt(1e18))
+	ethZRC20 := e2eTest.ETHZRC20
+	tx, err := ethZRC20.Approve(e2eTest.ZevmAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(ctx, smokeTest.ZevmClient, tx, logger, smokeTest.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZevmClient, tx, logger, e2eTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
-	blockNum, err := smokeTest.ZevmClient.BlockNumber(context.Background())
+	blockNum, err := e2eTest.ZevmClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
-	// #nosec G701 smoketest - always in range
-	nonce, err := smokeTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
+	// #nosec G701 e2eTest - always in range
+	nonce, err := e2eTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
 
-	// #nosec G701 smoketest - always in range
+	// #nosec G701 e2e - always in range
 	zevmNonce = big.NewInt(int64(nonce))
 
 	// -------------- TEST BEGINS ------------------
@@ -219,31 +218,31 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM - goerli")
 	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
-	smokeTest.WG.Add(2)
-	go WithdrawCCtx(smokeTest)       // Withdraw USDT from ZEVM to EVM - goerli
-	go EchoNetworkMetrics(smokeTest) // Display Network metrics periodically to monitor performance
+	e2eTest.WG.Add(2)
+	go WithdrawCCtx(e2eTest)       // Withdraw USDT from ZEVM to EVM - goerli
+	go EchoNetworkMetrics(e2eTest) // Display Network metrics periodically to monitor performance
 
-	smokeTest.WG.Wait()
+	e2eTest.WG.Wait()
 }
 
 // WithdrawCCtx withdraw USDT from ZEVM to EVM
-func WithdrawCCtx(sm *runner.SmokeTestRunner) {
+func WithdrawCCtx(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {
 		select {
 		case <-ticker.C:
-			WithdrawETHZRC20(sm)
+			WithdrawETHZRC20(runner)
 		}
 	}
 }
 
-func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
+func EchoNetworkMetrics(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Second * StatInterval)
 	var queue = make([]uint64, 0)
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
-	chainID, err := getChainID(sm.GoerliClient)
+	chainID, err := getChainID(runner.GoerliClient)
 
 	if err != nil {
 		panic(err)
@@ -254,7 +253,7 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 		case <-ticker.C:
 			numTicks++
 			// Get all pending outbound transactions
-			cctxResp, err := sm.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
+			cctxResp, err := runner.CctxClient.CctxListPending(context.Background(), &crosschaintypes.QueryListCctxPendingRequest{
 				ChainId: chainID.Int64(),
 			})
 			if err != nil {
@@ -271,7 +270,7 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 			}
 			//
 			// Get all trackers
-			trackerResp, err := sm.CctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
+			trackerResp, err := runner.CctxClient.OutTxTrackerAll(context.Background(), &crosschaintypes.QueryAllOutTxTrackerRequest{})
 			if err != nil {
 				continue
 			}
@@ -300,15 +299,15 @@ func EchoNetworkMetrics(sm *runner.SmokeTestRunner) {
 	}
 }
 
-func WithdrawETHZRC20(sm *runner.SmokeTestRunner) {
+func WithdrawETHZRC20(runner *runner.E2ERunner) {
 	defer func() {
 		zevmNonce.Add(zevmNonce, big.NewInt(1))
 	}()
 
-	ethZRC20 := sm.ETHZRC20
+	ethZRC20 := runner.ETHZRC20
 
-	sm.ZevmAuth.Nonce = zevmNonce
-	_, err := ethZRC20.Withdraw(sm.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
+	runner.ZevmAuth.Nonce = zevmNonce
+	_, err := ethZRC20.Withdraw(runner.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}

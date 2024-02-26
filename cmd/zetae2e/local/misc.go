@@ -2,19 +2,20 @@ package local
 
 import (
 	"fmt"
+
 	"runtime"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// miscTestRoutine runs miscellaneous smoke tests
+// miscTestRoutine runs miscellaneous e2e tests
 func miscTestRoutine(
 	conf config.Config,
-	deployerRunner *runner.SmokeTestRunner,
+	deployerRunner *runner.E2ERunner,
 	verbose bool,
 ) func() error {
 	return func() (err error) {
@@ -55,10 +56,10 @@ func miscTestRoutine(
 		miscRunner.WaitForMinedCCTX(txZetaDeposit)
 
 		// run misc test
-		if err := miscRunner.RunSmokeTestsFromNames(
-			smoketests.AllSmokeTests,
-			//smoketests.TestBlockHeadersName,
-			smoketests.TestMyTestName,
+		if err := miscRunner.RunE2ETestsFromNames(
+			e2etests.AllE2ETests,
+			//e2etests.TestBlockHeadersName,
+			e2etests.TestMyTestName,
 		); err != nil {
 			return fmt.Errorf("misc tests failed: %v", err)
 		}
