@@ -300,7 +300,7 @@ release:
 ###############################################################################
 
 mainnet-zetarpc-node:
-	cd contrib/local-mainnet/zetacored && docker-compose up
+	cd contrib/mainnet/zetacored && docker-compose up
 
 mainnet-bitcoind-node:
-	cd contrib/local-mainnet/bitcoind && docker-compose up
+	cd contrib/mainnet/bitcoind && docker-compose up
