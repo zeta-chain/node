@@ -88,7 +88,6 @@ func CreateChainClientMap(
 	bridge *zetabridge.ZetaCoreBridge,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	metrics *metrics.Metrics,
 	logger zerolog.Logger,
 	cfg *config.Config,
 	ts *metrics.TelemetryServer,
@@ -99,7 +98,7 @@ func CreateChainClientMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		co, err := evm.NewEVMChainClient(bridge, tss, dbpath, metrics, logger, cfg, *evmConfig, ts)
+		co, err := evm.NewEVMChainClient(bridge, tss, dbpath, logger, cfg, *evmConfig, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
 			continue
@@ -109,7 +108,7 @@ func CreateChainClientMap(
 	// BTC client
 	btcChain, btcConfig, enabled := cfg.GetBTCConfig()
 	if enabled {
-		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, metrics, logger, btcConfig, ts)
+		co, err := bitcoin.NewBitcoinClient(btcChain, bridge, tss, dbpath, logger, btcConfig, ts)
 		if err != nil {
 			logger.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
 
