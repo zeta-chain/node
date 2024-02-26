@@ -305,9 +305,8 @@ func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ER
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
-		logMsg := fmt.Sprintf("Restricted address detected in intx %s", event.Raw.TxHash)
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20", logMsg)
-		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20")
 		return nil
 	}
 
@@ -349,9 +348,8 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	// compliance check
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
-		logMsg := fmt.Sprintf("Restricted address detected in intx %s", event.Raw.TxHash)
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender, destAddr, "Zeta", logMsg)
-		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender, destAddr, "Zeta", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
 		return nil
 	}
 
@@ -398,9 +396,8 @@ func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethtypes.Transacti
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
-		logMsg := fmt.Sprintf("Restricted address detected in intx %s", tx.Hash())
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, sender.Hex(), sender.Hex(), "Gas", logMsg)
-		clientcommon.PrintComplianceLog(ob.logger.Compliance, sender.Hex(), sender.Hex(), "Gas", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+			false, ob.chain.ChainId, tx.Hash().Hex(), sender.Hex(), sender.Hex(), "Gas")
 		return nil
 	}
 

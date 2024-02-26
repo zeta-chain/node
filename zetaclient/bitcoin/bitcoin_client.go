@@ -32,7 +32,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -57,8 +57,6 @@ type BTCLog struct {
 // BTCChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BTCChainClient struct {
-	*metricsPkg.ChainMetrics
-
 	chain            common.Chain
 	netParams        *chaincfg.Params
 	rpcClient        interfaces.BTCRPCClient
@@ -79,7 +77,7 @@ type BTCChainClient struct {
 	db     *gorm.DB
 	stop   chan struct{}
 	logger BTCLog
-	ts     *metricsPkg.TelemetryServer
+	ts     *metrics.TelemetryServer
 
 	BlockCache *lru.Cache
 }
@@ -139,14 +137,12 @@ func NewBitcoinClient(
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	metrics *metricsPkg.Metrics,
 	loggers clientcommon.ClientLogger,
 	btcCfg config.BTCConfig,
-	ts *metricsPkg.TelemetryServer,
+	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
-		ChainMetrics: metricsPkg.NewChainMetrics(chain.ChainName.String(), metrics),
-		ts:           ts,
+		ts: ts,
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
@@ -196,11 +192,6 @@ func NewBitcoinClient(
 	ob.BlockCache, err = lru.New(btcBlocksPerDay)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create bitcoin block cache")
-		return nil, err
-	}
-
-	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
-	if err != nil {
 		return nil, err
 	}
 
@@ -717,9 +708,8 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		logMsg := fmt.Sprintf("Restricted address detected in intx %s", inTx.TxHash)
-		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, inTx.FromAddress, receiver, "BTC", logMsg)
-		clientcommon.PrintComplianceLog(ob.logger.Compliance, inTx.FromAddress, receiver, "BTC", logMsg)
+		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
 	return false

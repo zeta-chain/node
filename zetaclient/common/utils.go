@@ -26,8 +26,27 @@ func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
 	return config.ContainRestrictedAddress(sender, receiver)
 }
 
-// PrintComplianceLog prints compliance log with fields [sender, receiver, token]
-func PrintComplianceLog(logger zerolog.Logger, sender, receiver, token, msg string) {
-	logWithFields := logger.With().Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
-	logWithFields.Warn().Msg(msg)
+// PrintComplianceLog prints compliance log with fields [chain, cctx/intx, chain, sender, receiver, token]
+func PrintComplianceLog(
+	logger1 zerolog.Logger,
+	logger2 zerolog.Logger,
+	outbound bool,
+	chainID int64,
+	identifier, sender, receiver, token string) {
+	var logMsg string
+	var logWithFields1 zerolog.Logger
+	var logWithFields2 zerolog.Logger
+	if outbound {
+		// we print cctx for outbound tx
+		logMsg = "Restricted address detected in cctx"
+		logWithFields1 = logger1.With().Int64("chain", chainID).Str("cctx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+		logWithFields2 = logger2.With().Int64("chain", chainID).Str("cctx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+	} else {
+		// we print intx for inbound tx
+		logMsg = "Restricted address detected in intx"
+		logWithFields1 = logger1.With().Int64("chain", chainID).Str("intx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+		logWithFields2 = logger2.With().Int64("chain", chainID).Str("intx", identifier).Str("sender", sender).Str("receiver", receiver).Str("token", token).Logger()
+	}
+	logWithFields1.Warn().Msg(logMsg)
+	logWithFields2.Warn().Msg(logMsg)
 }
