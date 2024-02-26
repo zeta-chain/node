@@ -39,7 +39,7 @@ func WithdrawBitcoin(r *runner.E2ERunner) {
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 1 {
-		panic(fmt.Errorf("withdraw receipt status is successfull for an invalid BTC address"))
+		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
 	}
 
 	// withdraw 0.1 BTC from ZRC20 to BTC address

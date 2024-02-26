@@ -135,7 +135,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	}
 	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, foreignCoin.ForeignChainId)
 	if receiverChain == nil {
-		return errorsmod.Wrap(observertypes.ErrSupportedChains, fmt.Sprintf("chain with chainID %d not supported", foreignCoin.ForeignChainId))
+		return errorsmod.Wrapf(observertypes.ErrSupportedChains, "chain with chainID %d not supported", foreignCoin.ForeignChainId)
 	}
 	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
 	if err != nil {
