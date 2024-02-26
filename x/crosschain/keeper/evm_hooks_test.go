@@ -23,6 +23,64 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
+	admin := sample.AccAddress()
+	setAdminPolicies(ctx, zk, admin)
+
+	assetAddress := sample.EthAddress().String()
+	gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chain.ChainId, "ethereum", "ETH")
+	zrc20Addr := deployZRC20(
+		t,
+		ctx,
+		zk.FungibleKeeper,
+		sdkk.EvmKeeper,
+		chain.ChainId,
+		"ethereum",
+		assetAddress,
+		"ETH",
+	)
+	fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
+	_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
+		sdk.UnwrapSDKContext(ctx),
+		fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), sdkmath.Uint{}),
+	)
+	require.NoError(t, err)
+	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+		ChainId:     chain.ChainId,
+		MedianIndex: 0,
+		Prices:      []uint64{gasPrice},
+	})
+	setupZRC20Pool(
+		t,
+		ctx,
+		zk.FungibleKeeper,
+		sdkk.BankKeeper,
+		zrc20Addr,
+	)
+}
+func SetupStateForProcessLogs(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
+
+	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+	tss := sample.Tss()
+	zk.ObserverKeeper.SetTSS(ctx, tss)
+	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
+		ChainId: chain.ChainId,
+		Prices:  []uint64{100},
+	})
+
+	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+		Index:   chain.ChainName.String(),
+		ChainId: chain.ChainId,
+		Nonce:   0,
+	})
+	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+		NonceLow:  0,
+		NonceHigh: 0,
+		ChainId:   chain.ChainId,
+		Tss:       tss.TssPubkey,
+	})
+}
+
 func TestParseZRC20WithdrawalEvent(t *testing.T) {
 	t.Run("unable to parse an event with an invalid address in event log", func(t *testing.T) {
 		for i, log := range sample.GetInvalidZRC20WithdrawToExternal(t).Logs {
@@ -702,63 +760,5 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.ErrorContains(t, err, "ProcessZRC20WithdrawalEvent: failed to convert chainID")
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
-	})
-}
-
-func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
-	admin := sample.AccAddress()
-	setAdminPolicies(ctx, zk, admin)
-
-	assetAddress := sample.EthAddress().String()
-	gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chain.ChainId, "ethereum", "ETH")
-	zrc20Addr := deployZRC20(
-		t,
-		ctx,
-		zk.FungibleKeeper,
-		sdkk.EvmKeeper,
-		chain.ChainId,
-		"ethereum",
-		assetAddress,
-		"ETH",
-	)
-	fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
-	_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
-		sdk.UnwrapSDKContext(ctx),
-		fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(withdrawFee), sdkmath.Uint{}),
-	)
-	require.NoError(t, err)
-	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
-		ChainId:     chain.ChainId,
-		MedianIndex: 0,
-		Prices:      []uint64{gasPrice},
-	})
-	setupZRC20Pool(
-		t,
-		ctx,
-		zk.FungibleKeeper,
-		sdkk.BankKeeper,
-		zrc20Addr,
-	)
-}
-func SetupStateForProcessLogs(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
-
-	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
-	tss := sample.Tss()
-	zk.ObserverKeeper.SetTSS(ctx, tss)
-	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
-		ChainId: chain.ChainId,
-		Prices:  []uint64{100},
-	})
-
-	zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-		Index:   chain.ChainName.String(),
-		ChainId: chain.ChainId,
-		Nonce:   0,
-	})
-	zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
-		NonceLow:  0,
-		NonceHigh: 0,
-		ChainId:   chain.ChainId,
-		Tss:       tss.TssPubkey,
 	})
 }
