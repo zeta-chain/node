@@ -9,6 +9,7 @@ import (
 	"sync"
 	"testing"
 
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
@@ -21,7 +22,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -75,7 +75,7 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(config.BTCConfig{}, &tss, zerolog.Logger{}, &metrics.TelemetryServer{})
+	s.btcSigner, err = NewBTCSigner(config.BTCConfig{}, &tss, clientcommon.DefaultLoggers(), &metrics.TelemetryServer{})
 	c.Assert(err, IsNil)
 }
 
