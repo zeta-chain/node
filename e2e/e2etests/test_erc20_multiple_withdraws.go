@@ -10,7 +10,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(r *runner.E2ERunner) {
+func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	// deploy withdrawer
 	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZevmAuth, r.ZevmClient)
 	if err != nil {

@@ -15,7 +15,7 @@ import (
 )
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
-func TestStressEtherWithdraw(r *runner.E2ERunner) {
+func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	// number of withdraws to perform
 	numWithdraws := 100
 

@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestZetaDeposit(r *runner.E2ERunner) {
+func TestZetaDeposit(r *runner.E2ERunner, args []string) {
 	// Deposit 1 Zeta
 	hash := r.DepositZetaWithAmount(big.NewInt(1e18))
 

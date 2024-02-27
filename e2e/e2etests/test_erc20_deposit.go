@@ -7,7 +7,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestERC20Deposit(r *runner.E2ERunner) {
+func TestERC20Deposit(r *runner.E2ERunner, args []string) {
 	hash := r.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
 
 	// wait for the cctx to be mined

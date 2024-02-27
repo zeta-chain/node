@@ -13,7 +13,7 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestZetaWithdraw(r *runner.E2ERunner) {
+func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
 
 	r.ZevmAuth.Value = amount
@@ -90,7 +90,7 @@ func TestZetaWithdraw(r *runner.E2ERunner) {
 	}
 }
 
-func TestZetaWithdrawBTCRevert(r *runner.E2ERunner) {
+func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 	r.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
 	tx, err := r.WZeta.Deposit(r.ZevmAuth)
 	if err != nil {

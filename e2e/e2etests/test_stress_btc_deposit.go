@@ -12,7 +12,7 @@ import (
 )
 
 // TestStressBTCDeposit tests the stressing deposit of BTC
-func TestStressBTCDeposit(r *runner.E2ERunner) {
+func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
 	// number of deposits to perform
 	numDeposits := 100
 

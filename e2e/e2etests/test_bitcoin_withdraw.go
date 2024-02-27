@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestBitcoinWithdraw(r *runner.E2ERunner) {
+func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
 	WithdrawBitcoin(r)

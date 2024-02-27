@@ -9,7 +9,7 @@ import (
 )
 
 // TestEtherWithdraw tests the withdraw of ether
-func TestEtherWithdraw(r *runner.E2ERunner) {
+func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	// approve
 	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {

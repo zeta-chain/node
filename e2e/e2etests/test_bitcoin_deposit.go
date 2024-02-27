@@ -8,7 +8,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestBitcoinDeposit(r *runner.E2ERunner) {
+func TestBitcoinDeposit(r *runner.E2ERunner, args []string) {
 
 	r.SetBtcAddress(r.Name, false)
 

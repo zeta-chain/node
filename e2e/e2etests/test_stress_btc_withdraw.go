@@ -14,7 +14,7 @@ import (
 )
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc
-func TestStressBTCWithdraw(r *runner.E2ERunner) {
+func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	// number of withdraws to perform
 	numWithdraws := 100
 

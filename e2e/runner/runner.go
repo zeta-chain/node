@@ -161,7 +161,7 @@ func NewE2ERunner(
 
 // E2ETestFunc is a function representing a E2E test
 // It takes a E2ERunner as an argument
-type E2ETestFunc func(*E2ERunner)
+type E2ETestFunc func(*E2ERunner, []string)
 
 // E2ETest represents a E2E test with a name
 type E2ETest struct {
@@ -264,7 +264,7 @@ func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting boo
 	runner.Logger.Print("⏳running - %s", e2eTestWithName.Description)
 
 	// run e2e test
-	e2eTestWithName.E2ETest(runner)
+	e2eTestWithName.E2ETest(runner, []string{})
 
 	//check supplies
 	if checkAccounting {

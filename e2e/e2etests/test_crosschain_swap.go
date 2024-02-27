@@ -12,7 +12,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestCrosschainSwap(r *runner.E2ERunner) {
+func TestCrosschainSwap(r *runner.E2ERunner, args []string) {
 	r.ZevmAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized
