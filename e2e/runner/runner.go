@@ -165,9 +165,10 @@ type E2ETestFunc func(*E2ERunner, []string)
 
 // E2ETest represents a E2E test with a name
 type E2ETest struct {
-	Name        string
-	Description string
-	E2ETest     E2ETestFunc
+	Name                 string
+	Description          string
+	ArgumentsDescription string
+	E2ETest              E2ETestFunc
 }
 
 // RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
