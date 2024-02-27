@@ -15,6 +15,10 @@
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
 
+### Chores
+
+* [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
 ## Version: v13.0.0
 
 * `zetaclientd start` : 2 inputs required from stdin
