@@ -67,7 +67,6 @@ func Load(path string) (*Config, error) {
 	// fields sanitization
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
-	cfg.CurrentTssPubkey = ""
 	cfg.ZetaCoreHome = path
 
 	// load compliance config

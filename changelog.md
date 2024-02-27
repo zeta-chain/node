@@ -6,6 +6,7 @@
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 
 ### Features
 
