@@ -7,24 +7,25 @@ import (
 // TODO : Add smoke test for abort refund
 // https://github.com/zeta-chain/node/issues/1745
 const (
-	TestContextUpgradeName              = "context_upgrade"
-	TestDepositAndCallRefundName        = "deposit_and_call_refund"
-	TestMultipleERC20DepositName        = "erc20_multiple_deposit"
-	TestMultipleWithdrawsName           = "erc20_multiple_withdraw"
-	TestZetaWithdrawName                = "zeta_withdraw"
-	TestZetaWithdrawBTCRevertName       = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
-	TestMessagePassingName              = "message_passing"
-	TestZRC20SwapName                   = "zrc20_swap"
-	TestBitcoinWithdrawName             = "bitcoin_withdraw"
-	TestCrosschainSwapName              = "crosschain_swap"
-	TestMessagePassingRevertFailName    = "message_passing_revert_fail"
-	TestMessagePassingRevertSuccessName = "message_passing_revert_success"
-	TestPauseZRC20Name                  = "pause_zrc20"
-	TestERC20DepositAndCallRefundName   = "erc20_deposit_and_call_refund"
-	TestUpdateBytecodeName              = "update_bytecode"
-	TestEtherDepositAndCallName         = "eth_deposit_and_call"
-	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
-	TestMyTestName                      = "my_test"
+	TestContextUpgradeName                = "context_upgrade"
+	TestDepositAndCallRefundName          = "deposit_and_call_refund"
+	TestMultipleERC20DepositName          = "erc20_multiple_deposit"
+	TestMultipleWithdrawsName             = "erc20_multiple_withdraw"
+	TestZetaWithdrawName                  = "zeta_withdraw"
+	TestZetaWithdrawBTCRevertName         = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
+	TestMessagePassingName                = "message_passing"
+	TestZRC20SwapName                     = "zrc20_swap"
+	TestBitcoinWithdrawName               = "bitcoin_withdraw"
+	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
+	TestCrosschainSwapName                = "crosschain_swap"
+	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
+	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
+	TestPauseZRC20Name                    = "pause_zrc20"
+	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
+	TestUpdateBytecodeName                = "update_bytecode"
+	TestEtherDepositAndCallName           = "eth_deposit_and_call"
+	TestDepositEtherLiquidityCapName      = "deposit_eth_liquidity_cap"
+	TestMyTestName                        = "my_test"
 
 	TestERC20WithdrawName  = "erc20_withdraw"
 	TestERC20DepositName   = "erc20_deposit"
@@ -97,6 +98,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawName,
 		"withdraw BTC from ZEVM",
 		TestBitcoinWithdraw,
+	},
+	{
+		TestBitcoinWithdrawInvalidAddressName,
+		"withdraw BTC from ZEVM to an unsupported btc address",
+		TestBitcoinWithdrawToInvalidAddress,
 	},
 	{
 		TestCrosschainSwapName,
