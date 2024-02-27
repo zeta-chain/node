@@ -166,14 +166,15 @@ type E2ETestFunc func(*E2ERunner, []string)
 // E2ETest represents a E2E test with a name
 type E2ETest struct {
 	Name                 string
+	Args                 []string // TODO: should args be here, probably there is a cleaner way
 	Description          string
 	ArgumentsDescription string
 	E2ETest              E2ETestFunc
 }
 
 // RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
-func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...string) error {
-	for _, e2eTestName := range e2eTestNames {
+func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestsToRun ...E2ETest) error {
+	for _, e2eTestName := range e2eTestsToRun {
 		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
 		if !ok {
 			return fmt.Errorf("e2e test %s not found", e2eTestName)
@@ -188,19 +189,18 @@ func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames .
 
 // RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
-func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestNames ...string) (TestReports, error) {
+func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestsToRun []E2ETest) (TestReports, error) {
 	// get all tests so we can return an error if a test is not found
-	tests := make([]E2ETest, 0, len(e2eTestNames))
-	for _, e2eTestName := range e2eTestNames {
-		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
+	tests := make([]E2ETest, 0, len(e2eTestsToRun))
+	for _, e2eTestWithArgs := range e2eTestsToRun {
+		_, ok := findE2ETest(e2eTestWithArgs, e2eTests)
 		if !ok {
-			return nil, fmt.Errorf("e2e test %s not found", e2eTestName)
+			return nil, fmt.Errorf("e2e test %s not found", e2eTestWithArgs.Name)
 		}
-		tests = append(tests, e2eTest)
 	}
 
 	// go through all tests
-	reports := make(TestReports, 0, len(e2eTestNames))
+	reports := make(TestReports, 0, len(e2eTestsToRun))
 	for _, test := range tests {
 		// get info before test
 		balancesBefore, err := runner.GetAccountBalances(true)
@@ -238,18 +238,8 @@ func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eT
 	return reports, nil
 }
 
-// RunE2ETests runs a list of e2e tests
-func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
-	for _, e2eTest := range e2eTests {
-		if err := runner.RunE2ETest(e2eTest, true); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // RunE2ETest runs a e2e test
-func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (err error) {
+func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -257,15 +247,16 @@ func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting boo
 			// print stack trace
 			stack := make([]byte, 4096)
 			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTestWithName.Name, r, stack[:n])
+			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTest.Name, r, stack[:n])
 		}
 	}()
 
 	startTime := time.Now()
-	runner.Logger.Print("⏳running - %s", e2eTestWithName.Description)
+	runner.Logger.Print("⏳running - %s", e2eTest.Description)
 
 	// run e2e test
-	e2eTestWithName.E2ETest(runner, []string{})
+	// TODO: E2ETest probably should not have Args directly, revisit
+	e2eTest.E2ETest(runner, e2eTest.Args)
 
 	//check supplies
 	if checkAccounting {
@@ -274,15 +265,16 @@ func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting boo
 		}
 	}
 
-	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTestWithName.Description)
+	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
 
 	return err
 }
 
 // findE2ETest finds a e2e test by name
-func findE2ETest(name string, e2eTests []E2ETest) (E2ETest, bool) {
+func findE2ETest(e2eTest E2ETest, e2eTests []E2ETest) (E2ETest, bool) {
 	for _, test := range e2eTests {
-		if test.Name == name {
+		if test.Name == e2eTest.Name {
+			test.Args = e2eTest.Args
 			return test, true
 		}
 	}

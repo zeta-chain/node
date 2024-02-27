@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -23,12 +24,21 @@ const FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady
 // NewRunCmd returns the run command
 // which runs the E2E from a config file describing the tests, networks, and accounts
 func NewRunCmd() *cobra.Command {
+	var configFile string
+
 	cmd := &cobra.Command{
-		Use:   "run [config-file]",
-		Short: "Run E2E tests from a config file",
-		RunE:  runE2ETest,
-		Args:  cobra.ExactArgs(1),
+		Use:   "run [testname1]:[arg1],[arg2] [testname2]:[arg1],[arg2]...",
+		Short: "Run one or more E2E tests with optional arguments",
+		Long: `Run one or more E2E tests specified by their names and optional arguments.
+For example: zetae2e run deposit:1000 withdraw: --config confuing.yml`,
+		RunE: runE2ETest,
+		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
 	}
+
+	cmd.Flags().StringVarP(&configFile, "config", "c", "", "path to the configuration file")
+	cmd.MarkFlagRequired("config")
+
+	// Retain the verbose flag
 	cmd.Flags().Bool(
 		flagVerbose,
 		false,
@@ -40,7 +50,11 @@ func NewRunCmd() *cobra.Command {
 
 func runE2ETest(cmd *cobra.Command, args []string) error {
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	configPath, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return err
+	}
+	conf, err := config.ReadConfig(configPath)
 	if err != nil {
 		return err
 	}
@@ -65,6 +79,18 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	if !ethcommon.IsHexAddress(evmAddr) {
 		cancel()
 		return errors.New("invalid EVM address")
+	}
+
+	// parse test names and arguments
+	testList := []runner.E2ETest{}
+	for _, arg := range args {
+		parts := strings.SplitN(arg, ":", 2)
+		testName := parts[0]
+		var testArgs []string
+		if len(parts) > 1 && parts[1] != "" {
+			testArgs = strings.Split(parts[1], ",")
+		}
+		testList = append(testList, runner.E2ETest{Name: testName, Args: testArgs})
 	}
 
 	// initialize deployer runner with config
@@ -105,7 +131,7 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	//run tests
 	reports, err := testRunner.RunE2ETestsFromNamesIntoReport(
 		e2etests.AllE2ETests,
-		conf.TestList...,
+		testList,
 	)
 	if err != nil {
 		cancel()
