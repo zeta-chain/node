@@ -5,6 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
+import type { Policies } from "./policies_pb.js";
 
 /**
  * GenesisState defines the authority module's genesis state.
@@ -12,6 +13,11 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  * @generated from message zetachain.zetacore.authority.GenesisState
  */
 export declare class GenesisState extends Message<GenesisState> {
+  /**
+   * @generated from field: zetachain.zetacore.authority.Policies policies = 1;
+   */
+  policies?: Policies;
+
   constructor(data?: PartialMessage<GenesisState>);
 
   static readonly runtime: typeof proto3;
