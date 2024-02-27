@@ -5,10 +5,19 @@
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
+* [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+
+### Features
+
+* [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
 
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+
+### Chores
+
+* [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ## Version: v13.0.0
 

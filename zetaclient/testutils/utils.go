@@ -6,10 +6,15 @@ import (
 	"path/filepath"
 
 	"github.com/btcsuite/btcd/btcjson"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const (
-	TestDataPath = "testdata"
+	TestDataPathEVM          = "testdata/evm"
+	TestDataPathBTC          = "testdata/btc"
+	TestDataPathCctx         = "testdata/cctx"
+	RestrictedEVMAddressTest = "0x8a81Ba8eCF2c418CAe624be726F505332DF119C6"
+	RestrictedBtcAddressTest = "bcrt1qzp4gt6fc7zkds09kfzaf9ln9c5rvrzxmy6qmpp"
 )
 
 // SaveObjectToJSONFile saves an object to a file in JSON format
@@ -49,4 +54,10 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 		}
 	}
 	return SaveObjectToJSONFile(blockVb, filename)
+}
+
+func ComplianceConfigTest() *config.ComplianceConfig {
+	return &config.ComplianceConfig{
+		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
+	}
 }

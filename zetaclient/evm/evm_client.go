@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
 	"github.com/ethereum/go-ethereum"
@@ -36,8 +37,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -58,7 +59,7 @@ type Log struct {
 	ExternalChainWatcher zerolog.Logger // Observes external Chains for incoming trasnactions
 	WatchGasPrice        zerolog.Logger // Observes external Chains for Gas prices and posts to core
 	ObserveOutTx         zerolog.Logger // Observes external Chains for Outgoing transactions
-
+	Compliance           zerolog.Logger // Compliance logger
 }
 
 const (
@@ -73,7 +74,6 @@ const (
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type ChainClient struct {
-	*metricsPkg.ChainMetrics
 	chain                      common.Chain
 	evmClient                  interfaces.EVMRPCClient
 	zetaClient                 interfaces.ZetaCoreBridger
@@ -92,40 +92,35 @@ type ChainClient struct {
 	MaxNonce                   int64
 	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
-	fileLogger                 *zerolog.Logger // for critical info
 	logger                     Log
 	cfg                        *config.Config
 	params                     observertypes.ChainParams
-	ts                         *metricsPkg.TelemetryServer
-
-	blockCache   *lru.Cache
-	blockCacheV3 *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
-	headerCache  *lru.Cache
+	ts                         *metrics.TelemetryServer
+	blockCache                 *lru.Cache
+	blockCacheV3               *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
+	headerCache                *lru.Cache
 }
-
-var _ interfaces.ChainClient = (*ChainClient)(nil)
 
 // NewEVMChainClient returns a new configuration based on supplied target chain
 func NewEVMChainClient(
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	metrics *metricsPkg.Metrics,
-	logger zerolog.Logger,
+	loggers clientcommon.ClientLogger,
 	cfg *config.Config,
 	evmCfg config.EVMConfig,
-	ts *metricsPkg.TelemetryServer,
+	ts *metrics.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
-		ChainMetrics: metricsPkg.NewChainMetrics(evmCfg.Chain.ChainName.String(), metrics),
-		ts:           ts,
+		ts: ts,
 	}
-	chainLogger := logger.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
+	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Log{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),
 		WatchGasPrice:        chainLogger.With().Str("module", "WatchGasPrice").Logger(),
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
+		Compliance:           loggers.Compliance,
 	}
 	ob.cfg = cfg
 	ob.params = evmCfg.ChainParams
@@ -139,13 +134,6 @@ func NewEVMChainClient(
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
 	ob.OutTxChan = make(chan OutTx, 100)
-
-	logFile, err := os.OpenFile(ob.chain.ChainName.String()+"_debug.log", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	if err != nil {
-		log.Error().Err(err).Msgf("there was an error creating a logFile chain %s", ob.chain.ChainName.String())
-	}
-	fileLogger := zerolog.New(logFile).With().Logger()
-	ob.fileLogger = &fileLogger
 
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
 	client, err := ethclient.Dial(evmCfg.Endpoint)
@@ -170,20 +158,6 @@ func NewEVMChainClient(
 	ob.headerCache, err = lru.New(1000)
 	if err != nil {
 		ob.logger.ChainLogger.Error().Err(err).Msg("failed to create header cache")
-		return nil, err
-	}
-
-	// create metric counters
-	err = ob.RegisterPromCounter("rpc_getFilterLogs_count", "Number of getLogs")
-	if err != nil {
-		return nil, err
-	}
-	err = ob.RegisterPromCounter("rpc_getBlockByNumber_count", "Number of getBlockByNumber")
-	if err != nil {
-		return nil, err
-	}
-	err = ob.RegisterPromGauge(metricsPkg.PendingTxs, "Number of pending transactions")
-	if err != nil {
 		return nil, err
 	}
 
@@ -350,7 +324,12 @@ func (ob *ChainClient) Stop() {
 
 // returns: isIncluded, isConfirmed, Error
 // If isConfirmed, it also post to ZetaCore
-func (ob *ChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error) {
+func (ob *ChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger zerolog.Logger) (bool, bool, error) {
+	sendHash := cctx.Index
+	cointype := cctx.GetCurrentOutTxParam().CoinType
+	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
+
+	// skip if outtx is not confirmed
 	params := ob.GetChainParams()
 	receipt, transaction := ob.GetTxNReceipt(nonce)
 	if receipt == nil || transaction == nil { // not confirmed yet
@@ -359,6 +338,35 @@ func (ob *ChainClient) IsSendOutTxProcessed(sendHash string, nonce uint64, coint
 
 	sendID := fmt.Sprintf("%s-%d", ob.chain.String(), nonce)
 	logger = logger.With().Str("sendID", sendID).Logger()
+
+	// compliance check, special handling the cancelled cctx
+	if clientcommon.IsCctxRestricted(cctx) {
+		recvStatus := common.ReceiveStatus_Failed
+		if receipt.Status == 1 {
+			recvStatus = common.ReceiveStatus_Success
+		}
+		zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
+			sendHash,
+			receipt.TxHash.Hex(),
+			receipt.BlockNumber.Uint64(),
+			receipt.GasUsed,
+			transaction.GasPrice(),
+			transaction.Gas(),
+			// use cctx's amount to bypass the amount check in zetacore
+			cctx.GetCurrentOutTxParam().Amount.BigInt(),
+			recvStatus,
+			ob.chain,
+			nonce,
+			common.CoinType_Cmd,
+		)
+		if err != nil {
+			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
+		} else if zetaTxHash != "" {
+			logger.Info().Msgf("Zeta tx hash: %s cctx %s nonce %d ballot %s", zetaTxHash, sendHash, nonce, ballot)
+		}
+		return true, true, nil
+	}
+
 	if cointype == common.CoinType_Cmd {
 		recvStatus := common.ReceiveStatus_Failed
 		if receipt.Status == 1 {
@@ -941,11 +949,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	ob.SetLastBlockHeight(blockNumber)
 
 	// increment prom counter
-	counter, err := ob.GetPromCounter("rpc_getBlockByNumber_count")
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("GetPromCounter:")
-	}
-	counter.Inc()
+	metrics.GetBlockByNumberPerChain.WithLabelValues(ob.chain.ChainName.String()).Inc()
 
 	// skip if current height is too low
 	if blockNumber < ob.GetChainParams().ConfirmationCount {
@@ -1037,12 +1041,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 	})
 
 	// increment prom counter
-	cnt, err := ob.GetPromCounter("rpc_getFilterLogs_count")
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("GetPromCounter:")
-	} else {
-		cnt.Inc()
-	}
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.chain.ChainName.String()).Inc()
 
 	// post to zetabridge
 	beingScanned := uint64(0)
@@ -1114,12 +1113,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 
 	})
 
 	// increment prom counter
-	cnt, err := ob.GetPromCounter("rpc_getFilterLogs_count")
-	if err != nil {
-		ob.logger.ExternalChainWatcher.Error().Err(err).Msg("GetPromCounter:")
-	} else {
-		cnt.Inc()
-	}
+	metrics.GetFilterLogsPerChain.WithLabelValues(ob.chain.ChainName.String()).Inc()
 
 	// post to zetabridge
 	guard := make(map[string]bool) // guard against multiple events in the same tx
