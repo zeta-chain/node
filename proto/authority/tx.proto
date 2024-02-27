@@ -1,6 +1,8 @@
 syntax = "proto3";
 package zetachain.zetacore.authority;
 
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 
 // Msg defines the Msg service.
