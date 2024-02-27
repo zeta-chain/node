@@ -169,9 +169,10 @@ func NewBitcoinClient(
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
 	_, chainParams, found := appcontext.ZetaCoreContext().GetBTCChainParams()
-	if found {
-		ob.params = *chainParams
+	if !found {
+		return nil, fmt.Errorf("btc chains params not initialized")
 	}
+	ob.params = *chainParams
 	// initialize the Client
 	btcCfg := appcontext.Config().BitcoinConfig
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)

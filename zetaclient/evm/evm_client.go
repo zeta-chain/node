@@ -127,10 +127,11 @@ func NewEVMChainClient(
 		Compliance:           loggers.Compliance,
 	}
 	ob.coreContext = appContext.ZetaCoreContext()
-	chainParams, found := appContext.ZetaCoreContext().GetEVMChainParams(evmCfg.Chain.ChainId)
-	if found {
-		ob.chainParams = *chainParams
+	chainParams, found := ob.coreContext.GetEVMChainParams(evmCfg.Chain.ChainId)
+	if !found {
+		return nil, fmt.Errorf("evm chains params not initialized for chain %d", evmCfg.Chain.ChainId)
 	}
+	ob.chainParams = *chainParams
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
