@@ -14,6 +14,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
@@ -93,21 +96,22 @@ type ChainClient struct {
 	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
 	logger                     Log
-	cfg                        *config.Config
-	params                     observertypes.ChainParams
+	coreContext                *corecontext.ZetaCoreContext
+	chainParams                observertypes.ChainParams
 	ts                         *metrics.TelemetryServer
-	blockCache                 *lru.Cache
-	blockCacheV3               *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
-	headerCache                *lru.Cache
+
+	blockCache   *lru.Cache
+	blockCacheV3 *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
+	headerCache  *lru.Cache
 }
 
 // NewEVMChainClient returns a new configuration based on supplied target chain
 func NewEVMChainClient(
+	appContext *appcontext.AppContext,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
-	cfg *config.Config,
 	evmCfg config.EVMConfig,
 	ts *metrics.TelemetryServer,
 ) (*ChainClient, error) {
@@ -122,8 +126,12 @@ func NewEVMChainClient(
 		ObserveOutTx:         chainLogger.With().Str("module", "ObserveOutTx").Logger(),
 		Compliance:           loggers.Compliance,
 	}
-	ob.cfg = cfg
-	ob.params = evmCfg.ChainParams
+	ob.coreContext = appContext.ZetaCoreContext()
+	chainParams, found := ob.coreContext.GetEVMChainParams(evmCfg.Chain.ChainId)
+	if !found {
+		return nil, fmt.Errorf("evm chains params not initialized for chain %d", evmCfg.Chain.ChainId)
+	}
+	ob.chainParams = *chainParams
 	ob.stop = make(chan struct{})
 	ob.chain = evmCfg.Chain
 	ob.Mu = &sync.Mutex{}
@@ -198,28 +206,16 @@ func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
 	ob.zetaClient = bridge
 }
 
-func (ob *ChainClient) WithParams(params observertypes.ChainParams) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	ob.params = params
-}
-
-func (ob *ChainClient) SetConfig(cfg *config.Config) {
-	ob.Mu.Lock()
-	defer ob.Mu.Unlock()
-	ob.cfg = cfg
-}
-
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	ob.params = params
+	ob.chainParams = params
 }
 
 func (ob *ChainClient) GetChainParams() observertypes.ChainParams {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
-	return ob.params
+	return ob.chainParams
 }
 
 func (ob *ChainClient) GetConnectorContract() (ethcommon.Address, *zetaconnector.ZetaConnectorNonEth, error) {

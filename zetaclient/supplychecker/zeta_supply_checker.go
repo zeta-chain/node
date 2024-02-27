@@ -3,6 +3,7 @@ package supplychecker
 import (
 	"fmt"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
@@ -16,12 +17,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
 type ZetaSupplyChecker struct {
-	cfg              *config.Config
+	coreContext      *corecontext.ZetaCoreContext
 	evmClient        map[int64]*ethclient.Client
 	zetaClient       *zetabridge.ZetaCoreBridge
 	ticker           *clienttypes.DynamicTicker
@@ -32,7 +33,7 @@ type ZetaSupplyChecker struct {
 	genesisSupply    sdkmath.Int
 }
 
-func NewZetaSupplyChecker(cfg *config.Config, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
+func NewZetaSupplyChecker(appContext *appcontext.AppContext, zetaClient *zetabridge.ZetaCoreBridge, logger zerolog.Logger) (ZetaSupplyChecker, error) {
 	dynamicTicker, err := clienttypes.NewDynamicTicker("ZETASupplyTicker", 15)
 	if err != nil {
 		return ZetaSupplyChecker{}, err
@@ -45,10 +46,10 @@ func NewZetaSupplyChecker(cfg *config.Config, zetaClient *zetabridge.ZetaCoreBri
 		logger: logger.With().
 			Str("module", "ZetaSupplyChecker").
 			Logger(),
-		cfg:        cfg,
-		zetaClient: zetaClient,
+		coreContext: appContext.ZetaCoreContext(),
+		zetaClient:  zetaClient,
 	}
-	for _, evmConfig := range cfg.GetAllEVMConfigs() {
+	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
@@ -106,11 +107,12 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 
 	externalChainTotalSupply := sdkmath.ZeroInt()
 	for _, chain := range zs.externalEvmChain {
-		externalEvmChainConfig, ok := zs.cfg.GetEVMConfig(chain.ChainId)
+		externalEvmChainParams, ok := zs.coreContext.GetEVMChainParams(chain.ChainId)
 		if !ok {
-			return fmt.Errorf("externalEvmChainConfig not found for chain id %d", chain.ChainId)
+			return fmt.Errorf("externalEvmChainParams not found for chain id %d", chain.ChainId)
 		}
-		zetaTokenAddressString := externalEvmChainConfig.ZetaTokenContractAddress
+
+		zetaTokenAddressString := externalEvmChainParams.ZetaTokenContractAddress
 		zetaTokenAddress := ethcommon.HexToAddress(zetaTokenAddressString)
 		zetatokenNonEth, err := evm.FetchZetaZetaNonEthTokenContract(zetaTokenAddress, zs.evmClient[chain.ChainId])
 		if err != nil {
@@ -128,11 +130,11 @@ func (zs *ZetaSupplyChecker) CheckZetaTokenSupply() error {
 		externalChainTotalSupply = externalChainTotalSupply.Add(totalSupplyInt)
 	}
 
-	ethConfig, ok := zs.cfg.GetEVMConfig(zs.ethereumChain.ChainId)
+	evmChainParams, ok := zs.coreContext.GetEVMChainParams(zs.ethereumChain.ChainId)
 	if !ok {
 		return fmt.Errorf("eth config not found for chain id %d", zs.ethereumChain.ChainId)
 	}
-	ethConnectorAddressString := ethConfig.ConnectorContractAddress
+	ethConnectorAddressString := evmChainParams.ConnectorContractAddress
 	ethConnectorAddress := ethcommon.HexToAddress(ethConnectorAddressString)
 	ethConnectorContract, err := evm.FetchConnectorContractEth(ethConnectorAddress, zs.evmClient[zs.ethereumChain.ChainId])
 	if err != nil {
