@@ -29,7 +29,6 @@ func GenerateTss(
 	priKey secp256k1.PrivKey,
 	ts *metrics.TelemetryServer,
 	tssHistoricalList []observertypes.TSS,
-	metrics *metrics.Metrics,
 	tssPassword string,
 	hotkeyPassword string) (*mc.TSS, error) {
 	keygenLogger := appContext.Logger().With().Str("module", "keygen").Logger()
@@ -50,7 +49,6 @@ func GenerateTss(
 		preParams,
 		zetaBridge,
 		tssHistoricalList,
-		metrics,
 		bitcoinChainID,
 		tssPassword,
 		hotkeyPassword,
@@ -125,7 +123,6 @@ func GenerateTss(
 					CurrentPubkey: tss.CurrentPubkey,
 					Signers:       tss.Signers,
 					CoreBridge:    nil,
-					Metrics:       nil,
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
@@ -172,12 +169,7 @@ func keygenTss(keyGen observertypes.Keygen, tss *mc.TSS, keygenLogger zerolog.Lo
 
 		// Increment Blame counter
 		for _, node := range res.Blame.BlameNodes {
-			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
-			if err != nil {
-				keygenLogger.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
-				continue
-			}
-			counter.Inc()
+			metrics.TssNodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
 		}
 
 		keygenLogger.Info().Msgf("keygen posted blame data tx hash: %s", zetaHash)

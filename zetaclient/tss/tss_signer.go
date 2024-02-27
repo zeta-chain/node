@@ -33,7 +33,7 @@ import (
 	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	zetametrics "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 const (
@@ -74,7 +74,6 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	CoreBridge    interfaces.ZetaCoreBridger
-	Metrics       *zetametrics.ChainMetrics
 
 	// TODO: support multiple Bitcoin network, not just one network
 	// https://github.com/zeta-chain/node/issues/1397
@@ -89,7 +88,6 @@ func NewTSS(
 	preParams *keygen.LocalPreParams,
 	bridge interfaces.ZetaCoreBridger,
 	tssHistoricalList []observertypes.TSS,
-	metrics *zetametrics.Metrics,
 	bitcoinChainID int64,
 	tssPassword string,
 	hotkeyPassword string,
@@ -119,12 +117,13 @@ func NewTSS(
 	if err != nil {
 		bridge.GetLogger().Error().Err(err).Msg("VerifyKeysharesForPubkeys fail")
 	}
-	err = newTss.RegisterMetrics(metrics)
+	keygenRes, err := newTss.CoreBridge.GetKeyGen()
 	if err != nil {
-		bridge.GetLogger().Err(err).Msg("tss.RegisterMetrics")
 		return nil, err
 	}
-
+	for _, key := range keygenRes.GranteePubkeys {
+		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
+	}
 	return &newTss, nil
 }
 
@@ -225,12 +224,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 
 		// Increment Blame counter
 		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
-			if err != nil {
-				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
-				continue
-			}
-			counter.Inc()
+			metrics.TssNodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
 		}
 	}
 	signature := ksRes.Signatures
@@ -300,12 +294,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 
 		// Increment Blame counter
 		for _, node := range ksRes.Blame.BlameNodes {
-			counter, err := tss.Metrics.GetPromCounter(node.Pubkey)
-			if err != nil {
-				log.Error().Err(err).Msgf("error getting counter: %s", node.Pubkey)
-				continue
-			}
-			counter.Inc()
+			metrics.TssNodeBlamePerPubKey.WithLabelValues(node.Pubkey).Inc()
 		}
 	}
 
@@ -425,21 +414,6 @@ func (tss *TSS) InsertPubKey(pk string) error {
 		return err
 	}
 	tss.Keys[pk] = TSSKey
-	return nil
-}
-
-func (tss *TSS) RegisterMetrics(metrics *zetametrics.Metrics) error {
-	tss.Metrics = zetametrics.NewChainMetrics("tss", metrics)
-	keygenRes, err := tss.CoreBridge.GetKeyGen()
-	if err != nil {
-		return err
-	}
-	for _, key := range keygenRes.GranteePubkeys {
-		err := tss.Metrics.RegisterPromCounter(key, "tss node blame counter")
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

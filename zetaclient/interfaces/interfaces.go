@@ -17,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/common"
@@ -37,11 +36,9 @@ const (
 type ChainClient interface {
 	Start()
 	Stop()
-	IsSendOutTxProcessed(sendHash string, nonce uint64, cointype common.CoinType, logger zerolog.Logger) (bool, bool, error)
+	IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, logger zerolog.Logger) (bool, bool, error)
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
-	GetPromGauge(name string) (prometheus.Gauge, error)
-	GetPromCounter(name string) (prometheus.Counter, error)
 	GetTxID(nonce uint64) string
 	ExternalChainWatcherForNewInboundTrackerSuggestions()
 }
@@ -49,7 +46,7 @@ type ChainClient interface {
 // ChainSigner is the interface to sign transactions for a chain
 type ChainSigner interface {
 	TryProcessOutTx(
-		send *crosschaintypes.CrossChainTx,
+		cctx *crosschaintypes.CrossChainTx,
 		outTxMan *outtxprocessor.Processor,
 		outTxID string,
 		evmClient ChainClient,

@@ -42,6 +42,11 @@ type BTCConfig struct {
 	RPCParams   string // "regtest", "mainnet", "testnet3"
 }
 
+type ComplianceConfig struct {
+	LogPath             string   `json:"LogPath"`
+	RestrictedAddresses []string `json:"RestrictedAddresses"`
+}
+
 // Config is the config for ZetaClient
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
@@ -70,6 +75,9 @@ type Config struct {
 
 	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
 	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
+
+	// compliance config
+	ComplianceConfig *ComplianceConfig `json:"ComplianceConfig"`
 }
 
 func NewConfig() *Config {
@@ -116,6 +124,20 @@ func (c *Config) GetBTCConfig() (BTCConfig, bool) {
 		return BTCConfig{}, false
 	}
 	return *c.BitcoinConfig, true
+}
+
+// GetRestrictedAddressBook returns a map of restricted addresses
+// Note: the restricted address book contains both ETH and BTC addresses
+func (c *Config) GetRestrictedAddressBook() map[string]bool {
+	restrictedAddresses := make(map[string]bool)
+	if c.ComplianceConfig != nil {
+		for _, address := range c.ComplianceConfig.RestrictedAddresses {
+			if address != "" {
+				restrictedAddresses[strings.ToLower(address)] = true
+			}
+		}
+	}
+	return restrictedAddresses
 }
 
 func (c *Config) GetKeyringBackend() KeyringBackend {

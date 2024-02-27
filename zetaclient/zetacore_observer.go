@@ -7,15 +7,15 @@ import (
 
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/pkg/errors"
-	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -23,9 +23,7 @@ import (
 )
 
 const (
-	MaxLookaheadNonce   = 120
-	OutboundTxSignCount = "zetaclient_Outbound_tx_sign_count"
-	HotKeyBurnRate      = "zetaclient_hotkey_burn_rate"
+	MaxLookaheadNonce = 120
 )
 
 type ZetaCoreLog struct {
@@ -38,7 +36,6 @@ type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
 	signerMap           map[common.Chain]interfaces.ChainSigner
 	clientMap           map[common.Chain]interfaces.ChainClient
-	metrics             *metrics.Metrics
 	logger              ZetaCoreLog
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
@@ -70,16 +67,7 @@ func NewCoreObserver(
 	co.signerMap = signerMap
 
 	co.clientMap = clientMap
-	co.metrics = metrics
 	co.logger.ChainLogger.Info().Msg("starting core observer")
-	err := metrics.RegisterCounter(OutboundTxSignCount, "number of Outbound tx signed")
-	if err != nil {
-		co.logger.ChainLogger.Error().Err(err).Msg("error registering counter")
-	}
-	err = metrics.RegisterGauge(HotKeyBurnRate, "Fee burn rate of the hotkey")
-	if err != nil {
-		co.logger.ChainLogger.Error().Err(err).Msg("error registering gauge")
-	}
 	balance, err := bridge.GetZetaHotKeyBalance()
 	if err != nil {
 		co.logger.ChainLogger.Error().Err(err).Msg("error getting last balance of the hot key")
@@ -89,23 +77,11 @@ func NewCoreObserver(
 	return &co
 }
 
-func (co *CoreObserver) GetPromCounter(name string) (prom.Counter, error) {
-	cnt, found := metrics.Counters[name]
-	if !found {
-		return nil, errors.New("counter not found")
-	}
-	return cnt, nil
+func (co *CoreObserver) Config() *config.Config {
+	return co.cfg
 }
 
-func (co *CoreObserver) GetPromGauge(name string) (prom.Gauge, error) {
-	gauge, found := metrics.Gauges[name]
-	if !found {
-		return nil, errors.New("gauge not found")
-	}
-	return gauge, nil
-}
-
-func (co *CoreObserver) MonitorCore(appContext *appcontext.AppContext) {
+func (co *CoreObserver) MonitorCore() {
 	myid := co.bridge.GetKeys().GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startCctxScheduler(appContext)
@@ -163,12 +139,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 					}
 
 					// Set Current Hot key burn rate
-					gauge, err := co.GetPromGauge(HotKeyBurnRate)
-					if err != nil {
-						co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: failed to get prometheus gauge: %s for observer", metrics.PendingTxs)
-						continue
-					} // Gauge only takes float values
-					gauge.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
+					metrics.HotKeyBurnRate.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// schedule keysign for pending cctxs on each chain
 					supportedChains := appContext.ZetaCoreContext().GetEnabledChains()
@@ -189,12 +160,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 							continue
 						}
 						// Set Pending transactions prometheus gauge
-						gauge, err := ob.GetPromGauge(metrics.PendingTxs)
-						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: failed to get prometheus gauge: %s for chain %d", metrics.PendingTxs, c.ChainId)
-							continue
-						}
-						gauge.Set(float64(totalPending))
+						metrics.PendingTxsPerChain.WithLabelValues(c.ChainName.String()).Set(float64(totalPending))
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
@@ -250,7 +216,7 @@ func (co *CoreObserver) scheduleCctxEVM(
 		}
 
 		// try confirming the outtx
-		included, _, err := ob.IsSendOutTxProcessed(cctx.Index, params.OutboundTxTssNonce, params.CoinType, co.logger.ZetaChainWatcher)
+		included, _, err := ob.IsSendOutTxProcessed(cctx, co.logger.ZetaChainWatcher)
 		if err != nil {
 			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxEVM: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue
@@ -330,7 +296,7 @@ func (co *CoreObserver) scheduleCctxBTC(
 			continue
 		}
 		// try confirming the outtx
-		included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx.Index, nonce, params.CoinType, co.logger.ZetaChainWatcher)
+		included, confirmed, err := btcClient.IsSendOutTxProcessed(cctx, co.logger.ZetaChainWatcher)
 		if err != nil {
 			co.logger.ZetaChainWatcher.Error().Err(err).Msgf("scheduleCctxBTC: IsSendOutTxProcessed faild for chain %d nonce %d", chainID, nonce)
 			continue

@@ -25,7 +25,7 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 type Multiaddr = core.Multiaddr
@@ -59,7 +59,12 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	log.Logger = InitLogger(cfg)
+	loggers, err := InitLogger(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("InitLogger failed")
+		return err
+	}
+
 	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
 		err := validatePeer(cfg.Peer)
@@ -69,13 +74,14 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	masterLogger := log.Logger
+	masterLogger := loggers.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
+	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
-	telemetryServer := metrics2.NewTelemetryServer()
+	telemetryServer := metrics.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {
@@ -155,7 +161,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	metrics, err := metrics2.NewMetrics()
+	metrics, err := metrics.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
 		return err
