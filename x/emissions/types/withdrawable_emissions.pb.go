@@ -70,8 +70,62 @@ func (m *WithdrawableEmissions) GetAddress() string {
 	return ""
 }
 
+type WithdrawEmission struct {
+	Address              string                                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Amount               github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"amount"`
+	WithdrawFailedReason string                                 `protobuf:"bytes,4,opt,name=withdraw_failed_reason,json=withdrawFailedReason,proto3" json:"withdraw_failed_reason,omitempty"`
+}
+
+func (m *WithdrawEmission) Reset()         { *m = WithdrawEmission{} }
+func (m *WithdrawEmission) String() string { return proto.CompactTextString(m) }
+func (*WithdrawEmission) ProtoMessage()    {}
+func (*WithdrawEmission) Descriptor() ([]byte, []int) {
+	return fileDescriptor_56e0acf72be654f9, []int{1}
+}
+func (m *WithdrawEmission) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *WithdrawEmission) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_WithdrawEmission.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *WithdrawEmission) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_WithdrawEmission.Merge(m, src)
+}
+func (m *WithdrawEmission) XXX_Size() int {
+	return m.Size()
+}
+func (m *WithdrawEmission) XXX_DiscardUnknown() {
+	xxx_messageInfo_WithdrawEmission.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_WithdrawEmission proto.InternalMessageInfo
+
+func (m *WithdrawEmission) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *WithdrawEmission) GetWithdrawFailedReason() string {
+	if m != nil {
+		return m.WithdrawFailedReason
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*WithdrawableEmissions)(nil), "zetachain.zetacore.emissions.WithdrawableEmissions")
+	proto.RegisterType((*WithdrawEmission)(nil), "zetachain.zetacore.emissions.WithdrawEmission")
 }
 
 func init() {
@@ -79,7 +133,7 @@ func init() {
 }
 
 var fileDescriptor_56e0acf72be654f9 = []byte{
-	// 233 bytes of a gzipped FileDescriptorProto
+	// 278 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x4b, 0xcd, 0xcd, 0x2c,
 	0x2e, 0xce, 0xcc, 0xcf, 0x2b, 0xd6, 0x2f, 0xcf, 0x2c, 0xc9, 0x48, 0x29, 0x4a, 0x2c, 0x4f, 0x4c,
 	0xca, 0x49, 0x8d, 0x87, 0x0b, 0xeb, 0x15, 0x14, 0xe5, 0x97, 0xe4, 0x0b, 0xc9, 0x54, 0xa5, 0x96,
@@ -90,11 +144,14 @@ var fileDescriptor_56e0acf72be654f9 = []byte{
 	0x7e, 0x69, 0x5e, 0x89, 0x04, 0x13, 0x48, 0xc2, 0x49, 0xef, 0xc4, 0x3d, 0x79, 0x86, 0x5b, 0xf7,
 	0xe4, 0xd5, 0xd2, 0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x93, 0xf3, 0x8b,
 	0x73, 0xf3, 0x8b, 0xa1, 0x94, 0x6e, 0x71, 0x4a, 0xb6, 0x7e, 0x49, 0x65, 0x41, 0x6a, 0xb1, 0x9e,
-	0x67, 0x5e, 0x49, 0x10, 0x54, 0xb7, 0x93, 0xd7, 0x89, 0x47, 0x72, 0x8c, 0x17, 0x1e, 0xc9, 0x31,
-	0x3e, 0x78, 0x24, 0xc7, 0x38, 0xe1, 0xb1, 0x1c, 0xc3, 0x85, 0xc7, 0x72, 0x0c, 0x37, 0x1e, 0xcb,
-	0x31, 0x44, 0x19, 0x20, 0x99, 0x04, 0xf2, 0x89, 0x2e, 0xd8, 0x53, 0xfa, 0x30, 0x4f, 0xe9, 0x57,
-	0xe8, 0x23, 0x42, 0x04, 0x6c, 0x6e, 0x12, 0x1b, 0xd8, 0x37, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0x99, 0xf1, 0xaf, 0x2c, 0x2b, 0x01, 0x00, 0x00,
+	0x67, 0x5e, 0x49, 0x10, 0x54, 0xb7, 0xd2, 0x2a, 0x46, 0x2e, 0x01, 0x98, 0xdd, 0x30, 0x7b, 0x69,
+	0x6f, 0xad, 0x90, 0x09, 0x97, 0x18, 0x2c, 0x14, 0xe3, 0xd3, 0x12, 0x33, 0x73, 0x52, 0x53, 0xe2,
+	0x8b, 0x52, 0x13, 0x8b, 0xf3, 0xf3, 0x24, 0x58, 0xc0, 0x16, 0x8a, 0xc0, 0x64, 0xdd, 0xc0, 0x92,
+	0x41, 0x60, 0x39, 0x27, 0xaf, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92, 0x63, 0x7c, 0xf0, 0x48,
+	0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c, 0x96, 0x63, 0x88, 0x32,
+	0x40, 0xb2, 0x1f, 0x14, 0xec, 0xba, 0xe0, 0x18, 0xd0, 0x87, 0xc5, 0x80, 0x7e, 0x85, 0x3e, 0x22,
+	0xfa, 0xc0, 0xae, 0x49, 0x62, 0x03, 0x07, 0xbd, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x53, 0x9f,
+	0x6e, 0xbe, 0xd8, 0x01, 0x00, 0x00,
 }
 
 func (m *WithdrawableEmissions) Marshal() (dAtA []byte, err error) {
@@ -117,6 +174,53 @@ func (m *WithdrawableEmissions) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.Amount.Size()
+		i -= size
+		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintWithdrawableEmissions(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintWithdrawableEmissions(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *WithdrawEmission) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *WithdrawEmission) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *WithdrawEmission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.WithdrawFailedReason) > 0 {
+		i -= len(m.WithdrawFailedReason)
+		copy(dAtA[i:], m.WithdrawFailedReason)
+		i = encodeVarintWithdrawableEmissions(dAtA, i, uint64(len(m.WithdrawFailedReason)))
+		i--
+		dAtA[i] = 0x22
+	}
 	{
 		size := m.Amount.Size()
 		i -= size
@@ -160,6 +264,25 @@ func (m *WithdrawableEmissions) Size() (n int) {
 	}
 	l = m.Amount.Size()
 	n += 1 + l + sovWithdrawableEmissions(uint64(l))
+	return n
+}
+
+func (m *WithdrawEmission) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovWithdrawableEmissions(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovWithdrawableEmissions(uint64(l))
+	l = len(m.WithdrawFailedReason)
+	if l > 0 {
+		n += 1 + l + sovWithdrawableEmissions(uint64(l))
+	}
 	return n
 }
 
@@ -263,6 +386,154 @@ func (m *WithdrawableEmissions) Unmarshal(dAtA []byte) error {
 			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipWithdrawableEmissions(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *WithdrawEmission) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowWithdrawableEmissions
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: WithdrawEmission: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: WithdrawEmission: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowWithdrawableEmissions
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowWithdrawableEmissions
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawFailedReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowWithdrawableEmissions
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthWithdrawableEmissions
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.WithdrawFailedReason = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

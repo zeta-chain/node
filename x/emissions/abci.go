@@ -146,3 +146,32 @@ func DistributeTssRewards(ctx sdk.Context, amount sdk.Int, bankKeeper types.Bank
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedTssRewardsPool, coin)
 }
+
+func EndBlocker(ctx sdk.Context, keeper keeper.Keeper) {
+	allWithdrawEmissions := keeper.GetAllWithdrawEmissions(ctx)
+	defer func() {
+		for _, withdrawEmission := range allWithdrawEmissions {
+			keeper.DeleteWithdrawEmissions(ctx, withdrawEmission.Address)
+		}
+	}()
+	for _, withdrawEmission := range allWithdrawEmissions {
+		tmpCtx, commit := ctx.CacheContext()
+		coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawEmission.Amount))
+		address, err := sdk.AccAddressFromBech32(withdrawEmission.Address)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Error while parsing withdraw emission address %s : %s", withdrawEmission.Address, err))
+			continue
+		}
+		err = keeper.RemoveObserverEmission(tmpCtx, withdrawEmission.Address, withdrawEmission.Amount)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Error while removing withdraw emission from observer %s : %s", withdrawEmission.Address, err))
+			continue
+		}
+		err = keeper.GetBankKeeper().SendCoinsFromModuleToAccount(tmpCtx, types.UndistributedObserverRewardsPool, address, coin)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("Error while sending withdraw emission to %s : %s", withdrawEmission.Address, err))
+			continue
+		}
+		commit()
+	}
+}

@@ -23,6 +23,7 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey              = "mem_emissions"
 	WithdrawableEmissionsKey = "WithdrawableEmissions-value-"
+	WithdrawEmissionsKey     = "WithdrawEmissions-value-"
 
 	SecsInMonth        = 30 * 24 * 60 * 60
 	BlockRewardsInZeta = "210000000"

@@ -46,6 +46,19 @@ func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkm
 	k.SetWithdrawableEmission(ctx, we)
 }
 
+func (k Keeper) RemoveObserverEmission(ctx sdk.Context, address string, amount sdkmath.Int) error {
+	we, found := k.GetWithdrawableEmission(ctx, address)
+	if !found {
+		we = types.WithdrawableEmissions{Address: address, Amount: sdkmath.ZeroInt()}
+	}
+	if we.Amount.LT(amount) {
+		return types.ErrNotEnoughEmissionsAvailable
+	}
+	we.Amount = we.Amount.Sub(amount)
+	k.SetWithdrawableEmission(ctx, we)
+	return nil
+}
+
 // SlashObserverEmission slashes the rewards of a given address, if the address has no rewards left, it will set the rewards to 0.
 /* This function is a basic implementation of slashing; it will be improved in the future .
 Improvements will include:

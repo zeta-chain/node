@@ -1,14 +1,12 @@
 package types
 
+import errorsmod "cosmossdk.io/errors"
+
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
-
-// x/emissions module sentinel errors
 var (
-	ErrEmissionTrackerNotFound = sdkerrors.Register(ModuleName, 1100, "Emission Tracker Not found")
-	ErrParsingSenderAddress    = sdkerrors.Register(ModuleName, 1101, "Unable to parse address of sender")
-	ErrAddingCoinstoTracker    = sdkerrors.Register(ModuleName, 1102, "Unable to add coins to emissionTracker ")
+	ErrEmissionsNotFound = errorsmod.Register(ModuleName, 1000, "Emissions not found")
+
+	ErrNotEnoughEmissionsAvailable     = errorsmod.Register(ModuleName, 1001, "Not enough emissions available to withdraw")
+	ErrUnableToCreateWithdrawEmissions = errorsmod.Register(ModuleName, 1002, "Unable to create withdraw emissions")
 )
