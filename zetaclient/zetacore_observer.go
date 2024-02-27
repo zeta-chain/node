@@ -42,7 +42,6 @@ type CoreObserver struct {
 
 // NewCoreObserver creates a new CoreObserver
 func NewCoreObserver(
-	appContext *appcontext.AppContext,
 	bridge interfaces.ZetaCoreBridger,
 	signerMap map[common.Chain]interfaces.ChainSigner,
 	clientMap map[common.Chain]interfaces.ChainClient,
