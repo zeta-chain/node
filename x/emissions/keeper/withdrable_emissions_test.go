@@ -56,11 +56,14 @@ func Test_WithdrawableEmissions(t *testing.T) {
 	t.Run("remove observer emission", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		we := sample.WithdrawableEmissions(t)
-		k.AddObserverEmission(ctx, we.Address, we.Amount)
+		k.SetWithdrawableEmission(ctx, we)
+
+		err := k.RemoveObserverEmission(ctx, we.Address, we.Amount)
+		require.NoError(t, err)
 
 		we2, found := k.GetWithdrawableEmission(ctx, we.Address)
 		require.True(t, found)
-		require.Equal(t, we.Amount, we2.Amount)
+		require.Equal(t, sdkmath.ZeroInt(), we2.Amount)
 	})
 
 	t.Run("remove observer emission with not enough emissions available", func(t *testing.T) {
@@ -72,7 +75,17 @@ func Test_WithdrawableEmissions(t *testing.T) {
 		require.ErrorIs(t, err, emissionstypes.ErrNotEnoughEmissionsAvailable)
 	})
 
-	t.Run("SlashObserverEmission", func(t *testing.T) {
+	t.Run("try remove non-existent emission ", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		address := sample.AccAddress()
+		err := k.RemoveObserverEmission(ctx, address, sdkmath.ZeroInt())
+		require.NoError(t, err)
+		we, found := k.GetWithdrawableEmission(ctx, address)
+		require.True(t, found)
+		require.Equal(t, sdkmath.ZeroInt(), we.Amount)
+	})
+
+	t.Run("slash observer emission", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		we := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, we)
@@ -82,7 +95,7 @@ func Test_WithdrawableEmissions(t *testing.T) {
 		require.Equal(t, sdkmath.OneInt(), we2.Amount)
 	})
 
-	t.Run("SlashObserverEmission to zero if not enough emissions available", func(t *testing.T) {
+	t.Run("slash observer emission to zero if not enough emissions available", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 		we := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, we)
