@@ -34,7 +34,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	metricsPkg "github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -140,8 +139,8 @@ func NewBitcoinClient(
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	metrics *metricsPkg.Metrics,
-	ts *metricsPkg.TelemetryServer,
+	loggers clientcommon.ClientLogger,
+	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
 		ts: ts,
@@ -154,7 +153,7 @@ func NewBitcoinClient(
 	}
 	ob.netParams = netParams
 	ob.Mu = &sync.Mutex{}
-	chainLogger := appcontext.Logger().With().Str("chain", chain.ChainName.String()).Logger()
+	chainLogger := loggers.Std.With().Str("chain", chain.ChainName.String()).Logger()
 	ob.logger = BTCLog{
 		ChainLogger:   chainLogger,
 		WatchInTx:     chainLogger.With().Str("module", "WatchInTx").Logger(),

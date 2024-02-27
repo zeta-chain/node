@@ -1,7 +1,6 @@
 package appcontext
 
 import (
-	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -11,19 +10,16 @@ import (
 type AppContext struct {
 	coreContext *corecontext.ZetaCoreContext
 	config      *config.Config
-	logger      zerolog.Logger
 }
 
 // NewAppContext creates and returns new AppContext
 func NewAppContext(
 	coreContext *corecontext.ZetaCoreContext,
 	config *config.Config,
-	logger zerolog.Logger,
 ) *AppContext {
 	return &AppContext{
 		coreContext: coreContext,
 		config:      config,
-		logger:      logger,
 	}
 }
 
@@ -33,10 +29,6 @@ func (a *AppContext) Config() *config.Config {
 
 func (a *AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
 	return a.coreContext
-}
-
-func (a *AppContext) Logger() zerolog.Logger {
-	return a.logger
 }
 
 // GetBTCChainAndConfig returns btc chain and config if enabled

@@ -24,6 +24,7 @@ import (
 
 func GenerateTss(
 	appContext *appcontext.AppContext,
+	logger zerolog.Logger,
 	zetaBridge *zetabridge.ZetaCoreBridge,
 	peers p2p.AddrList,
 	priKey secp256k1.PrivKey,
@@ -31,7 +32,7 @@ func GenerateTss(
 	tssHistoricalList []observertypes.TSS,
 	tssPassword string,
 	hotkeyPassword string) (*mc.TSS, error) {
-	keygenLogger := appContext.Logger().With().Str("module", "keygen").Logger()
+	keygenLogger := logger.With().Str("module", "keygen").Logger()
 
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format

@@ -98,7 +98,7 @@ type ChainClient struct {
 	logger                     Log
 	coreContext                *corecontext.ZetaCoreContext
 	chainParams                observertypes.ChainParams
-	ts                         *metricsPkg.TelemetryServer
+	ts                         *metrics.TelemetryServer
 
 	blockCache   *lru.Cache
 	blockCacheV3 *lru.Cache // blockCacheV3 caches blocks containing type-3 (BlobTxType) transactions
@@ -111,14 +111,14 @@ func NewEVMChainClient(
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
-	metrics *metricsPkg.Metrics,
+	loggers clientcommon.ClientLogger,
 	evmCfg config.EVMConfig,
 	ts *metrics.TelemetryServer,
 ) (*ChainClient, error) {
 	ob := ChainClient{
 		ts: ts,
 	}
-	chainLogger := appContext.Logger().With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
+	chainLogger := loggers.Std.With().Str("chain", evmCfg.Chain.ChainName.String()).Logger()
 	ob.logger = Log{
 		ChainLogger:          chainLogger,
 		ExternalChainWatcher: chainLogger.With().Str("module", "ExternalChainWatcher").Logger(),

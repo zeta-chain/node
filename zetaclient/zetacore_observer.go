@@ -7,9 +7,7 @@ import (
 
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -48,14 +46,14 @@ func NewCoreObserver(
 	bridge interfaces.ZetaCoreBridger,
 	signerMap map[common.Chain]interfaces.ChainSigner,
 	clientMap map[common.Chain]interfaces.ChainClient,
-	metrics *metrics.Metrics,
+	logger zerolog.Logger,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
 	co := CoreObserver{
 		ts:   ts,
 		stop: make(chan struct{}),
 	}
-	chainLogger := appContext.Logger().With().
+	chainLogger := logger.With().
 		Str("chain", "ZetaChain").
 		Logger()
 	co.logger = ZetaCoreLog{
@@ -77,11 +75,7 @@ func NewCoreObserver(
 	return &co
 }
 
-func (co *CoreObserver) Config() *config.Config {
-	return co.cfg
-}
-
-func (co *CoreObserver) MonitorCore() {
+func (co *CoreObserver) MonitorCore(appContext *appcontext.AppContext) {
 	myid := co.bridge.GetKeys().GetAddress()
 	co.logger.ZetaChainWatcher.Info().Msgf("Starting Send Scheduler for %s", myid)
 	go co.startCctxScheduler(appContext)
