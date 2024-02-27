@@ -22,8 +22,8 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
-) *Keeper {
-	return &Keeper{
+) Keeper {
+	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
