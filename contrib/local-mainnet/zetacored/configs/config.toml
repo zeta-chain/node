@@ -32,7 +32,7 @@ max_body_bytes = 1000000
 max_header_bytes = 1048576
 tls_cert_file = ""
 tls_key_file = ""
-pprof_laddr = "localhost:6060"
+pprof_laddr = "0.0.0.0:6060"
 
 [p2p]
 laddr = "tcp://0.0.0.0:26656"
