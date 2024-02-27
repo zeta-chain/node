@@ -87,6 +87,7 @@ func TestEndBlocker(t *testing.T) {
 		observerPoolBalances := sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount
 		require.Equal(t, emissions[unsuccessfulIndex].Amount.String(), observerPoolBalances.String())
 	})
+
 	t.Run("unable to process withdraw if address is invalid", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
 		undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
@@ -104,6 +105,39 @@ func TestEndBlocker(t *testing.T) {
 		emissionsModule.EndBlocker(ctx, *k)
 		require.Empty(t, k.GetAllWithdrawEmissions(ctx))
 		require.Equal(t, emission.Amount.String(), sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount.String())
+	})
+
+	t.Run("unable to process withdraw if amount is more than available emission", func(t *testing.T) {
+		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
+		undistributedObserverPoolAddress := sk.AuthKeeper.GetModuleAccount(ctx, emissionstypes.UndistributedObserverRewardsPool).GetAddress()
+
+		emission := sample.WithdrawEmission(t)
+		k.SetWithdrawEmissions(ctx, emission)
+		k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+			Address: emission.Address,
+			Amount:  emission.Amount.Sub(sdkmath.NewInt(1)),
+		})
+
+		err := sk.BankKeeper.MintCoins(ctx, emissionstypes.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, emission.Amount)))
+		require.NoError(t, err)
+		emissionsModule.EndBlocker(ctx, *k)
+		require.Empty(t, k.GetAllWithdrawEmissions(ctx))
+		require.Equal(t, emission.Amount.String(), sk.BankKeeper.GetBalance(ctx, undistributedObserverPoolAddress, config.BaseDenom).Amount.String())
+	})
+
+	t.Run("unable to process withdraw if UndistributedObserverRewardsPool does not have enough balance", func(t *testing.T) {
+		k, ctx, sk, _ := keepertest.EmissionsKeeper(t)
+
+		emission := sample.WithdrawEmission(t)
+		k.SetWithdrawEmissions(ctx, emission)
+		k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+			Address: emission.Address,
+			Amount:  emission.Amount,
+		})
+
+		emissionsModule.EndBlocker(ctx, *k)
+		require.Empty(t, k.GetAllWithdrawEmissions(ctx))
+		require.Equal(t, sdkmath.ZeroInt().String(), sk.BankKeeper.GetBalance(ctx, sdk.MustAccAddressFromBech32(emission.Address), config.BaseDenom).Amount.String())
 	})
 }
 func TestBeginBlocker(t *testing.T) {
