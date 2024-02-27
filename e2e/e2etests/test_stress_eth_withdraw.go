@@ -19,6 +19,12 @@ func TestStressEtherWithdraw(r *runner.E2ERunner) {
 	// number of withdraws to perform
 	numWithdraws := 100
 
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
+	if err != nil {
+		panic(err)
+	}
+	r.WaitForTxReceiptOnZEVM(tx)
+
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete

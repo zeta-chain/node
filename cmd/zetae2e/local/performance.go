@@ -34,29 +34,29 @@ func ethereumDepositPerformanceRoutine(
 		}()
 
 		// initialize runner for ether test
-		ethereumRunner, err := initTestRunner(
+		r, err := initTestRunner(
 			"ether",
 			conf,
 			deployerRunner,
 			UserERC20Address,
 			UserERC20PrivateKey,
-			runner.NewLogger(verbose, color.FgMagenta, "perf_eth_deposit"),
+			runner.NewLogger(verbose, color.FgHiMagenta, "perf_eth_deposit"),
 		)
 		if err != nil {
 			return err
 		}
 
-		ethereumRunner.Logger.Print("🏃 starting Ethereum deposit performance tests")
+		r.Logger.Print("🏃 starting Ethereum deposit performance tests")
 		startTime := time.Now()
 
-		if err := ethereumRunner.RunE2ETestsFromNames(
+		if err := r.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
 			e2etests.TestStressEtherDepositName,
 		); err != nil {
 			return fmt.Errorf("thereum deposit performance test failed: %v", err)
 		}
 
-		ethereumRunner.Logger.Print("🍾 Ethereum deposit performance test completed in %s", time.Since(startTime).String())
+		r.Logger.Print("🍾 Ethereum deposit performance test completed in %s", time.Since(startTime).String())
 
 		return err
 	}
@@ -82,33 +82,33 @@ func ethereumWithdrawPerformanceRoutine(
 		}()
 
 		// initialize runner for ether test
-		ethereumRunner, err := initTestRunner(
+		r, err := initTestRunner(
 			"ether",
 			conf,
 			deployerRunner,
 			UserEtherAddress,
 			UserEtherPrivateKey,
-			runner.NewLogger(verbose, color.FgMagenta, "perf_eth_withdraw"),
+			runner.NewLogger(verbose, color.FgHiBlue, "perf_eth_withdraw"),
 		)
 		if err != nil {
 			return err
 		}
 
-		ethereumRunner.Logger.Print("🏃 starting Ethereum withdraw performance tests")
+		r.Logger.Print("🏃 starting Ethereum withdraw performance tests")
 		startTime := time.Now()
 
 		// depositing the necessary tokens on ZetaChain
-		txEtherDeposit := ethereumRunner.DepositEther(true)
-		ethereumRunner.WaitForMinedCCTX(txEtherDeposit)
+		txEtherDeposit := r.DepositEther(false)
+		r.WaitForMinedCCTX(txEtherDeposit)
 
-		if err := ethereumRunner.RunE2ETestsFromNames(
+		if err := r.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
 			e2etests.TestStressEtherWithdrawName,
 		); err != nil {
 			return fmt.Errorf("thereum withdraw performance test failed: %v", err)
 		}
 
-		ethereumRunner.Logger.Print("🍾 Ethereum withdraw performance test completed in %s", time.Since(startTime).String())
+		r.Logger.Print("🍾 Ethereum withdraw performance test completed in %s", time.Since(startTime).String())
 
 		return err
 	}

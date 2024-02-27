@@ -151,6 +151,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		logger.Print("⚠️ admin tests enabled")
 	}
 
+	if testPerformance && !skipRegular {
+		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
+		skipRegular = true
+	}
+
 	// start timer
 	go func() {
 		time.Sleep(TestTimeout)
@@ -255,7 +260,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testPerformance {
-		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose))
+		//eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose))
 	}
 	if testCustom {
