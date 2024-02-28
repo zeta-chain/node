@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
@@ -81,34 +82,34 @@ type TSS struct {
 
 // NewTSS creates a new TSS instance
 func NewTSS(
+	appContext *appcontext.AppContext,
 	peer p2p.AddrList,
 	privkey tmcrypto.PrivKey,
 	preParams *keygen.LocalPreParams,
-	cfg *config.Config,
 	bridge interfaces.ZetaCoreBridger,
 	tssHistoricalList []observertypes.TSS,
 	bitcoinChainID int64,
 	tssPassword string,
 	hotkeyPassword string,
 ) (*TSS, error) {
-	server, err := SetupTSSServer(peer, privkey, preParams, cfg, tssPassword)
+	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
 	newTss := TSS{
 		Server:         server,
 		Keys:           make(map[string]*Key),
-		CurrentPubkey:  cfg.CurrentTssPubkey,
+		CurrentPubkey:  appContext.ZetaCoreContext().GetCurrentTssPubkey(),
 		logger:         log.With().Str("module", "tss_signer").Logger(),
 		CoreBridge:     bridge,
 		BitcoinChainID: bitcoinChainID,
 	}
 
-	err = newTss.LoadTssFilesFromDirectory(cfg.TssPath)
+	err = newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
 	if err != nil {
 		return nil, err
 	}
-	_, pubkeyInBech32, err := keys.GetKeyringKeybase(cfg, hotkeyPassword)
+	_, pubkeyInBech32, err := keys.GetKeyringKeybase(appContext.Config(), hotkeyPassword)
 	if err != nil {
 		return nil, err
 	}
