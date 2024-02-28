@@ -57,13 +57,16 @@ func zetaTestRoutine(
 		zetaRunner.WaitForMinedCCTX(txEtherDeposit)
 
 		// run zeta test
-		if err := zetaRunner.RunE2ETestsFromNames(
+		testsToRun, err := zetaRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
-		); err != nil {
+			//e2etests.TestBlockHeadersName,
+			e2etests.TestMyTestName,
+		)
+		if err != nil {
+			return fmt.Errorf("zeta tests failed: %v", err)
+		}
+
+		if err := zetaRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("zeta tests failed: %v", err)
 		}
 

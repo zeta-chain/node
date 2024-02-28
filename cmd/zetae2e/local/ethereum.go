@@ -53,13 +53,18 @@ func ethereumTestRoutine(
 		// run ethereum test
 		// Note: due to the extensive block generation in Ethereum localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
-		if err := ethereumRunner.RunE2ETestsFromNames(
+		testsToRun, err := ethereumRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestEtherWithdrawName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
 			e2etests.TestDepositAndCallRefundName,
-		); err != nil {
+		)
+		if err != nil {
+			return fmt.Errorf("ethereum tests failed: %v", err)
+		}
+
+		if err := ethereumRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}
 

@@ -165,43 +165,69 @@ type E2ETestFunc func(*E2ERunner, []string)
 
 // E2ETest represents a E2E test with a name
 type E2ETest struct {
-	Name                 string
-	Args                 []string // TODO: should args be here, probably there is a cleaner way
-	Description          string
-	ArgumentsDescription string
-	E2ETest              E2ETestFunc
+	Name            string
+	Args            []string // TODO: should args be here, probably there is a cleaner way
+	Description     string
+	ArgsDescription string
+	E2ETest         E2ETestFunc
 }
 
-// RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
-func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestsToRun ...E2ETest) error {
-	for _, e2eTestName := range e2eTestsToRun {
-		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
-		if !ok {
-			return fmt.Errorf("e2e test %s not found", e2eTestName)
+// NewE2ETest creates a new instance of E2ETest with specified parameters.
+func NewE2ETest(name, description, argsDescription string, e2eTestFunc E2ETestFunc) E2ETest {
+	return E2ETest{
+		Name:            name,
+		Description:     description,
+		E2ETest:         e2eTestFunc,
+		ArgsDescription: argsDescription,
+		Args:            []string{},
+	}
+}
+
+func (runner *E2ERunner) GetE2ETestsToRunByName(e2eTests []E2ETest, e2eTestNames ...string) ([]E2ETest, error) {
+	e2eTestsWithArgs := make(map[string][]string)
+	for _, testName := range e2eTestNames {
+		e2eTestsWithArgs[testName] = []string{} // no args specified
+	}
+	return runner.GetE2ETestsToRunByNameAndArgs(e2eTests, e2eTestsWithArgs)
+}
+
+func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(e2eTests []E2ETest, e2eTestsWithArgs map[string][]string) ([]E2ETest, error) {
+	testsToRun := []E2ETest{}
+	for testName, args := range e2eTestsWithArgs {
+		e2eTest, found := findE2ETestByName(e2eTests, testName)
+		if !found {
+			return nil, fmt.Errorf("e2e test %s not found", testName)
 		}
+		// clone the test to modify its Args without affecting the original
+		e2eTestToRun := NewE2ETest(
+			e2eTest.Name,
+			e2eTest.Description,
+			e2eTest.ArgsDescription,
+			e2eTest.E2ETest,
+		)
+		e2eTestToRun.Args = args
+		testsToRun = append(testsToRun, e2eTestToRun)
+	}
+
+	return testsToRun, nil
+}
+
+// RunE2ETests runs a list of e2e tests
+func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
+	for _, e2eTest := range e2eTests {
 		if err := runner.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
 // RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
-func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestsToRun []E2ETest) (TestReports, error) {
-	// get all tests so we can return an error if a test is not found
-	tests := make([]E2ETest, 0, len(e2eTestsToRun))
-	for _, e2eTestWithArgs := range e2eTestsToRun {
-		_, ok := findE2ETest(e2eTestWithArgs, e2eTests)
-		if !ok {
-			return nil, fmt.Errorf("e2e test %s not found", e2eTestWithArgs.Name)
-		}
-	}
-
+func (runner *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, error) {
 	// go through all tests
-	reports := make(TestReports, 0, len(e2eTestsToRun))
-	for _, test := range tests {
+	reports := make(TestReports, 0, len(e2eTests))
+	for _, test := range e2eTests {
 		// get info before test
 		balancesBefore, err := runner.GetAccountBalances(true)
 		if err != nil {
@@ -271,10 +297,9 @@ func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err 
 }
 
 // findE2ETest finds a e2e test by name
-func findE2ETest(e2eTest E2ETest, e2eTests []E2ETest) (E2ETest, bool) {
+func findE2ETestByName(e2eTests []E2ETest, e2eTestName string) (E2ETest, bool) {
 	for _, test := range e2eTests {
-		if test.Name == e2eTest.Name {
-			test.Args = e2eTest.Args
+		if test.Name == e2eTestName {
 			return test, true
 		}
 	}

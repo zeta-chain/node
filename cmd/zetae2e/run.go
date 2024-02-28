@@ -81,16 +81,16 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return errors.New("invalid EVM address")
 	}
 
-	// parse test names and arguments
-	testList := []runner.E2ETest{}
+	// parse test names and arguments from cmd args
+	testArgsMap := make(map[string][]string)
 	for _, arg := range args {
 		parts := strings.SplitN(arg, ":", 2)
 		testName := parts[0]
-		var testArgs []string
+		testArgs := []string{}
 		if len(parts) > 1 && parts[1] != "" {
 			testArgs = strings.Split(parts[1], ",")
 		}
-		testList = append(testList, runner.E2ETest{Name: testName, Args: testArgs})
+		testArgsMap[testName] = testArgs
 	}
 
 	// initialize deployer runner with config
@@ -129,10 +129,12 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	//run tests
-	reports, err := testRunner.RunE2ETestsFromNamesIntoReport(
-		e2etests.AllE2ETests,
-		testList,
-	)
+	testsToRun, err := testRunner.GetE2ETestsToRunByNameAndArgs(e2etests.AllE2ETests, testArgsMap)
+	if err != nil {
+		cancel()
+		return err
+	}
+	reports, err := testRunner.RunE2ETestsIntoReport(testsToRun)
 	if err != nil {
 		cancel()
 		return err
