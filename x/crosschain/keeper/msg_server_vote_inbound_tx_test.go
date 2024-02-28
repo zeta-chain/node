@@ -33,6 +33,9 @@ func setObservers(t *testing.T, k *keeper.Keeper, ctx sdk.Context, zk keepertest
 	})
 	return validatorAddressListFormatted
 }
+
+// TODO: Complete the test cases
+// https://github.com/zeta-chain/node/issues/1542
 func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 	t.Run("successfully vote on evm deposit", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
@@ -69,91 +72,88 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_OutboundMined)
 		require.Equal(t, cctx.InboundTxParams.TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
-	// TODO : https://github.com/zeta-chain/node/issues/1542
-}
 
-/*
-Potential Double Event Submission
-*/
-func TestNoDoubleEventProtections(t *testing.T) {
-	k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	t.Run("prevent double event submission", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 
-	// MsgServer for the crosschain keeper
-	msgServer := keeper.NewMsgServerImpl(*k)
+		// MsgServer for the crosschain keeper
+		msgServer := keeper.NewMsgServerImpl(*k)
 
-	// Set the chain ids we want to use to be valid
-	params := observertypes.DefaultParams()
-	zk.ObserverKeeper.SetParams(
-		ctx, params,
-	)
+		// Set the chain ids we want to use to be valid
+		params := observertypes.DefaultParams()
+		zk.ObserverKeeper.SetParams(
+			ctx, params,
+		)
 
-	// Convert the validator address into a user address.
-	validators := k.GetStakingKeeper().GetAllValidators(ctx)
-	validatorAddress := validators[0].OperatorAddress
-	valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
-	addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
-	validatorAddr := addresstmp.String()
+		// Convert the validator address into a user address.
+		validators := k.GetStakingKeeper().GetAllValidators(ctx)
+		validatorAddress := validators[0].OperatorAddress
+		valAddr, _ := sdk.ValAddressFromBech32(validatorAddress)
+		addresstmp, _ := sdk.AccAddressFromHexUnsafe(hex.EncodeToString(valAddr.Bytes()))
+		validatorAddr := addresstmp.String()
 
-	// Add validator to the observer list for voting
-	zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
-		ObserverList: []string{validatorAddr},
+		// Add validator to the observer list for voting
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
+			ObserverList: []string{validatorAddr},
+		})
+
+		// Vote on the FIRST message.
+		msg := &types.MsgVoteOnObservedInboundTx{
+			Creator:       validatorAddr,
+			Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId: 1337, // ETH
+			Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain: 101, // zetachain
+			Amount:        sdkmath.NewUintFromString("10000000"),
+			Message:       "",
+			InBlockHeight: 1,
+			GasLimit:      1000000000,
+			InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:      0, // zeta
+			TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:         "",
+			EventIndex:    1,
+		}
+		_, err := msgServer.VoteOnObservedInboundTx(
+			ctx,
+			msg,
+		)
+		require.NoError(t, err)
+
+		// Check that the vote passed
+		ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+		require.True(t, found)
+		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
+		//Perform the SAME event. Except, this time, we resubmit the event.
+		msg2 := &types.MsgVoteOnObservedInboundTx{
+			Creator:       validatorAddr,
+			Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
+			SenderChainId: 1337,
+			Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
+			ReceiverChain: 101,
+			Amount:        sdkmath.NewUintFromString("10000000"),
+			Message:       "",
+			InBlockHeight: 1,
+			GasLimit:      1000000001, // <---- Change here
+			InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
+			CoinType:      0,
+			TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
+			Asset:         "",
+			EventIndex:    1,
+		}
+
+		_, err = msgServer.VoteOnObservedInboundTx(
+			ctx,
+			msg2,
+		)
+		require.Error(t, err)
+		require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
+		_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
+		require.False(t, found)
 	})
-
-	// Vote on the FIRST message.
-	msg := &types.MsgVoteOnObservedInboundTx{
-		Creator:       validatorAddr,
-		Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
-		SenderChainId: 1337, // ETH
-		Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
-		ReceiverChain: 101, // zetachain
-		Amount:        sdkmath.NewUintFromString("10000000"),
-		Message:       "",
-		InBlockHeight: 1,
-		GasLimit:      1000000000,
-		InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-		CoinType:      0, // zeta
-		TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
-		Asset:         "",
-		EventIndex:    1,
-	}
-	_, err := msgServer.VoteOnObservedInboundTx(
-		ctx,
-		msg,
-	)
-	require.NoError(t, err)
-
-	// Check that the vote passed
-	ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
-	require.True(t, found)
-	require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
-	//Perform the SAME event. Except, this time, we resubmit the event.
-	msg2 := &types.MsgVoteOnObservedInboundTx{
-		Creator:       validatorAddr,
-		Sender:        "0x954598965C2aCdA2885B037561526260764095B8",
-		SenderChainId: 1337,
-		Receiver:      "0x954598965C2aCdA2885B037561526260764095B8",
-		ReceiverChain: 101,
-		Amount:        sdkmath.NewUintFromString("10000000"),
-		Message:       "",
-		InBlockHeight: 1,
-		GasLimit:      1000000001, // <---- Change here
-		InTxHash:      "0x7a900ef978743f91f57ca47c6d1a1add75df4d3531da17671e9cf149e1aefe0b",
-		CoinType:      0,
-		TxOrigin:      "0x954598965C2aCdA2885B037561526260764095B8",
-		Asset:         "",
-		EventIndex:    1,
-	}
-
-	_, err = msgServer.VoteOnObservedInboundTx(
-		ctx,
-		msg2,
-	)
-	require.Error(t, err)
-	require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
-	_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
-	require.False(t, found)
 }
-func TestStatus_StatusTransition(t *testing.T) {
+
+func TestStatus_ChangeStatus(t *testing.T) {
 	tt := []struct {
 		Name         string
 		Status       types.Status

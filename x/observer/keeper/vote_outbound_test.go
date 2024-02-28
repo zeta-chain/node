@@ -190,4 +190,60 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, expectedBallot, ballot)
 	})
+
+	t.Run("can add vote to an existing ballot and finalize ballot", func(t *testing.T) {
+		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+
+		observer := sample.AccAddress()
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+			},
+		})
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+
+		// set a ballot
+		threshold, err := sdk.NewDecFromStr("0.1")
+		require.NoError(t, err)
+		ballot := types.Ballot{
+			Index:            "index",
+			BallotIdentifier: "index",
+			VoterList: []string{
+				observer,
+				sample.AccAddress(),
+				sample.AccAddress(),
+			},
+			Votes:           types.CreateVotes(3),
+			ObservationType: types.ObservationType_OutBoundTx,
+			BallotThreshold: threshold,
+			BallotStatus:    types.BallotStatus_BallotInProgress,
+		}
+		k.SetBallot(ctx, &ballot)
+
+		isFinalized, isNew, ballot, _, err := k.VoteOnOutboundBallot(
+			ctx,
+			"index",
+			getValidEthChainIDWithIndex(t, 0),
+			common.ReceiveStatus_Success,
+			observer,
+		)
+		require.NoError(t, err)
+
+		// ballot should be finalized since there is only one observer
+		require.True(t, isFinalized)
+		require.False(t, isNew)
+		expectedBallot, found := k.GetBallot(ctx, "index")
+		require.True(t, found)
+		require.Equal(t, expectedBallot, ballot)
+	})
 }

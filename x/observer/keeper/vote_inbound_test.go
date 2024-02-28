@@ -320,4 +320,66 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		require.False(t, isFinalized)
 		require.False(t, isNew)
 	})
+
+	t.Run("can add vote to an existing ballot and finalize ballot", func(t *testing.T) {
+		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+
+		observer := sample.AccAddress()
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+
+		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
+			IsInboundEnabled: true,
+		})
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 0),
+					IsSupported: true,
+				},
+				{
+					ChainId:     getValidEthChainIDWithIndex(t, 1),
+					IsSupported: true,
+				},
+			},
+		})
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{observer},
+		})
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+
+		// set a ballot
+		threshold, err := sdk.NewDecFromStr("0.1")
+		require.NoError(t, err)
+		ballot := types.Ballot{
+			Index:            "index",
+			BallotIdentifier: "index",
+			VoterList: []string{
+				observer,
+				sample.AccAddress(),
+				sample.AccAddress(),
+			},
+			Votes:           types.CreateVotes(3),
+			ObservationType: types.ObservationType_InBoundTx,
+			BallotThreshold: threshold,
+			BallotStatus:    types.BallotStatus_BallotInProgress,
+		}
+		k.SetBallot(ctx, &ballot)
+
+		isFinalized, isNew, err := k.VoteOnInboundBallot(
+			ctx,
+			getValidEthChainIDWithIndex(t, 0),
+			getValidEthChainIDWithIndex(t, 1),
+			common.CoinType_ERC20,
+			observer,
+			"index",
+			"inTxHash",
+		)
+		require.NoError(t, err)
+
+		// ballot should not be finalized as the threshold is not reached
+		require.True(t, isFinalized)
+		require.False(t, isNew)
+	})
 }

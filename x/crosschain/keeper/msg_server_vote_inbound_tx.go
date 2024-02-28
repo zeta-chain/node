@@ -77,7 +77,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
 	// This check prevents double spending
 	if isNew {
-		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+		if k.IsFinalizedInbound(tmpCtx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
 			return nil, cosmoserrors.Wrap(
 				types.ErrObservedTxAlreadyFinalized,
 				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
