@@ -354,12 +354,13 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	}
 
 	if !destChain.IsZetaChain() {
-		cfgDest, found := ob.cfg.GetEVMConfig(destChain.ChainId)
+		paramsDest, found := ob.coreContext.GetEVMChainParams(destChain.ChainId)
 		if !found {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainConfigs  %d", event.DestinationChainId.Int64())
+			ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not present in EVMChainParams  %d", event.DestinationChainId.Int64())
 			return nil
 		}
-		if strings.EqualFold(destAddr, cfgDest.ZetaTokenContractAddress) {
+
+		if strings.EqualFold(destAddr, paramsDest.ZetaTokenContractAddress) {
 			ob.logger.ExternalChainWatcher.Warn().Msgf("potential attack attempt: %s destination address is ZETA token contract address %s", destChain, destAddr)
 			return nil
 		}
