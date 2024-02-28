@@ -166,20 +166,20 @@ type E2ETestFunc func(*E2ERunner, []string)
 // E2ETest represents a E2E test with a name
 type E2ETest struct {
 	Name            string
-	Args            []string // TODO: should args be here, probably there is a cleaner way
+	Args            []string
 	Description     string
 	ArgsDescription string
 	E2ETest         E2ETestFunc
 }
 
 // NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description, argsDescription string, e2eTestFunc E2ETestFunc) E2ETest {
+func NewE2ETest(name, description, argsDescription string, args []string, e2eTestFunc E2ETestFunc) E2ETest {
 	return E2ETest{
 		Name:            name,
 		Description:     description,
 		E2ETest:         e2eTestFunc,
 		ArgsDescription: argsDescription,
-		Args:            []string{},
+		Args:            args,
 	}
 }
 
@@ -198,14 +198,13 @@ func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(e2eTests []E2ETest, e2eTe
 		if !found {
 			return nil, fmt.Errorf("e2e test %s not found", testName)
 		}
-		// clone the test to modify its Args without affecting the original
 		e2eTestToRun := NewE2ETest(
 			e2eTest.Name,
 			e2eTest.Description,
 			e2eTest.ArgsDescription,
+			args,
 			e2eTest.E2ETest,
 		)
-		e2eTestToRun.Args = args
 		testsToRun = append(testsToRun, e2eTestToRun)
 	}
 
