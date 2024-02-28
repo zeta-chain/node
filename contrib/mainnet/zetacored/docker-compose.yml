@@ -4,7 +4,7 @@ services:
     platform: linux/amd64
     #This will build the binary from the GIT_REF you are locally on.
     # build:
-    #  context: ../..
+    #  context: ../../..
     #  dockerfile: Dockerfile
     #If you want to use the pre-built docker images you would comment out Build lines, and uncomment this line with the correct docker tag.
     #image: zetachain/zeatcored:ubuntu-{CURRENT_RELEASE_VERSION}
@@ -32,7 +32,7 @@ services:
       CLIENT_SKIP_UPGRADE: "true"
       CLIENT_START_PROCESS: "false"
       MONIKER: local-test
-      RE_DO_START_SEQUENCE: false
+      RE_DO_START_SEQUENCE: "false"
     ports:
       - "26656:26656"
       - "1317:1317"
