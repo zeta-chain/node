@@ -9,9 +9,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	v5 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v5"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMigrateStore(t *testing.T) {
@@ -59,6 +61,76 @@ func TestMigrateStore(t *testing.T) {
 		}
 	})
 
+}
+
+func TestResetTestnetNonce(t *testing.T) {
+	t.Run("do not reset only mainnet nonce", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		mainnetChain := common.EthChain()
+		nonceLow := int64(1)
+		nonceHigh := int64(10)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+			Tss:       tss.TssPubkey,
+			ChainId:   mainnetChain.ChainId,
+			NonceLow:  nonceLow,
+			NonceHigh: nonceHigh,
+		})
+		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+			Index:   mainnetChain.ChainName.String(),
+			ChainId: mainnetChain.ChainId,
+			Nonce:   uint64(nonceHigh),
+		})
+		err := v5.MigrateStore(ctx, k, k.GetObserverKeeper())
+		require.NoError(t, err)
+		pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, mainnetChain.ChainId)
+		require.True(t, found)
+		require.Equal(t, nonceLow, pn.NonceLow)
+		require.Equal(t, nonceHigh, pn.NonceHigh)
+		cn, found := zk.ObserverKeeper.GetChainNonces(ctx, mainnetChain.ChainName.String())
+		require.True(t, found)
+		require.Equal(t, uint64(nonceHigh), cn.Nonce)
+	})
+	t.Run("reset only testnet nonce", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		testnetChains := []common.Chain{common.GoerliChain(), common.MumbaiChain(), common.BscTestnetChain(), common.BtcTestNetChain()}
+		nonceLow := int64(1)
+		nonceHigh := int64(10)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		for _, chain := range testnetChains {
+			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+				Tss:       tss.TssPubkey,
+				ChainId:   chain.ChainId,
+				NonceLow:  nonceLow,
+				NonceHigh: nonceHigh,
+			})
+			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   uint64(nonceHigh),
+			})
+		}
+		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
+		require.NoError(t, err)
+		assertValues := map[common.Chain]int64{
+			common.GoerliChain():     226841,
+			common.MumbaiChain():     200599,
+			common.BscTestnetChain(): 110454,
+			common.BtcTestNetChain(): 4881,
+		}
+
+		for _, chain := range testnetChains {
+			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+			require.True(t, found)
+			require.Equal(t, assertValues[chain], pn.NonceHigh)
+			require.Equal(t, assertValues[chain], pn.NonceLow)
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			require.True(t, found)
+			require.Equal(t, uint64(assertValues[chain]), cn.Nonce)
+		}
+	})
 }
 
 func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {

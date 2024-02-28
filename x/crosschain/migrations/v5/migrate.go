@@ -25,12 +25,60 @@ type crosschainKeeper interface {
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 4 to 5
 // It resets the aborted zeta amount to use the inbound tx amount instead in situations where the outbound cctx is never created.
-func MigrateStore(
+func MigrateStore(ctx sdk.Context, crosschainKeeper crosschainKeeper, observerKeeper types.ObserverKeeper) error {
+	err := SetZetaAccounting(ctx, crosschainKeeper, observerKeeper)
+	if err != nil {
+		return err
+	}
+	ResetTestnetNonce(ctx, observerKeeper)
+
+	return nil
+}
+
+func ResetTestnetNonce(
+	ctx sdk.Context,
+	observerKeeper types.ObserverKeeper,
+) {
+	tss, found := observerKeeper.GetTSS(ctx)
+	if !found {
+		return
+	}
+	for chain, nonce := range CurrentTestnetChains() {
+		cn, found := observerKeeper.GetChainNonces(ctx, chain.ChainName.String())
+		if !found {
+			continue
+		}
+		cn.Nonce = nonce.nonceHigh
+		observerKeeper.SetChainNonces(ctx, cn)
+		pn, found := observerKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+		if !found {
+			continue
+		}
+		pn.NonceLow = int64(nonce.nonceLow)
+		pn.NonceHigh = int64(nonce.nonceHigh)
+		observerKeeper.SetPendingNonces(ctx, pn)
+	}
+}
+
+type Nonce struct {
+	nonceHigh uint64
+	nonceLow  uint64
+}
+
+func CurrentTestnetChains() map[common.Chain]Nonce {
+	return map[common.Chain]Nonce{
+		common.GoerliChain():     Nonce{nonceHigh: 226841, nonceLow: 226841},
+		common.MumbaiChain():     Nonce{nonceHigh: 200599, nonceLow: 200599},
+		common.BscTestnetChain(): Nonce{nonceHigh: 110454, nonceLow: 110454},
+		common.BtcTestNetChain(): Nonce{nonceHigh: 4881, nonceLow: 4881},
+	}
+}
+
+func SetZetaAccounting(
 	ctx sdk.Context,
 	crosschainKeeper crosschainKeeper,
 	observerKeeper types.ObserverKeeper,
 ) error {
-
 	ccctxList := crosschainKeeper.GetAllCrossChainTx(ctx)
 	abortedAmountZeta := sdkmath.ZeroUint()
 	for _, cctx := range ccctxList {
@@ -77,7 +125,6 @@ func MigrateStore(
 
 	return nil
 }
-
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
 	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
 		return cctx.GetCurrentOutTxParam().Amount
