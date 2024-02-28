@@ -13,7 +13,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 
 	cosmosmath "cosmossdk.io/math"
@@ -30,9 +34,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -133,12 +134,12 @@ func (ob *BTCChainClient) GetChainParams() observertypes.ChainParams {
 
 // NewBitcoinClient returns a new configuration based on supplied target chain
 func NewBitcoinClient(
+	appcontext *appcontext.AppContext,
 	chain common.Chain,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
-	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -167,9 +168,13 @@ func NewBitcoinClient(
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
-	ob.params = btcCfg.ChainParams
-
+	_, chainParams, found := appcontext.ZetaCoreContext().GetBTCChainParams()
+	if !found {
+		return nil, fmt.Errorf("btc chains params not initialized")
+	}
+	ob.params = *chainParams
 	// initialize the Client
+	btcCfg := appcontext.Config().BitcoinConfig
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         btcCfg.RPCHost,
