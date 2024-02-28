@@ -52,11 +52,6 @@ contracts:
     connector_eth: "0x00005e3125aba53c5652f9f0ce1a4cf91d8b15ea"
     custody: "0x000047f11c6e42293f433c82473532e869ce4ec5"
     usdt: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
-test_list:
-#  - "erc20_deposit"
-#  - "erc20_withdraw"
-#  - "eth_deposit"
-#  - "eth_withdraw"
 ```
 
 ### Bitcoin setup
@@ -95,7 +90,7 @@ zetae2e list-tests
 Run tests:
 
 ```go
-zetae2e run [config] --verbose
+zetae2e run [testname1]:[arg1],[arg2] [testname2]:[arg1],[arg2] --config config.yml
 ```
 
 Since cctxs might take a longer time to be processed on live networks, it is highly recommended to use `--verbose` flag to see the current status of the cctx workflow.
@@ -124,9 +119,6 @@ contracts:
     zeta_eth
     connector_eth
     custody: "0x000047f11c6e42293f433c82473532e869ce4ec5"
-test_list:
-  - "eth_deposit"
-  - "eth_withdraw"
 ```
 
 One of the tests can be commented out in case only a deposit or a withdrawal is to be tested.
@@ -151,9 +143,6 @@ contracts:
     usdt_zrc20
   evm:
 		usdt
-test_list:
-  - "erc20_deposit"
-  - "erc20_withdraw"
 ```
 
 ### Testing a ZRC20 from a Bitcoin chain
@@ -182,9 +171,6 @@ contracts:
     btc_zrc20
     uniswap_factory
     uniswap_router
-test_list:
-  - "bitcoin_deposit"
-  - "bitcoin_withdraw"
 ```
 
 ### TODO: message passing
