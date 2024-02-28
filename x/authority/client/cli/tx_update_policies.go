@@ -31,7 +31,7 @@ func CmdUpdatePolices() *cobra.Command {
 				return err
 			}
 
-			msg := types.NewUpdatePolicies(
+			msg := types.NewMsgUpdatePolicies(
 				clientCtx.GetFromAddress().String(),
 				policies,
 			)

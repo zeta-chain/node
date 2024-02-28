@@ -10,7 +10,7 @@ const TypeMsgUpdatePolicies = "UpdatePolicies"
 
 var _ sdk.Msg = &MsgUpdatePolicies{}
 
-func NewUpdatePolicies(creator string, policies Policies) *MsgUpdatePolicies {
+func NewMsgUpdatePolicies(creator string, policies Policies) *MsgUpdatePolicies {
 	return &MsgUpdatePolicies{
 		AuthorityAddress: creator,
 		Policies:         policies,
