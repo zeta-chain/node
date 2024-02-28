@@ -13,6 +13,7 @@
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1816](https://github.com/zeta-chain/node/pull/1816) - add args to e2e tests
 
 ### Chores
 
