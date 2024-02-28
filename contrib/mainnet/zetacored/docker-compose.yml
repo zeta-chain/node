@@ -6,9 +6,7 @@ services:
     # build:
     #  context: ../../..
     #  dockerfile: Dockerfile
-    #If you want to use the pre-built docker images you would comment out Build lines, and uncomment this line with the correct docker tag.
-    #image: zetachain/zeatcored:ubuntu-{CURRENT_RELEASE_VERSION}
-    image: local/zetacored:v0.2.8
+    image: zetachain/zeatcored:ubuntu-{ZETACORED_VERSION}
     container_name: zetachain_mainnet_rpc
     environment:
       DAEMON_HOME: "/root/.zetacored"
@@ -16,9 +14,7 @@ services:
       #RESTORE_TYPE=snapshot/snapshot-archive/statesync
       RESTORE_TYPE: "statesync"
       SNAPSHOT_API: https://snapshots.zetachain.com
-      #for statesync needs to be set
-      #TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 100
+      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
       COSMOVISOR_VERSION: "v1.5.0"
       CHAIN_ID: "zetachain_7000-1"
       COSMOVISOR_CHECKSUM: "626dfc58c266b85f84a7ed8e2fe0e2346c15be98cfb9f9b88576ba899ed78cdc"
