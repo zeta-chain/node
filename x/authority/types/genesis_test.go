@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -16,8 +17,15 @@ func TestGenesisState_Validate(t *testing.T) {
 		errContains string
 	}{
 		{
-			name:        "valid",
+			name:        "default is valid",
 			gs:          types.DefaultGenesis(),
+			errContains: "",
+		},
+		{
+			name: "valid genesis",
+			gs: &types.GenesisState{
+				Policies: sample.Policies(),
+			},
 			errContains: "",
 		},
 		{

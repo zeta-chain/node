@@ -1,11 +1,12 @@
 package types_test
 
 import (
+	"testing"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/types"
-	"testing"
 )
 
 func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
@@ -18,11 +19,11 @@ func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdatePolicies(sample.AccAddress(), types.DefaultPolicies()),
+			msg:  types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies()),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgUpdatePolicies("invalid", types.DefaultPolicies()),
+			msg:  types.NewMsgUpdatePolicies("invalid", sample.Policies()),
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{

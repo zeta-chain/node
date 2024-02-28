@@ -37,6 +37,11 @@ func TestPolicies_Validate(t *testing.T) {
 			errContains: "",
 		},
 		{
+			name:        "regular valid policies",
+			policies:    sample.Policies(),
+			errContains: "",
+		},
+		{
 			name: "valid if a policy type is not existing",
 			policies: types.Policies{
 				PolicyAddresses: []*types.PolicyAddress{
