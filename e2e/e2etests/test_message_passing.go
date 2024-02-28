@@ -13,7 +13,7 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessagePassing(r *runner.E2ERunner, args []string) {
+func TestMessagePassing(r *runner.E2ERunner, _ []string) {
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
@@ -96,7 +96,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
+func TestMessagePassingRevertFail(r *runner.E2ERunner, _ []string) {
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
@@ -159,7 +159,7 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
+func TestMessagePassingRevertSuccess(r *runner.E2ERunner, _ []string) {
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)

@@ -11,7 +11,7 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
+func TestMultipleERC20Deposit(r *runner.E2ERunner, _ []string) {
 	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)

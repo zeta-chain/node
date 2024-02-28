@@ -13,7 +13,7 @@ import (
 )
 
 // TestStressEtherDeposit tests the stressing deposit of ether
-func TestStressEtherDeposit(r *runner.E2ERunner, args []string) {
+func TestStressEtherDeposit(r *runner.E2ERunner, _ []string) {
 	// number of deposits to perform
 	numDeposits := 100
 

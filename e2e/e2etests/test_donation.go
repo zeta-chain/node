@@ -9,7 +9,7 @@ import (
 )
 
 // TestDonationEther tests donation of ether to the tss address
-func TestDonationEther(r *runner.E2ERunner, args []string) {
+func TestDonationEther(r *runner.E2ERunner, _ []string) {
 	txDonation, err := r.SendEther(r.TSSAddress, big.NewInt(100000000000000000), []byte(evm.DonationMessage))
 	if err != nil {
 		panic(err)

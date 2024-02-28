@@ -18,6 +18,7 @@ import (
 )
 
 const flagVerbose = "verbose"
+const flagConfig = "config"
 
 const FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 
@@ -35,8 +36,11 @@ For example: zetae2e run deposit:1000 withdraw: --config confuing.yml`,
 		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
 	}
 
-	cmd.Flags().StringVarP(&configFile, "config", "c", "", "path to the configuration file")
-	cmd.MarkFlagRequired("config")
+	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
+	err := cmd.MarkFlagRequired(flagConfig)
+	if err != nil {
+		panic(err)
+	}
 
 	// Retain the verbose flag
 	cmd.Flags().Bool(

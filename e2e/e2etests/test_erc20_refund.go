@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestERC20DepositAndCallRefund(r *runner.E2ERunner, args []string) {
+func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	// Get the initial balance of the deployer
 	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {

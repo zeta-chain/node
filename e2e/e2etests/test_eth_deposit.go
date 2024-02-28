@@ -42,7 +42,7 @@ func TestEtherDeposit(r *runner.E2ERunner, args []string) {
 }
 
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
-func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
+func TestEtherDepositAndCall(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZevmAuth, r.ZevmClient)
 	if err != nil {
@@ -149,7 +149,7 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 }
 
-func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
+func TestDepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	goerliClient := r.GoerliClient
 
 	// in wei (10 eth)
@@ -247,7 +247,7 @@ func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 }
 
 // TestDepositEtherLiquidityCap tests depositing Ethers in a context where a liquidity cap is set
-func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
+func TestDepositEtherLiquidityCap(r *runner.E2ERunner, _ []string) {
 	supply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
