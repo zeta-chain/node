@@ -1,104 +1,83 @@
 package bitcoin
 
 import (
-	"fmt"
+	"path"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-func TestCheckEvmTxLog(t *testing.T) {
-	// test data
-	connectorAddr := ethcommon.HexToAddress("0x00005e3125aba53c5652f9f0ce1a4cf91d8b15ea")
-	txHash := "0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626"
-	topics := []ethcommon.Hash{
-		// https://goerli.etherscan.io/tx/0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626#eventlog
-		ethcommon.HexToHash("0x7ec1c94701e09b1652f3e1d307e60c4b9ebf99aff8c2079fd1d8c585e031c4e4"),
-		ethcommon.HexToHash("0x00000000000000000000000023856df5d563bd893fc7df864102d8bbfe7fc487"),
-		ethcommon.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000061"),
-	}
+func TestDecodeP2WPKHVout(t *testing.T) {
+	// load archived outtx raw result
+	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
+	var rawResult btcjson.TxRawResult
+	err := testutils.LoadObjectFromJSONFile(&rawResult, path.Join("../", testutils.TestDataPathBTC, "outtx_8332_148_raw_result.json"))
+	require.NoError(t, err)
+	require.Len(t, rawResult.Vout, 3)
 
-	tests := []struct {
-		name string
-		vLog *ethtypes.Log
-		fail bool
-	}{
-		{
-			name: "chain reorganization",
-			vLog: &ethtypes.Log{
-				Removed: true,
-				Address: connectorAddr,
-				TxHash:  ethcommon.HexToHash(txHash),
-				Topics:  topics,
-			},
-			fail: true,
-		},
-		{
-			name: "emitter address mismatch",
-			vLog: &ethtypes.Log{
-				Removed: false,
-				Address: ethcommon.HexToAddress("0x184ba627DB853244c9f17f3Cb4378cB8B39bf147"),
-				TxHash:  ethcommon.HexToHash(txHash),
-				Topics:  topics,
-			},
-			fail: true,
-		},
-		{
-			name: "tx hash mismatch",
-			vLog: &ethtypes.Log{
-				Removed: false,
-				Address: connectorAddr,
-				TxHash:  ethcommon.HexToHash("0x781c018d604af4dad0fe5e3cea4ad9fb949a996d8cd0cd04a92cadd7f08c05f2"),
-				Topics:  topics,
-			},
-			fail: true,
-		},
-		{
-			name: "topics mismatch",
-			vLog: &ethtypes.Log{
-				Removed: false,
-				Address: connectorAddr,
-				TxHash:  ethcommon.HexToHash(txHash),
-				Topics: []ethcommon.Hash{
-					// https://goerli.etherscan.io/tx/0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626#eventlog
-					ethcommon.HexToHash("0x7ec1c94701e09b1652f3e1d307e60c4b9ebf99aff8c2079fd1d8c585e031c4e4"),
-					ethcommon.HexToHash("0x00000000000000000000000023856df5d563bd893fc7df864102d8bbfe7fc487"),
-				},
-			},
-			fail: true,
-		},
-		{
-			name: "should pass",
-			vLog: &ethtypes.Log{
-				Removed: false,
-				Address: connectorAddr,
-				TxHash:  ethcommon.HexToHash(txHash),
-				Topics:  topics,
-			},
-			fail: false,
-		},
-	}
+	// it's a mainnet outtx
+	chain := common.BtcMainnetChain()
+	nonce := uint64(148)
 
-	evmClient := evm.ChainClient{}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fmt.Printf("check test: %s\n", tt.name)
-			err := evmClient.CheckEvmTxLog(
-				tt.vLog,
-				connectorAddr,
-				"0xb252c9e77feafdeeae25cc1f037a16c4b50fa03c494754b99a7339d816c79626",
-				evm.TopicsZetaSent,
-			)
-			if tt.fail {
-				require.Error(t, err)
-				return
-			} else {
-				require.NoError(t, err)
-			}
-		})
-	}
+	// decode vout 0, nonce mark 148
+	receiver, amount, err := DecodeP2WPKHVout(rawResult.Vout[0], chain)
+	require.NoError(t, err)
+	require.Equal(t, testutils.TSSAddressBTCMainnet, receiver)
+	require.Equal(t, common.NonceMarkAmount(nonce), amount)
+
+	// decode vout 1, payment 0.00012000 BTC
+	receiver, amount, err = DecodeP2WPKHVout(rawResult.Vout[1], chain)
+	require.NoError(t, err)
+	require.Equal(t, "bc1qpsdlklfcmlcfgm77c43x65ddtrt7n0z57hsyjp", receiver)
+	require.Equal(t, int64(12000), amount)
+
+	// decode vout 2, change 0.39041489 BTC
+	receiver, amount, err = DecodeP2WPKHVout(rawResult.Vout[2], chain)
+	require.NoError(t, err)
+	require.Equal(t, testutils.TSSAddressBTCMainnet, receiver)
+	require.Equal(t, int64(39041489), amount)
+}
+
+func TestDecodeP2WPKHVoutErrors(t *testing.T) {
+	// load archived outtx raw result
+	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
+	var rawResult btcjson.TxRawResult
+	err := testutils.LoadObjectFromJSONFile(&rawResult, path.Join("../", testutils.TestDataPathBTC, "outtx_8332_148_raw_result.json"))
+	require.NoError(t, err)
+
+	chain := common.BtcMainnetChain()
+
+	t.Run("should return error on invalid amount", func(t *testing.T) {
+		invalidVout := rawResult.Vout[0]
+		invalidVout.Value = -0.5 // negative amount, should not happen
+		_, _, err := DecodeP2WPKHVout(invalidVout, chain)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "error getting satoshis")
+	})
+	t.Run("should return error on invalid script", func(t *testing.T) {
+		invalidVout := rawResult.Vout[0]
+		invalidVout.ScriptPubKey.Hex = "invalid script"
+		_, _, err := DecodeP2WPKHVout(invalidVout, chain)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "error decoding scriptPubKey")
+	})
+	t.Run("should return error on unsupported script", func(t *testing.T) {
+		invalidVout := rawResult.Vout[0]
+		// can use any invalid script, https://blockstream.info/tx/e95c6ff206103716129c8e3aa8def1427782af3490589d1ea35ccf0122adbc25 (P2SH)
+		invalidVout.ScriptPubKey.Hex = "a91413b2388e6532653a4b369b7e4ed130f7b81626cc87"
+		_, _, err := DecodeP2WPKHVout(invalidVout, chain)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "unsupported scriptPubKey")
+	})
+	t.Run("should return error on unsupported witness version", func(t *testing.T) {
+		invalidVout := rawResult.Vout[0]
+		// use a fake witness version 1, even if version 0 is the only witness version defined in BIP141
+		invalidVout.ScriptPubKey.Hex = "01140c1bfb7d38dff0946fdec5626d51ad58d7e9bc54"
+		_, _, err := DecodeP2WPKHVout(invalidVout, chain)
+		require.Error(t, err)
+		require.ErrorContains(t, err, "unsupported witness in scriptPubKey")
+	})
 }
