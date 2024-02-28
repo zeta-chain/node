@@ -4,6 +4,8 @@ import (
 	"path"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mock"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -18,7 +20,7 @@ import (
 func MockEVMClient(chain common.Chain) *ChainClient {
 	return &ChainClient{
 		chain:      chain,
-		zetaClient: testutils.MockCoreBridge(),
+		zetaClient: mock.NewZetaCoreBridge(),
 	}
 }
 

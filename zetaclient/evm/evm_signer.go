@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/mock"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -92,16 +94,10 @@ func NewEVMSigner(
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
-	client, err := ethclient.Dial(endpoint)
+	client, chainID, ethSigner, err := getEVMRPC(endpoint)
 	if err != nil {
 		return nil, err
 	}
-
-	chainID, err := client.ChainID(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-	ethSigner := ethtypes.LatestSignerForChainID(chainID)
 	connectorABI, err := abi.JSON(strings.NewReader(abiString))
 	if err != nil {
 		return nil, err
@@ -339,7 +335,7 @@ func (signer *Signer) SignCommandTx(txData *TransactionData) (*ethtypes.Transact
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", txData.cmd)
 }
 
-func setChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger, txData *TransactionData) bool {
+func SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger, txData *TransactionData) bool {
 	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 		txData.toChainID = big.NewInt(cctx.InboundTxParams.SenderChainId) //common.GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
@@ -354,7 +350,7 @@ func setChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger, txData *
 	return false
 }
 
-func setupGas(
+func SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
@@ -392,7 +388,7 @@ func setupGas(
 	return nil
 }
 
-func setTransactionData(
+func SetTransactionData(
 	cctx *types.CrossChainTx,
 	evmClient *ChainClient,
 	evmRPC interfaces.EVMRPCClient,
@@ -407,7 +403,7 @@ func setTransactionData(
 	txData.srcChainID = big.NewInt(cctx.InboundTxParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
 
-	skipTx := setChainAndSender(cctx, logger, txData)
+	skipTx := SetChainAndSender(cctx, logger, txData)
 	if skipTx {
 		return true, nil
 	}
@@ -429,7 +425,7 @@ func setTransactionData(
 	}
 
 	// Set up gas limit and gas price
-	err = setupGas(cctx, logger, evmRPC, toChain, txData)
+	err = SetupGas(cctx, logger, evmRPC, toChain, txData)
 	if err != nil {
 		return true, err
 	}
@@ -499,7 +495,7 @@ func (signer *Signer) TryProcessOutTx(
 	// Setup Transaction input
 	txData := TransactionData{}
 	txData.height = height
-	skipTx, err := setTransactionData(cctx, evmClient, signer.client, logger, zetaBridge, &txData)
+	skipTx, err := SetTransactionData(cctx, evmClient, signer.client, logger, zetaBridge, &txData)
 	if err != nil {
 		logger.Error().Msg(err.Error())
 		return
@@ -577,10 +573,10 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	// Broadcast Signed Tx
-	signer.broadcastOutTx(tx, cctx, logger, myID, zetaBridge, &txData)
+	signer.BroadcastOutTx(tx, cctx, logger, myID, zetaBridge, &txData)
 }
 
-func (signer *Signer) broadcastOutTx(
+func (signer *Signer) BroadcastOutTx(
 	tx *ethtypes.Transaction,
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
@@ -768,6 +764,27 @@ func (signer *Signer) SignWhitelistTx(
 	}
 
 	return tx, nil
+}
+
+func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Signer, error) {
+	if endpoint == mock.EVMRPCEnabled {
+		chainID := big.NewInt(common.BscMainnetChain().ChainId)
+		ethSigner := ethtypes.NewEIP155Signer(chainID)
+		client := mock.EvmClient{}
+		return client, chainID, ethSigner, nil
+	}
+
+	client, err := ethclient.Dial(endpoint)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	chainID, err := client.ChainID(context.TODO())
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	ethSigner := ethtypes.LatestSignerForChainID(chainID)
+	return client, chainID, ethSigner, nil
 }
 
 func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
