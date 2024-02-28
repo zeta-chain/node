@@ -19,5 +19,4 @@ message WithdrawEmission {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  string withdraw_failed_reason = 4;
 }

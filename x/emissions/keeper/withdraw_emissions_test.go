@@ -87,7 +87,7 @@ func TestKeeper_CreateWithdrawEmissions(t *testing.T) {
 		withdrawableEmission.Amount = sdkmath.ZeroInt()
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
 		err := k.CreateWithdrawEmissions(ctx, withdrawableEmission.Address, sdkmath.ZeroInt())
-		require.ErrorIs(t, err, emissionstypes.ErrNotEnoughEmissionsAvailable)
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
 	})
 
 	t.Run("unable to create withdraw for negative amount", func(t *testing.T) {
@@ -96,7 +96,7 @@ func TestKeeper_CreateWithdrawEmissions(t *testing.T) {
 		withdrawableEmission.Amount = sdkmath.NewInt(-1)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
 		err := k.CreateWithdrawEmissions(ctx, withdrawableEmission.Address, sdkmath.NewInt(-1))
-		require.ErrorIs(t, err, emissionstypes.ErrNotEnoughEmissionsAvailable)
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
 	})
 
 	t.Run("unable to create withdraw for non existing withdrawable emission", func(t *testing.T) {

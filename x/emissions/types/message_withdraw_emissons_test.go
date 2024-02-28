@@ -16,15 +16,15 @@ func TestMsgWithdrawEmission_ValidateBasic(t *testing.T) {
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
-	t.Run("valid withdraw message", func(t *testing.T) {
-		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sample.IntInRange(1, 100))
-		err := msg.ValidateBasic()
-		require.NoError(t, err)
-	})
-
 	t.Run("invalid amount", func(t *testing.T) {
 		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sample.IntInRange(-100, -1))
 		err := msg.ValidateBasic()
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidCoins)
+	})
+
+	t.Run("valid withdraw message", func(t *testing.T) {
+		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sample.IntInRange(1, 100))
+		err := msg.ValidateBasic()
+		require.NoError(t, err)
 	})
 }

@@ -35,3 +35,32 @@ export declare class WithdrawableEmissions extends Message<WithdrawableEmissions
   static equals(a: WithdrawableEmissions | PlainMessage<WithdrawableEmissions> | undefined, b: WithdrawableEmissions | PlainMessage<WithdrawableEmissions> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.emissions.WithdrawEmission
+ */
+export declare class WithdrawEmission extends Message<WithdrawEmission> {
+  /**
+   * @generated from field: string address = 1;
+   */
+  address: string;
+
+  /**
+   * @generated from field: string amount = 2;
+   */
+  amount: string;
+
+  constructor(data?: PartialMessage<WithdrawEmission>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.emissions.WithdrawEmission";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): WithdrawEmission;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): WithdrawEmission;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): WithdrawEmission;
+
+  static equals(a: WithdrawEmission | PlainMessage<WithdrawEmission> | undefined, b: WithdrawEmission | PlainMessage<WithdrawEmission> | undefined): boolean;
+}
+

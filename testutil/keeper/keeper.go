@@ -106,7 +106,7 @@ var moduleAccountPerms = map[string][]string{
 	crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
 	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
 	emissionstypes.ModuleName:                       {authtypes.Minter},
-	emissionstypes.UndistributedObserverRewardsPool: {authtypes.Minter},
+	emissionstypes.UndistributedObserverRewardsPool: {authtypes.Minter, authtypes.Burner},
 	emissionstypes.UndistributedTssRewardsPool:      nil,
 }
 

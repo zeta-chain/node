@@ -46,7 +46,7 @@ func (k Keeper) CreateWithdrawEmissions(ctx sdk.Context, address string, amount 
 		return types.ErrEmissionsNotFound
 	}
 	if amount.IsNegative() || amount.IsZero() {
-		return types.ErrNotEnoughEmissionsAvailable
+		return types.ErrInvalidAmount
 	}
 	if amount.GT(emissions.Amount) {
 		amount = emissions.Amount
