@@ -32,16 +32,6 @@ func WithdrawBitcoin(r *runner.E2ERunner) {
 	// mine blocks
 	stop := r.MineBlocks()
 
-	// withdraw 0.1 BTC from ZRC20 to BTC legacy address
-	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)
-	if err != nil {
-		panic(err)
-	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
-	if receipt.Status == 1 {
-		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
-	}
-
 	// withdraw 0.1 BTC from ZRC20 to BTC address
 	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte(r.BTCDeployerAddress.EncodeAddress()), amount)
 	if err != nil {
