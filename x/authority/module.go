@@ -1,6 +1,7 @@
 package authority
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -78,11 +79,11 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	if err != nil {
 		fmt.Println("RegisterQueryHandlerClient err: %w", err)
 	}
-	// Uncomment once query created
-	//err = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
-	//if err != nil {
-	//	fmt.Println("RegisterQueryHandlerClient err: %w", err)
-	//}
+
+	err = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err != nil {
+		fmt.Println("RegisterQueryHandlerClient err: %w", err)
+	}
 }
 
 // GetTxCmd returns the authority module's root tx command.

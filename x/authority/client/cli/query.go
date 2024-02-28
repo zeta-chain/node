@@ -19,7 +19,9 @@ func GetQueryCmd(_ string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand()
+	cmd.AddCommand(
+		CmdShowPolicies(),
+	)
 
 	return cmd
 }
