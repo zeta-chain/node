@@ -25,4 +25,5 @@ zetacored tx authority [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
+* [zetacored tx authority update-policies](zetacored_tx_authority_update-policies.md)	 - Update the policies
 

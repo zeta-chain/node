@@ -25,4 +25,5 @@ zetacored query authority [flags]
 ### SEE ALSO
 
 * [zetacored query](zetacored_query.md)	 - Querying subcommands
+* [zetacored query authority show-policies](zetacored_query_authority_show-policies.md)	 - show the policies
 

@@ -26462,6 +26462,21 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/authority/policies:
+    get:
+      summary: Queries Policies
+      operationId: Query_Policies
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryGetPoliciesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of send items.
@@ -53462,6 +53477,38 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityMsgUpdatePoliciesResponse:
+    type: object
+    description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
+  authorityPolicies:
+    type: object
+    properties:
+      policy_addresses:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/authorityPolicyAddress'
+    title: Policy contains info about authority policies
+  authorityPolicyAddress:
+    type: object
+    properties:
+      policy_type:
+        $ref: '#/definitions/authorityPolicyType'
+      address:
+        type: string
+  authorityPolicyType:
+    type: string
+    enum:
+      - groupEmergency
+      - groupAdmin
+    default: groupEmergency
+    title: PolicyType defines the type of policy
+  authorityQueryGetPoliciesResponse:
+    type: object
+    properties:
+      policies:
+        $ref: '#/definitions/authorityPolicies'
+    description: QueryGetPoliciesResponse is the response type for the Query/Policies RPC method.
   bitcoinProof:
     type: object
     properties:
