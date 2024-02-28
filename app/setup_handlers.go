@@ -18,9 +18,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
-		// Set the consensus version for the crosschain module to 4.
-		// This would trigger the migration script for Version 4 to 5
-		vm[crosschaintypes.ModuleName] = 4
+		VersionMigrator{v: vm}.TriggerMigration(crosschaintypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
@@ -39,4 +37,13 @@ func SetupHandlers(app *App) {
 		// instead the default which is the latest version that store last committed i.e 0 for new stores.
 		app.SetStoreLoader(types.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
+}
+
+type VersionMigrator struct {
+	v module.VersionMap
+}
+
+func (v VersionMigrator) TriggerMigration(moduleName string) module.VersionMap {
+	v.v[moduleName] = v.v[moduleName] - 1
+	return v.v
 }
