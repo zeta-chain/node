@@ -12,7 +12,7 @@ services:
       - WALLET_ADDRESS=bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y
       - SNAPSHOT_URL=https://storage.googleapis.com/bitcoin-rpc-snapshots-prod/bitcoind-mainnet-2024-02-20-00-22-06.tar.gz
       - SNAPSHOT_RESTORE=true
-      - CLEAN_SNAPSHOT=false
+      - CLEAN_SNAPSHOT=true
       - DOWNLOAD_SNAPSHOT=true
     volumes:
       - bitcoin_data:/root/
