@@ -42,9 +42,13 @@ func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
 	}
 }
 
-func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
+func (c *ZetaCoreContext) GetKeygen() (observertypes.Keygen, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
+
+	if c.keygen == nil {
+		return observertypes.Keygen{}, false
+	}
 	copiedPubkeys := make([]string, len(c.keygen.GranteePubkeys))
 	copy(copiedPubkeys, c.keygen.GranteePubkeys)
 
@@ -52,7 +56,7 @@ func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 		Status:         c.keygen.Status,
 		GranteePubkeys: copiedPubkeys,
 		BlockNumber:    c.keygen.BlockNumber,
-	}
+	}, true
 }
 
 func (c *ZetaCoreContext) GetCurrentTssPubkey() string {

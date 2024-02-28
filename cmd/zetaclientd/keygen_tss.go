@@ -74,7 +74,10 @@ func GenerateTss(
 		// This loop will try keygen at the keygen block and then wait for keygen to be successfully reported by all nodes before breaking out of the loop.
 		// If keygen is unsuccessful, it will reset the triedKeygenAtBlock flag and try again at a new keygen block.
 
-		keyGen := appContext.ZetaCoreContext().GetKeygen()
+		keyGen, found := appContext.ZetaCoreContext().GetKeygen()
+		if !found {
+			return nil, fmt.Errorf("keygen not found")
+		}
 		if keyGen.Status == observertypes.KeygenStatus_KeyGenSuccess {
 			return tss, nil
 		}
