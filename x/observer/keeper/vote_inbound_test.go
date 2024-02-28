@@ -257,6 +257,59 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		require.True(t, isNew)
 	})
 
+	t.Run("can add vote and create ballot without finalizing ballot", func(t *testing.T) {
+		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+
+		observer := sample.AccAddress()
+		stakingMock := keepertest.GetObserverStakingMock(t, k)
+		slashingMock := keepertest.GetObserverSlashingMock(t, k)
+
+		// threshold high enough to not finalize ballot
+		threshold, err := sdk.NewDecFromStr("0.7")
+		require.NoError(t, err)
+
+		k.SetCrosschainFlags(ctx, types.CrosschainFlags{
+			IsInboundEnabled: true,
+		})
+		k.SetChainParamsList(ctx, types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				{
+					ChainId:         getValidEthChainIDWithIndex(t, 0),
+					IsSupported:     true,
+					BallotThreshold: threshold,
+				},
+				{
+					ChainId:         getValidEthChainIDWithIndex(t, 1),
+					IsSupported:     true,
+					BallotThreshold: threshold,
+				},
+			},
+		})
+		k.SetObserverSet(ctx, types.ObserverSet{
+			ObserverList: []string{
+				observer,
+				sample.AccAddress(),
+			},
+		})
+		stakingMock.MockGetValidator(sample.Validator(t, sample.Rand()))
+		slashingMock.MockIsTombstoned(false)
+
+		isFinalized, isNew, err := k.VoteOnInboundBallot(
+			ctx,
+			getValidEthChainIDWithIndex(t, 0),
+			getValidEthChainIDWithIndex(t, 1),
+			common.CoinType_ERC20,
+			observer,
+			"index",
+			"inTxHash",
+		)
+		require.NoError(t, err)
+
+		// ballot should be finalized since there is only one observer
+		require.False(t, isFinalized)
+		require.True(t, isNew)
+	})
+
 	t.Run("can add vote to an existing ballot", func(t *testing.T) {
 		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
 
