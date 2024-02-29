@@ -154,11 +154,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 5, m.Migrate5to6); err != nil {
 		panic(err)
 	}
-	if err := cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
+	_ = cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
 		return nil
-	}); err != nil {
-		panic(err)
-	}
+	})
 }
 
 // RegisterInvariants registers the observer module's invariants.

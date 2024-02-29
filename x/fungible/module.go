@@ -138,11 +138,9 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
-	if err := cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
+	_ = cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
 		return nil
-	}); err != nil {
-		panic(err)
-	}
+	})
 }
 
 // RegisterInvariants registers the fungible module's invariants.
