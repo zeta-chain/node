@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/zeta-chain/zetacore/x/authority/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,4 +30,24 @@ func TestKeeper_SetPolicies(t *testing.T) {
 	got, found = k.GetPolicies(ctx)
 	require.True(t, found)
 	require.Equal(t, newPolicies, got)
+}
+
+func TestKeeper_IsAuthorized(t *testing.T) {
+	k, ctx := keepertest.AuthorityKeeper(t)
+	policies := sample.Policies()
+	k.SetPolicies(ctx, policies)
+
+	// Check policy is set
+	got, found := k.GetPolicies(ctx)
+	require.True(t, found)
+	require.Equal(t, policies, got)
+
+	// Check policy is authorized
+	for _, policy := range policies.PolicyAddresses {
+		require.True(t, k.IsAuthorized(ctx, policy.Address, policy.PolicyType))
+	}
+
+	// Check policy is not authorized
+	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
+	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
 }

@@ -10,7 +10,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
-
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -145,4 +145,8 @@ type FungibleKeeper interface {
 	) (eth.Address, error)
 	FundGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
 	WithdrawFromGasStabilityPool(ctx sdk.Context, chainID int64, amount *big.Int) error
+}
+
+type AuthorityKeeper interface {
+	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
 }

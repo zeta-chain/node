@@ -357,6 +357,12 @@ func New(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
+	app.AuthorityKeeper = authoritykeeper.NewKeeper(
+		appCodec,
+		keys[authoritytypes.StoreKey],
+		keys[authoritytypes.MemStoreKey],
+	)
+
 	app.ObserverKeeper = observerkeeper.NewKeeper(
 		appCodec,
 		keys[observertypes.StoreKey],
@@ -364,6 +370,7 @@ func New(
 		app.GetSubspace(observertypes.ModuleName),
 		&stakingKeeper,
 		app.SlashingKeeper,
+		app.AuthorityKeeper,
 	)
 
 	// register the staking hooks
@@ -377,12 +384,6 @@ func New(
 		appCodec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
-	)
-
-	app.AuthorityKeeper = authoritykeeper.NewKeeper(
-		appCodec,
-		keys[authoritytypes.StoreKey],
-		keys[authoritytypes.MemStoreKey],
 	)
 
 	app.EmissionsKeeper = *emissionskeeper.NewKeeper(
@@ -422,6 +423,7 @@ func New(
 		app.EvmKeeper,
 		app.BankKeeper,
 		app.ObserverKeeper,
+		app.AuthorityKeeper,
 	)
 
 	app.CrosschainKeeper = *crosschainkeeper.NewKeeper(
@@ -434,6 +436,7 @@ func New(
 		app.BankKeeper,
 		app.ObserverKeeper,
 		&app.FungibleKeeper,
+		app.AuthorityKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
