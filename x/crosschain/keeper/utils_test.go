@@ -215,22 +215,6 @@ func setupZRC20Pool(
 	require.NoError(t, err)
 }
 
-// setAdminPolicies sets the admin policies for the observer module with group 1 and 2
-func setAdminPolicies(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) {
-	params := zk.ObserverKeeper.GetParams(ctx)
-	params.AdminPolicy = []*observertypes.Admin_Policy{
-		{
-			PolicyType: observertypes.Policy_Type_group1,
-			Address:    admin,
-		},
-		{
-			PolicyType: observertypes.Policy_Type_group2,
-			Address:    admin,
-		},
-	}
-	zk.ObserverKeeper.SetParams(ctx, params)
-}
-
 // setSupportedChain sets the supported chains for the observer module
 func setSupportedChain(ctx sdk.Context, zk testkeeper.ZetaKeepers, chainIDs ...int64) {
 	chainParamsList := make([]*observertypes.ChainParams, len(chainIDs))
