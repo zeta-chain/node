@@ -14,20 +14,22 @@ import (
 )
 
 type CrosschainMockOptions struct {
-	UseBankMock     bool
-	UseAccountMock  bool
-	UseStakingMock  bool
-	UseObserverMock bool
-	UseFungibleMock bool
+	UseBankMock      bool
+	UseAccountMock   bool
+	UseStakingMock   bool
+	UseObserverMock  bool
+	UseFungibleMock  bool
+	UseAuthorityMock bool
 }
 
 var (
 	CrosschainMocksAll = CrosschainMockOptions{
-		UseBankMock:     true,
-		UseAccountMock:  true,
-		UseStakingMock:  true,
-		UseObserverMock: true,
-		UseFungibleMock: true,
+		UseBankMock:      true,
+		UseAccountMock:   true,
+		UseStakingMock:   true,
+		UseObserverMock:  true,
+		UseFungibleMock:  true,
+		UseAuthorityMock: true,
 	}
 	CrosschainNoMocks = CrosschainMockOptions{}
 )
@@ -50,6 +52,11 @@ func CrosschainKeeperWithMocks(
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create zeta keepers
+	authorityKeeperTmp := initAuthorityKeeper(
+		cdc,
+		db,
+		stateStore,
+	)
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
@@ -57,8 +64,9 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
+		authorityKeeperTmp,
 	)
-	fungiblekeeperTmp := initFungibleKeeper(
+	fungibleKeeperTmp := initFungibleKeeper(
 		cdc,
 		db,
 		stateStore,
@@ -67,13 +75,16 @@ func CrosschainKeeperWithMocks(
 		sdkKeepers.BankKeeper,
 		sdkKeepers.EvmKeeper,
 		observerKeeperTmp,
+		authorityKeeperTmp,
 	)
 	zetaKeepers := ZetaKeepers{
-		ObserverKeeper: observerKeeperTmp,
-		FungibleKeeper: fungiblekeeperTmp,
+		ObserverKeeper:  observerKeeperTmp,
+		FungibleKeeper:  fungibleKeeperTmp,
+		AuthorityKeeper: &authorityKeeperTmp,
 	}
+	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
-	var fungibleKeeper types.FungibleKeeper = fungiblekeeperTmp
+	var fungibleKeeper types.FungibleKeeper = fungibleKeeperTmp
 
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -102,6 +113,10 @@ func CrosschainKeeperWithMocks(
 	if mockOptions.UseStakingMock {
 		stakingKeeper = crosschainmocks.NewCrosschainStakingKeeper(t)
 	}
+
+	if mockOptions.UseAuthorityMock {
+		authorityKeeper = crosschainmocks.NewCrosschainAuthorityKeeper(t)
+	}
 	if mockOptions.UseObserverMock {
 		observerKeeper = crosschainmocks.NewCrosschainObserverKeeper(t)
 	}
@@ -119,6 +134,7 @@ func CrosschainKeeperWithMocks(
 		bankKeeper,
 		observerKeeper,
 		fungibleKeeper,
+		authorityKeeper,
 	)
 
 	return k, ctx, sdkKeepers, zetaKeepers

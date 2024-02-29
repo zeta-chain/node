@@ -5,9 +5,6 @@ import (
 	"testing"
 	"time"
 
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -21,6 +18,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -38,6 +37,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -91,6 +93,7 @@ type SDKKeepers struct {
 
 // ZetaKeepers is a struct containing Zeta module keepers for test purposes
 type ZetaKeepers struct {
+	AuthorityKeeper  *authoritykeeper.Keeper
 	CrosschainKeeper *crosschainkeeper.Keeper
 	EmissionsKeeper  *emissionskeeper.Keeper
 	FungibleKeeper   *fungiblekeeper.Keeper
@@ -371,6 +374,9 @@ func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Cont
 
 // InitGenesis initializes the test modules genesis state for defined Zeta modules
 func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
+	if zk.AuthorityKeeper != nil {
+		authoritymodule.InitGenesis(ctx, *zk.AuthorityKeeper, *authoritytypes.DefaultGenesis())
+	}
 	if zk.CrosschainKeeper != nil {
 		crosschainmodule.InitGenesis(ctx, *zk.CrosschainKeeper, *crosschaintypes.DefaultGenesis())
 	}

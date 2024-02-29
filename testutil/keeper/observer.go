@@ -21,14 +21,16 @@ import (
 
 // ObserverMockOptions represents options for instantiating an observer keeper with mocks
 type ObserverMockOptions struct {
-	UseStakingMock  bool
-	UseSlashingMock bool
+	UseStakingMock   bool
+	UseSlashingMock  bool
+	UseAuthorityMock bool
 }
 
 var (
 	ObserverMocksAll = ObserverMockOptions{
-		UseStakingMock:  true,
-		UseSlashingMock: true,
+		UseStakingMock:   true,
+		UseSlashingMock:  true,
+		UseAuthorityMock: true,
 	}
 	ObserverNoMocks = ObserverMockOptions{}
 )
@@ -40,6 +42,7 @@ func initObserverKeeper(
 	stakingKeeper stakingkeeper.Keeper,
 	slashingKeeper slashingkeeper.Keeper,
 	paramKeeper paramskeeper.Keeper,
+	authorityKeeper types.AuthorityKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -53,6 +56,7 @@ func initObserverKeeper(
 		paramKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
 		slashingKeeper,
+		authorityKeeper,
 	)
 }
 
@@ -85,11 +89,15 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	// Initialize mocks for mocked keepers
 	var stakingKeeper types.StakingKeeper = sdkKeepers.StakingKeeper
 	var slashingKeeper types.SlashingKeeper = sdkKeepers.SlashingKeeper
+	var authorityKeeper types.AuthorityKeeper = initAuthorityKeeper(cdc, db, stateStore)
 	if mockOptions.UseStakingMock {
 		stakingKeeper = observermocks.NewObserverStakingKeeper(t)
 	}
 	if mockOptions.UseSlashingMock {
 		slashingKeeper = observermocks.NewObserverSlashingKeeper(t)
+	}
+	if mockOptions.UseAuthorityMock {
+		authorityKeeper = observermocks.NewObserverAuthorityKeeper(t)
 	}
 
 	k := keeper.NewKeeper(
@@ -99,6 +107,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
 		stakingKeeper,
 		slashingKeeper,
+		authorityKeeper,
 	)
 
 	k.SetParams(ctx, types.DefaultParams())

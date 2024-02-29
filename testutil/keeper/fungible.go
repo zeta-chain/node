@@ -22,18 +22,20 @@ import (
 )
 
 type FungibleMockOptions struct {
-	UseBankMock     bool
-	UseAccountMock  bool
-	UseObserverMock bool
-	UseEVMMock      bool
+	UseBankMock      bool
+	UseAccountMock   bool
+	UseObserverMock  bool
+	UseEVMMock       bool
+	UseAuthorityMock bool
 }
 
 var (
 	FungibleMocksAll = FungibleMockOptions{
-		UseBankMock:     true,
-		UseAccountMock:  true,
-		UseObserverMock: true,
-		UseEVMMock:      true,
+		UseBankMock:      true,
+		UseAccountMock:   true,
+		UseObserverMock:  true,
+		UseEVMMock:       true,
+		UseAuthorityMock: true,
 	}
 	FungibleNoMocks = FungibleMockOptions{}
 )
@@ -47,6 +49,7 @@ func initFungibleKeeper(
 	bankKeepr types.BankKeeper,
 	evmKeeper types.EVMKeeper,
 	observerKeeper types.ObserverKeeper,
+	authorityKeeper types.AuthorityKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -62,6 +65,7 @@ func initFungibleKeeper(
 		evmKeeper,
 		bankKeepr,
 		observerKeeper,
+		authorityKeeper,
 	)
 }
 
@@ -78,6 +82,13 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
+	// Create authority keeper
+	authorityKeeperTmp := initAuthorityKeeper(
+		cdc,
+		db,
+		stateStore,
+	)
+
 	// Create observer keeper
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
@@ -86,11 +97,14 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
+		authorityKeeperTmp,
 	)
 	zetaKeepers := ZetaKeepers{
-		ObserverKeeper: observerKeeperTmp,
+		ObserverKeeper:  observerKeeperTmp,
+		AuthorityKeeper: &authorityKeeperTmp,
 	}
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
+	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -110,6 +124,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
 	var bankKeeper types.BankKeeper = sdkKeepers.BankKeeper
 	var evmKeeper types.EVMKeeper = sdkKeepers.EvmKeeper
+
 	if mockOptions.UseAccountMock {
 		authKeeper = fungiblemocks.NewFungibleAccountKeeper(t)
 	}
@@ -122,6 +137,9 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	if mockOptions.UseEVMMock {
 		evmKeeper = fungiblemocks.NewFungibleEVMKeeper(t)
 	}
+	if mockOptions.UseAuthorityMock {
+		authorityKeeper = fungiblemocks.NewFungibleAuthorityKeeper(t)
+	}
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -132,6 +150,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		evmKeeper,
 		bankKeeper,
 		observerKeeper,
+		authorityKeeper,
 	)
 
 	fungiblemodule.InitGenesis(ctx, *k, *types.DefaultGenesis())
