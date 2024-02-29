@@ -31,7 +31,7 @@ func NewRunCmd() *cobra.Command {
 		Use:   "run [testname1]:[arg1],[arg2] [testname2]:[arg1],[arg2]...",
 		Short: "Run one or more E2E tests with optional arguments",
 		Long: `Run one or more E2E tests specified by their names and optional arguments.
-For example: zetae2e run deposit:1000 withdraw: --config confuing.yml`,
+For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 		RunE: runE2ETest,
 		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
 	}
@@ -85,18 +85,6 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return errors.New("invalid EVM address")
 	}
 
-	// parse test names and arguments from cmd args
-	testArgsMap := make(map[string][]string)
-	for _, arg := range args {
-		parts := strings.SplitN(arg, ":", 2)
-		testName := parts[0]
-		testArgs := []string{}
-		if len(parts) > 1 && parts[1] != "" {
-			testArgs = strings.Split(parts[1], ",")
-		}
-		testArgsMap[testName] = testArgs
-	}
-
 	// initialize deployer runner with config
 	testRunner, err := zetae2econfig.RunnerFromConfig(
 		ctx,
@@ -132,8 +120,9 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//run tests
-	testsToRun, err := testRunner.GetE2ETestsToRunByNameAndArgs(e2etests.AllE2ETests, testArgsMap)
+	// parse test names and arguments from cmd args and run them
+	userTests := parseCmdArgsToE2ETestSpecs(args)
+	testsToRun, err := testRunner.GetE2ETestsToRunByNameAndArgs(e2etests.AllE2ETests, userTests)
 	if err != nil {
 		cancel()
 		return err
@@ -158,4 +147,22 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	testRunner.PrintTestReports(reports)
 
 	return nil
+}
+
+// parseCmdArgsToE2ETests parses command-line arguments into a slice of E2ETest structs.
+func parseCmdArgsToE2ETestSpecs(args []string) []runner.E2ETestSpec {
+	tests := []runner.E2ETestSpec{}
+	for _, arg := range args {
+		parts := strings.SplitN(arg, ":", 2)
+		testName := parts[0]
+		var testArgs []string
+		if len(parts) > 1 && parts[1] != "" {
+			testArgs = strings.Split(parts[1], ",")
+		}
+		tests = append(tests, runner.E2ETestSpec{
+			Name: testName,
+			Args: testArgs,
+		})
+	}
+	return tests
 }

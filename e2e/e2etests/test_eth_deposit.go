@@ -25,11 +25,11 @@ func TestEtherDeposit(r *runner.E2ERunner, args []string) {
 	amount := new(big.Int).Set(defaultAmount)
 
 	if len(args) > 1 {
-		r.Logger.Error("TestEtherDeposit accepts only one argument for the amount, using default value")
+		panic("TestEtherDeposit accepts only one argument for the amount, using default value")
 	} else if len(args) == 1 {
 		userAmount, ok := big.NewInt(0).SetString(args[0], 10)
 		if !ok {
-			r.Logger.Error("Invalid amount specified for TestEtherDeposit, using default value")
+			panic("Invalid amount specified for TestEtherDeposit, using default value")
 		} else {
 			amount.Set(userAmount)
 		}

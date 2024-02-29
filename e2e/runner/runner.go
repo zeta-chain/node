@@ -163,7 +163,7 @@ func NewE2ERunner(
 // It takes a E2ERunner as an argument
 type E2ETestFunc func(*E2ERunner, []string)
 
-// E2ETest represents a E2E test with a name
+// E2ETest represents a E2E test with a name, args, description and test func
 type E2ETest struct {
 	Name            string
 	Args            []string
@@ -183,32 +183,43 @@ func NewE2ETest(name, description, argsDescription string, args []string, e2eTes
 	}
 }
 
-func (runner *E2ERunner) GetE2ETestsToRunByName(e2eTests []E2ETest, e2eTestNames ...string) ([]E2ETest, error) {
-	e2eTestsWithArgs := make(map[string][]string)
-	for _, testName := range e2eTestNames {
-		e2eTestsWithArgs[testName] = []string{} // no args specified
-	}
-	return runner.GetE2ETestsToRunByNameAndArgs(e2eTests, e2eTestsWithArgs)
+// E2ETestSpec defines the basic specification for initiating an E2E test, including its name and optional arguments.
+type E2ETestSpec struct {
+	Name string
+	Args []string
 }
 
-func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(e2eTests []E2ETest, e2eTestsWithArgs map[string][]string) ([]E2ETest, error) {
-	testsToRun := []E2ETest{}
-	for testName, args := range e2eTestsWithArgs {
-		e2eTest, found := findE2ETestByName(e2eTests, testName)
+// GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
+func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
+	tests := []E2ETestSpec{}
+	for _, testName := range testNames {
+		tests = append(tests, E2ETestSpec{
+			Name: testName,
+			Args: []string{},
+		})
+	}
+	return runner.GetE2ETestsToRunByNameAndArgs(availableTests, tests)
+}
+
+// GetE2ETestsToRunByNameAndArgs prepares a list of E2ETests to run based on provided test names and their corresponding arguments
+func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(availableTests []E2ETest, testSpecs []E2ETestSpec) ([]E2ETest, error) {
+	tests := []E2ETest{}
+	for _, test := range testSpecs {
+		e2eTest, found := findE2ETestByName(availableTests, test.Name)
 		if !found {
-			return nil, fmt.Errorf("e2e test %s not found", testName)
+			return nil, fmt.Errorf("e2e test %s not found", test.Name)
 		}
 		e2eTestToRun := NewE2ETest(
 			e2eTest.Name,
 			e2eTest.Description,
 			e2eTest.ArgsDescription,
-			args,
+			test.Args,
 			e2eTest.E2ETest,
 		)
-		testsToRun = append(testsToRun, e2eTestToRun)
+		tests = append(tests, e2eTestToRun)
 	}
 
-	return testsToRun, nil
+	return tests, nil
 }
 
 // RunE2ETests runs a list of e2e tests
