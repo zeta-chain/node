@@ -44,7 +44,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	// Init and export
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	observer.InitGenesis(ctx, *k, genesisState)
 	got := observer.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)
