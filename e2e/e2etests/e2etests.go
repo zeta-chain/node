@@ -64,7 +64,7 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(TestDepositEtherLiquidityCapName, "deposit Ethers into ZEVM with a liquidity cap", "", nil, TestDepositEtherLiquidityCap),
 	runner.NewE2ETest(TestMyTestName, "performing custom test", "", nil, TestMyTest),
 	runner.NewE2ETest(TestERC20DepositName, "deposit ERC20 into ZEVM", "", nil, TestERC20Deposit),
-	runner.NewE2ETest(TestEtherDepositName, "deposit Ether into ZEVM", "deposit amount (0.01ETH default)", nil, TestEtherDeposit),
+	runner.NewE2ETest(TestEtherDepositName, "deposit Ether into ZEVM", "deposit amount (0.01ETH default)", []string{"10000000000000000"}, TestEtherDeposit),
 	runner.NewE2ETest(TestEtherWithdrawName, "withdraw Ether from ZEVM", "", nil, TestEtherWithdraw),
 	runner.NewE2ETest(TestBitcoinDepositName, "deposit Bitcoin into ZEVM", "", nil, TestBitcoinDeposit),
 	runner.NewE2ETest(TestDonationEtherName, "donate Ether to the TSS", "", nil, TestDonationEther),

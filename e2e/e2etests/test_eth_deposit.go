@@ -21,21 +21,17 @@ import (
 
 // TestEtherDeposit tests deposit of ethers
 func TestEtherDeposit(r *runner.E2ERunner, args []string) {
-	defaultAmount := big.NewInt(10000000000000000) // default value of 0.01 ETH in wei
-	amount := new(big.Int).Set(defaultAmount)
-
-	if len(args) > 1 {
-		panic("TestEtherDeposit accepts only one argument for the amount, using default value")
-	} else if len(args) == 1 {
-		userAmount, ok := big.NewInt(0).SetString(args[0], 10)
-		if !ok {
-			panic("Invalid amount specified for TestEtherDeposit, using default value")
-		} else {
-			amount.Set(userAmount)
-		}
+	if len(args) != 1 {
+		panic("TestEtherDeposit requires exactly one argument for the amount.")
 	}
-	hash := r.DepositEtherWithAmount(false, amount) // in wei
 
+	// parse the amount from the provided arguments
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestEtherDeposit.")
+	}
+
+	hash := r.DepositEtherWithAmount(false, amount) // in wei
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")

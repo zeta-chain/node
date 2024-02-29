@@ -167,19 +167,21 @@ type E2ETestFunc func(*E2ERunner, []string)
 type E2ETest struct {
 	Name            string
 	Args            []string
+	DefaultArgs     []string
 	Description     string
 	ArgsDescription string
 	E2ETest         E2ETestFunc
 }
 
 // NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description, argsDescription string, args []string, e2eTestFunc E2ETestFunc) E2ETest {
+func NewE2ETest(name, description, argsDescription string, defaultArgs []string, e2eTestFunc E2ETestFunc) E2ETest {
 	return E2ETest{
 		Name:            name,
 		Description:     description,
 		E2ETest:         e2eTestFunc,
 		ArgsDescription: argsDescription,
-		Args:            args,
+		Args:            []string{},
+		DefaultArgs:     defaultArgs,
 	}
 }
 
@@ -290,9 +292,12 @@ func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err 
 	startTime := time.Now()
 	runner.Logger.Print("⏳running - %s", e2eTest.Description)
 
-	// run e2e test
-	// TODO: E2ETest probably should not have Args directly, revisit
-	e2eTest.E2ETest(runner, e2eTest.Args)
+	// run e2e test, if args are not provided, use default args
+	args := e2eTest.Args
+	if len(args) == 0 {
+		args = e2eTest.DefaultArgs
+	}
+	e2eTest.E2ETest(runner, args)
 
 	//check supplies
 	if checkAccounting {

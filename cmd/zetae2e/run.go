@@ -155,7 +155,7 @@ func parseCmdArgsToE2ETestSpecs(args []string) []runner.E2ETestSpec {
 	for _, arg := range args {
 		parts := strings.SplitN(arg, ":", 2)
 		testName := parts[0]
-		var testArgs []string
+		testArgs := []string{}
 		if len(parts) > 1 && parts[1] != "" {
 			testArgs = strings.Split(parts[1], ",")
 		}
