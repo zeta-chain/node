@@ -11,7 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// Authorized: admin policy group 2.
+// UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
 func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
