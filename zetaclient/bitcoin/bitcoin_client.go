@@ -38,7 +38,8 @@ import (
 )
 
 const (
-	DynamicDepositorFeeHeight = 834500 // Bitcoin block height to switch to dynamic depositor fee
+	// The starting height (Bitcoin mainnet) from which dynamic depositor fee will take effect
+	DynamicDepositorFeeHeight = 834500
 )
 
 var _ interfaces.ChainClient = &BTCChainClient{}
