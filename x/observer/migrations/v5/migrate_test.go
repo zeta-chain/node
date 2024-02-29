@@ -15,7 +15,7 @@ import (
 
 func TestMigrateObserverMapper(t *testing.T) {
 	t.Run("TestMigrateStore", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		legacyObserverMapperStore := prefix.NewStore(ctx.KVStore(k.StoreKey()), types.KeyPrefix(types.ObserverMapperKey))
 		legacyObserverMapperList := sample.LegacyObserverMapperList(t, 12, "sample")
 		for _, legacyObserverMapper := range legacyObserverMapperList {
@@ -43,7 +43,7 @@ func TestMigrateObserverMapper(t *testing.T) {
 }
 
 func TestMigrateObserverParams(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 
 	// set chain params
 	previousChainParamsList := types.ChainParamsList{

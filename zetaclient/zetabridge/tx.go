@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 const (
@@ -151,19 +151,20 @@ func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status
 	return "", fmt.Errorf("set tss failed | err %s", err.Error())
 }
 
-func (b *ZetaCoreBridge) ConfigUpdater(cfg *config.Config) {
-	b.logger.Info().Msg("ConfigUpdater started")
-	ticker := time.NewTicker(time.Duration(cfg.ConfigUpdateTicker) * time.Second)
+// CoreContextUpdater is a polling goroutine that checks and updates core context at every height
+func (b *ZetaCoreBridge) CoreContextUpdater(appContext *appcontext.AppContext) {
+	b.logger.Info().Msg("CoreContextUpdater started")
+	ticker := time.NewTicker(time.Duration(appContext.Config().ConfigUpdateTicker) * time.Second)
 	for {
 		select {
 		case <-ticker.C:
 			b.logger.Debug().Msg("Running Updater")
-			err := b.UpdateConfigFromCore(cfg, false)
+			err := b.UpdateZetaCoreContext(appContext.ZetaCoreContext(), false)
 			if err != nil {
-				b.logger.Err(err).Msg("ConfigUpdater failed to update config")
+				b.logger.Err(err).Msg("CoreContextUpdater failed to update config")
 			}
 		case <-b.stop:
-			b.logger.Info().Msg("ConfigUpdater stopped")
+			b.logger.Info().Msg("CoreContextUpdater stopped")
 			return
 		}
 	}
@@ -301,7 +302,6 @@ func (b *ZetaCoreBridge) MonitorVoteInboundTxResult(zetaTxHash string, retryGasL
 	b.logger.Error().Err(lastErr).Msgf(
 		"MonitorInboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
-	return
 }
 
 // PostVoteOutbound posts a vote on an observed outbound tx
@@ -427,5 +427,4 @@ func (b *ZetaCoreBridge) MonitorVoteOutboundTxResult(zetaTxHash string, retryGas
 	b.logger.Error().Err(lastErr).Msgf(
 		"MonitorVoteOutboundTxResult: unable to query tx result for txHash %s, err %s", zetaTxHash, lastErr.Error(),
 	)
-	return
 }

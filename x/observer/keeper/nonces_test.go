@@ -9,7 +9,7 @@ import (
 )
 
 func TestChainNoncesGet(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	items := sample.ChainNoncesList(t, 10)
 	for _, item := range items {
 		k.SetChainNonces(ctx, item)
@@ -21,7 +21,7 @@ func TestChainNoncesGet(t *testing.T) {
 	}
 }
 func TestChainNoncesRemove(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	items := sample.ChainNoncesList(t, 10)
 	for _, item := range items {
 		k.SetChainNonces(ctx, item)
@@ -34,7 +34,7 @@ func TestChainNoncesRemove(t *testing.T) {
 }
 
 func TestChainNoncesGetAll(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	items := sample.ChainNoncesList(t, 10)
 	for _, item := range items {
 		k.SetChainNonces(ctx, item)

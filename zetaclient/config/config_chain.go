@@ -35,7 +35,6 @@ func New() Config {
 	return Config{
 		EVMChainConfigs: evmChainsConfigs,
 		BitcoinConfig:   bitcoinConfigRegnet,
-		ChainsEnabled:   []common.Chain{},
 	}
 }
 
