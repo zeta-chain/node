@@ -1,11 +1,12 @@
 package evm
 
 import (
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"math/big"
 	"path"
 	"testing"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
