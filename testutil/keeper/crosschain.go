@@ -52,11 +52,7 @@ func CrosschainKeeperWithMocks(
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
 	// Create zeta keepers
-	authorityKeeperTmp := initAuthorityKeeper(
-		cdc,
-		db,
-		stateStore,
-	)
+	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
 		db,
