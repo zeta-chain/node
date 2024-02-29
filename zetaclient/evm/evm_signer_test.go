@@ -41,6 +41,14 @@ func getNewEvmSigner() (*Signer, error) {
 		ts)
 }
 
+func getNewEvmChainClient() (*ChainClient, error) {
+	logger := common.ClientLogger{}
+	ts := &metrics.TelemetryServer{}
+	cfg := config.NewConfig()
+	evmcfg := config.EVMConfig{Endpoint: "http://localhost:8545"}
+	return NewEVMChainClient(mock.NewZetaCoreBridge(), mock.NewTSSMainnet(), "", logger, cfg, evmcfg, ts)
+}
+
 func getNewOutTxProcessor() *outtxprocessor.Processor {
 	logger := zerolog.Logger{}
 	return outtxprocessor.NewOutTxProcessorManager(logger)
@@ -55,18 +63,21 @@ func getCCTX() (*types.CrossChainTx, error) {
 func TestSigner_TryProcessOutTx(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
-
 	cctx, err := getCCTX()
 	require.NoError(t, err)
-
 	processorManager := getNewOutTxProcessor()
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
 
-	mockChainClient := &ChainClient{
-		chain:      corecommon.BscMainnetChain(),
-		zetaClient: mock.NewZetaCoreBridge(),
-		Tss:        mock.NewTSSMainnet(),
-	}
 	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, mock.NewZetaCoreBridge(), 123)
+
+	//Check if cctx was processed
+	list := evmSigner.GetReportedTxList()
+	found := false
+	for range *list {
+		found = true
+	}
+	require.True(t, found)
 }
 
 func TestSigner_SignOutboundTx(t *testing.T) {

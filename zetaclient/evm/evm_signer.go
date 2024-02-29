@@ -766,6 +766,10 @@ func (signer *Signer) SignWhitelistTx(
 	return tx, nil
 }
 
+func (signer *Signer) GetReportedTxList() *map[string]bool {
+	return &signer.outTxHashBeingReported
+}
+
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Signer, error) {
 	if endpoint == mock.EVMRPCEnabled {
 		chainID := big.NewInt(common.BscMainnetChain().ChainId)
