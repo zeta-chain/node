@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -137,6 +138,11 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
+		return nil
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the fungible module's invariants.
@@ -167,7 +173,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return common.AppVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the fungible module.
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}

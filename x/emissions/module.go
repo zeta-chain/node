@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/emissions/client/cli"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
@@ -137,6 +138,11 @@ func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), emissionskeeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 13, func(s sdk.Context) error {
+		return nil
+	}); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterInvariants registers the emissions module's invariants.
@@ -165,7 +171,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return common.AppVersion }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the emissions module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

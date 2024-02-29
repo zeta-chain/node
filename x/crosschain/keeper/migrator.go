@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v14 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v14"
 	v2 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v2"
 	v3 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v3"
 	v4 "github.com/zeta-chain/zetacore/x/crosschain/migrations/v4"
@@ -38,4 +39,8 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // Migrate4to5 migrates the store from consensus version 4 to 5
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	return v5.MigrateStore(ctx, m.crossChainKeeper, m.crossChainKeeper.zetaObserverKeeper)
+}
+
+func (m Migrator) Migrate13to14(ctx sdk.Context) error {
+	return v14.MigrateStore(ctx, m.crossChainKeeper, m.crossChainKeeper.zetaObserverKeeper)
 }

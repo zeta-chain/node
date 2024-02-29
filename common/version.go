@@ -6,3 +6,5 @@ var (
 	CommitHash = ""
 	BuildTime  = ""
 )
+
+const AppVersion = 14
