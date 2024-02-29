@@ -266,10 +266,10 @@ release:
 ###############################################################################
 
 mainnet-zetarpc-node:
-	cd contrib/mainnet/zetacored && docker-compose up
+	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 mainnet-bitcoind-node:
-	cd contrib/mainnet/bitcoind && docker-compose up
+	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 athens3-zetarpc-node:
-	cd contrib/athens3/zetacored && docker-compose up
+	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up

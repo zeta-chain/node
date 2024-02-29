@@ -6,7 +6,7 @@ services:
 #    build:
 #      context: ../../..
 #      dockerfile: Dockerfile
-    image: zetachain/zeatcored:${DOCKER_TAG:-ubuntu-v12.3.0-docker-test}
+    image: zetachain/zeatcored:${DOCKER_TAG:-ubuntu-v14}
     environment:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: athens3
