@@ -34,7 +34,7 @@ func (m Ballot) GetVoterIndex(address string) int {
 	return index
 }
 
-// Is finalzing vote checks sets the ballot to a final status if enough votes have been added
+// IsFinalizingVote checks sets the ballot to a final status if enough votes have been added
 // If it has already been finalized it returns false
 // It enough votes have not been added it returns false
 func (m Ballot) IsFinalizingVote() (Ballot, bool) {

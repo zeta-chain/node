@@ -14,7 +14,7 @@ import (
 )
 
 func TestChainNoncesQuerySingle(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	chainNonces := sample.ChainNoncesList(t, 2)
 	for _, nonce := range chainNonces {
@@ -59,7 +59,7 @@ func TestChainNoncesQuerySingle(t *testing.T) {
 }
 
 func TestChainNoncesQueryPaginated(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	chainNonces := sample.ChainNoncesList(t, 5)
 	for _, nonce := range chainNonces {

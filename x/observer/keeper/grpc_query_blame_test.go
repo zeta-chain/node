@@ -12,7 +12,7 @@ import (
 )
 
 func TestKeeper_BlameByIdentifier(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	var chainId int64 = 97
 	var nonce uint64 = 101
 	digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
@@ -31,7 +31,7 @@ func TestKeeper_BlameByIdentifier(t *testing.T) {
 }
 
 func TestKeeper_BlameByChainAndNonce(t *testing.T) {
-	k, ctx := keepertest.ObserverKeeper(t)
+	k, ctx, _ := keepertest.ObserverKeeper(t)
 	var chainId int64 = 97
 	var nonce uint64 = 101
 	digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
@@ -52,7 +52,7 @@ func TestKeeper_BlameByChainAndNonce(t *testing.T) {
 
 func TestKeeper_BlameAll(t *testing.T) {
 	t.Run("GetBlameRecord by limit ", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		blameList := sample.BlameRecordsList(t, 10)
 		for _, record := range blameList {
 			k.SetBlame(ctx, record)
@@ -69,7 +69,7 @@ func TestKeeper_BlameAll(t *testing.T) {
 		require.Equal(t, len(blameList), int(pageRes.Total))
 	})
 	t.Run("GetBlameRecord by offset ", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		blameList := sample.BlameRecordsList(t, 20)
 		offset := 10
 		for _, record := range blameList {
@@ -88,7 +88,7 @@ func TestKeeper_BlameAll(t *testing.T) {
 		require.Equal(t, len(blameList), int(pageRes.Total))
 	})
 	t.Run("GetAllBlameRecord", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		blameList := sample.BlameRecordsList(t, 100)
 		for _, record := range blameList {
 			k.SetBlame(ctx, record)
@@ -103,7 +103,7 @@ func TestKeeper_BlameAll(t *testing.T) {
 		require.Equal(t, blameList, rst)
 	})
 	t.Run("Get no records if nothing is set", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		rst := k.GetAllBlame(ctx)
 		require.Len(t, rst, 0)
 	})
