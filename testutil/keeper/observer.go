@@ -70,6 +70,8 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	stateStore := store.NewCommitMultiStore(db)
 	cdc := NewCodec()
 
+	authorityKeeperTmp := initAuthorityKeeper(cdc, db, stateStore)
+
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
@@ -89,7 +91,7 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 	// Initialize mocks for mocked keepers
 	var stakingKeeper types.StakingKeeper = sdkKeepers.StakingKeeper
 	var slashingKeeper types.SlashingKeeper = sdkKeepers.SlashingKeeper
-	var authorityKeeper types.AuthorityKeeper = initAuthorityKeeper(cdc, db, stateStore)
+	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 	if mockOptions.UseStakingMock {
 		stakingKeeper = observermocks.NewObserverStakingKeeper(t)
 	}

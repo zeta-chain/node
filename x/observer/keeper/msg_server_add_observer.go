@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"math"
 
 	cosmoserrors "cosmossdk.io/errors"
@@ -11,12 +12,15 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Authorized: admin policy group 2.
+// AddObserver adds an observer address to the observer set
 func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver) (*types.MsgAddObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
+
+	// check permission
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
+
 	pubkey, err := common.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
@@ -25,7 +29,9 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 	}
+
 	k.DisableInboundOnly(ctx)
+
 	// AddNodeAccountOnly flag usage
 	// True: adds observer into the Node Account list but returns without adding to the observer list
 	// False: adds observer to the observer list, and not the node account list
@@ -41,9 +47,12 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		k.SetKeygen(ctx, types.Keygen{BlockNumber: math.MaxInt64})
 		return &types.MsgAddObserverResponse{}, nil
 	}
+
 	k.AddObserverToSet(ctx, msg.ObserverAddress)
 	observerSet, _ := k.GetObserverSet(ctx)
+
 	k.SetLastObserverCount(ctx, &types.LastObserverCount{Count: observerSet.LenUint()})
 	EmitEventAddObserver(ctx, observerSet.LenUint(), msg.ObserverAddress, granteeAddress.String(), msg.ZetaclientGranteePubkey)
+
 	return &types.MsgAddObserverResponse{}, nil
 }

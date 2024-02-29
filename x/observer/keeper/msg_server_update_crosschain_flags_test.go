@@ -4,27 +4,14 @@ import (
 	"testing"
 	"time"
 
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func setAdminCrossChainFlags(ctx sdk.Context, k *keeper.Keeper, admin string, group types.Policy_Type) {
-	k.SetParams(ctx, observertypes.Params{
-		AdminPolicy: []*observertypes.Admin_Policy{
-			{
-				PolicyType: group,
-				Address:    admin,
-			},
-		},
-	})
-}
 
 func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 	t.Run("can update crosschain flags", func(t *testing.T) {
