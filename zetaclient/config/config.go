@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// restrictedAddressBook is a map of restricted addresses
+var restrictedAddressBook = map[string]bool{}
+
 const filename string = "zetaclient_config.json"
 const folder string = "config"
 
@@ -64,10 +67,16 @@ func Load(path string) (*Config, error) {
 	// fields sanitization
 	cfg.TssPath = GetPath(cfg.TssPath)
 	cfg.PreParamsPath = GetPath(cfg.PreParamsPath)
-	cfg.CurrentTssPubkey = ""
 	cfg.ZetaCoreHome = path
 
+	// load compliance config
+	LoadComplianceConfig(cfg)
+
 	return cfg, nil
+}
+
+func LoadComplianceConfig(cfg *Config) {
+	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 
 func GetPath(inputPath string) string {
@@ -82,4 +91,15 @@ func GetPath(inputPath string) string {
 		}
 	}
 	return filepath.Join(path...)
+}
+
+// ContainRestrictedAddress returns true if any one of the addresses is restricted
+// Note: the addrs can contains both ETH and BTC addresses
+func ContainRestrictedAddress(addrs ...string) bool {
+	for _, addr := range addrs {
+		if addr != "" && restrictedAddressBook[strings.ToLower(addr)] {
+			return true
+		}
+	}
+	return false
 }

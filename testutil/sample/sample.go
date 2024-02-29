@@ -34,6 +34,11 @@ func newRandFromStringSeed(t *testing.T, s string) *rand.Rand {
 	return newRandFromSeed(int64(h.Sum64()))
 }
 
+// Rand returns a new random number generator
+func Rand() *rand.Rand {
+	return newRandFromSeed(42)
+}
+
 // PubKey returns a sample account PubKey
 func PubKey(r *rand.Rand) cryptotypes.PubKey {
 	seed := []byte(strconv.Itoa(r.Int()))
@@ -146,4 +151,9 @@ func Int64InRange(low, high int64) int64 {
 func UintInRange(low, high uint64) sdkmath.Uint {
 	u := Uint64InRange(low, high)
 	return sdkmath.NewUint(u)
+}
+
+func IntInRange(low, high int64) sdkmath.Int {
+	i := Int64InRange(low, high)
+	return sdkmath.NewInt(i)
 }

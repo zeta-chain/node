@@ -3,9 +3,9 @@ package keeper
 import (
 	"math/big"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/ethereum/go-ethereum/common"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -13,74 +13,74 @@ import (
 // SetGasPrice sets gas price on the system contract in zEVM; return the gasUsed and error code
 func (k Keeper) SetGasPrice(ctx sdk.Context, chainid *big.Int, gasPrice *big.Int) (uint64, error) {
 	if gasPrice == nil {
-		return 0, sdkerrors.Wrapf(types.ErrNilGasPrice, "gas price param should be set")
+		return 0, cosmoserrors.Wrapf(types.ErrNilGasPrice, "gas price param should be set")
 	}
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return 0, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
+		return 0, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
-	if oracle == common.HexToAddress("0x0") {
-		return 0, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
+	oracle := ethcommon.HexToAddress(system.SystemContract)
+	if oracle == (ethcommon.Address{}) {
+		return 0, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
 	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return 0, sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
+		return 0, cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, big.NewInt(50_000), true, false, "setGasPrice", chainid, gasPrice)
 	if err != nil {
-		return 0, sdkerrors.Wrapf(types.ErrContractCall, err.Error())
+		return 0, cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
-		return res.GasUsed, sdkerrors.Wrapf(types.ErrContractCall, "setGasPrice tx failed")
+		return res.GasUsed, cosmoserrors.Wrapf(types.ErrContractCall, "setGasPrice tx failed")
 	}
 
 	return res.GasUsed, nil
 }
 
-func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address common.Address) error {
+func (k Keeper) SetGasCoin(ctx sdk.Context, chainid *big.Int, address ethcommon.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
+		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
-	if oracle == common.HexToAddress("0x0") {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
+	oracle := ethcommon.HexToAddress(system.SystemContract)
+	if oracle == (ethcommon.Address{}) {
+		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
 	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
+		return cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasCoinZRC20", chainid, address)
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrContractCall, err.Error())
+		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "setGasCoinZRC20 tx failed")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "setGasCoinZRC20 tx failed")
 	}
 
 	return nil
 }
 
-func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool common.Address) error {
+func (k Keeper) SetGasZetaPool(ctx sdk.Context, chainid *big.Int, pool ethcommon.Address) error {
 	system, found := k.GetSystemContract(ctx)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
+		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract state variable not found")
 	}
-	oracle := common.HexToAddress(system.SystemContract)
-	if oracle == common.HexToAddress("0x0") {
-		return sdkerrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
+	oracle := ethcommon.HexToAddress(system.SystemContract)
+	if oracle == (ethcommon.Address{}) {
+		return cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract invalid address")
 	}
 	abi, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
+		return cosmoserrors.Wrapf(types.ErrABIGet, "SystemContractMetaData")
 	}
 	res, err := k.CallEVM(ctx, *abi, types.ModuleAddressEVM, oracle, BigIntZero, nil, true, false, "setGasZetaPool", chainid, pool)
 	if err != nil {
-		return sdkerrors.Wrapf(types.ErrContractCall, err.Error())
+		return cosmoserrors.Wrapf(types.ErrContractCall, err.Error())
 	}
 	if res.Failed() {
-		return sdkerrors.Wrapf(types.ErrContractCall, "setGasZetaPool tx failed")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "setGasZetaPool tx failed")
 	}
 
 	return nil

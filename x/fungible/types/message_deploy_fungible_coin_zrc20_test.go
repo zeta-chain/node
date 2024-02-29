@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -36,7 +37,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				Creator:  sample.AccAddress(),
 				Decimals: 78,
 			},
-			err: sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
+			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
 		},
 		{
 			name: "valid message",

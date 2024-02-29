@@ -22,7 +22,7 @@ func (k Keeper) HandleEVMDeposit(
 	ctx sdk.Context,
 	cctx *types.CrossChainTx,
 	msg types.MsgVoteOnObservedInboundTx,
-	senderChain *common.Chain,
+	senderChainID int64,
 ) (bool, error) {
 	to := ethcommon.HexToAddress(msg.Receiver)
 	var ethTxHash ethcommon.Hash
@@ -43,7 +43,7 @@ func (k Keeper) HandleEVMDeposit(
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		parsedAddress, data, err := parseAddressAndData(msg.Message)
+		parsedAddress, data, err := common.ParseAddressAndData(msg.Message)
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 		}
@@ -51,7 +51,7 @@ func (k Keeper) HandleEVMDeposit(
 			to = parsedAddress
 		}
 
-		from, err := senderChain.DecodeAddress(msg.Sender)
+		from, err := common.DecodeAddressFromChainID(senderChainID, msg.Sender)
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}
@@ -61,7 +61,7 @@ func (k Keeper) HandleEVMDeposit(
 			from,
 			to,
 			msg.Amount.BigInt(),
-			senderChain,
+			senderChainID,
 			data,
 			msg.CoinType,
 			msg.Asset,
@@ -109,27 +109,4 @@ func errShouldRevertCctx(err error) bool {
 	return errors.Is(err, fungibletypes.ErrForeignCoinCapReached) ||
 		errors.Is(err, fungibletypes.ErrCallNonContract) ||
 		errors.Is(err, fungibletypes.ErrPausedZRC20)
-}
-
-// parseAddressAndData parses the message string into an address and data
-// message is hex encoded byte array
-// [ contractAddress calldata ]
-// [ 20B, variable]
-func parseAddressAndData(message string) (ethcommon.Address, []byte, error) {
-	if len(message) == 0 {
-		return ethcommon.Address{}, nil, nil
-	}
-
-	data, err := hex.DecodeString(message)
-	if err != nil {
-		return ethcommon.Address{}, nil, fmt.Errorf("message should be a hex encoded string: " + err.Error())
-	}
-
-	if len(data) < 20 {
-		return ethcommon.Address{}, data, nil
-	}
-
-	address := ethcommon.BytesToAddress(data[:20])
-	data = data[20:]
-	return address, data, nil
 }

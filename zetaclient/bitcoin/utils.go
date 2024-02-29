@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	satoshiPerBitcoin       = 1e8
 	bytesPerKB              = 1000
 	bytesEmptyTx            = 10  // an empty tx is about 10 bytes
 	bytesPerInput           = 41  // each input is about 41 bytes
@@ -60,7 +59,7 @@ func PrettyPrintStruct(val interface{}) (string, error) {
 // FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func FeeRateToSatPerByte(rate float64) *big.Int {
 	// #nosec G701 always in range
-	satPerKB := new(big.Int).SetInt64(int64(rate * satoshiPerBitcoin))
+	satPerKB := new(big.Int).SetInt64(int64(rate * btcutil.SatoshiPerBitcoin))
 	return new(big.Int).Div(satPerKB, big.NewInt(bytesPerKB))
 }
 
@@ -102,7 +101,7 @@ func SegWitTxSizeWithdrawer() uint64 {
 // DepositorFee calculates the depositor fee in BTC for a given sat/byte fee rate
 // Note: the depositor fee is charged in order to cover the cost of spending the deposited UTXO in the future
 func DepositorFee(satPerByte int64) float64 {
-	return float64(satPerByte) * float64(BtcOutTxBytesDepositor) / satoshiPerBitcoin
+	return float64(satPerByte) * float64(BtcOutTxBytesDepositor) / btcutil.SatoshiPerBitcoin
 }
 
 // CalcBlockAvgFeeRate calculates the average gas rate (in sat/vByte) for a given block
@@ -209,7 +208,7 @@ func GetSatoshis(btc float64) (int64, error) {
 	case btc < 0.0:
 		return 0, errors.New("cannot be less than zero")
 	}
-	return round(btc * satoshiPerBitcoin), nil
+	return round(btc * btcutil.SatoshiPerBitcoin), nil
 }
 
 func round(f float64) int64 {
@@ -223,4 +222,31 @@ func round(f float64) int64 {
 
 func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 	return txscript.NewScriptBuilder().AddOp(txscript.OP_0).AddData(pubKeyHash).Script()
+}
+
+// DecodeP2WPKHVout decodes receiver and amount from P2WPKH output
+func DecodeP2WPKHVout(vout btcjson.Vout, chain common.Chain) (string, int64, error) {
+	amount, err := GetSatoshis(vout.Value)
+	if err != nil {
+		return "", 0, errors.Wrap(err, "error getting satoshis")
+	}
+	// decode P2WPKH scriptPubKey
+	scriptPubKey := vout.ScriptPubKey.Hex
+	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+	if err != nil {
+		return "", 0, errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+	}
+	if len(decodedScriptPubKey) != 22 { // P2WPKH script
+		return "", 0, fmt.Errorf("unsupported scriptPubKey: %s", scriptPubKey)
+	}
+	witnessVersion := decodedScriptPubKey[0]
+	witnessProgram := decodedScriptPubKey[2:]
+	if witnessVersion != 0 {
+		return "", 0, fmt.Errorf("unsupported witness in scriptPubKey %s", scriptPubKey)
+	}
+	recvAddress, err := chain.BTCAddressFromWitnessProgram(witnessProgram)
+	if err != nil {
+		return "", 0, errors.Wrapf(err, "error getting receiver from witness program %s", witnessProgram)
+	}
+	return recvAddress, amount, nil
 }

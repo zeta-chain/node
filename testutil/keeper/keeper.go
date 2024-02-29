@@ -43,7 +43,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	types2 "github.com/zeta-chain/zetacore/x/emissions/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -98,16 +98,16 @@ type ZetaKeepers struct {
 }
 
 var moduleAccountPerms = map[string][]string{
-	authtypes.FeeCollectorName:              nil,
-	distrtypes.ModuleName:                   nil,
-	stakingtypes.BondedPoolName:             {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:          {authtypes.Burner, authtypes.Staking},
-	evmtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-	crosschaintypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	fungibletypes.ModuleName:                {authtypes.Minter, authtypes.Burner},
-	types2.ModuleName:                       nil,
-	types2.UndistributedObserverRewardsPool: nil,
-	types2.UndistributedTssRewardsPool:      nil,
+	authtypes.FeeCollectorName:                      nil,
+	distrtypes.ModuleName:                           nil,
+	stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
+	evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+	crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	emissionstypes.ModuleName:                       {authtypes.Minter},
+	emissionstypes.UndistributedObserverRewardsPool: nil,
+	emissionstypes.UndistributedTssRewardsPool:      nil,
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -375,7 +375,7 @@ func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
 		crosschainmodule.InitGenesis(ctx, *zk.CrosschainKeeper, *crosschaintypes.DefaultGenesis())
 	}
 	if zk.EmissionsKeeper != nil {
-		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *types2.DefaultGenesis())
+		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *emissionstypes.DefaultGenesis())
 	}
 	if zk.FungibleKeeper != nil {
 		fungiblemodule.InitGenesis(ctx, *zk.FungibleKeeper, *fungibletypes.DefaultGenesis())

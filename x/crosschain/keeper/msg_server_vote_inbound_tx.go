@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observerKeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
-	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // FIXME: use more specific error types & codes
@@ -58,74 +55,60 @@ import (
 // Only observer validators are authorized to broadcast this message.
 func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedInboundTx) (*types.MsgVoteOnObservedInboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	index := msg.Digest()
 
-	observationType := observerTypes.ObservationType_InBoundTx
-	if !k.zetaObserverKeeper.IsInboundEnabled(ctx) {
-		return nil, types.ErrNotEnoughPermissions
+	// vote on inbound ballot
+	// use a temporary context to not commit any ballot state change in case of error
+	tmpCtx, commit := ctx.CacheContext()
+	finalized, isNew, err := k.zetaObserverKeeper.VoteOnInboundBallot(
+		tmpCtx,
+		msg.SenderChainId,
+		msg.ReceiverChain,
+		msg.CoinType,
+		msg.Creator,
+		index,
+		msg.InTxHash,
+	)
+	if err != nil {
+		return nil, err
 	}
 
-	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
-	observationChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId)
-	if observationChain == nil {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.SenderChainId, observationType.String()))
+	// If it is a new ballot, check if an inbound with the same hash, sender chain and event index has already been finalized
+	// This may happen if the same inbound is observed twice where msg.Digest gives a different index
+	// This check prevents double spending
+	if isNew {
+		if k.IsFinalizedInbound(tmpCtx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
+			return nil, cosmoserrors.Wrap(
+				types.ErrObservedTxAlreadyFinalized,
+				fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex),
+			)
+		}
 	}
-	receiverChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ReceiverChain)
-	if receiverChain == nil {
-		return nil, sdkerrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Observation %s", msg.ReceiverChain, observationType.String()))
+	commit()
+
+	// If the ballot is not finalized return nil here to add vote to commit state
+	if !finalized {
+		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
+
+	// get the latest TSS to set the TSS public key in the CCTX
 	tssPub := ""
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
 	if tssFound {
 		tssPub = tss.TssPubkey
 	}
-	// IsAuthorized does various checks against the list of observer mappers
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
-		return nil, observerTypes.ErrNotAuthorizedPolicy
-	}
 
-	index := msg.Digest()
-	// Add votes and Set Ballot
-	// GetBallot checks against the supported chains list before querying for Ballot
-	ballot, isNew, err := k.zetaObserverKeeper.FindBallot(ctx, index, observationChain, observationType)
-	if err != nil {
-		return nil, err
-	}
-	if isNew {
-		// Check if the inbound has already been processed.
-		if k.IsFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex) {
-			return nil, errorsmod.Wrap(types.ErrObservedTxAlreadyFinalized, fmt.Sprintf("InTxHash:%s, SenderChainID:%d, EventIndex:%d", msg.InTxHash, msg.SenderChainId, msg.EventIndex))
-		}
-		observerKeeper.EmitEventBallotCreated(ctx, ballot, msg.InTxHash, observationChain.String())
-	}
-	// AddVoteToBallot adds a vote and sets the ballot
-	ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observerTypes.VoteType_SuccessObservation)
-	if err != nil {
-		return nil, err
-	}
+	// create the CCTX
+	cctx := k.CreateNewCCTX(
+		ctx,
+		msg,
+		index,
+		tssPub,
+		types.CctxStatus_PendingInbound,
+		msg.SenderChainId,
+		msg.ReceiverChain,
+	)
 
-	_, isFinalizedInThisBlock := k.zetaObserverKeeper.CheckIfFinalizingVote(ctx, ballot)
-	if !isFinalizedInThisBlock {
-		// Return nil here to add vote to ballot and commit state
-		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-	}
-
-	// Validation if we want to send ZETA to external chain, but there is no ZETA token.
-	if receiverChain.IsExternalChain() {
-		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
-		if !found {
-			return nil, types.ErrNotFoundChainParams
-		}
-		if chainParams.ZetaTokenContractAddress == "" && msg.CoinType == common.CoinType_Zeta {
-			return nil, types.ErrUnableToSendCoinType
-		}
-	}
-
-	// ******************************************************************************
-	// below only happens when ballot is finalized: exactly when threshold vote is in
-	// ******************************************************************************
-
-	// Inbound Ballot has been finalized , Create CCTX
-	cctx := k.CreateNewCCTX(ctx, msg, index, tssPub, types.CctxStatus_PendingInbound, observationChain, receiverChain)
 	defer func() {
 		EmitEventInboundFinalized(ctx, &cctx)
 		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
@@ -135,11 +118,12 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
 		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 	}()
+
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-	if receiverChain.IsZetaChain() {
+	if common.IsZetaChain(msg.ReceiverChain) {
 		tmpCtx, commit := ctx.CacheContext()
-		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, observationChain)
+		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, msg.SenderChainId)
 
 		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
@@ -202,11 +186,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	// Receiver is not ZetaChain: Cross Chain SWAP
-	tmpCtx, commit := ctx.CacheContext()
+	tmpCtx, commit = ctx.CacheContext()
 	err = func() error {
 		err := k.PayGasAndUpdateCctx(
 			tmpCtx,
-			receiverChain.ChainId,
+			msg.ReceiverChain,
 			&cctx,
 			cctx.InboundTxParams.Amount,
 			false,
@@ -214,7 +198,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		if err != nil {
 			return err
 		}
-		return k.UpdateNonce(tmpCtx, receiverChain.ChainId, &cctx)
+		return k.UpdateNonce(tmpCtx, msg.ReceiverChain, &cctx)
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted

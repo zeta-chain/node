@@ -10,7 +10,7 @@ import (
 
 func TestKeeper_GetNonceToCctx(t *testing.T) {
 	t.Run("Get nonce to cctx", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonceToCctxList := sample.NonceToCctxList(t, "sample", 1)
 		for _, n := range nonceToCctxList {
 			k.SetNonceToCctx(ctx, n)
@@ -22,7 +22,7 @@ func TestKeeper_GetNonceToCctx(t *testing.T) {
 		}
 	})
 	t.Run("Get nonce to cctx not found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonceToCctxList := sample.NonceToCctxList(t, "sample", 1)
 		for _, n := range nonceToCctxList {
 			k.SetNonceToCctx(ctx, n)
@@ -31,7 +31,7 @@ func TestKeeper_GetNonceToCctx(t *testing.T) {
 		require.False(t, found)
 	})
 	t.Run("Get all nonce to cctx", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		nonceToCctxList := sample.NonceToCctxList(t, "sample", 10)
 		for _, n := range nonceToCctxList {
 			k.SetNonceToCctx(ctx, n)
