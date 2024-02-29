@@ -64,41 +64,27 @@ func TestMigrateStore(t *testing.T) {
 }
 
 func TestResetTestnetNonce(t *testing.T) {
-	t.Run("do not reset only mainnet nonce", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		mainnetChain := common.EthChain()
-		nonceLow := int64(1)
-		nonceHigh := int64(10)
-		tss := sample.Tss()
-		zk.ObserverKeeper.SetTSS(ctx, tss)
-		zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
-			Tss:       tss.TssPubkey,
-			ChainId:   mainnetChain.ChainId,
-			NonceLow:  nonceLow,
-			NonceHigh: nonceHigh,
-		})
-		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
-			Index:   mainnetChain.ChainName.String(),
-			ChainId: mainnetChain.ChainId,
-			Nonce:   uint64(nonceHigh),
-		})
-		err := v5.MigrateStore(ctx, k, k.GetObserverKeeper())
-		require.NoError(t, err)
-		pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, mainnetChain.ChainId)
-		require.True(t, found)
-		require.Equal(t, nonceLow, pn.NonceLow)
-		require.Equal(t, nonceHigh, pn.NonceHigh)
-		cn, found := zk.ObserverKeeper.GetChainNonces(ctx, mainnetChain.ChainName.String())
-		require.True(t, found)
-		require.Equal(t, uint64(nonceHigh), cn.Nonce)
-	})
-	t.Run("reset only testnet nonce", func(t *testing.T) {
+	t.Run("reset only testnet nonce without changing mainnet chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		testnetChains := []common.Chain{common.GoerliChain(), common.MumbaiChain(), common.BscTestnetChain(), common.BtcTestNetChain()}
+		mainnetChains := []common.Chain{common.EthChain(), common.BscMainnetChain(), common.BtcMainnetChain()}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
 		zk.ObserverKeeper.SetTSS(ctx, tss)
+		for _, chain := range mainnetChains {
+			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   uint64(nonceHigh),
+			})
+			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+				Tss:       tss.TssPubkey,
+				ChainId:   chain.ChainId,
+				NonceLow:  nonceLow,
+				NonceHigh: nonceHigh,
+			})
+		}
 		for _, chain := range testnetChains {
 			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
 				Tss:       tss.TssPubkey,
@@ -129,6 +115,59 @@ func TestResetTestnetNonce(t *testing.T) {
 			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
 			require.True(t, found)
 			require.Equal(t, uint64(assertValues[chain]), cn.Nonce)
+		}
+		for _, chain := range mainnetChains {
+			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+			require.True(t, found)
+			require.Equal(t, nonceHigh, pn.NonceHigh)
+			require.Equal(t, nonceLow, pn.NonceLow)
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			require.True(t, found)
+			require.Equal(t, uint64(nonceHigh), cn.Nonce)
+		}
+	})
+
+	t.Run("reset nonce even if some chain values are missing", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		testnetChains := []common.Chain{common.GoerliChain()}
+		nonceLow := int64(1)
+		nonceHigh := int64(10)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		for _, chain := range testnetChains {
+			zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+				Tss:       tss.TssPubkey,
+				ChainId:   chain.ChainId,
+				NonceLow:  nonceLow,
+				NonceHigh: nonceHigh,
+			})
+			zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
+				Index:   chain.ChainName.String(),
+				ChainId: chain.ChainId,
+				Nonce:   uint64(nonceHigh),
+			})
+		}
+		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
+		require.NoError(t, err)
+		assertValuesSet := map[common.Chain]int64{
+			common.GoerliChain(): 226841,
+		}
+		assertValuesNotSet := []common.Chain{common.MumbaiChain(), common.BscTestnetChain(), common.BtcTestNetChain()}
+
+		for _, chain := range testnetChains {
+			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+			require.True(t, found)
+			require.Equal(t, assertValuesSet[chain], pn.NonceHigh)
+			require.Equal(t, assertValuesSet[chain], pn.NonceLow)
+			cn, found := zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			require.True(t, found)
+			require.Equal(t, uint64(assertValuesSet[chain]), cn.Nonce)
+		}
+		for _, chain := range assertValuesNotSet {
+			_, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+			require.False(t, found)
+			_, found = zk.ObserverKeeper.GetChainNonces(ctx, chain.ChainName.String())
+			require.False(t, found)
 		}
 	})
 }

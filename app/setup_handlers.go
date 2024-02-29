@@ -8,7 +8,6 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-// "v13-testnet" is the release version for the v13 testnet upgrade
 const releaseVersion = "v14"
 
 func SetupHandlers(app *App) {

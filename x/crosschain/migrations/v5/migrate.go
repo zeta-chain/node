@@ -67,10 +67,10 @@ type Nonce struct {
 
 func CurrentTestnetChains() map[common.Chain]Nonce {
 	return map[common.Chain]Nonce{
-		common.GoerliChain():     Nonce{nonceHigh: 226841, nonceLow: 226841},
-		common.MumbaiChain():     Nonce{nonceHigh: 200599, nonceLow: 200599},
-		common.BscTestnetChain(): Nonce{nonceHigh: 110454, nonceLow: 110454},
-		common.BtcTestNetChain(): Nonce{nonceHigh: 4881, nonceLow: 4881},
+		common.GoerliChain():     {nonceHigh: 226841, nonceLow: 226841},
+		common.MumbaiChain():     {nonceHigh: 200599, nonceLow: 200599},
+		common.BscTestnetChain(): {nonceHigh: 110454, nonceLow: 110454},
+		common.BtcTestNetChain(): {nonceHigh: 4881, nonceLow: 4881},
 	}
 }
 
