@@ -44,39 +44,40 @@ func ResetTestnetNonce(
 		ctx.Logger().Info("ResetTestnetNonce: TSS not found")
 		return
 	}
-	for chain, nonce := range CurrentTestnetChains() {
-		cn, found := observerKeeper.GetChainNonces(ctx, chain.ChainName.String())
+	for _, chainNonce := range CurrentTestnetChains() {
+		cn, found := observerKeeper.GetChainNonces(ctx, chainNonce.chain.ChainName.String())
 		if !found {
-			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chain.ChainName.String())
+			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chainNonce.chain.ChainName.String())
 			continue
 		}
 
-		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chain.ChainName.String())
+		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chainNonce.chain.ChainName.String())
 
-		cn.Nonce = nonce.nonceHigh
+		cn.Nonce = chainNonce.nonceHigh
 		observerKeeper.SetChainNonces(ctx, cn)
 
-		pn, found := observerKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
+		pn, found := observerKeeper.GetPendingNonces(ctx, tss.TssPubkey, chainNonce.chain.ChainId)
 		if !found {
 			continue
 		}
-		pn.NonceLow = int64(nonce.nonceLow)
-		pn.NonceHigh = int64(nonce.nonceHigh)
+		pn.NonceLow = int64(chainNonce.nonceLow)
+		pn.NonceHigh = int64(chainNonce.nonceHigh)
 		observerKeeper.SetPendingNonces(ctx, pn)
 	}
 }
 
-type Nonce struct {
+type TestnetNonce struct {
+	chain     common.Chain
 	nonceHigh uint64
 	nonceLow  uint64
 }
 
-func CurrentTestnetChains() map[common.Chain]Nonce {
-	return map[common.Chain]Nonce{
-		common.GoerliChain():     {nonceHigh: 226841, nonceLow: 226841},
-		common.MumbaiChain():     {nonceHigh: 200599, nonceLow: 200599},
-		common.BscTestnetChain(): {nonceHigh: 110454, nonceLow: 110454},
-		common.BtcTestNetChain(): {nonceHigh: 4881, nonceLow: 4881},
+func CurrentTestnetChains() []TestnetNonce {
+	return []TestnetNonce{
+		{chain: common.GoerliChain(), nonceHigh: 226841, nonceLow: 226841},
+		{chain: common.MumbaiChain(), nonceHigh: 200599, nonceLow: 200599},
+		{chain: common.BscTestnetChain(), nonceHigh: 110454, nonceLow: 110454},
+		{chain: common.BtcTestNetChain(), nonceHigh: 4881, nonceLow: 4881},
 	}
 }
 
