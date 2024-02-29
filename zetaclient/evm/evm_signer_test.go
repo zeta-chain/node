@@ -1,11 +1,12 @@
 package evm
 
 import (
-	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"math/big"
 	"path"
 	"testing"
+
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
