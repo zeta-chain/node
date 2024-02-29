@@ -9,11 +9,16 @@
 ### Refactor
 
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
+
+### Chores
+
+* [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ## Version: v13.0.0
 
