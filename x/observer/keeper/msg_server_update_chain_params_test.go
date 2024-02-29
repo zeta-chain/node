@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"testing"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"

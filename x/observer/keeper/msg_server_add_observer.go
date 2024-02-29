@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"context"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"math"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
