@@ -11,6 +11,7 @@
 ### Features
 
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+* [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 
 ### Tests
 
