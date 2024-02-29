@@ -52,7 +52,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	network.AddCrosschainData(s.T(), 0, s.cfg.GenesisState, s.cfg.Codec)
 	network.AddObserverData(s.T(), 0, s.cfg.GenesisState, s.cfg.Codec, nil)
 	net, err := network.New(s.T(), app.NodeDir, s.cfg)
-	s.Assert().NoError(err)
+	s.Require().NoError(err)
 	s.network = net
 	time.Sleep(3 * time.Second)
 	_, err = s.network.WaitForHeight(1)
