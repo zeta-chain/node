@@ -12,11 +12,13 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-const (
-	TestPrivateKey = "401c22d98e2b63138afba629f70bc7dea9f299f973b257b484d1ae4c73bf54e4"
-)
+var TestPrivateKey *ecdsa.PrivateKey
 
 var _ interfaces.TSSSigner = (*TSS)(nil)
+
+func init() {
+	TestPrivateKey, _ = crypto.GenerateKey()
+}
 
 // TSS is a mock of TSS signer for testing
 type TSS struct {
@@ -41,11 +43,7 @@ func NewTSSAthens3() *TSS {
 
 // Sign uses test key unrelated to any tss key in production
 func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *common.Chain, _ string) ([65]byte, error) {
-	privateKey, err := crypto.HexToECDSA(TestPrivateKey)
-	if err != nil {
-		return [65]byte{}, err
-	}
-	signature, err := crypto.Sign(data, privateKey)
+	signature, err := crypto.Sign(data, TestPrivateKey)
 	if err != nil {
 		return [65]byte{}, err
 	}
@@ -57,8 +55,7 @@ func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *common.Chain, _ string) (
 
 // Pubkey uses the hardcoded private test key to generate the public key in bytes
 func (s *TSS) Pubkey() []byte {
-	privateKey, _ := crypto.HexToECDSA(TestPrivateKey)
-	publicKey := privateKey.Public()
+	publicKey := TestPrivateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		fmt.Println("error casting public key to ECDSA")

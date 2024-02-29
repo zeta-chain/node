@@ -1,6 +1,9 @@
 package evm
 
 import (
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"math/big"
 	"path"
 	"testing"
 
@@ -71,7 +74,7 @@ func TestSigner_TryProcessOutTx(t *testing.T) {
 
 	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, mock.NewZetaCoreBridge(), 123)
 
-	//Check if cctx was processed
+	//Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
 	found := false
 	for range *list {
@@ -81,28 +84,261 @@ func TestSigner_TryProcessOutTx(t *testing.T) {
 }
 
 func TestSigner_SignOutboundTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignOutboundTx - should successfully sign", func(t *testing.T) {
+		// Call SignOutboundTx
+		tx, err := evmSigner.SignOutboundTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
 }
 
 func TestSigner_SignRevertTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignRevertTx - should successfully sign", func(t *testing.T) {
+		// Call SignRevertTx
+		tx, err := evmSigner.SignRevertTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
 }
 
 func TestSigner_SignWithdrawTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignWithdrawTx - should successfully sign", func(t *testing.T) {
+		// Call SignWithdrawTx
+		tx, err := evmSigner.SignWithdrawTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
 }
 
 func TestSigner_SignCommandTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignCommandTx - should successfully sign", func(t *testing.T) {
+		// Call SignCommandTx
+		tx, err := evmSigner.SignCommandTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
 }
 
 func TestSigner_SignERC20WithdrawTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("SignERC20WithdrawTx - should successfully sign", func(t *testing.T) {
+		// Call SignERC20WithdrawTx
+		tx, err := evmSigner.SignERC20WithdrawTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
 }
 
 func TestSigner_BroadcastOutTx(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	t.Run("BroadcastOutTx - should successfully broadcast", func(t *testing.T) {
+		// Call SignERC20WithdrawTx
+		tx, err := evmSigner.SignERC20WithdrawTx(&txData)
+		require.NoError(t, err)
+
+		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mock.NewZetaCoreBridge(), &txData)
+
+		//Check if cctx was signed and broadcasted
+		list := evmSigner.GetReportedTxList()
+		found := false
+		for range *list {
+			found = true
+		}
+		require.True(t, found)
+	})
 }
 
 func TestSigner_SetChainAndSender(t *testing.T) {
+	// setup inputs
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+
+	txData := &TransactionData{}
+	logger := zerolog.Logger{}
+
+	t.Run("SetChainAndSender PendingRevert", func(t *testing.T) {
+		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
+		skipTx := SetChainAndSender(cctx, logger, txData)
+
+		require.False(t, skipTx)
+		require.Equal(t, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), txData.to)
+		require.Equal(t, big.NewInt(cctx.InboundTxParams.SenderChainId), txData.toChainID)
+	})
+
+	t.Run("SetChainAndSender PendingOutBound", func(t *testing.T) {
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		skipTx := SetChainAndSender(cctx, logger, txData)
+
+		require.False(t, skipTx)
+		require.Equal(t, ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver), txData.to)
+		require.Equal(t, big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId), txData.toChainID)
+	})
+
+	t.Run("SetChainAndSender Should skip cctx", func(t *testing.T) {
+		cctx.CctxStatus.Status = types.CctxStatus_PendingInbound
+		skipTx := SetChainAndSender(cctx, logger, txData)
+		require.True(t, skipTx)
+	})
 }
 
 func TestSigner_SetupGas(t *testing.T) {
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	txData := &TransactionData{}
+	logger := zerolog.Logger{}
+
+	t.Run("SetupGas_success", func(t *testing.T) {
+		chain := corecommon.BscMainnetChain()
+		err := SetupGas(cctx, logger, evmSigner.EvmClient(), &chain, txData)
+		require.NoError(t, err)
+	})
+
+	t.Run("SetupGas_error", func(t *testing.T) {
+		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
+		chain := corecommon.BtcMainnetChain()
+		err := SetupGas(cctx, logger, evmSigner.EvmClient(), &chain, txData)
+		require.Error(t, err)
+	})
 }
 
 func TestSigner_SetTransactionData(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	txData := TransactionData{}
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	require.False(t, skip)
+	require.NoError(t, err)
 }

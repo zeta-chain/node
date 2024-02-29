@@ -766,9 +766,19 @@ func (signer *Signer) SignWhitelistTx(
 	return tx, nil
 }
 
+// Exported for unit tests
+
 func (signer *Signer) GetReportedTxList() *map[string]bool {
 	return &signer.outTxHashBeingReported
 }
+func (signer *Signer) EvmClient() interfaces.EVMRPCClient {
+	return signer.client
+}
+func (signer *Signer) EvmSigner() ethtypes.Signer {
+	return signer.ethSigner
+}
+
+// ________________________
 
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Signer, error) {
 	if endpoint == mock.EVMRPCEnabled {
