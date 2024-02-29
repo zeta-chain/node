@@ -82,7 +82,8 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		cfgLock: &sync.RWMutex{},
+		cfgLock:         &sync.RWMutex{},
+		EVMChainConfigs: make(map[int64]*EVMConfig),
 	}
 }
 

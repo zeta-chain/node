@@ -1,6 +1,8 @@
 package evm
 
 import (
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"math/big"
 	"path"
 	"testing"
@@ -49,8 +51,14 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	logger := common.ClientLogger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
-	evmcfg := config.EVMConfig{Endpoint: "http://localhost:8545"}
-	return NewEVMChainClient(mock.NewZetaCoreBridge(), mock.NewTSSMainnet(), "", logger, cfg, evmcfg, ts)
+	tss := mock.NewTSSMainnet()
+
+	evmcfg := config.EVMConfig{Chain: corecommon.BscMainnetChain(), Endpoint: "http://localhost:8545"}
+	cfg.EVMChainConfigs[corecommon.BscMainnetChain().ChainId] = &evmcfg
+	coreCTX := corecontext.NewZetaCoreContext(cfg)
+	appCTX := appcontext.NewAppContext(coreCTX, cfg)
+
+	return NewEVMChainClient(appCTX, mock.NewZetaCoreBridge(), tss, "", logger, evmcfg, ts)
 }
 
 func getNewOutTxProcessor() *outtxprocessor.Processor {
@@ -192,7 +200,25 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.False(t, skip)
 	require.NoError(t, err)
 
-	t.Run("SignCommandTx - should successfully sign", func(t *testing.T) {
+	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
+		txData.cmd = corecommon.CmdWhitelistERC20
+		txData.params = ConnectorAddress
+		// Call SignCommandTx
+		tx, err := evmSigner.SignCommandTx(&txData)
+		require.NoError(t, err)
+
+		// Verify Signature
+		tss := mock.NewTSSMainnet()
+		_, r, s := tx.RawSignatureValues()
+		signature := append(r.Bytes(), s.Bytes()...)
+		hash := evmSigner.EvmSigner().Hash(tx)
+
+		verified := crypto.VerifySignature(tss.Pubkey(), hash.Bytes(), signature)
+		require.True(t, verified)
+	})
+
+	t.Run("SignCommandTx CmdMigrateTssFunds", func(t *testing.T) {
+		txData.cmd = corecommon.CmdMigrateTssFunds
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(&txData)
 		require.NoError(t, err)
