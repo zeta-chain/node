@@ -34,7 +34,7 @@ jobs:
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
@@ -66,7 +66,7 @@ jobs:
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
@@ -109,7 +109,7 @@ jobs:
       - name: Set Version from the PR title.
         if: github.event_name == 'pull_request'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=${{ github.event.pull_request.title }}" >> ${GITHUB_ENV}
+          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
