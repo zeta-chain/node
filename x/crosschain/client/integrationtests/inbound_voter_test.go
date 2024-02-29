@@ -241,13 +241,10 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 			out, err := clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdListPendingNonces(), []string{"--output", "json"})
 			s.Require().NoError(err)
-			//fmt.Println(out.String())
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, observercli.CmdGetSupportedChains(), []string{"--output", "json"})
 			s.Require().NoError(err)
-			//fmt.Println(out.String())
 			out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, crosschaincli.CmdListGasPrice(), []string{"--output", "json"})
 			s.Require().NoError(err)
-			//fmt.Println(out.String())
 
 			// Vote the inbound tx
 			for _, val := range s.network.Validators {
@@ -264,8 +261,9 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 					message = message + "falseVote"
 				}
 				signedTx := BuildSignedInboundVote(s.T(), val, s.cfg.BondDenom, account, message, i)
-				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "sync"})
+				out, err = clitestutil.ExecTestCLICmd(broadcaster.ClientCtx, authcli.GetBroadcastCommand(), []string{signedTx.Name(), "--broadcast-mode", "block"})
 				s.Require().NoError(err)
+				fmt.Println(out.String())
 			}
 			s.Require().NoError(s.network.WaitForNBlocks(2))
 
@@ -277,15 +275,15 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 			s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &ballot))
 
 			// Check the vote in the ballot
-			s.Assert().Equal(len(test.votes), len(ballot.Voters))
+			s.Require().Equal(len(test.votes), len(ballot.Voters))
 			for _, vote := range ballot.Voters {
 				if test.votes[vote.VoterAddress] == observerTypes.VoteType_FailureObservation {
 					s.Assert().Equal(observerTypes.VoteType_NotYetVoted.String(), vote.VoteType.String())
 					continue
 				}
-				s.Assert().Equal(test.votes[vote.VoterAddress].String(), vote.VoteType.String())
+				s.Assert().Equal(test.votes[vote.VoterAddress].String(), vote.VoteType.String(), "incorrect vote for voter: %s", vote.VoterAddress)
 			}
-			s.Assert().Equal(test.ballotResult.String(), ballot.BallotStatus.String())
+			s.Require().Equal(test.ballotResult.String(), ballot.BallotStatus.String())
 
 			// Get the cctx and check its status
 			cctxIdentifier := ballotIdentifier
@@ -298,7 +296,7 @@ func (s *IntegrationTestSuite) TestCCTXInboundVoter() {
 				s.Require().Contains(out.String(), "not found")
 			} else {
 				s.NoError(broadcaster.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &cctx))
-				s.Assert().Equal(test.cctxStatus.String(), cctx.CrossChainTx.CctxStatus.Status.String(), cctx.CrossChainTx.CctxStatus.StatusMessage)
+				s.Require().Equal(test.cctxStatus.String(), cctx.CrossChainTx.CctxStatus.Status.String(), cctx.CrossChainTx.CctxStatus.StatusMessage)
 			}
 		})
 	}
