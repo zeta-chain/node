@@ -270,3 +270,6 @@ mainnet-zetarpc-node:
 
 mainnet-bitcoind-node:
 	cd contrib/mainnet/bitcoind && docker-compose up
+
+athens3-zetarpc-node:
+	cd contrib/athens3/zetacored && docker-compose up

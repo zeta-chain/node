@@ -2,7 +2,7 @@ version: '3'
 
 services:
   bitcoin:
-    image: zetachain/bitcoin:36-mainnet
+    image: zetachain/bitcoin:${DOCKER_TAG:-36-mainnet}
     platform: linux/amd64
     environment:
       - bitcoin_username=test
