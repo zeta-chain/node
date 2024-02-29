@@ -17,7 +17,11 @@ var TestPrivateKey *ecdsa.PrivateKey
 var _ interfaces.TSSSigner = (*TSS)(nil)
 
 func init() {
-	TestPrivateKey, _ = crypto.GenerateKey()
+	var err error
+	TestPrivateKey, err = crypto.GenerateKey()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 // TSS is a mock of TSS signer for testing
