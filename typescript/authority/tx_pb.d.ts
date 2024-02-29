@@ -14,9 +14,9 @@ import type { Policies } from "./policies_pb.js";
  */
 export declare class MsgUpdatePolicies extends Message<MsgUpdatePolicies> {
   /**
-   * @generated from field: string authority_address = 1;
+   * @generated from field: string signer = 1;
    */
-  authorityAddress: string;
+  signer: string;
 
   /**
    * @generated from field: zetachain.zetacore.authority.Policies policies = 2;

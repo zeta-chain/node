@@ -15,6 +15,8 @@ type Keeper struct {
 	cdc      codec.Codec
 	storeKey storetypes.StoreKey
 	memKey   storetypes.StoreKey
+	// the address capable of executing a MsgUpdatePolicies message. Typically, this should be the x/gov module account.
+	govAddr sdk.AccAddress
 }
 
 // NewKeeper creates new instances of the authority Keeper
@@ -22,11 +24,13 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
+	govAddr sdk.AccAddress,
 ) Keeper {
 	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,
+		govAddr:  govAddr,
 	}
 }
 

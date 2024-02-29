@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"math/big"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 
 	"cosmossdk.io/math"
 

@@ -7,11 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	mock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/authority/types"
+)
+
+var (
+	AuthorityGovAddress = sample.Bech32AccAddress()
 )
 
 func initAuthorityKeeper(
@@ -28,6 +33,7 @@ func initAuthorityKeeper(
 		cdc,
 		storeKey,
 		memKey,
+		AuthorityGovAddress,
 	)
 }
 
@@ -61,6 +67,7 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		cdc,
 		storeKey,
 		memStoreKey,
+		AuthorityGovAddress,
 	)
 
 	return &k, ctx

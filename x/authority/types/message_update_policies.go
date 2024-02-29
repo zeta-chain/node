@@ -10,10 +10,10 @@ const TypeMsgUpdatePolicies = "UpdatePolicies"
 
 var _ sdk.Msg = &MsgUpdatePolicies{}
 
-func NewMsgUpdatePolicies(creator string, policies Policies) *MsgUpdatePolicies {
+func NewMsgUpdatePolicies(signer string, policies Policies) *MsgUpdatePolicies {
 	return &MsgUpdatePolicies{
-		AuthorityAddress: creator,
-		Policies:         policies,
+		Signer:   signer,
+		Policies: policies,
 	}
 }
 
@@ -26,7 +26,7 @@ func (msg *MsgUpdatePolicies) Type() string {
 }
 
 func (msg *MsgUpdatePolicies) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.AuthorityAddress)
+	creator, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
 		panic(err)
 	}
@@ -39,9 +39,9 @@ func (msg *MsgUpdatePolicies) GetSignBytes() []byte {
 }
 
 func (msg *MsgUpdatePolicies) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.AuthorityAddress)
+	_, err := sdk.AccAddressFromBech32(msg.Signer)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address (%s)", err)
 	}
 
 	if err := msg.Policies.Validate(); err != nil {

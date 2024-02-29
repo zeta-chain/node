@@ -361,6 +361,7 @@ func New(
 		appCodec,
 		keys[authoritytypes.StoreKey],
 		keys[authoritytypes.MemStoreKey],
+		authtypes.NewModuleAddress(govtypes.ModuleName),
 	)
 
 	app.ObserverKeeper = observerkeeper.NewKeeper(

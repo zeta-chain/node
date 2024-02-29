@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	errorsmod "cosmossdk.io/errors"

@@ -6,7 +6,7 @@ UpdatePolicies updates policies
 
 ```proto
 message MsgUpdatePolicies {
-	string authority_address = 1;
+	string signer = 1;
 	Policies policies = 2;
 }
 ```

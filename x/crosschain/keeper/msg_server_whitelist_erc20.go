@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"math/big"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
