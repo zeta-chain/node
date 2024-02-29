@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/zeta-chain/zetacore/x/authority/types"
 	"testing"
+
+	"github.com/zeta-chain/zetacore/x/authority/types"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"

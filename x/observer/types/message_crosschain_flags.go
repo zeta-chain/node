@@ -3,6 +3,8 @@ package types
 import (
 	"errors"
 
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -69,19 +71,21 @@ func (gpf GasPriceIncreaseFlags) Validate() error {
 }
 
 // GetRequiredGroup returns the required group policy for the message to execute the message
-// Group 1 should only be able to stop or disable functiunalities in case of emergency
+// Group emergency should only be able to stop or disable functiunalities in case of emergency
 // this concerns disabling inbound and outbound txs or block header verification
-// every other action requires group 2
-func (msg *MsgUpdateCrosschainFlags) GetRequiredGroup() Policy_Type {
+// every other action requires group admin
+// TODO: add separate message for each group
+// https://github.com/zeta-chain/node/issues/1562
+func (msg *MsgUpdateCrosschainFlags) GetRequiredGroup() authoritytypes.PolicyType {
 	if msg.IsInboundEnabled || msg.IsOutboundEnabled {
-		return Policy_Type_group2
+		return authoritytypes.PolicyType_groupAdmin
 	}
 	if msg.GasPriceIncreaseFlags != nil {
-		return Policy_Type_group2
+		return authoritytypes.PolicyType_groupAdmin
 	}
 	if msg.BlockHeaderVerificationFlags != nil && (msg.BlockHeaderVerificationFlags.IsEthTypeChainEnabled || msg.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled) {
-		return Policy_Type_group2
+		return authoritytypes.PolicyType_groupAdmin
 
 	}
-	return Policy_Type_group1
+	return authoritytypes.PolicyType_groupEmergency
 }

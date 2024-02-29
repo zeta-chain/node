@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	mock "github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/x/authority/keeper"
@@ -63,4 +64,9 @@ func AuthorityKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	)
 
 	return &k, ctx
+}
+
+// MockIsAuthorized mocks the IsAuthorized method of an authority keeper mock
+func MockIsAuthorized(m *mock.Mock, address string, policyType types.PolicyType, isAuthorized bool) {
+	m.On("IsAuthorized", mock.Anything, address, policyType).Return(isAuthorized).Once()
 }

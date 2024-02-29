@@ -147,6 +147,13 @@ func CrosschainKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Ze
 	return CrosschainKeeperWithMocks(t, CrosschainNoMocks)
 }
 
+// GetCrosschainAuthorityMock returns a new crosschain authority keeper mock
+func GetCrosschainAuthorityMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainAuthorityKeeper {
+	cok, ok := keeper.GetAuthorityKeeper().(*crosschainmocks.CrosschainAuthorityKeeper)
+	require.True(t, ok)
+	return cok
+}
+
 func GetCrosschainAccountMock(t testing.TB, keeper *keeper.Keeper) *crosschainmocks.CrosschainAccountKeeper {
 	cak, ok := keeper.GetAuthKeeper().(*crosschainmocks.CrosschainAccountKeeper)
 	require.True(t, ok)

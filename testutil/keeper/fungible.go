@@ -170,6 +170,13 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Zeta
 	return k, ctx, sdkk, zk
 }
 
+// GetFungibleAuthorityMock returns a new fungible authority keeper mock
+func GetFungibleAuthorityMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAuthorityKeeper {
+	cok, ok := keeper.GetAuthorityKeeper().(*fungiblemocks.FungibleAuthorityKeeper)
+	require.True(t, ok)
+	return cok
+}
+
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
 	fak, ok := keeper.GetAuthKeeper().(*fungiblemocks.FungibleAccountKeeper)
 	require.True(t, ok)

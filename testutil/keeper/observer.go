@@ -120,21 +120,19 @@ func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers) {
 	return ObserverKeeperWithMocks(t, ObserverNoMocks)
 }
 
+// GetObserverAuthorityMock returns a new observer authority keeper mock
+func GetObserverAuthorityMock(t testing.TB, keeper *keeper.Keeper) *observermocks.ObserverAuthorityKeeper {
+	cok, ok := keeper.GetAuthorityKeeper().(*observermocks.ObserverAuthorityKeeper)
+	require.True(t, ok)
+	return cok
+}
+
 // GetObserverStakingMock returns a new observer staking keeper mock
 func GetObserverStakingMock(t testing.TB, keeper *keeper.Keeper) *ObserverMockStakingKeeper {
 	k, ok := keeper.GetStakingKeeper().(*observermocks.ObserverStakingKeeper)
 	require.True(t, ok)
 	return &ObserverMockStakingKeeper{
 		ObserverStakingKeeper: k,
-	}
-}
-
-// GetObserverSlashingMock returns a new observer slashing keeper mock
-func GetObserverSlashingMock(t testing.TB, keeper *keeper.Keeper) *ObserverMockSlashingKeeper {
-	k, ok := keeper.GetSlashingKeeper().(*observermocks.ObserverSlashingKeeper)
-	require.True(t, ok)
-	return &ObserverMockSlashingKeeper{
-		ObserverSlashingKeeper: k,
 	}
 }
 
@@ -145,6 +143,15 @@ type ObserverMockStakingKeeper struct {
 
 func (m *ObserverMockStakingKeeper) MockGetValidator(validator stakingtypes.Validator) {
 	m.On("GetValidator", mock.Anything, mock.Anything).Return(validator, true)
+}
+
+// GetObserverSlashingMock returns a new observer slashing keeper mock
+func GetObserverSlashingMock(t testing.TB, keeper *keeper.Keeper) *ObserverMockSlashingKeeper {
+	k, ok := keeper.GetSlashingKeeper().(*observermocks.ObserverSlashingKeeper)
+	require.True(t, ok)
+	return &ObserverMockSlashingKeeper{
+		ObserverSlashingKeeper: k,
+	}
 }
 
 // ObserverMockSlashingKeeper is a wrapper of the observer slashing keeper mock that add methods to mock the IsTombstoned method
