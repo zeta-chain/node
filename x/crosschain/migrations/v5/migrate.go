@@ -41,15 +41,21 @@ func ResetTestnetNonce(
 ) {
 	tss, found := observerKeeper.GetTSS(ctx)
 	if !found {
+		ctx.Logger().Info("ResetTestnetNonce: TSS not found")
 		return
 	}
 	for chain, nonce := range CurrentTestnetChains() {
 		cn, found := observerKeeper.GetChainNonces(ctx, chain.ChainName.String())
 		if !found {
+			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chain.ChainName.String())
 			continue
 		}
+
+		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chain.ChainName.String())
+
 		cn.Nonce = nonce.nonceHigh
 		observerKeeper.SetChainNonces(ctx, cn)
+
 		pn, found := observerKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
 		if !found {
 			continue
