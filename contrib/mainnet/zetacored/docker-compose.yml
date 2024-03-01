@@ -6,7 +6,7 @@ services:
     # build:
     #  context: ../../..
     #  dockerfile: Dockerfile
-    image: zetachain/zeatcored:${DOCKER_TAG:-ubuntu-v14}
+    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14}
     container_name: zetachain_mainnet_rpc
     environment:
       DAEMON_HOME: "/root/.zetacored"

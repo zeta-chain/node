@@ -93,11 +93,6 @@ try:
                 logger.log.info("BINARY DOWNLOADED SUCCESSFULLY.")
             else:
                 logger.log.info("FAILED TO DOWNLOAD BINARY. Status code:", response.status_code)
-            logger.log.info("Validate binary exists in folder.")
-            files_and_directories = os.listdir(binary_directory)
-            logger.log.info("Files and directories in '", binary_directory, "':")
-            for name in files_and_directories:
-                logger.log.info(name)
     logger.log.info("BINARIES DOWNLOAD FINISHED...")
 except Exception as e:
     logger.log.error(str(e))
