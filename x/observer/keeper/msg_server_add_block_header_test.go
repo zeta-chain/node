@@ -149,7 +149,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			k, ctx := keepertest.ObserverKeeper(t)
+			k, ctx, _ := keepertest.ObserverKeeper(t)
 			srv := keeper.NewMsgServerImpl(*k)
 			k.SetObserverSet(ctx, types.ObserverSet{
 				ObserverList: []string{observerAddress.String()},

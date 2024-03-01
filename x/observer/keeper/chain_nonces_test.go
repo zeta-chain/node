@@ -10,7 +10,7 @@ import (
 
 func TestKeeper_GetChainNonces(t *testing.T) {
 	t.Run("Get chain nonces", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		chainNoncesList := sample.ChainNoncesList(t, 10)
 		for _, n := range chainNoncesList {
 			k.SetChainNonces(ctx, n)
@@ -22,7 +22,7 @@ func TestKeeper_GetChainNonces(t *testing.T) {
 		}
 	})
 	t.Run("Get chain nonces not found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		chainNoncesList := sample.ChainNoncesList(t, 10)
 		for _, n := range chainNoncesList {
 			k.SetChainNonces(ctx, n)
@@ -31,7 +31,7 @@ func TestKeeper_GetChainNonces(t *testing.T) {
 		require.False(t, found)
 	})
 	t.Run("Get all chain nonces", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		chainNoncesList := sample.ChainNoncesList(t, 10)
 		for _, n := range chainNoncesList {
 			k.SetChainNonces(ctx, n)
