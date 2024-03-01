@@ -14,17 +14,13 @@ import (
 )
 
 func TestBitcoinWithdraw(r *runner.E2ERunner) {
-	// start mining blocks
-	stop := r.MineBlocks()
-
 	// withdraw 0.01 BTC from ZRC20 to BTC address
 	WithdrawBitcoin(r)
+}
 
+func TestBitcoinWithdrawRestricted(r *runner.E2ERunner) {
 	// withdraw 0.01 BTC from ZRC20 to BTC restricted address
 	WithdrawBitcoinRestricted(r)
-
-	// stop mining
-	stop <- struct{}{}
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
@@ -37,6 +33,9 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
+
+	// mine blocks
+	stop := r.MineBlocks()
 
 	// withdraw 'amount' of BTC from ZRC20 to BTC address
 	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte(to.EncodeAddress()), amount)
@@ -78,6 +77,9 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 		r.Logger.Info("    Value: %.8f", txOut.Value)
 		r.Logger.Info("    ScriptPubKey: %s", txOut.ScriptPubKey.Hex)
 	}
+
+	// stop mining
+	stop <- struct{}{}
 
 	return rawTx
 }

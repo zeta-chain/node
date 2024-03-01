@@ -16,6 +16,7 @@ const (
 	TestMessagePassingName              = "message_passing"
 	TestZRC20SwapName                   = "zrc20_swap"
 	TestBitcoinWithdrawName             = "bitcoin_withdraw"
+	TestBitcoinWithdrawRestrictedName   = "bitcoin_withdraw_restricted"
 	TestCrosschainSwapName              = "crosschain_swap"
 	TestMessagePassingRevertFailName    = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName = "message_passing_revert_success"
@@ -98,6 +99,11 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawName,
 		"withdraw BTC from ZEVM",
 		TestBitcoinWithdraw,
+	},
+	{
+		TestBitcoinWithdrawRestrictedName,
+		"withdraw Bitcoin from ZEVM to restricted address",
+		TestBitcoinWithdrawRestricted,
 	},
 	{
 		TestCrosschainSwapName,

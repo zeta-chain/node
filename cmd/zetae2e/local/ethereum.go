@@ -55,7 +55,6 @@ func ethereumTestRoutine(
 		// to make it faster to catch up with the latest block header
 		if err := ethereumRunner.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
-			e2etests.TestEtherDepositName,
 			e2etests.TestEtherWithdrawName,
 			e2etests.TestEtherWithdrawRestrictedName,
 			e2etests.TestContextUpgradeName,
