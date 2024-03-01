@@ -80,7 +80,6 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 		HTTPPostMode: rpcConf.HTTPPostMode,
 		DisableTLS:   rpcConf.DisableTLS,
 		Params:       param,
-		//Endpoint:     "/wallet/user",
 	}
 	return rpcclient.New(connCfg, nil)
 }
