@@ -211,15 +211,6 @@ function start_network {
     --minimum-gas-prices 1.0azeta "--grpc.enable=true"
 }
 
-function patch_12_2_0 {
-  ls -lah /root/.zetacored/cosmovisor/upgrades/
-  mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.0 || logt "directory exists."
-  mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.0/bin || logt "directory exists."
-  ls -lah ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.1/
-  ls -lah ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.1/bin
-  cp ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.1/bin/zetacored ${DAEMON_HOME}/cosmovisor/upgrades/v12.2.0/bin/zetacored
-}
-
 function load_defaults {
   #DEFAULT: Mainnet Statesync.
   export DAEMON_HOME=${DAEMON_HOME:=/root/.zetacored}
@@ -316,9 +307,6 @@ else
 
   logt "Move root binaries to current"
   move_zetacored_binaries
-
-  logt "Patch 12.2.1 o 12.2.0"
-  patch_12_2_0
 
   logt "Start sequence has completed, echo into file so on restart it doesn't download snapshots again."
   echo "START_SEQUENCE_COMPLETE" >> ${DAEMON_HOME}/start_sequence_status
