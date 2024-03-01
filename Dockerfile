@@ -6,7 +6,7 @@ ENV GOOS=linux
 ENV CGO_ENABLED=1
 
 # Install build dependencies
-RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux python3 py3-pip
+RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl python3 py3-pip
 
 # Set the working directory
 WORKDIR /go/delivery/zeta-node
@@ -28,7 +28,7 @@ FROM alpine:3.18
 COPY contrib/docker-scripts/* /scripts/
 
 # Install runtime dependencies
-RUN apk --no-cache add git jq bash curl tmux python3 libusb-dev linux-headers make build-base wget py3-pip qemu-img qemu-system-x86_64 && \
+RUN apk --no-cache add git jq bash curl python3 libusb-dev linux-headers make build-base wget py3-pip qemu-img qemu-system-x86_64 && \
     pip install requests && \
     chmod a+x -R /scripts && \
     wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk && \
