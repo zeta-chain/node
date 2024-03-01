@@ -16,7 +16,9 @@ func TestZetaDeposit(r *runner.E2ERunner) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
+}
 
+func TestZetaDepositRestricted(r *runner.E2ERunner) {
 	// Deposit 1 Zeta to restricted address
 	r.DepositZetaWithAmount(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest), big.NewInt(1e18))
 }

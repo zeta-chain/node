@@ -56,10 +56,10 @@ func ethereumTestRoutine(
 		if err := ethereumRunner.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
 			e2etests.TestEtherWithdrawName,
-			e2etests.TestEtherWithdrawRestrictedName,
 			e2etests.TestContextUpgradeName,
 			e2etests.TestEtherDepositAndCallName,
 			e2etests.TestDepositAndCallRefundName,
+			e2etests.TestEtherWithdrawRestrictedName,
 		); err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)
 		}

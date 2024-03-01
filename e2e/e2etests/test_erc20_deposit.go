@@ -15,7 +15,9 @@ func TestERC20Deposit(r *runner.E2ERunner) {
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
+}
 
+func TestERC20DepositRestricted(r *runner.E2ERunner) {
 	// deposit ERC20 to restricted address
 	r.DepositERC20WithAmountAndMessage(ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest), big.NewInt(100000), []byte{})
 }

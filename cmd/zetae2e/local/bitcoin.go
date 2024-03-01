@@ -67,9 +67,9 @@ func bitcoinTestRoutine(
 		if err := bitcoinRunner.RunE2ETestsFromNames(
 			e2etests.AllE2ETests,
 			e2etests.TestBitcoinWithdrawName,
-			e2etests.TestBitcoinWithdrawRestrictedName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 			e2etests.TestCrosschainSwapName,
+			e2etests.TestBitcoinWithdrawRestrictedName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}

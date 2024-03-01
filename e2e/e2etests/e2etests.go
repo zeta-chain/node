@@ -29,11 +29,13 @@ const (
 
 	TestERC20WithdrawName           = "erc20_withdraw"
 	TestERC20DepositName            = "erc20_deposit"
+	TestERC20DepositRestrictedName  = "erc20_deposit_restricted"
 	TestEtherDepositName            = "eth_deposit"
 	TestEtherWithdrawName           = "eth_withdraw"
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
 	TestBitcoinDepositName          = "bitcoin_deposit"
 	TestZetaDepositName             = "zeta_deposit"
+	TestZetaDepositRestrictedName   = "zeta_deposit_restricted"
 
 	TestDonationEtherName = "donation_ether"
 
@@ -101,11 +103,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdraw,
 	},
 	{
-		TestBitcoinWithdrawRestrictedName,
-		"withdraw Bitcoin from ZEVM to restricted address",
-		TestBitcoinWithdrawRestricted,
-	},
-	{
 		TestCrosschainSwapName,
 		"testing Bitcoin ERC20 cross-chain swap",
 		TestCrosschainSwap,
@@ -166,11 +163,6 @@ var AllE2ETests = []runner.E2ETest{
 		TestEtherWithdraw,
 	},
 	{
-		TestEtherWithdrawRestrictedName,
-		"withdraw Ether from ZEVM to restricted address",
-		TestEtherWithdrawRestricted,
-	},
-	{
 		TestBitcoinDepositName,
 		"deposit Bitcoin into ZEVM",
 		TestBitcoinDeposit,
@@ -199,5 +191,25 @@ var AllE2ETests = []runner.E2ETest{
 		TestStressBTCDepositName,
 		"stress test BTC deposit",
 		TestStressBTCDeposit,
+	},
+	{
+		TestZetaDepositRestrictedName,
+		"deposit ZETA from Ethereum to ZEVM restricted address",
+		TestZetaDepositRestricted,
+	},
+	{
+		TestERC20DepositRestrictedName,
+		"deposit ERC20 into ZEVM restricted address",
+		TestERC20DepositRestricted,
+	},
+	{
+		TestEtherWithdrawRestrictedName,
+		"withdraw Ether from ZEVM to restricted address",
+		TestEtherWithdrawRestricted,
+	},
+	{
+		TestBitcoinWithdrawRestrictedName,
+		"withdraw Bitcoin from ZEVM to restricted address",
+		TestBitcoinWithdrawRestricted,
 	},
 }
