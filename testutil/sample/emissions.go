@@ -16,13 +16,3 @@ func WithdrawableEmissions(t *testing.T) types.WithdrawableEmissions {
 		Amount:  math.NewInt(r.Int63()),
 	}
 }
-
-func WithdrawEmission(t *testing.T) types.WithdrawEmission {
-	addr := AccAddress()
-	r := newRandFromStringSeed(t, addr)
-
-	return types.WithdrawEmission{
-		Address: AccAddress(),
-		Amount:  math.NewInt(r.Int63()),
-	}
-}

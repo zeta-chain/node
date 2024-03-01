@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,7 @@ func (k msgServer) WithdrawEmission(goCtx context.Context, msg *types.MsgWithdra
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if the creator address is valid
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	address, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidAddress, err.Error())
 	}
@@ -30,11 +31,14 @@ func (k msgServer) WithdrawEmission(goCtx context.Context, msg *types.MsgWithdra
 		return nil, errorsmod.Wrap(types.ErrRewardsPoolDoesNotHaveEnoughBalance, " rewards pool does not have enough balance to process this request")
 	}
 
-	// create a withdraw emission object
-	// CreateWithdrawEmissions makes sure that enough withdrawable emissions are available before creating the withdraw object
-	err = k.CreateWithdrawEmissions(ctx, msg.Creator, msg.Amount)
+	err = k.RemoveWithdrawableEmission(ctx, msg.Creator, msg.Amount)
 	if err != nil {
-		return nil, errorsmod.Wrap(types.ErrUnableToCreateWithdrawEmissions, err.Error())
+		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, err.Error())
+	}
+	err = k.GetBankKeeper().SendCoinsFromModuleToAccount(ctx, types.UndistributedObserverRewardsPool, address, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, msg.Amount)))
+	if err != nil {
+		ctx.Logger().Error(fmt.Sprintf("Error while processing withdraw of emission to adresss %s for amount %s : err %s", address, msg.Amount, err))
+		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, err.Error())
 	}
 	return &types.MsgWithdrawEmissionResponse{}, nil
 }

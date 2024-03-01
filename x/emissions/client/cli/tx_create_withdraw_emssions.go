@@ -13,7 +13,7 @@ import (
 
 func CmdCreateWithdrawEmission() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-withdraw-emission",
+		Use:   "create-withdraw-emission [amount]",
 		Short: "create a new withdrawEmission",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
