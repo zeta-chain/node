@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -16,10 +17,16 @@ func TestMsgWithdrawEmission_ValidateBasic(t *testing.T) {
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidAddress)
 	})
 
-	t.Run("invalid amount", func(t *testing.T) {
+	t.Run("invalid negative amount", func(t *testing.T) {
 		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sample.IntInRange(-100, -1))
 		err := msg.ValidateBasic()
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidCoins)
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
+	})
+
+	t.Run("invalid zero amount", func(t *testing.T) {
+		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sdkmath.ZeroInt())
+		err := msg.ValidateBasic()
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
 	})
 
 	t.Run("valid withdraw message", func(t *testing.T) {

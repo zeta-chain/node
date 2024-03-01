@@ -43,8 +43,8 @@ func (msg *MsgWithdrawEmission) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if !msg.Amount.GTE(sdkmath.ZeroInt()) {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid amount (%s)", msg.Amount.String())
+	if !msg.Amount.GT(sdkmath.ZeroInt()) {
+		return errorsmod.Wrapf(ErrInvalidAmount, "invalid amount (%s)", msg.Amount.String())
 	}
 	return nil
 }
