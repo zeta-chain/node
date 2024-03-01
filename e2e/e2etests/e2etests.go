@@ -27,8 +27,9 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
-	TestERC20WithdrawName           = "erc20_withdraw"
-	TestERC20DepositName            = "erc20_deposit"
+	TestERC20WithdrawName = "erc20_withdraw"
+	TestERC20DepositName  = "erc20_deposit"
+	// #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestERC20DepositRestrictedName  = "erc20_deposit_restricted"
 	TestEtherDepositName            = "eth_deposit"
 	TestEtherWithdrawName           = "eth_withdraw"
