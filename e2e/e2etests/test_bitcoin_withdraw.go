@@ -32,7 +32,8 @@ func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
 	amount := big.NewInt(int64(withdrawAmountSat))
 
 	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, amount.Mul(amount, big.NewInt(2))) // approve more to cover withdraw fee
+	approvalAmount := new(big.Int).Mul(amount, big.NewInt(2))
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, approvalAmount) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
