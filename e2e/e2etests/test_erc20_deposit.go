@@ -7,8 +7,17 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestERC20Deposit(r *runner.E2ERunner, _ []string) {
-	hash := r.DepositERC20WithAmountAndMessage(big.NewInt(100000), []byte{})
+func TestERC20Deposit(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestERC20Deposit requires exactly one argument for the amount.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestERC20Deposit.")
+	}
+
+	hash := r.DepositERC20WithAmountAndMessage(amount, []byte{})
 
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)

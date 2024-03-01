@@ -11,24 +11,39 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleERC20Deposit(r *runner.E2ERunner, _ []string) {
+func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
+	if len(args) != 2 {
+		panic("TestMultipleERC20Deposit requires exactly two arguments: the deposit amount and the number of deposits.")
+	}
+
+	depositAmount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid deposit amount specified for TestMultipleERC20Deposit.")
+	}
+
+	numberOfDeposits, ok := big.NewInt(0).SetString(args[1], 10)
+	if !ok || numberOfDeposits.Int64() < 1 {
+		panic("Invalid number of deposits specified for TestMultipleERC20Deposit.")
+	}
+
 	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	txhash := MultipleDeposits(r, big.NewInt(1e9), big.NewInt(3))
-	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, txhash.Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
+	txhash := MultipleDeposits(r, depositAmount, numberOfDeposits)
+	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, txhash.Hex(), r.CctxClient, int(numberOfDeposits.Int64()), r.Logger, r.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
-	// check new balance is increased by 1e9 * 3
+	// check new balance is increased by amount * count
 	bal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 	diff := big.NewInt(0).Sub(bal, initialBal)
-	if diff.Int64() != 3e9 {
+	total := depositAmount.Mul(depositAmount, numberOfDeposits)
+	if diff.Cmp(total) != 0 {
 		panic(fmt.Sprintf("balance difference is not correct: %d", diff.Int64()))
 	}
 }

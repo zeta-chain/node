@@ -9,9 +9,23 @@ import (
 )
 
 // TestEtherWithdraw tests the withdraw of ether
-func TestEtherWithdraw(r *runner.E2ERunner, _ []string) {
+func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
+	approvedAmount := big.NewInt(1e18)
+	if len(args) != 1 {
+		panic("TestEtherWithdraw requires exactly one argument for the withdrawal amount.")
+	}
+
+	withdrawalAmount, ok := new(big.Int).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid withdrawal amount specified for TestEtherWithdraw.")
+	}
+
+	if withdrawalAmount.Cmp(approvedAmount) >= 0 {
+		panic("Withdrawal amount must be less than the approved amount (1e18).")
+	}
+
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -24,7 +38,7 @@ func TestEtherWithdraw(r *runner.E2ERunner, _ []string) {
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), big.NewInt(100000))
+	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 	if err != nil {
 		panic(err)
 	}

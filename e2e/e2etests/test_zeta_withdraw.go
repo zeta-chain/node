@@ -13,8 +13,15 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestZetaWithdraw(r *runner.E2ERunner, _ []string) {
-	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(10)) // 10 Zeta
+func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestZetaWithdraw requires exactly one argument for the withdrawal.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestZetaWithdraw.")
+	}
 
 	r.ZevmAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZevmAuth)
@@ -90,8 +97,17 @@ func TestZetaWithdraw(r *runner.E2ERunner, _ []string) {
 	}
 }
 
-func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, _ []string) {
-	r.ZevmAuth.Value = big.NewInt(1e18) // 1 Zeta
+func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestZetaWithdrawBTCRevert requires exactly one argument for the withdrawal.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestZetaWithdrawBTCRevert.")
+	}
+
+	r.ZevmAuth.Value = amount
 	tx, err := r.WZeta.Deposit(r.ZevmAuth)
 	if err != nil {
 		panic(err)
@@ -117,12 +133,13 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, _ []string) {
 		panic("Approve failed")
 	}
 
+	lessThanAmount := amount.Div(amount, big.NewInt(10)) // 1/10 of amount
 	tx, err = r.ConnectorZEVM.Send(r.ZevmAuth, connectorzevm.ZetaInterfacesSendInput{
 		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,
-		ZetaValueAndGas:     big.NewInt(1e17),
+		ZetaValueAndGas:     lessThanAmount,
 		ZetaParams:          nil,
 	})
 	if err != nil {

@@ -3,6 +3,7 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
@@ -10,16 +11,24 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestBitcoinWithdraw(r *runner.E2ERunner, _ []string) {
-	// withdraw 0.1 BTC from ZRC20 to BTC address
-	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
-	WithdrawBitcoin(r)
+func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
+	WithdrawBitcoin(r, args)
 }
 
-func WithdrawBitcoin(r *runner.E2ERunner) {
-	amount := big.NewInt(0.1 * btcutil.SatoshiPerBitcoin)
+func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestBitcoinWithdraw requires exactly one argument for the amount.")
+	}
 
-	// approve the ZRC20 contract to spend 1 BTC from the deployer address
+	withdrawAmount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
+	}
+
+	withdrawAmountSat := withdrawAmount * btcutil.SatoshiPerBitcoin
+	amount := big.NewInt(int64(withdrawAmountSat))
+
+	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
 	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)

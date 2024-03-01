@@ -3,6 +3,7 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcutil"
@@ -14,22 +15,34 @@ import (
 )
 
 // TestStressBTCWithdraw tests the stressing withdraw of btc
-func TestStressBTCWithdraw(r *runner.E2ERunner, _ []string) {
-	// number of withdraws to perform
-	numWithdraws := 100
+func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
+	if len(args) != 2 {
+		panic("TestStressBTCWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+	}
+
+	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestStressBTCWithdraw.")
+	}
+
+	numWithdraws, err := strconv.Atoi(args[1])
+	if err != nil || numWithdraws < 1 {
+		panic("Invalid number of withdrawals specified for TestStressBTCWithdraw.")
+	}
 
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete
 	var eg errgroup.Group
 
+	satAmount := withdrawalAmount * btcutil.SatoshiPerBitcoin
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
 		tx, err := r.BTCZRC20.Withdraw(
 			r.ZevmAuth,
 			[]byte(r.BTCDeployerAddress.EncodeAddress()),
-			big.NewInt(0.01*btcutil.SatoshiPerBitcoin),
+			big.NewInt(int64(satAmount)),
 		)
 		if err != nil {
 			panic(err)
