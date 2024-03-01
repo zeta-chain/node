@@ -9,8 +9,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mock"
-
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -21,13 +19,14 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
 
 func MockBTCClientMainnet() *BTCChainClient {
 	return &BTCChainClient{
 		chain:      common.BtcMainnetChain(),
-		zetaClient: mock.NewZetaCoreBridge(),
-		Tss:        mock.NewTSSMainnet(),
+		zetaClient: stub.NewZetaCoreBridge(),
+		Tss:        stub.NewTSSMainnet(),
 	}
 }
 

@@ -5,6 +5,9 @@ import (
 	"path"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
+
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 
@@ -22,24 +25,23 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mock"
 )
 
-const (
+var (
 	// Dummy addresses as they are just used as transaction data to be signed
-	ConnectorAddress    = "0x00000000219ab540356cbb839cbe05303d7705fa"
-	ERC20CustodyAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+	ConnectorAddress    = sample.EthAddress()
+	ERC20CustodyAddress = sample.EthAddress()
 )
 
 func getNewEvmSigner() (*Signer, error) {
-	mpiAddress := ethcommon.HexToAddress(ConnectorAddress)
-	erc20CustodyAddress := ethcommon.HexToAddress(ERC20CustodyAddress)
+	mpiAddress := ConnectorAddress
+	erc20CustodyAddress := ERC20CustodyAddress
 	logger := common.ClientLogger{}
 	ts := &metrics.TelemetryServer{}
 	return NewEVMSigner(
 		corecommon.BscMainnetChain(),
-		mock.EVMRPCEnabled,
-		mock.NewTSSMainnet(),
+		stub.EVMRPCEnabled,
+		stub.NewTSSMainnet(),
 		config.GetConnectorABI(),
 		config.GetERC20CustodyABI(),
 		mpiAddress,
@@ -52,14 +54,14 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	logger := common.ClientLogger{}
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
-	tss := mock.NewTSSMainnet()
+	tss := stub.NewTSSMainnet()
 
 	evmcfg := config.EVMConfig{Chain: corecommon.BscMainnetChain(), Endpoint: "http://localhost:8545"}
 	cfg.EVMChainConfigs[corecommon.BscMainnetChain().ChainId] = &evmcfg
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
 
-	return NewEVMChainClient(appCTX, mock.NewZetaCoreBridge(), tss, "", logger, evmcfg, ts)
+	return NewEVMChainClient(appCTX, stub.NewZetaCoreBridge(), tss, "", logger, evmcfg, ts)
 }
 
 func getNewOutTxProcessor() *outtxprocessor.Processor {
@@ -82,7 +84,7 @@ func TestSigner_TryProcessOutTx(t *testing.T) {
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 
-	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, mock.NewZetaCoreBridge(), 123)
+	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, stub.NewZetaCoreBridge(), 123)
 
 	//Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
@@ -99,12 +101,12 @@ func TestSigner_SignOutboundTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -114,7 +116,7 @@ func TestSigner_SignOutboundTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -130,12 +132,12 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -145,7 +147,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -161,12 +163,12 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -176,7 +178,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -192,24 +194,24 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
 	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
 		txData.cmd = corecommon.CmdWhitelistERC20
-		txData.params = ConnectorAddress
+		txData.params = ConnectorAddress.Hex()
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(&txData)
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -225,7 +227,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -241,12 +243,12 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -256,7 +258,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 		require.NoError(t, err)
 
 		// Verify Signature
-		tss := mock.NewTSSMainnet()
+		tss := stub.NewTSSMainnet()
 		_, r, s := tx.RawSignatureValues()
 		signature := append(r.Bytes(), s.Bytes()...)
 		hash := evmSigner.EvmSigner().Hash(tx)
@@ -272,12 +274,12 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 
@@ -286,7 +288,7 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(&txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, mock.NewZetaCoreBridge(), &txData)
+		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, stub.NewZetaCoreBridge(), &txData)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()
@@ -303,12 +305,12 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 
-	txData := &TransactionData{}
+	txData := &BaseTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetChainAndSender PendingRevert", func(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
-		skipTx := SetChainAndSender(cctx, logger, txData)
+		skipTx := txData.SetChainAndSender(cctx, logger)
 
 		require.False(t, skipTx)
 		require.Equal(t, ethcommon.HexToAddress(cctx.InboundTxParams.Sender), txData.to)
@@ -317,7 +319,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 
 	t.Run("SetChainAndSender PendingOutBound", func(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		skipTx := SetChainAndSender(cctx, logger, txData)
+		skipTx := txData.SetChainAndSender(cctx, logger)
 
 		require.False(t, skipTx)
 		require.Equal(t, ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver), txData.to)
@@ -326,7 +328,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 
 	t.Run("SetChainAndSender Should skip cctx", func(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingInbound
-		skipTx := SetChainAndSender(cctx, logger, txData)
+		skipTx := txData.SetChainAndSender(cctx, logger)
 		require.True(t, skipTx)
 	})
 }
@@ -338,19 +340,19 @@ func TestSigner_SetupGas(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
-	txData := &TransactionData{}
+	txData := &BaseTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {
 		chain := corecommon.BscMainnetChain()
-		err := SetupGas(cctx, logger, evmSigner.EvmClient(), &chain, txData)
+		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.NoError(t, err)
 	})
 
 	t.Run("SetupGas_error", func(t *testing.T) {
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
 		chain := corecommon.BtcMainnetChain()
-		err := SetupGas(cctx, logger, evmSigner.EvmClient(), &chain, txData)
+		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.Error(t, err)
 	})
 }
@@ -361,12 +363,12 @@ func TestSigner_SetTransactionData(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
-	skip, err := SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, mock.NewZetaCoreBridge(), &txData)
+	skip, err := txData.SetTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{})
 	require.False(t, skip)
 	require.NoError(t, err)
 }

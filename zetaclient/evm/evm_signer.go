@@ -2,9 +2,7 @@ package evm
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -13,15 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/testutils/mock"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -34,28 +24,13 @@ import (
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
-
-type TransactionData struct {
-	srcChainID *big.Int
-	toChainID  *big.Int
-	sender     ethcommon.Address
-	to         ethcommon.Address
-	asset      ethcommon.Address
-	amount     *big.Int
-	gasPrice   *big.Int
-	gasLimit   uint64
-	message    []byte
-	sendHash   [32]byte
-	nonce      uint64
-	height     uint64
-
-	cmd            string
-	params         string
-	outboundParams *types.OutboundTxParams
-	flags          observertypes.CrosschainFlags
-}
 
 const (
 	OutTxInclusionTimeout     = 20 * time.Minute
@@ -177,11 +152,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *Signer) SignOutboundTx(txData *TransactionData) (*ethtypes.Transaction, error) {
-
-	if len(txData.sendHash) < 32 {
-		return nil, fmt.Errorf("sendHash len %d must be 32", len(txData.sendHash))
-	}
+func (signer *Signer) SignOutboundTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -193,7 +164,7 @@ func (signer *Signer) SignOutboundTx(txData *TransactionData) (*ethtypes.Transac
 		txData.message,
 		txData.sendHash)
 	if err != nil {
-		return nil, fmt.Errorf("pack error: %w", err)
+		return nil, fmt.Errorf("onReceive pack error: %w", err)
 	}
 
 	tx, _, _, err := signer.Sign(data,
@@ -203,7 +174,7 @@ func (signer *Signer) SignOutboundTx(txData *TransactionData) (*ethtypes.Transac
 		txData.nonce,
 		txData.height)
 	if err != nil {
-		return nil, fmt.Errorf("Sign error: %w", err)
+		return nil, fmt.Errorf("onReceive sign error: %w", err)
 	}
 
 	return tx, nil
@@ -219,7 +190,7 @@ func (signer *Signer) SignOutboundTx(txData *TransactionData) (*ethtypes.Transac
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(txData *TransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignRevertTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -248,6 +219,7 @@ func (signer *Signer) SignRevertTx(txData *TransactionData) (*ethtypes.Transacti
 	return tx, nil
 }
 
+// SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
@@ -269,7 +241,8 @@ func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint6
 	return signedTX, nil
 }
 
-func (signer *Signer) SignWithdrawTx(txData *TransactionData) (*ethtypes.Transaction, error) {
+// SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
+func (signer *Signer) SignWithdrawTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(txData.nonce, txData.to, txData.amount, 21000, txData.gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, txData.height, txData.nonce, signer.chain, "")
@@ -290,7 +263,11 @@ func (signer *Signer) SignWithdrawTx(txData *TransactionData) (*ethtypes.Transac
 	return signedTX, nil
 }
 
-func (signer *Signer) SignCommandTx(txData *TransactionData) (*ethtypes.Transaction, error) {
+// SignCommandTx signs a transaction based on the given command includes:
+//
+//	cmd_whitelist_erc20
+//	cmd_migrate_tss_funds
+func (signer *Signer) SignCommandTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	if txData.cmd == common.CmdWhitelistERC20 {
 		erc20 := ethcommon.HexToAddress(txData.params)
@@ -335,137 +312,6 @@ func (signer *Signer) SignCommandTx(txData *TransactionData) (*ethtypes.Transact
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", txData.cmd)
 }
 
-func SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger, txData *TransactionData) bool {
-	if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
-		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-		txData.toChainID = big.NewInt(cctx.InboundTxParams.SenderChainId) //common.GetChainFromChainID(cctx.InboundTxParams.SenderChainId)
-		logger.Info().Msgf("Abort: reverting inbound")
-	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
-		txData.to = ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
-		txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId) //common.GetChainFromChainID(cctx.GetCurrentOutTxParam().ReceiverChainId)
-	} else {
-		logger.Info().Msgf("Transaction doesn't need to be processed status: %d", cctx.CctxStatus.Status)
-		return true
-	}
-	return false
-}
-
-func SetupGas(
-	cctx *types.CrossChainTx,
-	logger zerolog.Logger,
-	client interfaces.EVMRPCClient,
-	chain *common.Chain,
-	txData *TransactionData) error {
-
-	txData.gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
-	if txData.gasLimit < 100_000 {
-		txData.gasLimit = 100_000
-		logger.Warn().Msgf("gasLimit %d is too low; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
-	}
-	if txData.gasLimit > 1_000_000 {
-		txData.gasLimit = 1_000_000
-		logger.Warn().Msgf("gasLimit %d is too high; set to %d", cctx.GetCurrentOutTxParam().OutboundTxGasLimit, txData.gasLimit)
-	}
-
-	// use dynamic gas price for ethereum chains.
-	// The code below is a fix for https://github.com/zeta-chain/node/issues/1085
-	// doesn't close directly the issue because we should determine if we want to keep using SuggestGasPrice if no OutboundTxGasPrice
-	// we should possibly remove it completely and return an error if no OutboundTxGasPrice is provided because it means no fee is processed on ZetaChain
-	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
-	if !ok {
-		if common.IsEthereumChain(chain.ChainId) {
-			suggested, err := client.SuggestGasPrice(context.Background())
-			if err != nil {
-				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
-			}
-			txData.gasPrice = roundUpToNearestGwei(suggested)
-		} else {
-			return fmt.Errorf("cannot convert gas price  %s ", cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
-		}
-	} else {
-		txData.gasPrice = specified
-	}
-	return nil
-}
-
-func SetTransactionData(
-	cctx *types.CrossChainTx,
-	evmClient *ChainClient,
-	evmRPC interfaces.EVMRPCClient,
-	logger zerolog.Logger,
-	zetaBridge interfaces.ZetaCoreBridger,
-	txData *TransactionData) (bool, error) {
-
-	txData.outboundParams = cctx.GetCurrentOutTxParam()
-	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
-	txData.nonce = cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	txData.sender = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-	txData.srcChainID = big.NewInt(cctx.InboundTxParams.SenderChainId)
-	txData.asset = ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
-
-	skipTx := SetChainAndSender(cctx, logger, txData)
-	if skipTx {
-		return true, nil
-	}
-
-	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
-	if toChain == nil {
-		return true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
-	}
-
-	// Get nonce, Early return if the cctx is already processed
-	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx, logger)
-	if err != nil {
-		return true, errors.New("IsSendOutTxProcessed failed")
-	}
-	if included || confirmed {
-		logger.Info().Msgf("CCTX already processed; exit signer")
-		return true, nil
-	}
-
-	// Set up gas limit and gas price
-	err = SetupGas(cctx, logger, evmRPC, toChain, txData)
-	if err != nil {
-		return true, err
-	}
-
-	// Get sendHash
-	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
-	sendHash, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
-	if err != nil || len(sendHash) != 32 {
-		return true, fmt.Errorf("decode CCTX %s error", cctx.Index)
-	}
-	copy(txData.sendHash[:32], sendHash[:32])
-
-	// In case there is a pending transaction, make sure this keysign is a transaction replacement
-	pendingTx := evmClient.GetPendingTx(nonce)
-	if pendingTx != nil {
-		if txData.gasPrice.Cmp(pendingTx.GasPrice()) > 0 {
-			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
-		} else {
-			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
-			return true, nil
-		}
-	}
-
-	// Base64 decode message
-	if cctx.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
-		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
-		if err != nil {
-			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
-		}
-	}
-
-	// Get cross-chain flags
-	txData.flags, err = zetaBridge.GetCrosschainFlags()
-	if err != nil {
-		return true, errors.New("cannot get crosschain flags")
-	}
-
-	return false, nil
-}
-
 func (signer *Signer) TryProcessOutTx(
 	cctx *types.CrossChainTx,
 	outTxMan *outtxprocessor.Processor,
@@ -493,11 +339,11 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	// Setup Transaction input
-	txData := TransactionData{}
+	txData := BaseTransactionData{}
 	txData.height = height
-	skipTx, err := SetTransactionData(cctx, evmClient, signer.client, logger, zetaBridge, &txData)
+	skipTx, err := txData.SetTransactionData(cctx, evmClient, signer.client, logger)
 	if err != nil {
-		logger.Error().Msg(err.Error())
+		logger.Err(err).Msg("error setting up transaction input fields")
 		return
 	}
 	if skipTx {
@@ -506,6 +352,13 @@ func (signer *Signer) TryProcessOutTx(
 
 	// Get destination chain for logging
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
+
+	// Get cross-chain flags
+	crossChainflags, err := zetaBridge.GetCrosschainFlags()
+	if err != nil {
+		logger.Err(err).Msg("couldn't retrieve crosschain flags from core")
+		return
+	}
 
 	var tx *ethtypes.Transaction
 	// compliance check goes first
@@ -527,17 +380,16 @@ func (signer *Signer) TryProcessOutTx(
 		txData.cmd = msg[0]
 		txData.params = msg[1]
 		tx, err = signer.SignCommandTx(&txData)
-	} else if cctx.InboundTxParams.SenderChainId == zetaBridge.ZetaChain().ChainId && cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && txData.flags.IsOutboundEnabled {
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
+
+	} else if IsSenderZetaChain(cctx, zetaBridge, &crossChainflags) {
+		switch cctx.GetCurrentOutTxParam().CoinType {
+		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(&txData)
-		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
-
-			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignERC20WithdrawTx(&txData)
-		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+		case common.CoinType_ERC20:
+			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
+			tx, err = signer.SignWithdrawTx(&txData)
+		case common.CoinType_Zeta:
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignOutboundTx(&txData)
 		}
@@ -562,27 +414,23 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	if err != nil {
-		logger.Warn().Err(err).Msgf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, cctx.GetCurrentOutTxParam().ReceiverChainId)
+		logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 		return
 	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
-
-	_, err = zetaBridge.GetObserverList()
-	if err != nil {
-		logger.Warn().Err(err).Msgf("unable to get observer list: chain %d observation %s", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, observertypes.ObservationType_OutBoundTx.String())
-	}
 
 	// Broadcast Signed Tx
 	signer.BroadcastOutTx(tx, cctx, logger, myID, zetaBridge, &txData)
 }
 
+// BroadcastOutTx signed transaction through evm rpc client
 func (signer *Signer) BroadcastOutTx(
 	tx *ethtypes.Transaction,
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetaBridge interfaces.ZetaCoreBridger,
-	txData *TransactionData) {
+	txData *BaseTransactionData) {
 	// Get destination chain for logging
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 
@@ -717,7 +565,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *Signer) SignERC20WithdrawTx(txData *TransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20WithdrawTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
@@ -780,11 +628,12 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 
 // ________________________
 
+// getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Signer, error) {
-	if endpoint == mock.EVMRPCEnabled {
+	if endpoint == stub.EVMRPCEnabled {
 		chainID := big.NewInt(common.BscMainnetChain().ChainId)
 		ethSigner := ethtypes.NewEIP155Signer(chainID)
-		client := mock.EvmClient{}
+		client := stub.EvmClient{}
 		return client, chainID, ethSigner, nil
 	}
 
@@ -809,4 +658,12 @@ func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
 		return gasPrice
 	}
 	return new(big.Int).Add(gasPrice, new(big.Int).Sub(oneGwei, mod))
+}
+
+func IsSenderZetaChain(cctx *types.CrossChainTx, zetaBridge interfaces.ZetaCoreBridger, flags *observertypes.CrosschainFlags) bool {
+	return cctx.InboundTxParams.SenderChainId == zetaBridge.ZetaChain().ChainId && cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled
+}
+
+func SignerErrorMsg(cctx *types.CrossChainTx) string {
+	return fmt.Sprintf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, cctx.GetCurrentOutTxParam().ReceiverChainId)
 }
