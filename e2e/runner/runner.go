@@ -206,18 +206,20 @@ func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNa
 // GetE2ETestsToRunByNameAndArgs prepares a list of E2ETests to run based on provided test names and their corresponding arguments
 func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(availableTests []E2ETest, testSpecs []E2ETestSpec) ([]E2ETest, error) {
 	tests := []E2ETest{}
-	for _, test := range testSpecs {
-		e2eTest, found := findE2ETestByName(availableTests, test.Name)
+	for _, testSpec := range testSpecs {
+		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)
 		if !found {
-			return nil, fmt.Errorf("e2e test %s not found", test.Name)
+			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
 		}
 		e2eTestToRun := NewE2ETest(
 			e2eTest.Name,
 			e2eTest.Description,
 			e2eTest.ArgsDescription,
-			test.Args,
+			e2eTest.DefaultArgs,
 			e2eTest.E2ETest,
 		)
+		// update e2e test args
+		e2eTestToRun.Args = testSpec.Args
 		tests = append(tests, e2eTestToRun)
 	}
 
