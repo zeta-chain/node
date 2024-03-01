@@ -61,7 +61,7 @@ func initObserverKeeper(
 }
 
 // ObserverKeeperWithMocks instantiates an observer keeper for testing purposes with the option to mock specific keepers
-func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers) {
+func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -114,11 +114,13 @@ func ObserverKeeperWithMocks(t testing.TB, mockOptions ObserverMockOptions) (*ke
 
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx, sdkKeepers
+	return k, ctx, sdkKeepers, ZetaKeepers{
+		AuthorityKeeper: &authorityKeeperTmp,
+	}
 }
 
 // ObserverKeeper instantiates an observer keeper for testing purposes
-func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers) {
+func ObserverKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
 	return ObserverKeeperWithMocks(t, ObserverNoMocks)
 }
 

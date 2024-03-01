@@ -15,7 +15,7 @@ import (
 
 func TestMsgServer_RemoveChainParams(t *testing.T) {
 	t.Run("can update chain params", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
@@ -82,7 +82,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot remove chain params if not authorized", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
@@ -99,7 +99,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot remove if chain ID not found", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)

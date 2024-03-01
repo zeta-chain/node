@@ -18,7 +18,7 @@ import (
 
 func TestMsgServer_UpdateObserver(t *testing.T) {
 	t.Run("successfully update tombstoned observer", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -74,7 +74,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("unable to update to a non validator address", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -123,7 +123,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("unable to update tombstoned validator with with non operator account", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -175,7 +175,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("unable to update non-tombstoned observer with update reason tombstoned", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -226,7 +226,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("unable to update observer with no node account", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -273,7 +273,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("unable to update observer when last observer count is missing", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))
@@ -319,7 +319,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("update observer using admin policy", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
 			UseAuthorityMock: true,
 		})
 		srv := keeper.NewMsgServerImpl(*k)
@@ -379,7 +379,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 	})
 
 	t.Run("fail to update observer using regular account and update type admin", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
 
 		// #nosec G404 test purpose - weak randomness is not an issue here
