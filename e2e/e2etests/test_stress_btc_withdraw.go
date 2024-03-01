@@ -35,7 +35,11 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	// create a wait group to wait for all the withdraws to complete
 	var eg errgroup.Group
 
-	satAmount := withdrawalAmount * btcutil.SatoshiPerBitcoin
+	satAmount, err := btcutil.NewAmount(withdrawalAmount)
+	if err != nil {
+		panic(err)
+	}
+
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i

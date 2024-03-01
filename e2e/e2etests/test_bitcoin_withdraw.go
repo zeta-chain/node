@@ -25,11 +25,14 @@ func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
 		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
 	}
 
-	withdrawAmountSat := withdrawAmount * btcutil.SatoshiPerBitcoin
+	withdrawAmountSat, err := btcutil.NewAmount(withdrawAmount)
+	if err != nil {
+		panic(err)
+	}
 	amount := big.NewInt(int64(withdrawAmountSat))
 
 	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, amount.Mul(amount, big.NewInt(2))) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
