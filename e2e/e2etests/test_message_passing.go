@@ -13,15 +13,22 @@ import (
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessagePassing(r *runner.E2ERunner, _ []string) {
+func TestMessagePassing(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestMessagePassing requires exactly one argument for the amount.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestMessagePassing.")
+	}
+
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	r.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
-	amount := big.NewInt(1e18)
-	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
 	auth := r.GoerliAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
@@ -96,14 +103,21 @@ func TestMessagePassing(r *runner.E2ERunner, _ []string) {
 	}
 }
 
-func TestMessagePassingRevertFail(r *runner.E2ERunner, _ []string) {
+func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestMessagePassingRevertFail requires exactly one argument for the amount.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestMessagePassingRevertFail.")
+	}
+
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	amount := big.NewInt(1e18)
-	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
 	auth := r.GoerliAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
@@ -159,14 +173,21 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, _ []string) {
 	}
 }
 
-func TestMessagePassingRevertSuccess(r *runner.E2ERunner, _ []string) {
+func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestMessagePassingRevertSuccess requires exactly one argument for the amount.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestMessagePassingRevertSuccess.")
+	}
+
 	chainID, err := r.GoerliClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	amount := big.NewInt(1e18)
-	amount = amount.Mul(amount, big.NewInt(10)) // 10 Zeta
 	auth := r.GoerliAuth
 
 	tx, err := r.ZetaEth.Approve(auth, r.TestDAppAddr, amount)
