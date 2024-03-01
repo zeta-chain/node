@@ -1,13 +1,14 @@
 package v7_test
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	v7 "github.com/zeta-chain/zetacore/x/observer/migrations/v7"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	"testing"
 )
 
 func TestMigratePolicies(t *testing.T) {
