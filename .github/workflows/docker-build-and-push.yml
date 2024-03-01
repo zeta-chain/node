@@ -1,11 +1,9 @@
 name: Zetacored-Docker-Build
 
 on:
-  pull_request:
+  release:
     types:
-      - closed
-    branches:
-      - 'main'
+      - created
   workflow_dispatch:
     inputs:
       version:
@@ -32,9 +30,14 @@ jobs:
           fetch-depth: 0
 
       - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'workflow_dispatch'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
+          LATEST_RELEASE=$(curl -s -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          RELEASE_TITLE=$(echo $LATEST_RELEASE | jq -r .name)
+          echo "Latest release title: $RELEASE_TITLE"
+          echo "GITHUB_TAG_MAJOR_VERSION=$RELEASE_TITLE" >> $GITHUB_ENV
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
@@ -64,9 +67,14 @@ jobs:
           fetch-depth: 0
 
       - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'workflow_dispatch'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
+          LATEST_RELEASE=$(curl -s -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          RELEASE_TITLE=$(echo $LATEST_RELEASE | jq -r .name)
+          echo "Latest release title: $RELEASE_TITLE"
+          echo "GITHUB_TAG_MAJOR_VERSION=$RELEASE_TITLE" >> $GITHUB_ENV
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
@@ -107,9 +115,14 @@ jobs:
           fetch-depth: 0
 
       - name: Set Version from the PR title.
-        if: github.event_name == 'pull_request'
+        if: github.event_name != 'workflow_dispatch'
         run: |
-          echo "GITHUB_TAG_MAJOR_VERSION=$(grep 'const releaseVersion =' app/setup_handlers.go | cut -d '"' -f 2 | tr -d '\n')" >> ${GITHUB_ENV}
+          LATEST_RELEASE=$(curl -s -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          RELEASE_TITLE=$(echo $LATEST_RELEASE | jq -r .name)
+          echo "Latest release title: $RELEASE_TITLE"
+          echo "GITHUB_TAG_MAJOR_VERSION=$RELEASE_TITLE" >> $GITHUB_ENV
 
       - name: Set Version for Hotfix Release from Input.
         if: github.event_name != 'pull_request'
