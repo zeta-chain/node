@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* Admin policies have been moved from `observer` to a new module `authority`.
+  * Updating admin policies now requires to send a governance proposal executing the `UpdatePolicies` message in the `authority` module.
+  * The `Policies` query of the `authority` module must be used to get the current admin policies.
+  * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
+
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
