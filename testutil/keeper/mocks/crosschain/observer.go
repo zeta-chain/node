@@ -800,6 +800,90 @@ func (_m *CrosschainObserverKeeper) SetTssAndUpdateNonce(ctx types.Context, tss 
 	_m.Called(ctx, tss)
 }
 
+// VoteOnInboundBallot provides a mock function with given fields: ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash
+func (_m *CrosschainObserverKeeper) VoteOnInboundBallot(ctx types.Context, senderChainID int64, receiverChainID int64, coinType common.CoinType, voter string, ballotIndex string, inTxHash string) (bool, bool, error) {
+	ret := _m.Called(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VoteOnInboundBallot")
+	}
+
+	var r0 bool
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, common.CoinType, string, string, string) (bool, bool, error)); ok {
+		return rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, int64, int64, common.CoinType, string, string, string) bool); ok {
+		r0 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, int64, int64, common.CoinType, string, string, string) bool); ok {
+		r1 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, int64, int64, common.CoinType, string, string, string) error); ok {
+		r2 = rf(ctx, senderChainID, receiverChainID, coinType, voter, ballotIndex, inTxHash)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// VoteOnOutboundBallot provides a mock function with given fields: ctx, ballotIndex, outTxChainID, receiveStatus, voter
+func (_m *CrosschainObserverKeeper) VoteOnOutboundBallot(ctx types.Context, ballotIndex string, outTxChainID int64, receiveStatus common.ReceiveStatus, voter string) (bool, bool, observertypes.Ballot, string, error) {
+	ret := _m.Called(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+
+	if len(ret) == 0 {
+		panic("no return value specified for VoteOnOutboundBallot")
+	}
+
+	var r0 bool
+	var r1 bool
+	var r2 observertypes.Ballot
+	var r3 string
+	var r4 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64, common.ReceiveStatus, string) (bool, bool, observertypes.Ballot, string, error)); ok {
+		return rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, string, int64, common.ReceiveStatus, string) bool); ok {
+		r0 = rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, string, int64, common.ReceiveStatus, string) bool); ok {
+		r1 = rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, string, int64, common.ReceiveStatus, string) observertypes.Ballot); ok {
+		r2 = rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	} else {
+		r2 = ret.Get(2).(observertypes.Ballot)
+	}
+
+	if rf, ok := ret.Get(3).(func(types.Context, string, int64, common.ReceiveStatus, string) string); ok {
+		r3 = rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	} else {
+		r3 = ret.Get(3).(string)
+	}
+
+	if rf, ok := ret.Get(4).(func(types.Context, string, int64, common.ReceiveStatus, string) error); ok {
+		r4 = rf(ctx, ballotIndex, outTxChainID, receiveStatus, voter)
+	} else {
+		r4 = ret.Error(4)
+	}
+
+	return r0, r1, r2, r3, r4
+}
+
 // NewCrosschainObserverKeeper creates a new instance of CrosschainObserverKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewCrosschainObserverKeeper(t interface {

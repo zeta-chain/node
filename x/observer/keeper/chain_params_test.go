@@ -12,7 +12,7 @@ import (
 
 func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 	t.Run("return nil if chain not found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		// no core params list
 		require.Nil(t, k.GetSupportedChainFromChainID(ctx, getValidEthChainIDWithIndex(t, 0)))
@@ -31,7 +31,7 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 	})
 
 	t.Run("return chain if chain found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		chainID := getValidEthChainIDWithIndex(t, 0)
 		setSupportedChain(ctx, *k, getValidEthChainIDWithIndex(t, 1), chainID)
 		chain := k.GetSupportedChainFromChainID(ctx, chainID)
@@ -42,12 +42,12 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 
 func TestKeeper_GetSupportedChains(t *testing.T) {
 	t.Run("return empty list if no core params list", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		require.Empty(t, k.GetSupportedChains(ctx))
 	})
 
 	t.Run("return list containing supported chains", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		require.Greater(t, len(common.ExternalChainList()), 5)
 		supported1 := common.ExternalChainList()[0]
