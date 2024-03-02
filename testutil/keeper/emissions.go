@@ -105,3 +105,9 @@ func EmissionKeeperWithMockOptions(
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
+
+func GetEmissionsBankMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionBankKeeper {
+	cbk, ok := keeper.GetBankKeeper().(*emissionsmocks.EmissionBankKeeper)
+	require.True(t, ok)
+	return cbk
+}
