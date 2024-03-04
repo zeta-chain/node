@@ -40,5 +40,6 @@ func (k msgServer) WithdrawEmission(goCtx context.Context, msg *types.MsgWithdra
 		ctx.Logger().Error(fmt.Sprintf("Error while processing withdraw of emission to adresss %s for amount %s : err %s", address, msg.Amount, err))
 		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, err.Error())
 	}
+	
 	return &types.MsgWithdrawEmissionResponse{}, nil
 }
