@@ -1,3 +1,9 @@
+# Purpose: This Dockerfile creates an environment for running ZetaChain
+# It contains:
+# - zetacored: the ZetaChain node binary
+# - zetaclientd: the ZetaChain client binary for observers
+# - zetae2e: the ZetaChain end-to-end tests CLI
+
 FROM golang:1.20-alpine3.18
 
 ENV GOPATH /go
@@ -10,15 +16,9 @@ RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
-#RUN --mount=type=cache,target=/root/.cache/go-build \
-#    go mod download
+
 RUN go mod download
 COPY . .
-
-#RUN --mount=type=cache,target=/root/.cache/go-build \
-#    make install
-#RUN --mount=type=cache,target=/root/.cache/go-build \
-#    make install-zetae2e
 RUN make install
 RUN make install-zetae2e
 #

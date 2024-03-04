@@ -35,12 +35,11 @@ func New() Config {
 	return Config{
 		EVMChainConfigs: evmChainsConfigs,
 		BitcoinConfig:   bitcoinConfigRegnet,
-		ChainsEnabled:   []common.Chain{},
 	}
 }
 
 var bitcoinConfigRegnet = &BTCConfig{
-	RPCUsername: "smoketest",
+	RPCUsername: "e2e",
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",

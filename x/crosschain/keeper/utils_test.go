@@ -175,7 +175,7 @@ func setupZRC20Pool(
 	)
 	require.NoError(t, err)
 
-	// approve the router to spend the zeta
+	// approve the router to spend the zrc20
 	err = k.CallZRC20Approve(
 		ctx,
 		types.ModuleAddressEVM,

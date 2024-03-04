@@ -4,9 +4,32 @@
 ### Fixes 
 - [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
+## Unreleased
+
+### Refactor
+
+* [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
+* [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+
+### Features
+
+* [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+
+### Tests
+
+* [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+
+### Chores
+
+* [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
 ## Version: v13.0.0
 
-* `zetaclientd start` : 2 inputs required from stdin
+### Breaking Changes
+
+* `zetaclientd start`: now requires 2 inputs from stdin: hotkey password and tss keyshare password
+  Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
 
 ### Features
 
@@ -21,9 +44,9 @@
 *[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
 
 ### Refactor
+
 * [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
-* [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
-  Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
+* [1630](https://github.com/zeta-chain/node/pull/1630) - added password prompts for hotkey and tss keyshare in zetaclient
 * [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
 
 ### Fixes
@@ -39,12 +62,14 @@
 * [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
 * [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
-
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
+
 * [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
+* [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
 
 ### CI
 
@@ -54,6 +79,11 @@
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+* [1781](https://github.com/zeta-chain/node/pull/1781) - add codecov coverage report in CI
+
+### Features
+
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
 
 ### Chores
 

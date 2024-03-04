@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	cosmoserrors "cosmossdk.io/errors"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -776,10 +777,10 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 // VerifyAddressFormat verifies the address is compatible with ethereum
 func VerifyAddressFormat(bz []byte) error {
 	if len(bz) == 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownAddress, "invalid address; cannot be empty")
+		return cosmoserrors.Wrap(sdkerrors.ErrUnknownAddress, "invalid address; cannot be empty")
 	}
 	if len(bz) != AddrLen {
-		return sdkerrors.Wrapf(
+		return cosmoserrors.Wrapf(
 			sdkerrors.ErrUnknownAddress,
 			"invalid address length; got: %d, expect: %d", len(bz), AddrLen,
 		)

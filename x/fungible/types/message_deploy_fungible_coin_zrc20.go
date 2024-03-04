@@ -1,6 +1,7 @@
 package types
 
 import (
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/common"
@@ -47,14 +48,14 @@ func (msg *MsgDeployFungibleCoinZRC20) GetSignBytes() []byte {
 func (msg *MsgDeployFungibleCoinZRC20) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if msg.GasLimit < 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit")
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidGasLimit, "invalid gas limit")
 	}
 
 	if msg.Decimals > 77 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78")
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78")
 	}
 	return nil
 }

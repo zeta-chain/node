@@ -72,6 +72,22 @@ type ObserverKeeper interface {
 	SetTssAndUpdateNonce(ctx sdk.Context, tss observertypes.TSS)
 	RemoveFromPendingNonces(ctx sdk.Context, tss string, chainID int64, nonce int64)
 	GetAllNonceToCctx(ctx sdk.Context) (list []observertypes.NonceToCctx)
+	VoteOnInboundBallot(
+		ctx sdk.Context,
+		senderChainID int64,
+		receiverChainID int64,
+		coinType common.CoinType,
+		voter string,
+		ballotIndex string,
+		inTxHash string,
+	) (bool, bool, error)
+	VoteOnOutboundBallot(
+		ctx sdk.Context,
+		ballotIndex string,
+		outTxChainID int64,
+		receiveStatus common.ReceiveStatus,
+		voter string,
+	) (bool, bool, observertypes.Ballot, string, error)
 	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain
 	GetSupportedChains(ctx sdk.Context) []*common.Chain
 }
@@ -103,7 +119,7 @@ type FungibleKeeper interface {
 		from []byte,
 		to eth.Address,
 		amount *big.Int,
-		senderChain *common.Chain,
+		senderChainID int64,
 		data []byte,
 		coinType common.CoinType,
 		asset string,

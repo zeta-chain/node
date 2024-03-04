@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 const flagVerbose = "verbose"
@@ -21,7 +21,7 @@ const flagVerbose = "verbose"
 const FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 
 // NewRunCmd returns the run command
-// which runs the smoketest from a config file describing the tests, networks, and accounts
+// which runs the E2E from a config file describing the tests, networks, and accounts
 func NewRunCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [config-file]",
@@ -103,8 +103,8 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	//run tests
-	reports, err := testRunner.RunSmokeTestsFromNamesIntoReport(
-		smoketests.AllSmokeTests,
+	reports, err := testRunner.RunE2ETestsFromNamesIntoReport(
+		e2etests.AllE2ETests,
 		conf.TestList...,
 	)
 	if err != nil {

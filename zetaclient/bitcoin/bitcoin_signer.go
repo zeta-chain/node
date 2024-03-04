@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"time"
 
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -34,15 +35,20 @@ const (
 )
 
 type BTCSigner struct {
-	tssSigner interfaces.TSSSigner
-	rpcClient interfaces.BTCRPCClient
-	logger    zerolog.Logger
-	ts        *metrics.TelemetryServer
+	tssSigner        interfaces.TSSSigner
+	rpcClient        interfaces.BTCRPCClient
+	logger           zerolog.Logger
+	loggerCompliance zerolog.Logger
+	ts               *metrics.TelemetryServer
 }
 
 var _ interfaces.ChainSigner = &BTCSigner{}
 
-func NewBTCSigner(cfg config.BTCConfig, tssSigner interfaces.TSSSigner, logger zerolog.Logger, ts *metrics.TelemetryServer) (*BTCSigner, error) {
+func NewBTCSigner(
+	cfg config.BTCConfig,
+	tssSigner interfaces.TSSSigner,
+	loggers clientcommon.ClientLogger,
+	ts *metrics.TelemetryServer) (*BTCSigner, error) {
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,
@@ -57,12 +63,11 @@ func NewBTCSigner(cfg config.BTCConfig, tssSigner interfaces.TSSSigner, logger z
 	}
 
 	return &BTCSigner{
-		tssSigner: tssSigner,
-		rpcClient: client,
-		logger: logger.With().
-			Str("chain", "BTC").
-			Str("module", "BTCSigner").Logger(),
-		ts: ts,
+		tssSigner:        tssSigner,
+		rpcClient:        client,
+		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
+		loggerCompliance: loggers.Compliance,
+		ts:               ts,
 	}, nil
 }
 
@@ -76,6 +81,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 	height uint64,
 	nonce uint64,
 	chain *common.Chain,
+	cancelTx bool,
 ) (*wire.MsgTx, error) {
 	estimateFee := float64(gasPrice.Uint64()*outTxBytesMax) / 1e8
 	nonceMark := common.NonceMarkAmount(nonce)
@@ -155,12 +161,14 @@ func (signer *BTCSigner) SignWithdrawTx(
 	tx.AddTxOut(txOut1)
 
 	// 2nd output: the payment to the recipient
-	pkScript, err := PayToWitnessPubKeyHashScript(to.WitnessProgram())
-	if err != nil {
-		return nil, err
+	if !cancelTx {
+		pkScript, err := PayToWitnessPubKeyHashScript(to.WitnessProgram())
+		if err != nil {
+			return nil, err
+		}
+		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+		tx.AddTxOut(txOut2)
 	}
-	txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
-	tx.AddTxOut(txOut2)
 
 	// 3rd output: the remaining btc to TSS self
 	if remainingSats > 0 {
@@ -305,6 +313,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
 		return
 	}
+	amount := float64(params.Amount.Uint64()) / 1e8
 
 	// Add 1 satoshi/byte to gasPrice to avoid minRelayTxFee issue
 	networkInfo, err := signer.rpcClient.GetNetworkInfo()
@@ -315,18 +324,27 @@ func (signer *BTCSigner) TryProcessOutTx(
 	satPerByte := FeeRateToSatPerByte(networkInfo.RelayFee)
 	gasprice.Add(gasprice, satPerByte)
 
+	// compliance check
+	cancelTx := clientcommon.IsCctxRestricted(cctx)
+	if cancelTx {
+		clientcommon.PrintComplianceLog(logger, signer.loggerCompliance,
+			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
+		amount = 0.0 // zero out the amount to cancel the tx
+	}
+
 	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 
 	tx, err := signer.SignWithdrawTx(
 		to,
-		float64(params.Amount.Uint64())/1e8,
+		amount,
 		gasprice,
 		sizelimit,
 		btcClient,
 		height,
 		outboundTxTssNonce,
 		&btcClient.chain,
+		cancelTx,
 	)
 	if err != nil {
 		logger.Warn().Err(err).Msgf("SignOutboundTx error: nonce %d chain %d", outboundTxTssNonce, params.ReceiverChainId)

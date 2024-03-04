@@ -9,6 +9,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/zeta-chain/zetacore/common"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -20,8 +25,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
@@ -43,8 +46,8 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	//client, err := NewBitcoinClient(common.BtcTestNetChain(), nil, tss, "", nil)
-	client, err := NewBitcoinClient(common.BtcRegtestChain(), nil, tss, "/tmp", nil, log.Logger, config.BTCConfig{}, nil)
+	appContext := appcontext.NewAppContext(&corecontext.ZetaCoreContext{}, &config.Config{})
+	client, err := NewBitcoinClient(appContext, common.BtcRegtestChain(), nil, tss, "/tmp", clientcommon.DefaultLoggers(), nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 	skBytes, err := hex.DecodeString(skHex)
@@ -53,7 +56,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 
 	btc := client.rpcClient
 
-	_, err = btc.CreateWallet("smoketest")
+	_, err = btc.CreateWallet("e2e")
 	suite.Require().NoError(err)
 	addr, err := btc.GetNewAddress("test")
 	suite.Require().NoError(err)
