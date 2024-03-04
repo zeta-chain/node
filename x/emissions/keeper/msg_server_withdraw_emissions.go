@@ -35,6 +35,7 @@ func (k msgServer) WithdrawEmission(goCtx context.Context, msg *types.MsgWithdra
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrUnableToWithdrawEmissions, fmt.Sprintf("error while removing withdrawable emission for address %s : %s", msg.Creator, err))
 	}
+	
 	err = k.GetBankKeeper().SendCoinsFromModuleToAccount(ctx, types.UndistributedObserverRewardsPool, address, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, msg.Amount)))
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while processing withdraw of emission to adresss %s for amount %s : err %s", address, msg.Amount, err))
