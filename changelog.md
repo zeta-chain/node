@@ -19,6 +19,7 @@
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 
 ### Chores
 
@@ -79,11 +80,16 @@
 * Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
 * Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
 * [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+* Re-wrote Dockerfile for building Zetacored docker images. 
+* Adjusted the docker-compose files for Zetacored nodes to utilize the new docker image.
+* Added scripts for the new docker image that facilitate the start up automation.
+* Adjusted the docker pipeline slightly to pull the version on PR from the app.go file.
 * [1781](https://github.com/zeta-chain/node/pull/1781) - add codecov coverage report in CI
 
 ### Features
 
 * [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
+
 
 ### Chores
 
