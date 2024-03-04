@@ -63,6 +63,7 @@ func zetaTestRoutine(
 			e2etests.TestMessagePassingName,
 			e2etests.TestMessagePassingRevertFailName,
 			e2etests.TestMessagePassingRevertSuccessName,
+			e2etests.TestZetaDepositRestrictedName,
 		); err != nil {
 			return fmt.Errorf("zeta tests failed: %v", err)
 		}
