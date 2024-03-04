@@ -8,11 +8,6 @@ RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers b
 RUN pip install requests
 RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
 
-  apt-get update
-  apt-get install nano jq python3 -y
-  pip3 install requests
-
-
 WORKDIR /go/delivery/zeta-node
 COPY go.mod .
 COPY go.sum .
