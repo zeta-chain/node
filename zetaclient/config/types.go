@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
@@ -50,6 +51,8 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
+	cfgLock *sync.RWMutex `json:"-"`
+
 	Peer                string         `json:"Peer"`
 	PublicIP            string         `json:"PublicIP"`
 	LogFormat           string         `json:"LogFormat"`
@@ -78,11 +81,35 @@ type Config struct {
 }
 
 func NewConfig() Config {
-	return Config{}
+	return Config{
+		cfgLock: &sync.RWMutex{},
+	}
 }
 
-func (c Config) BTCEnabled() bool {
-	return c.BitcoinConfig != BTCConfig{}
+func (c Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
+	c.cfgLock.RLock()
+	defer c.cfgLock.RUnlock()
+	evmCfg, found := c.EVMChainConfigs[chainID]
+	return evmCfg, found
+}
+
+func (c Config) GetAllEVMConfigs() map[int64]EVMConfig {
+	c.cfgLock.RLock()
+	defer c.cfgLock.RUnlock()
+
+	// deep copy evm configs
+	copied := make(map[int64]EVMConfig, len(c.EVMChainConfigs))
+	for chainID, evmConfig := range c.EVMChainConfigs {
+		copied[chainID] = evmConfig
+	}
+	return copied
+}
+
+func (c Config) GetBTCConfig() (BTCConfig, bool) {
+	c.cfgLock.RLock()
+	defer c.cfgLock.RUnlock()
+
+	return c.BitcoinConfig, c.BitcoinConfig != (BTCConfig{})
 }
 
 func (c Config) String() string {

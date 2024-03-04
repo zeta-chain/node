@@ -30,7 +30,8 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
 	}
 	var bitcoinChainParams *observertypes.ChainParams
-	if cfg.BTCEnabled() {
+	_, found := cfg.GetBTCConfig()
+	if found {
 		bitcoinChainParams = &observertypes.ChainParams{}
 	}
 	return &ZetaCoreContext{
@@ -45,7 +46,16 @@ func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
-	return c.keygen
+	var copiedPubkeys []string
+	if c.keygen.GranteePubkeys != nil {
+		copiedPubkeys = make([]string, len(c.keygen.GranteePubkeys))
+		copy(copiedPubkeys, c.keygen.GranteePubkeys)
+	}
+	return observertypes.Keygen{
+		Status:         c.keygen.Status,
+		GranteePubkeys: copiedPubkeys,
+		BlockNumber:    c.keygen.BlockNumber,
+	}
 }
 
 func (c *ZetaCoreContext) GetCurrentTssPubkey() string {

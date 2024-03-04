@@ -58,7 +58,7 @@ func CreateSignerMap(
 ) (map[common.Chain]interfaces.ChainSigner, error) {
 	signerMap := make(map[common.Chain]interfaces.ChainSigner)
 	// EVM signers
-	for _, evmConfig := range appContext.Config().EVMChainConfigs {
+	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
@@ -100,7 +100,7 @@ func CreateChainClientMap(
 ) (map[common.Chain]interfaces.ChainClient, error) {
 	clientMap := make(map[common.Chain]interfaces.ChainClient)
 	// EVM clients
-	for _, evmConfig := range appContext.Config().EVMChainConfigs {
+	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}

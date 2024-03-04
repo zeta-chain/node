@@ -33,11 +33,12 @@ func (a AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
 
 // GetBTCChainAndConfig returns btc chain and config if enabled
 func (a AppContext) GetBTCChainAndConfig() (common.Chain, config.BTCConfig, bool) {
+	btcConfig, configEnabled := a.Config().GetBTCConfig()
 	btcChain, _, paramsEnabled := a.ZetaCoreContext().GetBTCChainParams()
 
-	if !a.config.BTCEnabled() || !paramsEnabled {
+	if !configEnabled || !paramsEnabled {
 		return common.Chain{}, config.BTCConfig{}, false
 	}
 
-	return btcChain, a.config.BitcoinConfig, true
+	return btcChain, btcConfig, true
 }

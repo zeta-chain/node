@@ -57,6 +57,20 @@ func validatePeer(seedPeer string) error {
 func maskCfg(cfg config.Config) string {
 	maskedCfg := cfg
 
+	maskedCfg.BitcoinConfig = config.BTCConfig{
+		RPCUsername: cfg.BitcoinConfig.RPCUsername,
+		RPCPassword: cfg.BitcoinConfig.RPCPassword,
+		RPCHost:     cfg.BitcoinConfig.RPCHost,
+		RPCParams:   cfg.BitcoinConfig.RPCParams,
+	}
+	maskedCfg.EVMChainConfigs = map[int64]config.EVMConfig{}
+	for key, val := range cfg.EVMChainConfigs {
+		maskedCfg.EVMChainConfigs[key] = config.EVMConfig{
+			Chain:    val.Chain,
+			Endpoint: val.Endpoint,
+		}
+	}
+
 	// Mask Sensitive data
 	for key, chain := range maskedCfg.EVMChainConfigs {
 		if chain.Endpoint == "" {
