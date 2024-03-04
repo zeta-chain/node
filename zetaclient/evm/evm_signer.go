@@ -267,51 +267,19 @@ func (signer *Signer) SignWithdrawTx(txData *BaseTransactionData) (*ethtypes.Tra
 //
 //	cmd_whitelist_erc20
 //	cmd_migrate_tss_funds
-func (signer *Signer) SignCommandTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
-	outboundParams := txData.outboundParams
-	if txData.cmd == common.CmdWhitelistERC20 {
-		erc20 := ethcommon.HexToAddress(txData.params)
-		if erc20 == (ethcommon.Address{}) {
-			return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", txData.params)
-		}
-		custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
-		if err != nil {
-			return nil, err
-		}
-		data, err := custodyAbi.Pack("whitelist", erc20)
-		if err != nil {
-			return nil, err
-		}
-		tx, _, _, err := signer.Sign(data, txData.to, txData.gasLimit, txData.gasPrice, outboundParams.OutboundTxTssNonce, txData.height)
-		if err != nil {
-			return nil, fmt.Errorf("sign error: %w", err)
-		}
-		return tx, nil
+func (signer *Signer) SignCommandTx(txData *BaseTransactionData, cmd string, params string) (*ethtypes.Transaction, error) {
+	switch cmd {
+	case common.CmdWhitelistERC20:
+		return signer.SignWhitelistERC20Cmd(txData, params)
+	case common.CmdMigrateTssFunds:
+		return signer.SignMigrateTssFundsCmd(txData)
 	}
-	if txData.cmd == common.CmdMigrateTssFunds {
-		tx := ethtypes.NewTransaction(outboundParams.OutboundTxTssNonce, txData.to, outboundParams.Amount.BigInt(), outboundParams.OutboundTxGasLimit, txData.gasPrice, nil)
-		hashBytes := signer.ethSigner.Hash(tx).Bytes()
-		sig, err := signer.tssSigner.Sign(hashBytes, txData.height, outboundParams.OutboundTxTssNonce, signer.chain, "")
-		if err != nil {
-			return nil, err
-		}
-		pubk, err := crypto.SigToPub(hashBytes, sig[:])
-		if err != nil {
-			signer.logger.Std.Error().Err(err).Msgf("SigToPub error")
-		}
-		addr := crypto.PubkeyToAddress(*pubk)
-		signer.logger.Std.Info().Msgf("Sign: Ecrecovery of signature: %s", addr.Hex())
-		signedTX, err := tx.WithSignature(signer.ethSigner, sig[:])
-		if err != nil {
-			return nil, err
-		}
-
-		return signedTX, nil
-	}
-
-	return nil, fmt.Errorf("SignCommandTx: unknown command %s", txData.cmd)
+	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)
 }
 
+// TryProcessOutTx - signer interface implementation
+// This function will attempt to build and sign an evm transaction using the TSS signer.
+// It will then broadcast the signed transaction to the outbound chain.
 func (signer *Signer) TryProcessOutTx(
 	cctx *types.CrossChainTx,
 	outTxMan *outtxprocessor.Processor,
@@ -366,6 +334,10 @@ func (signer *Signer) TryProcessOutTx(
 		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
 			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
 		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
+		}
 	} else if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 		if to == (ethcommon.Address{}) {
@@ -377,10 +349,17 @@ func (signer *Signer) TryProcessOutTx(
 			logger.Error().Msgf("invalid message %s", msg)
 			return
 		}
-		txData.cmd = msg[0]
-		txData.params = msg[1]
-		tx, err = signer.SignCommandTx(&txData)
-
+		// cmd field is used to determine whether to execute ERC20 whitelist or migrate TSS funds given that the coin type
+		// from the cctx is common.CoinType_Cmd
+		cmd := msg[0]
+		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
+		// contract address when a whitelist command is requested
+		params := msg[1]
+		tx, err = signer.SignCommandTx(&txData, cmd, params)
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
+		}
 	} else if IsSenderZetaChain(cctx, zetaBridge, &crossChainflags) {
 		switch cctx.GetCurrentOutTxParam().CoinType {
 		case common.CoinType_Gas:
@@ -393,14 +372,22 @@ func (signer *Signer) TryProcessOutTx(
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignOutboundTx(&txData)
 		}
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
+		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetaBridge.ZetaChain().ChainId {
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
+		switch cctx.GetCurrentOutTxParam().CoinType {
+		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(&txData)
-		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
+		case common.CoinType_ERC20:
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignERC20WithdrawTx(&txData)
+		}
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert {
 		logger.Info().Msgf("SignRevertTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
@@ -408,15 +395,19 @@ func (signer *Signer) TryProcessOutTx(
 		txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId)
 
 		tx, err = signer.SignRevertTx(&txData)
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
+		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 		tx, err = signer.SignOutboundTx(&txData)
+		if err != nil {
+			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
+			return
+		}
 	}
 
-	if err != nil {
-		logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
-		return
-	}
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 
 	// Broadcast Signed Tx
@@ -666,4 +657,34 @@ func IsSenderZetaChain(cctx *types.CrossChainTx, zetaBridge interfaces.ZetaCoreB
 
 func SignerErrorMsg(cctx *types.CrossChainTx) string {
 	return fmt.Sprintf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, cctx.GetCurrentOutTxParam().ReceiverChainId)
+}
+
+func (signer *Signer) SignWhitelistERC20Cmd(txData *BaseTransactionData, params string) (*ethtypes.Transaction, error) {
+	outboundParams := txData.outboundParams
+	erc20 := ethcommon.HexToAddress(params)
+	if erc20 == (ethcommon.Address{}) {
+		return nil, fmt.Errorf("SignCommandTx: invalid erc20 address %s", params)
+	}
+	custodyAbi, err := erc20custody.ERC20CustodyMetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+	data, err := custodyAbi.Pack("whitelist", erc20)
+	if err != nil {
+		return nil, err
+	}
+	tx, _, _, err := signer.Sign(data, txData.to, txData.gasLimit, txData.gasPrice, outboundParams.OutboundTxTssNonce, txData.height)
+	if err != nil {
+		return nil, fmt.Errorf("sign error: %w", err)
+	}
+	return tx, nil
+}
+
+func (signer *Signer) SignMigrateTssFundsCmd(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+	outboundParams := txData.outboundParams
+	tx, _, _, err := signer.Sign(nil, txData.to, txData.gasLimit, txData.gasPrice, outboundParams.OutboundTxTssNonce, txData.height)
+	if err != nil {
+		return nil, err
+	}
+	return tx, nil
 }

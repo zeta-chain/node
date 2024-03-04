@@ -35,14 +35,6 @@ type BaseTransactionData struct {
 	nonce      uint64
 	height     uint64
 
-	// cmd field is used to determine whether to execute ERC20 whitelist or migrate TSS funds given that the coin type
-	// from the cctx is CMD
-	cmd string
-
-	// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
-	// contract address when a whitelist command is requested
-	params string
-
 	// sendHash field is the inbound message digest that is sent to the destination contract
 	sendHash [32]byte
 
