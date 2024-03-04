@@ -184,7 +184,7 @@ generate: proto openapi specs typescript docs-zetacored
 
 zetanode:
 	@echo "Building zetanode"
-	$(DOCKER) build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-localnet .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
