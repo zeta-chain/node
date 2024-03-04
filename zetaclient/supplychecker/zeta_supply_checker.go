@@ -49,7 +49,7 @@ func NewZetaSupplyChecker(appContext *appcontext.AppContext, zetaClient *zetabri
 		coreContext: appContext.ZetaCoreContext(),
 		zetaClient:  zetaClient,
 	}
-	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
+	for _, evmConfig := range appContext.Config().EVMChainConfigs {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}

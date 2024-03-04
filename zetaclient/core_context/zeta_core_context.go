@@ -24,14 +24,13 @@ type ZetaCoreContext struct {
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
 // it is initializing chain params from provided config
-func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
+func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	evmChainParams := make(map[int64]*observertypes.ChainParams)
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
 	}
 	var bitcoinChainParams *observertypes.ChainParams
-	_, found := cfg.GetBTCConfig()
-	if found {
+	if cfg.BTCEnabled() {
 		bitcoinChainParams = &observertypes.ChainParams{}
 	}
 	return &ZetaCoreContext{

@@ -9,13 +9,13 @@ import (
 // AppContext contains global app structs like config, core context and logger
 type AppContext struct {
 	coreContext *corecontext.ZetaCoreContext
-	config      *config.Config
+	config      config.Config
 }
 
 // NewAppContext creates and returns new AppContext
 func NewAppContext(
 	coreContext *corecontext.ZetaCoreContext,
-	config *config.Config,
+	config config.Config,
 ) *AppContext {
 	return &AppContext{
 		coreContext: coreContext,
@@ -23,22 +23,21 @@ func NewAppContext(
 	}
 }
 
-func (a *AppContext) Config() *config.Config {
+func (a AppContext) Config() config.Config {
 	return a.config
 }
 
-func (a *AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
+func (a AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
 	return a.coreContext
 }
 
 // GetBTCChainAndConfig returns btc chain and config if enabled
-func (a *AppContext) GetBTCChainAndConfig() (common.Chain, config.BTCConfig, bool) {
-	btcConfig, configEnabled := a.Config().GetBTCConfig()
+func (a AppContext) GetBTCChainAndConfig() (common.Chain, config.BTCConfig, bool) {
 	btcChain, _, paramsEnabled := a.ZetaCoreContext().GetBTCChainParams()
 
-	if !configEnabled || !paramsEnabled {
+	if !a.config.BTCEnabled() || !paramsEnabled {
 		return common.Chain{}, config.BTCConfig{}, false
 	}
 
-	return btcChain, btcConfig, true
+	return btcChain, a.config.BitcoinConfig, true
 }

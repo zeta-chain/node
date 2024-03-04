@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"sync"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
@@ -51,8 +50,6 @@ type ComplianceConfig struct {
 // TODO: use snake case for json fields
 // https://github.com/zeta-chain/node/issues/1020
 type Config struct {
-	cfgLock *sync.RWMutex `json:"-"`
-
 	Peer                string         `json:"Peer"`
 	PublicIP            string         `json:"PublicIP"`
 	LogFormat           string         `json:"LogFormat"`
@@ -73,22 +70,22 @@ type Config struct {
 	HsmMode             bool           `json:"HsmMode"`
 	HsmHotKey           string         `json:"HsmHotKey"`
 
-	EVMChainConfigs map[int64]*EVMConfig `json:"EVMChainConfigs"`
-	BitcoinConfig   *BTCConfig           `json:"BitcoinConfig"`
+	EVMChainConfigs map[int64]EVMConfig `json:"EVMChainConfigs"`
+	BitcoinConfig   BTCConfig           `json:"BitcoinConfig"`
 
 	// compliance config
-	ComplianceConfig *ComplianceConfig `json:"ComplianceConfig"`
+	ComplianceConfig ComplianceConfig `json:"ComplianceConfig"`
 }
 
-func NewConfig() *Config {
-	return &Config{
-		cfgLock: &sync.RWMutex{},
-	}
+func NewConfig() Config {
+	return Config{}
 }
 
-func (c *Config) String() string {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
+func (c Config) BTCEnabled() bool {
+	return c.BitcoinConfig != BTCConfig{}
+}
+
+func (c Config) String() string {
 	s, err := json.MarshalIndent(c, "", "\t")
 	if err != nil {
 		return ""
@@ -96,54 +93,16 @@ func (c *Config) String() string {
 	return string(s)
 }
 
-func (c *Config) GetEVMConfig(chainID int64) (EVMConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	evmCfg, found := c.EVMChainConfigs[chainID]
-	return *evmCfg, found
-}
-
-func (c *Config) GetAllEVMConfigs() map[int64]*EVMConfig {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-
-	// deep copy evm configs
-	copied := make(map[int64]*EVMConfig, len(c.EVMChainConfigs))
-	for chainID, evmConfig := range c.EVMChainConfigs {
-		copied[chainID] = &EVMConfig{}
-		*copied[chainID] = *evmConfig
-	}
-	return copied
-}
-
-func (c *Config) GetBTCConfig() (BTCConfig, bool) {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-
-	if c.BitcoinConfig == nil { // bitcoin is not enabled
-		return BTCConfig{}, false
-	}
-	return *c.BitcoinConfig, true
-}
-
 // GetRestrictedAddressBook returns a map of restricted addresses
 // Note: the restricted address book contains both ETH and BTC addresses
-func (c *Config) GetRestrictedAddressBook() map[string]bool {
+func (c Config) GetRestrictedAddressBook() map[string]bool {
 	restrictedAddresses := make(map[string]bool)
-	if c.ComplianceConfig != nil {
-		for _, address := range c.ComplianceConfig.RestrictedAddresses {
-			if address != "" {
-				restrictedAddresses[strings.ToLower(address)] = true
-			}
+	for _, address := range c.ComplianceConfig.RestrictedAddresses {
+		if address != "" {
+			restrictedAddresses[strings.ToLower(address)] = true
 		}
 	}
 	return restrictedAddresses
-}
-
-func (c *Config) GetKeyringBackend() KeyringBackend {
-	c.cfgLock.RLock()
-	defer c.cfgLock.RUnlock()
-	return c.KeyringBackend
 }
 
 // ValidateChainParams performs some basic checks on core params

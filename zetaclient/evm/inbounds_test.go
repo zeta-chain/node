@@ -63,8 +63,8 @@ func TestEthereum_GetInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	require.Equal(t, "0x477544c4b8c8be544b23328b21286125c89cd6bb5d1d6d388d91eea8ea1a6f1f", msg.Digest())
 
 	// create config
-	cfg := &config.Config{
-		ComplianceConfig: &config.ComplianceConfig{},
+	cfg := config.Config{
+		ComplianceConfig: config.ComplianceConfig{},
 	}
 
 	t.Run("should return nil msg if sender is restricted", func(t *testing.T) {

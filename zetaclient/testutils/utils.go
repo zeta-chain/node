@@ -56,8 +56,8 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 	return SaveObjectToJSONFile(blockVb, filename)
 }
 
-func ComplianceConfigTest() *config.ComplianceConfig {
-	return &config.ComplianceConfig{
+func ComplianceConfigTest() config.ComplianceConfig {
+	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
 	}
 }

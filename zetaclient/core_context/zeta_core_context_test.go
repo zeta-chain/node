@@ -41,7 +41,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 
 	t.Run("should create new zeta core context with config containing evm chain params", func(t *testing.T) {
 		testCfg := config.NewConfig()
-		testCfg.EVMChainConfigs = map[int64]*config.EVMConfig{
+		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
 				Chain: common.Chain{
 					ChainName: 1,
@@ -75,7 +75,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 
 	t.Run("should create new zeta core context with config containing btc config", func(t *testing.T) {
 		testCfg := config.NewConfig()
-		testCfg.BitcoinConfig = &config.BTCConfig{
+		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test username",
 			RPCPassword: "test password",
 			RPCHost:     "test host",
@@ -159,7 +159,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
 		testCfg := config.NewConfig()
-		testCfg.EVMChainConfigs = map[int64]*config.EVMConfig{
+		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
 				Chain: common.Chain{
 					ChainName: 1,
@@ -173,7 +173,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 				},
 			},
 		}
-		testCfg.BitcoinConfig = &config.BTCConfig{
+		testCfg.BitcoinConfig = config.BTCConfig{
 			RPCUsername: "test username",
 			RPCPassword: "test password",
 			RPCHost:     "test host",

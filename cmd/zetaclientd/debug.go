@@ -103,7 +103,7 @@ func DebugCmd() *cobra.Command {
 				ob.WithLogger(chainLogger)
 				client := &ethclient.Client{}
 				coinType := common.CoinType_Cmd
-				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
+				for chain, evmConfig := range cfg.EVMChainConfigs {
 					if chainID == chain {
 						client, err = ethclient.Dial(evmConfig.Endpoint)
 						if err != nil {

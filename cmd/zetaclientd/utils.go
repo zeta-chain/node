@@ -22,7 +22,7 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	authz.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaBridge(cfg *config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetabridge.ZetaCoreBridge, error) {
+func CreateZetaBridge(cfg config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetabridge.ZetaCoreBridge, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
 		hotKey = cfg.HsmHotKey
@@ -58,7 +58,7 @@ func CreateSignerMap(
 ) (map[common.Chain]interfaces.ChainSigner, error) {
 	signerMap := make(map[common.Chain]interfaces.ChainSigner)
 	// EVM signers
-	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
+	for _, evmConfig := range appContext.Config().EVMChainConfigs {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
@@ -100,11 +100,11 @@ func CreateChainClientMap(
 ) (map[common.Chain]interfaces.ChainClient, error) {
 	clientMap := make(map[common.Chain]interfaces.ChainClient)
 	// EVM clients
-	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
+	for _, evmConfig := range appContext.Config().EVMChainConfigs {
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		co, err := evm.NewEVMChainClient(appContext, bridge, tss, dbpath, loggers, *evmConfig, ts)
+		co, err := evm.NewEVMChainClient(appContext, bridge, tss, dbpath, loggers, evmConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
 			continue

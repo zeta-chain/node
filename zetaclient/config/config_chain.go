@@ -38,14 +38,14 @@ func New() Config {
 	}
 }
 
-var bitcoinConfigRegnet = &BTCConfig{
+var bitcoinConfigRegnet = BTCConfig{
 	RPCUsername: "e2e",
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",
 }
 
-var evmChainsConfigs = map[int64]*EVMConfig{
+var evmChainsConfigs = map[int64]EVMConfig{
 	common.EthChain().ChainId: {
 		Chain: common.EthChain(),
 	},
