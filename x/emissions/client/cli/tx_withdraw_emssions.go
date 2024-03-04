@@ -11,9 +11,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-func CmdCreateWithdrawEmission() *cobra.Command {
+func CmdWithdrawEmission() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-withdraw-emission [amount]",
+		Use:   "withdraw-emission [amount]",
 		Short: "create a new withdrawEmission",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

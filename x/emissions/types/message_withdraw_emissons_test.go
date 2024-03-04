@@ -29,6 +29,12 @@ func TestMsgWithdrawEmission_ValidateBasic(t *testing.T) {
 		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
 	})
 
+	t.Run("invalid nil amount", func(t *testing.T) {
+		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sdkmath.Int{})
+		err := msg.ValidateBasic()
+		require.ErrorIs(t, err, emissionstypes.ErrInvalidAmount)
+	})
+
 	t.Run("valid withdraw message", func(t *testing.T) {
 		msg := emissionstypes.NewMsgWithdrawEmissions(sample.AccAddress(), sample.IntInRange(1, 100))
 		err := msg.ValidateBasic()
