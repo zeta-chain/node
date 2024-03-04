@@ -137,7 +137,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner) {
 
 func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	amount := big.NewInt(1e10)
-	txHash := r.DepositERC20WithAmountAndMessage(amount, []byte{})
+	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
 	utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
 	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
