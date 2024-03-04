@@ -18,8 +18,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 		require.NotNil(t, zetaContext)
 
 		// assert keygen
-		keyGen, keyGenFound := zetaContext.GetKeygen()
-		require.False(t, keyGenFound)
+		keyGen := zetaContext.GetKeygen()
 		require.Equal(t, observertypes.Keygen{}, keyGen)
 
 		// assert enabled chains
@@ -136,8 +135,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		)
 
 		// assert keygen updated
-		keyGen, keyGenFound := zetaContext.GetKeygen()
-		require.True(t, keyGenFound)
+		keyGen := zetaContext.GetKeygen()
 		require.Equal(t, keyGenToUpdate, keyGen)
 
 		// assert enabled chains updated
@@ -223,8 +221,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		)
 
 		// assert keygen updated
-		keyGen, keyGenFound := zetaContext.GetKeygen()
-		require.True(t, keyGenFound)
+		keyGen := zetaContext.GetKeygen()
 		require.Equal(t, keyGenToUpdate, keyGen)
 
 		// assert enabled chains updated

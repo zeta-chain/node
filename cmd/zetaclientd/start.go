@@ -190,10 +190,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		keyGen, found := appContext.ZetaCoreContext().GetKeygen()
-		if !found {
-			return fmt.Errorf("keygen not found")
-		}
+		keyGen := appContext.ZetaCoreContext().GetKeygen()
 		if keyGen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
 			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", keyGen.Status)
 			continue
