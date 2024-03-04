@@ -1,9 +1,9 @@
-# tx emissions create-withdraw-emission
+# tx emissions withdraw-emission
 
 create a new withdrawEmission
 
 ```
-zetacored tx emissions create-withdraw-emission [amount] [flags]
+zetacored tx emissions withdraw-emission [amount] [flags]
 ```
 
 ### Options
@@ -21,7 +21,7 @@ zetacored tx emissions create-withdraw-emission [amount] [flags]
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-withdraw-emission
+  -h, --help                     help for withdraw-emission
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
