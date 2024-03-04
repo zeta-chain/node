@@ -15,6 +15,7 @@
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 
 ### Chores
 
