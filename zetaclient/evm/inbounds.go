@@ -170,9 +170,8 @@ func (ob *ChainClient) CheckReceiptForCoinTypeERC20(txHash string, vote bool) (s
 			if err == nil {
 				msg = ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 				break
-			} else {
-				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("CheckEvmTxLog error on ERC20CustodyDeposited event")
 			}
+			ob.logger.ExternalChainWatcher.Error().Err(err).Msg("CheckEvmTxLog error on ERC20CustodyDeposited event")
 		}
 	}
 	if msg == nil {
