@@ -67,7 +67,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 
-	if bal.Int64() < 1000 { // TODO: how is this determined?
+	if bal.Int64() < totalWithdrawal.Int64() {
 		panic("not enough USDT ZRC20 balance!")
 	}
 

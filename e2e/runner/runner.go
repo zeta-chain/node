@@ -165,48 +165,74 @@ type E2ETestFunc func(*E2ERunner, []string)
 
 // E2ETest represents a E2E test with a name, args, description and test func
 type E2ETest struct {
-	Name            string
-	Args            []string
-	DefaultArgs     []string
-	Description     string
-	ArgsDescription string
-	E2ETest         E2ETestFunc
+	Name           string
+	Description    string
+	Args           []string
+	ArgsDefinition []ArgDefinition
+	E2ETest        E2ETestFunc
 }
 
 // NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description, argsDescription string, defaultArgs []string, e2eTestFunc E2ETestFunc) E2ETest {
+func NewE2ETest(name, description string, argsDefinition []ArgDefinition, e2eTestFunc E2ETestFunc) E2ETest {
 	return E2ETest{
-		Name:            name,
-		Description:     description,
-		E2ETest:         e2eTestFunc,
-		ArgsDescription: argsDescription,
-		Args:            []string{},
-		DefaultArgs:     defaultArgs,
+		Name:           name,
+		Description:    description,
+		ArgsDefinition: argsDefinition,
+		E2ETest:        e2eTestFunc,
+		Args:           []string{},
 	}
 }
 
-// E2ETestSpec defines the basic specification for initiating an E2E test, including its name and optional arguments.
-type E2ETestSpec struct {
+// ArgDefinition defines a structure for holding an argument's description along with it's default value.
+type ArgDefinition struct {
+	Description  string
+	DefaultValue string
+}
+
+// DefaultArgs extracts and returns array of default arguments from the ArgsDefinition.
+func (e E2ETest) DefaultArgs() []string {
+	defaultArgs := make([]string, len(e.ArgsDefinition))
+	for i, spec := range e.ArgsDefinition {
+		defaultArgs[i] = spec.DefaultValue
+	}
+	return defaultArgs
+}
+
+// ArgsDescription returns a string representing the arguments description in a readable format.
+func (e E2ETest) ArgsDescription() string {
+	argsDescription := ""
+	for _, def := range e.ArgsDefinition {
+		argDesc := fmt.Sprintf("%s (%s)", def.Description, def.DefaultValue)
+		if argsDescription != "" {
+			argsDescription += ", "
+		}
+		argsDescription += argDesc
+	}
+	return argsDescription
+}
+
+// E2ETestRunConfig defines the basic configuration for initiating an E2E test, including its name and optional runtime arguments.
+type E2ETestRunConfig struct {
 	Name string
 	Args []string
 }
 
 // GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
 func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
-	tests := []E2ETestSpec{}
+	tests := []E2ETestRunConfig{}
 	for _, testName := range testNames {
-		tests = append(tests, E2ETestSpec{
+		tests = append(tests, E2ETestRunConfig{
 			Name: testName,
 			Args: []string{},
 		})
 	}
-	return runner.GetE2ETestsToRunByNameAndArgs(availableTests, tests)
+	return runner.GetE2ETestsToRunByConfig(availableTests, tests)
 }
 
-// GetE2ETestsToRunByNameAndArgs prepares a list of E2ETests to run based on provided test names and their corresponding arguments
-func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(availableTests []E2ETest, testSpecs []E2ETestSpec) ([]E2ETest, error) {
+// GetE2ETestsToRunByConfig prepares a list of E2ETests to run based on provided test names and their corresponding arguments
+func (runner *E2ERunner) GetE2ETestsToRunByConfig(availableTests []E2ETest, testConfigs []E2ETestRunConfig) ([]E2ETest, error) {
 	tests := []E2ETest{}
-	for _, testSpec := range testSpecs {
+	for _, testSpec := range testConfigs {
 		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)
 		if !found {
 			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
@@ -214,8 +240,7 @@ func (runner *E2ERunner) GetE2ETestsToRunByNameAndArgs(availableTests []E2ETest,
 		e2eTestToRun := NewE2ETest(
 			e2eTest.Name,
 			e2eTest.Description,
-			e2eTest.ArgsDescription,
-			e2eTest.DefaultArgs,
+			e2eTest.ArgsDefinition,
 			e2eTest.E2ETest,
 		)
 		// update e2e test args
@@ -297,7 +322,7 @@ func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err 
 	// run e2e test, if args are not provided, use default args
 	args := e2eTest.Args
 	if len(args) == 0 {
-		args = e2eTest.DefaultArgs
+		args = e2eTest.DefaultArgs()
 	}
 	e2eTest.E2ETest(runner, args)
 

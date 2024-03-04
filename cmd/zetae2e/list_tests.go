@@ -47,6 +47,6 @@ func renderTests(logger *runner.Logger, tests []runner.E2ETest) {
 	formatString := fmt.Sprintf("%%-%ds | %%-%ds | %%s", maxNameLength, maxDescriptionLength)
 	logger.Print(formatString, "Name", "Description", "Arguments (default)")
 	for _, test := range tests {
-		logger.Print(formatString, test.Name, test.Description, test.ArgsDescription)
+		logger.Print(formatString, test.Name, test.Description, test.ArgsDescription())
 	}
 }

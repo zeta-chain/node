@@ -121,8 +121,13 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	}
 
 	// parse test names and arguments from cmd args and run them
-	userTests := parseCmdArgsToE2ETestSpecs(args)
-	testsToRun, err := testRunner.GetE2ETestsToRunByNameAndArgs(e2etests.AllE2ETests, userTests)
+	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
+	if err != nil {
+		cancel()
+		return err
+	}
+
+	testsToRun, err := testRunner.GetE2ETestsToRunByConfig(e2etests.AllE2ETests, userTestsConfigs)
 	if err != nil {
 		cancel()
 		return err
@@ -149,20 +154,26 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// parseCmdArgsToE2ETests parses command-line arguments into a slice of E2ETest structs.
-func parseCmdArgsToE2ETestSpecs(args []string) []runner.E2ETestSpec {
-	tests := []runner.E2ETestSpec{}
+// parseCmdArgsToE2ETests parses command-line arguments into a slice of E2ETestRunConfig structs.
+func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, error) {
+	tests := []runner.E2ETestRunConfig{}
 	for _, arg := range args {
 		parts := strings.SplitN(arg, ":", 2)
+		if len(parts) != 2 {
+			return nil, errors.New("command arguments should be in format: testName:testArgs")
+		}
+		if parts[0] == "" {
+			return nil, errors.New("missing testName")
+		}
 		testName := parts[0]
 		testArgs := []string{}
-		if len(parts) > 1 && parts[1] != "" {
+		if parts[1] != "" {
 			testArgs = strings.Split(parts[1], ",")
 		}
-		tests = append(tests, runner.E2ETestSpec{
+		tests = append(tests, runner.E2ETestRunConfig{
 			Name: testName,
 			Args: testArgs,
 		})
 	}
-	return tests
+	return tests, nil
 }
