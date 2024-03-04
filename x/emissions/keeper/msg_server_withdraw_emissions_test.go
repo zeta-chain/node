@@ -21,7 +21,9 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		require.NoError(t, err)
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
 		require.NoError(t, err)
 
 		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
@@ -40,7 +42,9 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		require.NoError(t, err)
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
 		require.NoError(t, err)
 
 		_, err = msgServer.WithdrawEmission(ctx, &types.MsgWithdrawEmission{
@@ -85,9 +89,10 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 
 		withdrawableEmission := sample.WithdrawableEmissions(t)
 		k.SetWithdrawableEmission(ctx, withdrawableEmission)
-		err := sk.BankKeeper.MintCoins(ctx, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		err := sk.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
 		require.NoError(t, err)
-
+		err = sk.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.UndistributedObserverRewardsPool, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, withdrawableEmission.Amount)))
+		require.NoError(t, err)
 		address, err := sdk.AccAddressFromBech32(withdrawableEmission.Address)
 		require.NoError(t, err)
 
