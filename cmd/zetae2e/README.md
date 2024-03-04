@@ -89,8 +89,10 @@ zetae2e list-tests
 
 Run tests:
 
+Tests can be run using `run` command. Arguments of this command should be in `testName:testArgs` format, where `testArgs` is optional comma-separated list of test arguments. If test arguments are not provided, default arguments will be used. Example of `run` command:
+
 ```go
-zetae2e run [testname1]:[arg1],[arg2] [testname2]:[arg1],[arg2] --config config.yml
+zetae2e run zeta_deposit:2000000000000000000 eth_deposit:2000000000000000000 erc20_deposit:200000 --config cmd/zetae2e/config/local.yml
 ```
 
 Since cctxs might take a longer time to be processed on live networks, it is highly recommended to use `--verbose` flag to see the current status of the cctx workflow.
