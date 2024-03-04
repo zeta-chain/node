@@ -23,6 +23,7 @@ func (k msgServer) WithdrawEmission(goCtx context.Context, msg *types.MsgWithdra
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrInvalidAddress, err.Error())
 	}
+	
 	// check if the undistributed rewards pool has enough balance to process this request.
 	// This is just a preliminary check, the actual processing at endblock might still fail if the pool balance gets affected.
 	undistributedRewardsBalance := k.GetBankKeeper().GetBalance(ctx, types.UndistributedObserverRewardsPoolAddress, config.BaseDenom)
