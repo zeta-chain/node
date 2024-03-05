@@ -16,6 +16,7 @@ const (
 	TestMessagePassingName              = "message_passing"
 	TestZRC20SwapName                   = "zrc20_swap"
 	TestBitcoinWithdrawName             = "bitcoin_withdraw"
+	TestBitcoinWithdrawRestrictedName   = "bitcoin_withdraw_restricted"
 	TestCrosschainSwapName              = "crosschain_swap"
 	TestMessagePassingRevertFailName    = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName = "message_passing_revert_success"
@@ -26,12 +27,16 @@ const (
 	TestDepositEtherLiquidityCapName    = "deposit_eth_liquidity_cap"
 	TestMyTestName                      = "my_test"
 
-	TestERC20WithdrawName  = "erc20_withdraw"
-	TestERC20DepositName   = "erc20_deposit"
-	TestEtherDepositName   = "eth_deposit"
-	TestEtherWithdrawName  = "eth_withdraw"
-	TestBitcoinDepositName = "bitcoin_deposit"
-	TestZetaDepositName    = "zeta_deposit"
+	TestERC20WithdrawName = "erc20_withdraw"
+	TestERC20DepositName  = "erc20_deposit"
+	// #nosec G101: Potential hardcoded credentials (gosec), not a credential
+	TestERC20DepositRestrictedName  = "erc20_deposit_restricted"
+	TestEtherDepositName            = "eth_deposit"
+	TestEtherWithdrawName           = "eth_withdraw"
+	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
+	TestBitcoinDepositName          = "bitcoin_deposit"
+	TestZetaDepositName             = "zeta_deposit"
+	TestZetaDepositRestrictedName   = "zeta_deposit_restricted"
 
 	TestDonationEtherName = "donation_ether"
 
@@ -187,5 +192,25 @@ var AllE2ETests = []runner.E2ETest{
 		TestStressBTCDepositName,
 		"stress test BTC deposit",
 		TestStressBTCDeposit,
+	},
+	{
+		TestZetaDepositRestrictedName,
+		"deposit ZETA from Ethereum to ZEVM restricted address",
+		TestZetaDepositRestricted,
+	},
+	{
+		TestERC20DepositRestrictedName,
+		"deposit ERC20 into ZEVM restricted address",
+		TestERC20DepositRestricted,
+	},
+	{
+		TestEtherWithdrawRestrictedName,
+		"withdraw Ether from ZEVM to restricted address",
+		TestEtherWithdrawRestricted,
+	},
+	{
+		TestBitcoinWithdrawRestrictedName,
+		"withdraw Bitcoin from ZEVM to restricted address",
+		TestBitcoinWithdrawRestricted,
 	},
 }
