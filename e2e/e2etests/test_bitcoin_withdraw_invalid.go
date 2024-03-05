@@ -10,17 +10,16 @@ import (
 )
 
 func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner) {
-	// try to withdraw 0.00001 BTC from ZRC20 to BTC legacy address
-	// first, approve the ZRC20 contract to spend 1 BTC from the deployer address
 	WithdrawToInvalidAddress(r)
 }
 
 func WithdrawToInvalidAddress(r *runner.E2ERunner) {
 
 	amount := big.NewInt(0.00001 * btcutil.SatoshiPerBitcoin)
-
-	// approve the ZRC20 contract to spend 1 BTC from the deployer address
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	approvalAmount := 1000000000000000000
+	// approve the ZRC20 contract to spend approvalAmount BTC from the deployer address.
+	// the actual amount transferred is 0.00001 BTC, but we approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(int64(approvalAmount)))
 	if err != nil {
 		panic(err)
 	}
