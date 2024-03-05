@@ -11,7 +11,7 @@ import (
 )
 
 func TestMigrateCrosschainFlags(t *testing.T) {
-	k, ctx, _ := keepertest.ObserverKeeper(t)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	store := prefix.NewStore(ctx.KVStore(k.StoreKey()), types.KeyPrefix(types.CrosschainFlagsKey))
 	legacyFlags := types.LegacyCrosschainFlags{
 		IsInboundEnabled:      false,

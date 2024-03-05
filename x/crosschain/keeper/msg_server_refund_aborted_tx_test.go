@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -37,10 +38,15 @@ func Test_GetRefundAddress(t *testing.T) {
 }
 func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 	t.Run("successfully refund tx for coin-type gas", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -69,11 +75,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("successfully refund tx for coin-type zeta", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -102,11 +114,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("successfully refund tx to inbound amount if outbound is not found for coin-type zeta", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -136,11 +154,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("successfully refund to optional refund address if provided", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -169,12 +193,18 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("successfully refund tx for coin-type ERC20", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
 		asset := sample.EthAddress().String()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -213,11 +243,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("successfully refund tx for coin-type Gas with BTC sender", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidBtcChainID()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -246,11 +282,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("fail refund if address provided is invalid", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -271,11 +313,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "invalid refund address")
 	})
+
 	t.Run("fail refund if address provided is null ", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -296,11 +344,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "invalid refund address")
 	})
+
 	t.Run("fail refund if status is not aborted", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -323,11 +377,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, found)
 		require.False(t, c.CctxStatus.IsAbortRefunded)
 	})
+
 	t.Run("fail refund if status cctx not found", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -346,11 +406,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "cannot find cctx")
 	})
+
 	t.Run("fail refund if refund address not provided", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidBtcChainID()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -371,11 +437,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "refund address is required")
 	})
+
 	t.Run("fail refund tx for coin-type Zeta if zeta accounting object is not present", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -395,11 +467,17 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "unable to find zeta accounting")
 	})
+
 	t.Run("fail refund if non admin account is the creator", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
 		chainID := getValidEthChainID(t)
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
@@ -414,7 +492,7 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		_ = setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, cctx.InboundTxParams.SenderChainId, "foobar", "foobar")
 
 		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
-			Creator:       sample.AccAddress(),
+			Creator:       admin,
 			CctxIndex:     cctx.Index,
 			RefundAddress: cctx.InboundTxParams.Sender,
 		})

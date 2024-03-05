@@ -8,6 +8,8 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { Chain } from "../common/common_pb.js";
 
 /**
+ * Deprecated(v14):Moved into the authority module
+ *
  * @generated from enum zetachain.zetacore.observer.Policy_Type
  */
 export declare enum Policy_Type {
@@ -136,7 +138,7 @@ export declare class ChainParams extends Message<ChainParams> {
 }
 
 /**
- * Deprecated: Use ChainParamsList
+ * Deprecated(v13): Use ChainParamsList
  *
  * @generated from message zetachain.zetacore.observer.ObserverParams
  */
@@ -177,6 +179,8 @@ export declare class ObserverParams extends Message<ObserverParams> {
 }
 
 /**
+ * Deprecated(v14):Moved into the authority module
+ *
  * @generated from message zetachain.zetacore.observer.Admin_Policy
  */
 export declare class Admin_Policy extends Message<Admin_Policy> {
@@ -212,13 +216,15 @@ export declare class Admin_Policy extends Message<Admin_Policy> {
  */
 export declare class Params extends Message<Params> {
   /**
-   * Deprecated: Use ChainParamsList
+   * Deprecated(v13): Use ChainParamsList
    *
    * @generated from field: repeated zetachain.zetacore.observer.ObserverParams observer_params = 1;
    */
   observerParams: ObserverParams[];
 
   /**
+   * Deprecated(v14):Moved into the authority module
+   *
    * @generated from field: repeated zetachain.zetacore.observer.Admin_Policy admin_policy = 2;
    */
   adminPolicy: Admin_Policy[];

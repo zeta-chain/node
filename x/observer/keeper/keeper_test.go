@@ -3,18 +3,18 @@ package keeper
 import (
 	"testing"
 
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -45,6 +45,7 @@ func SetupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		paramsSubspace,
 		stakingkeeper.Keeper{},
 		slashingkeeper.Keeper{},
+		authoritykeeper.Keeper{},
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, nil)

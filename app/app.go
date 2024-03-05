@@ -10,9 +10,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
-	emissionsModuleKeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	emissionsModuleTypes "github.com/zeta-chain/zetacore/x/emissions/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -97,13 +94,21 @@ import (
 	"github.com/zeta-chain/zetacore/docs/openapi"
 	srvflags "github.com/zeta-chain/zetacore/server/flags"
 
+	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
-	fungibleModule "github.com/zeta-chain/zetacore/x/fungible"
-	fungibleModuleKeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
-	fungibleModuleTypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
+	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
+
+	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
+	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	observermodule "github.com/zeta-chain/zetacore/x/observer"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -175,27 +180,28 @@ var (
 		vesting.AppModuleBasic{},
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
+		authoritymodule.AppModuleBasic{},
 		crosschainmodule.AppModuleBasic{},
 		observermodule.AppModuleBasic{},
-		fungibleModule.AppModuleBasic{},
-		emissionsModule.AppModuleBasic{},
+		fungiblemodule.AppModuleBasic{},
+		emissionsmodule.AppModuleBasic{},
 		groupmodule.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                            nil,
-		distrtypes.ModuleName:                                 nil,
-		stakingtypes.BondedPoolName:                           {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:                        {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                                   {authtypes.Burner},
-		crosschaintypes.ModuleName:                            {authtypes.Minter, authtypes.Burner},
-		evmtypes.ModuleName:                                   {authtypes.Minter, authtypes.Burner},
-		fungibleModuleTypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
-		emissionsModuleTypes.ModuleName:                       nil,
-		emissionsModuleTypes.UndistributedObserverRewardsPool: nil,
-		emissionsModuleTypes.UndistributedTssRewardsPool:      nil,
+		authtypes.FeeCollectorName:                      nil,
+		distrtypes.ModuleName:                           nil,
+		stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                             {authtypes.Burner},
+		crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+		evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+		fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+		emissionstypes.ModuleName:                       nil,
+		emissionstypes.UndistributedObserverRewardsPool: nil,
+		emissionstypes.UndistributedTssRewardsPool:      nil,
 	}
 
 	// module accounts that are NOT allowed to receive tokens
@@ -226,28 +232,34 @@ type App struct {
 	tkeys   map[string]*storetypes.TransientStoreKey
 	memKeys map[string]*storetypes.MemoryStoreKey
 
-	// keepers
-	AccountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	StakingKeeper    stakingkeeper.Keeper
-	SlashingKeeper   slashingkeeper.Keeper
-	DistrKeeper      distrkeeper.Keeper
-	GovKeeper        govkeeper.Keeper
-	CrisisKeeper     crisiskeeper.Keeper
-	UpgradeKeeper    upgradekeeper.Keeper
-	ParamsKeeper     paramskeeper.Keeper
-	EvidenceKeeper   evidencekeeper.Keeper
+	mm           *module.Manager
+	sm           *module.SimulationManager
+	configurator module.Configurator
+
+	// sdk keepers
+	AccountKeeper  authkeeper.AccountKeeper
+	BankKeeper     bankkeeper.Keeper
+	StakingKeeper  stakingkeeper.Keeper
+	SlashingKeeper slashingkeeper.Keeper
+	DistrKeeper    distrkeeper.Keeper
+	GovKeeper      govkeeper.Keeper
+	CrisisKeeper   crisiskeeper.Keeper
+	UpgradeKeeper  upgradekeeper.Keeper
+	ParamsKeeper   paramskeeper.Keeper
+	EvidenceKeeper evidencekeeper.Keeper
+	GroupKeeper    groupkeeper.Keeper
+	AuthzKeeper    authzkeeper.Keeper
+
+	// evm keepers
+	EvmKeeper       *evmkeeper.Keeper
+	FeeMarketKeeper feemarketkeeper.Keeper
+
+	// zetachain keepers
+	AuthorityKeeper  authoritykeeper.Keeper
 	CrosschainKeeper crosschainkeeper.Keeper
 	ObserverKeeper   *observerkeeper.Keeper
-	mm               *module.Manager
-	sm               *module.SimulationManager
-	configurator     module.Configurator
-	EvmKeeper        *evmkeeper.Keeper
-	FeeMarketKeeper  feemarketkeeper.Keeper
-	FungibleKeeper   fungibleModuleKeeper.Keeper
-	EmissionsKeeper  emissionsModuleKeeper.Keeper
-	GroupKeeper      groupkeeper.Keeper
-	AuthzKeeper      authzkeeper.Keeper
+	FungibleKeeper   fungiblekeeper.Keeper
+	EmissionsKeeper  emissionskeeper.Keeper
 }
 
 // New returns a reference to an initialized ZetaApp.
@@ -279,12 +291,14 @@ func New(
 		group.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
+		authzkeeper.StoreKey,
+		evmtypes.StoreKey,
+		feemarkettypes.StoreKey,
+		authoritytypes.StoreKey,
 		crosschaintypes.StoreKey,
 		observertypes.StoreKey,
-		evmtypes.StoreKey, feemarkettypes.StoreKey,
-		fungibleModuleTypes.StoreKey,
-		emissionsModuleTypes.StoreKey,
-		authzkeeper.StoreKey,
+		fungibletypes.StoreKey,
+		emissionstypes.StoreKey,
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey, evmtypes.TransientKey, feemarkettypes.TransientKey)
 	memKeys := sdk.NewMemoryStoreKeys()
@@ -316,10 +330,13 @@ func New(
 		maccPerms,
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 	)
+
 	logger.Info("bank keeper blocklist addresses", "addresses", app.BlockedAddrs())
+
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
 	)
+
 	stakingKeeper := stakingkeeper.NewKeeper(
 		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName),
 	)
@@ -328,14 +345,24 @@ func New(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName,
 	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
+
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)
+
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	app.AuthorityKeeper = authoritykeeper.NewKeeper(
+		appCodec,
+		keys[authoritytypes.StoreKey],
+		keys[authoritytypes.MemStoreKey],
+		authtypes.NewModuleAddress(govtypes.ModuleName),
+	)
 
 	app.ObserverKeeper = observerkeeper.NewKeeper(
 		appCodec,
@@ -344,6 +371,7 @@ func New(
 		app.GetSubspace(observertypes.ModuleName),
 		&stakingKeeper,
 		app.SlashingKeeper,
+		app.AuthorityKeeper,
 	)
 
 	// register the staking hooks
@@ -356,19 +384,21 @@ func New(
 		keys[authzkeeper.StoreKey],
 		appCodec,
 		app.MsgServiceRouter(),
-		app.AccountKeeper)
+		app.AccountKeeper,
+	)
 
-	app.EmissionsKeeper = *emissionsModuleKeeper.NewKeeper(
+	app.EmissionsKeeper = *emissionskeeper.NewKeeper(
 		appCodec,
-		keys[emissionsModuleTypes.StoreKey],
-		keys[emissionsModuleTypes.MemStoreKey],
-		app.GetSubspace(emissionsModuleTypes.ModuleName),
+		keys[emissionstypes.StoreKey],
+		keys[emissionstypes.MemStoreKey],
+		app.GetSubspace(emissionstypes.ModuleName),
 		authtypes.FeeCollectorName,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.ObserverKeeper,
 		app.AccountKeeper,
 	)
+
 	// Create Ethermint keepers
 	tracer := cast.ToString(appOpts.Get(srvflags.EVMTracer))
 	feeSs := app.GetSubspace(feemarkettypes.ModuleName)
@@ -385,15 +415,16 @@ func New(
 		tracer, evmSs,
 	)
 
-	app.FungibleKeeper = *fungibleModuleKeeper.NewKeeper(
+	app.FungibleKeeper = *fungiblekeeper.NewKeeper(
 		appCodec,
-		keys[fungibleModuleTypes.StoreKey],
-		keys[fungibleModuleTypes.MemStoreKey],
-		app.GetSubspace(fungibleModuleTypes.ModuleName),
+		keys[fungibletypes.StoreKey],
+		keys[fungibletypes.MemStoreKey],
+		app.GetSubspace(fungibletypes.ModuleName),
 		app.AccountKeeper,
 		app.EvmKeeper,
 		app.BankKeeper,
 		app.ObserverKeeper,
+		app.AuthorityKeeper,
 	)
 
 	app.CrosschainKeeper = *crosschainkeeper.NewKeeper(
@@ -406,6 +437,7 @@ func New(
 		app.BankKeeper,
 		app.ObserverKeeper,
 		&app.FungibleKeeper,
+		app.AuthorityKeeper,
 	)
 	app.GroupKeeper = groupkeeper.NewKeeper(keys[group.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper, group.Config{
 		MaxExecutionPeriod: 2 * time.Hour, // Two hours.
@@ -476,10 +508,11 @@ func New(
 		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, interfaceRegistry),
 		evm.NewAppModule(app.EvmKeeper, app.AccountKeeper, evmSs),
 		feemarket.NewAppModule(app.FeeMarketKeeper, feeSs),
+		authoritymodule.NewAppModule(appCodec, app.AuthorityKeeper),
 		crosschainmodule.NewAppModule(appCodec, app.CrosschainKeeper),
 		observermodule.NewAppModule(appCodec, *app.ObserverKeeper),
-		fungibleModule.NewAppModule(appCodec, app.FungibleKeeper),
-		emissionsModule.NewAppModule(appCodec, app.EmissionsKeeper),
+		fungiblemodule.NewAppModule(appCodec, app.FungibleKeeper),
+		emissionsmodule.NewAppModule(appCodec, app.EmissionsKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 	)
 
@@ -506,9 +539,10 @@ func New(
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
 		observertypes.ModuleName,
-		fungibleModuleTypes.ModuleName,
-		emissionsModuleTypes.ModuleName,
+		fungibletypes.ModuleName,
+		emissionstypes.ModuleName,
 		authz.ModuleName,
+		authoritytypes.ModuleName,
 	)
 	app.mm.SetOrderEndBlockers(
 		banktypes.ModuleName,
@@ -528,9 +562,10 @@ func New(
 		feemarkettypes.ModuleName,
 		crosschaintypes.ModuleName,
 		observertypes.ModuleName,
-		fungibleModuleTypes.ModuleName,
-		emissionsModuleTypes.ModuleName,
+		fungibletypes.ModuleName,
+		emissionstypes.ModuleName,
 		authz.ModuleName,
+		authoritytypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -557,9 +592,10 @@ func New(
 		vestingtypes.ModuleName,
 		observertypes.ModuleName,
 		crosschaintypes.ModuleName,
-		fungibleModuleTypes.ModuleName,
-		emissionsModuleTypes.ModuleName,
+		fungibletypes.ModuleName,
+		emissionstypes.ModuleName,
 		authz.ModuleName,
+		authoritytypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
@@ -769,8 +805,8 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(group.ModuleName)
 	paramsKeeper.Subspace(crosschaintypes.ModuleName)
 	paramsKeeper.Subspace(observertypes.ModuleName)
-	paramsKeeper.Subspace(fungibleModuleTypes.ModuleName)
-	paramsKeeper.Subspace(emissionsModuleTypes.ModuleName)
+	paramsKeeper.Subspace(fungibletypes.ModuleName)
+	paramsKeeper.Subspace(emissionstypes.ModuleName)
 	return paramsKeeper
 }
 

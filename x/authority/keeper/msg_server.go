@@ -1,0 +1,15 @@
+package keeper
+
+import "github.com/zeta-chain/zetacore/x/authority/types"
+
+type msgServer struct {
+	Keeper
+}
+
+// NewMsgServerImpl returns an implementation of the MsgServer interface
+// for the provided Keeper.
+func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+	return &msgServer{Keeper: keeper} //nolint:typecheck
+}
+
+var _ types.MsgServer = msgServer{} //nolint:typecheck

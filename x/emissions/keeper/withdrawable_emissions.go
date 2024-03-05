@@ -37,6 +37,8 @@ func (k Keeper) GetAllWithdrawableEmission(ctx sdk.Context) (list []types.Withdr
 	return
 }
 
+// AddObserverEmission adds the given amount to the withdrawable emission of a given address.
+// If the address does not have a withdrawable emission, it will create a new withdrawable emission with the given amount.
 func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkmath.Int) {
 	we, found := k.GetWithdrawableEmission(ctx, address)
 	if !found {
@@ -46,7 +48,27 @@ func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkm
 	k.SetWithdrawableEmission(ctx, we)
 }
 
+// RemoveWithdrawableEmission removes the given amount from the withdrawable emission of a given address.
+// If the amount is greater than the available withdrawable emissionsf or that address it will remove the entire amount from the withdrawable emissions.
+// If the amount is negative or zero, it will return an error.
+func (k Keeper) RemoveWithdrawableEmission(ctx sdk.Context, address string, amount sdkmath.Int) error {
+	we, found := k.GetWithdrawableEmission(ctx, address)
+	if !found {
+		return types.ErrEmissionsNotFound
+	}
+	if amount.IsNegative() || amount.IsZero() {
+		return types.ErrInvalidAmount
+	}
+	if amount.GT(we.Amount) {
+		amount = we.Amount
+	}
+	we.Amount = we.Amount.Sub(amount)
+	k.SetWithdrawableEmission(ctx, we)
+	return nil
+}
+
 // SlashObserverEmission slashes the rewards of a given address, if the address has no rewards left, it will set the rewards to 0.
+// If the address does not have a withdrawable emission, it will create a new withdrawable emission with zero amount.
 /* This function is a basic implementation of slashing; it will be improved in the future .
 Improvements will include:
 - Add a jailing mechanism

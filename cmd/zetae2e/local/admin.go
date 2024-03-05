@@ -61,12 +61,17 @@ func adminTestRoutine(
 		adminRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		// run erc20 advanced test
-		if err := adminRunner.RunE2ETestsFromNames(
+		testsToRun, err := adminRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeName,
 			e2etests.TestDepositEtherLiquidityCapName,
-		); err != nil {
+		)
+		if err != nil {
+			return fmt.Errorf("admin tests failed: %v", err)
+		}
+
+		if err := adminRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("admin tests failed: %v", err)
 		}
 

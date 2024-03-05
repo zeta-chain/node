@@ -8,14 +8,20 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_RemoveChainParams(t *testing.T) {
 	t.Run("can update chain params", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
+
+		// mock the authority keeper for authorization
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
 		chain1 := common.ExternalChainList()[0].ChainId
 		chain2 := common.ExternalChainList()[1].ChainId
@@ -23,7 +29,6 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		// set admin
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
 
 		// add chain params
 		k.SetChainParamsList(ctx, types.ChainParamsList{
@@ -33,6 +38,8 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 				sample.ChainParams(chain3),
 			},
 		})
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// remove chain params
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
@@ -75,34 +82,32 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 	})
 
 	t.Run("cannot remove chain params if not authorized", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 
-		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
-			Creator:     sample.AccAddress(),
-			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
-		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
-
-		// group 1 should not be able to update core params
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
-		_, err = srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
-			Creator:     sample.AccAddress(),
-			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
+		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
+			Creator: admin,
+			ChainId: common.ExternalChainList()[0].ChainId,
 		})
 		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
-
 	})
 
 	t.Run("cannot remove if chain ID not found", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 
 		// set admin
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// not found if no chain params
 		_, found := k.GetChainParamsList(ctx)
@@ -122,6 +127,8 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 				sample.ChainParams(common.ExternalChainList()[2].ChainId),
 			},
 		})
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// not found if chain ID not in list
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{

@@ -9,8 +9,17 @@ import (
 )
 
 // TestDonationEther tests donation of ether to the tss address
-func TestDonationEther(r *runner.E2ERunner) {
-	txDonation, err := r.SendEther(r.TSSAddress, big.NewInt(100000000000000000), []byte(common.DonationMessage))
+func TestDonationEther(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestDonationEther requires exactly one argument for the amount.")
+	}
+
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestDonationEther.")
+	}
+
+	txDonation, err := r.SendEther(r.TSSAddress, amount, []byte(common.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
