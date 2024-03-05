@@ -27,9 +27,4 @@ contracts:
     connector_eth: "0x00005e3125aba53c5652f9f0ce1a4cf91d8b15ea"
     custody: "0x000047f11c6e42293f433c82473532e869ce4ec5"
     usdt: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
-test_list:
-#  - "erc20_deposit"
-#  - "erc20_withdraw"
-#  - "eth_deposit"
-#  - "eth_withdraw"
 
