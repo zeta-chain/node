@@ -141,7 +141,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawInvalidAddressName,
 		"withdraw BTC from ZEVM to an unsupported btc address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.00001"},
 		},
 		TestBitcoinWithdrawToInvalidAddress,
 	),
