@@ -44,10 +44,11 @@ func CheckEvmTransaction(tx *ethrpc.Transaction) error {
 	if tx.Nonce < 0 {
 		return fmt.Errorf("transaction nonce %d is negative", tx.Nonce)
 	}
-	if tx.From != "" && !ethcommon.IsHexAddress(tx.From) {
+	if !ethcommon.IsHexAddress(tx.From) {
 		return fmt.Errorf("transaction from %s is not a valid hex address", tx.From)
 	}
 	if tx.To != "" && !ethcommon.IsHexAddress(tx.To) {
+		// To address can be empty for contract creation
 		return fmt.Errorf("transaction to %s is not a valid hex address", tx.To)
 	}
 	if tx.Value.Sign() < 0 {

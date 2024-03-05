@@ -128,11 +128,23 @@ func TestCheckEvmTransaction(t *testing.T) {
 		err := CheckEvmTransaction(tx)
 		require.ErrorContains(t, err, "nonce -1 is negative")
 	})
+	t.Run("should fail for empty from address", func(t *testing.T) {
+		tx := testutils.LoadEVMIntx(t, 1, intxHash, common.CoinType_Gas)
+		tx.From = ""
+		err := CheckEvmTransaction(tx)
+		require.ErrorContains(t, err, "not a valid hex address")
+	})
 	t.Run("should fail for invalid from address", func(t *testing.T) {
 		tx := testutils.LoadEVMIntx(t, 1, intxHash, common.CoinType_Gas)
 		tx.From = "0x"
 		err := CheckEvmTransaction(tx)
 		require.ErrorContains(t, err, "from 0x is not a valid hex address")
+	})
+	t.Run("should pass for empty to address", func(t *testing.T) {
+		tx := testutils.LoadEVMIntx(t, 1, intxHash, common.CoinType_Gas)
+		tx.To = ""
+		err := CheckEvmTransaction(tx)
+		require.NoError(t, err)
 	})
 	t.Run("should fail for invalid to address", func(t *testing.T) {
 		tx := testutils.LoadEVMIntx(t, 1, intxHash, common.CoinType_Gas)
