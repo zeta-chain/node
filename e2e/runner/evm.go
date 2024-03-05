@@ -72,10 +72,10 @@ func (runner *E2ERunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int
 func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
 	runner.Logger.Print("⏳ depositing ERC20 into ZEVM")
 
-	return runner.DepositERC20WithAmountAndMessage(big.NewInt(1e18), []byte{})
+	return runner.DepositERC20WithAmountAndMessage(runner.DeployerAddress, big.NewInt(1e18), []byte{})
 }
 
-func (runner *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg []byte) ethcommon.Hash {
+func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
 	// reset allowance, necessary for USDT
 	tx, err := runner.USDTERC20.Approve(runner.GoerliAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
@@ -97,7 +97,7 @@ func (runner *E2ERunner) DepositERC20WithAmountAndMessage(amount *big.Int, msg [
 	}
 	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	tx, err = runner.ERC20Custody.Deposit(runner.GoerliAuth, runner.DeployerAddress.Bytes(), runner.USDTERC20Addr, amount, msg)
+	tx, err = runner.ERC20Custody.Deposit(runner.GoerliAuth, to.Bytes(), runner.USDTERC20Addr, amount, msg)
 	runner.Logger.Print("TX: %v", tx)
 	if err != nil {
 		panic(err)
