@@ -49,7 +49,7 @@ func (k Keeper) AddObserverEmission(ctx sdk.Context, address string, amount sdkm
 }
 
 // RemoveWithdrawableEmission removes the given amount from the withdrawable emission of a given address.
-// If the amount is greater than the withdrawable emission, it will remove the entire withdrawable emission.
+// If the amount is greater than the available withdrawable emissionsf or that address it will remove the entire amount from the withdrawable emissions.
 // If the amount is negative or zero, it will return an error.
 func (k Keeper) RemoveWithdrawableEmission(ctx sdk.Context, address string, amount sdkmath.Int) error {
 	we, found := k.GetWithdrawableEmission(ctx, address)

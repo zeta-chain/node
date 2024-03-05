@@ -34,6 +34,8 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 
 		balance := k.GetBankKeeper().GetBalance(ctx, sdk.MustAccAddressFromBech32(withdrawableEmission.Address), config.BaseDenom).Amount.String()
 		require.Equal(t, withdrawableEmission.Amount.String(), balance)
+		balance = k.GetBankKeeper().GetBalance(ctx, types.UndistributedObserverRewardsPoolAddress, config.BaseDenom).Amount.String()
+		require.Equal(t, sdk.ZeroInt().String(), balance)
 	})
 
 	t.Run("unable to withdraw emissions with invalid address", func(t *testing.T) {

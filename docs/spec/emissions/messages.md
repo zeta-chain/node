@@ -2,11 +2,10 @@
 
 ## MsgWithdrawEmission
 
-WithdrawEmission create a withdraw emission object , which is then process at endblock
-The withdraw emission object is created and stored
-using the address of the creator as the index key ,therefore, if more that one withdraw requests are created in a block on thr last one would be processed.
-Creating a withdraw does not guarantee that the emission will be processed
-All withdraws for a block are deleted at the end of the block irrespective of whether they were processed or not.
+WithdrawEmission allows the user to withdraw from their withdrawable emissions.
+on a successful withdrawal, the amount is transferred from the undistributed rewards pool to the user's account.
+if the amount to be withdrawn is greater than the available withdrawable emission, the max available amount is withdrawn.
+if the pool does not have enough balance to process this request, an error is returned.
 
 ```proto
 message MsgWithdrawEmission {
