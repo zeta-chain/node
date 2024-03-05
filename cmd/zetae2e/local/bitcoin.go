@@ -66,6 +66,7 @@ func bitcoinTestRoutine(
 		// to make it faster to catch up with the latest block header
 		testsToRun, err := bitcoinRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
+			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestBitcoinWithdrawName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 			e2etests.TestCrosschainSwapName,
