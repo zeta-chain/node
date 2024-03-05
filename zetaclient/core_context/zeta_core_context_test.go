@@ -1,4 +1,4 @@
-package corecontext
+package corecontext_test
 
 import (
 	"testing"
@@ -8,13 +8,14 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
 
 func TestNewZetaCoreContext(t *testing.T) {
 	t.Run("should create new zeta core context with empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
-		zetaContext := NewZetaCoreContext(testCfg)
+		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert keygen
@@ -54,7 +55,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 				},
 			},
 		}
-		zetaContext := NewZetaCoreContext(testCfg)
+		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert evm chain params
@@ -80,7 +81,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 			RPCHost:     "test host",
 			RPCParams:   "test params",
 		}
-		zetaContext := NewZetaCoreContext(testCfg)
+		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		// assert btc chain params panic because chain params are not yet updated
@@ -94,7 +95,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 	t.Run("should update core context after being created from empty config", func(t *testing.T) {
 		testCfg := config.NewConfig()
 
-		zetaContext := NewZetaCoreContext(testCfg)
+		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		keyGenToUpdate := observertypes.Keygen{
@@ -178,7 +179,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			RPCParams:   "test params",
 		}
 
-		zetaContext := NewZetaCoreContext(testCfg)
+		zetaContext := corecontext.NewZetaCoreContext(testCfg)
 		require.NotNil(t, zetaContext)
 
 		keyGenToUpdate := observertypes.Keygen{

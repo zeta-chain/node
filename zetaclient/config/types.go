@@ -138,7 +138,7 @@ func (c *Config) GetKeyringBackend() KeyringBackend {
 	return c.KeyringBackend
 }
 
-// TODO: is this function duplicate of one from observertypes?
+// TODO: remove this duplicated function https://github.com/zeta-chain/node/issues/1838
 // ValidateChainParams performs some basic checks on core params
 func ValidateChainParams(chainParams *observertypes.ChainParams) error {
 	if chainParams == nil {
