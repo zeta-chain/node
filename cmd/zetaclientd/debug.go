@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/onrik/ethrpc"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
@@ -18,7 +20,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/common"
@@ -101,25 +102,32 @@ func DebugCmd() *cobra.Command {
 				}
 				ob.WithZetaClient(bridge)
 				ob.WithLogger(chainLogger)
-				client := &ethclient.Client{}
+				var ethRPC *ethrpc.EthRPC
+				var client *ethclient.Client
 				coinType := common.CoinType_Cmd
 				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
 					if chainID == chain {
+						ethRPC = ethrpc.NewEthRPC(evmConfig.Endpoint)
 						client, err = ethclient.Dial(evmConfig.Endpoint)
 						if err != nil {
 							return err
 						}
 						ob.WithEvmClient(client)
+						ob.WithEvmJSONRPC(ethRPC)
 						ob.WithChain(*common.GetChainFromChainID(chainID))
 					}
 				}
 				hash := ethcommon.HexToHash(txHash)
-				tx, isPending, err := client.TransactionByHash(context.Background(), hash)
+				tx, isPending, err := ob.TransactionByHash(txHash)
 				if err != nil {
 					return fmt.Errorf("tx not found on chain %s , %d", err.Error(), chain.ChainId)
 				}
 				if isPending {
 					return fmt.Errorf("tx is still pending")
+				}
+				receipt, err := client.TransactionReceipt(context.Background(), hash)
+				if err != nil {
+					return fmt.Errorf("tx receipt not found on chain %s, %d", err.Error(), chain.ChainId)
 				}
 
 				for _, chainParams := range chainParams {
@@ -135,32 +143,31 @@ func DebugCmd() *cobra.Command {
 							return fmt.Errorf("missing chain params for chain %d", chainID)
 						}
 						evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
-						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
+						if strings.EqualFold(tx.To, chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta
-						} else if strings.EqualFold(tx.To().Hex(), chainParams.Erc20CustodyContractAddress) {
+						} else if strings.EqualFold(tx.To, chainParams.Erc20CustodyContractAddress) {
 							coinType = common.CoinType_ERC20
-						} else if strings.EqualFold(tx.To().Hex(), tssEthAddress) {
+						} else if strings.EqualFold(tx.To, tssEthAddress) {
 							coinType = common.CoinType_Gas
 						}
-
 					}
 				}
 
 				switch coinType {
 				case common.CoinType_Zeta:
-					ballotIdentifier, err = ob.CheckReceiptForCoinTypeZeta(txHash, false)
+					ballotIdentifier, err = ob.CheckNVoteInboundTokenZeta(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case common.CoinType_ERC20:
-					ballotIdentifier, err = ob.CheckReceiptForCoinTypeERC20(txHash, false)
+					ballotIdentifier, err = ob.CheckNVoteInboundTokenERC20(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case common.CoinType_Gas:
-					ballotIdentifier, err = ob.CheckReceiptForCoinTypeGas(txHash, false)
+					ballotIdentifier, err = ob.CheckNVoteInboundTokenGas(tx, receipt, false)
 					if err != nil {
 						return err
 					}

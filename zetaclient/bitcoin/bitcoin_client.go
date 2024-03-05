@@ -88,7 +88,6 @@ const (
 	btcBlocksPerDay           = 144       // for LRU block cache size
 	bigValueSats              = 200000000 // 2 BTC
 	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
-	DonationMessage           = "I am rich!"
 )
 
 func (ob *BTCChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
@@ -768,7 +767,7 @@ func GetBtcEvent(
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
 					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
-				if bytes.Equal(memoBytes, []byte(DonationMessage)) {
+				if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
