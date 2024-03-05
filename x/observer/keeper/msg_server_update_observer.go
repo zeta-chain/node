@@ -80,7 +80,7 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 		}
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
-			// Admin policy group 2 is authorized to update observer
+			// Group admin is authorized to update observer
 			if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 				return false, types.ErrNotAuthorizedPolicy
 			}
