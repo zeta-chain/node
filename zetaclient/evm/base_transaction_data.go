@@ -20,9 +20,9 @@ const (
 	MaxGasLimit = 1_000_000
 )
 
-// BaseTransactionData is a data structure containing input fields used to construct each type of transaction.
+// OutBoundTransactionData is a data structure containing input fields used to construct each type of transaction.
 // This is populated using cctx and other input parameters passed to TryProcessOutTx
-type BaseTransactionData struct {
+type OutBoundTransactionData struct {
 	srcChainID *big.Int
 	toChainID  *big.Int
 	sender     ethcommon.Address
@@ -45,7 +45,7 @@ type BaseTransactionData struct {
 // SetChainAndSender populates the destination address and Chain ID based on the status of the cross chain tx
 // returns true if transaction should be skipped
 // returns false otherwise
-func (txData *BaseTransactionData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
+func (txData *OutBoundTransactionData) SetChainAndSender(cctx *types.CrossChainTx, logger zerolog.Logger) bool {
 	switch cctx.CctxStatus.Status {
 	case types.CctxStatus_PendingRevert:
 		txData.to = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
@@ -62,7 +62,7 @@ func (txData *BaseTransactionData) SetChainAndSender(cctx *types.CrossChainTx, l
 }
 
 // SetupGas sets the gas limit and price
-func (txData *BaseTransactionData) SetupGas(
+func (txData *OutBoundTransactionData) SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
@@ -107,7 +107,7 @@ func (txData *BaseTransactionData) SetupGas(
 //	cctx will be skipped and false otherwise.
 //
 // error
-func (txData *BaseTransactionData) SetTransactionData(
+func (txData *OutBoundTransactionData) SetTransactionData(
 	cctx *types.CrossChainTx,
 	evmClient *ChainClient,
 	evmRPC interfaces.EVMRPCClient,

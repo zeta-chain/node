@@ -152,7 +152,7 @@ func (signer *Signer) Broadcast(tx *ethtypes.Transaction) error {
 //	bytes32 internalSendHash
 //
 // ) external virtual {}
-func (signer *Signer) SignOutboundTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignOutboundTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -190,7 +190,7 @@ func (signer *Signer) SignOutboundTx(txData *BaseTransactionData) (*ethtypes.Tra
 // bytes calldata message,
 // bytes32 internalSendHash
 // ) external override whenNotPaused onlyTssAddress
-func (signer *Signer) SignRevertTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignRevertTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 
@@ -242,7 +242,7 @@ func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint6
 }
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
-func (signer *Signer) SignWithdrawTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignWithdrawTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
 	tx := ethtypes.NewTransaction(txData.nonce, txData.to, txData.amount, 21000, txData.gasPrice, nil)
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, txData.height, txData.nonce, signer.chain, "")
@@ -267,7 +267,7 @@ func (signer *Signer) SignWithdrawTx(txData *BaseTransactionData) (*ethtypes.Tra
 //
 //	cmd_whitelist_erc20
 //	cmd_migrate_tss_funds
-func (signer *Signer) SignCommandTx(txData *BaseTransactionData, cmd string, params string) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignCommandTx(txData *OutBoundTransactionData, cmd string, params string) (*ethtypes.Transaction, error) {
 	switch cmd {
 	case common.CmdWhitelistERC20:
 		return signer.SignWhitelistERC20Cmd(txData, params)
@@ -307,7 +307,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	// Setup Transaction input
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	txData.height = height
 	skipTx, err := txData.SetTransactionData(cctx, evmClient, signer.client, logger)
 	if err != nil {
@@ -421,7 +421,7 @@ func (signer *Signer) BroadcastOutTx(
 	logger zerolog.Logger,
 	myID sdk.AccAddress,
 	zetaBridge interfaces.ZetaCoreBridger,
-	txData *BaseTransactionData) {
+	txData *OutBoundTransactionData) {
 	// Get destination chain for logging
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 
@@ -556,7 +556,7 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 // address asset,
 // uint256 amount,
 // ) external onlyTssAddress
-func (signer *Signer) SignERC20WithdrawTx(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignERC20WithdrawTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
 	var data []byte
 	var err error
 	data, err = signer.erc20CustodyABI.Pack("withdraw", txData.to, txData.asset, txData.amount)
@@ -659,7 +659,7 @@ func SignerErrorMsg(cctx *types.CrossChainTx) string {
 	return fmt.Sprintf("signer SignOutbound error: nonce %d chain %d", cctx.GetCurrentOutTxParam().OutboundTxTssNonce, cctx.GetCurrentOutTxParam().ReceiverChainId)
 }
 
-func (signer *Signer) SignWhitelistERC20Cmd(txData *BaseTransactionData, params string) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignWhitelistERC20Cmd(txData *OutBoundTransactionData, params string) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	erc20 := ethcommon.HexToAddress(params)
 	if erc20 == (ethcommon.Address{}) {
@@ -680,7 +680,7 @@ func (signer *Signer) SignWhitelistERC20Cmd(txData *BaseTransactionData, params 
 	return tx, nil
 }
 
-func (signer *Signer) SignMigrateTssFundsCmd(txData *BaseTransactionData) (*ethtypes.Transaction, error) {
+func (signer *Signer) SignMigrateTssFundsCmd(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
 	outboundParams := txData.outboundParams
 	tx, _, _, err := signer.Sign(nil, txData.to, txData.gasLimit, txData.gasPrice, outboundParams.OutboundTxTssNonce, txData.height)
 	if err != nil {

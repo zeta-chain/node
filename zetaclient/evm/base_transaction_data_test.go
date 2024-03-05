@@ -16,7 +16,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 
-	txData := &BaseTransactionData{}
+	txData := &OutBoundTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetChainAndSender PendingRevert", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestSigner_SetupGas(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
-	txData := &BaseTransactionData{}
+	txData := &OutBoundTransactionData{}
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {
@@ -62,9 +62,9 @@ func TestSigner_SetupGas(t *testing.T) {
 
 	t.Run("SetupGas_error", func(t *testing.T) {
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
-		chain := corecommon.BtcMainnetChain()
+		chain := corecommon.BscMainnetChain()
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
-		require.Error(t, err)
+		require.ErrorContains(t, err, "cannot convert gas price")
 	})
 }
 
@@ -74,7 +74,7 @@ func TestSigner_SetTransactionData(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()

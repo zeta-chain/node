@@ -83,11 +83,7 @@ func TestSigner_TryProcessOutTx(t *testing.T) {
 
 	//Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
-	found := false
-	for range *list {
-		found = true
-	}
-	require.True(t, found)
+	require.Len(t, *list, 1)
 }
 
 func TestSigner_SignOutboundTx(t *testing.T) {
@@ -96,7 +92,7 @@ func TestSigner_SignOutboundTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -127,7 +123,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -158,7 +154,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -189,7 +185,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -238,7 +234,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -269,7 +265,7 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	txData := BaseTransactionData{}
+	txData := OutBoundTransactionData{}
 	cctx, err := getCCTX()
 	require.NoError(t, err)
 	mockChainClient, err := getNewEvmChainClient()
@@ -287,10 +283,6 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()
-		found := false
-		for range *list {
-			found = true
-		}
-		require.True(t, found)
+		require.Len(t, *list, 1)
 	})
 }
