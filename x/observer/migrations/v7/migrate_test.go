@@ -11,6 +11,34 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func TestMigrateStore(t *testing.T) {
+	t.Run("Migrate store from v6 to v7", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+		addr1 := sample.AccAddress()
+		addr2 := sample.AccAddress()
+
+		k.SetParams(ctx, types.Params{
+			AdminPolicy: []*types.Admin_Policy{
+				{
+					PolicyType: types.Policy_Type_group1,
+					Address:    addr1,
+				},
+				{
+					PolicyType: types.Policy_Type_group2,
+					Address:    addr2,
+				},
+			},
+		})
+
+		// Migrate store
+		err := v7.MigrateStore(ctx, k)
+
+		// Check if store is migrated
+		require.NoError(t, err)
+	})
+}
+
 func TestMigratePolicies(t *testing.T) {
 	t.Run("Migrate policies from observer to authority with 2 types", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.ObserverKeeper(t)

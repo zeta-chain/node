@@ -35,6 +35,11 @@ func TestKeeper_SetPolicies(t *testing.T) {
 
 func TestKeeper_IsAuthorized(t *testing.T) {
 	k, ctx := keepertest.AuthorityKeeper(t)
+
+	// Not authorized if no policies
+	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupAdmin))
+	require.False(t, k.IsAuthorized(ctx, sample.AccAddress(), types.PolicyType_groupEmergency))
+
 	policies := sample.Policies()
 	k.SetPolicies(ctx, policies)
 
