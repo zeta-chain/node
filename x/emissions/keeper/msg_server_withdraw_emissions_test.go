@@ -82,7 +82,7 @@ func TestMsgServer_WithdrawEmission(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrUnableToWithdrawEmissions)
 	})
 
-	t.Run("unable to withdraw emissions if SendCoinsFromModuleToAccount", func(t *testing.T) {
+	t.Run("unable to withdraw emissions if SendCoinsFromModuleToAccount fails", func(t *testing.T) {
 		k, ctx, sk, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
 			UseBankMock: true,
 		})
