@@ -1,8 +1,4 @@
 # CHANGELOG
-## Version: v14
-
-### Fixes 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Unreleased
 
@@ -34,6 +30,11 @@
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+## Version: v14
+
+### Fixes
+- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 
