@@ -149,7 +149,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 				switch oldStatus {
 				case types.CctxStatus_PendingOutbound:
 
-					gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
+					gasLimit, err := k.GetRevertGasLimit(ctx, &cctx)
 					if err != nil {
 						return errors.New("can't get revert tx gas limit" + err.Error())
 					}

@@ -92,4 +92,5 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundTxParams inbound_tx_params = 9;
   repeated OutboundTxParams outbound_tx_params = 10;
+  uint64 event_index = 11;
 }
