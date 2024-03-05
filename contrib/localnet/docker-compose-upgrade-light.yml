@@ -6,15 +6,27 @@ version: "3"
 services:
   zetacore0:
     entrypoint: ["/root/start-zetacored.sh", "2", "upgrade", "90"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
 
   zetacore1:
     entrypoint: ["/root/start-zetacored.sh", "2", "upgrade", "90"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
 
   zetaclient0:
     entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
 
   zetaclient1:
     entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
 
   orchestrator:
     entrypoint: ["/work/start.sh", "local", "upgrade", "90"]

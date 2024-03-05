@@ -8,7 +8,6 @@
 ZETAE2E_CMD=$1
 OPTION=$2
 
-
 echo "waiting for geth RPC to start..."
 sleep 2
 
@@ -97,7 +96,7 @@ else
   # Run the e2e tests normally
 
   echo "running e2e tests..."
-  #  zetae2e "$ZETAE2E_CMD"
+
   eval "zetae2e $ZETAE2E_CMD"
   ZETAE2E_EXIT_CODE=$?
 
