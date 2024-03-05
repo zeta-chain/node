@@ -38,12 +38,12 @@ func TestMigratePolicies(t *testing.T) {
 		require.NoError(t, err)
 		policies, found := zk.AuthorityKeeper.GetPolicies(ctx)
 		require.True(t, found)
-		policyAddresses := policies.PolicyAddresses
-		require.Len(t, policyAddresses, 2)
-		require.EqualValues(t, addr1, policyAddresses[0].Address)
-		require.EqualValues(t, addr2, policyAddresses[1].Address)
-		require.EqualValues(t, authoritytypes.PolicyType_groupEmergency, policyAddresses[0].PolicyType)
-		require.EqualValues(t, authoritytypes.PolicyType_groupAdmin, policyAddresses[1].PolicyType)
+		items := policies.Items
+		require.Len(t, items, 2)
+		require.EqualValues(t, addr1, items[0].Address)
+		require.EqualValues(t, addr2, items[1].Address)
+		require.EqualValues(t, authoritytypes.PolicyType_groupEmergency, items[0].PolicyType)
+		require.EqualValues(t, authoritytypes.PolicyType_groupAdmin, items[1].PolicyType)
 	})
 
 	t.Run("Can migrate with just emergency policy", func(t *testing.T) {
@@ -67,10 +67,10 @@ func TestMigratePolicies(t *testing.T) {
 		require.NoError(t, err)
 		policies, found := zk.AuthorityKeeper.GetPolicies(ctx)
 		require.True(t, found)
-		policyAddresses := policies.PolicyAddresses
-		require.Len(t, policyAddresses, 1)
-		require.EqualValues(t, addr, policyAddresses[0].Address)
-		require.EqualValues(t, authoritytypes.PolicyType_groupEmergency, policyAddresses[0].PolicyType)
+		items := policies.Items
+		require.Len(t, items, 1)
+		require.EqualValues(t, addr, items[0].Address)
+		require.EqualValues(t, authoritytypes.PolicyType_groupEmergency, items[0].PolicyType)
 	})
 
 	t.Run("Can migrate with just admin  policy", func(t *testing.T) {
@@ -94,10 +94,10 @@ func TestMigratePolicies(t *testing.T) {
 		require.NoError(t, err)
 		policies, found := zk.AuthorityKeeper.GetPolicies(ctx)
 		require.True(t, found)
-		policyAddresses := policies.PolicyAddresses
-		require.Len(t, policyAddresses, 1)
-		require.EqualValues(t, addr, policyAddresses[0].Address)
-		require.EqualValues(t, authoritytypes.PolicyType_groupAdmin, policyAddresses[0].PolicyType)
+		items := policies.Items
+		require.Len(t, items, 1)
+		require.EqualValues(t, addr, items[0].Address)
+		require.EqualValues(t, authoritytypes.PolicyType_groupAdmin, items[0].PolicyType)
 	})
 
 	t.Run("Can migrate with no policies", func(t *testing.T) {
@@ -112,8 +112,8 @@ func TestMigratePolicies(t *testing.T) {
 		require.NoError(t, err)
 		policies, found := zk.AuthorityKeeper.GetPolicies(ctx)
 		require.True(t, found)
-		policyAddresses := policies.PolicyAddresses
-		require.Len(t, policyAddresses, 0)
+		items := policies.Items
+		require.Len(t, items, 0)
 	})
 
 	t.Run("Fail to migrate if invalid policy", func(t *testing.T) {

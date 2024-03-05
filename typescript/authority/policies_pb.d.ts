@@ -24,9 +24,9 @@ export declare enum PolicyType {
 }
 
 /**
- * @generated from message zetachain.zetacore.authority.PolicyAddress
+ * @generated from message zetachain.zetacore.authority.Policy
  */
-export declare class PolicyAddress extends Message<PolicyAddress> {
+export declare class Policy extends Message<Policy> {
   /**
    * @generated from field: zetachain.zetacore.authority.PolicyType policy_type = 1;
    */
@@ -37,19 +37,19 @@ export declare class PolicyAddress extends Message<PolicyAddress> {
    */
   address: string;
 
-  constructor(data?: PartialMessage<PolicyAddress>);
+  constructor(data?: PartialMessage<Policy>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.authority.PolicyAddress";
+  static readonly typeName = "zetachain.zetacore.authority.Policy";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PolicyAddress;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Policy;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PolicyAddress;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Policy;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PolicyAddress;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Policy;
 
-  static equals(a: PolicyAddress | PlainMessage<PolicyAddress> | undefined, b: PolicyAddress | PlainMessage<PolicyAddress> | undefined): boolean;
+  static equals(a: Policy | PlainMessage<Policy> | undefined, b: Policy | PlainMessage<Policy> | undefined): boolean;
 }
 
 /**
@@ -59,9 +59,9 @@ export declare class PolicyAddress extends Message<PolicyAddress> {
  */
 export declare class Policies extends Message<Policies> {
   /**
-   * @generated from field: repeated zetachain.zetacore.authority.PolicyAddress policy_addresses = 1;
+   * @generated from field: repeated zetachain.zetacore.authority.Policy items = 1;
    */
-  policyAddresses: PolicyAddress[];
+  items: Policy[];
 
   constructor(data?: PartialMessage<Policies>);
 

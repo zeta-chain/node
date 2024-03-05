@@ -4,7 +4,7 @@ import authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 func Policies() authoritytypes.Policies {
 	return authoritytypes.Policies{
-		PolicyAddresses: []*authoritytypes.PolicyAddress{
+		Items: []*authoritytypes.Policy{
 			{
 				Address:    AccAddress(),
 				PolicyType: authoritytypes.PolicyType_groupEmergency,

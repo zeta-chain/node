@@ -34,7 +34,7 @@ func MigratePolicies(ctx sdk.Context, observerKeeper observerKeeper) error {
 				policyType = authoritytypes.PolicyType_groupEmergency
 			}
 
-			policies.PolicyAddresses = append(policies.PolicyAddresses, &authoritytypes.PolicyAddress{
+			policies.Items = append(policies.Items, &authoritytypes.Policy{
 				Address:    adminPolicy.Address,
 				PolicyType: policyType,
 			})

@@ -30,7 +30,7 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string, policyType types.P
 	if !found {
 		return false
 	}
-	for _, policy := range policies.PolicyAddresses {
+	for _, policy := range policies.Items {
 		if policy.Address == address && policy.PolicyType == policyType {
 			return true
 		}

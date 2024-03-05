@@ -53483,13 +53483,13 @@ definitions:
   authorityPolicies:
     type: object
     properties:
-      policy_addresses:
+      items:
         type: array
         items:
           type: object
-          $ref: '#/definitions/authorityPolicyAddress'
+          $ref: '#/definitions/authorityPolicy'
     title: Policy contains info about authority policies
-  authorityPolicyAddress:
+  authorityPolicy:
     type: object
     properties:
       policy_type:

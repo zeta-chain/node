@@ -118,7 +118,7 @@ func TestGasPriceIncreaseFlags_Validate(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
+func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 	tests := []struct {
 		name string
 		msg  types.MsgUpdateCrosschainFlags
@@ -228,7 +228,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.EqualValues(t, tt.want, tt.msg.GetRequiredGroup())
+			require.EqualValues(t, tt.want, tt.msg.GetRequiredPolicyType())
 		})
 	}
 }

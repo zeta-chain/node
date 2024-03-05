@@ -15,7 +15,7 @@ func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, msg.GetRequiredGroup()) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, msg.GetRequiredPolicyType()) {
 		return &types.MsgUpdateCrosschainFlagsResponse{}, types.ErrNotAuthorizedPolicy
 	}
 

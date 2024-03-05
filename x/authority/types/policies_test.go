@@ -44,7 +44,7 @@ func TestPolicies_Validate(t *testing.T) {
 		{
 			name: "valid if a policy type is not existing",
 			policies: types.Policies{
-				PolicyAddresses: []*types.PolicyAddress{
+				Items: []*types.Policy{
 					{
 						Address:    sample.AccAddress(),
 						PolicyType: types.PolicyType_groupEmergency,
@@ -56,7 +56,7 @@ func TestPolicies_Validate(t *testing.T) {
 		{
 			name: "invalid if address is invalid",
 			policies: types.Policies{
-				PolicyAddresses: []*types.PolicyAddress{
+				Items: []*types.Policy{
 					{
 						Address:    "invalid",
 						PolicyType: types.PolicyType_groupEmergency,
@@ -68,7 +68,7 @@ func TestPolicies_Validate(t *testing.T) {
 		{
 			name: "invalid if policy type is invalid",
 			policies: types.Policies{
-				PolicyAddresses: []*types.PolicyAddress{
+				Items: []*types.Policy{
 					{
 						Address:    sample.AccAddress(),
 						PolicyType: types.PolicyType(1000),
@@ -80,7 +80,7 @@ func TestPolicies_Validate(t *testing.T) {
 		{
 			name: "invalid if duplicated policy type",
 			policies: types.Policies{
-				PolicyAddresses: []*types.PolicyAddress{
+				Items: []*types.Policy{
 					{
 						Address:    sample.AccAddress(),
 						PolicyType: types.PolicyType_groupEmergency,

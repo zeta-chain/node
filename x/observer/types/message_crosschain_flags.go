@@ -70,13 +70,13 @@ func (gpf GasPriceIncreaseFlags) Validate() error {
 	return nil
 }
 
-// GetRequiredGroup returns the required group policy for the message to execute the message
-// Group emergency should only be able to stop or disable functiunalities in case of emergency
+// GetRequiredPolicyType returns the required policy type for the message to execute the message
+// Group emergency should only be able to stop or disable functionalities in case of emergency
 // this concerns disabling inbound and outbound txs or block header verification
 // every other action requires group admin
 // TODO: add separate message for each group
 // https://github.com/zeta-chain/node/issues/1562
-func (msg *MsgUpdateCrosschainFlags) GetRequiredGroup() authoritytypes.PolicyType {
+func (msg *MsgUpdateCrosschainFlags) GetRequiredPolicyType() authoritytypes.PolicyType {
 	if msg.IsInboundEnabled || msg.IsOutboundEnabled {
 		return authoritytypes.PolicyType_groupAdmin
 	}

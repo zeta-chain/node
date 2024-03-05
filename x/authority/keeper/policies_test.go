@@ -44,7 +44,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 	require.Equal(t, policies, got)
 
 	// Check policy is authorized
-	for _, policy := range policies.PolicyAddresses {
+	for _, policy := range policies.Items {
 		require.True(t, k.IsAuthorized(ctx, policy.Address, policy.PolicyType))
 	}
 

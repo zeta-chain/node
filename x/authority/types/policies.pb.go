@@ -50,23 +50,23 @@ func (PolicyType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_cf39aa57ca0776f1, []int{0}
 }
 
-type PolicyAddress struct {
+type Policy struct {
 	PolicyType PolicyType `protobuf:"varint,1,opt,name=policy_type,json=policyType,proto3,enum=zetachain.zetacore.authority.PolicyType" json:"policy_type,omitempty"`
 	Address    string     `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
 }
 
-func (m *PolicyAddress) Reset()         { *m = PolicyAddress{} }
-func (m *PolicyAddress) String() string { return proto.CompactTextString(m) }
-func (*PolicyAddress) ProtoMessage()    {}
-func (*PolicyAddress) Descriptor() ([]byte, []int) {
+func (m *Policy) Reset()         { *m = Policy{} }
+func (m *Policy) String() string { return proto.CompactTextString(m) }
+func (*Policy) ProtoMessage()    {}
+func (*Policy) Descriptor() ([]byte, []int) {
 	return fileDescriptor_cf39aa57ca0776f1, []int{0}
 }
-func (m *PolicyAddress) XXX_Unmarshal(b []byte) error {
+func (m *Policy) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PolicyAddress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Policy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PolicyAddress.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Policy.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -76,26 +76,26 @@ func (m *PolicyAddress) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *PolicyAddress) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PolicyAddress.Merge(m, src)
+func (m *Policy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Policy.Merge(m, src)
 }
-func (m *PolicyAddress) XXX_Size() int {
+func (m *Policy) XXX_Size() int {
 	return m.Size()
 }
-func (m *PolicyAddress) XXX_DiscardUnknown() {
-	xxx_messageInfo_PolicyAddress.DiscardUnknown(m)
+func (m *Policy) XXX_DiscardUnknown() {
+	xxx_messageInfo_Policy.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PolicyAddress proto.InternalMessageInfo
+var xxx_messageInfo_Policy proto.InternalMessageInfo
 
-func (m *PolicyAddress) GetPolicyType() PolicyType {
+func (m *Policy) GetPolicyType() PolicyType {
 	if m != nil {
 		return m.PolicyType
 	}
 	return PolicyType_groupEmergency
 }
 
-func (m *PolicyAddress) GetAddress() string {
+func (m *Policy) GetAddress() string {
 	if m != nil {
 		return m.Address
 	}
@@ -104,7 +104,7 @@ func (m *PolicyAddress) GetAddress() string {
 
 // Policy contains info about authority policies
 type Policies struct {
-	PolicyAddresses []*PolicyAddress `protobuf:"bytes,1,rep,name=policy_addresses,json=policyAddresses,proto3" json:"policy_addresses,omitempty"`
+	Items []*Policy `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 }
 
 func (m *Policies) Reset()         { *m = Policies{} }
@@ -140,45 +140,44 @@ func (m *Policies) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Policies proto.InternalMessageInfo
 
-func (m *Policies) GetPolicyAddresses() []*PolicyAddress {
+func (m *Policies) GetItems() []*Policy {
 	if m != nil {
-		return m.PolicyAddresses
+		return m.Items
 	}
 	return nil
 }
 
 func init() {
 	proto.RegisterEnum("zetachain.zetacore.authority.PolicyType", PolicyType_name, PolicyType_value)
-	proto.RegisterType((*PolicyAddress)(nil), "zetachain.zetacore.authority.PolicyAddress")
+	proto.RegisterType((*Policy)(nil), "zetachain.zetacore.authority.Policy")
 	proto.RegisterType((*Policies)(nil), "zetachain.zetacore.authority.Policies")
 }
 
 func init() { proto.RegisterFile("authority/policies.proto", fileDescriptor_cf39aa57ca0776f1) }
 
 var fileDescriptor_cf39aa57ca0776f1 = []byte{
-	// 295 bytes of a gzipped FileDescriptorProto
+	// 284 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x48, 0x2c, 0x2d, 0xc9,
 	0xc8, 0x2f, 0xca, 0x2c, 0xa9, 0xd4, 0x2f, 0xc8, 0xcf, 0xc9, 0x4c, 0xce, 0x4c, 0x2d, 0xd6, 0x2b,
 	0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0xa9, 0x4a, 0x2d, 0x49, 0x4c, 0xce, 0x48, 0xcc, 0xcc, 0xd3,
 	0x03, 0xb3, 0xf2, 0x8b, 0x52, 0xf5, 0xe0, 0x8a, 0xa5, 0x44, 0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x0a,
-	0xf5, 0x41, 0x2c, 0x88, 0x1e, 0xa5, 0x12, 0x2e, 0xde, 0x00, 0x90, 0x29, 0x95, 0x8e, 0x29, 0x29,
-	0x45, 0xa9, 0xc5, 0xc5, 0x42, 0x9e, 0x5c, 0xdc, 0x60, 0x63, 0x2b, 0xe3, 0x4b, 0x2a, 0x0b, 0x52,
-	0x25, 0x18, 0x15, 0x18, 0x35, 0xf8, 0x8c, 0x34, 0xf4, 0xf0, 0x19, 0xad, 0x07, 0x31, 0x21, 0xa4,
-	0xb2, 0x20, 0x35, 0x88, 0xab, 0x00, 0xce, 0x16, 0x92, 0xe0, 0x62, 0x4f, 0x84, 0x98, 0x2a, 0xc1,
-	0xa4, 0xc0, 0xa8, 0xc1, 0x19, 0x04, 0xe3, 0x2a, 0x25, 0x71, 0x71, 0x04, 0x40, 0xdd, 0x2e, 0x14,
-	0xc6, 0x25, 0x00, 0xb5, 0x10, 0x2a, 0x9b, 0x5a, 0x2c, 0xc1, 0xa8, 0xc0, 0xac, 0xc1, 0x6d, 0xa4,
-	0x4d, 0x8c, 0xad, 0x50, 0x77, 0x07, 0xf1, 0x17, 0x20, 0x73, 0x53, 0x8b, 0xb5, 0xcc, 0xb8, 0xb8,
-	0x10, 0xee, 0x12, 0x12, 0xe2, 0xe2, 0x4b, 0x2f, 0xca, 0x2f, 0x2d, 0x70, 0xcd, 0x4d, 0x2d, 0x4a,
-	0x4f, 0xcd, 0x4b, 0xae, 0x14, 0x60, 0x10, 0xe2, 0xe3, 0xe2, 0x02, 0x8b, 0x39, 0xa6, 0xe4, 0x66,
-	0xe6, 0x09, 0x30, 0x4a, 0xb1, 0xac, 0x58, 0x22, 0xc7, 0xe8, 0xe4, 0x75, 0xe2, 0x91, 0x1c, 0xe3,
-	0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c,
-	0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x06, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9,
-	0xb9, 0xfa, 0x20, 0xf7, 0xe8, 0x82, 0x9d, 0xa6, 0x0f, 0x73, 0x9a, 0x7e, 0x85, 0x3e, 0x22, 0x6a,
-	0x40, 0x81, 0x57, 0x9c, 0xc4, 0x06, 0x0e, 0x64, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x2a,
-	0xef, 0xf4, 0x31, 0xb4, 0x01, 0x00, 0x00,
+	0xf5, 0x41, 0x2c, 0x88, 0x1e, 0xa5, 0x5c, 0x2e, 0xb6, 0x00, 0x90, 0x29, 0x95, 0x42, 0x9e, 0x5c,
+	0xdc, 0x60, 0xf3, 0x2a, 0xe3, 0x4b, 0x2a, 0x0b, 0x52, 0x25, 0x18, 0x15, 0x18, 0x35, 0xf8, 0x8c,
+	0x34, 0xf4, 0xf0, 0x99, 0xa9, 0x07, 0xd1, 0x1a, 0x52, 0x59, 0x90, 0x1a, 0xc4, 0x55, 0x00, 0x67,
+	0x0b, 0x49, 0x70, 0xb1, 0x27, 0xa6, 0xa4, 0x14, 0xa5, 0x16, 0x17, 0x4b, 0x30, 0x29, 0x30, 0x6a,
+	0x70, 0x06, 0xc1, 0xb8, 0x4a, 0x6e, 0x5c, 0x1c, 0x01, 0x50, 0x47, 0x0b, 0x59, 0x71, 0xb1, 0x66,
+	0x96, 0xa4, 0xe6, 0x16, 0x4b, 0x30, 0x2a, 0x30, 0x6b, 0x70, 0x1b, 0xa9, 0x10, 0x63, 0x55, 0x10,
+	0x44, 0x8b, 0x96, 0x19, 0x17, 0x17, 0xc2, 0x6e, 0x21, 0x21, 0x2e, 0xbe, 0xf4, 0xa2, 0xfc, 0xd2,
+	0x02, 0xd7, 0xdc, 0xd4, 0xa2, 0xf4, 0xd4, 0xbc, 0xe4, 0x4a, 0x01, 0x06, 0x21, 0x3e, 0x2e, 0x2e,
+	0xb0, 0x98, 0x63, 0x4a, 0x6e, 0x66, 0x9e, 0x00, 0xa3, 0x14, 0xcb, 0x8a, 0x25, 0x72, 0x8c, 0x4e,
+	0x5e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7,
+	0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0x65, 0x90, 0x9e, 0x59, 0x92,
+	0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x0f, 0xb2, 0x5e, 0x17, 0xec, 0x12, 0x7d, 0x98, 0x4b,
+	0xf4, 0x2b, 0xf4, 0x11, 0xe1, 0x0e, 0x0a, 0xa0, 0xe2, 0x24, 0x36, 0x70, 0x08, 0x1a, 0x03, 0x02,
+	0x00, 0x00, 0xff, 0xff, 0x08, 0x31, 0x60, 0x2c, 0x91, 0x01, 0x00, 0x00,
 }
 
-func (m *PolicyAddress) Marshal() (dAtA []byte, err error) {
+func (m *Policy) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -188,12 +187,12 @@ func (m *PolicyAddress) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PolicyAddress) MarshalTo(dAtA []byte) (int, error) {
+func (m *Policy) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PolicyAddress) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Policy) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -233,10 +232,10 @@ func (m *Policies) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.PolicyAddresses) > 0 {
-		for iNdEx := len(m.PolicyAddresses) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Items) > 0 {
+		for iNdEx := len(m.Items) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.PolicyAddresses[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Items[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -261,7 +260,7 @@ func encodeVarintPolicies(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *PolicyAddress) Size() (n int) {
+func (m *Policy) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -283,8 +282,8 @@ func (m *Policies) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.PolicyAddresses) > 0 {
-		for _, e := range m.PolicyAddresses {
+	if len(m.Items) > 0 {
+		for _, e := range m.Items {
 			l = e.Size()
 			n += 1 + l + sovPolicies(uint64(l))
 		}
@@ -298,7 +297,7 @@ func sovPolicies(x uint64) (n int) {
 func sozPolicies(x uint64) (n int) {
 	return sovPolicies(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *PolicyAddress) Unmarshal(dAtA []byte) error {
+func (m *Policy) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -321,10 +320,10 @@ func (m *PolicyAddress) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PolicyAddress: wiretype end group for non-group")
+			return fmt.Errorf("proto: Policy: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PolicyAddress: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: Policy: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -430,7 +429,7 @@ func (m *Policies) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PolicyAddresses", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -457,8 +456,8 @@ func (m *Policies) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PolicyAddresses = append(m.PolicyAddresses, &PolicyAddress{})
-			if err := m.PolicyAddresses[len(m.PolicyAddresses)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Items = append(m.Items, &Policy{})
+			if err := m.Items[len(m.Items)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

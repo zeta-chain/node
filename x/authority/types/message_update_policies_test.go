@@ -29,7 +29,7 @@ func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid policies",
 			msg: types.NewMsgUpdatePolicies(sample.AccAddress(), types.Policies{
-				PolicyAddresses: []*types.PolicyAddress{
+				Items: []*types.Policy{
 					{
 						Address:    "invalid",
 						PolicyType: types.PolicyType_groupEmergency,

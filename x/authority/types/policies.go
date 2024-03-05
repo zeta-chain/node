@@ -14,7 +14,7 @@ const (
 // DefaultPolicies returns the default value for policies
 func DefaultPolicies() Policies {
 	return Policies{
-		PolicyAddresses: []*PolicyAddress{
+		Items: []*Policy{
 			{
 				Address:    DefaultPolicyAddress,
 				PolicyType: PolicyType_groupEmergency,
@@ -32,7 +32,7 @@ func (p Policies) Validate() error {
 	policyTypeMap := make(map[PolicyType]bool)
 
 	// for each policy, check address, policy type, and ensure no duplicate policy types
-	for _, policy := range p.PolicyAddresses {
+	for _, policy := range p.Items {
 		_, err := sdk.AccAddressFromBech32(policy.Address)
 		if err != nil {
 			return fmt.Errorf("invalid address: %s", err)
