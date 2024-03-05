@@ -3,6 +3,7 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -13,19 +14,48 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-func TestBitcoinWithdraw(r *runner.E2ERunner) {
-	// withdraw 0.01 BTC from ZRC20 to BTC address
-	WithdrawBitcoin(r)
+func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestBitcoinWithdraw requires exactly one argument for the amount.")
+	}
+
+	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
+	}
+
+	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
+	if err != nil {
+		panic(err)
+	}
+	amount := big.NewInt(int64(withdrawalAmountSat))
+
+	WithdrawBitcoin(r, amount)
 }
 
-func TestBitcoinWithdrawRestricted(r *runner.E2ERunner) {
-	// withdraw 0.01 BTC from ZRC20 to BTC restricted address
-	WithdrawBitcoinRestricted(r)
+func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestBitcoinWithdrawRestricted requires exactly one argument for the amount.")
+	}
+
+	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestBitcoinWithdrawRestricted.")
+	}
+
+	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
+	if err != nil {
+		panic(err)
+	}
+	amount := big.NewInt(int64(withdrawalAmountSat))
+
+	WithdrawBitcoinRestricted(r, amount)
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	// approve the ZRC20 contract to spend 'amount' of BTC from the deployer address
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
+	approvalAmount := new(big.Int).Mul(amount, big.NewInt(2))
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, approvalAmount) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
@@ -84,14 +114,11 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	return rawTx
 }
 
-func WithdrawBitcoin(r *runner.E2ERunner) {
-	amount := big.NewInt(0.01 * btcutil.SatoshiPerBitcoin)
+func WithdrawBitcoin(r *runner.E2ERunner, amount *big.Int) {
 	withdrawBTCZRC20(r, r.BTCDeployerAddress, amount)
 }
 
-func WithdrawBitcoinRestricted(r *runner.E2ERunner) {
-	amount := big.NewInt(0.01 * btcutil.SatoshiPerBitcoin)
-
+func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
 	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
 	if err != nil {

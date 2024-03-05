@@ -277,25 +277,33 @@ var AllE2ETests = []runner.E2ETest{
 	runner.NewE2ETest(
 		TestZetaDepositRestrictedName,
 		"deposit ZETA from Ethereum to ZEVM restricted address",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "1000000000000000000"},
+		},
 		TestZetaDepositRestricted,
 	),
 	runner.NewE2ETest(
 		TestERC20DepositRestrictedName,
 		"deposit ERC20 into ZEVM restricted address",
-		[]runner.ArgDefinition{},
-		TestZetaDepositRestricted,
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount", DefaultValue: "100000"},
+		},
+		TestERC20DepositRestricted,
 	),
 	runner.NewE2ETest(
 		TestEtherWithdrawRestrictedName,
 		"withdraw Ether from ZEVM to restricted address",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in wei", DefaultValue: "100000"},
+		},
 		TestEtherWithdrawRestricted,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
-		[]runner.ArgDefinition{},
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.1"},
+		},
 		TestBitcoinWithdrawRestricted,
 	),
 }
