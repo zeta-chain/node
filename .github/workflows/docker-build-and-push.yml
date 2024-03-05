@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  DOCKER_REPO: "zeatcored"
+  DOCKER_REPO: "zetacored"
   DOCKER_ORG: "zetachain"
   DOCKER_REGISTRY: "https://index.docker.io/v1/"
 
