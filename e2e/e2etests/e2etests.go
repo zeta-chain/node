@@ -132,7 +132,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawName,
 		"withdraw BTC from ZEVM",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.1"},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
 		},
 		TestBitcoinWithdraw,
 	),
@@ -302,7 +302,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.1"},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
 		},
 		TestBitcoinWithdrawRestricted,
 	),

@@ -53,9 +53,7 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
-	approvalAmount := new(big.Int).Mul(amount, big.NewInt(2))
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, approvalAmount) // approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
