@@ -10,6 +10,7 @@ option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 message ChainParamsList {
   repeated ChainParams chain_params = 1;
 }
+
 message ChainParams {
   int64 chain_id = 11;
   uint64 confirmation_count = 1;
@@ -33,7 +34,7 @@ message ChainParams {
   bool is_supported = 16;
 }
 
-// Deprecated: Use ChainParamsList
+// Deprecated(v13): Use ChainParamsList
 message ObserverParams {
   common.Chain chain = 1;
   string ballot_threshold = 3 [
@@ -47,12 +48,14 @@ message ObserverParams {
   bool is_supported = 5;
 }
 
+// Deprecated(v14):Moved into the authority module
 enum Policy_Type {
   option (gogoproto.goproto_enum_stringer) = true;
   group1 = 0;
   group2 = 1;
 }
 
+// Deprecated(v14):Moved into the authority module
 message Admin_Policy {
   Policy_Type policy_type = 1;
   string address = 2;
@@ -62,9 +65,11 @@ message Admin_Policy {
 message Params {
   option (gogoproto.goproto_stringer) = false;
 
-  // Deprecated: Use ChainParamsList
+  // Deprecated(v13): Use ChainParamsList
   repeated ObserverParams observer_params = 1;
 
+  // Deprecated(v14):Moved into the authority module
   repeated Admin_Policy admin_policy = 2;
+
   int64 ballot_maturity_blocks = 3;
 }

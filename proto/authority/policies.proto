@@ -1,0 +1,23 @@
+syntax = "proto3";
+package zetachain.zetacore.authority;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+
+// PolicyType defines the type of policy
+enum PolicyType {
+  option (gogoproto.goproto_enum_stringer) = true;
+  groupEmergency = 0;
+  groupAdmin = 1;
+}
+
+message Policy {
+  PolicyType policy_type = 1;
+  string address = 2;
+}
+
+// Policy contains info about authority policies
+message Policies {
+  repeated Policy items = 1;
+}

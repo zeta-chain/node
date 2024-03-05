@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
 type StakingKeeper interface {
@@ -22,4 +23,11 @@ type StakingHooks interface {
 	AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error
 	AfterDelegationModified(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx sdk.Context, valAddr sdk.ValAddress, fraction sdk.Dec) error
+}
+
+type AuthorityKeeper interface {
+	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
+
+	// SetPolicies is solely used for the migration of policies from observer to authority
+	SetPolicies(ctx sdk.Context, policies authoritytypes.Policies)
 }

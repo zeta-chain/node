@@ -3,13 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/libs/log"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -25,6 +23,7 @@ type (
 		bankKeeper         types.BankKeeper
 		zetaObserverKeeper types.ObserverKeeper
 		fungibleKeeper     types.FungibleKeeper
+		authorityKeeper    types.AuthorityKeeper
 	}
 )
 
@@ -38,6 +37,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	zetaObserverKeeper types.ObserverKeeper,
 	fungibleKeeper types.FungibleKeeper,
+	authorityKeeper types.AuthorityKeeper,
 ) *Keeper {
 	// ensure governance module account is set
 	// FIXME: enable this check! (disabled for now to avoid unit test panic)
@@ -55,6 +55,7 @@ func NewKeeper(
 		bankKeeper:         bankKeeper,
 		zetaObserverKeeper: zetaObserverKeeper,
 		fungibleKeeper:     fungibleKeeper,
+		authorityKeeper:    authorityKeeper,
 	}
 }
 
@@ -80,6 +81,10 @@ func (k Keeper) GetFungibleKeeper() types.FungibleKeeper {
 
 func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 	return k.zetaObserverKeeper
+}
+
+func (k Keeper) GetAuthorityKeeper() types.AuthorityKeeper {
+	return k.authorityKeeper
 }
 
 func (k Keeper) GetStoreKey() storetypes.StoreKey {
