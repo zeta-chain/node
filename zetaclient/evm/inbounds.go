@@ -325,7 +325,8 @@ func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction
 	}
 
 	// donation check
-	data, _ := hex.DecodeString(message) // err already checked
+	// #nosec G703 err is already checked
+	data, _ := hex.DecodeString(message)
 	if bytes.Equal(data, []byte(common.DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return nil
