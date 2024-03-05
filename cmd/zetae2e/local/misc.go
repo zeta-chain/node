@@ -56,11 +56,16 @@ func miscTestRoutine(
 		miscRunner.WaitForMinedCCTX(txZetaDeposit)
 
 		// run misc test
-		if err := miscRunner.RunE2ETestsFromNames(
+		testsToRun, err := miscRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			//e2etests.TestBlockHeadersName,
 			e2etests.TestMyTestName,
-		); err != nil {
+		)
+		if err != nil {
+			return fmt.Errorf("misc tests failed: %v", err)
+		}
+
+		if err := miscRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("misc tests failed: %v", err)
 		}
 

@@ -26,6 +26,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Deprecated(v14):Moved into the authority module
 type Policy_Type int32
 
 const (
@@ -229,7 +230,7 @@ func (m *ChainParams) GetIsSupported() bool {
 	return false
 }
 
-// Deprecated: Use ChainParamsList
+// Deprecated(v13): Use ChainParamsList
 type ObserverParams struct {
 	Chain                 *common.Chain                          `protobuf:"bytes,1,opt,name=chain,proto3" json:"chain,omitempty"`
 	BallotThreshold       github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=ballot_threshold,json=ballotThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"ballot_threshold"`
@@ -284,6 +285,7 @@ func (m *ObserverParams) GetIsSupported() bool {
 	return false
 }
 
+// Deprecated(v14):Moved into the authority module
 type Admin_Policy struct {
 	PolicyType Policy_Type `protobuf:"varint,1,opt,name=policy_type,json=policyType,proto3,enum=zetachain.zetacore.observer.Policy_Type" json:"policy_type,omitempty"`
 	Address    string      `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
@@ -338,10 +340,11 @@ func (m *Admin_Policy) GetAddress() string {
 
 // Params defines the parameters for the module.
 type Params struct {
-	// Deprecated: Use ChainParamsList
-	ObserverParams       []*ObserverParams `protobuf:"bytes,1,rep,name=observer_params,json=observerParams,proto3" json:"observer_params,omitempty"`
-	AdminPolicy          []*Admin_Policy   `protobuf:"bytes,2,rep,name=admin_policy,json=adminPolicy,proto3" json:"admin_policy,omitempty"`
-	BallotMaturityBlocks int64             `protobuf:"varint,3,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3" json:"ballot_maturity_blocks,omitempty"`
+	// Deprecated(v13): Use ChainParamsList
+	ObserverParams []*ObserverParams `protobuf:"bytes,1,rep,name=observer_params,json=observerParams,proto3" json:"observer_params,omitempty"`
+	// Deprecated(v14):Moved into the authority module
+	AdminPolicy          []*Admin_Policy `protobuf:"bytes,2,rep,name=admin_policy,json=adminPolicy,proto3" json:"admin_policy,omitempty"`
+	BallotMaturityBlocks int64           `protobuf:"varint,3,opt,name=ballot_maturity_blocks,json=ballotMaturityBlocks,proto3" json:"ballot_maturity_blocks,omitempty"`
 }
 
 func (m *Params) Reset()      { *m = Params{} }

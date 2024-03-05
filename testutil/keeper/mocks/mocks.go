@@ -36,6 +36,11 @@ type CrosschainFungibleKeeper interface {
 	crosschaintypes.FungibleKeeper
 }
 
+//go:generate mockery --name CrosschainAuthorityKeeper --filename authority.go --case underscore --output ./crosschain
+type CrosschainAuthorityKeeper interface {
+	crosschaintypes.AuthorityKeeper
+}
+
 /**
  * Fungible Mocks
  */
@@ -58,6 +63,11 @@ type FungibleObserverKeeper interface {
 //go:generate mockery --name FungibleEVMKeeper --filename evm.go --case underscore --output ./fungible
 type FungibleEVMKeeper interface {
 	fungibletypes.EVMKeeper
+}
+
+//go:generate mockery --name FungibleAuthorityKeeper --filename authority.go --case underscore --output ./fungible
+type FungibleAuthorityKeeper interface {
+	fungibletypes.AuthorityKeeper
 }
 
 /**
@@ -96,4 +106,9 @@ type ObserverStakingKeeper interface {
 //go:generate mockery --name ObserverSlashingKeeper --filename slashing.go --case underscore --output ./observer
 type ObserverSlashingKeeper interface {
 	observertypes.SlashingKeeper
+}
+
+//go:generate mockery --name ObserverAuthorityKeeper --filename authority.go --case underscore --output ./observer
+type ObserverAuthorityKeeper interface {
+	observertypes.AuthorityKeeper
 }

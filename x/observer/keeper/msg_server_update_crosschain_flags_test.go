@@ -8,29 +8,22 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func setAdminCrossChainFlags(ctx sdk.Context, k *keeper.Keeper, admin string, group types.Policy_Type) {
-	k.SetParams(ctx, observertypes.Params{
-		AdminPolicy: []*observertypes.Admin_Policy{
-			{
-				PolicyType: group,
-				Address:    admin,
-			},
-		},
-	})
-}
 
 func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 	t.Run("can update crosschain flags", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		// mock the authority keeper for authorization
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		_, err := srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -58,7 +51,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
 		require.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
 
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// can update flags again
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
@@ -88,7 +81,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
 
 		// group 1 should be able to disable inbound and outbound
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		// if gas price increase flags is nil, it should not be updated
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
@@ -109,7 +102,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
 
 		// group 1 should be able to disable header verification
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		// if gas price increase flags is nil, it should not be updated
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
@@ -138,7 +131,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		_, found = k.GetCrosschainFlags(ctx)
 		require.False(t, found)
 
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -157,19 +150,24 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 	})
 
 	t.Run("cannot update crosschain flags if not authorized", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, false)
+
 		_, err := srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
-			Creator:           sample.AccAddress(),
+			Creator:           admin,
 			IsInboundEnabled:  false,
 			IsOutboundEnabled: false,
 		})
 		require.Error(t, err)
 		require.Equal(t, types.ErrNotAuthorizedPolicy, err)
 
-		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,

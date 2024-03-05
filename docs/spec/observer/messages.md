@@ -2,7 +2,7 @@
 
 ## MsgAddObserver
 
-Authorized: admin policy group 2.
+AddObserver adds an observer address to the observer set
 
 ```proto
 message MsgAddObserver {

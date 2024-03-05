@@ -107,7 +107,6 @@ else
 
   # if e2e passed, exit with 0, otherwise exit with 1
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then
-    cat /work/deployed.yml
     echo "e2e passed"
     exit 0
   else

@@ -215,7 +215,7 @@ message MsgWhitelistERC20 {
 
 ## MsgUpdateTssAddress
 
-Authorized: admin policy group 2.
+UpdateTssAddress updates the TSS address.
 
 ```proto
 message MsgUpdateTssAddress {
@@ -226,7 +226,7 @@ message MsgUpdateTssAddress {
 
 ## MsgMigrateTssFunds
 
-Authorized: admin policy group 2.
+MigrateTssFunds migrates the funds from the current TSS to the new TSS
 
 ```proto
 message MsgMigrateTssFunds {

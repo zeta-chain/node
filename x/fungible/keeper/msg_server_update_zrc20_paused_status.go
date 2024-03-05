@@ -3,12 +3,13 @@ package keeper
 import (
 	"context"
 
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // UpdateZRC20PausedStatus updates the paused status of a ZRC20
@@ -28,11 +29,11 @@ func (k msgServer) UpdateZRC20PausedStatus(
 
 	// check if the sender is the admin
 	// unpausing requires group2 admin
-	requiredPolicyAccount := zetaObserverTypes.Policy_Type_group1
+	requiredPolicyAccount := authoritytypes.PolicyType_groupEmergency
 	if msg.Action == types.UpdatePausedStatusAction_UNPAUSE {
-		requiredPolicyAccount = zetaObserverTypes.Policy_Type_group2
+		requiredPolicyAccount = authoritytypes.PolicyType_groupAdmin
 	}
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(requiredPolicyAccount) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, requiredPolicyAccount) {
 		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 
