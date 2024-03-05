@@ -132,6 +132,12 @@ func (c Config) GetRestrictedAddressBook() map[string]bool {
 	return restrictedAddresses
 }
 
+func (c *Config) GetKeyringBackend() KeyringBackend {
+	c.cfgLock.RLock()
+	defer c.cfgLock.RUnlock()
+	return c.KeyringBackend
+}
+
 // ValidateChainParams performs some basic checks on core params
 func ValidateChainParams(chainParams *observertypes.ChainParams) error {
 	if chainParams == nil {
