@@ -3,37 +3,29 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
-	"strconv"
 
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
-	WithdrawBitcoin(r, args)
+func TestBitcoinWithdraw(r *runner.E2ERunner) {
+	// withdraw 0.01 BTC from ZRC20 to BTC address
+	WithdrawBitcoin(r)
 }
 
-func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestBitcoinWithdraw requires exactly one argument for the amount.")
-	}
+func TestBitcoinWithdrawRestricted(r *runner.E2ERunner) {
+	// withdraw 0.01 BTC from ZRC20 to BTC restricted address
+	WithdrawBitcoinRestricted(r)
+}
 
-	withdrawAmount, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
-	}
-
-	withdrawAmountSat, err := btcutil.NewAmount(withdrawAmount)
-	if err != nil {
-		panic(err)
-	}
-	amount := big.NewInt(int64(withdrawAmountSat))
-
-	// approve the ZRC20 contract to spend amount * 2 BTC from the deployer address
-	approvalAmount := new(big.Int).Mul(amount, big.NewInt(2))
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, approvalAmount) // approve more to cover withdraw fee
+func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
+	// approve the ZRC20 contract to spend 'amount' of BTC from the deployer address
+	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
@@ -45,8 +37,8 @@ func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
 	// mine blocks
 	stop := r.MineBlocks()
 
-	// withdraw 0.1 BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte(r.BTCDeployerAddress.EncodeAddress()), amount)
+	// withdraw 'amount' of BTC from ZRC20 to BTC address
+	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte(to.EncodeAddress()), amount)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +48,7 @@ func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
 	}
 
 	// mine 10 blocks to confirm the withdraw tx
-	_, err = r.BtcRPCClient.GenerateToAddress(10, r.BTCDeployerAddress, nil)
+	_, err = r.BtcRPCClient.GenerateToAddress(10, to, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -88,6 +80,29 @@ func WithdrawBitcoin(r *runner.E2ERunner, args []string) {
 
 	// stop mining
 	stop <- struct{}{}
+
+	return rawTx
+}
+
+func WithdrawBitcoin(r *runner.E2ERunner) {
+	amount := big.NewInt(0.01 * btcutil.SatoshiPerBitcoin)
+	withdrawBTCZRC20(r, r.BTCDeployerAddress, amount)
+}
+
+func WithdrawBitcoinRestricted(r *runner.E2ERunner) {
+	amount := big.NewInt(0.01 * btcutil.SatoshiPerBitcoin)
+
+	// use restricted BTC P2WPKH address
+	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
+	if err != nil {
+		panic(err)
+	}
+
+	// the cctx should be cancelled
+	rawTx := withdrawBTCZRC20(r, addressRestricted, amount)
+	if len(rawTx.Vout) != 2 {
+		panic(fmt.Errorf("BTC cancelled outtx rawTx.Vout should have 2 outputs"))
+	}
 }
 
 // WithdrawBitcoinMultipleTimes ...
