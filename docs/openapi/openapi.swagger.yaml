@@ -54011,6 +54011,8 @@ definitions:
         type: string
       proved:
         type: boolean
+  emissionsMsgWithdrawEmissionResponse:
+    type: object
   emissionsQueryGetEmissionsFactorsResponse:
     type: object
     properties:

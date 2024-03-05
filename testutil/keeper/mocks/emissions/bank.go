@@ -31,6 +31,24 @@ func (_m *EmissionBankKeeper) GetBalance(ctx types.Context, addr types.AccAddres
 	return r0
 }
 
+// SendCoinsFromModuleToAccount provides a mock function with given fields: ctx, senderModule, recipientAddr, amt
+func (_m *EmissionBankKeeper) SendCoinsFromModuleToAccount(ctx types.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
+	ret := _m.Called(ctx, senderModule, recipientAddr, amt)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SendCoinsFromModuleToAccount")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, string, types.AccAddress, types.Coins) error); ok {
+		r0 = rf(ctx, senderModule, recipientAddr, amt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SendCoinsFromModuleToModule provides a mock function with given fields: ctx, senderModule, recipientModule, amt
 func (_m *EmissionBankKeeper) SendCoinsFromModuleToModule(ctx types.Context, senderModule string, recipientModule string, amt types.Coins) error {
 	ret := _m.Called(ctx, senderModule, recipientModule, amt)

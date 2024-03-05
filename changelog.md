@@ -45,6 +45,7 @@
 ### Features
 
 * [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+* [1811](https://github.com/zeta-chain/node/pull/1811) - add a message to withdraw emission rewards
 
 ### Docs
 
