@@ -12,7 +12,7 @@ import (
 
 func TestMigrateObserverParams(t *testing.T) {
 	t.Run("Migrate when keygen is Pending", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		k.SetKeygen(ctx, types.Keygen{
 			Status:      types.KeygenStatus_PendingKeygen,
 			BlockNumber: math.MaxInt64,
@@ -57,7 +57,7 @@ func TestMigrateObserverParams(t *testing.T) {
 		require.Equal(t, participantList, participantList)
 	})
 	t.Run("Migrate when keygen is not Pending", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 		participantList := []string{
 			"zetapub1addwnpepqglunjrgl3qg08duxq9pf28jmvrer3crwnnfzp6m0u0yh9jk9mnn5p76utc",
 			"zetapub1addwnpepqwwpjwwnes7cywfkr0afme7ymk8rf5jzhn8pfr6qqvfm9v342486qsrh4f5",

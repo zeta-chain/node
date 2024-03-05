@@ -104,3 +104,75 @@ To create a release simply execute the publish-release workflow and follow the s
  - Step 5. Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
 
 Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.
+
+
+Here is the formatted documentation in Markdown:
+
+---
+
+### Starting Full Zetacored Nodes
+
+#### Step 1: Choose the Network
+
+To start a node, use the `make` command with the `DOCKER_TAG` of the image you wish to use from Docker Hub.
+
+- **For Mainnet:**
+
+  ```shell
+  # Use this command to start a mainnet node with a specific Docker tag
+  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
+  # Example:
+  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  ```
+
+- **For Athens3:**
+
+  ```shell
+  # The command is the same for Athens3, just ensure you're specifying the correct Docker tag
+  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
+  # Example:
+  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  ```
+
+**Note:** The default configuration is to restore from state sync. This process will download the necessary configurations and information from [Zeta-Chain Network Config](https://github.com/zeta-chain/network-config) and configure the node for state sync restore.
+
+#### Changing the Sync Type
+
+If you wish to change the sync type, you will need to modify the `docker-compose.yml` file located in `contrib/{NETWORK}/zetacored/`.
+
+Change the following values according to your needs:
+
+```yaml
+# Possible values for RESTORE_TYPE are "snapshot", "snapshot-archive", or "statesync"
+RESTORE_TYPE: "statesync"
+MONIKER: "local-test"
+RE_DO_START_SEQUENCE: "false"
+```
+
+To perform a snapshot restore from the latest snapshot, simply change the `RESTORE_TYPE` to either `snapshot` or `snapshot-archive`.
+
+---
+
+Here's the formatted documentation in Markdown for starting a full Bitcoind Mainnet node:
+
+---
+
+### Starting Full Bitcoind Mainnet Node
+
+#### Step 1: Restore a Mainnet BTC Watcher Node
+
+To restore a mainnet BTC watcher node from a BTC snapshot, run the following `make` command and specify the `DOCKER_TAG` with the image you want to use from Docker Hub.
+
+```commandline
+make mainnet-bitcoind-node DOCKER_TAG={DOCKER_TAG_FROM_DOCKER_HUB_TO_USE}
+# Example:
+make mainnet-bitcoind-node DOCKER_TAG=36-mainnet
+```
+
+#### Updating the TSS Address
+
+If you need to update the TSS (Threshold Signature Scheme) address being watched, please edit the `docker-compose.yml` file located at `contrib/mainnet/bitcoind/docker-compose.yml`.
+
+To update, simply change the user and password you wish to use, and the TSS address to watch. Then, run the command provided above to apply your changes.
+
+---

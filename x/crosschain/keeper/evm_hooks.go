@@ -170,7 +170,15 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	cctx := k.CreateNewCCTX(
+		ctx,
+		msg,
+		sendHash,
+		tss.TssPubkey,
+		types.CctxStatus_PendingOutbound,
+		senderChain.ChainId,
+		receiverChain.ChainId,
+	)
 
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
@@ -210,7 +218,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	// Validation if we want to send ZETA to an external chain, but there is no ZETA token.
 	chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, receiverChain.ChainId)
 	if !found {
-		return types.ErrNotFoundChainParams
+		return observertypes.ErrChainParamsNotFound
 	}
 	if receiverChain.IsExternalChain() && chainParams.ZetaTokenContractAddress == "" {
 		return types.ErrUnableToSendCoinType
@@ -241,7 +249,15 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	sendHash := msg.Digest()
 
 	// Create the CCTX
-	cctx := k.CreateNewCCTX(ctx, msg, sendHash, tss.TssPubkey, types.CctxStatus_PendingOutbound, &senderChain, receiverChain)
+	cctx := k.CreateNewCCTX(
+		ctx,
+		msg,
+		sendHash,
+		tss.TssPubkey,
+		types.CctxStatus_PendingOutbound,
+		senderChain.ChainId,
+		receiverChain.ChainId,
+	)
 
 	if err := k.PayGasAndUpdateCctx(
 		ctx,

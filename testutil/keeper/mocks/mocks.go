@@ -4,6 +4,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 /**
@@ -59,6 +60,10 @@ type FungibleEVMKeeper interface {
 	fungibletypes.EVMKeeper
 }
 
+/**
+ * Emissions Mocks
+ */
+
 //go:generate mockery --name EmissionAccountKeeper --filename account.go --case underscore --output ./emissions
 type EmissionAccountKeeper interface {
 	emissionstypes.AccountKeeper
@@ -77,4 +82,18 @@ type EmissionStakingKeeper interface {
 //go:generate mockery --name EmissionObserverKeeper --filename observer.go --case underscore --output ./emissions
 type EmissionObserverKeeper interface {
 	emissionstypes.ObserverKeeper
+}
+
+/**
+ * Observer Mocks
+ */
+
+//go:generate mockery --name ObserverStakingKeeper --filename staking.go --case underscore --output ./observer
+type ObserverStakingKeeper interface {
+	observertypes.StakingKeeper
+}
+
+//go:generate mockery --name ObserverSlashingKeeper --filename slashing.go --case underscore --output ./observer
+type ObserverSlashingKeeper interface {
+	observertypes.SlashingKeeper
 }
