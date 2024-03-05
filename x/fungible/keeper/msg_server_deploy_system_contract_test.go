@@ -4,25 +4,29 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_DeploySystemContracts(t *testing.T) {
 	t.Run("admin can deploy system contracts", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		res, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.NoError(t, err)
@@ -35,24 +39,32 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 	})
 
 	t.Run("non-admin cannot deploy system contracts", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		nonadmin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, nonadmin, observertypes.Policy_Type_group1)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, nonadmin, authoritytypes.PolicyType_groupAdmin, false)
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(nonadmin))
 		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
 	})
 
 	t.Run("should fail if contract deployment fails", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseEVMMock: true,
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+			UseEVMMock:       true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On(

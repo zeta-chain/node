@@ -12,7 +12,7 @@ import (
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-func TestPauseZRC20(r *runner.E2ERunner) {
+func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	// Setup vault used to test zrc20 interactions
 	r.Logger.Info("Deploying vault")
 	vaultAddr, _, vaultContract, err := vault.DeployVault(r.ZevmAuth, r.ZevmClient)

@@ -13,45 +13,57 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Authorized: admin policy group 2.
+// MigrateTssFunds migrates the funds from the current TSS to the new TSS
 func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateTssFunds) (*types.MsgMigrateTssFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group2) {
+
+	// check if authorized
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
+
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot migrate funds while inbound is enabled")
 	}
+
 	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot find current TSS")
 	}
+
 	tssHistory := k.zetaObserverKeeper.GetAllTSS(ctx)
 	sort.SliceStable(tssHistory, func(i, j int) bool {
 		return tssHistory[i].FinalizedZetaHeight < tssHistory[j].FinalizedZetaHeight
 	})
+
 	if tss.TssPubkey == tssHistory[len(tssHistory)-1].TssPubkey {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "no new tss address has been generated")
 	}
+
 	// This check is to deal with an edge case where the current TSS is not part of the TSS history list at all
 	if tss.FinalizedZetaHeight >= tssHistory[len(tssHistory)-1].FinalizedZetaHeight {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "current tss is the latest")
 	}
+
 	pendingNonces, found := k.GetObserverKeeper().GetPendingNonces(ctx, tss.TssPubkey, msg.ChainId)
 	if !found {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot find pending nonces for chain")
 	}
+
 	if pendingNonces.NonceLow != pendingNonces.NonceHigh {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "cannot migrate funds when there are pending nonces")
 	}
+
 	err := k.MigrateTSSFundsForChain(ctx, msg.ChainId, msg.Amount, tss, tssHistory)
 	if err != nil {
 		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, err.Error())
 	}
+
 	return &types.MsgMigrateTssFundsResponse{}, nil
 }
 

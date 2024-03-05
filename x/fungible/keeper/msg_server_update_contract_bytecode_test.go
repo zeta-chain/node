@@ -5,31 +5,19 @@ import (
 	"math/big"
 	"testing"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-func setAdminPolicies(ctx sdk.Context, zk keepertest.ZetaKeepers, admin string, policyType observertypes.Policy_Type) {
-	zk.ObserverKeeper.SetParams(ctx, observertypes.Params{
-		AdminPolicy: []*observertypes.Admin_Policy{
-			{
-				PolicyType: policyType,
-				Address:    admin,
-			},
-		},
-	})
-}
 
 func codeHashFromAddress(t *testing.T, ctx sdk.Context, k *keeper.Keeper, contractAddr string) string {
 	res, err := k.CodeHash(ctx, &types.QueryCodeHashRequest{
@@ -41,13 +29,14 @@ func codeHashFromAddress(t *testing.T, ctx sdk.Context, k *keeper.Keeper, contra
 
 func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	t.Run("can update the bytecode from another contract", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		msgServer := keeper.NewMsgServerImpl(*k)
 
-		// set admin policy
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
 		// sample chainIDs and addresses
 		chainList := zetacommon.DefaultChainsList()
@@ -104,6 +93,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NoError(t, err)
 		codeHash := codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		// update the bytecode
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
@@ -147,6 +138,9 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		)
 		codeHash = codeHashFromAddress(t, ctx, k, newCodeAddress.Hex())
 		require.NoError(t, err)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
 			admin,
 			zrc20.Hex(),
@@ -165,13 +159,16 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("can update the bytecode of the wzeta connector contract", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 		msgServer := keeper.NewMsgServerImpl(*k)
 
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+
 		// deploy a connector
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		wzeta, _, _, oldConnector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 		codeHash := codeHashFromAddress(t, ctx, k, oldConnector.Hex())
 
@@ -180,6 +177,8 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		require.NoError(t, err)
 		require.NotEmpty(t, newConnector)
 		assertContractDeployment(t, sdkk.EvmKeeper, ctx, newConnector)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// can update the bytecode of the new connector with the old connector contract
 		_, err = msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
@@ -191,11 +190,17 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail if unauthorized", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
+		admin := sample.AccAddress()
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		_, err := msgServer.UpdateContractBytecode(ctx, types.NewMsgUpdateContractBytecode(
-			sample.AccAddress(),
+			admin,
 			sample.EthAddress().Hex(),
 			sample.Hash().Hex(),
 		))
@@ -203,11 +208,14 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail invalid contract address", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeper(t)
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		_, err := msgServer.UpdateContractBytecode(ctx, &types.MsgUpdateContractBytecode{
 			Creator:         admin,
@@ -218,14 +226,17 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail if can't get contract account", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseEVMMock: true,
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseEVMMock:       true,
+			UseAuthorityMock: true,
 		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
 		contractAddr := sample.EthAddress()
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		mockEVMKeeper.On(
 			"GetAccount",
@@ -244,12 +255,15 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail neither a zrc20 nor wzeta connector", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 		wzeta, _, _, _, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// can't update the bytecode of the wzeta contract
@@ -262,12 +276,16 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail if system contract not found", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
 
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		_, _, _, connector, _ := deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// remove system contract
@@ -283,13 +301,18 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 	})
 
 	t.Run("should fail if can't set account with new bytecode", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
-			UseEVMMock: true,
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+			UseEVMMock:       true,
 		})
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		contractAddr := sample.EthAddress()
 		newCodeHash := sample.Hash().Hex()
 

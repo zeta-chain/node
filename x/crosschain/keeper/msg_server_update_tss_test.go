@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -14,9 +14,14 @@ import (
 
 func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	t.Run("successfully update tss address", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
@@ -47,9 +52,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 
 	t.Run("new tss has not been added to tss history", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
@@ -79,9 +89,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 
 	t.Run("old tss pubkey provided", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		k.GetObserverKeeper().SetTSSHistory(ctx, tssOld)
@@ -110,9 +125,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 
 	t.Run("unable to update tss when not enough migrators are present", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
@@ -148,9 +168,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 
 	t.Run("unable to update tss when pending cctx is present", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()
@@ -185,9 +210,14 @@ func TestMsgServer_UpdateTssAddress(t *testing.T) {
 	})
 
 	t.Run("unable to update tss cctx is not present", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		msgServer := keeper.NewMsgServerImpl(*k)
 		tssOld := sample.Tss()
 		tssNew := sample.Tss()

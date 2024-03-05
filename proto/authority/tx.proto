@@ -1,0 +1,21 @@
+syntax = "proto3";
+package zetachain.zetacore.authority;
+
+import "authority/policies.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc UpdatePolicies(MsgUpdatePolicies) returns (MsgUpdatePoliciesResponse);
+}
+
+// MsgUpdatePolicies defines the MsgUpdatePolicies service.
+message MsgUpdatePolicies {
+  string signer = 1;
+  Policies policies = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
+message MsgUpdatePoliciesResponse {}

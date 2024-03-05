@@ -11,14 +11,14 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Authorized: admin policy group 2.
 func (k msgServer) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 	newSystemContractAddr := ethcommon.HexToAddress(msg.NewSystemContractAddress)

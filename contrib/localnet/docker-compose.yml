@@ -32,13 +32,14 @@ services:
     container_name: zetacore0
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetacore0
     ports:
       - "1317:1317"
       - "9545:8545"
       - "9546:8546"
       - "26657:26657"
+      - "9090:9090"
     networks:
       mynetwork:
         ipv4_address: 172.20.0.11
@@ -52,7 +53,7 @@ services:
     container_name: zetacore1
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetacore1
     networks:
       mynetwork:
@@ -67,7 +68,7 @@ services:
     container_name: zetaclient0
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetaclient0
     networks:
       mynetwork:
@@ -83,7 +84,7 @@ services:
     container_name: zetaclient1
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetaclient1
     networks:
       mynetwork:

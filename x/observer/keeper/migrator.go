@@ -7,6 +7,7 @@ import (
 	v4 "github.com/zeta-chain/zetacore/x/observer/migrations/v4"
 	v5 "github.com/zeta-chain/zetacore/x/observer/migrations/v5"
 	v6 "github.com/zeta-chain/zetacore/x/observer/migrations/v6"
+	v7 "github.com/zeta-chain/zetacore/x/observer/migrations/v7"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -41,4 +42,9 @@ func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 
 func (m Migrator) Migrate5to6(ctx sdk.Context) error {
 	return v6.MigrateStore(ctx, m.observerKeeper)
+}
+
+// Migrate6to7 migrates the store from consensus version 6 to 7
+func (m Migrator) Migrate6to7(ctx sdk.Context) error {
+	return v7.MigrateStore(ctx, m.observerKeeper)
 }

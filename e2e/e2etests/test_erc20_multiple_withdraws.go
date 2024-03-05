@@ -10,7 +10,28 @@ import (
 	testcontract "github.com/zeta-chain/zetacore/testutil/contracts"
 )
 
-func TestMultipleWithdraws(r *runner.E2ERunner) {
+func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
+	approvedAmount := big.NewInt(1e18)
+	if len(args) != 2 {
+		panic("TestMultipleWithdraws requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+	}
+
+	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok || withdrawalAmount.Cmp(approvedAmount) >= 0 {
+		panic("Invalid withdrawal amount specified for TestMultipleWithdraws.")
+	}
+
+	numberOfWithdrawals, ok := big.NewInt(0).SetString(args[1], 10)
+	if !ok || numberOfWithdrawals.Int64() < 1 {
+		panic("Invalid number of withdrawals specified for TestMultipleWithdraws.")
+	}
+
+	// calculate total withdrawal to ensure it doesn't exceed approved amount.
+	totalWithdrawal := big.NewInt(0).Mul(withdrawalAmount, numberOfWithdrawals)
+	if totalWithdrawal.Cmp(approvedAmount) >= 0 {
+		panic("Total withdrawal amount exceeds approved limit.")
+	}
+
 	// deploy withdrawer
 	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZevmAuth, r.ZevmClient)
 	if err != nil {
@@ -18,7 +39,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner) {
 	}
 
 	// approve
-	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
+	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -29,7 +50,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner) {
 	r.Logger.Info("USDT ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
-	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, big.NewInt(1e18))
+	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -46,7 +67,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner) {
 	}
 	r.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
 
-	if bal.Int64() < 1000 {
+	if bal.Int64() < totalWithdrawal.Int64() {
 		panic("not enough USDT ZRC20 balance!")
 	}
 
@@ -55,8 +76,8 @@ func TestMultipleWithdraws(r *runner.E2ERunner) {
 		r.ZevmAuth,
 		r.DeployerAddress.Bytes(),
 		r.USDTZRC20Addr,
-		big.NewInt(100),
-		big.NewInt(3),
+		withdrawalAmount,
+		numberOfWithdrawals,
 	)
 	if err != nil {
 		panic(err)
@@ -66,13 +87,13 @@ func TestMultipleWithdraws(r *runner.E2ERunner) {
 		panic("withdraw failed")
 	}
 
-	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, 3, r.Logger, r.CctxTimeout)
+	cctxs := utils.WaitCctxsMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, int(numberOfWithdrawals.Int64()), r.Logger, r.CctxTimeout)
 	if len(cctxs) != 3 {
 		panic(fmt.Sprintf("cctxs length is not correct: %d", len(cctxs)))
 	}
 
 	// verify the withdraw value
 	for _, cctx := range cctxs {
-		verifyTransferAmountFromCCTX(r, cctx, 100)
+		verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
 	}
 }
