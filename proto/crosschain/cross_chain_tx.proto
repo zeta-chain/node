@@ -13,7 +13,7 @@ enum CctxStatus {
   OutboundMined = 3; // the corresponding outbound tx is mined
   PendingRevert = 4; // outbound cannot succeed; should revert inbound
   Reverted = 5; // inbound reverted.
-  Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort
+  Aborted = 6; // inbound tx error or invalid paramters and cannot revert; just abort. But the amount can be refunded to zetachain using and admin proposal
 }
 
 enum TxFinalizationStatus {
@@ -77,6 +77,7 @@ message Status {
   CctxStatus status = 1;
   string status_message = 2;
   int64 lastUpdate_timestamp = 3;
+  bool isAbortRefunded = 4;
 }
 
 message CrossChainTx {

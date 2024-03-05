@@ -1,24 +1,112 @@
 # CHANGELOG
+## Version: v14
+
+### Fixes 
+- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Unreleased
 
-* `zetaclientd start` : 2 inputs required from stdin
+### Breaking Changes
+
+* Admin policies have been moved from `observer` to a new module `authority`.
+  * Updating admin policies now requires to send a governance proposal executing the `UpdatePolicies` message in the `authority` module.
+  * The `Policies` query of the `authority` module must be used to get the current admin policies.
+  * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
 
 ### Refactor
 
-* [1630](https://github.com/zeta-chain/node/pull/1630) added password prompts for hotkey and tss keyshare in zetaclient
+* [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
+* [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
+* [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+
+### Features
+
+* [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+* [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
+
+### Tests
+
+* [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1816](https://github.com/zeta-chain/node/pull/1816) - add args to e2e tests
+* [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
+* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address 
+
+### Chores
+
+* [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+## Version: v13.0.0
+
+### Breaking Changes
+
+* `zetaclientd start`: now requires 2 inputs from stdin: hotkey password and tss keyshare password
   Starting zetaclient now requires two passwords to be input; one for the hotkey and another for the tss key-share.
 * `MsgRemoveForeignCoin`: `Name` field has been renamed in to `ZRC20Address`
 
+### Features
+
+* [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+* [1811](https://github.com/zeta-chain/node/pull/1811) - add a message to withdraw emission rewards
+
+### Docs
+
+* [1731](https://github.com/zeta-chain/node/pull/1731) added doc for hotkey and tss key-share password prompts.
+
+### Features
+
+*[1728] (https://github.com/zeta-chain/node/pull/1728) - allow aborted transactions to be refunded by minting tokens to zEvm.
+
+### Refactor
+
+* [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
+* [1630](https://github.com/zeta-chain/node/pull/1630) - added password prompts for hotkey and tss keyshare in zetaclient
+* [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
+
 ### Fixes
 
+* [1678](https://github.com/zeta-chain/node/issues/1678) - clean cached stale block to fix evm outtx hash mismatch
 * [1690](https://github.com/zeta-chain/node/issues/1690) - double watched gas prices and fix btc scheduler
 * [1687](https://github.com/zeta-chain/node/pull/1687) - only use EVM supported chains for gas stability pool
 * [1692](https://github.com/zeta-chain/node/pull/1692) - fix get params query for emissions module
+* [1706](https://github.com/zeta-chain/node/pull/1706) - fix CLI crosschain show-out-tx-tracker
+* [1707](https://github.com/zeta-chain/node/issues/1707) - fix bitcoin fee rate estimation
+* [1712](https://github.com/zeta-chain/node/issues/1712) - increase EVM outtx inclusion timeout to 20 minutes
+* [1733](https://github.com/zeta-chain/node/pull/1733) - remove the unnecessary 2x multiplier in the convertGasToZeta RPC
+* [1721](https://github.com/zeta-chain/node/issues/1721) - zetaclient should provide bitcoin_chain_id when querying TSS address
+* [1744](https://github.com/zeta-chain/node/pull/1744) - added cmd to encrypt tss keyshare file, allowing empty tss password for backward compatibility.
 
 ### Tests
 
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
+* [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
+* [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
+
+* [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
+* [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
+
+### CI
+
+* Adjusted the release pipeline to be a manually executed pipeline with an approver step. The pipeline now executes all the required tests run before the approval step unless skipped. 
+* Added pipeline to build and push docker images into dockerhub on release for ubuntu and macos.
+* Adjusted the pipeline for building and pushing docker images for MacOS to install and run docker.
+* Added docker-compose and make commands for launching full nodes. `make mainnet-zetarpc-node`  `make mainnet-bitcoind-node`
+* Made adjustments to the docker-compose for launching mainnet full nodes to include examples of using the docker images build from the docker image build pipeline.
+* [1736](https://github.com/zeta-chain/node/pull/1736) - chore: add Ethermint endpoints to OpenAPI
+* Re-wrote Dockerfile for building Zetacored docker images. 
+* Adjusted the docker-compose files for Zetacored nodes to utilize the new docker image.
+* Added scripts for the new docker image that facilitate the start up automation.
+* Adjusted the docker pipeline slightly to pull the version on PR from the app.go file.
+* [1781](https://github.com/zeta-chain/node/pull/1781) - add codecov coverage report in CI
+
+### Features
+
+* [1425](https://github.com/zeta-chain/node/pull/1425) add `whitelist-erc20` command
+
+
+### Chores
+
+* [1729](https://github.com/zeta-chain/node/pull/1729) - add issue templates
+* [1754](https://github.com/zeta-chain/node/pull/1754) - cleanup expected keepers
 
 ## Version: v12.2.4
 
@@ -33,6 +121,10 @@
 * [1663](https://github.com/zeta-chain/node/issues/1663) - skip Mumbai empty block if ethclient sanity check fails
 * [1661](https://github.com/zeta-chain/node/issues/1661) - use estimated SegWit tx size for Bitcoin gas fee calculation
 * [1667](https://github.com/zeta-chain/node/issues/1667) - estimate SegWit tx size in uinit of vByte
+* [1675](https://github.com/zeta-chain/node/issues/1675) - use chain param ConfirmationCount for bitcoin confirmation
+
+## Chores
+* [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use require testing package for the entire node folder
 
 ## Version: v12.1.0
 
@@ -60,6 +152,7 @@
 * [1585](https://github.com/zeta-chain/node/pull/1585) - Updated release instructions
 * [1615](https://github.com/zeta-chain/node/pull/1615) - Add upgrade handler for version v12.1.0
 
+
 ### Features
 
 * [1591](https://github.com/zeta-chain/node/pull/1591) - support lower gas limit for voting on inbound and outbound transactions
@@ -68,6 +161,7 @@
 ### Refactoring
 
 * [1628](https://github.com/zeta-chain/node/pull/1628) optimize return and simplify code
+* [1640](https://github.com/zeta-chain/node/pull/1640) reorganize zetaclient into subpackages
 
 ### Refactoring
 * [1619](https://github.com/zeta-chain/node/pull/1619) - Add evm fee calculation to tss migration of evm chains
@@ -245,4 +339,3 @@ Getting the correct TSS address for Bitcoin now requires proviidng the Bitcoin c
 
 * [1218](https://github.com/zeta-chain/node/pull/1218) - cross-compile release binaries and simplify PR testings
 * [1302](https://github.com/zeta-chain/node/pull/1302) - add mainnet builds to goreleaser
-

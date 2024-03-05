@@ -77,7 +77,7 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 		"wZetaContractAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call wZetaContractAddress")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wZetaContractAddress (%s)", err.Error())
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -85,6 +85,10 @@ func (k *Keeper) GetWZetaContractAddress(ctx sdk.Context) (ethcommon.Address, er
 	var wzetaResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "wZetaContractAddress", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack wZetaContractAddress: %s", err.Error())
+	}
+
+	if wzetaResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "wzeta contract invalid address")
 	}
 	return wzetaResponse.Value, nil
 }
@@ -113,16 +117,20 @@ func (k *Keeper) GetUniswapV2FactoryAddress(ctx sdk.Context) (ethcommon.Address,
 		"uniswapv2FactoryAddress",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call uniswapv2FactoryAddress")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2FactoryAddress (%s)", err.Error())
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
 	}
-	var wzetaResponse AddressResponse
-	if err := sysABI.UnpackIntoInterface(&wzetaResponse, "uniswapv2FactoryAddress", res.Ret); err != nil {
+	var uniswapFactoryResponse AddressResponse
+	if err := sysABI.UnpackIntoInterface(&uniswapFactoryResponse, "uniswapv2FactoryAddress", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2FactoryAddress: %s", err.Error())
 	}
-	return wzetaResponse.Value, nil
+
+	if uniswapFactoryResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap factory contract invalid address")
+	}
+	return uniswapFactoryResponse.Value, nil
 }
 
 // GetUniswapV2Router02Address returns the uniswapv2 router02 address on ZetaChain
@@ -149,7 +157,7 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 		"uniswapv2Router02Address",
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call uniswapv2Router02Address")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call uniswapv2Router02Address (%s)", err.Error())
 	}
 	type AddressResponse struct {
 		Value ethcommon.Address
@@ -157,6 +165,10 @@ func (k *Keeper) GetUniswapV2Router02Address(ctx sdk.Context) (ethcommon.Address
 	var routerResponse AddressResponse
 	if err := sysABI.UnpackIntoInterface(&routerResponse, "uniswapv2Router02Address", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack uniswapv2Router02Address: %s", err.Error())
+	}
+
+	if routerResponse.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "uniswap router contract invalid address")
 	}
 	return routerResponse.Value, nil
 }
@@ -185,7 +197,7 @@ func (k *Keeper) CallWZetaDeposit(ctx sdk.Context, sender ethcommon.Address, amo
 		"deposit",
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(err, "failed to call wzeta deposit")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to call wzeta deposit (%s)", err.Error())
 	}
 	return nil
 }
@@ -215,7 +227,7 @@ func (k *Keeper) QueryWZetaBalanceOf(ctx sdk.Context, addr ethcommon.Address) (*
 		addr,
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to call balanceOf")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call balanceOf (%s)", err.Error())
 	}
 
 	type BigIntResponse struct {
@@ -254,7 +266,7 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 		chainid,
 	)
 	if err != nil {
-		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to call gasCoinZRC20ByChainId")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call gasCoinZRC20ByChainId (%s)", err.Error())
 	}
 
 	type AddressResponse struct {
@@ -263,6 +275,9 @@ func (k *Keeper) QuerySystemContractGasCoinZRC20(ctx sdk.Context, chainid *big.I
 	var zrc20Res AddressResponse
 	if err := sysABI.UnpackIntoInterface(&zrc20Res, "gasCoinZRC20ByChainId", res.Ret); err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrABIUnpack, "failed to unpack gasCoinZRC20ByChainId: %s", err.Error())
+	}
+	if zrc20Res.Value == (ethcommon.Address{}) {
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "gas coin contract invalid address")
 	}
 	return zrc20Res.Value, nil
 }
@@ -315,7 +330,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForTokens(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactTokensForTokens")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactTokensForTokens (%s)", err.Error())
 	}
 
 	amounts := new([3]*big.Int)
@@ -373,7 +388,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactTokensForETH(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactTokensForETH")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactTokensForETH (%s)", err.Error())
 	}
 
 	amounts := new([2]*big.Int)
@@ -425,7 +440,7 @@ func (k *Keeper) CallUniswapV2RouterSwapExactETHForToken(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapExactETHForTokens")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapExactETHForTokens (%s)", err.Error())
 	}
 
 	amounts := new([2]*big.Int)
@@ -476,7 +491,7 @@ func (k *Keeper) CallUniswapV2RouterSwapEthForExactToken(
 		big.NewInt(1e17),
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method swapETHForExactTokens")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method swapETHForExactTokens (%s)", err.Error())
 	}
 
 	amounts := new([2]*big.Int)
@@ -518,7 +533,7 @@ func (k *Keeper) QueryUniswapV2RouterGetZetaAmountsIn(ctx sdk.Context, amountOut
 		[]ethcommon.Address{wzetaAddr, outZRC4},
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method getAmountsIn (%s)", err.Error())
 	}
 
 	amounts := new([2]*big.Int)
@@ -559,7 +574,7 @@ func (k *Keeper) QueryUniswapV2RouterGetZRC4AmountsIn(ctx sdk.Context, amountOut
 		[]ethcommon.Address{inZRC4, wzetaAddr},
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method getAmountsIn (%s)", err.Error())
 	}
 
 	amounts := new([2]*big.Int)
@@ -600,7 +615,7 @@ func (k *Keeper) QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn(ctx sdk.Context, amo
 		[]ethcommon.Address{inZRC4, wzetaAddr, outZRC4},
 	)
 	if err != nil {
-		return nil, cosmoserrors.Wrapf(err, "failed to CallEVM method getAmountsIn")
+		return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method getAmountsIn (%s)", err.Error())
 	}
 
 	amounts := new([3]*big.Int)
@@ -637,7 +652,7 @@ func (k *Keeper) CallZRC20Burn(
 		amount,
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(err, "failed to CallEVM method burn")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method burn (%s)", err.Error())
 	}
 
 	return nil
@@ -670,7 +685,7 @@ func (k *Keeper) CallZRC20Deposit(
 		amount,
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(err, "failed to CallEVM method burn")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method burn (%s)", err.Error())
 	}
 	return nil
 }
@@ -703,7 +718,7 @@ func (k *Keeper) CallZRC20Approve(
 		amount,
 	)
 	if err != nil {
-		return cosmoserrors.Wrapf(err, "failed to CallEVM method approve")
+		return cosmoserrors.Wrapf(types.ErrContractCall, "failed to CallEVM method approve (%s)", err.Error())
 	}
 
 	return nil

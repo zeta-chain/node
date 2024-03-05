@@ -135,12 +135,12 @@ func TestKeeper_CctxListPending(t *testing.T) {
 		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
 
 		// set some cctxs as pending below nonce
-		cctx1, found := k.GetCrossChainTx(ctx, "1337-940")
+		cctx1, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("1337-940"))
 		require.True(t, found)
 		cctx1.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, cctx1)
 
-		cctx2, found := k.GetCrossChainTx(ctx, "1337-955")
+		cctx2, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("1337-955"))
 		require.True(t, found)
 		cctx2.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, cctx2)

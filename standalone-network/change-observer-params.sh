@@ -1,2 +1,0 @@
-zetacored tx gov  submit-proposal  proposal_feemarket.json --from zeta --keyring-backend=test -b block  --chain-id=localnet_101-1 --gas=auto --gas-prices=0.1azeta --gas-adjustment=1.5 --yes
-zetacored tx gov vote 1 yes --from zeta --keyring-backend test --chain-id localnet_101-1 --yes --gas=auto --gas-prices=0.1azeta --gas-adjustment=1.5

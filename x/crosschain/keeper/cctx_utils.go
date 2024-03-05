@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/pkg/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -52,42 +52,6 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 	return nil
 }
 
-// RefundAmountOnZetaChain refunds the amount of the cctx on ZetaChain in case of aborted cctx
-// NOTE: GetCurrentOutTxParam should contain the last up to date cctx amount
-func (k Keeper) RefundAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, inputAmount math.Uint) error {
-	// preliminary checks
-	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
-		return errors.New("unsupported coin type for refund on ZetaChain")
-	}
-	if !common.IsEVMChain(cctx.InboundTxParams.SenderChainId) {
-		return errors.New("only EVM chains are supported for refund on ZetaChain")
-	}
-	sender := ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
-	if sender == (ethcommon.Address{}) {
-		return errors.New("invalid sender address")
-	}
-	if inputAmount.IsNil() || inputAmount.IsZero() {
-		return errors.New("no amount to refund")
-	}
-
-	// get address of the zrc20
-	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
-	if !found {
-		return fmt.Errorf("asset %s zrc not found", cctx.InboundTxParams.Asset)
-	}
-	zrc20 := ethcommon.HexToAddress(fc.Zrc20ContractAddress)
-	if zrc20 == (ethcommon.Address{}) {
-		return fmt.Errorf("asset %s invalid zrc address", cctx.InboundTxParams.Asset)
-	}
-
-	// deposit the amount to the sender
-	if _, err := k.fungibleKeeper.DepositZRC20(ctx, zrc20, sender, inputAmount.BigInt()); err != nil {
-		return errors.New("failed to deposit zrc20 on ZetaChain" + err.Error())
-	}
-
-	return nil
-}
-
 // GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
 // It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
 func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
@@ -125,4 +89,19 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uin
 func IsPending(cctx types.CrossChainTx) bool {
 	// pending inbound is not considered a "pending" state because it has not reached consensus yet
 	return cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound || cctx.CctxStatus.Status == types.CctxStatus_PendingRevert
+}
+
+// GetAbortedAmount returns the amount to refund for a given CCTX .
+// If the CCTX has an outbound transaction, it returns the amount of the outbound transaction.
+// If OutTxParams is nil or the amount is zero, it returns the amount of the inbound transaction.
+// This is because there might be a case where the transaction is set to be aborted before paying gas or creating an outbound transaction.In such a situation we can refund the entire amount that has been locked in connector or TSS
+func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
+	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
+		return cctx.GetCurrentOutTxParam().Amount
+	}
+	if cctx.InboundTxParams != nil {
+		return cctx.InboundTxParams.Amount
+	}
+
+	return sdkmath.ZeroUint()
 }

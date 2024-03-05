@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -17,11 +18,16 @@ import (
 
 func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 	t.Run("can deploy a new zrc20", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		msgServer := keeper.NewMsgServerImpl(*k)
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -55,6 +61,8 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, gasAddress, gas.Hex())
 
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		// can deploy non-gas zrc20
 		res, err = msgServer.DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
 			admin,
@@ -87,15 +95,21 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 	})
 
 	t.Run("should not deploy a new zrc20 if not admin", func(t *testing.T) {
-		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 		chainID := getValidChainID(t)
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
 		// should not deploy a new zrc20 if not admin
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, types.NewMsgDeployFungibleCoinZRC20(
-			sample.AccAddress(),
+			admin,
 			sample.EthAddress().Hex(),
 			chainID,
 			8,
@@ -109,10 +123,13 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 	})
 
 	t.Run("should not deploy a new zrc20 with wrong decimal", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -133,10 +150,14 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 	})
 
 	t.Run("should not deploy a new zrc20 with invalid chain ID", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
 
@@ -156,10 +177,14 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 	})
 
 	t.Run("should not deploy an existing gas or erc20 contract", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.FungibleKeeper(t)
+		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseAuthorityMock: true,
+		})
 		k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
 		admin := sample.AccAddress()
-		setAdminPolicies(ctx, zk, admin, observertypes.Policy_Type_group2)
+		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
+
 		chainID := getValidChainID(t)
 
 		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
@@ -175,17 +200,27 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		)
 
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		// Attempt to deploy the same gas token twice should result in error
 		_, err := keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.NoError(t, err)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrForeignCoinAlreadyExist)
 
 		// Similar to above, redeploying existing erc20 should also fail
 		deployMsg.CoinType = common.CoinType_ERC20
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.NoError(t, err)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)
 		require.Error(t, err)
 		require.ErrorIs(t, err, types.ErrForeignCoinAlreadyExist)

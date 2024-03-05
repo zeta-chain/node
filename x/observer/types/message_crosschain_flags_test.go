@@ -6,6 +6,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -117,11 +118,11 @@ func TestGasPriceIncreaseFlags_Validate(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
+func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 	tests := []struct {
 		name string
 		msg  types.MsgUpdateCrosschainFlags
-		want types.Policy_Type
+		want authoritytypes.PolicyType
 	}{
 		{
 			name: "disabling outbound and inbound allows group 1",
@@ -132,7 +133,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				BlockHeaderVerificationFlags: nil,
 				GasPriceIncreaseFlags:        nil,
 			},
-			want: types.Policy_Type_group1,
+			want: authoritytypes.PolicyType_groupEmergency,
 		},
 		{
 			name: "disabling outbound and inbound and block header verification allows group 1",
@@ -146,10 +147,10 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: types.Policy_Type_group1,
+			want: authoritytypes.PolicyType_groupEmergency,
 		},
 		{
-			name: "updating gas price increase flags requires group 2",
+			name: "updating gas price increase flags asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  false,
@@ -165,10 +166,10 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 					MaxPendingCctxs:         100,
 				},
 			},
-			want: types.Policy_Type_group2,
+			want: authoritytypes.PolicyType_groupAdmin,
 		},
 		{
-			name: "enabling inbound requires group 2",
+			name: "enabling inbound asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  true,
@@ -179,10 +180,10 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: types.Policy_Type_group2,
+			want: authoritytypes.PolicyType_groupAdmin,
 		},
 		{
-			name: "enabling outbound requires group 2",
+			name: "enabling outbound asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  false,
@@ -193,10 +194,10 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: types.Policy_Type_group2,
+			want: authoritytypes.PolicyType_groupAdmin,
 		},
 		{
-			name: "enabling eth header verification requires group 2",
+			name: "enabling eth header verification asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  false,
@@ -207,10 +208,10 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: types.Policy_Type_group2,
+			want: authoritytypes.PolicyType_groupAdmin,
 		},
 		{
-			name: "enabling btc header verification requires group 2",
+			name: "enabling btc header verification asserts group 2",
 			msg: types.MsgUpdateCrosschainFlags{
 				Creator:           sample.AccAddress(),
 				IsInboundEnabled:  false,
@@ -221,13 +222,13 @@ func TestMsgUpdateCrosschainFlags_GetRequiredGroup(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: types.Policy_Type_group2,
+			want: authoritytypes.PolicyType_groupAdmin,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, tt.msg.GetRequiredGroup())
+			require.EqualValues(t, tt.want, tt.msg.GetRequiredPolicyType())
 		})
 	}
 }

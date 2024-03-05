@@ -29,7 +29,7 @@ EVM-compatibility.
 ## Building the zetacored/zetaclientd binaries
 For the Athens 3 testnet, clone this repository, checkout the latest release tag, and type the following command to build the binaries:
 ```
-make install-testnet
+make install
 ```
 to build. 
 
@@ -73,7 +73,7 @@ documentation for all the messages in that module.
 ## Running tests
 
 To check that the source code is working as expected, refer to the manual on how
-to [run the smoke test](./contrib/localnet/README.md).
+to [run the E2E test](./LOCAL_TESTING.md).
 
 ## Community
 
@@ -92,23 +92,87 @@ Creating a release candidate for testing is a straightforward process. Here are 
 By following these steps, you can efficiently create a release candidate for QA and validation. In the future we will make this automatically deploy to a testnet when a -rc branch is created. 
 Currently, raising the proposal to deploy to testnet is a manual process via GovOps repo. 
 
-## Creating a Release
-After the Release Candidate has been fully tested, creating a final release for use on public networks is a straightforward process. Here are the steps to follow:
+## Creating a Release / Hotfix Release
+
+To create a release simply execute the publish-release workflow and follow the steps below.
 
 ### Steps
- - Step 1. Open a Pull Request (PR): Begin by opening a PR from the release candidate branch (e.g., vx.x.x-rc) to the main branch.
- - Step 2. Testing and Validation: Allow the automated tests, including E2E tests, linting, and upgrade path testing, to run. Ensure that these tests pass successfully.
- - Step 3. Approval Process: Obtain the necessary approvals from relevant stakeholders or team members.
- - Step 4. Merging PR: Once all requirements have been met and the PR has received the required approvals, merge the PR. The automation will then be triggered to proceed with the release.
+ - Step 1. Go to this pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml
+ - Step 2. Select the dropdown branch / tag you want to create the release with.
+ - Step 3. In the version input, include the version of your release. Note. The major version must match what is in the upgrade handler.
+ - Step 4. Select if you want to skip the tests by checking the checkbox for skip tests.
+ - Step 5. Once the testing steps pass it will create a Github Issue. This Github Issue needes to be approved by one of the approvers: kingpinXD,lumtis,brewmaster012
 
-By following these steps, you can efficiently create a release, ensuring that the code has been thoroughly tested and validated before deployment to public networks.
+Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.
 
-## Creating a Hotfix Release
-Creating a hotfix release is a straightforward process. Here are the steps to follow:
 
-### Steps
- - Step 1. Execute pipeline: https://github.com/zeta-chain/node/actions/workflows/publish-release.yml 
- - Step 2. select branch when running pipeline manually your hotfix lives on.
- - Step 3. specify the version in the input field and run workflow. ex. vx.x.x-hotfix recommended.
+Here is the formatted documentation in Markdown:
 
-Wheny ou execute with hotfix it will build and publish the binaries to the releases. 
+---
+
+### Starting Full Zetacored Nodes
+
+#### Step 1: Choose the Network
+
+To start a node, use the `make` command with the `DOCKER_TAG` of the image you wish to use from Docker Hub.
+
+- **For Mainnet:**
+
+  ```shell
+  # Use this command to start a mainnet node with a specific Docker tag
+  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
+  # Example:
+  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  ```
+
+- **For Athens3:**
+
+  ```shell
+  # The command is the same for Athens3, just ensure you're specifying the correct Docker tag
+  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
+  # Example:
+  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  ```
+
+**Note:** The default configuration is to restore from state sync. This process will download the necessary configurations and information from [Zeta-Chain Network Config](https://github.com/zeta-chain/network-config) and configure the node for state sync restore.
+
+#### Changing the Sync Type
+
+If you wish to change the sync type, you will need to modify the `docker-compose.yml` file located in `contrib/{NETWORK}/zetacored/`.
+
+Change the following values according to your needs:
+
+```yaml
+# Possible values for RESTORE_TYPE are "snapshot", "snapshot-archive", or "statesync"
+RESTORE_TYPE: "statesync"
+MONIKER: "local-test"
+RE_DO_START_SEQUENCE: "false"
+```
+
+To perform a snapshot restore from the latest snapshot, simply change the `RESTORE_TYPE` to either `snapshot` or `snapshot-archive`.
+
+---
+
+Here's the formatted documentation in Markdown for starting a full Bitcoind Mainnet node:
+
+---
+
+### Starting Full Bitcoind Mainnet Node
+
+#### Step 1: Restore a Mainnet BTC Watcher Node
+
+To restore a mainnet BTC watcher node from a BTC snapshot, run the following `make` command and specify the `DOCKER_TAG` with the image you want to use from Docker Hub.
+
+```commandline
+make mainnet-bitcoind-node DOCKER_TAG={DOCKER_TAG_FROM_DOCKER_HUB_TO_USE}
+# Example:
+make mainnet-bitcoind-node DOCKER_TAG=36-mainnet
+```
+
+#### Updating the TSS Address
+
+If you need to update the TSS (Threshold Signature Scheme) address being watched, please edit the `docker-compose.yml` file located at `contrib/mainnet/bitcoind/docker-compose.yml`.
+
+To update, simply change the user and password you wish to use, and the TSS address to watch. Then, run the command provided above to apply your changes.
+
+---

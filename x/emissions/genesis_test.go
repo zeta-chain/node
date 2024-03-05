@@ -22,7 +22,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	// Init and export
-	k, ctx := keepertest.EmissionsKeeper(t)
+	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 	emissions.InitGenesis(ctx, *k, genesisState)
 	got := emissions.ExportGenesis(ctx, *k)
 	require.NotNil(t, got)

@@ -4,6 +4,12 @@ import (
 	"fmt"
 )
 
+func (m *Status) AbortRefunded(timeStamp int64) {
+	m.IsAbortRefunded = true
+	m.StatusMessage = "CCTX aborted and Refunded"
+	m.LastUpdateTimestamp = timeStamp
+}
+
 // empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {

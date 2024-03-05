@@ -75,12 +75,17 @@ func (chain Chain) BTCAddressFromWitnessProgram(witnessProgram []byte) (string, 
 
 // DecodeAddress decode the address string to bytes
 func (chain Chain) DecodeAddress(addr string) ([]byte, error) {
-	if IsEVMChain(chain.ChainId) {
+	return DecodeAddressFromChainID(chain.ChainId, addr)
+}
+
+// DecodeAddressFromChainID decode the address string to bytes
+func DecodeAddressFromChainID(chainID int64, addr string) ([]byte, error) {
+	if IsEVMChain(chainID) {
 		return ethcommon.HexToAddress(addr).Bytes(), nil
-	} else if IsBitcoinChain(chain.ChainId) {
+	} else if IsBitcoinChain(chainID) {
 		return []byte(addr), nil
 	}
-	return nil, fmt.Errorf("chain (%d) not supported", chain.ChainId)
+	return nil, fmt.Errorf("chain (%d) not supported", chainID)
 }
 
 func IsZetaChain(chainID int64) bool {
@@ -112,10 +117,6 @@ func IsHeaderSupportedEvmChain(chainID int64) bool {
 		chainID == 1337 || // eth privnet
 		chainID == 1 || // eth mainnet
 		chainID == 56 // bsc mainnet
-}
-
-func (chain Chain) IsKlaytnChain() bool {
-	return chain.ChainId == 1001
 }
 
 // SupportMerkleProof returns true if the chain supports block header-based verification
@@ -195,7 +196,7 @@ func GetBTCChainParams(chainID int64) (*chaincfg.Params, error) {
 	case 8332:
 		return &chaincfg.MainNetParams, nil
 	default:
-		return nil, fmt.Errorf("error chainID %d is not a Bitcoin chain", chainID)
+		return nil, fmt.Errorf("error chainID %d is not a bitcoin chain", chainID)
 	}
 }
 
@@ -208,7 +209,7 @@ func GetBTCChainIDFromChainParams(params *chaincfg.Params) (int64, error) {
 	case chaincfg.MainNetParams.Name:
 		return 8332, nil
 	default:
-		return 0, fmt.Errorf("error chain %s is not a Bitcoin chain", params.Name)
+		return 0, fmt.Errorf("error chain %s is not a bitcoin chain", params.Name)
 	}
 }
 

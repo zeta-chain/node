@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
 )
 
@@ -43,8 +43,8 @@ func TestKeeper_CalculateFixedValidatorRewards(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			blockRewards, err := emissionskeeper.CalculateFixedValidatorRewards(tc.blockTimeInSecs)
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expectedBlockRewards, blockRewards)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedBlockRewards, blockRewards)
 		})
 	}
 }

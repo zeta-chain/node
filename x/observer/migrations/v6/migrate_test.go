@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	v6 "github.com/zeta-chain/zetacore/x/observer/migrations/v6"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -12,7 +12,7 @@ import (
 
 func TestMigrateObserverParams(t *testing.T) {
 	t.Run("Migrate when keygen is Pending", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		k.SetKeygen(ctx, types.Keygen{
 			Status:      types.KeygenStatus_PendingKeygen,
 			BlockNumber: math.MaxInt64,
@@ -49,15 +49,15 @@ func TestMigrateObserverParams(t *testing.T) {
 			FinalizedZetaHeight: finalizedZetaHeight,
 		})
 		err := v6.MigrateStore(ctx, k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		keygen, found := k.GetKeygen(ctx)
-		assert.True(t, found)
-		assert.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
-		assert.Equal(t, keygenHeight, keygenHeight)
-		assert.Equal(t, participantList, participantList)
+		require.True(t, found)
+		require.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
+		require.Equal(t, keygenHeight, keygenHeight)
+		require.Equal(t, participantList, participantList)
 	})
 	t.Run("Migrate when keygen is not Pending", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		participantList := []string{
 			"zetapub1addwnpepqglunjrgl3qg08duxq9pf28jmvrer3crwnnfzp6m0u0yh9jk9mnn5p76utc",
 			"zetapub1addwnpepqwwpjwwnes7cywfkr0afme7ymk8rf5jzhn8pfr6qqvfm9v342486qsrh4f5",
@@ -76,12 +76,12 @@ func TestMigrateObserverParams(t *testing.T) {
 			GranteePubkeys: participantList,
 		})
 		err := v6.MigrateStore(ctx, k)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		keygen, found := k.GetKeygen(ctx)
-		assert.True(t, found)
-		assert.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
-		assert.Equal(t, keygen.BlockNumber, keygenHeight)
-		assert.Equal(t, keygen.GranteePubkeys, participantList)
+		require.True(t, found)
+		require.Equal(t, types.KeygenStatus_KeyGenSuccess, keygen.Status)
+		require.Equal(t, keygen.BlockNumber, keygenHeight)
+		require.Equal(t, keygen.GranteePubkeys, participantList)
 	})
 
 }

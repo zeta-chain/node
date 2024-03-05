@@ -432,7 +432,7 @@ func (k Keeper) QueryZRC20Data(
 
 	zrc4ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return types.ZRC20Data{}, sdkerrors.Wrapf(
+		return types.ZRC20Data{}, cosmoserrors.Wrapf(
 			types.ErrABIUnpack, "failed to get ABI: %s", err.Error(),
 		)
 	}
@@ -583,7 +583,6 @@ func (k Keeper) CallEVM(
 		if ok {
 			errMes = fmt.Sprintf("%s, reason: %v", errMes, revertErr.ErrorData())
 		}
-
 		return resp, cosmoserrors.Wrapf(err, errMes)
 	}
 	return resp, nil

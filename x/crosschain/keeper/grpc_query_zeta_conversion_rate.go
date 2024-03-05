@@ -25,7 +25,7 @@ func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryCo
 		return nil, status.Error(codes.InvalidArgument, "invalid request: param chain")
 	}
 	gasLimit := math.NewUintFromString(request.GasLimit)
-	outTxGasFee := medianGasPrice.Mul(gasLimit).MulUint64(2) //FIXME: parameterize this to sync with where this fee is charged
+	outTxGasFee := medianGasPrice.Mul(gasLimit)
 	zrc20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chain.ChainId))
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "zrc20 not found")

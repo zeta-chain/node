@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -44,7 +43,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 
 func TestKeeper_IsAuthorized(t *testing.T) {
 	t.Run("authorized observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
@@ -52,7 +51,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		validator := sample.Validator(t, r)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
 		consAddress, err := validator.GetConsAddr()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
 			Address:             consAddress.String(),
 			StartHeight:         0,
@@ -66,11 +65,11 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
-		assert.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
@@ -78,7 +77,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		validator := sample.Validator(t, r)
 		k.GetStakingKeeper().SetValidator(ctx, validator)
 		consAddress, err := validator.GetConsAddr()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
 			Address:             consAddress.String(),
 			StartHeight:         0,
@@ -92,11 +91,11 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _ := keepertest.ObserverKeeper(t)
 
 		r := rand.New(rand.NewSource(9))
 
@@ -104,7 +103,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		validator := sample.Validator(t, r)
 
 		consAddress, err := validator.GetConsAddr()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		k.GetSlashingKeeper().SetValidatorSigningInfo(ctx, consAddress, slashingtypes.ValidatorSigningInfo{
 			Address:             consAddress.String(),
 			StartHeight:         0,
@@ -118,7 +117,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		assert.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
 
 	})
 }

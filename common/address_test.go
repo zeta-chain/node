@@ -23,20 +23,41 @@ func TestAddress(t *testing.T) {
 
 func TestDecodeBtcAddress(t *testing.T) {
 	t.Run("invalid string", func(t *testing.T) {
-		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", 18332)
+		_, err := DecodeBtcAddress("�U�ڷ���i߭����꿚�l", BtcTestNetChain().ChainId)
 		require.ErrorContains(t, err, "runtime error: index out of range")
 	})
 	t.Run("invalid chain", func(t *testing.T) {
 		_, err := DecodeBtcAddress("14CEjTd5ci3228J45GdnGeUKLSSeCWUQxK", 0)
-		require.ErrorContains(t, err, "is not a Bitcoin chain")
+		require.ErrorContains(t, err, "is not a bitcoin chain")
 	})
-	t.Run("nil pointer dereference", func(t *testing.T) {
-		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18332)
-		require.ErrorContains(t, err, "runtime error: invalid memory address or nil pointer dereference")
+	t.Run("invalid checksum", func(t *testing.T) {
+		_, err := DecodeBtcAddress("tb1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcTestNetChain().ChainId)
+		require.ErrorContains(t, err, "invalid checksum")
 	})
-	t.Run("valid address", func(t *testing.T) {
-		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", 18444)
+	t.Run("valid legacy main-net address address incorrect params TestNet", func(t *testing.T) {
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcTestNetChain().ChainId)
+		require.ErrorContains(t, err, "decode address failed")
+	})
+	t.Run("valid legacy main-net address address incorrect params RegTestNet", func(t *testing.T) {
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcRegtestChain().ChainId)
+		require.ErrorContains(t, err, "decode address failed")
+	})
+
+	t.Run("valid legacy main-net address address correct params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3", BtcMainnetChain().ChainId)
+		require.NoError(t, err)
+	})
+	t.Run("valid legacy testnet address with correct params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("n2TCLD16i8SNjwPCcgGBkTEeG6CQAcYTN1", BtcTestNetChain().ChainId)
 		require.NoError(t, err)
 	})
 
+	t.Run("non legacy valid address with incorrect params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcMainnetChain().ChainId)
+		require.ErrorContains(t, err, "address is not for network mainnet")
+	})
+	t.Run("non legacy valid address with correct params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcRegtestChain().ChainId)
+		require.NoError(t, err)
+	})
 }

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -12,7 +10,7 @@ import (
 
 // SetForeignCoins set a specific foreignCoins in the store from its index
 func (k Keeper) SetForeignCoins(ctx sdk.Context, foreignCoins types.ForeignCoins) {
-	p := types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix))
+	p := types.KeyPrefix(types.ForeignCoinsKeyPrefix)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	b := k.cdc.MustMarshal(&foreignCoins)
 	store.Set(types.ForeignCoinsKey(
@@ -25,7 +23,7 @@ func (k Keeper) GetForeignCoins(
 	ctx sdk.Context,
 	zrc20Addr string,
 ) (val types.ForeignCoins, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
 
 	b := store.Get(types.ForeignCoinsKey(
 		zrc20Addr,
@@ -51,7 +49,7 @@ func (k Keeper) RemoveForeignCoins(
 
 // GetAllForeignCoinsForChain returns all foreignCoins on a given chain
 func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64) (list []types.ForeignCoins) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -68,7 +66,7 @@ func (k Keeper) GetAllForeignCoinsForChain(ctx sdk.Context, foreignChainID int64
 
 // GetAllForeignCoins returns all foreignCoins
 func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(fmt.Sprintf("%s", types.ForeignCoinsKeyPrefix)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ForeignCoinsKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()

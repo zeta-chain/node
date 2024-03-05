@@ -32,6 +32,15 @@ func getValidEthChain(_ *testing.T) *zetacommon.Chain {
 	return &goerli
 }
 
+func getValidBTCChain() *zetacommon.Chain {
+	btcRegNet := zetacommon.BtcRegtestChain()
+	return &btcRegNet
+}
+
+func getValidBtcChainID() int64 {
+	return getValidBTCChain().ChainId
+}
+
 // getValidEthChainIDWithIndex get a valid eth chain id with index
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
@@ -45,7 +54,7 @@ func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	return 0
 }
 
-// assert that a contract has been deployed by checking stored code is non-empty.
+// require that a contract has been deployed by checking stored code is non-empty.
 func assertContractDeployment(t *testing.T, k *evmkeeper.Keeper, ctx sdk.Context, contractAddress common.Address) {
 	acc := k.GetAccount(ctx, contractAddress)
 	require.NotNil(t, acc)
@@ -166,7 +175,7 @@ func setupZRC20Pool(
 	)
 	require.NoError(t, err)
 
-	// approve the router to spend the zeta
+	// approve the router to spend the zrc20
 	err = k.CallZRC20Approve(
 		ctx,
 		types.ModuleAddressEVM,
@@ -204,22 +213,6 @@ func setupZRC20Pool(
 		liquidityAmount,
 	)
 	require.NoError(t, err)
-}
-
-// setAdminPolicies sets the admin policies for the observer module with group 1 and 2
-func setAdminPolicies(ctx sdk.Context, zk testkeeper.ZetaKeepers, admin string) {
-	params := zk.ObserverKeeper.GetParams(ctx)
-	params.AdminPolicy = []*observertypes.Admin_Policy{
-		{
-			PolicyType: observertypes.Policy_Type_group1,
-			Address:    admin,
-		},
-		{
-			PolicyType: observertypes.Policy_Type_group2,
-			Address:    admin,
-		},
-	}
-	zk.ObserverKeeper.SetParams(ctx, params)
 }
 
 // setSupportedChain sets the supported chains for the observer module

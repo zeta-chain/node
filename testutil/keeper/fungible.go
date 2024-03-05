@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -8,28 +9,33 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
-	"github.com/stretchr/testify/assert"
+	"github.com/evmos/ethermint/x/evm/statedb"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
 	fungiblemocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/fungible"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	"github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
 type FungibleMockOptions struct {
-	UseBankMock     bool
-	UseAccountMock  bool
-	UseObserverMock bool
-	UseEVMMock      bool
+	UseBankMock      bool
+	UseAccountMock   bool
+	UseObserverMock  bool
+	UseEVMMock       bool
+	UseAuthorityMock bool
 }
 
 var (
 	FungibleMocksAll = FungibleMockOptions{
-		UseBankMock:     true,
-		UseAccountMock:  true,
-		UseObserverMock: true,
-		UseEVMMock:      true,
+		UseBankMock:      true,
+		UseAccountMock:   true,
+		UseObserverMock:  true,
+		UseEVMMock:       true,
+		UseAuthorityMock: true,
 	}
 	FungibleNoMocks = FungibleMockOptions{}
 )
@@ -43,6 +49,7 @@ func initFungibleKeeper(
 	bankKeepr types.BankKeeper,
 	evmKeeper types.EVMKeeper,
 	observerKeeper types.ObserverKeeper,
+	authorityKeeper types.AuthorityKeeper,
 ) *keeper.Keeper {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -58,6 +65,7 @@ func initFungibleKeeper(
 		evmKeeper,
 		bankKeepr,
 		observerKeeper,
+		authorityKeeper,
 	)
 }
 
@@ -74,6 +82,13 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	// Create regular keepers
 	sdkKeepers := NewSDKKeepers(cdc, db, stateStore)
 
+	// Create authority keeper
+	authorityKeeperTmp := initAuthorityKeeper(
+		cdc,
+		db,
+		stateStore,
+	)
+
 	// Create observer keeper
 	observerKeeperTmp := initObserverKeeper(
 		cdc,
@@ -82,11 +97,14 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
+		authorityKeeperTmp,
 	)
 	zetaKeepers := ZetaKeepers{
-		ObserverKeeper: observerKeeperTmp,
+		ObserverKeeper:  observerKeeperTmp,
+		AuthorityKeeper: &authorityKeeperTmp,
 	}
 	var observerKeeper types.ObserverKeeper = observerKeeperTmp
+	var authorityKeeper types.AuthorityKeeper = authorityKeeperTmp
 
 	// Create the fungible keeper
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
@@ -106,6 +124,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	var authKeeper types.AccountKeeper = sdkKeepers.AuthKeeper
 	var bankKeeper types.BankKeeper = sdkKeepers.BankKeeper
 	var evmKeeper types.EVMKeeper = sdkKeepers.EvmKeeper
+
 	if mockOptions.UseAccountMock {
 		authKeeper = fungiblemocks.NewFungibleAccountKeeper(t)
 	}
@@ -118,6 +137,9 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 	if mockOptions.UseEVMMock {
 		evmKeeper = fungiblemocks.NewFungibleEVMKeeper(t)
 	}
+	if mockOptions.UseAuthorityMock {
+		authorityKeeper = fungiblemocks.NewFungibleAuthorityKeeper(t)
+	}
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -128,6 +150,7 @@ func FungibleKeeperWithMocks(t testing.TB, mockOptions FungibleMockOptions) (*ke
 		evmKeeper,
 		bankKeeper,
 		observerKeeper,
+		authorityKeeper,
 	)
 
 	fungiblemodule.InitGenesis(ctx, *k, *types.DefaultGenesis())
@@ -147,26 +170,98 @@ func FungibleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, Zeta
 	return k, ctx, sdkk, zk
 }
 
+// GetFungibleAuthorityMock returns a new fungible authority keeper mock
+func GetFungibleAuthorityMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAuthorityKeeper {
+	cok, ok := keeper.GetAuthorityKeeper().(*fungiblemocks.FungibleAuthorityKeeper)
+	require.True(t, ok)
+	return cok
+}
+
 func GetFungibleAccountMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleAccountKeeper {
 	fak, ok := keeper.GetAuthKeeper().(*fungiblemocks.FungibleAccountKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fak
 }
 
 func GetFungibleBankMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleBankKeeper {
 	fbk, ok := keeper.GetBankKeeper().(*fungiblemocks.FungibleBankKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fbk
 }
 
 func GetFungibleObserverMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleObserverKeeper {
 	fok, ok := keeper.GetObserverKeeper().(*fungiblemocks.FungibleObserverKeeper)
-	assert.True(t, ok)
+	require.True(t, ok)
 	return fok
 }
 
-func GetFungibleEVMMock(t testing.TB, keeper *keeper.Keeper) *fungiblemocks.FungibleEVMKeeper {
+func GetFungibleEVMMock(t testing.TB, keeper *keeper.Keeper) *FungibleMockEVMKeeper {
 	fek, ok := keeper.GetEVMKeeper().(*fungiblemocks.FungibleEVMKeeper)
-	assert.True(t, ok)
-	return fek
+	require.True(t, ok)
+	return &FungibleMockEVMKeeper{
+		FungibleEVMKeeper: fek,
+	}
+}
+
+type FungibleMockEVMKeeper struct {
+	*fungiblemocks.FungibleEVMKeeper
+}
+
+func (m *FungibleMockEVMKeeper) SetupMockEVMKeeperForSystemContractDeployment() {
+	gasRes := &evmtypes.EstimateGasResponse{Gas: 1000}
+	m.On("WithChainID", mock.Anything).Maybe().Return(mock.Anything)
+	m.On("ChainID").Maybe().Return(big.NewInt(1))
+	m.On(
+		"EstimateGas",
+		mock.Anything,
+		mock.Anything,
+	).Return(gasRes, nil)
+	m.MockEVMSuccessCallTimes(5)
+	m.On(
+		"GetAccount",
+		mock.Anything,
+		mock.Anything,
+	).Return(&statedb.Account{
+		Nonce: 1,
+	})
+	m.On(
+		"GetCode",
+		mock.Anything,
+		mock.Anything,
+	).Return([]byte{1, 2, 3})
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallOnce() {
+	m.MockEVMSuccessCallOnceWithReturn(&evmtypes.MsgEthereumTxResponse{})
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimes(times int) {
+	m.MockEVMSuccessCallTimesWithReturn(&evmtypes.MsgEthereumTxResponse{}, times)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallOnceWithReturn(ret *evmtypes.MsgEthereumTxResponse) {
+	m.MockEVMSuccessCallTimesWithReturn(ret, 1)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMSuccessCallTimesWithReturn(ret *evmtypes.MsgEthereumTxResponse, times int) {
+	if ret == nil {
+		ret = &evmtypes.MsgEthereumTxResponse{}
+	}
+	m.On(
+		"ApplyMessage",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(ret, nil).Times(times)
+}
+
+func (m *FungibleMockEVMKeeper) MockEVMFailCallOnce() {
+	m.On(
+		"ApplyMessage",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(&evmtypes.MsgEthereumTxResponse{}, sample.ErrSample).Once()
 }

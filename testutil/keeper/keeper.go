@@ -5,9 +5,6 @@ import (
 	"testing"
 	"time"
 
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -21,6 +18,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -38,12 +37,15 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritymodule "github.com/zeta-chain/zetacore/x/authority"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainmodule "github.com/zeta-chain/zetacore/x/crosschain"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionsmodule "github.com/zeta-chain/zetacore/x/emissions"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
-	types2 "github.com/zeta-chain/zetacore/x/emissions/types"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungiblemodule "github.com/zeta-chain/zetacore/x/fungible"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -56,7 +58,7 @@ import (
 func NewContext(stateStore sdk.CommitMultiStore) sdk.Context {
 	header := tmproto.Header{
 		Height:  1,
-		ChainID: "test_1-1",
+		ChainID: "test_7000-1",
 		Time:    time.Now().UTC(),
 		LastBlockId: tmproto.BlockID{
 			Hash: tmhash.Sum([]byte("block_id")),
@@ -91,6 +93,7 @@ type SDKKeepers struct {
 
 // ZetaKeepers is a struct containing Zeta module keepers for test purposes
 type ZetaKeepers struct {
+	AuthorityKeeper  *authoritykeeper.Keeper
 	CrosschainKeeper *crosschainkeeper.Keeper
 	EmissionsKeeper  *emissionskeeper.Keeper
 	FungibleKeeper   *fungiblekeeper.Keeper
@@ -98,16 +101,16 @@ type ZetaKeepers struct {
 }
 
 var moduleAccountPerms = map[string][]string{
-	authtypes.FeeCollectorName:              nil,
-	distrtypes.ModuleName:                   nil,
-	stakingtypes.BondedPoolName:             {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:          {authtypes.Burner, authtypes.Staking},
-	evmtypes.ModuleName:                     {authtypes.Minter, authtypes.Burner},
-	crosschaintypes.ModuleName:              {authtypes.Minter, authtypes.Burner},
-	fungibletypes.ModuleName:                {authtypes.Minter, authtypes.Burner},
-	types2.ModuleName:                       nil,
-	types2.UndistributedObserverRewardsPool: nil,
-	types2.UndistributedTssRewardsPool:      nil,
+	authtypes.FeeCollectorName:                      nil,
+	distrtypes.ModuleName:                           nil,
+	stakingtypes.BondedPoolName:                     {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:                  {authtypes.Burner, authtypes.Staking},
+	evmtypes.ModuleName:                             {authtypes.Minter, authtypes.Burner},
+	crosschaintypes.ModuleName:                      {authtypes.Minter, authtypes.Burner},
+	fungibletypes.ModuleName:                        {authtypes.Minter, authtypes.Burner},
+	emissionstypes.ModuleName:                       {authtypes.Minter},
+	emissionstypes.UndistributedObserverRewardsPool: nil,
+	emissionstypes.UndistributedTssRewardsPool:      nil,
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
@@ -371,11 +374,14 @@ func (sdkk SDKKeepers) InitBlockProposer(t testing.TB, ctx sdk.Context) sdk.Cont
 
 // InitGenesis initializes the test modules genesis state for defined Zeta modules
 func (zk ZetaKeepers) InitGenesis(ctx sdk.Context) {
+	if zk.AuthorityKeeper != nil {
+		authoritymodule.InitGenesis(ctx, *zk.AuthorityKeeper, *authoritytypes.DefaultGenesis())
+	}
 	if zk.CrosschainKeeper != nil {
 		crosschainmodule.InitGenesis(ctx, *zk.CrosschainKeeper, *crosschaintypes.DefaultGenesis())
 	}
 	if zk.EmissionsKeeper != nil {
-		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *types2.DefaultGenesis())
+		emissionsmodule.InitGenesis(ctx, *zk.EmissionsKeeper, *emissionstypes.DefaultGenesis())
 	}
 	if zk.FungibleKeeper != nil {
 		fungiblemodule.InitGenesis(ctx, *zk.FungibleKeeper, *fungibletypes.DefaultGenesis())

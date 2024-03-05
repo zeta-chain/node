@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
@@ -22,7 +22,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 
 	// Cross-chain genesis state
 	var crossChainGenesis types.GenesisState
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &crossChainGenesis))
 	nodeAccountList := make([]*observertypes.NodeAccount, len(observerList))
 	for i, operator := range observerList {
 		nodeAccountList[i] = &observertypes.NodeAccount{
@@ -32,28 +32,28 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	}
 
 	crossChainGenesis.Params.Enabled = true
-	assert.NoError(t, crossChainGenesis.Validate())
+	require.NoError(t, crossChainGenesis.Validate())
 	crossChainGenesisBz, err := codec.MarshalJSON(&crossChainGenesis)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// EVM genesis state
 	var evmGenesisState evmtypes.GenesisState
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[evmtypes.ModuleName], &evmGenesisState))
 	evmGenesisState.Params.EvmDenom = cmdcfg.BaseDenom
-	assert.NoError(t, evmGenesisState.Validate())
+	require.NoError(t, evmGenesisState.Validate())
 	evmGenesisBz, err := codec.MarshalJSON(&evmGenesisState)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Staking genesis state
 	var stakingGenesisState stakingtypes.GenesisState
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[stakingtypes.ModuleName], &stakingGenesisState))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[stakingtypes.ModuleName], &stakingGenesisState))
 	stakingGenesisState.Params.BondDenom = cmdcfg.BaseDenom
 	stakingGenesisStateBz, err := codec.MarshalJSON(&stakingGenesisState)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Observer genesis state
 	var observerGenesis observertypes.GenesisState
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &observerGenesis))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &observerGenesis))
 	observerSet := observertypes.ObserverSet{
 		ObserverList: observerList,
 	}
@@ -92,9 +92,9 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
 	}
-	assert.NoError(t, observerGenesis.Validate())
+	require.NoError(t, observerGenesis.Validate())
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	genesisState[types.ModuleName] = crossChainGenesisBz
 	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
@@ -104,7 +104,7 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 
 func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {
 	state := observertypes.GenesisState{}
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[observertypes.ModuleName], &state))
 
 	// set chain params with chains all enabled
 	state.ChainParamsList = observertypes.GetDefaultChainParams()
@@ -155,17 +155,17 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 	}
 
 	// check genesis state validity
-	assert.NoError(t, state.Validate())
+	require.NoError(t, state.Validate())
 
 	// marshal genesis state
 	buf, err := codec.MarshalJSON(&state)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	genesisState[observertypes.ModuleName] = buf
 	return &state
 }
 func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec) *types.GenesisState {
 	state := types.GenesisState{}
-	assert.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &state))
+	require.NoError(t, codec.UnmarshalJSON(genesisState[types.ModuleName], &state))
 	// TODO : Fix add EVM balance to deploy contracts
 	for i := 0; i < n; i++ {
 		state.CrossChainTxs = append(state.CrossChainTxs, &types.CrossChainTx{
@@ -216,10 +216,10 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 		state.OutTxTrackerList = append(state.OutTxTrackerList, outTxTracker)
 	}
 
-	assert.NoError(t, state.Validate())
+	require.NoError(t, state.Validate())
 
 	buf, err := codec.MarshalJSON(&state)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	genesisState[types.ModuleName] = buf
 	return &state
 }

@@ -58,7 +58,7 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	createCctxWithNonceRange(t, ctx, *k, 40, 45, common.ZetaChainMainnet().ChainId, tss, zk)
 
 	// set a cctx where the update function should fail to test that the next cctx are not updated but the next chains are
-	failMap["1-12"] = struct{}{}
+	failMap[sample.GetCctxIndexFromString("1-12")] = struct{}{}
 
 	// test that the default crosschain flags are used when not set and the epoch length is not reached
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength + 1)
@@ -84,7 +84,6 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	require.Equal(t, customFlags, flags)
 
 	// test that cctx are iterated and updated when the epoch length is reached
-
 	ctx = ctx.WithBlockHeight(observertypes.DefaultCrosschainFlags().GasPriceIncreaseFlags.EpochLength * 2)
 	cctxCount, flags = k.IterateAndUpdateCctxGasPrice(ctx, supportedChains, updateFunc)
 
@@ -94,14 +93,14 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 
 	// check that the update function was called with the cctx index
 	require.Equal(t, 7, len(updateFuncMap))
-	require.Contains(t, updateFuncMap, "1-10")
-	require.Contains(t, updateFuncMap, "1-11")
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("1-10"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("1-11"))
 
-	require.Contains(t, updateFuncMap, "56-30")
-	require.Contains(t, updateFuncMap, "56-31")
-	require.Contains(t, updateFuncMap, "56-32")
-	require.Contains(t, updateFuncMap, "56-33")
-	require.Contains(t, updateFuncMap, "56-34")
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-30"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-31"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-32"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-33"))
+	require.Contains(t, updateFuncMap, sample.GetCctxIndexFromString("56-34"))
 }
 
 func TestCheckAndUpdateCctxGasPrice(t *testing.T) {

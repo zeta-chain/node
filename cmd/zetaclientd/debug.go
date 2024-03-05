@@ -8,6 +8,13 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
 	"github.com/btcsuite/btcd/rpcclient"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -17,7 +24,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
@@ -46,6 +52,7 @@ func DebugCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			coreContext := corecontext.NewZetaCoreContext(cfg)
 			chainID, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
@@ -54,7 +61,7 @@ func DebugCmd() *cobra.Command {
 			var ballotIdentifier string
 			chainLogger := zerolog.New(io.Discard).Level(zerolog.Disabled)
 
-			telemetryServer := zetaclient.NewTelemetryServer()
+			telemetryServer := metrics.NewTelemetryServer()
 			go func() {
 				err := telemetryServer.Start()
 				if err != nil {
@@ -62,8 +69,8 @@ func DebugCmd() *cobra.Command {
 				}
 			}()
 
-			bridge, err := zetaclient.NewZetaCoreBridge(
-				&zetaclient.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
+			bridge, err := zetabridge.NewZetaCoreBridge(
+				&keys.Keys{OperatorAddress: sdk.MustAccAddressFromBech32(sample.AccAddress())},
 				debugArgs.zetaNode,
 				"",
 				debugArgs.zetaChainID,
@@ -89,7 +96,7 @@ func DebugCmd() *cobra.Command {
 
 			if common.IsEVMChain(chain.ChainId) {
 
-				ob := zetaclient.EVMChainClient{
+				ob := evm.ChainClient{
 					Mu: &sync.Mutex{},
 				}
 				ob.WithZetaClient(bridge)
@@ -117,14 +124,17 @@ func DebugCmd() *cobra.Command {
 
 				for _, chainParams := range chainParams {
 					if chainParams.ChainId == chainID {
-						ob.WithParams(observertypes.ChainParams{
+						ob.SetChainParams(observertypes.ChainParams{
 							ChainId:                     chainID,
 							ConnectorContractAddress:    chainParams.ConnectorContractAddress,
 							ZetaTokenContractAddress:    chainParams.ZetaTokenContractAddress,
 							Erc20CustodyContractAddress: chainParams.Erc20CustodyContractAddress,
 						})
-						cfg.EVMChainConfigs[chainID].ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
-						ob.SetConfig(cfg)
+						evmChainParams, found := coreContext.GetEVMChainParams(chainID)
+						if !found {
+							return fmt.Errorf("missing chain params for chain %d", chainID)
+						}
+						evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						if strings.EqualFold(tx.To().Hex(), chainParams.ConnectorContractAddress) {
 							coinType = common.CoinType_Zeta
 						} else if strings.EqualFold(tx.To().Hex(), chainParams.Erc20CustodyContractAddress) {
@@ -159,7 +169,7 @@ func DebugCmd() *cobra.Command {
 				}
 				fmt.Println("CoinType : ", coinType)
 			} else if common.IsBitcoinChain(chain.ChainId) {
-				obBtc := zetaclient.BitcoinChainClient{
+				obBtc := bitcoin.BTCChainClient{
 					Mu: &sync.Mutex{},
 				}
 				obBtc.WithZetaClient(bridge)

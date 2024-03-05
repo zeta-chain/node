@@ -8,6 +8,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
+
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
@@ -18,9 +24,9 @@ import (
 )
 
 type COSuite struct {
-	bridge1      *ZetaCoreBridge
-	bridge2      *ZetaCoreBridge
-	signer       *EVMSigner
+	bridge1      *zetabridge.ZetaCoreBridge
+	bridge2      *zetabridge.ZetaCoreBridge
+	signer       *evm.Signer
 	coreObserver *CoreObserver
 }
 
@@ -49,18 +55,18 @@ func (s *COSuite) SetUpTest(c *C) {
 	{
 		signerName := "alice"
 		signerPass := "password"
-		kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+		kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 		if err != nil {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewZetaCoreBridge(k, chainIP, "alice")
+		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "alice")
 		if err != nil {
 			c.Fail()
 		}
@@ -72,18 +78,18 @@ func (s *COSuite) SetUpTest(c *C) {
 	{
 		signerName := "bob"
 		signerPass := "password"
-		kb, _, err := GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
+		kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
 		if err != nil {
 			log.Fatal().Err(err).Msg("fail to get keyring keybase")
 		}
 
-		k := NewKeysWithKeybase(kb, signerName, signerPass)
+		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
 
 		chainIP := os.Getenv("CHAIN_IP")
 		if chainIP == "" {
 			chainIP = "127.0.0.1"
 		}
-		bridge, err := NewZetaCoreBridge(k, chainIP, "bob")
+		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "bob")
 		if err != nil {
 			c.Fail()
 		}
@@ -94,18 +100,18 @@ func (s *COSuite) SetUpTest(c *C) {
 	// The following PrivKey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
 	privateKey, err := crypto.HexToECDSA(config.TssTestPrivkey)
 	c.Assert(err, IsNil)
-	tss := TestSigner{
+	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	signer, err := NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
+	signer, err := evm.NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
 	c.Logf("ETH MPI EVMAddress: %s", config.ETH_MPI_ADDRESS)
 
 	s.signer = signer
 
-	// setup zetacore observer
+	// setup zetabridge observer
 	co := &CoreObserver{
 		bridge: s.bridge1,
 		signer: signer,

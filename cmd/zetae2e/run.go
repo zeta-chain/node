@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -10,25 +11,38 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/config"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/runner"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/smoketests"
-	"github.com/zeta-chain/zetacore/contrib/localnet/orchestrator/smoketest/utils"
+	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
+	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
 const flagVerbose = "verbose"
+const flagConfig = "config"
 
 const FungibleAdminMnemonic = "snow grace federal cupboard arrive fancy gym lady uniform rotate exercise either leave alien grass" // #nosec G101 - used for testing
 
 // NewRunCmd returns the run command
-// which runs the smoketest from a config file describing the tests, networks, and accounts
+// which runs the E2E from a config file describing the tests, networks, and accounts
 func NewRunCmd() *cobra.Command {
+	var configFile string
+
 	cmd := &cobra.Command{
-		Use:   "run [config-file]",
-		Short: "Run E2E tests from a config file",
-		RunE:  runE2ETest,
-		Args:  cobra.ExactArgs(1),
+		Use:   "run [testname1]:[arg1],[arg2] [testname2]:[arg1],[arg2]...",
+		Short: "Run one or more E2E tests with optional arguments",
+		Long: `Run one or more E2E tests specified by their names and optional arguments.
+For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
+		RunE: runE2ETest,
+		Args: cobra.MinimumNArgs(1), // Ensures at least one test is provided
 	}
+
+	cmd.Flags().StringVarP(&configFile, flagConfig, "c", "", "path to the configuration file")
+	err := cmd.MarkFlagRequired(flagConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	// Retain the verbose flag
 	cmd.Flags().Bool(
 		flagVerbose,
 		false,
@@ -40,7 +54,11 @@ func NewRunCmd() *cobra.Command {
 
 func runE2ETest(cmd *cobra.Command, args []string) error {
 	// read the config file
-	conf, err := config.ReadConfig(args[0])
+	configPath, err := cmd.Flags().GetString(flagConfig)
+	if err != nil {
+		return err
+	}
+	conf, err := config.ReadConfig(configPath)
 	if err != nil {
 		return err
 	}
@@ -102,11 +120,19 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//run tests
-	reports, err := testRunner.RunSmokeTestsFromNamesIntoReport(
-		smoketests.AllSmokeTests,
-		conf.TestList...,
-	)
+	// parse test names and arguments from cmd args and run them
+	userTestsConfigs, err := parseCmdArgsToE2ETestRunConfig(args)
+	if err != nil {
+		cancel()
+		return err
+	}
+
+	testsToRun, err := testRunner.GetE2ETestsToRunByConfig(e2etests.AllE2ETests, userTestsConfigs)
+	if err != nil {
+		cancel()
+		return err
+	}
+	reports, err := testRunner.RunE2ETestsIntoReport(testsToRun)
 	if err != nil {
 		cancel()
 		return err
@@ -126,4 +152,28 @@ func runE2ETest(cmd *cobra.Command, args []string) error {
 	testRunner.PrintTestReports(reports)
 
 	return nil
+}
+
+// parseCmdArgsToE2ETests parses command-line arguments into a slice of E2ETestRunConfig structs.
+func parseCmdArgsToE2ETestRunConfig(args []string) ([]runner.E2ETestRunConfig, error) {
+	tests := []runner.E2ETestRunConfig{}
+	for _, arg := range args {
+		parts := strings.SplitN(arg, ":", 2)
+		if len(parts) != 2 {
+			return nil, errors.New("command arguments should be in format: testName:testArgs")
+		}
+		if parts[0] == "" {
+			return nil, errors.New("missing testName")
+		}
+		testName := parts[0]
+		testArgs := []string{}
+		if parts[1] != "" {
+			testArgs = strings.Split(parts[1], ",")
+		}
+		tests = append(tests, runner.E2ETestRunConfig{
+			Name: testName,
+			Args: testArgs,
+		})
+	}
+	return tests, nil
 }

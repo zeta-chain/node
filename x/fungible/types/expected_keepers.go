@@ -6,13 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -28,26 +28,12 @@ type AccountKeeper interface {
 
 type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	IsSendEnabledCoin(ctx sdk.Context, coin sdk.Coin) bool
-	BlockedAddr(addr sdk.AccAddress) bool
-	GetDenomMetaData(ctx sdk.Context, denom string) (banktypes.Metadata, bool)
-	SetDenomMetaData(ctx sdk.Context, denomMetaData banktypes.Metadata)
-	HasSupply(ctx sdk.Context, denom string) bool
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type ObserverKeeper interface {
-	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
-	SetBallot(ctx sdk.Context, ballot *observertypes.Ballot)
-	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
-	GetAllBallots(ctx sdk.Context) (voters []*observertypes.Ballot)
 	GetParams(ctx sdk.Context) (params observertypes.Params)
-	GetChainParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.ChainParams, found bool)
 	GetSupportedChains(ctx sdk.Context) []*common.Chain
-	GetMaturedBallotList(ctx sdk.Context) []string
 }
 
 type EVMKeeper interface {
@@ -65,5 +51,10 @@ type EVMKeeper interface {
 		commit bool,
 	) (*evmtypes.MsgEthereumTxResponse, error)
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
+	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
+}
+
+type AuthorityKeeper interface {
+	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
 }

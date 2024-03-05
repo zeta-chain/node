@@ -22,8 +22,10 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	metrics2 "github.com/zeta-chain/zetacore/zetaclient/metrics"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
 
 type Multiaddr = core.Multiaddr
@@ -57,7 +59,12 @@ func start(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	log.Logger = InitLogger(cfg)
+	loggers, err := InitLogger(cfg)
+	if err != nil {
+		log.Error().Err(err).Msg("InitLogger failed")
+		return err
+	}
+
 	//Wait until zetacore has started
 	if len(cfg.Peer) != 0 {
 		err := validatePeer(cfg.Peer)
@@ -67,13 +74,14 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	masterLogger := log.Logger
+	masterLogger := loggers.Std
 	startLogger := masterLogger.With().Str("module", "startup").Logger()
 
+	// Wait until zetacore is up
 	waitForZetaCore(cfg, startLogger)
 	startLogger.Info().Msgf("ZetaCore is ready , Trying to connect to %s", cfg.Peer)
 
-	telemetryServer := mc.NewTelemetryServer()
+	telemetryServer := metrics.NewTelemetryServer()
 	go func() {
 		err := telemetryServer.Start()
 		if err != nil {
@@ -113,15 +121,15 @@ func start(_ *cobra.Command, _ []string) error {
 	startLogger.Debug().Msgf("CreateAuthzSigner is ready")
 
 	// Initialize core parameters from zetacore
-	err = zetaBridge.UpdateConfigFromCore(cfg, true)
+	appContext := appcontext.NewAppContext(corecontext.NewZetaCoreContext(cfg), cfg)
+	err = zetaBridge.UpdateZetaCoreContext(appContext.ZetaCoreContext(), true)
 	if err != nil {
 		startLogger.Error().Err(err).Msg("Error getting core parameters")
 		return err
 	}
 	startLogger.Info().Msgf("Config is updated from ZetaCore %s", maskCfg(cfg))
 
-	// ConfigUpdater: A polling goroutine checks and updates core parameters at every height. Zetacore stores core parameters for all clients
-	go zetaBridge.ConfigUpdater(cfg)
+	go zetaBridge.CoreContextUpdater(appContext)
 
 	// Generate TSS address . The Tss address is generated through Keygen ceremony. The TSS key is used to sign all outbound transactions .
 	// The bridgePk is private key for the Hotkey. The Hotkey is used to sign all inbound transactions
@@ -153,7 +161,7 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	metrics, err := metrics2.NewMetrics()
+	metrics, err := metrics.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
 		return err
@@ -167,7 +175,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	telemetryServer.SetIPAddress(cfg.PublicIP)
-	tss, err := GenerateTss(masterLogger, cfg, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, metrics, tssKeyPass, hotkeyPass)
+	tss, err := GenerateTss(appContext, masterLogger, zetaBridge, peers, priKey, telemetryServer, tssHistoricalList, tssKeyPass, hotkeyPass)
 	if err != nil {
 		return err
 	}
@@ -182,8 +190,8 @@ func start(_ *cobra.Command, _ []string) error {
 	// For existing keygen, this should directly proceed to the next step
 	ticker := time.NewTicker(time.Second * 1)
 	for range ticker.C {
-		if cfg.Keygen.Status != observerTypes.KeygenStatus_KeyGenSuccess {
-			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", cfg.Keygen.Status)
+		if appContext.ZetaCoreContext().GetKeygen().Status != observerTypes.KeygenStatus_KeyGenSuccess {
+			startLogger.Info().Msgf("Waiting for TSS Keygen to be a success, current status %s", appContext.ZetaCoreContext().GetKeygen().Status)
 			continue
 		}
 		break
@@ -201,7 +209,7 @@ func start(_ *cobra.Command, _ []string) error {
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
-	if len(cfg.ChainsEnabled) == 0 {
+	if len(appContext.ZetaCoreContext().GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
 	}
 
@@ -219,7 +227,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateSignerMap: This creates a map of all signers for each chain . Each signer is responsible for signing transactions for a particular chain
-	signerMap, err := CreateSignerMap(tss, masterLogger, cfg, telemetryServer)
+	signerMap, err := CreateSignerMap(appContext, tss, loggers, telemetryServer)
 	if err != nil {
 		log.Error().Err(err).Msg("CreateSignerMap")
 		return err
@@ -233,9 +241,9 @@ func start(_ *cobra.Command, _ []string) error {
 	dbpath := filepath.Join(userDir, ".zetaclient/chainobserver")
 
 	// CreateChainClientMap : This creates a map of all chain clients . Each chain client is responsible for listening to events on the chain and processing them
-	chainClientMap, err := CreateChainClientMap(zetaBridge, tss, dbpath, metrics, masterLogger, cfg, telemetryServer)
+	chainClientMap, err := CreateChainClientMap(appContext, zetaBridge, tss, dbpath, loggers, telemetryServer)
 	if err != nil {
-		startLogger.Err(err).Msg("CreateSignerMap")
+		startLogger.Err(err).Msg("CreateChainClientMap")
 		return err
 	}
 
@@ -249,8 +257,8 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 
 	// CreateCoreObserver : Core observer wraps the zetacore bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
-	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, metrics, masterLogger, cfg, telemetryServer)
-	mo1.MonitorCore()
+	mo1 := mc.NewCoreObserver(zetaBridge, signerMap, chainClientMap, masterLogger, telemetryServer)
+	mo1.MonitorCore(appContext)
 
 	// start zeta supply checker
 	// TODO: enable
@@ -333,9 +341,9 @@ func promptPasswords() (string, string, error) {
 		return "", "", err
 	}
 
-	if TSSKeyPass == "" {
-		return "", "", errors.New("tss password is required to start zetaclient")
-	}
+	//trim delimiters
+	hotKeyPass = strings.TrimSuffix(hotKeyPass, "\n")
+	TSSKeyPass = strings.TrimSuffix(TSSKeyPass, "\n")
 
 	return hotKeyPass, TSSKeyPass, err
 }

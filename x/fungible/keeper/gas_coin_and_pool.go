@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/big"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -50,7 +50,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 
 	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, common.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to DeployZRC20Contract")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,
@@ -76,33 +76,33 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	}
 	systemContractAddress, err := k.GetSystemContractAddress(ctx)
 	if err != nil || systemContractAddress == (ethcommon.Address{}) {
-		return ethcommon.Address{}, sdkerrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
+		return ethcommon.Address{}, cosmoserrors.Wrapf(types.ErrContractNotFound, "system contract address invalid: %s", systemContractAddress)
 	}
 	systemABI, err := systemcontract.SystemContractMetaData.GetAbi()
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get system contract abi")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get system contract abi")
 	}
 	_, err = k.CallEVM(ctx, *systemABI, types.ModuleAddressEVM, systemContractAddress, BigIntZero, nil, true, false, "setGasZetaPool", big.NewInt(chain.ChainId), zrc20Addr)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chain.ChainId, zrc20Addr.String())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method setGasZetaPool(%d, %s)", chain.ChainId, zrc20Addr.String())
 	}
 
 	// setup uniswap v2 pools gas/zeta
 	routerAddress, err := k.GetUniswapV2Router02Address(ctx)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to GetUniswapV2Router02Address")
 	}
 	routerABI, err := uniswapv2router02.UniswapV2Router02MetaData.GetAbi()
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to get uniswap router abi")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to get uniswap router abi")
 	}
 	ZRC20ABI, err := zrc20.ZRC20MetaData.GetAbi()
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to GetAbi zrc20")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to GetAbi zrc20")
 	}
 	_, err = k.CallEVM(ctx, *ZRC20ABI, types.ModuleAddressEVM, zrc20Addr, BigIntZero, nil, true, false, "approve", routerAddress, amount)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method approve(%s, %d)", routerAddress.String(), amount)
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method approve(%s, %d)", routerAddress.String(), amount)
 	}
 
 	//function addLiquidityETH(
@@ -116,14 +116,14 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	res, err := k.CallEVM(ctx, *routerABI, types.ModuleAddressEVM, routerAddress, amountAZeta, big.NewInt(5_000_000), true, false,
 		"addLiquidityETH", zrc20Addr, amount, BigIntZero, BigIntZero, types.ModuleAddressEVM, amountAZeta)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amountAZeta.String())
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to CallEVM method addLiquidityETH(%s, %s)", zrc20Addr.String(), amountAZeta.String())
 	}
 	AmountToken := new(*big.Int)
 	AmountETH := new(*big.Int)
 	Liquidity := new(*big.Int)
 	err = routerABI.UnpackIntoInterface(&[]interface{}{AmountToken, AmountETH, Liquidity}, "addLiquidityETH", res.Ret)
 	if err != nil {
-		return ethcommon.Address{}, sdkerrors.Wrapf(err, "failed to UnpackIntoInterface addLiquidityETH")
+		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to UnpackIntoInterface addLiquidityETH")
 
 	}
 	ctx.EventManager().EmitEvent(
