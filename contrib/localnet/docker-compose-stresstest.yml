@@ -17,7 +17,7 @@ services:
     container_name: zetacore2
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetacore2
     networks:
       mynetwork:
@@ -32,7 +32,7 @@ services:
     container_name: zetacore3
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetacore3
     networks:
       mynetwork:
@@ -55,7 +55,7 @@ services:
     container_name: zetaclient2
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetaclient2
     networks:
       mynetwork:
@@ -71,7 +71,7 @@ services:
     container_name: zetaclient3
     build:
       context: ../../.
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-localnet
     hostname: zetaclient3
     networks:
       mynetwork:

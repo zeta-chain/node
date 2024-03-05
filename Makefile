@@ -184,7 +184,7 @@ generate: proto openapi specs typescript docs-zetacored
 
 zetanode:
 	@echo "Building zetanode"
-	$(DOCKER) build -t zetanode -f ./Dockerfile .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-localnet .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 .PHONY: zetanode
 
@@ -281,7 +281,10 @@ release:
 ###############################################################################
 
 mainnet-zetarpc-node:
-	cd contrib/local-mainnet/zetacored && docker-compose up
+	cd contrib/mainnet/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
 
 mainnet-bitcoind-node:
-	cd contrib/local-mainnet/bitcoind && docker-compose up
+	cd contrib/mainnet/bitcoind && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+athens3-zetarpc-node:
+	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up

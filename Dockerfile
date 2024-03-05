@@ -1,51 +1,54 @@
-# Purpose: This Dockerfile creates an environment for running ZetaChain
-# It contains:
-# - zetacored: the ZetaChain node binary
-# - zetaclientd: the ZetaChain client binary for observers
-# - zetae2e: the ZetaChain end-to-end tests CLI
-
-FROM golang:1.20-alpine3.18
+# Build Stage
+FROM golang:1.20-alpine3.18 AS builder
 
 ENV GOPATH /go
 ENV GOOS=linux
 ENV CGO_ENABLED=1
 
-RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl tmux
-RUN ssh-keygen -b 2048 -t rsa -f /root/.ssh/localtest.pem -q -N ""
+# Install build dependencies
+RUN apk --no-cache add git make build-base jq openssh libusb-dev linux-headers bash curl python3 py3-pip
 
+# Set the working directory
 WORKDIR /go/delivery/zeta-node
+
+# Copy module files and download dependencies
 COPY go.mod .
 COPY go.sum .
 
 RUN go mod download
+
+# Copy the rest of the source code and build the application
 COPY . .
+
 RUN make install
-RUN make install-zetae2e
-#
-#FROM golang:1.20-alpine
 
-#RUN apk --no-cache add openssh jq tmux vim curl bash
-RUN ssh-keygen -A
-WORKDIR /root
+# Run Stage
+FROM alpine:3.18
 
-RUN cp /root/.ssh/localtest.pem.pub /root/.ssh/authorized_keys
+# Copy Start Script Helpers
+COPY contrib/docker-scripts/* /scripts/
 
-RUN cp /go/bin/zetaclientd /usr/local/bin
-RUN cp /go/bin/zetacored /usr/local/bin
-RUN cp /go/bin/zetae2e /usr/local/bin
+# Install runtime dependencies
+RUN apk --no-cache add git jq bash curl python3 libusb-dev linux-headers make build-base wget py3-pip qemu-img qemu-system-x86_64 && \
+    pip install requests && \
+    chmod a+x -R /scripts && \
+    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.31-r0/glibc-2.31-r0.apk && \
+    apk add --force-overwrite --allow-untrusted glibc-2.31-r0.apk
 
-COPY contrib/localnet/scripts /root
-COPY contrib/localnet/preparams /root/preparams
-COPY contrib/localnet/ssh_config /root/.ssh/config
-COPY contrib/localnet/zetacored /root/zetacored
-COPY contrib/localnet/tss /root/tss
+# Copy the binaries from the build stage
+COPY --from=builder /go/bin/zetaclientd /usr/local/bin/zetaclientd
+COPY --from=builder /go/bin/zetacored /usr/local/bin/zetacored
 
-RUN chmod 755 /root/*.sh
-RUN chmod 700 /root/.ssh
-RUN chmod 600 /root/.ssh/*
-
+# Set the working directory
 WORKDIR /usr/local/bin
-ENV SHELL /bin/sh
-EXPOSE 22
 
-ENTRYPOINT ["/usr/sbin/sshd", "-D"]
+# Set the default shell
+ENV SHELL /bin/bash
+
+EXPOSE 26656
+EXPOSE 1317
+EXPOSE 8545
+EXPOSE 8546
+EXPOSE 9090
+EXPOSE 26657
+EXPOSE 9091
