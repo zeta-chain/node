@@ -3,22 +3,36 @@ package e2etests
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner) {
-	WithdrawToInvalidAddress(r)
+func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestBitcoinWithdrawToInvalidAddress requires exactly one argument for the amount.")
+	}
+
+	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestBitcoinWithdrawToInvalidAddress.")
+	}
+
+	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
+	if err != nil {
+		panic(err)
+	}
+	amount := big.NewInt(int64(withdrawalAmountSat))
+
+	WithdrawToInvalidAddress(r, amount)
 }
 
-func WithdrawToInvalidAddress(r *runner.E2ERunner) {
-
-	amount := big.NewInt(0.00001 * btcutil.SatoshiPerBitcoin)
+func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	approvalAmount := 1000000000000000000
 	// approve the ZRC20 contract to spend approvalAmount BTC from the deployer address.
-	// the actual amount transferred is 0.00001 BTC, but we approve more to cover withdraw fee
+	// the actual amount transferred is provided as test arg BTC, but we approve more to cover withdraw fee
 	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(int64(approvalAmount)))
 	if err != nil {
 		panic(err)
@@ -31,7 +45,7 @@ func WithdrawToInvalidAddress(r *runner.E2ERunner) {
 	// mine blocks
 	stop := r.MineBlocks()
 
-	// withdraw 0.00001 BTC from ZRC20 to BTC legacy address
+	// withdraw amount provided as test arg BTC from ZRC20 to BTC legacy address
 	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)
 	if err != nil {
 		panic(err)

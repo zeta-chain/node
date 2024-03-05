@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -12,9 +13,20 @@ import (
 )
 
 // TestStressBTCDeposit tests the stressing deposit of BTC
-func TestStressBTCDeposit(r *runner.E2ERunner) {
-	// number of deposits to perform
-	numDeposits := 100
+func TestStressBTCDeposit(r *runner.E2ERunner, args []string) {
+	if len(args) != 2 {
+		panic("TestStressBTCDeposit requires exactly two arguments: the deposit amount and the number of deposits.")
+	}
+
+	depositAmount, err := strconv.ParseFloat(args[1], 64)
+	if err != nil {
+		panic("Invalid deposit amount specified for TestStressBTCDeposit.")
+	}
+
+	numDeposits, err := strconv.Atoi(args[1])
+	if err != nil || numDeposits < 1 {
+		panic("Invalid number of deposits specified for TestStressBTCDeposit.")
+	}
 
 	r.SetBtcAddress(r.Name, false)
 
@@ -26,7 +38,7 @@ func TestStressBTCDeposit(r *runner.E2ERunner) {
 	// send the deposits
 	for i := 0; i < numDeposits; i++ {
 		i := i
-		txHash := r.DepositBTCWithAmount(0.001)
+		txHash := r.DepositBTCWithAmount(depositAmount)
 		r.Logger.Print("index %d: starting deposit, tx hash: %s", i, txHash.String())
 
 		eg.Go(func() error {

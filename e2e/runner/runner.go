@@ -161,46 +161,112 @@ func NewE2ERunner(
 
 // E2ETestFunc is a function representing a E2E test
 // It takes a E2ERunner as an argument
-type E2ETestFunc func(*E2ERunner)
+type E2ETestFunc func(*E2ERunner, []string)
 
-// E2ETest represents a E2E test with a name
+// E2ETest represents a E2E test with a name, args, description and test func
 type E2ETest struct {
-	Name        string
-	Description string
-	E2ETest     E2ETestFunc
+	Name           string
+	Description    string
+	Args           []string
+	ArgsDefinition []ArgDefinition
+	E2ETest        E2ETestFunc
 }
 
-// RunE2ETestsFromNames runs a list of E2E tests by name in a list of e2e tests
-func (runner *E2ERunner) RunE2ETestsFromNames(e2eTests []E2ETest, e2eTestNames ...string) error {
-	for _, e2eTestName := range e2eTestNames {
-		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
-		if !ok {
-			return fmt.Errorf("e2e test %s not found", e2eTestName)
+// NewE2ETest creates a new instance of E2ETest with specified parameters.
+func NewE2ETest(name, description string, argsDefinition []ArgDefinition, e2eTestFunc E2ETestFunc) E2ETest {
+	return E2ETest{
+		Name:           name,
+		Description:    description,
+		ArgsDefinition: argsDefinition,
+		E2ETest:        e2eTestFunc,
+		Args:           []string{},
+	}
+}
+
+// ArgDefinition defines a structure for holding an argument's description along with it's default value.
+type ArgDefinition struct {
+	Description  string
+	DefaultValue string
+}
+
+// DefaultArgs extracts and returns array of default arguments from the ArgsDefinition.
+func (e E2ETest) DefaultArgs() []string {
+	defaultArgs := make([]string, len(e.ArgsDefinition))
+	for i, spec := range e.ArgsDefinition {
+		defaultArgs[i] = spec.DefaultValue
+	}
+	return defaultArgs
+}
+
+// ArgsDescription returns a string representing the arguments description in a readable format.
+func (e E2ETest) ArgsDescription() string {
+	argsDescription := ""
+	for _, def := range e.ArgsDefinition {
+		argDesc := fmt.Sprintf("%s (%s)", def.Description, def.DefaultValue)
+		if argsDescription != "" {
+			argsDescription += ", "
 		}
+		argsDescription += argDesc
+	}
+	return argsDescription
+}
+
+// E2ETestRunConfig defines the basic configuration for initiating an E2E test, including its name and optional runtime arguments.
+type E2ETestRunConfig struct {
+	Name string
+	Args []string
+}
+
+// GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
+func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
+	tests := []E2ETestRunConfig{}
+	for _, testName := range testNames {
+		tests = append(tests, E2ETestRunConfig{
+			Name: testName,
+			Args: []string{},
+		})
+	}
+	return runner.GetE2ETestsToRunByConfig(availableTests, tests)
+}
+
+// GetE2ETestsToRunByConfig prepares a list of E2ETests to run based on provided test names and their corresponding arguments
+func (runner *E2ERunner) GetE2ETestsToRunByConfig(availableTests []E2ETest, testConfigs []E2ETestRunConfig) ([]E2ETest, error) {
+	tests := []E2ETest{}
+	for _, testSpec := range testConfigs {
+		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)
+		if !found {
+			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
+		}
+		e2eTestToRun := NewE2ETest(
+			e2eTest.Name,
+			e2eTest.Description,
+			e2eTest.ArgsDefinition,
+			e2eTest.E2ETest,
+		)
+		// update e2e test args
+		e2eTestToRun.Args = testSpec.Args
+		tests = append(tests, e2eTestToRun)
+	}
+
+	return tests, nil
+}
+
+// RunE2ETests runs a list of e2e tests
+func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
+	for _, e2eTest := range e2eTests {
 		if err := runner.RunE2ETest(e2eTest, true); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
 // RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
-func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eTestNames ...string) (TestReports, error) {
-	// get all tests so we can return an error if a test is not found
-	tests := make([]E2ETest, 0, len(e2eTestNames))
-	for _, e2eTestName := range e2eTestNames {
-		e2eTest, ok := findE2ETest(e2eTestName, e2eTests)
-		if !ok {
-			return nil, fmt.Errorf("e2e test %s not found", e2eTestName)
-		}
-		tests = append(tests, e2eTest)
-	}
-
+func (runner *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, error) {
 	// go through all tests
-	reports := make(TestReports, 0, len(e2eTestNames))
-	for _, test := range tests {
+	reports := make(TestReports, 0, len(e2eTests))
+	for _, test := range e2eTests {
 		// get info before test
 		balancesBefore, err := runner.GetAccountBalances(true)
 		if err != nil {
@@ -237,18 +303,8 @@ func (runner *E2ERunner) RunE2ETestsFromNamesIntoReport(e2eTests []E2ETest, e2eT
 	return reports, nil
 }
 
-// RunE2ETests runs a list of e2e tests
-func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
-	for _, e2eTest := range e2eTests {
-		if err := runner.RunE2ETest(e2eTest, true); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // RunE2ETest runs a e2e test
-func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting bool) (err error) {
+func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error) {
 	// return an error on panic
 	// https://github.com/zeta-chain/node/issues/1500
 	defer func() {
@@ -256,15 +312,19 @@ func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting boo
 			// print stack trace
 			stack := make([]byte, 4096)
 			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTestWithName.Name, r, stack[:n])
+			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTest.Name, r, stack[:n])
 		}
 	}()
 
 	startTime := time.Now()
-	runner.Logger.Print("⏳running - %s", e2eTestWithName.Description)
+	runner.Logger.Print("⏳running - %s", e2eTest.Description)
 
-	// run e2e test
-	e2eTestWithName.E2ETest(runner)
+	// run e2e test, if args are not provided, use default args
+	args := e2eTest.Args
+	if len(args) == 0 {
+		args = e2eTest.DefaultArgs()
+	}
+	e2eTest.E2ETest(runner, args)
 
 	//check supplies
 	if checkAccounting {
@@ -273,15 +333,15 @@ func (runner *E2ERunner) RunE2ETest(e2eTestWithName E2ETest, checkAccounting boo
 		}
 	}
 
-	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTestWithName.Description)
+	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
 
 	return err
 }
 
 // findE2ETest finds a e2e test by name
-func findE2ETest(name string, e2eTests []E2ETest) (E2ETest, bool) {
+func findE2ETestByName(e2eTests []E2ETest, e2eTestName string) (E2ETest, bool) {
 	for _, test := range e2eTests {
-		if test.Name == name {
+		if test.Name == e2eTestName {
 			return test, true
 		}
 	}

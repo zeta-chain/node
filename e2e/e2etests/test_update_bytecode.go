@@ -13,7 +13,7 @@ import (
 )
 
 // TestUpdateBytecode tests updating the bytecode of a zrc20 and interact with it
-func TestUpdateBytecode(r *runner.E2ERunner) {
+func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	// Random approval
 	approved := sample.EthAddress()
 	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, approved, big.NewInt(1e10))

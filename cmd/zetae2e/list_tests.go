@@ -33,16 +33,20 @@ func runListTests(_ *cobra.Command, _ []string) error {
 func renderTests(logger *runner.Logger, tests []runner.E2ETest) {
 	// Find the maximum length of the Name field
 	maxNameLength := 0
+	maxDescriptionLength := 0
 	for _, test := range tests {
 		if len(test.Name) > maxNameLength {
 			maxNameLength = len(test.Name)
 		}
+		if len(test.Description) > maxDescriptionLength {
+			maxDescriptionLength = len(test.Description)
+		}
 	}
 
 	// Formatting and printing the table
-	formatString := fmt.Sprintf("%%-%ds | %%s", maxNameLength)
-	logger.Print(formatString, "Name", "Description")
+	formatString := fmt.Sprintf("%%-%ds | %%-%ds | %%s", maxNameLength, maxDescriptionLength)
+	logger.Print(formatString, "Name", "Description", "Arguments (default)")
 	for _, test := range tests {
-		logger.Print(formatString, test.Name, test.Description)
+		logger.Print(formatString, test.Name, test.Description, test.ArgsDescription())
 	}
 }
