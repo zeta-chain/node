@@ -54,7 +54,7 @@ For example: zetae2e run deposit:1000 withdraw: --config config.yml`,
 
 func runE2ETest(cmd *cobra.Command, args []string) error {
 	// read the config file
-	configPath, err := cmd.Flags().GetString("config")
+	configPath, err := cmd.Flags().GetString(flagConfig)
 	if err != nil {
 		return err
 	}
