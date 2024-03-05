@@ -11,8 +11,17 @@ import (
 )
 
 // TestContextUpgrade tests sending ETH on ZetaChain and check context data
-func TestContextUpgrade(r *runner.E2ERunner) {
-	value := big.NewInt(1000000000000000) // in wei (1 eth)
+func TestContextUpgrade(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestContextUpgrade requires exactly one argument for the value.")
+	}
+
+	// parse the value from the provided arguments
+	value, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid value specified for TestContextUpgrade.")
+	}
+
 	data := make([]byte, 0, 32)
 	data = append(data, r.ContextAppAddr.Bytes()...)
 	data = append(data, []byte("filler")...) // just to make sure that this is a contract call;

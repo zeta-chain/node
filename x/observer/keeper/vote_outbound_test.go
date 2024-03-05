@@ -13,7 +13,7 @@ import (
 
 func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	t.Run("fail if chain is not supported", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{})
 
@@ -49,7 +49,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if receive status is invalid", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -72,7 +72,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("fail if sender is not authorized", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
@@ -96,7 +96,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("can add vote and create ballot", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
 
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
@@ -134,7 +134,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("can add vote and create ballot without finalizing ballot", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
 
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
@@ -180,7 +180,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("can add vote to an existing ballot", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
 
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)
@@ -238,7 +238,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 	})
 
 	t.Run("can add vote to an existing ballot and finalize ballot", func(t *testing.T) {
-		k, ctx, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMocksAll)
 
 		observer := sample.AccAddress()
 		stakingMock := keepertest.GetObserverStakingMock(t, k)

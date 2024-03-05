@@ -12,6 +12,7 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -52,4 +53,8 @@ type EVMKeeper interface {
 	GetAccount(ctx sdk.Context, addr ethcommon.Address) *statedb.Account
 	GetCode(ctx sdk.Context, codeHash ethcommon.Hash) []byte
 	SetAccount(ctx sdk.Context, addr ethcommon.Address, account statedb.Account) error
+}
+
+type AuthorityKeeper interface {
+	IsAuthorized(ctx sdk.Context, address string, policyType authoritytypes.PolicyType) bool
 }

@@ -90,6 +90,7 @@ func validateVotingThresholds(i interface{}) error {
 	}
 	return nil
 }
+
 func validateAdminPolicy(i interface{}) error {
 	_, ok := i.([]*Admin_Policy)
 	if !ok {
@@ -98,6 +99,7 @@ func validateAdminPolicy(i interface{}) error {
 
 	return nil
 }
+
 func validateBallotMaturityBlocks(i interface{}) error {
 	_, ok := i.(int64)
 	if !ok {

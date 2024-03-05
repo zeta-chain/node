@@ -26462,6 +26462,21 @@ paths:
           type: boolean
       tags:
         - Query
+  /zeta-chain/authority/policies:
+    get:
+      summary: Queries Policies
+      operationId: Query_Policies
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/authorityQueryGetPoliciesResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      tags:
+        - Query
   /zeta-chain/crosschain/cctx:
     get:
       summary: Queries a list of send items.
@@ -53462,6 +53477,38 @@ definitions:
         format: int64
       balance:
         type: string
+  authorityMsgUpdatePoliciesResponse:
+    type: object
+    description: MsgUpdatePoliciesResponse defines the MsgUpdatePoliciesResponse service.
+  authorityPolicies:
+    type: object
+    properties:
+      items:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/authorityPolicy'
+    title: Policy contains info about authority policies
+  authorityPolicy:
+    type: object
+    properties:
+      policy_type:
+        $ref: '#/definitions/authorityPolicyType'
+      address:
+        type: string
+  authorityPolicyType:
+    type: string
+    enum:
+      - groupEmergency
+      - groupAdmin
+    default: groupEmergency
+    title: PolicyType defines the type of policy
+  authorityQueryGetPoliciesResponse:
+    type: object
+    properties:
+      policies:
+        $ref: '#/definitions/authorityPolicies'
+    description: QueryGetPoliciesResponse is the response type for the Query/Policies RPC method.
   bitcoinProof:
     type: object
     properties:
@@ -54138,6 +54185,7 @@ definitions:
         $ref: '#/definitions/observerPolicy_Type'
       address:
         type: string
+    title: Deprecated(v14):Moved into the authority module
   observerBallotStatus:
     type: string
     enum:
@@ -54376,7 +54424,7 @@ definitions:
         type: string
       is_supported:
         type: boolean
-    title: 'Deprecated: Use ChainParamsList'
+    title: 'Deprecated(v13): Use ChainParamsList'
   observerObserverUpdateReason:
     type: string
     enum:
@@ -54405,6 +54453,7 @@ definitions:
       - group1
       - group2
     default: group1
+    title: Deprecated(v14):Moved into the authority module
   observerQueryAllBlameRecordsResponse:
     type: object
     properties:
@@ -54770,12 +54819,13 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerObserverParams'
-        title: 'Deprecated: Use ChainParamsList'
+        title: 'Deprecated(v13): Use ChainParamsList'
       admin_policy:
         type: array
         items:
           type: object
           $ref: '#/definitions/observerAdmin_Policy'
+        title: Deprecated(v14):Moved into the authority module
       ballot_maturity_blocks:
         type: string
         format: int64

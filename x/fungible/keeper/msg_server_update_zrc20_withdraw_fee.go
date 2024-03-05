@@ -4,20 +4,19 @@ import (
 	"context"
 
 	cosmoserrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// Authorized: admin policy group 2.
+// UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
 func (k msgServer) UpdateZRC20WithdrawFee(goCtx context.Context, msg *types.MsgUpdateZRC20WithdrawFee) (*types.MsgUpdateZRC20WithdrawFeeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check signer permission
-	if msg.Creator != k.observerKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "deploy can only be executed by the correct policy account")
 	}
 
