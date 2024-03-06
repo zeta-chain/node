@@ -25,4 +25,5 @@ zetacored tx emissions [flags]
 ### SEE ALSO
 
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
+* [zetacored tx emissions withdraw-emission](zetacored_tx_emissions_withdraw-emission.md)	 - create a new withdrawEmission
 

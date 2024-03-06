@@ -16,7 +16,6 @@ type Config struct {
 	RPCs        RPCs      `yaml:"rpcs"`
 	Contracts   Contracts `yaml:"contracts"`
 	ZetaChainID string    `yaml:"zeta_chain_id"`
-	TestList    []string  `yaml:"test_list"`
 }
 
 // Accounts contains the configuration for the accounts

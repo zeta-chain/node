@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Breaking Changes
+
+* Admin policies have been moved from `observer` to a new module `authority`.
+  * Updating admin policies now requires to send a governance proposal executing the `UpdatePolicies` message in the `authority` module.
+  * The `Policies` query of the `authority` module must be used to get the current admin policies.
+  * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
+
 ### Refactor
 
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
@@ -11,16 +18,23 @@
 ### Features
 
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+* [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 
 ### Tests
 
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
+* [1816](https://github.com/zeta-chain/node/pull/1816) - add args to e2e tests
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address 
 `
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+## Version: v14
+
+### Fixes
+- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 
@@ -32,6 +46,7 @@
 ### Features
 
 * [1698](https://github.com/zeta-chain/node/issues/1698) - bitcoin dynamic depositor fee
+* [1811](https://github.com/zeta-chain/node/pull/1811) - add a message to withdraw emission rewards
 
 ### Docs
 

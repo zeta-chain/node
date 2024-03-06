@@ -25,12 +25,69 @@ type crosschainKeeper interface {
 
 // MigrateStore migrates the x/crosschain module state from the consensus version 4 to 5
 // It resets the aborted zeta amount to use the inbound tx amount instead in situations where the outbound cctx is never created.
-func MigrateStore(
+func MigrateStore(ctx sdk.Context, crosschainKeeper crosschainKeeper, observerKeeper types.ObserverKeeper) error {
+	err := SetZetaAccounting(ctx, crosschainKeeper, observerKeeper)
+	if err != nil {
+		return err
+	}
+	ResetTestnetNonce(ctx, observerKeeper)
+
+	return nil
+}
+
+func ResetTestnetNonce(
+	ctx sdk.Context,
+	observerKeeper types.ObserverKeeper,
+) {
+	tss, found := observerKeeper.GetTSS(ctx)
+	if !found {
+		ctx.Logger().Info("ResetTestnetNonce: TSS not found")
+		return
+	}
+	for _, chainNonce := range CurrentTestnetChains() {
+		cn, found := observerKeeper.GetChainNonces(ctx, chainNonce.chain.ChainName.String())
+		if !found {
+			ctx.Logger().Info("ResetTestnetNonce: Chain nonce not found", "chain", chainNonce.chain.ChainName.String())
+			continue
+		}
+
+		ctx.Logger().Info("ResetTestnetNonce: Resetting chain nonce", "chain", chainNonce.chain.ChainName.String())
+
+		cn.Nonce = chainNonce.nonceHigh
+		observerKeeper.SetChainNonces(ctx, cn)
+
+		pn, found := observerKeeper.GetPendingNonces(ctx, tss.TssPubkey, chainNonce.chain.ChainId)
+		if !found {
+			continue
+		}
+		// #nosec G701 always in range for testnet chains
+		pn.NonceLow = int64(chainNonce.nonceLow)
+		// #nosec G701 always in range for testnet chains
+		pn.NonceHigh = int64(chainNonce.nonceHigh)
+		observerKeeper.SetPendingNonces(ctx, pn)
+	}
+}
+
+type TestnetNonce struct {
+	chain     common.Chain
+	nonceHigh uint64
+	nonceLow  uint64
+}
+
+func CurrentTestnetChains() []TestnetNonce {
+	return []TestnetNonce{
+		{chain: common.GoerliChain(), nonceHigh: 226841, nonceLow: 226841},
+		{chain: common.MumbaiChain(), nonceHigh: 200599, nonceLow: 200599},
+		{chain: common.BscTestnetChain(), nonceHigh: 110454, nonceLow: 110454},
+		{chain: common.BtcTestNetChain(), nonceHigh: 4881, nonceLow: 4881},
+	}
+}
+
+func SetZetaAccounting(
 	ctx sdk.Context,
 	crosschainKeeper crosschainKeeper,
 	observerKeeper types.ObserverKeeper,
 ) error {
-
 	ccctxList := crosschainKeeper.GetAllCrossChainTx(ctx)
 	abortedAmountZeta := sdkmath.ZeroUint()
 	for _, cctx := range ccctxList {
@@ -77,7 +134,6 @@ func MigrateStore(
 
 	return nil
 }
-
 func GetAbortedAmount(cctx types.CrossChainTx) sdkmath.Uint {
 	if cctx.OutboundTxParams != nil && !cctx.GetCurrentOutTxParam().Amount.IsZero() {
 		return cctx.GetCurrentOutTxParam().Amount

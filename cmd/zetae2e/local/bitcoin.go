@@ -64,14 +64,19 @@ func bitcoinTestRoutine(
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
-		if err := bitcoinRunner.RunE2ETestsFromNames(
+		testsToRun, err := bitcoinRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestBitcoinWithdrawInvalidAddressName,
 			e2etests.TestBitcoinWithdrawName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 			e2etests.TestCrosschainSwapName,
 			//e2etests.TestBitcoinWithdrawRestrictedName,
-		); err != nil {
+		)
+		if err != nil {
+			return fmt.Errorf("bitcoin tests failed: %v", err)
+		}
+
+		if err := bitcoinRunner.RunE2ETests(testsToRun); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}
 

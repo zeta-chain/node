@@ -10,7 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/utils"
 )
 
-func TestZRC20Swap(r *runner.E2ERunner) {
+func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation

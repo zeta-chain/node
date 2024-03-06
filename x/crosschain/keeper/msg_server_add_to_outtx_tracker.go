@@ -13,6 +13,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/zetacore/common"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -48,8 +49,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 	}
 
 	if msg.Proof == nil { // without proof, only certain accounts can send this message
-		adminPolicyAccount := k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(observertypes.Policy_Type_group1)
-		isAdmin := msg.Creator == adminPolicyAccount
+		isAdmin := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
 		isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
 
 		// Sender needs to be either the admin policy account or an observer

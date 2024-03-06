@@ -2,6 +2,7 @@ package e2etests
 
 import (
 	"fmt"
+	"strconv"
 
 	"math/big"
 	"time"
@@ -15,9 +16,20 @@ import (
 )
 
 // TestStressEtherWithdraw tests the stressing withdraw of ether
-func TestStressEtherWithdraw(r *runner.E2ERunner) {
-	// number of withdraws to perform
-	numWithdraws := 100
+func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
+	if len(args) != 2 {
+		panic("TestStressEtherWithdraw requires exactly two arguments: the withdrawal amount and the number of withdrawals.")
+	}
+
+	withdrawalAmount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid withdrawal amount specified for TestStressEtherWithdraw.")
+	}
+
+	numWithdraws, err := strconv.Atoi(args[1])
+	if err != nil || numWithdraws < 1 {
+		panic("Invalid number of withdrawals specified for TestStressEtherWithdraw.")
+	}
 
 	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
@@ -33,7 +45,7 @@ func TestStressEtherWithdraw(r *runner.E2ERunner) {
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
-		tx, err := r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), big.NewInt(100000))
+		tx, err := r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 		if err != nil {
 			panic(err)
 		}

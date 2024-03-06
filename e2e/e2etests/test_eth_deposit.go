@@ -20,16 +20,33 @@ import (
 )
 
 // TestEtherDeposit tests deposit of ethers
-func TestEtherDeposit(r *runner.E2ERunner) {
-	hash := r.DepositEtherWithAmount(false, big.NewInt(10000000000000000)) // in wei (0.01 eth)
+func TestEtherDeposit(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestEtherDeposit requires exactly one argument for the amount.")
+	}
 
+	amount, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestEtherDeposit.")
+	}
+
+	hash := r.DepositEtherWithAmount(false, amount) // in wei
 	// wait for the cctx to be mined
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, hash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "deposit")
 }
 
 // TestEtherDepositAndCall tests deposit of ethers calling a example contract
-func TestEtherDepositAndCall(r *runner.E2ERunner) {
+func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestEtherDepositAndCall requires exactly one argument for the amount.")
+	}
+
+	value, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestEtherDepositAndCall.")
+	}
+
 	r.Logger.Info("Deploying example contract")
 	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZevmAuth, r.ZevmClient)
 	if err != nil {
@@ -39,7 +56,6 @@ func TestEtherDepositAndCall(r *runner.E2ERunner) {
 
 	// preparing tx
 	goerliClient := r.GoerliClient
-	value := big.NewInt(1e18)
 	gasLimit := uint64(23000)
 	gasPrice, err := goerliClient.SuggestGasPrice(r.Ctx)
 	if err != nil {
@@ -136,12 +152,17 @@ func TestEtherDepositAndCall(r *runner.E2ERunner) {
 	}
 }
 
-func TestDepositAndCallRefund(r *runner.E2ERunner) {
-	goerliClient := r.GoerliClient
+func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestDepositAndCallRefund requires exactly one argument for the amount.")
+	}
 
-	// in wei (10 eth)
-	value := big.NewInt(1e18)
-	value = value.Mul(value, big.NewInt(10))
+	value, ok := big.NewInt(0).SetString(args[0], 10)
+	if !ok {
+		panic("Invalid amount specified for TestDepositAndCallRefund.")
+	}
+
+	goerliClient := r.GoerliClient
 
 	nonce, err := goerliClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
 	if err != nil {
@@ -234,15 +255,20 @@ func TestDepositAndCallRefund(r *runner.E2ERunner) {
 }
 
 // TestDepositEtherLiquidityCap tests depositing Ethers in a context where a liquidity cap is set
-func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
+func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
+	if len(args) != 1 {
+		panic("TestDepositEtherLiquidityCap requires exactly one argument for the liquidity cap.")
+	}
+
+	liquidityCapArg := math.NewUintFromString(args[0])
 	supply, err := r.ETHZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		panic(err)
 	}
 
-	// Set a liquidity cap slightly above the current supply
-	r.Logger.Info("Setting a liquidity cap")
-	liquidityCap := math.NewUintFromBigInt(supply).Add(math.NewUint(1e16))
+	liquidityCap := math.NewUintFromBigInt(supply).Add(liquidityCapArg)
+	amountLessThanCap := liquidityCap.BigInt().Div(liquidityCap.BigInt(), big.NewInt(10)) // 1/10 of the cap
+	amountMoreThanCap := liquidityCap.BigInt().Mul(liquidityCap.BigInt(), big.NewInt(10)) // 10 times the cap
 	msg := fungibletypes.NewMsgUpdateZRC20LiquidityCap(
 		r.ZetaTxServer.GetAccountAddress(0),
 		r.ETHZRC20Addr.Hex(),
@@ -255,7 +281,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
 	r.Logger.Info("set liquidity cap tx hash: %s", res.TxHash)
 
 	r.Logger.Info("Depositing more than liquidity cap should make cctx reverted")
-	signedTx, err := r.SendEther(r.TSSAddress, big.NewInt(1e17), nil)
+	signedTx, err := r.SendEther(r.TSSAddress, amountMoreThanCap, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -274,7 +300,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	signedTx, err = r.SendEther(r.TSSAddress, big.NewInt(1e15), nil)
+	signedTx, err = r.SendEther(r.TSSAddress, amountLessThanCap, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -283,7 +309,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
 		panic("deposit eth tx failed")
 	}
 	utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	expectedBalance := big.NewInt(0).Add(initialBal, big.NewInt(1e15))
+	expectedBalance := big.NewInt(0).Add(initialBal, amountLessThanCap)
 
 	bal, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
@@ -309,7 +335,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
 	if err != nil {
 		panic(err)
 	}
-	signedTx, err = r.SendEther(r.TSSAddress, big.NewInt(1e17), nil)
+	signedTx, err = r.SendEther(r.TSSAddress, amountMoreThanCap, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -318,7 +344,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner) {
 		panic("deposit eth tx failed")
 	}
 	utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
-	expectedBalance = big.NewInt(0).Add(initialBal, big.NewInt(1e17))
+	expectedBalance = big.NewInt(0).Add(initialBal, amountMoreThanCap)
 
 	bal, err = r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {

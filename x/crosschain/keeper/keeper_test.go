@@ -16,6 +16,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmdb "github.com/tendermint/tm-db"
+	authoritykeeper "github.com/zeta-chain/zetacore/x/authority/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -44,6 +45,7 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 	authKeeper := authkeeper.AccountKeeper{}
 	observerKeeper := keeper.Keeper{}
 	fungibleKeeper := fungiblekeeper.Keeper{}
+	authorityKeeper := authoritykeeper.Keeper{}
 
 	k := NewKeeper(
 		codec.NewProtoCodec(registry),
@@ -55,6 +57,7 @@ func setupKeeper(t testing.TB) (*Keeper, sdk.Context) {
 		bankKeeper,
 		observerKeeper,
 		&fungibleKeeper,
+		authorityKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

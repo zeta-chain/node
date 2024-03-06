@@ -1,0 +1,31 @@
+zeta_chain_id: "athens_7001-1"
+accounts:
+  evm_address: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC"
+  evm_priv_key: "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
+rpcs:
+  zevm: "http://0.0.0.0:9545"
+  evm: "http://0.0.0.0:8545"
+  bitcoin:
+    host: "0.0.0.0:18443"
+    user: "e2e"
+    pass: "123"
+    http_post_mode: true
+    disable_tls: true
+    params: regnet
+  zetacore_grpc: "0.0.0.0:9090"
+  zetacore_rpc: "http://0.0.0.0:26657"
+contracts:
+  zevm:
+    system_contract: "0x91d18e54DAf4F677cB28167158d6dd21F6aB3921"
+    eth_zrc20: "0x13A0c5930C028511Dc02665E7285134B6d11A5f4"
+    usdt_zrc20: "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb"
+    btc_zrc20: "0xd97B1de3619ed2c6BEb3860147E30cA8A7dC9891"
+    uniswap_factory: "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
+    uniswap_router: "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
+    connector_zevm: "0x239e96c8f17C85c30100AC26F635Ea15f23E9c67"
+    wzeta: "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"
+  evm:
+    zeta_eth: "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9"
+    connector_eth: "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca"
+    custody: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a"
+    usdt: "0xbD1e64A22B9F92D9Ce81aA9B4b0fFacd80215564"

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -16,7 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // WhitelistERC20 deploys a new zrc20, create a foreign coin object for the ERC20
@@ -25,9 +26,12 @@ import (
 // Authorized: admin policy group 1.
 func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelistERC20) (*types.MsgWhitelistERC20Response, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.zetaObserverKeeper.GetParams(ctx).GetAdminPolicyAccount(zetaObserverTypes.Policy_Type_group2) {
+
+	// check if authorized
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
+
 	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
 	if erc20Addr == (ethcommon.Address{}) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid ERC20 contract address (%s)", msg.Erc20Address)
