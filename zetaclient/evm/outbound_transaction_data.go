@@ -100,59 +100,61 @@ func (txData *OutBoundTransactionData) SetupGas(
 	return nil
 }
 
-// SetTransactionData populates transaction input fields parsed from the cctx and other parameters
+// NewOutBoundTransactionData populates transaction input fields parsed from the cctx and other parameters
 // returns
 // bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
 //
 //	cctx will be skipped and false otherwise.
 //
 // error
-func (txData *OutBoundTransactionData) SetTransactionData(
+func NewOutBoundTransactionData(
 	cctx *types.CrossChainTx,
 	evmClient *ChainClient,
 	evmRPC interfaces.EVMRPCClient,
 	logger zerolog.Logger,
-) (bool, error) {
-
+	height uint64,
+) (*OutBoundTransactionData, bool, error) {
+	txData := OutBoundTransactionData{}
 	txData.outboundParams = cctx.GetCurrentOutTxParam()
 	txData.amount = cctx.GetCurrentOutTxParam().Amount.BigInt()
 	txData.nonce = cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 	txData.sender = ethcommon.HexToAddress(cctx.InboundTxParams.Sender)
 	txData.srcChainID = big.NewInt(cctx.InboundTxParams.SenderChainId)
 	txData.asset = ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
+	txData.height = height
 
 	skipTx := txData.SetChainAndSender(cctx, logger)
 	if skipTx {
-		return true, nil
+		return nil, true, nil
 	}
 
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 	if toChain == nil {
-		return true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
+		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
 
 	// Get nonce, Early return if the cctx is already processed
 	nonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
 	included, confirmed, err := evmClient.IsSendOutTxProcessed(cctx, logger)
 	if err != nil {
-		return true, errors.New("IsSendOutTxProcessed failed")
+		return nil, true, errors.New("IsSendOutTxProcessed failed")
 	}
 	if included || confirmed {
 		logger.Info().Msgf("CCTX already processed; exit signer")
-		return true, nil
+		return nil, true, nil
 	}
 
 	// Set up gas limit and gas price
 	err = txData.SetupGas(cctx, logger, evmRPC, toChain)
 	if err != nil {
-		return true, err
+		return nil, true, err
 	}
 
 	// Get sendHash
 	logger.Info().Msgf("chain %s minting %d to %s, nonce %d, finalized zeta bn %d", toChain, cctx.InboundTxParams.Amount, txData.to.Hex(), nonce, cctx.InboundTxParams.InboundTxFinalizedZetaHeight)
 	sendHash, err := hex.DecodeString(cctx.Index[2:]) // remove the leading 0x
 	if err != nil || len(sendHash) != 32 {
-		return true, fmt.Errorf("decode CCTX %s error", cctx.Index)
+		return nil, true, fmt.Errorf("decode CCTX %s error", cctx.Index)
 	}
 	copy(txData.sendHash[:32], sendHash[:32])
 
@@ -163,7 +165,7 @@ func (txData *OutBoundTransactionData) SetTransactionData(
 			logger.Info().Msgf("replace pending outTx %s nonce %d using gas price %d", pendingTx.Hash().Hex(), nonce, txData.gasPrice)
 		} else {
 			logger.Info().Msgf("please wait for pending outTx %s nonce %d to be included", pendingTx.Hash().Hex(), nonce)
-			return true, nil
+			return nil, true, nil
 		}
 	}
 
@@ -175,5 +177,5 @@ func (txData *OutBoundTransactionData) SetTransactionData(
 		}
 	}
 
-	return false, nil
+	return &txData, false, nil
 }

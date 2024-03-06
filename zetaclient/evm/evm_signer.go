@@ -307,9 +307,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	// Setup Transaction input
-	txData := OutBoundTransactionData{}
-	txData.height = height
-	skipTx, err := txData.SetTransactionData(cctx, evmClient, signer.client, logger)
+	txData, skipTx, err := NewOutBoundTransactionData(cctx, evmClient, signer.client, logger, height)
 	if err != nil {
 		logger.Err(err).Msg("error setting up transaction input fields")
 		return
@@ -355,7 +353,7 @@ func (signer *Signer) TryProcessOutTx(
 		// params field is used to pass input parameters for command requests, currently it is used to pass the ERC20
 		// contract address when a whitelist command is requested
 		params := msg[1]
-		tx, err = signer.SignCommandTx(&txData, cmd, params)
+		tx, err = signer.SignCommandTx(txData, cmd, params)
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 			return
@@ -364,13 +362,13 @@ func (signer *Signer) TryProcessOutTx(
 		switch cctx.GetCurrentOutTxParam().CoinType {
 		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignWithdrawTx(&txData)
+			tx, err = signer.SignWithdrawTx(txData)
 		case common.CoinType_ERC20:
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignERC20WithdrawTx(&txData)
+			tx, err = signer.SignERC20WithdrawTx(txData)
 		case common.CoinType_Zeta:
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignOutboundTx(&txData)
+			tx, err = signer.SignOutboundTx(txData)
 		}
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
@@ -380,10 +378,10 @@ func (signer *Signer) TryProcessOutTx(
 		switch cctx.GetCurrentOutTxParam().CoinType {
 		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignWithdrawTx(&txData)
+			tx, err = signer.SignWithdrawTx(txData)
 		case common.CoinType_ERC20:
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-			tx, err = signer.SignERC20WithdrawTx(&txData)
+			tx, err = signer.SignERC20WithdrawTx(txData)
 		}
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
@@ -394,14 +392,14 @@ func (signer *Signer) TryProcessOutTx(
 		txData.srcChainID = big.NewInt(cctx.OutboundTxParams[0].ReceiverChainId)
 		txData.toChainID = big.NewInt(cctx.GetCurrentOutTxParam().ReceiverChainId)
 
-		tx, err = signer.SignRevertTx(&txData)
+		tx, err = signer.SignRevertTx(txData)
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 			return
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound {
 		logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
-		tx, err = signer.SignOutboundTx(&txData)
+		tx, err = signer.SignOutboundTx(txData)
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 			return
@@ -411,7 +409,7 @@ func (signer *Signer) TryProcessOutTx(
 	logger.Info().Msgf("Key-sign success: %d => %s, nonce %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 
 	// Broadcast Signed Tx
-	signer.BroadcastOutTx(tx, cctx, logger, myID, zetaBridge, &txData)
+	signer.BroadcastOutTx(tx, cctx, logger, myID, zetaBridge, txData)
 }
 
 // BroadcastOutTx signed transaction through evm rpc client
