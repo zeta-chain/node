@@ -435,7 +435,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetabridge...")
 						// sanity check tx event
-						err = CheckEvmTxLog(vLog, connectorAddr, transaction.Hash().Hex(), TopicsZetaReceived)
+						err = ValidateEvmTxLog(vLog, connectorAddr, transaction.Hash().Hex(), TopicsZetaReceived)
 						if err != nil {
 							logger.Error().Err(err).Msgf("CheckEvmTxLog error on ZetaReceived event, chain %d nonce %d txhash %s", ob.chain.ChainId, nonce, transaction.Hash().Hex())
 							return false, false, err
@@ -473,7 +473,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 					if confHeight <= ob.GetLastBlockHeight() {
 						logger.Info().Msg("Confirmed! Sending PostConfirmation to zetabridge...")
 						// sanity check tx event
-						err = CheckEvmTxLog(vLog, connectorAddr, transaction.Hash().Hex(), TopicsZetaReverted)
+						err = ValidateEvmTxLog(vLog, connectorAddr, transaction.Hash().Hex(), TopicsZetaReverted)
 						if err != nil {
 							logger.Error().Err(err).Msgf("CheckEvmTxLog error on ZetaReverted event, chain %d nonce %d txhash %s", ob.chain.ChainId, nonce, transaction.Hash().Hex())
 							return false, false, err
@@ -541,7 +541,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				if err == nil {
 					logger.Info().Msgf("Found (ERC20Custody.Withdrawn Event) sendHash %s on chain %s txhash %s", sendHash, ob.chain.String(), vLog.TxHash.Hex())
 					// sanity check tx event
-					err = CheckEvmTxLog(vLog, addrCustody, transaction.Hash().Hex(), TopicsWithdrawn)
+					err = ValidateEvmTxLog(vLog, addrCustody, transaction.Hash().Hex(), TopicsWithdrawn)
 					if err != nil {
 						logger.Error().Err(err).Msgf("CheckEvmTxLog error on Withdrawn event, chain %d nonce %d txhash %s", ob.chain.ChainId, nonce, transaction.Hash().Hex())
 						return false, false, err
@@ -940,10 +940,10 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	startBlock, toBlock := ob.calcBlockRangeToScan(confirmedBlockNum, lastScanned, config.MaxBlocksPerPeriod)
 
 	// task 1:  query evm chain for zeta sent logs (read at most 100 blocks in one go)
-	lastScannedZetaSent := ob.observeZetaSent(startBlock, toBlock, true)
+	lastScannedZetaSent := ob.observeZetaSent(startBlock, toBlock)
 
 	// task 2: query evm chain for deposited logs (read at most 100 blocks in one go)
-	lastScannedDeposited := ob.observeERC20Deposited(startBlock, toBlock, true)
+	lastScannedDeposited := ob.observeERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
 	lastScannedTssRecvd := ob.observerTSSReceive(startBlock, toBlock, flags)
@@ -971,7 +971,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 
 // observeZetaSent queries the ZetaSent event from the connector contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64, vote bool) uint64 {
+func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
@@ -993,7 +993,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64, vote bool) ui
 	events := make([]*zetaconnector.ZetaConnectorNonEthZetaSent, 0)
 	for iter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&iter.Event.Raw, addrConnector, "", TopicsZetaSent)
+		err := ValidateEvmTxLog(&iter.Event.Raw, addrConnector, "", TopicsZetaSent)
 		if err == nil {
 			events = append(events, iter.Event)
 			continue
@@ -1030,7 +1030,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64, vote bool) ui
 		guard[event.Raw.TxHash.Hex()] = true
 
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
-		if msg != nil && vote {
+		if msg != nil {
 			_, err = ob.PostVoteInbound(msg, common.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
 			if err != nil {
 				return beingScanned - 1 // we have to re-scan from this block next time
@@ -1043,7 +1043,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64, vote bool) ui
 
 // observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64, vote bool) uint64 {
+func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
@@ -1065,7 +1065,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64, vote bo
 	events := make([]*erc20custody.ERC20CustodyDeposited, 0)
 	for iter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&iter.Event.Raw, addrCustody, "", TopicsDeposited)
+		err := ValidateEvmTxLog(&iter.Event.Raw, addrCustody, "", TopicsDeposited)
 		if err == nil {
 			events = append(events, iter.Event)
 			continue
@@ -1110,7 +1110,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64, vote bo
 		guard[event.Raw.TxHash.Hex()] = true
 
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
-		if msg != nil && vote {
+		if msg != nil {
 			_, err = ob.PostVoteInbound(msg, common.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
 			if err != nil {
 				return beingScanned - 1 // we have to re-scan from this block next time
@@ -1334,7 +1334,7 @@ func (ob *ChainClient) BlockByNumber(blockNumber int) (*ethrpc.Block, error) {
 		return nil, err
 	}
 	for i := range block.Transactions {
-		err := CheckEvmTransaction(&block.Transactions[i])
+		err := ValidateEvmTransaction(&block.Transactions[i])
 		if err != nil {
 			return nil, err
 		}
@@ -1348,7 +1348,7 @@ func (ob *ChainClient) TransactionByHash(txHash string) (*ethrpc.Transaction, bo
 	if err != nil {
 		return nil, false, err
 	}
-	err = CheckEvmTransaction(tx)
+	err = ValidateEvmTransaction(tx)
 	if err != nil {
 		return nil, false, err
 	}

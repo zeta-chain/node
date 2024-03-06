@@ -11,16 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
-// CheckEvmTxLog checks the basics of an EVM tx log
-func CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
+// ValidateEvmTxLog checks the basics of an EVM tx log
+func ValidateEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash string, wantTopics int) error {
 	if vLog.Removed {
 		return fmt.Errorf("log is removed, chain reorg?")
 	}
 	if vLog.Address != wantAddress {
 		return fmt.Errorf("log emitter address mismatch: want %s got %s", wantAddress.Hex(), vLog.Address.Hex())
-	}
-	if vLog.TxHash.Hex() == "" {
-		return fmt.Errorf("log tx hash is empty: %d %s", vLog.BlockNumber, vLog.TxHash.Hex())
 	}
 	if wantHash != "" && vLog.TxHash.Hex() != wantHash {
 		return fmt.Errorf("log tx hash mismatch: want %s got %s", wantHash, vLog.TxHash.Hex())
@@ -31,10 +28,10 @@ func CheckEvmTxLog(vLog *ethtypes.Log, wantAddress ethcommon.Address, wantHash s
 	return nil
 }
 
-// CheckEvmTransaction checks the basics of an EVM transaction
+// ValidateEvmTransaction checks the basics of an EVM transaction
 // Note: these checks are to ensure the transaction is well-formed
 // and can be safely used for further processing by zetaclient
-func CheckEvmTransaction(tx *ethrpc.Transaction) error {
+func ValidateEvmTransaction(tx *ethrpc.Transaction) error {
 	if tx == nil {
 		return fmt.Errorf("transaction is nil")
 	}

@@ -107,7 +107,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, rece
 		event, err := connector.ParseZetaSent(*log)
 		if err == nil && event != nil {
 			// sanity check tx event
-			err = CheckEvmTxLog(&event.Raw, addrConnector, tx.Hash, TopicsZetaSent)
+			err = ValidateEvmTxLog(&event.Raw, addrConnector, tx.Hash, TopicsZetaSent)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForZetaSentEvent(event)
 			} else {
@@ -148,7 +148,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, rec
 		zetaDeposited, err := custody.ParseDeposited(*log)
 		if err == nil && zetaDeposited != nil {
 			// sanity check tx event
-			err = CheckEvmTxLog(&zetaDeposited.Raw, addrCustory, tx.Hash, TopicsDeposited)
+			err = ValidateEvmTxLog(&zetaDeposited.Raw, addrCustory, tx.Hash, TopicsDeposited)
 			if err == nil {
 				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
