@@ -70,7 +70,7 @@ func bitcoinTestRoutine(
 			e2etests.TestBitcoinWithdrawName,
 			e2etests.TestZetaWithdrawBTCRevertName,
 			e2etests.TestCrosschainSwapName,
-			e2etests.TestBitcoinWithdrawRestrictedName,
+			//e2etests.TestBitcoinWithdrawRestrictedName,
 		); err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)
 		}

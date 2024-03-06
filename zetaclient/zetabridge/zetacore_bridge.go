@@ -48,11 +48,14 @@ type ZetaCoreBridge struct {
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *keys.Keys, chainIP string,
+func NewZetaCoreBridge(
+	k *keys.Keys,
+	chainIP string,
 	signerName string,
 	chainID string,
 	hsmMode bool,
-	telemetry *metrics.TelemetryServer) (*ZetaCoreBridge, error) {
+	telemetry *metrics.TelemetryServer,
+) (*ZetaCoreBridge, error) {
 
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
