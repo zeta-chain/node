@@ -3,9 +3,10 @@ package network
 import (
 	"encoding/json"
 	"fmt"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"strconv"
 	"testing"
+
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
