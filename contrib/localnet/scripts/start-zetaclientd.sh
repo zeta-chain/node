@@ -45,8 +45,8 @@ else
   zetaclientd start < /root/password.file
 fi
 
-#if [ "$OPTION" == "background" ]; then
-#    sleep 3
-#    tail -f $HOME/zetaclient.log
-#fi
+if [ "$OPTION" == "background" ]; then
+    sleep 3
+    tail -f $HOME/zetaclient.log
+fi
 
