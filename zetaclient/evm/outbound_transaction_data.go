@@ -102,11 +102,10 @@ func (txData *OutBoundTransactionData) SetupGas(
 
 // NewOutBoundTransactionData populates transaction input fields parsed from the cctx and other parameters
 // returns
-// bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
-//
-//	cctx will be skipped and false otherwise.
-//
-// error
+//  1. New OutBoundTransaction Data struct or nil if an error occurred.
+//  2. bool (skipTx) - if the transaction doesn't qualify to be processed the function will return true, meaning that this
+//     cctx will be skipped and false otherwise.
+//  3. error
 func NewOutBoundTransactionData(
 	cctx *types.CrossChainTx,
 	evmClient *ChainClient,
