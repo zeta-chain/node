@@ -49,11 +49,16 @@ func ethereumDepositPerformanceRoutine(
 		r.Logger.Print("🏃 starting Ethereum deposit performance tests")
 		startTime := time.Now()
 
-		if err := r.RunE2ETestsFromNames(
+		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestStressEtherDepositName,
-		); err != nil {
-			return fmt.Errorf("thereum deposit performance test failed: %v", err)
+		)
+		if err != nil {
+			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
+		}
+
+		if err := r.RunE2ETests(tests); err != nil {
+			return fmt.Errorf("misc tests failed: %v", err)
 		}
 
 		r.Logger.Print("🍾 Ethereum deposit performance test completed in %s", time.Since(startTime).String())
@@ -101,11 +106,16 @@ func ethereumWithdrawPerformanceRoutine(
 		txEtherDeposit := r.DepositEther(false)
 		r.WaitForMinedCCTX(txEtherDeposit)
 
-		if err := r.RunE2ETestsFromNames(
+		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestStressEtherWithdrawName,
-		); err != nil {
-			return fmt.Errorf("thereum withdraw performance test failed: %v", err)
+		)
+		if err != nil {
+			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
+		}
+
+		if err := r.RunE2ETests(tests); err != nil {
+			return fmt.Errorf("misc tests failed: %v", err)
 		}
 
 		r.Logger.Print("🍾 Ethereum withdraw performance test completed in %s", time.Since(startTime).String())
