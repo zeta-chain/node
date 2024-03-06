@@ -201,8 +201,8 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		return
 	} else if err != nil && isContractReverted { // contract call reverted; should refund
 		revertMessage := err.Error()
-		chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
-		if chain == nil {
+		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
+		if senderChain == nil {
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
 			return
 		}
@@ -232,7 +232,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		err = func() error {
 			err := k.PayGasAndUpdateCctx(
 				tmpCtx,
-				chain.ChainId,
+				senderChain.ChainId,
 				cctx,
 				cctx.InboundTxParams.Amount,
 				false,
@@ -240,7 +240,8 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			if err != nil {
 				return err
 			}
-			return k.UpdateNonce(tmpCtx, chain.ChainId, cctx)
+			// Update nonce using senderchain id as this is a revert tx and would go back to the original sender
+			return k.UpdateNonce(tmpCtx, senderChain.ChainId, cctx)
 		}()
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))

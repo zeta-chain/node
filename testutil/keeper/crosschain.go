@@ -1,16 +1,24 @@
 package keeper
 
 import (
+	"math/big"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
+	"github.com/zeta-chain/zetacore/common"
 	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 type CrosschainMockOptions struct {
@@ -182,4 +190,78 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 	cfk, ok := keeper.GetFungibleKeeper().(*crosschainmocks.CrosschainFungibleKeeper)
 	require.True(t, ok)
 	return cfk
+}
+
+func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *common.Chain) {
+	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+		Return(senderChain).Once()
+
+}
+func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain common.Chain) {
+	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
+		Return(fungibletypes.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+		}, true)
+	m.On("QueryGasLimit", mock.Anything, mock.Anything).
+		Return(big.NewInt(100), nil)
+
+}
+func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain common.Chain) {
+	m2.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+		Return(&senderChain).Twice()
+	m.On("QuerySystemContractGasCoinZRC20", mock.Anything, mock.Anything).
+		Return(ethcommon.Address{}, nil)
+	m.On("QueryGasLimit", mock.Anything, mock.Anything).
+		Return(big.NewInt(100), nil)
+	m.On("QueryProtocolFlatFee", mock.Anything, mock.Anything).
+		Return(big.NewInt(1), nil)
+	k.SetGasPrice(ctx, types.GasPrice{
+		ChainId:     senderChain.ChainId,
+		MedianIndex: 0,
+		Prices:      []uint64{1},
+	})
+
+	m.On("QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(big.NewInt(0), nil)
+	m.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(&evmtypes.MsgEthereumTxResponse{}, nil)
+	m.On("GetUniswapV2Router02Address", mock.Anything).
+		Return(ethcommon.Address{}, nil)
+	m.On("CallZRC20Approve", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+	m.On("CallUniswapV2RouterSwapExactTokensForTokens", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(1000)}, nil)
+	m.On("CallZRC20Burn", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		Return(nil)
+
+}
+
+func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain common.Chain) (nonce uint64) {
+	nonce = uint64(1)
+	tss := sample.Tss()
+	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+		Return(senderChain)
+	m.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+		Return(observertypes.ChainNonces{Nonce: nonce}, true)
+	m.On("GetTSS", mock.Anything).
+		Return(tss, true)
+	m.On("GetPendingNonces", mock.Anything, tss.TssPubkey, mock.Anything).
+		Return(observertypes.PendingNonces{NonceHigh: int64(nonce)}, true)
+	m.On("SetChainNonces", mock.Anything, mock.Anything)
+	m.On("SetPendingNonces", mock.Anything, mock.Anything)
+	return
+}
+
+func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, receiver ethcommon.Address, amount *big.Int, senderChainId int64, errDeposit error) {
+	m.On(
+		"ZRC20DepositAndCallContract",
+		mock.Anything,
+		mock.Anything,
+		receiver,
+		amount,
+		senderChainId,
+		mock.Anything,
+		common.CoinType_ERC20,
+		mock.Anything,
+	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }

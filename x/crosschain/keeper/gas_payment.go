@@ -144,7 +144,6 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
 		return observertypes.ErrSupportedChains
 	}
-
 	// get gas params
 	gasZRC20, gasLimit, gasPrice, protocolFlatFee, err := k.ChainGasParams(ctx, chainID)
 	if err != nil {
