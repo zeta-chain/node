@@ -209,7 +209,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "can't get revert tx gas limit"+err.Error())
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("can't get revert tx gas limit,%s", err.Error()))
 			return
 		}
 		if gasLimit == 0 {
@@ -243,7 +243,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			return k.UpdateNonce(tmpCtx, chain.ChainId, cctx)
 		}()
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
+			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))
 			return
 		}
 		commit()

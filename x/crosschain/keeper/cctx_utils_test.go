@@ -1,10 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	evmtypes "github.com/evmos/ethermint/x/evm/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -12,6 +15,7 @@ import (
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestGetRevertGasLimit(t *testing.T) {
@@ -190,4 +194,256 @@ func TestGetAbortedAmount(t *testing.T) {
 		a := crosschainkeeper.GetAbortedAmount(cctx)
 		require.Equal(t, sdkmath.ZeroUint(), a)
 	})
+}
+
+func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
+	t.Run("process zevm deposit successfully", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		// expect DepositCoinZeta to be called
+		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
+			Return(nil)
+
+		// call HandleEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = 0
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
+	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit returns err without reverting", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		// Setup expected calls
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
+			Return(fmt.Errorf("deposit error"), false)
+
+		// call ProcessZEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = 0
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, "deposit error", cctx.CctxStatus.StatusMessage)
+	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit reverts fails at GetSupportedChainFromChainID", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChainId := getValidEthChainID(t)
+		// Setup expected calls
+		errDeposit := fmt.Errorf("deposit failed")
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			mock.Anything,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChainId,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChainId).
+			Return(nil)
+
+		// call ProcessZEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = senderChainId
+		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = ""
+		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, "invalid sender chain", cctx.CctxStatus.StatusMessage)
+	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at and GetRevertGasLimit", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+
+		// Setup expected calls
+		errDeposit := fmt.Errorf("deposit failed")
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			mock.Anything,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain.ChainId,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
+			Return(fungibletypes.ForeignCoins{}, false)
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain)
+
+		// call ProcessZEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
+		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = asset
+		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, fmt.Sprintf("can't get revert tx gas limit,%s", types.ErrForeignCoinNotFound), cctx.CctxStatus.StatusMessage)
+	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails at PayGasInERC20AndUpdateCctx", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+
+		// Setup expected calls
+		errDeposit := fmt.Errorf("deposit failed")
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			mock.Anything,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain.ChainId,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
+			Return(fungibletypes.ForeignCoins{
+				Zrc20ContractAddress: sample.EthAddress().String(),
+			}, true)
+		fungibleMock.On("QueryGasLimit", mock.Anything, mock.Anything).
+			Return(big.NewInt(100), nil)
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain).Once()
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(nil).Once()
+
+		// call ProcessZEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
+		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = asset
+		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains), cctx.CctxStatus.StatusMessage)
+	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit reverts fails at PayGasInERC20AndUpdateCctx", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+
+		// Setup expected calls
+		errDeposit := fmt.Errorf("deposit failed")
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			mock.Anything,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain.ChainId,
+			mock.Anything,
+			common.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
+		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
+			Return(fungibletypes.ForeignCoins{
+				Zrc20ContractAddress: sample.EthAddress().String(),
+			}, true)
+		fungibleMock.On("QueryGasLimit", mock.Anything, mock.Anything).
+			Return(big.NewInt(100), nil)
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(senderChain).Once()
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
+			Return(nil).Once()
+
+		// call ProcessZEVMDeposit
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
+		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = asset
+		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains), cctx.CctxStatus.StatusMessage)
+	})
+
 }
