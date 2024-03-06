@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -12,11 +14,13 @@ import (
 //
 // Authorized: admin policy group 1.
 func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeygen) (*types.MsgUpdateKeygenResponse, error) {
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group1) {
+
+	// check permission
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
 		return &types.MsgUpdateKeygenResponse{}, types.ErrNotAuthorizedPolicy
 	}
+
 	keygen, found := k.GetKeygen(ctx)
 	if !found {
 		return nil, types.ErrKeygenNotFound
@@ -24,15 +28,20 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 	if msg.Block <= (ctx.BlockHeight() + 10) {
 		return nil, types.ErrKeygenBlockTooLow
 	}
+
 	nodeAccountList := k.GetAllNodeAccount(ctx)
 	granteePubKeys := make([]string, len(nodeAccountList))
 	for i, nodeAccount := range nodeAccountList {
 		granteePubKeys[i] = nodeAccount.GranteePubkey.Secp256k1.String()
 	}
+
+	// update keygen
 	keygen.GranteePubkeys = granteePubKeys
 	keygen.BlockNumber = msg.Block
 	keygen.Status = types.KeygenStatus_PendingKeygen
 	k.SetKeygen(ctx, keygen)
+
 	EmitEventKeyGenBlockUpdated(ctx, &keygen)
+
 	return &types.MsgUpdateKeygenResponse{}, nil
 }

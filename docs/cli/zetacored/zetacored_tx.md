@@ -25,6 +25,7 @@ zetacored tx [flags]
 ### SEE ALSO
 
 * [zetacored](zetacored.md)	 - Zetacore Daemon (server)
+* [zetacored tx authority](zetacored_tx_authority.md)	 - authority transactions subcommands
 * [zetacored tx authz](zetacored_tx_authz.md)	 - Authorization transactions subcommands
 * [zetacored tx bank](zetacored_tx_bank.md)	 - Bank transaction subcommands
 * [zetacored tx broadcast](zetacored_tx_broadcast.md)	 - Broadcast transactions generated offline

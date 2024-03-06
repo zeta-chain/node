@@ -91,7 +91,7 @@ message MsgUpdateContractBytecode {
 
 ## MsgUpdateZRC20WithdrawFee
 
-Authorized: admin policy group 2.
+UpdateZRC20WithdrawFee updates the withdraw fee and gas limit of a zrc20 token
 
 ```proto
 message MsgUpdateZRC20WithdrawFee {

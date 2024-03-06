@@ -158,6 +158,23 @@ cast balance 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC --rpc-url http://0.0.0.0
 cast send 0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c --value 42 --rpc-url http://0.0.0.0:8545 --private-key "d87baf7bf6dc560a252596678c12e41f7d1682837f05b29d411bc3f78ae2c263"
 ```
 
+### Interaction using `zetae2e`
+
+`zetae2e` CLI can also be used to interact with the localnet and test specific functionalities with the `run` command. The [local config](cmd/zetae2e/config/local.yml) can be used to interact with the network. 
+
+The balances on the localnet can be checked with the following command:
+
+```bash
+zetae2e balances cmd/zetae2e/config/local.yml --skip-btc
+```
+Note: Bitcoin network is currently not supported for the command.
+
+Example of `run` command:
+
+```dockerfile
+zetae2e run zeta_deposit:2000000000000000000 eth_deposit:2000000000000000000 erc20_deposit:200000 --config cmd/zetae2e/config/local.yml
+```
+
 ## Useful data
 
 - TSS Address (on ETH): 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2

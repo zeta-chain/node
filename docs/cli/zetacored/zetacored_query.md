@@ -27,6 +27,7 @@ zetacored query [flags]
 * [zetacored](zetacored.md)	 - Zetacore Daemon (server)
 * [zetacored query account](zetacored_query_account.md)	 - Query for account by address
 * [zetacored query auth](zetacored_query_auth.md)	 - Querying commands for the auth module
+* [zetacored query authority](zetacored_query_authority.md)	 - Querying commands for the authority module
 * [zetacored query authz](zetacored_query_authz.md)	 - Querying commands for the authz module
 * [zetacored query bank](zetacored_query_bank.md)	 - Querying commands for the bank module
 * [zetacored query block](zetacored_query_block.md)	 - Get verified data for the block at given height

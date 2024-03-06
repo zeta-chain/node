@@ -52,6 +52,7 @@ func EmissionKeeperWithMockOptions(
 		sdkKeepers.StakingKeeper,
 		sdkKeepers.SlashingKeeper,
 		sdkKeepers.ParamsKeeper,
+		initAuthorityKeeper(cdc, db, stateStore),
 	)
 
 	zetaKeepers := ZetaKeepers{
@@ -104,4 +105,10 @@ func EmissionKeeperWithMockOptions(
 	k.SetParams(ctx, types.DefaultParams())
 
 	return k, ctx, sdkKeepers, zetaKeepers
+}
+
+func GetEmissionsBankMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionBankKeeper {
+	cbk, ok := keeper.GetBankKeeper().(*emissionsmocks.EmissionBankKeeper)
+	require.True(t, ok)
+	return cbk
 }
