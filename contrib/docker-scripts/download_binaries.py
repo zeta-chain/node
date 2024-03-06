@@ -1,11 +1,8 @@
-import re
 import requests
 import os
 import json
 import logging
 import sys
-import shutil
-
 
 # Logger class for easier logging setup
 class Logger:
@@ -22,43 +19,6 @@ class Logger:
 # Initialize logger instance
 logger = Logger()
 
-# Define the path where upgrades will be stored, using an environment variable for the base path
-upgrade_path = f'{os.environ["DAEMON_HOME"]}/cosmovisor/upgrades/'
-
-
-# Function to find the latest patch version of a binary based on major and optional minor version
-def find_latest_patch_version(major_version, minor_version=None):
-    # Define a regex pattern to match version directories
-    pattern = re.compile(
-        f"v{major_version}\.{minor_version}\.(\d+)" if minor_version else f"v{major_version}\.0\.(\d+)")
-    # List directories that match the version pattern
-    versions = [folder for folder in os.listdir(upgrade_path) if pattern.match(folder)]
-    if versions:
-        try:
-            # Find the maximum version, assuming it's the latest patch
-            latest_patch_version = max(versions)
-            # Return the path to the binary of the latest patch version
-            return os.path.join(upgrade_path, latest_patch_version, "bin", "zetacored")
-        except ValueError as e:
-            logger.log.error(f"Error finding latest patch version: {e}")
-            return None
-    return None
-
-
-# Function to replace an old binary with a new one
-def replace_binary(source, target):
-    try:
-        # Log deletion of old binary
-        if os.path.exists(target):
-            logger.log.info(f"Deleted old binary: {target}")
-            os.remove(target)
-        # Copy the new binary to the target location
-        shutil.copy(source, target)
-        logger.log.info(f"Binary replaced: {target} -> {source}")
-    except Exception as e:
-        logger.log.error(f"Error replacing binary: {e}")
-
-
 # Parse JSON from an environment variable to get binary download information
 info = json.loads(os.environ["DOWNLOAD_BINARIES"])
 
@@ -66,7 +26,7 @@ try:
     # Iterate over binaries to download
     for binary in info["binaries"]:
         download_link = binary["download_url"]
-        binary_location = binary["binary_location"]
+        binary_location = f'{os.environ["DAEMON_HOME"]}/{binary["binary_location"]}'
         binary_directory = os.path.dirname(binary_location)
         # Log download link
         logger.log.info(f"DOWNLOAD LINK: {download_link}")
