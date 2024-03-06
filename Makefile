@@ -147,11 +147,6 @@ proto:
 	@buf format -w
 .PHONY: proto
 
-typescript:
-	@echo "--> Generating TypeScript bindings"
-	@bash ./scripts/protoc-gen-typescript.sh
-.PHONY: typescript
-
 proto-format:
 	@bash ./scripts/proto-format.sh
 
