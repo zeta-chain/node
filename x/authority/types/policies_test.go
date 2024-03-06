@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,11 @@ import (
 
 // setConfig sets the global config to use zeta chain's bech32 prefixes
 func setConfig() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("config is already sealed", r)
+		}
+	}()
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
 	cfg.Seal()

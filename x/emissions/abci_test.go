@@ -165,12 +165,6 @@ func TestDistributeObserverRewards(t *testing.T) {
 	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
 	require.NoError(t, err)
 	// Set starting emission for all observers to 100 so that we can calculate the rewards and slashes
-	for _, observer := range observerSet.ObserverList {
-		k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
-			Address: observer,
-			Amount:  sdkmath.NewInt(100),
-		})
-	}
 
 	tt := []struct {
 		name                 string
@@ -256,6 +250,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			for _, observer := range observerSet.ObserverList {
+				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+					Address: observer,
+					Amount:  sdkmath.NewInt(100),
+				})
+			}
 			params := emissionstypes.DefaultParams()
 			params.ObserverSlashAmount = tc.slashAmount
 			k.SetParams(ctx, params)
@@ -274,7 +274,6 @@ func TestDistributeObserverRewards(t *testing.T) {
 				Height:           0,
 				BallotsIndexList: ballotIdentifiers,
 			})
-
 			ctx = ctx.WithBlockHeight(100)
 			err := emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k)
 			require.NoError(t, err)
