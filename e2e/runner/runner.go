@@ -73,7 +73,7 @@ type E2ERunner struct {
 	ERC20CustodyAddr     ethcommon.Address
 	ERC20Custody         *erc20custody.ERC20Custody
 	USDTERC20Addr        ethcommon.Address
-	USDTERC20            *erc20.USDT
+	USDTERC20            *erc20.ERC20
 	USDTZRC20Addr        ethcommon.Address
 	USDTZRC20            *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
@@ -384,7 +384,7 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	runner.USDTERC20, err = erc20.NewUSDT(runner.USDTERC20Addr, runner.GoerliClient)
+	runner.USDTERC20, err = erc20.NewERC20(runner.USDTERC20Addr, runner.GoerliClient)
 	if err != nil {
 		return err
 	}

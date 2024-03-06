@@ -118,7 +118,7 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 	runner.Logger.Info("ERC20Custody contract address: %s, tx hash: %s", erc20CustodyAddr.Hex(), txCustody.Hash().Hex())
 
 	runner.Logger.Info("Deploying USDT contract")
-	usdtAddr, txUSDT, usdt, err := erc20.DeployUSDT(runner.GoerliAuth, runner.GoerliClient, "USDT", "USDT", 6)
+	usdtAddr, txUSDT, usdt, err := erc20.DeployERC20(runner.GoerliAuth, runner.GoerliClient, "USDT", "USDT", 6)
 	if err != nil {
 		panic(err)
 	}

@@ -60,7 +60,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid USDT: %s", c)
 		}
 		r.USDTERC20Addr = ethcommon.HexToAddress(c)
-		r.USDTERC20, err = erc20.NewUSDT(r.USDTERC20Addr, r.GoerliClient)
+		r.USDTERC20, err = erc20.NewERC20(r.USDTERC20Addr, r.GoerliClient)
 		if err != nil {
 			return err
 		}
