@@ -55,7 +55,7 @@ test-hsm:
 # Generate the test coverage
 # "|| exit 1" is used to return a non-zero exit code if the tests fail
 test-coverage:
-	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR} || exit 1
+	@go test ${TEST_BUILD_FLAGS} -coverprofile coverage.out ${TEST_DIR} || exit 1
 
 coverage-report: test-coverage
 	@go tool cover -html=coverage.out -o coverage.html
