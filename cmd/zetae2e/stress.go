@@ -219,13 +219,13 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
 	e2eTest.WG.Add(2)
-	go WithdrawCCtx(e2eTest)       // Withdraw USDT from ZEVM to EVM - goerli
+	go WithdrawCCtx(e2eTest)       // Withdraw from ZEVM to EVM - goerli
 	go EchoNetworkMetrics(e2eTest) // Display Network metrics periodically to monitor performance
 
 	e2eTest.WG.Wait()
 }
 
-// WithdrawCCtx withdraw USDT from ZEVM to EVM
+// WithdrawCCtx withdraw ETHZRC20 from ZEVM to EVM
 func WithdrawCCtx(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {

@@ -67,7 +67,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMultipleERC20DepositName,
-		"deposit USDT ERC20 into ZEVM in multiple deposits",
+		"deposit ERC20 into ZEVM in multiple deposits",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount", DefaultValue: "1000000000"},
 			runner.ArgDefinition{Description: "count", DefaultValue: "3"},
@@ -125,7 +125,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZRC20SwapName,
-		"swap ZRC20 USDT for ZRC20 ETH",
+		"swap ZRC20 token for ZRC20 ETH",
 		[]runner.ArgDefinition{},
 		TestZRC20Swap,
 	),

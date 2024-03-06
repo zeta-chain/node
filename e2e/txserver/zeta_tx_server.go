@@ -172,8 +172,8 @@ func (zts ZetaTxServer) BroadcastTx(account string, msg sdktypes.Msg) (*sdktypes
 }
 
 // DeploySystemContractsAndZRC20 deploys the system contracts and ZRC20 contracts
-// returns the addresses of uniswap factory, router and usdt zrc20
-func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr string) (string, string, string, string, string, error) {
+// returns the addresses of uniswap factory, router and zrc20 token
+func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string) (string, string, string, string, string, error) {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -253,30 +253,30 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 		return "", "", "", "", "", fmt.Errorf("failed to deploy btc zrc20: %s", err.Error())
 	}
 
-	// deploy usdt zrc20
+	// deploy zrc20 token
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
-		usdtERC20Addr,
+		erc20Addr,
 		common.GoerliLocalnetChain().ChainId,
 		6,
-		"USDT",
-		"USDT",
+		"TestToken",
+		"TEST",
 		common.CoinType_ERC20,
 		100000,
 	))
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to deploy usdt zrc20: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to deploy test token zrc20: %s", err.Error())
 	}
 
-	// fetch the usdt zrc20 contract address and remove the quotes
-	usdtZRC20Addr, err := fetchAttribute(res, "Contract")
+	// fetch the zrc20 contract address and remove the quotes
+	zrc20Addr, err := fetchAttribute(res, "Contract")
 	if err != nil {
-		return "", "", "", "", "", fmt.Errorf("failed to fetch usdt zrc20 contract address: %s", err.Error())
+		return "", "", "", "", "", fmt.Errorf("failed to fetch zrc20 contract address: %s", err.Error())
 	}
-	if !ethcommon.IsHexAddress(usdtZRC20Addr) {
-		return "", "", "", "", "", fmt.Errorf("invalid address in event: %s", usdtZRC20Addr)
+	if !ethcommon.IsHexAddress(zrc20Addr) {
+		return "", "", "", "", "", fmt.Errorf("invalid address in event: %s", zrc20Addr)
 	}
-	return uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, usdtZRC20Addr, nil
+	return uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, zrc20Addr, nil
 }
 
 // newCodec returns the codec for msg server

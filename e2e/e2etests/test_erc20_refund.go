@@ -15,7 +15,7 @@ import (
 
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	// Get the initial balance of the deployer
-	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	amount := big.NewInt(1e4)
 
 	// send the deposit
-	inTxHash, err := sendInvalidUSDTDeposit(r, amount)
+	inTxHash, err := sendInvalidERC20Deposit(r, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
-	newBalance, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	newBalance, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -72,14 +72,14 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 	r.Logger.Info("Liquidity pool created")
 
-	goerliBalance, err := r.USDTERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	goerliBalance, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	// send the deposit
 	amount = big.NewInt(1e7)
-	inTxHash, err = sendInvalidUSDTDeposit(r, amount)
+	inTxHash, err = sendInvalidERC20Deposit(r, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -108,7 +108,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 
 	// check that the erc20 in the reverted cctx was refunded on Goerli
-	goerliBalanceAfterRefund, err := r.USDTERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	goerliBalanceAfterRefund, err := r.ERC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +140,7 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
 	utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
-	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
+	tx, err := r.ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	r.ZevmAuth.Value = big.NewInt(1e10)
 	tx, err = r.UniswapV2Router.AddLiquidityETH(
 		r.ZevmAuth,
-		r.USDTZRC20Addr,
+		r.ZRC20Addr,
 		amount,
 		big.NewInt(0),
 		big.NewInt(0),
@@ -172,19 +172,18 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	return nil
 }
 
-func sendInvalidUSDTDeposit(r *runner.E2ERunner, amount *big.Int) (string, error) {
-	USDT := r.USDTERC20
-	tx, err := USDT.Approve(r.GoerliAuth, r.ERC20CustodyAddr, amount)
+func sendInvalidERC20Deposit(r *runner.E2ERunner, amount *big.Int) (string, error) {
+	tx, err := r.ERC20.Approve(r.GoerliAuth, r.ERC20CustodyAddr, amount)
 	if err != nil {
 		return "", err
 	}
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	tx, err = r.ERC20Custody.Deposit(
 		r.GoerliAuth,
 		r.DeployerAddress.Bytes(),
-		r.USDTERC20Addr,
+		r.ERC20Addr,
 		amount,
 		[]byte("this is an invalid msg that will cause the contract to revert"),
 	)

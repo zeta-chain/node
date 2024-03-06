@@ -92,11 +92,11 @@ func ExportContractsFromRunner(r *runner.E2ERunner, conf config.Config) config.C
 	conf.Contracts.EVM.ZetaEthAddress = r.ZetaEthAddr.Hex()
 	conf.Contracts.EVM.ConnectorEthAddr = r.ConnectorEthAddr.Hex()
 	conf.Contracts.EVM.CustodyAddr = r.ERC20CustodyAddr.Hex()
-	conf.Contracts.EVM.USDT = r.USDTERC20Addr.Hex()
+	conf.Contracts.EVM.ERC20 = r.ERC20Addr.Hex()
 
 	conf.Contracts.ZEVM.SystemContractAddr = r.SystemContractAddr.Hex()
 	conf.Contracts.ZEVM.ETHZRC20Addr = r.ETHZRC20Addr.Hex()
-	conf.Contracts.ZEVM.USDTZRC20Addr = r.USDTZRC20Addr.Hex()
+	conf.Contracts.ZEVM.ZRC20Addr = r.ZRC20Addr.Hex()
 	conf.Contracts.ZEVM.BTCZRC20Addr = r.BTCZRC20Addr.Hex()
 	conf.Contracts.ZEVM.UniswapFactoryAddr = r.UniswapV2FactoryAddr.Hex()
 	conf.Contracts.ZEVM.UniswapRouterAddr = r.UniswapV2RouterAddr.Hex()

@@ -58,7 +58,7 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 	}
 	conf := config.DefaultConfig()
 
-	runner.Logger.InfoLoud("Deploy ZetaETH ConnectorETH ERC20Custody USDT\n")
+	runner.Logger.InfoLoud("Deploy ZetaETH ConnectorETH ERC20Custody ERC20\n")
 
 	// donate to the TSS address to avoid account errors because deploying gas token ZRC20 will automatically mint
 	// gas token on ZetaChain to initialize the pool
@@ -117,14 +117,14 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 	runner.ERC20Custody = ERC20Custody
 	runner.Logger.Info("ERC20Custody contract address: %s, tx hash: %s", erc20CustodyAddr.Hex(), txCustody.Hash().Hex())
 
-	runner.Logger.Info("Deploying USDT contract")
-	usdtAddr, txUSDT, usdt, err := erc20.DeployERC20(runner.GoerliAuth, runner.GoerliClient, "USDT", "USDT", 6)
+	runner.Logger.Info("Deploying ERC20 contract")
+	erc20Addr, txERC20, erc20, err := erc20.DeployERC20(runner.GoerliAuth, runner.GoerliClient, "TESTERC20", "TESTERC20", 6)
 	if err != nil {
 		panic(err)
 	}
-	runner.USDTERC20 = usdt
-	runner.USDTERC20Addr = usdtAddr
-	runner.Logger.Info("USDT contract address: %s, tx hash: %s", usdtAddr.Hex(), txUSDT.Hash().Hex())
+	runner.ERC20 = erc20
+	runner.ERC20Addr = erc20Addr
+	runner.Logger.Info("ERC20 contract address: %s, tx hash: %s", erc20Addr.Hex(), txERC20.Hash().Hex())
 
 	// deploy TestDApp contract
 	appAddr, txApp, _, err := testdapp.DeployTestDApp(runner.GoerliAuth, runner.GoerliClient, runner.ConnectorEthAddr, runner.ZetaEthAddr)
@@ -147,8 +147,8 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txCustody, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
 		panic("ERC20Custody deployment failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txUSDT, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
-		panic("USDT deployment failed")
+	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txERC20, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
+		panic("ERC20 deployment failed")
 	}
 	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txApp, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
@@ -156,13 +156,13 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 	}
 
 	// initialize custody contract
-	runner.Logger.Info("Whitelist USDT")
-	txWhitelist, err := ERC20Custody.Whitelist(runner.GoerliAuth, usdtAddr)
+	runner.Logger.Info("Whitelist ERC20")
+	txWhitelist, err := ERC20Custody.Whitelist(runner.GoerliAuth, erc20Addr)
 	if err != nil {
 		panic(err)
 	}
 	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txWhitelist, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
-		panic("USDT whitelist failed")
+		panic("ERC20 whitelist failed")
 	}
 
 	runner.Logger.Info("Set TSS address")
@@ -171,7 +171,7 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 		panic(err)
 	}
 	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, txCustody, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
-		panic("USDT update TSS address failed")
+		panic("ERC20 update TSS address failed")
 	}
 	runner.Logger.Info("TSS set receipt tx hash: %s", txCustody.Hash().Hex())
 

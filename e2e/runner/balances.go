@@ -44,7 +44,7 @@ func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, erro
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	zetaErc20, err := runner.USDTZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	zetaErc20, err := runner.ZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -62,7 +62,7 @@ func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, erro
 	if err != nil {
 		return AccountBalances{}, err
 	}
-	evmErc20, err := runner.USDTERC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	evmErc20, err := runner.ERC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -117,7 +117,6 @@ func (runner *E2ERunner) GetBitcoinBalance() (string, error) {
 }
 
 // PrintAccountBalances shows the account balances of the accounts used in the E2E test
-// Note: USDT is mentioned as erc20 here because we want to show the balance of any erc20 contract
 func (runner *E2ERunner) PrintAccountBalances(balances AccountBalances) {
 	runner.Logger.Print(" ---💰 Account info %s ---", runner.DeployerAddress.Hex())
 

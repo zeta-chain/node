@@ -26,7 +26,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 		panic("Invalid number of deposits specified for TestMultipleERC20Deposit.")
 	}
 
-	initialBal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	}
 
 	// check new balance is increased by amount * count
-	bal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
 	// approve
-	tx, err := r.USDTERC20.Approve(r.GoerliAuth, depositorAddr, fullAmount)
+	tx, err := r.ERC20.Approve(r.GoerliAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -66,10 +66,10 @@ func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	r.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
-	tx, err = depositor.RunDeposits(r.GoerliAuth, r.DeployerAddress.Bytes(), r.USDTERC20Addr, amount, []byte{}, count)
+	tx, err = depositor.RunDeposits(r.GoerliAuth, r.DeployerAddress.Bytes(), r.ERC20Addr, amount, []byte{}, count)
 	if err != nil {
 		panic(err)
 	}
