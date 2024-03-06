@@ -201,20 +201,24 @@ func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, 
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 		Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
-		}, true)
+		}, true).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
-		Return(big.NewInt(100), nil)
+		Return(big.NewInt(100), nil).Once()
 
 }
-func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain common.Chain) {
+func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain common.Chain, asset string) {
 	m2.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(&senderChain).Twice()
+	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
+		Return(fungibletypes.ForeignCoins{
+			Zrc20ContractAddress: sample.EthAddress().String(),
+		}, true).Once()
 	m.On("QuerySystemContractGasCoinZRC20", mock.Anything, mock.Anything).
-		Return(ethcommon.Address{}, nil)
+		Return(ethcommon.Address{}, nil).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
-		Return(big.NewInt(100), nil)
+		Return(big.NewInt(100), nil).Once()
 	m.On("QueryProtocolFlatFee", mock.Anything, mock.Anything).
-		Return(big.NewInt(1), nil)
+		Return(big.NewInt(1), nil).Once()
 	k.SetGasPrice(ctx, types.GasPrice{
 		ChainId:     senderChain.ChainId,
 		MedianIndex: 0,
@@ -222,17 +226,17 @@ func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *cr
 	})
 
 	m.On("QueryUniswapV2RouterGetZRC4ToZRC4AmountsIn", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(big.NewInt(0), nil)
+		Return(big.NewInt(0), nil).Once()
 	m.On("DepositZRC20", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 		Return(&evmtypes.MsgEthereumTxResponse{}, nil)
 	m.On("GetUniswapV2Router02Address", mock.Anything).
-		Return(ethcommon.Address{}, nil)
+		Return(ethcommon.Address{}, nil).Once()
 	m.On("CallZRC20Approve", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil)
+		Return(nil).Once()
 	m.On("CallUniswapV2RouterSwapExactTokensForTokens", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(1000)}, nil)
+		Return([]*big.Int{big.NewInt(0), big.NewInt(1), big.NewInt(1000)}, nil).Once()
 	m.On("CallZRC20Burn", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-		Return(nil)
+		Return(nil).Once()
 
 }
 

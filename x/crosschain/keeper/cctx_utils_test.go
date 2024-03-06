@@ -371,7 +371,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 
 		// Mock unsuccessful UpdateNonce
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
@@ -410,7 +410,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
 
 		// mock successful PayGasAndUpdateCctx
-		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
 		// mock successful UpdateNonce
 		updatedNonce := keepertest.MockUpdateNonce(observerMock, *senderChain)
 
@@ -425,7 +425,79 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 
 func TestKeeper_ProcessCrosschainMsgPassing(t *testing.T) {
 	t.Run("process crosschain msg passing successfully", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
 
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		receiverChain := getValidEthChain(t)
+
+		// mock successful PayGasAndUpdateCctx
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")
+
+		// mock successful UpdateNonce
+		updatedNonce := keepertest.MockUpdateNonce(observerMock, *receiverChain)
+
+		// call ProcessCrosschainMsgPassing
+		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		k.ProcessCrosschainMsgPassing(ctx, cctx)
+		require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
+		require.Equal(t, updatedNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
+	})
+
+	t.Run("unable to process crosschain msg passing PayGasAndUpdateCctx fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		receiverChain := getValidEthChain(t)
+
+		// mock unsuccessful PayGasAndUpdateCctx
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, receiverChain.ChainId).
+			Return(nil).Once()
+
+		// call ProcessCrosschainMsgPassing
+		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		k.ProcessCrosschainMsgPassing(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.StatusMessage)
+	})
+
+	t.Run("unable to process crosschain msg passing UpdateNonce fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		receiverChain := getValidEthChain(t)
+
+		// mock successful PayGasAndUpdateCctx
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *receiverChain, "")
+
+		// mock unsuccessful UpdateNonce
+		observerMock.On("GetChainNonces", mock.Anything, receiverChain.ChainName.String()).
+			Return(observertypes.ChainNonces{}, false)
+
+		// call ProcessCrosschainMsgPassing
+		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
+		k.ProcessCrosschainMsgPassing(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
 	})
 }
 
@@ -436,6 +508,7 @@ func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.C
 	cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
 	cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
 	cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
+	cctx.GetCurrentOutTxParam().ReceiverChainId = senderChain.ChainId
 	cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
 	cctx.RelayedMessage = ""
 	cctx.GetInboundTxParams().Asset = asset

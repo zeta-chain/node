@@ -264,6 +264,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 // Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to PendingOutbound.
 func (k Keeper) ProcessCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossChainTx) {
 	tmpCtx, commit := ctx.CacheContext()
+	// Todo : Check receiver vs sender chain id
 	outboundReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
 	err := func() error {
 		err := k.PayGasAndUpdateCctx(
