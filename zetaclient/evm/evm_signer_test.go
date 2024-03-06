@@ -297,3 +297,30 @@ func TestSigner_getEVMRPC(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+func TestSigner_SignerErrorMsg(t *testing.T) {
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+
+	msg := SignerErrorMsg(cctx)
+	require.Contains(t, msg, "nonce 68270 chain 56")
+}
+
+func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
+	// Setup evm signer
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+
+	// Setup txData struct
+	cctx, err := getCCTX()
+	require.NoError(t, err)
+	mockChainClient, err := getNewEvmChainClient()
+	require.NoError(t, err)
+	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
+	require.False(t, skip)
+	require.NoError(t, err)
+
+	tx, err := evmSigner.SignWhitelistERC20Cmd(txData, "")
+	require.Nil(t, tx)
+	require.ErrorContains(t, err, "invalid erc20 address")
+}
