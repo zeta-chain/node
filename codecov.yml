@@ -28,15 +28,12 @@ comment:
 
 flags:
   zetacore:
-    carryforward: true
     paths:
       - "x/"
   zetaclient:
-    carryforward: true
     paths:
       - "zetaclient/"
   common:
-    carryforward: true
     paths:
       - "common/"
 
