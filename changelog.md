@@ -1,8 +1,4 @@
 # CHANGELOG
-## Version: v14
-
-### Fixes 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Unreleased
 
@@ -30,11 +26,16 @@
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
 * [1816](https://github.com/zeta-chain/node/pull/1816) - add args to e2e tests
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
-* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address 
+* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
+* [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
 
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+## Version: v14
+
+- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 
