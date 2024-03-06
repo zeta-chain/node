@@ -7,6 +7,7 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
@@ -71,6 +72,12 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	if chainParams == nil {
 		return nil, fmt.Errorf("chain params not found")
 	}
+	// test taproot address type
+	address, err = bitcoin.DecodeTaprootAddress(inputAddress)
+	if err == nil && address.IsForNet(chainParams) {
+		return address, nil
+	}
+	// test taproot address fail; continue other types
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	if err != nil {
 		return nil, fmt.Errorf("decode address failed: %s , for input address %s", err.Error(), inputAddress)

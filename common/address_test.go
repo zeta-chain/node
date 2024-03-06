@@ -60,4 +60,13 @@ func TestDecodeBtcAddress(t *testing.T) {
 		_, err := DecodeBtcAddress("bcrt1qy9pqmk2pd9sv63g27jt8r657wy0d9uee4x2dt2", BtcRegtestChain().ChainId)
 		require.NoError(t, err)
 	})
+
+	t.Run("taproot address with correct params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c", BtcMainnetChain().ChainId)
+		require.NoError(t, err)
+	})
+	t.Run("taproot address with incorrect params", func(t *testing.T) {
+		_, err := DecodeBtcAddress("bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c", BtcTestNetChain().ChainId)
+		require.Error(t, err)
+	})
 }
