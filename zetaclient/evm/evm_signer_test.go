@@ -287,3 +287,13 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 		require.Len(t, *list, 1)
 	})
 }
+
+func TestSigner_getEVMRPC(t *testing.T) {
+	t.Run("getEVMRPC error dialing", func(t *testing.T) {
+		client, chainId, signer, err := getEVMRPC("invalidEndpoint")
+		require.Nil(t, client)
+		require.Nil(t, chainId)
+		require.Nil(t, signer)
+		require.Error(t, err)
+	})
+}
