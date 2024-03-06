@@ -194,6 +194,12 @@ func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
 	ob.zetaClient = bridge
 }
 
+func (ob *ChainClient) WithBlockCache(cache *lru.Cache) {
+	ob.Mu.Lock()
+	defer ob.Mu.Unlock()
+	ob.blockCache = cache
+}
+
 func (ob *ChainClient) SetChainParams(params observertypes.ChainParams) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()

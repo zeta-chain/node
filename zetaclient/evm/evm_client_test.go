@@ -1,15 +1,16 @@
-package evm
+package evm_test
 
 import (
-	"math/big"
+	"sync"
 	"testing"
 
 	"cosmossdk.io/math"
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	lru "github.com/hashicorp/golang-lru"
+	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
@@ -17,28 +18,27 @@ func TestEVM_BlockCache(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := ChainClient{
-		blockCache: blockCache,
-	}
+	ob := &evm.ChainClient{Mu: &sync.Mutex{}}
+	ob.WithBlockCache(blockCache)
 
 	// delete non-existing block should not panic
-	blockNumber := int64(10388180)
-	// #nosec G701 possible nummber
-	ob.RemoveCachedBlock(uint64(blockNumber))
+	blockNumber := uint64(10388180)
+	ob.RemoveCachedBlock(blockNumber)
 
 	// add a block
-	header := &ethtypes.Header{
-		Number: big.NewInt(blockNumber),
+	block := &ethrpc.Block{
+		// #nosec G701 always in range
+		Number: int(blockNumber),
 	}
-	block := ethtypes.NewBlock(header, nil, nil, nil, nil)
-	ob.blockCache.Add(blockNumber, block)
+	blockCache.Add(blockNumber, block)
+	ob.WithBlockCache(blockCache)
 
 	// block should be in cache
-	_, ok := ob.blockCache.Get(blockNumber)
-	require.True(t, ok)
+	_, err = ob.GetBlockByNumberCached(blockNumber)
+	require.NoError(t, err)
 
 	// delete the block should not panic
-	ob.RemoveCachedBlock(uint64(blockNumber))
+	ob.RemoveCachedBlock(blockNumber)
 }
 
 func TestEVM_CheckTxInclusion(t *testing.T) {
@@ -57,12 +57,11 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	// create client
 	blockCache, err := lru.New(1000)
 	require.NoError(t, err)
-	ob := ChainClient{
-		blockCache: blockCache,
-	}
+	ob := &evm.ChainClient{Mu: &sync.Mutex{}}
 
 	// save block to cache
-	ob.blockCache.Add(blockNumber, block)
+	blockCache.Add(blockNumber, block)
+	ob.WithBlockCache(blockCache)
 
 	t.Run("should pass for archived outtx", func(t *testing.T) {
 		err := ob.CheckTxInclusion(tx, receipt)
@@ -80,14 +79,15 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 		// change the tx at position 'receipt.TransactionIndex' to a different tx
 		priorTx := block.Transactions[receipt.TransactionIndex-1]
 		block.Transactions[receipt.TransactionIndex] = priorTx
-		ob.blockCache.Add(blockNumber, block)
+		blockCache.Add(blockNumber, block)
+		ob.WithBlockCache(blockCache)
 
 		// check inclusion should fail
 		err := ob.CheckTxInclusion(tx, receipt)
 		require.ErrorContains(t, err, "has different hash")
 
 		// wrong block should be removed from cache
-		_, ok := ob.blockCache.Get(blockNumber)
+		_, ok := blockCache.Get(blockNumber)
 		require.False(t, ok)
 	})
 }
