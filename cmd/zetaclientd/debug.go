@@ -155,19 +155,19 @@ func DebugCmd() *cobra.Command {
 
 				switch coinType {
 				case common.CoinType_Zeta:
-					ballotIdentifier, err = ob.CheckNVoteInboundTokenZeta(tx, receipt, false)
+					ballotIdentifier, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case common.CoinType_ERC20:
-					ballotIdentifier, err = ob.CheckNVoteInboundTokenERC20(tx, receipt, false)
+					ballotIdentifier, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
 				case common.CoinType_Gas:
-					ballotIdentifier, err = ob.CheckNVoteInboundTokenGas(tx, receipt, false)
+					ballotIdentifier, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 					if err != nil {
 						return err
 					}

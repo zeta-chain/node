@@ -81,8 +81,6 @@ type ChainClient struct {
 	outTxPendingTransactions   map[string]*ethtypes.Transaction
 	outTXConfirmedReceipts     map[string]*ethtypes.Receipt
 	outTXConfirmedTransactions map[string]*ethtypes.Transaction
-	MinNonce                   int64
-	MaxNonce                   int64
 	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
 	logger                     Log
@@ -948,7 +946,7 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	lastScannedDeposited := ob.observeERC20Deposited(startBlock, toBlock, true)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.observeTssRecvd(startBlock, toBlock, flags)
+	lastScannedTssRecvd := ob.observerTSSReceive(startBlock, toBlock, flags)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -1031,7 +1029,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64, vote bool) ui
 		}
 		guard[event.Raw.TxHash.Hex()] = true
 
-		msg := ob.GetInboundVoteMsgForZetaSentEvent(event)
+		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		if msg != nil && vote {
 			_, err = ob.PostVoteInbound(msg, common.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
 			if err != nil {
@@ -1111,7 +1109,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64, vote bo
 		}
 		guard[event.Raw.TxHash.Hex()] = true
 
-		msg := ob.GetInboundVoteMsgForDepositedEvent(event, sender)
+		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil && vote {
 			_, err = ob.PostVoteInbound(msg, common.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
 			if err != nil {
@@ -1123,9 +1121,9 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64, vote bo
 	return toBlock
 }
 
-// observeTssRecvd queries the incoming gas asset to TSS address and posts to zetabridge
+// observerTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+func (ob *ChainClient) observerTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
 	if !ob.GetChainParams().IsSupported {
 		return startBlock - 1 // lastScanned
 	}
@@ -1146,7 +1144,7 @@ func (ob *ChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observe
 		// TODO: we can track the total number of 'getBlockByNumber' RPC calls made
 		block, err := ob.GetBlockByNumberCached(bn)
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observeTssRecvd: error getting block %d for chain %d", bn, ob.chain.ChainId)
+			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observerTSSReceive: error getting block %d for chain %d", bn, ob.chain.ChainId)
 			return bn - 1 // we have to re-scan from this block next time
 		}
 		for i := range block.Transactions {
@@ -1154,12 +1152,12 @@ func (ob *ChainClient) observeTssRecvd(startBlock, toBlock uint64, flags observe
 			if ethcommon.HexToAddress(tx.To) == ob.Tss.EVMAddress() {
 				receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tx.Hash))
 				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf("observeTssRecvd: error getting receipt for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+					ob.logger.ExternalChainWatcher.Err(err).Msgf("observerTSSReceive: error getting receipt for intx %s chain %d", tx.Hash, ob.chain.ChainId)
 					return bn - 1 // we have to re-scan from this block next time
 				}
-				_, err = ob.CheckNVoteInboundTokenGas(&tx, receipt, true)
+				_, err = ob.CheckAndVoteInboundTokenGas(&tx, receipt, true)
 				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf("observeTssRecvd: error checking and voting inbound gas asset for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+					ob.logger.ExternalChainWatcher.Err(err).Msgf("observerTSSReceive: error checking and voting inbound gas asset for intx %s chain %d", tx.Hash, ob.chain.ChainId)
 					return bn - 1 // we have to re-scan this block next time
 				}
 			}
@@ -1320,31 +1318,6 @@ func (ob *ChainClient) LoadDB(dbPath string, chain common.Chain) error {
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func (ob *ChainClient) SetMinAndMaxNonce(trackers []crosschaintypes.OutTxTracker) error {
-	minNonce, maxNonce := int64(-1), int64(0)
-	for _, tracker := range trackers {
-		conv := tracker.Nonce
-		// #nosec G701 always in range
-		intNonce := int64(conv)
-		if minNonce == -1 {
-			minNonce = intNonce
-		}
-		if intNonce < minNonce {
-			minNonce = intNonce
-		}
-		if intNonce > maxNonce {
-			maxNonce = intNonce
-		}
-	}
-	if minNonce != -1 {
-		atomic.StoreInt64(&ob.MinNonce, minNonce)
-	}
-	if maxNonce > 0 {
-		atomic.StoreInt64(&ob.MaxNonce, maxNonce)
 	}
 	return nil
 }

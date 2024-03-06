@@ -7,6 +7,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -99,6 +100,201 @@ func TestCheckEvmTxLog(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestCheckEvmTransactionTable(t *testing.T) {
+	// use archived intx
+	chainID := int64(1)
+	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
+
+	tests := []struct {
+		name string
+		tx   *ethrpc.Transaction
+		fail bool
+		msg  string
+	}{
+		{
+			name: "should pass for valid transaction",
+			tx:   testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas),
+			fail: false,
+		},
+		{
+			name: "should fail for nil transaction",
+			tx:   nil,
+			fail: true,
+			msg:  "transaction is nil",
+		},
+		{
+			name: "should fail for empty hash",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.Hash = ""
+				return tx
+			}(),
+			fail: true,
+			msg:  "hash is empty",
+		},
+		{
+			name: "should fail for negative nonce",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.Nonce = -1
+				return tx
+			}(),
+			fail: true,
+			msg:  "nonce -1 is negative",
+		},
+		{
+			name: "should fail for empty from address",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.From = ""
+				return tx
+			}(),
+			fail: true,
+			msg:  "not a valid hex address",
+		},
+		{
+			name: "should fail for invalid from address",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.From = "0x"
+				return tx
+			}(),
+			fail: true,
+			msg:  "from 0x is not a valid hex address",
+		},
+		{
+			name: "should pass for empty to address",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.To = ""
+				return tx
+			}(),
+			fail: false,
+		},
+		{
+			name: "should fail for invalid to address",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.To = "0xinvalid"
+				return tx
+			}(),
+			fail: true,
+			msg:  "to 0xinvalid is not a valid hex address",
+		},
+		{
+			name: "should fail for negative value",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.Value = *big.NewInt(-1)
+				return tx
+			}(),
+			fail: true,
+			msg:  "value -1 is negative",
+		},
+		{
+			name: "should fail for negative gas",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.Gas = -1
+				return tx
+			}(),
+			fail: true,
+			msg:  "gas -1 is negative",
+		},
+		{
+			name: "should fail for negative gas price",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.GasPrice = *big.NewInt(-1)
+				return tx
+			}(),
+			fail: true,
+			msg:  "gas price -1 is negative",
+		},
+		{
+			name: "should remove '0x' prefix from input data",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				return tx
+			}(),
+			fail: false,
+		},
+		{
+			name: "nil block number should pass",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.BlockNumber = nil
+				return tx
+			}(),
+			fail: false,
+		},
+		{
+			name: "should fail for negative block number",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				negBlockNumber := -1
+				tx.BlockNumber = &negBlockNumber
+				return tx
+			}(),
+			fail: true,
+			msg:  "block number -1 is not positive",
+		},
+		{
+			name: "should fail for empty block hash",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.BlockHash = ""
+				return tx
+			}(),
+			fail: true,
+			msg:  "block hash is empty",
+		},
+		{
+			name: "nil transaction index should fail",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.TransactionIndex = nil
+				return tx
+			}(),
+			fail: true,
+			msg:  "index is nil",
+		},
+		{
+			name: "should fail for negative transaction index",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				negTransactionIndex := -1
+				tx.TransactionIndex = &negTransactionIndex
+				return tx
+			}(),
+			fail: true,
+			msg:  "index -1 is negative",
+		},
+		{
+			name: "should fail for invalid input data",
+			tx: func() *ethrpc.Transaction {
+				tx := testutils.LoadEVMIntx(t, chainID, intxHash, common.CoinType_Gas)
+				tx.Input = "03befinvalid"
+				return tx
+			}(),
+			fail: true,
+			msg:  "input data is not hex encoded",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CheckEvmTransaction(tt.tx)
+			if tt.fail {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.msg)
+				return
+			}
+			require.NoError(t, err)
 		})
 	}
 }

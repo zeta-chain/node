@@ -41,7 +41,7 @@ func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.ObserveTrackerSuggestions()
+			err := ob.ObserveIntxTrackers()
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Err(err).Msg("ObserveTrackerSuggestions error")
 			}
@@ -53,7 +53,8 @@ func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	}
 }
 
-func (ob *ChainClient) ObserveTrackerSuggestions() error {
+// ObserveIntxTrackers observes the inbound trackers for the chain
+func (ob *ChainClient) ObserveIntxTrackers() error {
 	trackers, err := ob.zetaClient.GetInboundTrackersForChain(ob.chain.ChainId)
 	if err != nil {
 		return err
@@ -73,11 +74,11 @@ func (ob *ChainClient) ObserveTrackerSuggestions() error {
 		// check and vote on inbound tx
 		switch tracker.CoinType {
 		case common.CoinType_Zeta:
-			_, err = ob.CheckNVoteInboundTokenZeta(tx, receipt, true)
+			_, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
 		case common.CoinType_ERC20:
-			_, err = ob.CheckNVoteInboundTokenERC20(tx, receipt, true)
+			_, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
 		case common.CoinType_Gas:
-			_, err = ob.CheckNVoteInboundTokenGas(tx, receipt, true)
+			_, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, true)
 		default:
 			return fmt.Errorf("unknown coin type %s for intx %s chain %d", tracker.CoinType, tx.Hash, ob.chain.ChainId)
 		}
@@ -88,8 +89,8 @@ func (ob *ChainClient) ObserveTrackerSuggestions() error {
 	return nil
 }
 
-// CheckNVoteInboundTokenZeta checks and votes on the given inbound Zeta token
-func (ob *ChainClient) CheckNVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+// CheckAndVoteInboundTokenZeta checks and votes on the given inbound Zeta token
+func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -108,7 +109,7 @@ func (ob *ChainClient) CheckNVoteInboundTokenZeta(tx *ethrpc.Transaction, receip
 			// sanity check tx event
 			err = CheckEvmTxLog(&event.Raw, addrConnector, tx.Hash, TopicsZetaSent)
 			if err == nil {
-				msg = ob.GetInboundVoteMsgForZetaSentEvent(event)
+				msg = ob.BuildInboundVoteMsgForZetaSentEvent(event)
 			} else {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
@@ -127,8 +128,8 @@ func (ob *ChainClient) CheckNVoteInboundTokenZeta(tx *ethrpc.Transaction, receip
 	return msg.Digest(), nil
 }
 
-// CheckNVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
-func (ob *ChainClient) CheckNVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+// CheckAndVoteInboundTokenERC20 checks and votes on the given inbound ERC20 token
+func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -149,7 +150,7 @@ func (ob *ChainClient) CheckNVoteInboundTokenERC20(tx *ethrpc.Transaction, recei
 			// sanity check tx event
 			err = CheckEvmTxLog(&zetaDeposited.Raw, addrCustory, tx.Hash, TopicsDeposited)
 			if err == nil {
-				msg = ob.GetInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
+				msg = ob.BuildInboundVoteMsgForDepositedEvent(zetaDeposited, sender)
 			} else {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("CheckEvmTxLog error on intx %s chain %d", tx.Hash, ob.chain.ChainId)
 				return "", err
@@ -168,8 +169,8 @@ func (ob *ChainClient) CheckNVoteInboundTokenERC20(tx *ethrpc.Transaction, recei
 	return msg.Digest(), nil
 }
 
-// CheckNVoteInboundTokenGas checks and votes on the given inbound gas token
-func (ob *ChainClient) CheckNVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
+// CheckAndVoteInboundTokenGas checks and votes on the given inbound gas token
+func (ob *ChainClient) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, receipt *ethtypes.Receipt, vote bool) (string, error) {
 	// check confirmations
 	if confirmed := ob.HasEnoughConfirmations(receipt, ob.GetLastBlockHeight()); !confirmed {
 		return "", fmt.Errorf("intx %s has not been confirmed yet: receipt block %d", tx.Hash, receipt.BlockNumber.Uint64())
@@ -184,7 +185,7 @@ func (ob *ChainClient) CheckNVoteInboundTokenGas(tx *ethrpc.Transaction, receipt
 	sender := ethcommon.HexToAddress(tx.From)
 
 	// build inbound vote message and post vote
-	msg := ob.GetInboundVoteMsgForTokenSentToTSS(tx, sender, receipt.BlockNumber.Uint64())
+	msg := ob.BuildInboundVoteMsgForTokenSentToTSS(tx, sender, receipt.BlockNumber.Uint64())
 	if msg == nil {
 		// donation, restricted tx, etc.
 		ob.logger.ExternalChainWatcher.Info().Msgf("no vote message built for intx %s chain %d", tx.Hash, ob.chain.ChainId)
@@ -218,7 +219,8 @@ func (ob *ChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHei
 	return lastHeight >= confHeight
 }
 
-func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
+// BuildInboundVoteMsgForDepositedEvent builds a inbound vote message for a Deposited event
+func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
 	// compliance check
 	maybeReceiver := ""
 	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(event.Message))
@@ -258,7 +260,8 @@ func (ob *ChainClient) GetInboundVoteMsgForDepositedEvent(event *erc20custody.ER
 	)
 }
 
-func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
+// BuildInboundVoteMsgForZetaSentEvent builds a inbound vote message for a ZetaSent event
+func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
 	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
@@ -308,8 +311,8 @@ func (ob *ChainClient) GetInboundVoteMsgForZetaSentEvent(event *zetaconnector.Ze
 	)
 }
 
-// GetInboundVoteMsgForTokenSentToTSS builds a inbound vote message for a token sent to TSS
-func (ob *ChainClient) GetInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
+// BuildInboundVoteMsgForTokenSentToTSS builds a inbound vote message for a token sent to TSS
+func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transaction, sender ethcommon.Address, blockNumber uint64) *types.MsgVoteOnObservedInboundTx {
 	message := tx.Input
 
 	// compliance check
