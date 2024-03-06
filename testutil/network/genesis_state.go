@@ -3,6 +3,7 @@ package network
 import (
 	"encoding/json"
 	"fmt"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"strconv"
 	"testing"
 
@@ -77,17 +78,6 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 		GranteePubkeys: observerList,
 		BlockNumber:    5,
 	}
-	// set admin policy with first validator as admin
-	observerGenesis.Params.AdminPolicy = []*observertypes.Admin_Policy{
-		{
-			PolicyType: observertypes.Policy_Type_group1,
-			Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
-		},
-		{
-			PolicyType: observertypes.Policy_Type_group2,
-			Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
-		},
-	}
 	observerGenesis.CrosschainFlags = &observertypes.CrosschainFlags{
 		IsInboundEnabled:  true,
 		IsOutboundEnabled: true,
@@ -96,10 +86,31 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	observerGenesisBz, err := codec.MarshalJSON(&observerGenesis)
 	require.NoError(t, err)
 
+	// authority genesis state
+	var authorityGenesis authoritytypes.GenesisState
+	require.NoError(t, codec.UnmarshalJSON(genesisState[authoritytypes.ModuleName], &authorityGenesis))
+	policies := authoritytypes.Policies{
+		Items: []*authoritytypes.Policy{
+			{
+				PolicyType: authoritytypes.PolicyType_groupEmergency,
+				Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+			},
+			{
+				PolicyType: authoritytypes.PolicyType_groupAdmin,
+				Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+			},
+		},
+	}
+	authorityGenesis.Policies = policies
+	require.NoError(t, authorityGenesis.Validate())
+	authorityGenesisBz, err := codec.MarshalJSON(&authorityGenesis)
+	require.NoError(t, err)
+
 	genesisState[types.ModuleName] = crossChainGenesisBz
 	genesisState[stakingtypes.ModuleName] = stakingGenesisStateBz
 	genesisState[observertypes.ModuleName] = observerGenesisBz
 	genesisState[evmtypes.ModuleName] = evmGenesisBz
+	genesisState[authoritytypes.ModuleName] = authorityGenesisBz
 }
 
 func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessage, codec codec.Codec, ballots []*observertypes.Ballot) *observertypes.GenesisState {

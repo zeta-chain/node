@@ -55,6 +55,8 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.Equal(t, chain1, chainParamsList.ChainParams[0].ChainId)
 		require.Equal(t, chain3, chainParamsList.ChainParams[1].ChainId)
 
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
@@ -67,6 +69,8 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.True(t, found)
 		require.Len(t, chainParamsList.ChainParams, 1)
 		require.Equal(t, chain3, chainParamsList.ChainParams[0].ChainId)
+
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{

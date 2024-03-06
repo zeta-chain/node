@@ -10,8 +10,6 @@ import (
 )
 
 func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
-	setConfig()
-
 	tests := []struct {
 		name string
 		msg  *types.MsgUpdatePolicies
