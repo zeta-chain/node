@@ -58,7 +58,7 @@ func TestAddressTaproot(t *testing.T) {
 		// these hex string comes from link
 		// https://mempool.space/tx/41f7cbaaf9a8d378d09ee86de32eebef455225520cb71015cc9a7318fb42e326
 		witnessProg, err := hex.DecodeString("af06f3d4c726a3b952f2f648d86398af5ddfc3df27aa531d97203987add8db2e")
-		addr, err := newAddressTaproot("bc", witnessProg[:])
+		addr, err := NewAddressTaproot(witnessProg[:], &chaincfg.MainNetParams)
 		require.Nil(t, err)
 		require.Equal(t, addr.EncodeAddress(), "bc1p4ur084x8y63mj5hj7eydscuc4awals7ly749x8vhyquc0twcmvhquspa5c")
 	}
