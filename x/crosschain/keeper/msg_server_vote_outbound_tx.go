@@ -163,7 +163,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 						Receiver:           cctx.InboundTxParams.Sender,
 						ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
 						Amount:             cctx.InboundTxParams.Amount,
-						CoinType:           cctx.InboundTxParams.CoinType,
 						OutboundTxGasLimit: gasLimit,
 					}
 					cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)

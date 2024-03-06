@@ -24,7 +24,7 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.GetCurrentOutTxParam().CoinType != common.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.CoinType != common.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))
@@ -44,7 +44,7 @@ func TestMigrateStore(t *testing.T) {
 		cctxListUpdated := k.GetAllCrossChainTx(ctx)
 		// Check refund status of the cctx
 		for _, cctx := range cctxListUpdated {
-			switch cctx.InboundTxParams.CoinType {
+			switch cctx.CoinType {
 			case common.CoinType_ERC20:
 				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
 				require.NotNil(t, receiverChain)
@@ -180,28 +180,26 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 		amount := math.NewUint(uint64(r.Uint32()))
 		cctxList[i] = crosschaintypes.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
+			CoinType:   common.CoinType_Zeta,
 			CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 			InboundTxParams: &crosschaintypes.InboundTxParams{
-				Amount:   amount.Add(math.NewUint(uint64(r.Uint32()))),
-				CoinType: common.CoinType_Zeta,
+				Amount: amount.Add(math.NewUint(uint64(r.Uint32()))),
 			},
 			OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
-				Amount:   amount,
-				CoinType: common.CoinType_Zeta,
+				Amount: amount,
 			}},
 		}
 		for ; i < count; i++ {
 			amount := math.NewUint(uint64(r.Uint32()))
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
+				CoinType:   common.CoinType_Zeta,
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
-					Amount:   amount,
-					CoinType: common.CoinType_Zeta,
+					Amount: amount,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
-					Amount:   math.ZeroUint(),
-					CoinType: common.CoinType_Zeta,
+					Amount: math.ZeroUint(),
 				}},
 			}
 		}
@@ -209,14 +207,13 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			amount := math.NewUint(uint64(r.Uint32()))
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
+				CoinType:   common.CoinType_ERC20,
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
-					Amount:   amount,
-					CoinType: common.CoinType_ERC20,
+					Amount: amount,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        common.CoinType_ERC20,
 					ReceiverChainId: common.ZetaPrivnetChain().ChainId,
 				}},
 			}
@@ -225,14 +222,13 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			amount := math.NewUint(uint64(r.Uint32()))
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
+				CoinType:   common.CoinType_ERC20,
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
-					Amount:   amount,
-					CoinType: common.CoinType_ERC20,
+					Amount: amount,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        common.CoinType_ERC20,
 					ReceiverChainId: common.GoerliLocalnetChain().ChainId,
 				}},
 			}
@@ -241,14 +237,13 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			amount := math.NewUint(uint64(r.Uint32()))
 			cctxList[i] = crosschaintypes.CrossChainTx{
 				Index:      fmt.Sprintf("%d", i),
+				CoinType:   common.CoinType_Gas,
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
-					Amount:   amount,
-					CoinType: common.CoinType_Gas,
+					Amount: amount,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
-					Amount:   amount,
-					CoinType: common.CoinType_Gas,
+					Amount: amount,
 				}},
 			}
 		}

@@ -113,6 +113,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	// create a cmd cctx to whitelist the erc20 on the external chain
 	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
+		CoinType:       common.CoinType_Cmd,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
@@ -122,10 +123,10 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			LastUpdateTimestamp: 0,
 		},
 		InboundTxParams: &types.InboundTxParams{
-			Sender:                          "",
-			SenderChainId:                   0,
-			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
+			Sender:        "",
+			SenderChainId: 0,
+			TxOrigin:      "",
+
 			Asset:                           "",
 			Amount:                          math.Uint{},
 			InboundTxObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
@@ -137,7 +138,6 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			{
 				Receiver:                         param.Erc20CustodyContractAddress,
 				ReceiverChainId:                  msg.ChainId,
-				CoinType:                         common.CoinType_Cmd,
 				Amount:                           math.NewUint(0),
 				OutboundTxTssNonce:               0,
 				OutboundTxGasLimit:               100_000,

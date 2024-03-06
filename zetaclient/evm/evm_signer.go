@@ -386,7 +386,7 @@ func (signer *Signer) TryProcessOutTx(
 	}
 
 	var message []byte
-	if cctx.GetCurrentOutTxParam().CoinType != common.CoinType_Cmd {
+	if cctx.CoinType != common.CoinType_Cmd {
 		message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
 			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)
@@ -457,9 +457,9 @@ func (signer *Signer) TryProcessOutTx(
 	// compliance check goes first
 	if clientcommon.IsCctxRestricted(cctx) {
 		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
-			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
+			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, to.Hex(), cctx.CoinType.String())
 		tx, err = signer.SignCancelTx(nonce, gasprice, height) // cancel the tx
-	} else if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Cmd { // admin command
+	} else if cctx.CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 		if to == (ethcommon.Address{}) {
 			logger.Error().Msgf("invalid receiver %s", cctx.GetCurrentOutTxParam().Receiver)
@@ -473,7 +473,7 @@ func (signer *Signer) TryProcessOutTx(
 		}
 		tx, err = signer.SignCommandTx(msg[0], msg[1], to, cctx.GetCurrentOutTxParam(), gasLimit, gasprice, height)
 	} else if cctx.InboundTxParams.SenderChainId == zetaBridge.ZetaChain().ChainId && cctx.CctxStatus.Status == types.CctxStatus_PendingOutbound && flags.IsOutboundEnabled {
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
+		if cctx.CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(
 				to,
@@ -483,7 +483,7 @@ func (signer *Signer) TryProcessOutTx(
 				height,
 			)
 		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
+		if cctx.CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignERC20WithdrawTx(
@@ -496,7 +496,7 @@ func (signer *Signer) TryProcessOutTx(
 				height,
 			)
 		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+		if cctx.CoinType == common.CoinType_Zeta {
 			logger.Info().Msgf("SignOutboundTx: %d => %s, nonce %d, gasprice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignOutboundTx(
 				ethcommon.HexToAddress(cctx.InboundTxParams.Sender),
@@ -512,7 +512,7 @@ func (signer *Signer) TryProcessOutTx(
 			)
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetaBridge.ZetaChain().ChainId {
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Gas {
+		if cctx.CoinType == common.CoinType_Gas {
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasprice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignWithdrawTx(
 				to,
@@ -522,7 +522,7 @@ func (signer *Signer) TryProcessOutTx(
 				height,
 			)
 		}
-		if cctx.GetCurrentOutTxParam().CoinType == common.CoinType_ERC20 {
+		if cctx.CoinType == common.CoinType_ERC20 {
 			asset := ethcommon.HexToAddress(cctx.InboundTxParams.Asset)
 			logger.Info().Msgf("SignERC20WithdrawTx: %d => %s, nonce %d, gasprice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, gasprice)
 			tx, err = signer.SignERC20WithdrawTx(

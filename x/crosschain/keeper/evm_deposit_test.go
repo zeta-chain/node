@@ -34,7 +34,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.CoinType = common.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		reverted, err := k.HandleEVMDeposit(
 			ctx,
@@ -63,7 +63,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.CoinType = common.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		reverted, err := k.HandleEVMDeposit(
 			ctx,
@@ -103,7 +103,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -147,7 +147,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -191,7 +191,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -234,7 +234,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -277,7 +277,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -318,7 +318,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = ""
@@ -341,7 +341,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().String()
 		cctx.GetInboundTxParams().Amount = math.NewUint(42)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_Gas
+		cctx.CoinType = common.CoinType_Gas
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = "not_hex"
@@ -381,7 +381,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = sample.EthAddress().String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = receiver.Hex()[2:] + "DEADBEEF"
@@ -423,7 +423,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "foo")
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+		cctx.CoinType = common.CoinType_ERC20
 		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
 		cctx.GetInboundTxParams().SenderChainId = senderChain
 		cctx.RelayedMessage = "DEADBEEF"

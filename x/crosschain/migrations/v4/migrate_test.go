@@ -167,10 +167,10 @@ func SetRandomCctx(ctx sdk.Context, k keeper.Keeper) sdkmath.Uint {
 		amount := sdkmath.NewUint(uint64(r.Uint32()))
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
+			CoinType:   common.CoinType_Zeta,
 			CctxStatus: &types.Status{Status: types.CctxStatus_Aborted},
 			OutboundTxParams: []*types.OutboundTxParams{{
-				Amount:   amount,
-				CoinType: common.CoinType_Zeta,
+				Amount: amount,
 			}},
 		})
 		totalZeta = totalZeta.Add(amount)

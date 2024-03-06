@@ -170,7 +170,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(
+	cctx := CreateNewCCTX(
 		ctx,
 		msg,
 		sendHash,
@@ -205,7 +205,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		fungibletypes.ModuleName,
 		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas))),
 	); err != nil {
-		fmt.Printf("burn coins failed: %s\n", err.Error())
+		ctx.Logger().Error(fmt.Sprintf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error()))
 		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())
 	}
 
@@ -249,7 +249,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	sendHash := msg.Digest()
 
 	// Create the CCTX
-	cctx := k.CreateNewCCTX(
+	cctx := CreateNewCCTX(
 		ctx,
 		msg,
 		sendHash,

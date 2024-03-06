@@ -42,7 +42,6 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		Sender:                          EthAddress().String(),
 		SenderChainId:                   r.Int63(),
 		TxOrigin:                        EthAddress().String(),
-		CoinType:                        common.CoinType(r.Intn(100)),
 		Asset:                           StringRandom(r, 32),
 		Amount:                          math.NewUint(uint64(r.Int63())),
 		InboundTxObservedHash:           StringRandom(r, 32),
@@ -56,7 +55,6 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 	return &types.OutboundTxParams{
 		Receiver:                         EthAddress().String(),
 		ReceiverChainId:                  r.Int63(),
-		CoinType:                         common.CoinType(r.Intn(100)),
 		Amount:                           math.NewUint(uint64(r.Int63())),
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),
@@ -89,6 +87,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	return &types.CrossChainTx{
 		Creator:          AccAddress(),
 		Index:            GetCctxIndexFromString(index),
+		CoinType:         common.CoinType(r.Intn(100)),
 		ZetaFees:         math.NewUint(uint64(r.Int63())),
 		RelayedMessage:   StringRandom(r, 32),
 		CctxStatus:       Status(t, index),

@@ -31,9 +31,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
-			InboundTxParams: &types.InboundTxParams{
-				CoinType: common.CoinType_Zeta,
-			}})
+			CoinType: common.CoinType_Zeta})
 		require.NoError(t, err)
 		require.Equal(t, uint64(0), gasLimit)
 	})
@@ -50,8 +48,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_Gas,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
 		require.NoError(t, err)
@@ -80,8 +78,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_ERC20,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
@@ -93,8 +91,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_Gas,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
 				SenderChainId: 999999,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
@@ -114,8 +112,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_Gas,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
 		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
@@ -125,8 +123,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_ERC20,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
 				SenderChainId: 999999,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
@@ -148,8 +146,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+			CoinType: common.CoinType_ERC20,
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
@@ -216,7 +214,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.CoinType = common.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		k.ProcessZEVMDeposit(ctx, cctx)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
@@ -241,7 +239,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-		cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+		cctx.CoinType = common.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		k.ProcessZEVMDeposit(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
@@ -506,10 +504,10 @@ func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.C
 	cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 	cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 	cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-	cctx.GetInboundTxParams().CoinType = common.CoinType_Zeta
+	cctx.CoinType = common.CoinType_Zeta
 	cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
 	cctx.GetCurrentOutTxParam().ReceiverChainId = senderChain.ChainId
-	cctx.GetInboundTxParams().CoinType = common.CoinType_ERC20
+	cctx.CoinType = common.CoinType_ERC20
 	cctx.RelayedMessage = ""
 	cctx.GetInboundTxParams().Asset = asset
 	cctx.GetInboundTxParams().Sender = sample.EthAddress().String()

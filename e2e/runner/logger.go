@@ -122,7 +122,7 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 		l.Info("  TxHeight: %d", cctx.InboundTxParams.InboundTxObservedExternalHeight)
 		l.Info("  BallotIndex: %s", cctx.InboundTxParams.InboundTxBallotIndex)
 		l.Info("  Amount: %s", cctx.InboundTxParams.Amount.String())
-		l.Info("  CoinType: %s", cctx.InboundTxParams.CoinType.String())
+		l.Info("  CoinType: %s", cctx.InboundTxParams.String())
 		l.Info("  SenderChainID: %d", cctx.InboundTxParams.SenderChainId)
 		l.Info("  Origin: %s", cctx.InboundTxParams.TxOrigin)
 		if cctx.InboundTxParams.Sender != "" {
@@ -151,7 +151,7 @@ func (l *Logger) CCTX(cctx crosschaintypes.CrossChainTx, name string) {
 		l.Info("  EffectiveGasPrice: %s", outTxParam.OutboundTxEffectiveGasPrice.String())
 		l.Info("  EffectiveGasLimit: %d", outTxParam.OutboundTxEffectiveGasLimit)
 		l.Info("  Amount: %s", outTxParam.Amount.String())
-		l.Info("  CoinType: %s", outTxParam.CoinType.String())
+		l.Info("  CoinType: %s", outTxParam.String())
 		l.Info("  Receiver: %s", outTxParam.Receiver)
 		l.Info("  ReceiverChainID: %d", outTxParam.ReceiverChainId)
 	}

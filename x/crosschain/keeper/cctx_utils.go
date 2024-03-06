@@ -23,10 +23,10 @@ func (k Keeper) GetInbound(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundT
 	if tssFound {
 		tssPub = tss.TssPubkey
 	}
-	return k.CreateNewCCTX(ctx, msg, msg.Digest(), tssPub, types.CctxStatus_PendingInbound, msg.SenderChainId, msg.ReceiverChain)
+	return CreateNewCCTX(ctx, msg, msg.Digest(), tssPub, types.CctxStatus_PendingInbound, msg.SenderChainId, msg.ReceiverChain)
 }
 
-func (k Keeper) CreateNewCCTX(
+func CreateNewCCTX(
 	ctx sdk.Context,
 	msg *types.MsgVoteOnObservedInboundTx,
 	index string,
@@ -44,7 +44,6 @@ func (k Keeper) CreateNewCCTX(
 		TxOrigin:                        msg.TxOrigin,
 		Asset:                           msg.Asset,
 		Amount:                          msg.Amount,
-		CoinType:                        msg.CoinType,
 		InboundTxObservedHash:           msg.InTxHash,
 		InboundTxObservedExternalHeight: msg.InBlockHeight,
 		InboundTxFinalizedZetaHeight:    0,
@@ -60,7 +59,6 @@ func (k Keeper) CreateNewCCTX(
 		OutboundTxGasPrice:               "",
 		OutboundTxBallotIndex:            "",
 		OutboundTxObservedExternalHeight: 0,
-		CoinType:                         msg.CoinType, // FIXME: is this correct?
 		Amount:                           sdk.NewUint(0),
 		TssPubkey:                        tssPubkey,
 	}
@@ -79,6 +77,7 @@ func (k Keeper) CreateNewCCTX(
 		InboundTxParams:  inboundParams,
 		OutboundTxParams: []*types.OutboundTxParams{outBoundParams},
 		EventIndex:       msg.EventIndex,
+		CoinType:         msg.CoinType,
 	}
 	return newCctx
 }
@@ -127,7 +126,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx *types.CrossChainTx) (ui
 		return 0, nil
 	}
 
-	if cctx.InboundTxParams.CoinType == common.CoinType_Gas {
+	if cctx.CoinType == common.CoinType_Gas {
 		// get the gas limit of the gas token
 		fc, found := k.fungibleKeeper.GetGasCoinForForeignCoin(ctx, cctx.InboundTxParams.SenderChainId)
 		if !found {
@@ -138,7 +137,7 @@ func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx *types.CrossChainTx) (ui
 			return 0, errors.Wrap(fungibletypes.ErrContractCall, err.Error())
 		}
 		return gasLimit.Uint64(), nil
-	} else if cctx.InboundTxParams.CoinType == common.CoinType_ERC20 {
+	} else if cctx.CoinType == common.CoinType_ERC20 {
 		// get the gas limit of the associated asset
 		fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, cctx.InboundTxParams.SenderChainId)
 		if !found {
@@ -222,7 +221,6 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			Receiver:           cctx.InboundTxParams.Sender,
 			ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
 			Amount:             cctx.InboundTxParams.Amount,
-			CoinType:           cctx.InboundTxParams.CoinType,
 			OutboundTxGasLimit: gasLimit,
 		}
 		cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
@@ -264,7 +262,6 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 // Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to PendingOutbound.
 func (k Keeper) ProcessCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossChainTx) {
 	tmpCtx, commit := ctx.CacheContext()
-	// Todo : Check receiver vs sender chain id
 	outboundReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
 	err := func() error {
 		err := k.PayGasAndUpdateCctx(

@@ -80,6 +80,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	index := hash.Hex()
 	cctx := types.CrossChainTx{
 		Creator:        "",
+		CoinType:       common.CoinType_Cmd,
 		Index:          index,
 		ZetaFees:       sdkmath.Uint{},
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
@@ -92,7 +93,6 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			Sender:                          "",
 			SenderChainId:                   chainID,
 			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          amount,
 			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
@@ -103,7 +103,6 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		OutboundTxParams: []*types.OutboundTxParams{{
 			Receiver:                         "",
 			ReceiverChainId:                  chainID,
-			CoinType:                         common.CoinType_Cmd,
 			Amount:                           amount,
 			OutboundTxTssNonce:               0,
 			OutboundTxGasLimit:               1_000_000,
