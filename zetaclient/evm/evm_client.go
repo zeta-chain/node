@@ -188,7 +188,7 @@ func (ob *ChainClient) WithEvmJSONRPC(client *ethrpc.EthRPC) {
 	ob.evmJSONRPC = client
 }
 
-func (ob *ChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
+func (ob *ChainClient) WithZetaClient(bridge interfaces.ZetaCoreBridger) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.zetaClient = bridge

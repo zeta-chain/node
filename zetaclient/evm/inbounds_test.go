@@ -15,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 )
 
@@ -29,7 +30,7 @@ func MockEVMClient(
 		Mu:  &sync.Mutex{},
 	}
 	client.WithChain(chain)
-	client.WithZetaClient(testutils.MockCoreBridge())
+	client.WithZetaClient(stub.NewZetaCoreBridge())
 	client.SetLastBlockHeight(lastBlock)
 	client.SetChainParams(params)
 	return client
@@ -47,7 +48,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -57,7 +58,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -67,7 +68,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -78,7 +79,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
 		require.ErrorContains(t, err, "emitter address mismatch")
 	})
@@ -96,7 +97,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -106,7 +107,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -116,7 +117,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -127,7 +128,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
 		require.ErrorContains(t, err, "emitter address mismatch")
 	})
@@ -145,7 +146,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
@@ -155,7 +156,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		_, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not been confirmed")
 	})
@@ -165,7 +166,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not TSS address")
 		require.Equal(t, "", ballot)
@@ -176,7 +177,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.ErrorContains(t, err, "not a successful tx")
 		require.Equal(t, "", ballot)
@@ -187,7 +188,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
-		ob := MockEVMClient(common.EthChain(), testutils.NewMockTSSMainnet(), lastBlock, testutils.MockChainParams(chainID, confirmation))
+		ob := MockEVMClient(common.EthChain(), stub.NewTSSMainnet(), lastBlock, stub.MockChainParams(chainID, confirmation))
 		ballot, err := ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 		require.NoError(t, err)
 		require.Equal(t, "", ballot)
@@ -203,8 +204,8 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, common.CoinType_Zeta)
 
 	// parse ZetaSent event
-	ob := MockEVMClient(common.EthChain(), nil, 1, testutils.MockChainParams(1, 1))
-	connector := testutils.MockConnectorNonEth(chainID)
+	ob := MockEVMClient(common.EthChain(), nil, 1, stub.MockChainParams(1, 1))
+	connector := stub.MockConnectorNonEth(chainID)
 	event := testutils.ParseReceiptZetaSent(receipt, connector)
 
 	// create test compliance config
@@ -249,8 +250,8 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, common.CoinType_ERC20)
 
 	// parse Deposited event
-	ob := MockEVMClient(common.EthChain(), nil, 1, testutils.MockChainParams(1, 1))
-	custody := testutils.MockERC20Custody(chainID)
+	ob := MockEVMClient(common.EthChain(), nil, 1, stub.MockChainParams(1, 1))
+	custody := stub.MockERC20Custody(chainID)
 	event := testutils.ParseReceiptERC20Deposited(receipt, custody)
 	sender := ethcommon.HexToAddress(tx.From)
 
@@ -300,7 +301,7 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
-	ob := MockEVMClient(common.EthChain(), nil, 1, testutils.MockChainParams(1, 1))
+	ob := MockEVMClient(common.EthChain(), nil, 1, stub.MockChainParams(1, 1))
 	cfg := &config.Config{
 		ComplianceConfig: &config.ComplianceConfig{},
 	}
