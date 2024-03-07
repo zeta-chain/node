@@ -59,7 +59,7 @@ func CreateNewCCTX(
 		OutboundTxGasPrice:               "",
 		OutboundTxBallotIndex:            "",
 		OutboundTxObservedExternalHeight: 0,
-		Amount:                           sdk.NewUint(0),
+		Amount:                           sdkmath.ZeroUint(),
 		TssPubkey:                        tssPubkey,
 	}
 	status := &types.Status{
