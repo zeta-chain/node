@@ -117,7 +117,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		0.11,
 		utxos[4:5],
 		btc,
-		[]byte(zetabitcoin.DonationMessage),
+		[]byte(common.DonationMessage),
 		runner.BTCDeployerAddress,
 	)
 	if err != nil {
