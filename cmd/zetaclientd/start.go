@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/libp2p/go-libp2p/core"
 	maddr "github.com/multiformats/go-multiaddr"
 	"github.com/pkg/errors"
@@ -209,6 +210,9 @@ func start(_ *cobra.Command, _ []string) error {
 
 	// Defensive check: Make sure the tss address is set to the current TSS address and not the newly generated one
 	tss.CurrentPubkey = currentTss.TssPubkey
+	if tss.EVMAddress() == (ethcommon.Address{}) || tss.BTCAddress() == "" {
+		startLogger.Error().Msg("TSS address is not set in zetacore")
+	}
 	startLogger.Info().Msgf("Current TSS address \n ETH : %s \n BTC : %s \n PubKey : %s ", tss.EVMAddress(), tss.BTCAddress(), tss.CurrentPubkey)
 	if len(appContext.ZetaCoreContext().GetEnabledChains()) == 0 {
 		startLogger.Error().Msgf("No chains enabled in updated config %s ", cfg.String())
