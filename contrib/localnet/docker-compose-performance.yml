@@ -5,5 +5,5 @@ version: "3"
 
 services:
   orchestrator:
-    entrypoint: ["/work/start.sh", "local --skip-regular --test-performance"]
+    entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-performance"]
 

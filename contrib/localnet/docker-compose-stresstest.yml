@@ -85,4 +85,4 @@ services:
   orchestrator:
     build:
       dockerfile: contrib/localnet/orchestrator/Dockerfile.fastbuild
-    entrypoint: ["/work/start.sh", "stress"]
+    entrypoint: ["/work/start-zetae2e.sh", "stress"]

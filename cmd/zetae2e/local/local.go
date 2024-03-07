@@ -27,6 +27,7 @@ const (
 	flagSetupOnly         = "setup-only"
 	flagConfigOut         = "config-out"
 	flagSkipSetup         = "skip-setup"
+	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 )
 
 var (
@@ -96,6 +97,11 @@ func NewLocalCmd() *cobra.Command {
 		false,
 		"set to true to skip setup",
 	)
+	cmd.Flags().Bool(
+		flagSkipBitcoinSetup,
+		false,
+		"set to true to skip bitcoin wallet setup",
+	)
 
 	return cmd
 }
@@ -140,6 +146,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 	skipSetup, err := cmd.Flags().GetBool(flagSkipSetup)
+	if err != nil {
+		panic(err)
+	}
+	skipBitcoinSetup, err := cmd.Flags().GetBool(flagSkipBitcoinSetup)
 	if err != nil {
 		panic(err)
 	}
@@ -253,7 +263,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipRegular {
 		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
 		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup))
 		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testAdmin {

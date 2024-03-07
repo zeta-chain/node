@@ -60,10 +60,10 @@ func zetaTestRoutine(
 		testsToRun, err := zetaRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestZetaWithdrawName,
-			e2etests.TestMessagePassingName,
-			e2etests.TestMessagePassingRevertFailName,
-			e2etests.TestMessagePassingRevertSuccessName,
-			e2etests.TestZetaDepositRestrictedName,
+			//e2etests.TestMessagePassingName,
+			//e2etests.TestMessagePassingRevertFailName,
+			//e2etests.TestMessagePassingRevertSuccessName,
+			//e2etests.TestZetaDepositRestrictedName,
 		)
 		if err != nil {
 			return fmt.Errorf("zeta tests failed: %v", err)

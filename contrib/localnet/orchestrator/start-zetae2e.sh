@@ -80,7 +80,13 @@ if [ "$OPTION" == "upgrade" ]; then
 
   echo "running E2E command to test the network after upgrade..."
 
-  zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
+  # Run zetae2e again
+  # When the upgrade height is greater than 100 for upgrade test, the Bitcoin tests have been run once, therefore the Bitcoin wallet is already set up
+  if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
+    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml
+  else
+    zetae2e "$ZETAE2E_CMD" --skip-setup --config deployed.yml --skip-bitcoin-setup
+  fi
 
   ZETAE2E_EXIT_CODE=$?
   if [ $ZETAE2E_EXIT_CODE -eq 0 ]; then

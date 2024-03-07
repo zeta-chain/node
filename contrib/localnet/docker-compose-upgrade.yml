@@ -31,4 +31,4 @@ services:
       dockerfile: Dockerfile-upgrade
 
   orchestrator:
-    entrypoint: ["/work/start.sh", "local", "upgrade"]
+    entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade"]

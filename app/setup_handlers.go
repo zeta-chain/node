@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 const releaseVersion = "v15"
@@ -17,6 +18,7 @@ func SetupHandlers(app *App) {
 		for m, mb := range app.mm.Modules {
 			vm[m] = mb.ConsensusVersion()
 		}
+		VersionMigrator{v: vm}.TriggerMigration(observertypes.ModuleName)
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)
 	})
@@ -28,7 +30,6 @@ func SetupHandlers(app *App) {
 	if upgradeInfo.Name == releaseVersion && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
 			Added: []string{authoritytypes.ModuleName},
-			// Added: []string{},
 		}
 		// Use upgrade store loader for the initial loading of all stores when app starts,
 		// it checks if version == upgradeHeight and applies store upgrades before loading the stores,

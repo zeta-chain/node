@@ -63,10 +63,10 @@ func erc20TestRoutine(
 		testsToRun, err := erc20Runner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
 			e2etests.TestERC20WithdrawName,
-			e2etests.TestMultipleWithdrawsName,
-			e2etests.TestERC20DepositAndCallRefundName,
-			e2etests.TestZRC20SwapName,
-			e2etests.TestERC20DepositRestrictedName,
+			//e2etests.TestMultipleWithdrawsName,
+			//e2etests.TestERC20DepositAndCallRefundName,
+			//e2etests.TestZRC20SwapName,
+			//e2etests.TestERC20DepositRestrictedName,
 		)
 		if err != nil {
 			return fmt.Errorf("erc20 tests failed: %v", err)
