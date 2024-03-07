@@ -259,8 +259,8 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 		erc20Addr,
 		common.GoerliLocalnetChain().ChainId,
 		6,
-		"TestToken",
-		"TEST",
+		"USDT",
+		"USDT",
 		common.CoinType_ERC20,
 		100000,
 	))
