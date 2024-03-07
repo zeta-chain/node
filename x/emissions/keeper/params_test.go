@@ -26,7 +26,6 @@ func TestKeeper_GetParams(t *testing.T) {
 				ObserverEmissionPercentage:  "00.25",
 				TssSignerEmissionPercentage: "00.25",
 				DurationFactorConstant:      "0.001877876953694702",
-				ObserverSlashAmount:         sdkmath.NewInt(100000000000000000),
 			},
 			isPanic: "",
 		},

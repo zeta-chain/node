@@ -1,6 +1,7 @@
 package emissions_test
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,8 +13,11 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
+	params := types.DefaultParams()
+	params.ObserverSlashAmount = sdk.Int{}
+
 	genesisState := types.GenesisState{
-		Params: types.DefaultParams(),
+		Params: params,
 		WithdrawableEmissions: []types.WithdrawableEmissions{
 			sample.WithdrawableEmissions(t),
 			sample.WithdrawableEmissions(t),
