@@ -114,7 +114,10 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			continue
 		}
 		if observerRewardUnits < 0 {
-			slashAmount := keeper.GetParams(ctx).ObserverSlashAmount
+			slashAmount, ok := sdkmath.NewIntFromString(types.ObserverSlashAmount)
+			if !ok {
+				continue
+			}
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,

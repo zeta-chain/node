@@ -29,6 +29,8 @@ const (
 
 	EmissionScheduledYears = 4
 	AvgBlockTime           = "5.7"
+
+	ObserverSlashAmount = "100000000000000000"
 )
 
 func KeyPrefix(p string) []byte {
