@@ -327,7 +327,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
 	}
 	if testPerformance {
-		//eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose))
+		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose))
 		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose))
 	}
 	if testCustom {
