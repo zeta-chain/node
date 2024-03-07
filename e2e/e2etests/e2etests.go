@@ -125,7 +125,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZRC20SwapName,
-		"swap ZRC20 token for ZRC20 ETH",
+		"swap ZRC20 ERC20 for ZRC20 ETH",
 		[]runner.ArgDefinition{},
 		TestZRC20Swap,
 	),

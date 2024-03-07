@@ -47,7 +47,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	r.Logger.Info("ZRC20 approve receipt: status %d", receipt.Status)
+	r.Logger.Info("ERC20 ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
 	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)

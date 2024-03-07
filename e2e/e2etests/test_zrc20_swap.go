@@ -33,7 +33,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.Info("ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
+	r.Logger.Info("ERC20 ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
@@ -83,7 +83,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
-	r.Logger.Info("Swap ZRC20 token for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
+	r.Logger.Info("Swap ERC20 ZRC20 for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
 	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {

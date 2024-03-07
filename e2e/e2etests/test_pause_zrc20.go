@@ -101,7 +101,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
-		panic("ZERC20 transfer should succeed")
+		panic("ERC20 ZRC20 transfer should succeed")
 	}
 	tx, err = vaultContract.Deposit(r.ZevmAuth, r.ERC20ZRC20Addr, big.NewInt(1e3))
 	if err != nil {

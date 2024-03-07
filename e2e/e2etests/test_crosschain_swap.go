@@ -23,7 +23,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		r.Logger.Print("ℹ️create pair error")
 	}
-	txApprove, err := r.ERC20ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
@@ -42,8 +42,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txApprove, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
-		panic("zrc20 approve failed")
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txERC20ZRC20Approve, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+		panic("ZRC20 ERC20 approve failed")
 	}
 	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txBTCApprove, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
 		panic("btc approve failed")

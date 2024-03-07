@@ -24,7 +24,7 @@ func (runner *E2ERunner) CheckZRC20ReserveAndSupply() error {
 	if err := runner.checkEthTSSBalance(); err != nil {
 		return err
 	}
-	if err := runner.checkZRC20TSSBalance(); err != nil {
+	if err := runner.checkERC20TSSBalance(); err != nil {
 		return err
 	}
 	return runner.checkZetaTSSBalance()
@@ -80,19 +80,19 @@ func (runner *E2ERunner) CheckBtcTSSBalance() error {
 	return nil
 }
 
-func (runner *E2ERunner) checkZRC20TSSBalance() error {
+func (runner *E2ERunner) checkERC20TSSBalance() error {
 	erc20Balance, err := runner.ERC20.BalanceOf(&bind.CallOpts{}, runner.ERC20CustodyAddr)
 	if err != nil {
 		return err
 	}
-	zrc20Supply, err := runner.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
+	erc20zrc20Supply, err := runner.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}
-	if erc20Balance.Cmp(zrc20Supply) < 0 {
-		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", erc20Balance, zrc20Supply)
+	if erc20Balance.Cmp(erc20zrc20Supply) < 0 {
+		return fmt.Errorf("ERC20: TSS balance (%d) < ZRC20 TotalSupply (%d) ", erc20Balance, erc20zrc20Supply)
 	}
-	runner.Logger.Info("ERC20: TSS balance (%d) >= ZRC20 TotalSupply (%d)", erc20Balance, zrc20Supply)
+	runner.Logger.Info("ERC20: TSS balance (%d) >= ERC20 ZRC20 TotalSupply (%d)", erc20Balance, erc20zrc20Supply)
 	return nil
 }
 
