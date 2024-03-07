@@ -16,6 +16,7 @@ func zetaTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -59,11 +60,7 @@ func zetaTestRoutine(
 		// run zeta test
 		testsToRun, err := zetaRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestZetaWithdrawName,
-			//e2etests.TestMessagePassingName,
-			//e2etests.TestMessagePassingRevertFailName,
-			//e2etests.TestMessagePassingRevertSuccessName,
-			//e2etests.TestZetaDepositRestrictedName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("zeta tests failed: %v", err)

@@ -18,6 +18,7 @@ func bitcoinTestRoutine(
 	verbose bool,
 	initBitcoinNetwork bool,
 	testHeader bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -67,11 +68,7 @@ func bitcoinTestRoutine(
 		// to make it faster to catch up with the latest block header
 		testsToRun, err := bitcoinRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestBitcoinWithdrawName,
-			//e2etests.TestBitcoinWithdrawInvalidAddressName,
-			//e2etests.TestZetaWithdrawBTCRevertName,
-			//e2etests.TestCrosschainSwapName,
-			//e2etests.TestBitcoinWithdrawRestrictedName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)

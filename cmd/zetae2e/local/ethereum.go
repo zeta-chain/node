@@ -17,6 +17,7 @@ func ethereumTestRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	testHeader bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -56,11 +57,12 @@ func ethereumTestRoutine(
 		// to make it faster to catch up with the latest block header
 		testsToRun, err := ethereumRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestEtherWithdrawName,
+			//e2etests.TestEtherWithdrawName,
 			//e2etests.TestContextUpgradeName,
 			//e2etests.TestEtherDepositAndCallName,
 			//e2etests.TestDepositAndCallRefundName,
 			//e2etests.TestEtherWithdrawRestrictedName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("ethereum tests failed: %v", err)

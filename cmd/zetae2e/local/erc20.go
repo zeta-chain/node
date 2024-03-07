@@ -16,6 +16,7 @@ func erc20TestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -56,17 +57,10 @@ func erc20TestRoutine(
 		erc20Runner.WaitForMinedCCTX(txEtherDeposit)
 		erc20Runner.WaitForMinedCCTX(txERC20Deposit)
 
-		//erc20Runner.SetupBitcoinAccount()
-		//erc20Runner.DepositBTC()
-
 		// run erc20 test
 		testsToRun, err := erc20Runner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestERC20WithdrawName,
-			//e2etests.TestMultipleWithdrawsName,
-			//e2etests.TestERC20DepositAndCallRefundName,
-			//e2etests.TestZRC20SwapName,
-			//e2etests.TestERC20DepositRestrictedName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("erc20 tests failed: %v", err)
