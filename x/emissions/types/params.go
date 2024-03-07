@@ -72,16 +72,6 @@ func (p Params) String() string {
 	return string(out)
 }
 
-func validateObserverSlashAmount(i interface{}) error {
-	v, ok := i.(sdkmath.Int)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	if v.LT(sdk.ZeroInt()) {
-		return fmt.Errorf("slash amount cannot be less than 0")
-	}
-	return nil
-}
 func validateDurationFactorConstant(i interface{}) error {
 	_, ok := i.(string)
 	if !ok {
