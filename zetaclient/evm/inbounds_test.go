@@ -256,8 +256,8 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	sender := ethcommon.HexToAddress(tx.From)
 
 	// create test compliance config
-	cfg := &config.Config{
-		ComplianceConfig: &config.ComplianceConfig{},
+	cfg := config.Config{
+		ComplianceConfig: config.ComplianceConfig{},
 	}
 
 	t.Run("should return vote msg for archived Deposited event", func(t *testing.T) {
@@ -302,8 +302,8 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 
 	// create test compliance config
 	ob := MockEVMClient(common.EthChain(), nil, 1, stub.MockChainParams(1, 1))
-	cfg := &config.Config{
-		ComplianceConfig: &config.ComplianceConfig{},
+	cfg := config.Config{
+		ComplianceConfig: config.ComplianceConfig{},
 	}
 
 	t.Run("should return vote msg for archived gas token transfer to TSS", func(t *testing.T) {
