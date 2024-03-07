@@ -61,6 +61,7 @@
 * [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
 * [1630](https://github.com/zeta-chain/node/pull/1630) - added password prompts for hotkey and tss keyshare in zetaclient
 * [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
+* [1809](https://github.com/zeta-chain/node/pull/1809) - Refactored tryprocessout function in evm signer
 
 ### Fixes
 

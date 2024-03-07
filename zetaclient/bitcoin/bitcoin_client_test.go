@@ -19,13 +19,14 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
 
 func MockBTCClientMainnet() *BTCChainClient {
 	return &BTCChainClient{
 		chain:      common.BtcMainnetChain(),
-		zetaClient: testutils.MockCoreBridge(),
-		Tss:        testutils.NewMockTSSMainnet(),
+		zetaClient: stub.NewZetaCoreBridge(),
+		Tss:        stub.NewTSSMainnet(),
 	}
 }
 
