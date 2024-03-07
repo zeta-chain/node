@@ -32,12 +32,6 @@ import (
 	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
-const (
-	OutTxInclusionTimeout     = 20 * time.Minute
-	OutTxTrackerReportTimeout = 10 * time.Minute
-	ZetaBlockTime             = 6500 * time.Millisecond
-)
-
 type Signer struct {
 	client                      interfaces.EVMRPCClient
 	chain                       *common.Chain
