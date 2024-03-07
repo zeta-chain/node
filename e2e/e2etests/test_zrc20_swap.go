@@ -15,11 +15,11 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	tx, err := r.UniswapV2Factory.CreatePair(r.ZevmAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
+	tx, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
 	if err != nil {
 		r.Logger.Print("ℹ️create pair error")
 	} else {
-		utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+		utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	}
 
 	zrc20EthPair, err := r.UniswapV2Factory.GetPair(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.ETHZRC20Addr)
@@ -28,29 +28,29 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	}
 	r.Logger.Info("ZRC20-ETH pair receipt pair addr %s", zrc20EthPair.Hex())
 
-	tx, err = r.ERC20ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err = r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("ERC20 ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
-	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	tx, err = r.ETHZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("ETH ZRC20 approval receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	// temporarily increase gas limit to 400000
-	previousGasLimit := r.ZevmAuth.GasLimit
+	previousGasLimit := r.ZEVMAuth.GasLimit
 	defer func() {
-		r.ZevmAuth.GasLimit = previousGasLimit
+		r.ZEVMAuth.GasLimit = previousGasLimit
 	}()
 
-	r.ZevmAuth.GasLimit = 400000
+	r.ZEVMAuth.GasLimit = 400000
 	tx, err = r.UniswapV2Router.AddLiquidity(
-		r.ZevmAuth,
+		r.ZEVMAuth,
 		r.ERC20ZRC20Addr,
 		r.ETHZRC20Addr,
 		big.NewInt(90000),
@@ -63,7 +63,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Add liquidity receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 
 	balETHBefore, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
@@ -72,7 +72,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	}
 	ethOutAmout := big.NewInt(1)
 	tx, err = r.UniswapV2Router.SwapExactTokensForTokens(
-		r.ZevmAuth,
+		r.ZEVMAuth,
 		big.NewInt(1000),
 		ethOutAmout,
 		[]ethcommon.Address{r.ERC20ZRC20Addr, r.ETHZRC20Addr},
@@ -82,7 +82,7 @@ func TestZRC20Swap(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Swap ERC20 ZRC20 for ETH ZRC20 %s status %d", receipt.TxHash, receipt.Status)
 
 	balETHAfter, err := r.ETHZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)

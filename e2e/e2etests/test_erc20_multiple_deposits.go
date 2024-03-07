@@ -50,7 +50,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 
 func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Hash {
 	// deploy depositor
-	depositorAddr, _, depositor, err := testcontract.DeployDepositor(r.GoerliAuth, r.GoerliClient, r.ERC20CustodyAddr)
+	depositorAddr, _, depositor, err := testcontract.DeployDepositor(r.EVMAuth, r.EVMClient, r.ERC20CustodyAddr)
 	if err != nil {
 		panic(err)
 	}
@@ -58,22 +58,22 @@ func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 	fullAmount := big.NewInt(0).Mul(amount, count)
 
 	// approve
-	tx, err := r.ERC20.Approve(r.GoerliAuth, depositorAddr, fullAmount)
+	tx, err := r.ERC20.Approve(r.EVMAuth, depositorAddr, fullAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
 	r.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
 	// deposit
-	tx, err = depositor.RunDeposits(r.GoerliAuth, r.DeployerAddress.Bytes(), r.ERC20Addr, amount, []byte{}, count)
+	tx, err = depositor.RunDeposits(r.EVMAuth, r.DeployerAddress.Bytes(), r.ERC20Addr, amount, []byte{}, count)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposits failed")
 	}
@@ -87,6 +87,6 @@ func MultipleDeposits(r *runner.E2ERunner, amount, count *big.Int) ethcommon.Has
 		r.Logger.Info("Multiple deposit event: ")
 		r.Logger.Info("  Amount: %d, ", event.Amount)
 	}
-	r.Logger.Info("gas limit %d", r.ZevmAuth.GasLimit)
+	r.Logger.Info("gas limit %d", r.ZEVMAuth.GasLimit)
 	return tx.Hash()
 }

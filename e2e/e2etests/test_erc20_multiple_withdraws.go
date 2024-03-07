@@ -33,28 +33,28 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	}
 
 	// deploy withdrawer
-	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZevmAuth, r.ZevmClient)
+	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// approve
-	tx, err := r.ERC20ZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
+	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
 	r.Logger.Info("ERC20 ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
-	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
+	tx, err = r.ETHZRC20.Approve(r.ZEVMAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve gas token failed")
 	}
@@ -73,7 +73,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(
-		r.ZevmAuth,
+		r.ZEVMAuth,
 		r.DeployerAddress.Bytes(),
 		r.ERC20ZRC20Addr,
 		withdrawalAmount,
@@ -82,7 +82,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}

@@ -48,27 +48,27 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 
 	r.Logger.Info("Deploying example contract")
-	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZevmAuth, r.ZevmClient)
+	exampleAddr, _, exampleContract, err := testcontract.DeployExample(r.ZEVMAuth, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("Example contract deployed")
 
 	// preparing tx
-	goerliClient := r.GoerliClient
+	evmClient := r.EVMClient
 	gasLimit := uint64(23000)
-	gasPrice, err := goerliClient.SuggestGasPrice(r.Ctx)
+	gasPrice, err := evmClient.SuggestGasPrice(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
-	nonce, err := goerliClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	data := append(exampleAddr.Bytes(), []byte("hello sailors")...)
 	tx := ethtypes.NewTransaction(nonce, r.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(r.Ctx)
+	chainID, err := evmClient.NetworkID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -82,11 +82,11 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 
 	r.Logger.Info("Sending a cross-chain call to example contract")
-	err = goerliClient.SendTransaction(r.Ctx, signedTx)
+	err = evmClient.SendTransaction(r.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
@@ -106,18 +106,18 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("Cross-chain call succeeded")
 
 	r.Logger.Info("Deploying reverter contract")
-	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZevmAuth, r.ZevmClient)
+	reverterAddr, _, _, err := testcontract.DeployReverter(r.ZEVMAuth, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("Example reverter deployed")
 
 	// preparing tx for reverter
-	gasPrice, err = goerliClient.SuggestGasPrice(r.Ctx)
+	gasPrice, err = evmClient.SuggestGasPrice(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
-	nonce, err = goerliClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err = evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -130,12 +130,12 @@ func TestEtherDepositAndCall(r *runner.E2ERunner, args []string) {
 	}
 
 	r.Logger.Info("Sending a cross-chain call to reverter contract")
-	err = goerliClient.SendTransaction(r.Ctx, signedTx)
+	err = evmClient.SendTransaction(r.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
 
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("tx failed")
 	}
@@ -162,22 +162,22 @@ func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		panic("Invalid amount specified for TestDepositAndCallRefund.")
 	}
 
-	goerliClient := r.GoerliClient
+	evmClient := r.EVMClient
 
-	nonce, err := goerliClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(r.Ctx, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
 
 	gasLimit := uint64(23000) // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(r.Ctx)
+	gasPrice, err := evmClient.SuggestGasPrice(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	data := append(r.BTCZRC20Addr.Bytes(), []byte("hello sailors")...) // this data
 	tx := ethtypes.NewTransaction(nonce, r.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(r.Ctx)
+	chainID, err := evmClient.NetworkID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -190,13 +190,13 @@ func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	err = goerliClient.SendTransaction(r.Ctx, signedTx)
+	err = evmClient.SendTransaction(r.Ctx, signedTx)
 	if err != nil {
 		panic(err)
 	}
-	r.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
-	r.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
+	r.Logger.Info("EVM tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("EVM tx receipt: %d", receipt.Status)
 	r.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	r.Logger.Info("  to: %s", signedTx.To().String())
 	r.Logger.Info("  value: %d", signedTx.Value())
@@ -206,13 +206,13 @@ func TestDepositAndCallRefund(r *runner.E2ERunner, args []string) {
 		cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, signedTx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 		r.Logger.Info("cctx status message: %s", cctx.CctxStatus.StatusMessage)
 		revertTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-		r.Logger.Info("GOERLI revert tx receipt: status %d", receipt.Status)
+		r.Logger.Info("EVM revert tx receipt: status %d", receipt.Status)
 
-		tx, _, err := r.GoerliClient.TransactionByHash(r.Ctx, ethcommon.HexToHash(revertTxHash))
+		tx, _, err := r.EVMClient.TransactionByHash(r.Ctx, ethcommon.HexToHash(revertTxHash))
 		if err != nil {
 			panic(err)
 		}
-		receipt, err := r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
+		receipt, err := r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(revertTxHash))
 		if err != nil {
 			panic(err)
 		}
@@ -285,7 +285,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
@@ -304,7 +304,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}
@@ -339,7 +339,7 @@ func TestDepositEtherLiquidityCap(r *runner.E2ERunner, args []string) {
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit eth tx failed")
 	}

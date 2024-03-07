@@ -24,8 +24,8 @@ func RunnerFromConfig(
 ) (*runner.E2ERunner, error) {
 	// initialize clients
 	btcRPCClient,
-		goerliClient,
-		goerliAuth,
+		evmClient,
+		evmAuth,
 		cctxClient,
 		fungibleClient,
 		authClient,
@@ -56,7 +56,7 @@ func RunnerFromConfig(
 		evmUserAddr,
 		evmUserPrivKey,
 		zetaUserMnemonic,
-		goerliClient,
+		evmClient,
 		zevmClient,
 		cctxClient,
 		zetaTxServer,
@@ -64,7 +64,7 @@ func RunnerFromConfig(
 		authClient,
 		bankClient,
 		observerClient,
-		goerliAuth,
+		evmAuth,
 		zevmAuth,
 		btcRPCClient,
 		logger,

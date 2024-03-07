@@ -30,7 +30,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ZetaEthAddress: %s", c)
 		}
 		r.ZetaEthAddr = ethcommon.HexToAddress(c)
-		r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.GoerliClient)
+		r.ZetaEth, err = zetaeth.NewZetaEth(r.ZetaEthAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
@@ -40,7 +40,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ConnectorEthAddr: %s", c)
 		}
 		r.ConnectorEthAddr = ethcommon.HexToAddress(c)
-		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.GoerliClient)
+		r.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(r.ConnectorEthAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid CustodyAddr: %s", c)
 		}
 		r.ERC20CustodyAddr = ethcommon.HexToAddress(c)
-		r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.GoerliClient)
+		r.ERC20Custody, err = erc20custody.NewERC20Custody(r.ERC20CustodyAddr, r.EVMClient)
 		if err != nil {
 			return err
 		}
@@ -60,7 +60,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ERC20: %s", c)
 		}
 		r.ERC20Addr = ethcommon.HexToAddress(c)
-		r.ERC20, err = erc20.NewERC20(r.ERC20Addr, r.GoerliClient)
+		r.ERC20, err = erc20.NewERC20(r.ERC20Addr, r.EVMClient)
 		if err != nil {
 			return err
 		}
@@ -72,7 +72,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid SystemContractAddr: %s", c)
 		}
 		r.SystemContractAddr = ethcommon.HexToAddress(c)
-		r.SystemContract, err = systemcontract.NewSystemContract(r.SystemContractAddr, r.ZevmClient)
+		r.SystemContract, err = systemcontract.NewSystemContract(r.SystemContractAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ETHZRC20Addr: %s", c)
 		}
 		r.ETHZRC20Addr = ethcommon.HexToAddress(c)
-		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZevmClient)
+		r.ETHZRC20, err = zrc20.NewZRC20(r.ETHZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -92,7 +92,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
 		}
 		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
-		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZevmClient)
+		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -102,7 +102,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid BTCZRC20Addr: %s", c)
 		}
 		r.BTCZRC20Addr = ethcommon.HexToAddress(c)
-		r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZevmClient)
+		r.BTCZRC20, err = zrc20.NewZRC20(r.BTCZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -112,7 +112,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
 		}
 		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
-		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZevmClient)
+		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid UniswapFactoryAddr: %s", c)
 		}
 		r.UniswapV2FactoryAddr = ethcommon.HexToAddress(c)
-		r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZevmClient)
+		r.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(r.UniswapV2FactoryAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid UniswapRouterAddr: %s", c)
 		}
 		r.UniswapV2RouterAddr = ethcommon.HexToAddress(c)
-		r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZevmClient)
+		r.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(r.UniswapV2RouterAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ConnectorZEVMAddr: %s", c)
 		}
 		r.ConnectorZEVMAddr = ethcommon.HexToAddress(c)
-		r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZevmClient)
+		r.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(r.ConnectorZEVMAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -152,7 +152,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid WZetaAddr: %s", c)
 		}
 		r.WZetaAddr = ethcommon.HexToAddress(c)
-		r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZevmClient)
+		r.WZeta, err = wzeta.NewWETH9(r.WZetaAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -162,7 +162,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ZEVMSwapAppAddr: %s", c)
 		}
 		r.ZEVMSwapAppAddr = ethcommon.HexToAddress(c)
-		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZevmClient)
+		r.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(r.ZEVMSwapAppAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return fmt.Errorf("invalid ContextAppAddr: %s", c)
 		}
 		r.ContextAppAddr = ethcommon.HexToAddress(c)
-		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZevmClient)
+		r.ContextApp, err = contextapp.NewContextApp(r.ContextAppAddr, r.ZEVMClient)
 		if err != nil {
 			return err
 		}

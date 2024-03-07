@@ -32,7 +32,7 @@ type AccountBalancesDiff struct {
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
 func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
 	// zevm
-	zetaZeta, err := runner.ZevmClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
+	zetaZeta, err := runner.ZEVMClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}
@@ -54,7 +54,7 @@ func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, erro
 	}
 
 	// evm
-	evmEth, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
+	evmEth, err := runner.EVMClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
 	if err != nil {
 		return AccountBalances{}, err
 	}

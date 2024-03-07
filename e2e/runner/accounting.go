@@ -31,7 +31,7 @@ func (runner *E2ERunner) CheckZRC20ReserveAndSupply() error {
 }
 
 func (runner *E2ERunner) checkEthTSSBalance() error {
-	tssBal, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.TSSAddress, nil)
+	tssBal, err := runner.EVMClient.BalanceAt(runner.Ctx, runner.TSSAddress, nil)
 	if err != nil {
 		return err
 	}

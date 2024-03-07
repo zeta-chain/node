@@ -25,22 +25,22 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	}
 
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ERC20ZRC20Addr, approvedAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ERC20ZRC20Addr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx, err = r.ERC20ZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
+	tx, err = r.ERC20ZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
 		event, err := r.ERC20ZRC20.ParseWithdrawal(*log)
@@ -61,11 +61,11 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	verifyTransferAmountFromCCTX(r, cctx, withdrawalAmount.Int64())
 }
 
-// verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on Goerli
+// verifyTransferAmountFromCCTX verifies the transfer amount from the CCTX on EVM
 func verifyTransferAmountFromCCTX(r *runner.E2ERunner, cctx *crosschaintypes.CrossChainTx, amount int64) {
 	r.Logger.Info("outTx hash %s", cctx.GetCurrentOutTxParam().OutboundTxHash)
 
-	receipt, err := r.GoerliClient.TransactionReceipt(
+	receipt, err := r.EVMClient.TransactionReceipt(
 		r.Ctx,
 		ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash),
 	)

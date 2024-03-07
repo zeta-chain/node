@@ -47,8 +47,8 @@ type E2ERunner struct {
 	FungibleAdminMnemonic string
 
 	// rpc clients
-	ZevmClient   *ethclient.Client
-	GoerliClient *ethclient.Client
+	ZEVMClient   *ethclient.Client
+	EVMClient    *ethclient.Client
 	BtcRPCClient *rpcclient.Client
 
 	// grpc clients
@@ -62,8 +62,8 @@ type E2ERunner struct {
 	ZetaTxServer txserver.ZetaTxServer
 
 	// evm auth
-	GoerliAuth *bind.TransactOpts
-	ZevmAuth   *bind.TransactOpts
+	EVMAuth  *bind.TransactOpts
+	ZEVMAuth *bind.TransactOpts
 
 	// contracts
 	ZetaEthAddr          ethcommon.Address
@@ -118,7 +118,7 @@ func NewE2ERunner(
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
 	fungibleAdminMnemonic string,
-	goerliClient *ethclient.Client,
+	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
 	zetaTxServer txserver.ZetaTxServer,
@@ -126,7 +126,7 @@ func NewE2ERunner(
 	authClient authtypes.QueryClient,
 	bankClient banktypes.QueryClient,
 	observerClient observertypes.QueryClient,
-	goerliAuth *bind.TransactOpts,
+	evmAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
 	logger *Logger,
@@ -140,8 +140,8 @@ func NewE2ERunner(
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,
 
-		ZevmClient:     zevmClient,
-		GoerliClient:   goerliClient,
+		ZEVMClient:     zevmClient,
+		EVMClient:      evmClient,
 		ZetaTxServer:   zetaTxServer,
 		CctxClient:     cctxClient,
 		FungibleClient: fungibleClient,
@@ -149,8 +149,8 @@ func NewE2ERunner(
 		BankClient:     bankClient,
 		ObserverClient: observerClient,
 
-		GoerliAuth:   goerliAuth,
-		ZevmAuth:     zevmAuth,
+		EVMAuth:      evmAuth,
+		ZEVMAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
 
 		Logger: logger,
@@ -372,60 +372,60 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.SystemContractAddr = other.SystemContractAddr
 
 	// create instances of contracts
-	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.GoerliClient)
+	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.GoerliClient)
+	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.GoerliClient)
+	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20, err = erc20.NewERC20(runner.ERC20Addr, runner.GoerliClient)
+	runner.ERC20, err = erc20.NewERC20(runner.ERC20Addr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZevmClient)
+	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZevmClient)
+	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZevmClient)
+	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZevmClient)
+	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZevmClient)
+	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZevmClient)
+	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZevmClient)
+	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
 
-	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZevmClient)
+	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZevmClient)
+	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZevmClient)
+	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
