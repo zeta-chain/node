@@ -74,8 +74,8 @@ type E2ERunner struct {
 	ERC20Custody         *erc20custody.ERC20Custody
 	ERC20Addr            ethcommon.Address
 	ERC20                *erc20.ERC20
-	ZRC20Addr            ethcommon.Address
-	ZRC20                *zrc20.ZRC20
+	ERC20ZRC20Addr       ethcommon.Address
+	ERC20ZRC20           *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
@@ -359,7 +359,7 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.ConnectorEthAddr = other.ConnectorEthAddr
 	runner.ERC20CustodyAddr = other.ERC20CustodyAddr
 	runner.ERC20Addr = other.ERC20Addr
-	runner.ZRC20Addr = other.ZRC20Addr
+	runner.ERC20ZRC20Addr = other.ERC20ZRC20Addr
 	runner.ETHZRC20Addr = other.ETHZRC20Addr
 	runner.BTCZRC20Addr = other.BTCZRC20Addr
 	runner.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
@@ -388,7 +388,7 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	if err != nil {
 		return err
 	}
-	runner.ZRC20, err = zrc20.NewZRC20(runner.ZRC20Addr, runner.ZevmClient)
+	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZevmClient)
 	if err != nil {
 		return err
 	}
@@ -450,7 +450,7 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print(" --- 📜zEVM contracts ---")
 	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())
 	runner.Logger.Print("ETHZRC20:       %s", runner.ETHZRC20Addr.Hex())
-	runner.Logger.Print("ZRC20:      %s", runner.ZRC20Addr.Hex())
+	runner.Logger.Print("ERC20ZRC20:      %s", runner.ERC20ZRC20Addr.Hex())
 	runner.Logger.Print("BTCZRC20:       %s", runner.BTCZRC20Addr.Hex())
 	runner.Logger.Print("UniswapFactory: %s", runner.UniswapV2FactoryAddr.Hex())
 	runner.Logger.Print("UniswapRouter:  %s", runner.UniswapV2RouterAddr.Hex())

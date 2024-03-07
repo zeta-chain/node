@@ -26,7 +26,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 		panic("Invalid number of deposits specified for TestMultipleERC20Deposit.")
 	}
 
-	initialBal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -37,7 +37,7 @@ func TestMultipleERC20Deposit(r *runner.E2ERunner, args []string) {
 	}
 
 	// check new balance is increased by amount * count
-	bal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}

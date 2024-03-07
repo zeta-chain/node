@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/btcsuite/btcutil"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
 // AccountBalances is a struct that contains the balances of the accounts used in the E2E test
@@ -31,59 +30,57 @@ type AccountBalancesDiff struct {
 
 // GetAccountBalances returns the account balances of the accounts used in the E2E test
 func (runner *E2ERunner) GetAccountBalances(skipBTC bool) (AccountBalances, error) {
-	// zevm
-	zetaZeta, err := runner.ZevmClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	zetaWZeta, err := runner.WZeta.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	zetaEth, err := runner.ETHZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	zetaErc20, err := runner.ZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	zetaBtc, err := runner.BTCZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
+	// // zevm
+	// zetaZeta, err := runner.ZevmClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
+	// // zetaWZeta, err := runner.WZeta.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// // if err != nil {
+	// // 	return AccountBalances{}, err
+	// // }
+	// zetaEth, err := runner.ETHZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
+	// zetaErc20, err := runner.ZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
+	// zetaBtc, err := runner.BTCZRC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
 
-	// evm
-	evmEth, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	evmZeta, err := runner.ZetaEth.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
-	evmErc20, err := runner.ERC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
-	if err != nil {
-		return AccountBalances{}, err
-	}
+	// // evm
+	// evmEth, err := runner.GoerliClient.BalanceAt(runner.Ctx, runner.DeployerAddress, nil)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
+	// evmZeta, err := runner.ZetaEth.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
+	// evmErc20, err := runner.ERC20.BalanceOf(&bind.CallOpts{}, runner.DeployerAddress)
+	// if err != nil {
+	// 	return AccountBalances{}, err
+	// }
 
 	// bitcoin
-	var BtcBTC string
-	if !skipBTC {
-		if BtcBTC, err = runner.GetBitcoinBalance(); err != nil {
-			return AccountBalances{}, err
-		}
+	BtcBTC, err := runner.GetBitcoinBalance()
+	if err != nil {
+		return AccountBalances{}, err
 	}
 
 	return AccountBalances{
-		ZetaETH:   zetaEth,
-		ZetaZETA:  zetaZeta,
-		ZetaWZETA: zetaWZeta,
-		ZetaERC20: zetaErc20,
-		ZetaBTC:   zetaBtc,
-		EvmETH:    evmEth,
-		EvmZETA:   evmZeta,
-		EvmERC20:  evmErc20,
+		ZetaETH:   nil,
+		ZetaZETA:  nil,
+		ZetaWZETA: nil,
+		ZetaERC20: nil,
+		ZetaBTC:   nil,
+		EvmETH:    nil,
+		EvmZETA:   nil,
+		EvmERC20:  nil,
 		BtcBTC:    BtcBTC,
 	}, nil
 }

@@ -70,7 +70,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, zrc20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
+	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
 		utils2.FungibleAdminName,
 		runner.ERC20Addr.Hex(),
 	)
@@ -78,9 +78,9 @@ func (runner *E2ERunner) SetZEVMContracts() {
 		panic(err)
 	}
 
-	// Set ZRC20Addr
-	runner.ZRC20Addr = ethcommon.HexToAddress(zrc20Addr)
-	runner.ZRC20, err = zrc20.NewZRC20(runner.ZRC20Addr, runner.ZevmClient)
+	// Set ERC20ZRC20Addr
+	runner.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZevmClient)
 	if err != nil {
 		panic(err)
 	}

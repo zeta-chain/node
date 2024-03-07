@@ -85,7 +85,7 @@ func (runner *E2ERunner) checkZRC20TSSBalance() error {
 	if err != nil {
 		return err
 	}
-	zrc20Supply, err := runner.ZRC20.TotalSupply(&bind.CallOpts{})
+	zrc20Supply, err := runner.ERC20ZRC20.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return err
 	}

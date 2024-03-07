@@ -25,7 +25,7 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	}
 
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ZRC20Addr, approvedAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ERC20ZRC20Addr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -36,14 +36,14 @@ func TestERC20Withdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// withdraw
-	tx, err = r.ZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
+	tx, err = r.ERC20ZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("Receipt txhash %s status %d", receipt.TxHash, receipt.Status)
 	for _, log := range receipt.Logs {
-		event, err := r.ZRC20.ParseWithdrawal(*log)
+		event, err := r.ERC20ZRC20.ParseWithdrawal(*log)
 		if err != nil {
 			continue
 		}

@@ -61,7 +61,7 @@ type EVM struct {
 type ZEVM struct {
 	SystemContractAddr string `yaml:"system_contract"`
 	ETHZRC20Addr       string `yaml:"eth_zrc20"`
-	ZRC20Addr          string `yaml:"zrc20"`
+	ERC20ZRC20Addr     string `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       string `yaml:"btc_zrc20"`
 	UniswapFactoryAddr string `yaml:"uniswap_factory"`
 	UniswapRouterAddr  string `yaml:"uniswap_router"`

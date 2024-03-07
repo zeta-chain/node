@@ -87,12 +87,12 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return err
 		}
 	}
-	if c := conf.Contracts.ZEVM.ZRC20Addr; c != "" {
+	if c := conf.Contracts.ZEVM.ERC20ZRC20Addr; c != "" {
 		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ZRC20Addr: %s", c)
+			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
 		}
-		r.ZRC20Addr = ethcommon.HexToAddress(c)
-		r.ZRC20, err = zrc20.NewZRC20(r.ZRC20Addr, r.ZevmClient)
+		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
+		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZevmClient)
 		if err != nil {
 			return err
 		}
@@ -107,12 +107,12 @@ func setContractsFromConfig(r *runner.E2ERunner, conf config.Config) error {
 			return err
 		}
 	}
-	if c := conf.Contracts.ZEVM.ZRC20Addr; c != "" {
+	if c := conf.Contracts.ZEVM.ERC20ZRC20Addr; c != "" {
 		if !ethcommon.IsHexAddress(c) {
-			return fmt.Errorf("invalid ZRC20Addr: %s", c)
+			return fmt.Errorf("invalid ERC20ZRC20Addr: %s", c)
 		}
-		r.ZRC20Addr = ethcommon.HexToAddress(c)
-		r.ZRC20, err = zrc20.NewZRC20(r.ZRC20Addr, r.ZevmClient)
+		r.ERC20ZRC20Addr = ethcommon.HexToAddress(c)
+		r.ERC20ZRC20, err = zrc20.NewZRC20(r.ERC20ZRC20Addr, r.ZevmClient)
 		if err != nil {
 			return err
 		}

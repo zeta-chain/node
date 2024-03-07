@@ -28,7 +28,7 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	if receipt.Status == 0 {
 		panic("Vault approval should succeed")
 	}
-	tx, err = r.ZRC20.Approve(r.ZevmAuth, vaultAddr, big.NewInt(1e18))
+	tx, err = r.ERC20ZRC20.Approve(r.ZevmAuth, vaultAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
@@ -93,9 +93,9 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	}
 	r.Logger.Info("Operations all failed")
 
-	// Check we can still interact with ZRC20
+	// Check we can still interact with ERC20 ZRC20
 	r.Logger.Info("Check other ZRC20 can still be operated")
-	tx, err = r.ZRC20.Transfer(r.ZevmAuth, sample.EthAddress(), big.NewInt(1e3))
+	tx, err = r.ERC20ZRC20.Transfer(r.ZevmAuth, sample.EthAddress(), big.NewInt(1e3))
 	if err != nil {
 		panic(err)
 	}
@@ -103,13 +103,13 @@ func TestPauseZRC20(r *runner.E2ERunner, _ []string) {
 	if receipt.Status == 0 {
 		panic("ZERC20 transfer should succeed")
 	}
-	tx, err = vaultContract.Deposit(r.ZevmAuth, r.ZRC20Addr, big.NewInt(1e3))
+	tx, err = vaultContract.Deposit(r.ZevmAuth, r.ERC20ZRC20Addr, big.NewInt(1e3))
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
-		panic("ZRC20 vault deposit should succeed")
+		panic("ERC20 ZRC20 vault deposit should succeed")
 	}
 
 	// Check deposit revert when paused

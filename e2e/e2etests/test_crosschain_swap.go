@@ -19,11 +19,11 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	_, err := r.UniswapV2Factory.CreatePair(r.ZevmAuth, r.ZRC20Addr, r.BTCZRC20Addr)
+	_, err := r.UniswapV2Factory.CreatePair(r.ZevmAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
 		r.Logger.Print("ℹ️create pair error")
 	}
-	txApprove, err := r.ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	txApprove, err := r.ERC20ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
@@ -55,10 +55,10 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		panic("BTC ZRC20 transfer failed")
 	}
 
-	// Add 100 zrc20 token liq and 0.001 BTC
+	// Add 100 erc20 zrc20 liq and 0.001 BTC
 	txAddLiquidity, err := r.UniswapV2Router.AddLiquidity(
 		r.ZevmAuth,
-		r.ZRC20Addr,
+		r.ERC20ZRC20Addr,
 		r.BTCZRC20Addr,
 		big.NewInt(1e8),
 		big.NewInt(1e8),
@@ -118,14 +118,14 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
-	r.Logger.Info("******* Second test: BTC -> ZRC20")
+	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	utxos, err := r.BtcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("#utxos %d", len(utxos))
-	r.Logger.Info("memo address %s", r.ZRC20Addr)
-	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ZRC20Addr, r.DeployerAddress.Bytes())
+	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
+	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.DeployerAddress.Bytes())
 	if err != nil {
 		panic(err)
 	}

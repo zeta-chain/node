@@ -39,7 +39,7 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	}
 
 	// approve
-	tx, err := r.ZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
+	tx, err := r.ERC20ZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
@@ -61,21 +61,21 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// check the balance
-	bal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	r.Logger.Info("balance of deployer on ZRC20: %d", bal)
+	r.Logger.Info("balance of deployer on ERC20 ZRC20: %d", bal)
 
 	if bal.Int64() < totalWithdrawal.Int64() {
-		panic("not enough ZRC20 balance!")
+		panic("not enough ERC20 ZRC20 balance!")
 	}
 
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(
 		r.ZevmAuth,
 		r.DeployerAddress.Bytes(),
-		r.ZRC20Addr,
+		r.ERC20ZRC20Addr,
 		withdrawalAmount,
 		numberOfWithdrawals,
 	)

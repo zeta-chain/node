@@ -15,7 +15,7 @@ import (
 
 func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	// Get the initial balance of the deployer
-	initialBal, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	initialBal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func TestERC20DepositAndCallRefund(r *runner.E2ERunner, _ []string) {
 	}
 
 	// Check that the erc20 in the aborted cctx was refunded on ZetaChain
-	newBalance, err := r.ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	newBalance, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
@@ -140,7 +140,7 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, amount, []byte{})
 	utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
-	tx, err := r.ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
+	tx, err := r.ERC20ZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e10))
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func createZetaERC20LiquidityPool(r *runner.E2ERunner) error {
 	r.ZevmAuth.Value = big.NewInt(1e10)
 	tx, err = r.UniswapV2Router.AddLiquidityETH(
 		r.ZevmAuth,
-		r.ZRC20Addr,
+		r.ERC20ZRC20Addr,
 		amount,
 		big.NewInt(0),
 		big.NewInt(0),
