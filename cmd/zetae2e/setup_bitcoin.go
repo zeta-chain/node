@@ -26,7 +26,7 @@ func NewSetupBitcoinCmd() *cobra.Command {
 	return cmd
 }
 
-func runSetupBitcoin(cmd *cobra.Command, args []string) error {
+func runSetupBitcoin(_ *cobra.Command, args []string) error {
 	// read the config file
 	conf, err := config.ReadConfig(args[0])
 	if err != nil {
