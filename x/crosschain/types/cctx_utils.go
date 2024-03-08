@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -61,8 +64,21 @@ func (m CrossChainTx) Validate() error {
 	if len(m.OutboundTxParams) > 2 {
 		return fmt.Errorf("outbound tx params cannot be more than 2")
 	}
-	if len(m.Index) != 66 {
-		return ErrInvalidCCTXIndex
+	if m.Index != "" {
+		err := ValidateZetaIndex(m.Index)
+		if err != nil {
+			return err
+		}
+	}
+	err := m.InboundTxParams.Validate()
+	if err != nil {
+		return err
+	}
+	for _, outboundTxParam := range m.OutboundTxParams {
+		err = outboundTxParam.Validate()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -72,53 +88,97 @@ func (m InboundTxParams) Validate() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender cannot be empty")
 	}
-	if m.InboundTxObservedHash == "" {
-		return fmt.Errorf("inbound tx observed hash cannot be empty")
+	err := ValidateAddressForChain(m.Sender, m.SenderChainId)
+	if err != nil {
+		return err
 	}
-	if len(m.InboundTxBallotIndex) != 66 {
-		return fmt.Errorf("inbound tx ballot index must be 66 characters")
+	if common.GetChainFromChainID(m.SenderChainId) == nil {
+		return fmt.Errorf("invalid sender chain id %d", m.SenderChainId)
 	}
-	if common.IsEthereumChain(m.SenderChainId) {
-		if !ethcommon.IsHexAddress(m.Sender) {
-			return fmt.Errorf("sender a valid ethereum address")
+	if m.TxOrigin != "" {
+		errTxOrigin := ValidateAddressForChain(m.TxOrigin, m.SenderChainId)
+		if errTxOrigin != nil {
+			return errTxOrigin
 		}
 	}
 	if m.Amount.IsNil() {
 		return fmt.Errorf("amount cannot be nil")
 	}
-	if common.IsBitcoinChain(m.SenderChainId) {
-		//if _, err := common.BitcoinAddressToPubKeyHash(m.Sender); err != nil {
-		//	return fmt.Errorf("sender must be a valid bitcoin address")
-		//}
+	err = ValidateHashForChain(m.InboundTxObservedHash, m.SenderChainId)
+	if err != nil {
+		return err
+	}
+	if m.InboundTxBallotIndex != "" {
+		err = ValidateZetaIndex(m.InboundTxBallotIndex)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+func ValidateZetaIndex(index string) error {
+	if len(index) != 66 {
+		return ErrInvalidIndexValue
+	}
+	return nil
+}
+func ValidateHashForChain(hash string, chainID int64) error {
+	if common.IsEthereumChain(chainID) {
+		_, err := hexutil.Decode(hash)
+		if err != nil {
+			return fmt.Errorf("hash must be a valid ethereum hash")
+		}
+	}
+	if common.IsBitcoinChain(chainID) {
+		_, err := chainhash.NewHashFromStr(hash)
+		if err != nil {
+			return fmt.Errorf("hash must be a valid bitcoin hash")
+		}
+	}
+	return fmt.Errorf("invalid chain id %d", chainID)
+}
+
+func ValidateAddressForChain(address string, chainID int64) error {
+	if common.IsEthereumChain(chainID) {
+		if !ethcommon.IsHexAddress(address) {
+			return fmt.Errorf("sender a valid ethereum address")
+		}
+		return nil
+	}
+	if common.IsBitcoinChain(chainID) {
+		addr, err := common.DecodeBtcAddress(address, chainID)
+		if err != nil {
+			return fmt.Errorf("invalid address %s: %s", address, err)
+		}
+		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
+		if !ok {
+			return fmt.Errorf(" invalid address %s (not P2WPKH address)", address)
+		}
+		return nil
+	}
+	return fmt.Errorf("invalid chain id %d", chainID)
 }
 
 func (m OutboundTxParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
 	}
+	err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId)
+	if err != nil {
+		return err
+	}
+	if common.GetChainFromChainID(m.ReceiverChainId) == nil {
+		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
+	}
 	if m.Amount.IsNil() {
 		return fmt.Errorf("amount cannot be nil")
 	}
-	if m.OutboundTxGasPrice == "" {
-		return fmt.Errorf("outbound tx gas price cannot be empty")
-	}
-	if m.GasLimit == 0 {
-		return fmt.Errorf("gas limit cannot be 0")
-	}
-	if m.ReceiverChainId == 0 {
-		return fmt.Errorf("receiver chain id cannot be 0")
-	}
-	if common.IsEthereumChain(m.ReceiverChainId) {
-		if !ethcommon.IsHexAddress(m.Receiver) {
-			return fmt.Errorf("receiver must be a valid ethereum address")
+	if m.OutboundTxBallotIndex != "" {
+		err = ValidateZetaIndex(m.OutboundTxBallotIndex)
+		if err != nil {
+			return err
 		}
-	}
-	if common.IsBitcoinChain(m.ReceiverChainId) {
-		//if _, err := common.BitcoinAddressToPubKeyHash(m.Receiver); err != nil {
-		//	return fmt.Errorf("receiver must be a valid bitcoin address")
-		//}
 	}
 	return nil
 }

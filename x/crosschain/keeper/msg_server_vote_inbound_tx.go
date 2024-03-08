@@ -90,6 +90,10 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	}
 
 	inboundCctx := k.GetInbound(ctx, msg)
+	err = inboundCctx.Validate()
+	if err != nil {
+		return nil, err
+	}
 	k.ProcessInbound(ctx, &inboundCctx)
 	k.SaveInbound(ctx, &inboundCctx)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
