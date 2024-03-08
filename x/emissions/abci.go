@@ -22,6 +22,14 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
 	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
 
+	// TODO : Replace hardcoded slash amount with a parameter
+	// https://github.com/zeta-chain/node/pull/1861
+	slashAmount, ok := sdkmath.NewIntFromString(types.ObserverSlashAmount)
+	if !ok {
+		ctx.Logger().Error(fmt.Sprintf("Error while parsing observer slash amount %s", types.ObserverSlashAmount))
+		return
+	}
+
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
 	tmpCtx, commit := ctx.CacheContext()
@@ -30,7 +38,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing validator rewards %s", err))
 		return
 	}
-	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper)
+	err = DistributeObserverRewards(tmpCtx, observerRewards, keeper, slashAmount)
 	if err != nil {
 		ctx.Logger().Error(fmt.Sprintf("Error while distributing observer rewards %s", err))
 		return
@@ -63,7 +71,12 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper 
 // NotVoted or Unsuccessful votes are slashed
 // rewards given or slashed amounts are in azeta
 
-func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {
+func DistributeObserverRewards(
+	ctx sdk.Context,
+	amount sdkmath.Int,
+	keeper keeper.Keeper,
+	slashAmount sdkmath.Int,
+) error {
 
 	rewardsDistributer := map[string]int64{}
 	totalRewardsUnits := int64(0)
@@ -113,13 +126,6 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			continue
 		}
 		if observerRewardUnits < 0 {
-
-			// TODO : Replace hardcoded slash amount with a parameter
-			// https://github.com/zeta-chain/node/pull/1861
-			slashAmount, ok := sdkmath.NewIntFromString(types.ObserverSlashAmount)
-			if !ok {
-				continue
-			}
 
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{

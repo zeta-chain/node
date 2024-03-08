@@ -153,6 +153,7 @@ func TestBeginBlocker(t *testing.T) {
 }
 
 func TestDistributeObserverRewards(t *testing.T) {
+	keepertest.SetConfig(false)
 	observerSet := sample.ObserverSet(4)
 
 	tt := []struct {
@@ -286,8 +287,9 @@ func TestDistributeObserverRewards(t *testing.T) {
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly
-			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k)
+			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, tc.slashAmount)
 			require.NoError(t, err)
+
 			for i, observer := range observerSet.ObserverList {
 				observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
 				require.True(t, found, "withdrawable emission not found for observer %d", i)
