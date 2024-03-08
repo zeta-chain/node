@@ -163,18 +163,6 @@ function setup_basic_keyring {
   fi
 }
 
-function install_dependencies {
-  apt-get update
-  apt-get install nano jq python3 -y
-  pip3 install requests
-}
-
-function download_cosmovisor {
-  mkdir -p ${DAEMON_HOME}/cosmovisor/
-  mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades/
-  python3 /scripts/install_cosmovisor.py
-}
-
 function download_binary_version {
   if [ "${NETWORK}" == "mainnet" ]; then
     wget -q ${BINARY_LIST_MAINNET}
@@ -269,9 +257,6 @@ if [[ -f "${DAEMON_HOME}/start_sequence_status" ]] && grep -q "START_SEQUENCE_CO
     logt "Modify Chain Configs"
     change_config_values
 
-    logt "Download Cosmosvisor."
-    download_cosmovisor
-
     logt "Move Zetacored Binaries."
     move_zetacored_binaries
 
@@ -293,9 +278,6 @@ else
 
   logt "Download Configs"
   download_configs
-
-  logt "Download Cosmovisor"
-  download_cosmovisor
 
   logt "Download Historical Binaries"
   download_binary_version
