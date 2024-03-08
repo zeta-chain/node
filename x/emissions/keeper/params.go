@@ -5,9 +5,10 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-// GetParams get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramstore.GetParamSet(ctx, &params)
+// GetParamSetIfExists get all parameters as types.Params if they exist
+// non existent parameters will return zero values
+func (k Keeper) GetParamSetIfExists(ctx sdk.Context) (params types.Params) {
+	k.paramstore.GetParamSetIfExists(ctx, &params)
 	return
 }
 

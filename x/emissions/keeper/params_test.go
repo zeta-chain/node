@@ -234,9 +234,9 @@ func TestKeeper_GetParams(t *testing.T) {
 			}, tt.isPanic)
 
 			if tt.isPanic != "" {
-				require.Equal(t, emissionstypes.DefaultParams(), k.GetParams(ctx))
+				require.Equal(t, emissionstypes.DefaultParams(), k.GetParamSetIfExists(ctx))
 			} else {
-				require.Equal(t, tt.params, k.GetParams(ctx))
+				require.Equal(t, tt.params, k.GetParamSetIfExists(ctx))
 			}
 		})
 	}

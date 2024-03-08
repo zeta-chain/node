@@ -18,9 +18,9 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
 	}
-	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
-	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
-	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
+
+	// Get the distribution of rewards
+	validatorRewards, observerRewards, tssSignerRewards := keeper.GetDistributions(ctx)
 
 	// Use a tmpCtx, which is a cache-wrapped context to avoid writing to the store
 	// We commit only if all three distributions are successful, if not the funds stay in the emission pool
@@ -62,7 +62,6 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper 
 // The total rewards are distributed equally among all Successful votes
 // NotVoted or Unsuccessful votes are slashed
 // rewards given or slashed amounts are in azeta
-
 func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keeper.Keeper) error {
 
 	rewardsDistributer := map[string]int64{}
@@ -113,7 +112,7 @@ func DistributeObserverRewards(ctx sdk.Context, amount sdkmath.Int, keeper keepe
 			continue
 		}
 		if observerRewardUnits < 0 {
-			slashAmount := keeper.GetParams(ctx).ObserverSlashAmount
+			slashAmount := keeper.GetParamSetIfExists(ctx).ObserverSlashAmount
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,
