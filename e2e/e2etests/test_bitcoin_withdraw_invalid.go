@@ -26,6 +26,8 @@ func TestBitcoinWithdrawToInvalidAddress(r *runner.E2ERunner, args []string) {
 	}
 	amount := big.NewInt(int64(withdrawalAmountSat))
 
+	r.SetBtcAddress(r.Name, false)
+
 	WithdrawToInvalidAddress(r, amount)
 }
 
