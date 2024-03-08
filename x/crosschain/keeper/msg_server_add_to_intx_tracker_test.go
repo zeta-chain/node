@@ -16,7 +16,7 @@ import (
 )
 
 func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
-	params := zk.ObserverKeeper.GetParams(ctx)
+	params := zk.ObserverKeeper.GetParamsIfExists(ctx)
 	zk.ObserverKeeper.SetParams(ctx, params)
 	zk.ObserverKeeper.SetBlockHeader(ctx, common.BlockHeader{
 		Height:     block.Number().Int64(),
