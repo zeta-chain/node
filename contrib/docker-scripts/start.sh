@@ -77,7 +77,7 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=athens3 | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=athens3 | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
@@ -91,7 +91,7 @@ function setup_restore_type {
   elif [ "${RESTORE_TYPE}" == "snapshot-archive"  ]; then
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "Get Latest Snapshot URL"
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=mainnet | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=mainnet | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
@@ -102,7 +102,7 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=athens3 | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=athens3 | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
