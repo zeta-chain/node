@@ -29,7 +29,7 @@
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
-
+* [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
