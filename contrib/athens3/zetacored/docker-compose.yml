@@ -11,7 +11,7 @@ services:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: athens3
       #RESTORE_TYPE=snapshot/snapshot-archive/statesync
-      RESTORE_TYPE: "statesync"
+      RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
       COSMOVISOR_VERSION: "v1.5.0"
