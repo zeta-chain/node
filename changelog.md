@@ -101,6 +101,7 @@
 * Adjusted the docker pipeline slightly to pull the version on PR from the app.go file.
 * [1781](https://github.com/zeta-chain/node/pull/1781) - add codecov coverage report in CI
 * fixed the download binary script to use relative pathing from binary_list file.
+* default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 
 ### Features
 
