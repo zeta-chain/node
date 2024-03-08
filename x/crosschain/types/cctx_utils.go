@@ -87,13 +87,14 @@ func (m InboundTxParams) Validate() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender cannot be empty")
 	}
+	if common.GetChainFromChainID(m.SenderChainId) == nil {
+		return fmt.Errorf("invalid sender chain id %d", m.SenderChainId)
+	}
 	err := ValidateAddressForChain(m.Sender, m.SenderChainId)
 	if err != nil {
 		return err
 	}
-	if common.GetChainFromChainID(m.SenderChainId) == nil {
-		return fmt.Errorf("invalid sender chain id %d", m.SenderChainId)
-	}
+
 	if m.TxOrigin != "" {
 		errTxOrigin := ValidateAddressForChain(m.TxOrigin, m.SenderChainId)
 		if errTxOrigin != nil {
@@ -120,12 +121,12 @@ func (m OutboundTxParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
 	}
+	if common.GetChainFromChainID(m.ReceiverChainId) == nil {
+		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
+	}
 	err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId)
 	if err != nil {
 		return err
-	}
-	if common.GetChainFromChainID(m.ReceiverChainId) == nil {
-		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
 	}
 	if m.Amount.IsNil() {
 		return fmt.Errorf("amount cannot be nil")
@@ -141,7 +142,7 @@ func (m OutboundTxParams) Validate() error {
 
 func ValidateZetaIndex(index string) error {
 	if len(index) != 66 {
-		return ErrInvalidIndexValue
+		return fmt.Errorf("invalid index hash %s", index)
 	}
 	return nil
 }
@@ -149,7 +150,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 	if common.IsEthereumChain(chainID) {
 		_, err := hexutil.Decode(hash)
 		if err != nil {
-			return fmt.Errorf("hash must be a valid ethereum hash")
+			return fmt.Errorf("hash must be a valid ethereum hash %s", hash)
 		}
 		return nil
 	}
@@ -159,7 +160,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 			return fmt.Errorf("error compiling regex")
 		}
 		if !r.MatchString(hash) {
-			return fmt.Errorf("hash must be a valid bitcoin hash")
+			return fmt.Errorf("hash must be a valid bitcoin hash %s", hash)
 		}
 		return nil
 	}

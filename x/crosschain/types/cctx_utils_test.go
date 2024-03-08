@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -36,6 +37,89 @@ func TestValidateHashForChain(t *testing.T) {
 	require.NoError(t, types.ValidateHashForChain("15b7880f5d236e857a5e8f043ce9d56f5ef01e1c3f2a786baf740fc0bb7a22a3", common.BtcMainnetChain().ChainId))
 	require.NoError(t, types.ValidateHashForChain("a0fa5a82f106fb192e4c503bfa8d54b2de20a821e09338094ab825cc9b275059", common.BtcTestNetChain().ChainId))
 	require.Error(t, types.ValidateHashForChain("0x84bd5c9922b63c52d8a9ca686e0a57ff978150b71be0583514d01c27aa341910", common.BtcMainnetChain().ChainId))
+}
+
+func TestInboundTxParams_Validate(t *testing.T) {
+	r := rand.New(rand.NewSource(42))
+	inTxParams := sample.InboundTxParamsValidChainId(r)
+	inTxParams.Sender = ""
+	require.ErrorContains(t, inTxParams.Validate(), "sender cannot be empty")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.SenderChainId = 1000
+	require.ErrorContains(t, inTxParams.Validate(), "invalid sender chain id 1000")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.SenderChainId = common.GoerliChain().ChainId
+	inTxParams.Sender = "0x123"
+	require.ErrorContains(t, inTxParams.Validate(), "invalid address 0x123")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.SenderChainId = common.GoerliChain().ChainId
+	inTxParams.TxOrigin = "0x123"
+	require.ErrorContains(t, inTxParams.Validate(), "invalid address 0x123")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.Amount = sdkmath.Uint{}
+	require.ErrorContains(t, inTxParams.Validate(), "amount cannot be nil")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.InboundTxObservedHash = "12"
+	require.ErrorContains(t, inTxParams.Validate(), "hash must be a valid ethereum hash 12")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.InboundTxObservedHash = sample.Hash().String()
+	inTxParams.InboundTxBallotIndex = "12"
+	require.ErrorContains(t, inTxParams.Validate(), "invalid index hash 12")
+	inTxParams = sample.InboundTxParamsValidChainId(r)
+	inTxParams.InboundTxObservedHash = sample.Hash().String()
+	inTxParams.InboundTxBallotIndex = sample.ZetaIndex(t)
+	require.NoError(t, inTxParams.Validate())
+}
+
+func TestOutboundTxParams_Validate(t *testing.T) {
+	r := rand.New(rand.NewSource(42))
+	outTxParams := sample.OutboundTxParamsValidChainId(r)
+	outTxParams.Receiver = ""
+	require.ErrorContains(t, outTxParams.Validate(), "receiver cannot be empty")
+	outTxParams = sample.OutboundTxParamsValidChainId(r)
+	outTxParams.ReceiverChainId = 1000
+	require.ErrorContains(t, outTxParams.Validate(), "invalid receiver chain id 1000")
+	outTxParams = sample.OutboundTxParamsValidChainId(r)
+	outTxParams.Receiver = "0x123"
+	require.ErrorContains(t, outTxParams.Validate(), "invalid address 0x123")
+	outTxParams = sample.OutboundTxParamsValidChainId(r)
+	outTxParams.Amount = sdkmath.Uint{}
+	require.ErrorContains(t, outTxParams.Validate(), "amount cannot be nil")
+	outTxParams = sample.OutboundTxParamsValidChainId(r)
+	outTxParams.OutboundTxBallotIndex = "12"
+	require.ErrorContains(t, outTxParams.Validate(), "invalid index hash 12")
+	outTxParams = sample.OutboundTxParamsValidChainId(r)
+	outTxParams.OutboundTxBallotIndex = sample.ZetaIndex(t)
+	require.NoError(t, outTxParams.Validate())
+}
+
+func TestCrossChainTx_Validate(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "foo")
+	cctx.InboundTxParams = nil
+	require.ErrorContains(t, cctx.Validate(), "inbound tx params cannot be nil")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.OutboundTxParams = nil
+	require.ErrorContains(t, cctx.Validate(), "outbound tx params cannot be nil")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.CctxStatus = nil
+	require.ErrorContains(t, cctx.Validate(), "cctx status cannot be nil")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.OutboundTxParams = make([]*types.OutboundTxParams, 3)
+	require.ErrorContains(t, cctx.Validate(), "outbound tx params cannot be more than 2")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.Index = "0"
+	require.ErrorContains(t, cctx.Validate(), "invalid index hash 0")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.InboundTxParams = sample.InboundTxParamsValidChainId(rand.New(rand.NewSource(42)))
+	cctx.InboundTxParams.SenderChainId = 1000
+	require.ErrorContains(t, cctx.Validate(), "invalid sender chain id 1000")
+	cctx = sample.CrossChainTx(t, "foo")
+	cctx.OutboundTxParams = []*types.OutboundTxParams{sample.OutboundTxParamsValidChainId(rand.New(rand.NewSource(42)))}
+	cctx.InboundTxParams = sample.InboundTxParamsValidChainId(rand.New(rand.NewSource(42)))
+	cctx.InboundTxParams.InboundTxObservedHash = sample.Hash().String()
+	cctx.InboundTxParams.InboundTxBallotIndex = sample.ZetaIndex(t)
+	cctx.OutboundTxParams[0].ReceiverChainId = 1000
+	require.ErrorContains(t, cctx.Validate(), "invalid receiver chain id 1000")
 }
 
 func TestCrossChainTx_GetCurrentOutTxParam(t *testing.T) {
