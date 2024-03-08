@@ -46,7 +46,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	appContext := appcontext.NewAppContext(&corecontext.ZetaCoreContext{}, &config.Config{})
+	appContext := appcontext.NewAppContext(&corecontext.ZetaCoreContext{}, config.Config{})
 	client, err := NewBitcoinClient(appContext, common.BtcRegtestChain(), nil, tss, "/tmp", clientcommon.DefaultLoggers(), nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client

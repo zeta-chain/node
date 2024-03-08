@@ -63,7 +63,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 
 func (ks *KeysSuite) TestGetKeyringKeybase(c *C) {
 	keyring.Debug = true
-	cfg := &config.Config{
+	cfg := config.Config{
 		AuthzHotkey:  "bob",
 		ZetaCoreHome: "/Users/test/.zetacored/",
 	}
@@ -83,7 +83,7 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 		c.Assert(err, IsNil)
 	}()
 
-	cfg := &config.Config{
+	cfg := config.Config{
 		AuthzHotkey:  signerNameForTest,
 		ZetaCoreHome: folder,
 	}
