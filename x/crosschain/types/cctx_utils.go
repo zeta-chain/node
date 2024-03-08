@@ -2,9 +2,9 @@ package types
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -80,7 +80,6 @@ func (m CrossChainTx) Validate() error {
 			return err
 		}
 	}
-
 	return nil
 }
 
@@ -117,49 +116,6 @@ func (m InboundTxParams) Validate() error {
 	return nil
 }
 
-func ValidateZetaIndex(index string) error {
-	if len(index) != 66 {
-		return ErrInvalidIndexValue
-	}
-	return nil
-}
-func ValidateHashForChain(hash string, chainID int64) error {
-	if common.IsEthereumChain(chainID) {
-		_, err := hexutil.Decode(hash)
-		if err != nil {
-			return fmt.Errorf("hash must be a valid ethereum hash")
-		}
-	}
-	if common.IsBitcoinChain(chainID) {
-		_, err := chainhash.NewHashFromStr(hash)
-		if err != nil {
-			return fmt.Errorf("hash must be a valid bitcoin hash")
-		}
-	}
-	return fmt.Errorf("invalid chain id %d", chainID)
-}
-
-func ValidateAddressForChain(address string, chainID int64) error {
-	if common.IsEthereumChain(chainID) {
-		if !ethcommon.IsHexAddress(address) {
-			return fmt.Errorf("sender a valid ethereum address")
-		}
-		return nil
-	}
-	if common.IsBitcoinChain(chainID) {
-		addr, err := common.DecodeBtcAddress(address, chainID)
-		if err != nil {
-			return fmt.Errorf("invalid address %s: %s", address, err)
-		}
-		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
-		if !ok {
-			return fmt.Errorf(" invalid address %s (not P2WPKH address)", address)
-		}
-		return nil
-	}
-	return fmt.Errorf("invalid chain id %d", chainID)
-}
-
 func (m OutboundTxParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
@@ -181,6 +137,54 @@ func (m OutboundTxParams) Validate() error {
 		}
 	}
 	return nil
+}
+
+func ValidateZetaIndex(index string) error {
+	if len(index) != 66 {
+		return ErrInvalidIndexValue
+	}
+	return nil
+}
+func ValidateHashForChain(hash string, chainID int64) error {
+	if common.IsEthereumChain(chainID) {
+		_, err := hexutil.Decode(hash)
+		if err != nil {
+			return fmt.Errorf("hash must be a valid ethereum hash")
+		}
+		return nil
+	}
+	if common.IsBitcoinChain(chainID) {
+		r, err := regexp.Compile("^[a-fA-F0-9]{64}$")
+		if err != nil {
+			return fmt.Errorf("error compiling regex")
+		}
+		if !r.MatchString(hash) {
+			return fmt.Errorf("hash must be a valid bitcoin hash")
+		}
+		return nil
+	}
+	return fmt.Errorf("invalid chain id %d", chainID)
+}
+
+func ValidateAddressForChain(address string, chainID int64) error {
+	if common.IsEthereumChain(chainID) {
+		if !ethcommon.IsHexAddress(address) {
+			return fmt.Errorf("invalid address %s", address)
+		}
+		return nil
+	}
+	if common.IsBitcoinChain(chainID) {
+		addr, err := common.DecodeBtcAddress(address, chainID)
+		if err != nil {
+			return fmt.Errorf("invalid address %s: %s", address, err)
+		}
+		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
+		if !ok {
+			return fmt.Errorf(" invalid address %s (not P2WPKH address)", address)
+		}
+		return nil
+	}
+	return fmt.Errorf("invalid chain id %d", chainID)
 }
 
 // GetGasPrice returns the gas price of the outbound tx

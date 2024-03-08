@@ -91,3 +91,11 @@ func EventIndex() uint64 {
 	r := newRandFromSeed(1)
 	return r.Uint64()
 }
+
+func EthChain() common.Chain {
+	return common.EthChain()
+}
+
+func BtcChain() common.Chain {
+	return common.BtcMainnetChain()
+}
