@@ -148,6 +148,7 @@ function change_config_values {
     logt "EXTERNAL_IP: ${EXTERNAL_IP}"
     logt "SED Change Config Files."
     sed -i -e "s/^enable = .*/enable = \"true\"/" ${DAEMON_HOME}/config/config.toml
+    sed '/^\[statesync\]/,/^\[/ s/enable = "true"/enable = "false"/' ${DAEMON_HOME}/config/config.toml
     sed -i -e "s/^moniker = .*/moniker = \"${MONIKER}\"/" ${DAEMON_HOME}/config/config.toml
     sed -i -e "s/^external_address = .*/external_address = \"${EXTERNAL_IP}:26656\"/" ${DAEMON_HOME}/config/config.toml
   fi
