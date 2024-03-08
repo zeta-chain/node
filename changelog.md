@@ -33,6 +33,7 @@
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+* [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ## Version: v14
 
