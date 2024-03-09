@@ -137,6 +137,12 @@ func (m OutboundTxParams) Validate() error {
 			return err
 		}
 	}
+	if m.OutboundTxHash != "" {
+		err = ValidateHashForChain(m.OutboundTxHash, m.ReceiverChainId)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -147,7 +153,7 @@ func ValidateZetaIndex(index string) error {
 	return nil
 }
 func ValidateHashForChain(hash string, chainID int64) error {
-	if common.IsEthereumChain(chainID) {
+	if common.IsEthereumChain(chainID) || common.IsZetaChain(chainID) {
 		_, err := hexutil.Decode(hash)
 		if err != nil {
 			return fmt.Errorf("hash must be a valid ethereum hash %s", hash)
@@ -168,7 +174,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 }
 
 func ValidateAddressForChain(address string, chainID int64) error {
-	if common.IsEthereumChain(chainID) {
+	if common.IsEthereumChain(chainID) || common.IsZetaChain(chainID) {
 		if !ethcommon.IsHexAddress(address) {
 			return fmt.Errorf("invalid address %s", address)
 		}

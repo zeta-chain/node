@@ -16,7 +16,7 @@ import (
 )
 
 func TestMigrateStore(t *testing.T) {
-	t.Run("sucessfull migrate cctx from v14 to v15", func(t *testing.T) {
+	t.Run("successful migrate cctx from v14 to v15", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		v14cctxList := make([]*types.CrossChainTxV14, 10)
 		for i := 0; i < 10; i++ {

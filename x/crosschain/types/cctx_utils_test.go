@@ -90,6 +90,7 @@ func TestOutboundTxParams_Validate(t *testing.T) {
 	require.ErrorContains(t, outTxParams.Validate(), "invalid index hash 12")
 	outTxParams = sample.OutboundTxParamsValidChainId(r)
 	outTxParams.OutboundTxBallotIndex = sample.ZetaIndex(t)
+	outTxParams.OutboundTxHash = sample.Hash().String()
 	require.NoError(t, outTxParams.Validate())
 }
 

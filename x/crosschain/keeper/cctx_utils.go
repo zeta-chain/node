@@ -92,7 +92,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	nonce, found := k.GetObserverKeeper().GetChainNonces(ctx, chain.ChainName.String())
 	if !found {
-		return cosmoserrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String()))
+		return cosmoserrors.Wrap(types.ErrCannotFindReceiverNonce, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
 
 	// SET nonce
