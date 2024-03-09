@@ -15,6 +15,7 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1864](https://github.com/zeta-chain/node/pull/1864) - prevent panic in param management
 
 ### Features
 
