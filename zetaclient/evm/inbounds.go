@@ -354,3 +354,25 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		0, // not a smart contract call
 	)
 }
+
+// ObserveTSSReceiveInBlock queries the incoming gas asset to TSS address in a single block and posts votes
+func (ob *ChainClient) ObserveTSSReceiveInBlock(blockNumber uint64) error {
+	block, err := ob.GetBlockByNumberCached(blockNumber)
+	if err != nil {
+		return errors.Wrapf(err, "error getting block %d for chain %d", blockNumber, ob.chain.ChainId)
+	}
+	for i := range block.Transactions {
+		tx := block.Transactions[i]
+		if ethcommon.HexToAddress(tx.To) == ob.Tss.EVMAddress() {
+			receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tx.Hash))
+			if err != nil {
+				return errors.Wrapf(err, "error getting receipt for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+			}
+			_, err = ob.CheckAndVoteInboundTokenGas(&tx, receipt, true)
+			if err != nil {
+				return errors.Wrapf(err, "error checking and voting inbound gas asset for intx %s chain %d", tx.Hash, ob.chain.ChainId)
+			}
+		}
+	}
+	return nil
+}
