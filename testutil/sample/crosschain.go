@@ -123,6 +123,7 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 		CctxStatus:       Status(t, index),
 		InboundTxParams:  InboundTxParams(r),
 		OutboundTxParams: []*types.OutboundTxParams{OutboundTxParams(r), OutboundTxParams(r)},
+		EventIndex:       r.Uint64(),
 	}
 }
 

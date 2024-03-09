@@ -1,10 +1,14 @@
 # CHANGELOG
+
+## Unreleased
+
+### Refactor
+* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx . Refactor CCTX struct to remove duplicate CoinType
+
 ## Version: v14
 
 ### Fixes 
 - [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
-
-## Unreleased
 
 ### Breaking Changes
 
