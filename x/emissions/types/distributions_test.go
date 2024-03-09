@@ -1,18 +1,34 @@
-package keeper_test
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 func TestKeeper_GetDistributions(t *testing.T) {
-	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+	t.Run("Return fractions of block reward", func(t *testing.T) {
+		val, obs, tss := types.GetDistributions(types.Params{
+			ValidatorEmissionPercentage: "0.5",
+			ObserverEmissionPercentage:  "0.25",
+			TssSignerEmissionPercentage: "0.25",
+		})
 
-	val, obs, tss := k.GetDistributions(ctx)
+		require.EqualValues(t, "4810474537037037037", val.String()) // 0.5 * block reward
+		require.EqualValues(t, "2405237268518518518", obs.String()) // 0.25 * block reward
+		require.EqualValues(t, "2405237268518518518", tss.String()) // 0.25 * block reward
+	})
 
-	require.EqualValues(t, "4810474537037037037", val.String()) // 0.5 * block reward
-	require.EqualValues(t, "2405237268518518518", obs.String()) // 0.25 * block reward
-	require.EqualValues(t, "2405237268518518518", tss.String()) // 0.25 * block reward
+	t.Run("Return zero in case of invalid string", func(t *testing.T) {
+		val, obs, tss := types.GetDistributions(types.Params{
+			ValidatorEmissionPercentage: "invalid",
+			ObserverEmissionPercentage:  "invalid",
+			TssSignerEmissionPercentage: "invalid",
+		})
+
+		require.True(t, val.IsZero())
+		require.True(t, obs.IsZero())
+		require.True(t, tss.IsZero())
+	})
 }

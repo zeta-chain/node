@@ -20,7 +20,8 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 	}
 
 	// Get the distribution of rewards
-	validatorRewards, observerRewards, tssSignerRewards := keeper.GetDistributions(ctx)
+	params := keeper.GetParamSetIfExists(ctx)
+	validatorRewards, observerRewards, tssSignerRewards := types.GetDistributions(params)
 
 	// TODO : Replace hardcoded slash amount with a parameter
 	// https://github.com/zeta-chain/node/pull/1861

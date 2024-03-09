@@ -8,11 +8,11 @@ import (
 // GetParamSetIfExists get all parameters as types.Params if they exist
 // non existent parameters will return zero values
 func (k Keeper) GetParamSetIfExists(ctx sdk.Context) (params types.Params) {
-	k.paramstore.GetParamSetIfExists(ctx, &params)
+	k.paramStore.GetParamSetIfExists(ctx, &params)
 	return
 }
 
 // SetParams set the params
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramstore.SetParamSet(ctx, &params)
+	k.paramStore.SetParamSet(ctx, &params)
 }
