@@ -8,7 +8,7 @@ import (
 )
 
 func TestKeeper_GetDistributions(t *testing.T) {
-	k, ctx, sdkk, _ := keepertest.EmissionsKeeper(t)
+	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 
 	val, obs, tss := k.GetDistributions(ctx)
 
