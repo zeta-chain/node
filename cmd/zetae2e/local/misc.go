@@ -17,6 +17,7 @@ func miscTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -58,8 +59,7 @@ func miscTestRoutine(
 		// run misc test
 		testsToRun, err := miscRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			//e2etests.TestBlockHeadersName,
-			e2etests.TestMyTestName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("misc tests failed: %v", err)

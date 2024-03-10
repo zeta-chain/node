@@ -14,11 +14,12 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/runner"
 )
 
-// ethereumDepositPerformanceRoutine runs Ethereum withdraw stress tests
+// ethereumDepositPerformanceRoutine runs performance tests for Ether deposit
 func ethereumDepositPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -51,7 +52,7 @@ func ethereumDepositPerformanceRoutine(
 
 		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestStressEtherDepositName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("ethereum deposit performance test failed: %v", err)
@@ -67,11 +68,12 @@ func ethereumDepositPerformanceRoutine(
 	}
 }
 
-// ethereumWithdrawPerformanceRoutine runs Ethereum withdraw stress tests
+// ethereumWithdrawPerformanceRoutine runs performance tests for Ether withdraw
 func ethereumWithdrawPerformanceRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -108,7 +110,7 @@ func ethereumWithdrawPerformanceRoutine(
 
 		tests, err := r.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestStressEtherWithdrawName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("ethereum withdraw performance test failed: %v", err)
