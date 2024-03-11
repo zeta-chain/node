@@ -14,21 +14,17 @@ import (
 func TestMsgRemoveForeignCoin_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgRemoveForeignCoin
+		msg  *types.MsgRemoveForeignCoin
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgRemoveForeignCoin{
-				Creator: "invalid_address",
-			},
-			err: sdkerrors.ErrInvalidAddress,
+			msg:  types.NewMsgRemoveForeignCoin("invalid_address", "name"),
+			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "valid address",
-			msg: types.MsgRemoveForeignCoin{
-				Creator: sample.AccAddress(),
-			},
+			msg:  types.NewMsgRemoveForeignCoin(sample.AccAddress(), "name"),
 		},
 	}
 	for _, tt := range tests {

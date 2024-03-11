@@ -13,43 +13,43 @@ import (
 func TestMsgUpdateContractBytecode_ValidateBasic(t *testing.T) {
 	tt := []struct {
 		name      string
-		msg       types.MsgUpdateContractBytecode
+		msg       *types.MsgUpdateContractBytecode
 		wantError bool
 	}{
 		{
 			name: "valid",
-			msg: types.MsgUpdateContractBytecode{
-				Creator:         sample.AccAddress(),
-				ContractAddress: sample.EthAddress().Hex(),
-				NewCodeHash:     sample.Hash().Hex(),
-			},
+			msg: types.NewMsgUpdateContractBytecode(
+				sample.AccAddress(),
+				sample.EthAddress().Hex(),
+				sample.Hash().Hex(),
+			),
 			wantError: false,
 		},
 		{
 			name: "invalid creator",
-			msg: types.MsgUpdateContractBytecode{
-				Creator:         "invalid",
-				ContractAddress: sample.EthAddress().Hex(),
-				NewCodeHash:     sample.Hash().Hex(),
-			},
+			msg: types.NewMsgUpdateContractBytecode(
+				"invalid",
+				sample.EthAddress().Hex(),
+				sample.Hash().Hex(),
+			),
 			wantError: true,
 		},
 		{
 			name: "invalid contract address",
-			msg: types.MsgUpdateContractBytecode{
-				Creator:         sample.AccAddress(),
-				ContractAddress: "invalid",
-				NewCodeHash:     sample.Hash().Hex(),
-			},
+			msg: types.NewMsgUpdateContractBytecode(
+				sample.AccAddress(),
+				"invalid",
+				sample.Hash().Hex(),
+			),
 			wantError: true,
 		},
 		{
 			name: "invalid new code hash",
-			msg: types.MsgUpdateContractBytecode{
-				Creator:         sample.AccAddress(),
-				ContractAddress: sample.EthAddress().Hex(),
-				NewCodeHash:     "invalid",
-			},
+			msg: types.NewMsgUpdateContractBytecode(
+				sample.AccAddress(),
+				sample.EthAddress().Hex(),
+				"invalid",
+			),
 			wantError: true,
 		},
 	}

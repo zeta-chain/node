@@ -14,21 +14,17 @@ import (
 func TestMsgDeploySystemContract_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgDeploySystemContracts
+		msg  *types.MsgDeploySystemContracts
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgDeploySystemContracts{
-				Creator: "invalid_address",
-			},
-			err: sdkerrors.ErrInvalidAddress,
+			msg:  types.NewMsgDeploySystemContracts("invalid"),
+			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "valid message",
-			msg: types.MsgDeploySystemContracts{
-				Creator: sample.AccAddress(),
-			},
+			msg:  types.NewMsgDeploySystemContracts(sample.AccAddress()),
 		},
 	}
 	for _, tt := range tests {
@@ -47,21 +43,17 @@ func TestMsgDeploySystemContract_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgDeploySystemContracts
+		msg    *types.MsgDeploySystemContracts
 		panics bool
 	}{
 		{
-			name: "valid signer",
-			msg: types.MsgDeploySystemContracts{
-				Creator: signer,
-			},
+			name:   "valid signer",
+			msg:    types.NewMsgDeploySystemContracts(signer),
 			panics: false,
 		},
 		{
-			name: "invalid signer",
-			msg: types.MsgDeploySystemContracts{
-				Creator: "invalid",
-			},
+			name:   "invalid signer",
+			msg:    types.NewMsgDeploySystemContracts("invalid"),
 			panics: true,
 		},
 	}

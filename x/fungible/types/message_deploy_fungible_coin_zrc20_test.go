@@ -8,6 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -15,37 +16,63 @@ import (
 func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgDeployFungibleCoinZRC20
+		msg  *types.MsgDeployFungibleCoinZRC20
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgDeployFungibleCoinZRC20{
-				Creator: "invalid_address",
-			},
+			msg: types.NewMsgDeployFungibleCoinZRC20(
+				"invalid_address",
+				"test erc20",
+				1,
+				6,
+				"test",
+				"test",
+				common.CoinType_ERC20,
+				10,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid gas limit",
-			msg: types.MsgDeployFungibleCoinZRC20{
-				Creator:  sample.AccAddress(),
-				GasLimit: -1,
-			},
+			msg: types.NewMsgDeployFungibleCoinZRC20(
+				sample.AccAddress(),
+				"test erc20",
+				1,
+				6,
+				"test",
+				"test",
+				common.CoinType_ERC20,
+				-1,
+			),
 			err: sdkerrors.ErrInvalidGasLimit,
 		},
 		{
 			name: "invalid decimals",
-			msg: types.MsgDeployFungibleCoinZRC20{
-				Creator:  sample.AccAddress(),
-				Decimals: 78,
-			},
+			msg: types.NewMsgDeployFungibleCoinZRC20(
+				sample.AccAddress(),
+				"test erc20",
+				1,
+				78,
+				"test",
+				"test",
+				common.CoinType_ERC20,
+				10,
+			),
 			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
 		},
 		{
 			name: "valid message",
-			msg: types.MsgDeployFungibleCoinZRC20{
-				Creator: sample.AccAddress(),
-			},
+			msg: types.NewMsgDeployFungibleCoinZRC20(
+				sample.AccAddress(),
+				"test erc20",
+				1,
+				6,
+				"test",
+				"test",
+				common.CoinType_ERC20,
+				10,
+			),
 		},
 	}
 	for _, tt := range tests {

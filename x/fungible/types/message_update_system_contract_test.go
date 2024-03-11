@@ -14,31 +14,22 @@ import (
 func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateSystemContract
+		msg  *types.MsgUpdateSystemContract
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  "invalid_address",
-				NewSystemContractAddress: sample.EthAddress().String(),
-			},
-			err: sdkerrors.ErrInvalidAddress,
+			msg:  types.NewMsgUpdateSystemContract("invalid_address", sample.EthAddress().String()),
+			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid new system contract address",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  sample.AccAddress(),
-				NewSystemContractAddress: "invalid_address",
-			},
-			err: sdkerrors.ErrInvalidAddress,
+			msg:  types.NewMsgUpdateSystemContract(sample.AccAddress(), "invalid_address"),
+			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "valid message",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  sample.AccAddress(),
-				NewSystemContractAddress: sample.EthAddress().String(),
-			},
+			msg:  types.NewMsgUpdateSystemContract(sample.AccAddress(), sample.EthAddress().String()),
 		},
 	}
 	for _, tt := range tests {

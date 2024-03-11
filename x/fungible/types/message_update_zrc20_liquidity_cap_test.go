@@ -16,46 +16,49 @@ import (
 func TestNewMsgUpdateZRC20LiquidityCap_ValidateBasics(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateZRC20LiquidityCap
+		msg  *types.MsgUpdateZRC20LiquidityCap
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgUpdateZRC20LiquidityCap{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: sample.EthAddress().String(),
-				LiquidityCap: math.NewUint(1000),
-			},
+			msg: types.NewMsgUpdateZRC20LiquidityCap(
+				sample.AccAddress(),
+				sample.EthAddress().String(),
+				math.NewUint(1000),
+			),
 		},
 		{
 			name: "valid message with liquidity cap 0",
-			msg: types.MsgUpdateZRC20LiquidityCap{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: sample.EthAddress().String(),
-				LiquidityCap: math.ZeroUint(),
-			},
+			msg: types.NewMsgUpdateZRC20LiquidityCap(
+				sample.AccAddress(),
+				sample.EthAddress().String(),
+				math.ZeroUint(),
+			),
 		},
 		{
 			name: "valid message with liquidity cap nil",
-			msg: types.MsgUpdateZRC20LiquidityCap{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: sample.EthAddress().String(),
-			},
+			msg: types.NewMsgUpdateZRC20LiquidityCap(
+				sample.AccAddress(),
+				sample.EthAddress().String(),
+				math.NewUint(1000),
+			),
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgUpdateZRC20LiquidityCap{
-				Creator:      "invalid_address",
-				Zrc20Address: sample.EthAddress().String(),
-			},
+			msg: types.NewMsgUpdateZRC20LiquidityCap(
+				"invalid_address",
+				sample.EthAddress().String(),
+				math.NewUint(1000),
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid contract address",
-			msg: types.MsgUpdateZRC20LiquidityCap{
-				Creator:      sample.AccAddress(),
-				Zrc20Address: "invalid_address",
-			},
+			msg: types.NewMsgUpdateZRC20LiquidityCap(
+				sample.AccAddress(),
+				"invalid_address",
+				math.NewUint(1000),
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 	}
