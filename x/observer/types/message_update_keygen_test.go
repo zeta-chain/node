@@ -14,20 +14,22 @@ import (
 func TestMsgUpdateKeygen_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateKeygen
+		msg  *types.MsgUpdateKeygen
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgUpdateKeygen{
-				Creator: "invalid_address",
-			},
+			msg: types.NewMsgUpdateKeygen(
+				"invalid_address",
+				1,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: types.MsgUpdateKeygen{
-				Creator: sample.AccAddress(),
-			},
+			msg: types.NewMsgUpdateKeygen(
+				sample.AccAddress(),
+				1,
+			),
 		},
 	}
 	for _, tt := range tests {

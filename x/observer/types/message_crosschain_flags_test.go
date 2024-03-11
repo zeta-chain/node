@@ -239,21 +239,25 @@ func TestMsgUpdateCrosschainFlags_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateCrosschainFlags
+		msg    *types.MsgUpdateCrosschainFlags
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateCrosschainFlags{
-				Creator: signer,
-			},
+			msg: types.NewMsgUpdateCrosschainFlags(
+				signer,
+				true,
+				true,
+			),
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateCrosschainFlags{
-				Creator: "invalid",
-			},
+			msg: types.NewMsgUpdateCrosschainFlags(
+				"invalid",
+				true,
+				true,
+			),
 			panics: true,
 		},
 	}

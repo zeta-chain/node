@@ -15,31 +15,31 @@ import (
 func TestMsgRemoveChainParams_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgRemoveChainParams
+		msg  *types.MsgRemoveChainParams
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgRemoveChainParams{
-				Creator: sample.AccAddress(),
-				ChainId: common.ExternalChainList()[0].ChainId,
-			},
+			msg: types.NewMsgRemoveChainParams(
+				sample.AccAddress(),
+				common.ExternalChainList()[0].ChainId,
+			),
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgRemoveChainParams{
-				Creator: "invalid_address",
-				ChainId: common.ExternalChainList()[0].ChainId,
-			},
+			msg: types.NewMsgRemoveChainParams(
+				"invalid_address",
+				common.ExternalChainList()[0].ChainId,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 
 		{
 			name: "invalid chain ID",
-			msg: types.MsgRemoveChainParams{
-				Creator: sample.AccAddress(),
-				ChainId: 999,
-			},
+			msg: types.NewMsgRemoveChainParams(
+				sample.AccAddress(),
+				999,
+			),
 			err: sdkerrors.ErrInvalidChainID,
 		},
 	}

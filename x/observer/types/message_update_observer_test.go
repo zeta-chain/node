@@ -14,67 +14,67 @@ import (
 func TestNewMsgUpdateObserver_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateObserver
+		msg  *types.MsgUpdateObserver
 		err  error
 	}{
 		{
 			name: "invalid creator",
-			msg: types.MsgUpdateObserver{
-				Creator:            "invalid_address",
-				OldObserverAddress: sample.AccAddress(),
-				NewObserverAddress: sample.AccAddress(),
-				UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
-			},
+			msg: types.NewMsgUpdateObserver(
+				"invalid_address",
+				sample.AccAddress(),
+				sample.AccAddress(),
+				types.ObserverUpdateReason_AdminUpdate,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid old observer address",
-			msg: types.MsgUpdateObserver{
-				Creator:            sample.AccAddress(),
-				OldObserverAddress: "invalid_address",
-				NewObserverAddress: sample.AccAddress(),
-				UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
-			},
+			msg: types.NewMsgUpdateObserver(
+				sample.AccAddress(),
+				"invalid_address",
+				sample.AccAddress(),
+				types.ObserverUpdateReason_AdminUpdate,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid new observer address",
-			msg: types.MsgUpdateObserver{
-				Creator:            sample.AccAddress(),
-				OldObserverAddress: sample.AccAddress(),
-				NewObserverAddress: "invalid_address",
-				UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
-			},
+			msg: types.NewMsgUpdateObserver(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				"invalid_address",
+				types.ObserverUpdateReason_AdminUpdate,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "old observer address is not creator",
-			msg: types.MsgUpdateObserver{
-				Creator:            sample.AccAddress(),
-				OldObserverAddress: sample.AccAddress(),
-				NewObserverAddress: sample.AccAddress(),
-				UpdateReason:       types.ObserverUpdateReason_Tombstoned,
-			},
+			msg: types.NewMsgUpdateObserver(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				sample.AccAddress(),
+				types.ObserverUpdateReason_Tombstoned,
+			),
 			err: types.ErrUpdateObserver,
 		},
 		{
 			name: "invalid Update Reason",
-			msg: types.MsgUpdateObserver{
-				Creator:            sample.AccAddress(),
-				OldObserverAddress: sample.AccAddress(),
-				NewObserverAddress: sample.AccAddress(),
-				UpdateReason:       types.ObserverUpdateReason(100),
-			},
+			msg: types.NewMsgUpdateObserver(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				sample.AccAddress(),
+				types.ObserverUpdateReason(100),
+			),
 			err: types.ErrUpdateObserver,
 		},
 		{
 			name: "valid message",
-			msg: types.MsgUpdateObserver{
-				Creator:            sample.AccAddress(),
-				OldObserverAddress: sample.AccAddress(),
-				NewObserverAddress: sample.AccAddress(),
-				UpdateReason:       types.ObserverUpdateReason_AdminUpdate,
-			},
+			msg: types.NewMsgUpdateObserver(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				sample.AccAddress(),
+				types.ObserverUpdateReason_AdminUpdate,
+			),
 		},
 	}
 	for _, tt := range tests {

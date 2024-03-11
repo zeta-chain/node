@@ -15,30 +15,31 @@ import (
 func TestMsgUpdateChainParams_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateChainParams
+		msg  *types.MsgUpdateChainParams
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgUpdateChainParams{
-				Creator:     sample.AccAddress(),
-				ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
-			},
+			msg: types.NewMsgUpdateChainParams(
+				sample.AccAddress(),
+				sample.ChainParams(common.ExternalChainList()[0].ChainId),
+			),
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgUpdateChainParams{
-				Creator:     "invalid_address",
-				ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
-			},
+			msg: types.NewMsgUpdateChainParams(
+				"invalid_address",
+				sample.ChainParams(common.ExternalChainList()[0].ChainId),
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 
 		{
 			name: "invalid chain params (nil)",
-			msg: types.MsgUpdateChainParams{
-				Creator: sample.AccAddress(),
-			},
+			msg: types.NewMsgUpdateChainParams(
+				sample.AccAddress(),
+				nil,
+			),
 			err: types.ErrInvalidChainParams,
 		},
 	}
