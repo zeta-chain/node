@@ -1,4 +1,5 @@
 export * from "./cross_chain_tx_pb";
+export * from "./cross_chain_tx_v14_pb";
 export * from "./events_pb";
 export * from "./gas_price_pb";
 export * from "./genesis_pb";

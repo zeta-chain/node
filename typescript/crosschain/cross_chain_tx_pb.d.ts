@@ -104,11 +104,6 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
   txOrigin: string;
 
   /**
-   * @generated from field: common.CoinType coin_type = 4;
-   */
-  coinType: CoinType;
-
-  /**
    * for ERC20 coin type, the asset is an address of the ERC20 contract
    *
    * @generated from field: string asset = 5;
@@ -199,11 +194,6 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
    * @generated from field: int64 receiver_chainId = 2;
    */
   receiverChainId: bigint;
-
-  /**
-   * @generated from field: common.CoinType coin_type = 3;
-   */
-  coinType: CoinType;
 
   /**
    * @generated from field: string amount = 4;
@@ -362,6 +352,16 @@ export declare class CrossChainTx extends Message<CrossChainTx> {
    * @generated from field: repeated zetachain.zetacore.crosschain.OutboundTxParams outbound_tx_params = 10;
    */
   outboundTxParams: OutboundTxParams[];
+
+  /**
+   * @generated from field: uint64 event_index = 11;
+   */
+  eventIndex: bigint;
+
+  /**
+   * @generated from field: common.CoinType coin_type = 12;
+   */
+  coinType: CoinType;
 
   constructor(data?: PartialMessage<CrossChainTx>);
 

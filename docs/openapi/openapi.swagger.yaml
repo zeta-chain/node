@@ -53657,6 +53657,11 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/crosschainOutboundTxParams'
+      event_index:
+        type: string
+        format: uint64
+      coin_type:
+        $ref: '#/definitions/commonCoinType'
   crosschainGasPrice:
     type: object
     properties:
@@ -53715,8 +53720,6 @@ definitions:
       tx_origin:
         type: string
         title: this address is the EOA that signs the inbound tx
-      coin_type:
-        $ref: '#/definitions/commonCoinType'
       asset:
         type: string
         title: for ERC20 coin type, the asset is an address of the ERC20 contract
@@ -53807,8 +53810,6 @@ definitions:
       receiver_chainId:
         type: string
         format: int64
-      coin_type:
-        $ref: '#/definitions/commonCoinType'
       amount:
         type: string
       outbound_tx_tss_nonce:
