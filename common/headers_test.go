@@ -26,7 +26,7 @@ const numHeadersToTest = 100
 func generateHeader() {
 	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
 	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
-	file, _ := os.Create("test_data/eth_header_18495266.json")
+	file, _ := os.Create("testdata/eth_header_18495266.json")
 	b, _ := header.MarshalJSON()
 	file.Write(b)
 }
@@ -35,7 +35,7 @@ func TestTrueEthereumHeader(t *testing.T) {
 	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
-	file, err := os.Open("./test_data/eth_header_18495266.json")
+	file, err := os.Open("./testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
@@ -56,7 +56,7 @@ func TestFalseEthereumHeader(t *testing.T) {
 	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
-	file, err := os.Open("./test_data/eth_header_18495266.json")
+	file, err := os.Open("./testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
