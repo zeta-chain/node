@@ -9,37 +9,36 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name  string
-		msg   crosschaintypes.MsgUpdateTssAddress
+		msg   *types.MsgUpdateTssAddress
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: crosschaintypes.MsgUpdateTssAddress{
-				Creator:   "invalid_address",
-				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
-			},
+			msg: types.NewMsgUpdateTssAddress(
+				"invalid_address",
+				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
+			),
 			error: true,
 		},
 		{
 			name: "invalid pubkey",
-			msg: crosschaintypes.MsgUpdateTssAddress{
-				Creator:   "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
-			},
+			msg: types.NewMsgUpdateTssAddress(
+				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
+			),
 			error: true,
 		},
 		{
 			name: "valid msg",
-			msg: crosschaintypes.MsgUpdateTssAddress{
-				Creator:   "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				TssPubkey: "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
-			},
+			msg: types.NewMsgUpdateTssAddress(
+				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
+			),
 			error: false,
 		},
 	}
@@ -62,19 +61,19 @@ func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    crosschaintypes.MsgUpdateTssAddress
+		msg    types.MsgUpdateTssAddress
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: crosschaintypes.MsgUpdateTssAddress{
+			msg: types.MsgUpdateTssAddress{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: crosschaintypes.MsgUpdateTssAddress{
+			msg: types.MsgUpdateTssAddress{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -96,21 +95,21 @@ func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
 }
 
 func TestMessageUpdateTssAddress_Type(t *testing.T) {
-	msg := crosschaintypes.MsgUpdateTssAddress{
+	msg := types.MsgUpdateTssAddress{
 		Creator: sample.AccAddress(),
 	}
 	assert.Equal(t, types.TypeMsgUpdateTssAddress, msg.Type())
 }
 
 func TestMessageUpdateTssAddress_Route(t *testing.T) {
-	msg := crosschaintypes.MsgUpdateTssAddress{
+	msg := types.MsgUpdateTssAddress{
 		Creator: sample.AccAddress(),
 	}
 	assert.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMessageUpdateTssAddress_GetSignBytes(t *testing.T) {
-	msg := crosschaintypes.MsgUpdateTssAddress{
+	msg := types.MsgUpdateTssAddress{
 		Creator: sample.AccAddress(),
 	}
 	assert.NotPanics(t, func() {

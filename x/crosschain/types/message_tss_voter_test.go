@@ -91,3 +91,8 @@ func TestMsgCreateTSSVoter_GetSignBytes(t *testing.T) {
 		msg.GetSignBytes()
 	})
 }
+
+func TestMsgCreateTSSVoter_Digest(t *testing.T) {
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
+	assert.Equal(t, "1-tss-keygen", msg.Digest())
+}

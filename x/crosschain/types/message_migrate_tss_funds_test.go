@@ -16,34 +16,43 @@ import (
 func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name  string
-		msg   types.MsgMigrateTssFunds
+		msg   *types.MsgMigrateTssFunds
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.MsgMigrateTssFunds{
-				Creator: "invalid_address",
-				ChainId: common.DefaultChainsList()[0].ChainId,
-				Amount:  sdkmath.NewUintFromString("100000"),
-			},
+			msg: types.NewMsgMigrateTssFunds(
+				"invalid address",
+				common.DefaultChainsList()[0].ChainId,
+				sdkmath.NewUintFromString("100000"),
+			),
 			error: true,
 		},
 		{
 			name: "invalid chain id",
-			msg: types.MsgMigrateTssFunds{
-				Creator: "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				ChainId: 999,
-				Amount:  sdkmath.NewUintFromString("100000"),
-			},
+			msg: types.NewMsgMigrateTssFunds(
+				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				999,
+				sdkmath.NewUintFromString("100000"),
+			),
+			error: true,
+		},
+		{
+			name: "invalid amount",
+			msg: types.NewMsgMigrateTssFunds(
+				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				common.DefaultChainsList()[0].ChainId,
+				sdkmath.NewUintFromString("0"),
+			),
 			error: true,
 		},
 		{
 			name: "valid msg",
-			msg: types.MsgMigrateTssFunds{
-				Creator: "zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				ChainId: common.DefaultChainsList()[0].ChainId,
-				Amount:  sdkmath.NewUintFromString("100000"),
-			},
+			msg: types.NewMsgMigrateTssFunds(
+				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				common.DefaultChainsList()[0].ChainId,
+				sdkmath.NewUintFromString("100000"),
+			),
 			error: false,
 		},
 	}

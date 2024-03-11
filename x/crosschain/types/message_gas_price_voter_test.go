@@ -15,20 +15,40 @@ import (
 func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgGasPriceVoter
+		msg  *types.MsgGasPriceVoter
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgGasPriceVoter{
-				Creator: "invalid_address",
-			},
+			msg: types.NewMsgGasPriceVoter(
+				"invalid",
+				1,
+				1,
+				"1000",
+				1,
+			),
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
+		},
+		{
+			name: "invalid chain id",
+			msg: types.NewMsgGasPriceVoter(
+				sample.AccAddress(),
+				-1,
+				1,
+				"1000",
+				1,
+			),
+			err: sdkerrors.ErrInvalidChainID,
+		},
+		{
 			name: "valid address",
-			msg: types.MsgGasPriceVoter{
-				Creator: sample.AccAddress(),
-			},
+			msg: types.NewMsgGasPriceVoter(
+				sample.AccAddress(),
+				1,
+				1,
+				"1000",
+				1,
+			),
 		},
 	}
 	for _, tt := range tests {

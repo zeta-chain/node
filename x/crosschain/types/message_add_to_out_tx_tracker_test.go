@@ -14,20 +14,46 @@ import (
 func TestMsgAddToOutTxTracker_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgAddToOutTxTracker
+		msg  *types.MsgAddToOutTxTracker
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgAddToOutTxTracker{
-				Creator: "invalid_address",
-			},
+			msg: types.NewMsgAddToOutTxTracker(
+				"invalid",
+				1,
+				1,
+				"",
+				nil,
+				"",
+				1,
+			),
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
+		},
+		{
+			name: "invalid chain id",
+			msg: types.NewMsgAddToOutTxTracker(
+				sample.AccAddress(),
+				-1,
+				1,
+				"",
+				nil,
+				"",
+				1,
+			),
+			err: sdkerrors.ErrInvalidChainID,
+		},
+		{
 			name: "valid address",
-			msg: types.MsgAddToOutTxTracker{
-				Creator: sample.AccAddress(),
-			},
+			msg: types.NewMsgAddToOutTxTracker(
+				sample.AccAddress(),
+				1,
+				1,
+				"",
+				nil,
+				"",
+				1,
+			),
 		},
 	}
 	for _, tt := range tests {

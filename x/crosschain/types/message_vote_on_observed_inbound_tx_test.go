@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
@@ -21,106 +20,106 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 
 	tests := []struct {
 		name string
-		msg  types.MsgVoteOnObservedInboundTx
+		msg  *types.MsgVoteOnObservedInboundTx
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgVoteOnObservedInboundTx{
-				Creator:       sample.AccAddress(),
-				Sender:        sample.AccAddress(),
-				SenderChainId: 42,
-				TxOrigin:      sample.String(),
-				Receiver:      sample.String(),
-				ReceiverChain: 42,
-				Amount:        math.NewUint(42),
-				Message:       sample.String(),
-				InTxHash:      sample.String(),
-				InBlockHeight: 42,
-				GasLimit:      42,
-				CoinType:      common.CoinType_Zeta,
-				Asset:         sample.String(),
-				EventIndex:    42,
-			},
+			msg: types.NewMsgVoteOnObservedInboundTx(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				42,
+				sample.String(),
+				sample.String(),
+				42,
+				math.NewUint(42),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				common.CoinType_Zeta,
+				sample.String(),
+				42,
+			),
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgVoteOnObservedInboundTx{
-				Creator:       "invalid_address",
-				Sender:        sample.AccAddress(),
-				SenderChainId: 42,
-				TxOrigin:      sample.String(),
-				Receiver:      sample.String(),
-				ReceiverChain: 42,
-				Amount:        math.NewUint(42),
-				Message:       sample.String(),
-				InTxHash:      sample.String(),
-				InBlockHeight: 42,
-				GasLimit:      42,
-				CoinType:      common.CoinType_Zeta,
-				Asset:         sample.String(),
-				EventIndex:    42,
-			},
+			msg: types.NewMsgVoteOnObservedInboundTx(
+				"invalid_address",
+				sample.AccAddress(),
+				42,
+				sample.String(),
+				sample.String(),
+				42,
+				math.NewUint(42),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				common.CoinType_Zeta,
+				sample.String(),
+				42,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid sender chain ID",
-			msg: types.MsgVoteOnObservedInboundTx{
-				Creator:       sample.AccAddress(),
-				Sender:        sample.AccAddress(),
-				SenderChainId: -1,
-				TxOrigin:      sample.String(),
-				Receiver:      sample.String(),
-				ReceiverChain: 42,
-				Amount:        math.NewUint(42),
-				Message:       sample.String(),
-				InTxHash:      sample.String(),
-				InBlockHeight: 42,
-				GasLimit:      42,
-				CoinType:      common.CoinType_Zeta,
-				Asset:         sample.String(),
-				EventIndex:    42,
-			},
+			msg: types.NewMsgVoteOnObservedInboundTx(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				-1,
+				sample.String(),
+				sample.String(),
+				42,
+				math.NewUint(42),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				common.CoinType_Zeta,
+				sample.String(),
+				42,
+			),
 			err: types.ErrInvalidChainID,
 		},
 		{
 			name: "invalid receiver chain ID",
-			msg: types.MsgVoteOnObservedInboundTx{
-				Creator:       sample.AccAddress(),
-				Sender:        sample.AccAddress(),
-				SenderChainId: 42,
-				TxOrigin:      sample.String(),
-				Receiver:      sample.String(),
-				ReceiverChain: -1,
-				Amount:        math.NewUint(42),
-				Message:       sample.String(),
-				InTxHash:      sample.String(),
-				InBlockHeight: 42,
-				GasLimit:      42,
-				CoinType:      common.CoinType_Zeta,
-				Asset:         sample.String(),
-				EventIndex:    42,
-			},
+			msg: types.NewMsgVoteOnObservedInboundTx(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				42,
+				sample.String(),
+				sample.String(),
+				-1,
+				math.NewUint(42),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				common.CoinType_Zeta,
+				sample.String(),
+				42,
+			),
 			err: types.ErrInvalidChainID,
 		},
 		{
 			name: "invalid message length",
-			msg: types.MsgVoteOnObservedInboundTx{
-				Creator:       sample.AccAddress(),
-				Sender:        sample.AccAddress(),
-				SenderChainId: 42,
-				TxOrigin:      sample.String(),
-				Receiver:      sample.String(),
-				ReceiverChain: 42,
-				Amount:        math.NewUint(42),
-				Message:       sample.StringRandom(r, types.MaxMessageLength+1),
-				InTxHash:      sample.String(),
-				InBlockHeight: 42,
-				GasLimit:      42,
-				CoinType:      common.CoinType_Zeta,
-				Asset:         sample.String(),
-				EventIndex:    42,
-			},
+			msg: types.NewMsgVoteOnObservedInboundTx(
+				sample.AccAddress(),
+				sample.AccAddress(),
+				42,
+				sample.String(),
+				sample.String(),
+				42,
+				math.NewUint(42),
+				sample.StringRandom(r, types.MaxMessageLength+1),
+				sample.String(),
+				42,
+				42,
+				common.CoinType_Zeta,
+				sample.String(),
+				42,
+			),
 			err: sdkerrors.ErrInvalidRequest,
 		},
 	}
@@ -247,19 +246,19 @@ func TestMsgVoteOnObservedInboundTx_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    crosschaintypes.MsgVoteOnObservedInboundTx
+		msg    types.MsgVoteOnObservedInboundTx
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: crosschaintypes.MsgVoteOnObservedInboundTx{
+			msg: types.MsgVoteOnObservedInboundTx{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: crosschaintypes.MsgVoteOnObservedInboundTx{
+			msg: types.MsgVoteOnObservedInboundTx{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -281,21 +280,21 @@ func TestMsgVoteOnObservedInboundTx_GetSigners(t *testing.T) {
 }
 
 func TestMsgVoteOnObservedInboundTx_Type(t *testing.T) {
-	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+	msg := types.MsgVoteOnObservedInboundTx{
 		Creator: sample.AccAddress(),
 	}
 	assert.Equal(t, common.InboundVoter.String(), msg.Type())
 }
 
 func TestMsgVoteOnObservedInboundTx_Route(t *testing.T) {
-	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+	msg := types.MsgVoteOnObservedInboundTx{
 		Creator: sample.AccAddress(),
 	}
 	assert.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgVoteOnObservedInboundTx_GetSignBytes(t *testing.T) {
-	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+	msg := types.MsgVoteOnObservedInboundTx{
 		Creator: sample.AccAddress(),
 	}
 	assert.NotPanics(t, func() {
