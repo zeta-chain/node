@@ -22,7 +22,7 @@ func CreateAuthzSigner(granter string, grantee sdk.AccAddress) {
 	authz.SetupAuthZSignerList(granter, grantee)
 }
 
-func CreateZetaBridge(cfg *config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetabridge.ZetaCoreBridge, error) {
+func CreateZetaBridge(cfg config.Config, telemetry *metrics.TelemetryServer, hotkeyPassword string) (*zetabridge.ZetaCoreBridge, error) {
 	hotKey := cfg.AuthzHotkey
 	if cfg.HsmMode {
 		hotKey = cfg.HsmHotKey
@@ -115,7 +115,7 @@ func CreateChainClientMap(
 		if !evmChainParams.IsSupported {
 			continue
 		}
-		co, err := evm.NewEVMChainClient(appContext, bridge, tss, dbpath, loggers, *evmConfig, ts)
+		co, err := evm.NewEVMChainClient(appContext, bridge, tss, dbpath, loggers, evmConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
 			continue

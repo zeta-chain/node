@@ -52,7 +52,7 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	tss := stub.NewTSSMainnet()
 
 	evmcfg := config.EVMConfig{Chain: corecommon.BscMainnetChain(), Endpoint: "http://localhost:8545"}
-	cfg.EVMChainConfigs[corecommon.BscMainnetChain().ChainId] = &evmcfg
+	cfg.EVMChainConfigs[corecommon.BscMainnetChain().ChainId] = evmcfg
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
 

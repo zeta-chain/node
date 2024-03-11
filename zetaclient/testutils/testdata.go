@@ -50,8 +50,8 @@ func LoadObjectFromJSONFile(obj interface{}, filename string) error {
 	return decoder.Decode(&obj)
 }
 
-func ComplianceConfigTest() *config.ComplianceConfig {
-	return &config.ComplianceConfig{
+func ComplianceConfigTest() config.ComplianceConfig {
+	return config.ComplianceConfig{
 		RestrictedAddresses: []string{RestrictedEVMAddressTest, RestrictedBtcAddressTest},
 	}
 }

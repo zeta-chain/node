@@ -14,6 +14,7 @@
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+* [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
 
 ### Features
 
@@ -29,6 +30,10 @@
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
 * [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
+
+### Fixes
+
+* [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 
 ### Chores
 
