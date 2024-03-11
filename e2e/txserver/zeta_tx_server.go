@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 
@@ -285,7 +286,7 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, usdtERC20Addr str
 }
 
 // FundEmissionsPool funds the emissions pool with the given amount
-func (zts ZetaTxServer) FundEmissionsPool(account, amount string) error {
+func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error {
 	// retrieve account
 	acc, err := zts.clientCtx.Keyring.Key(account)
 	if err != nil {
@@ -303,10 +304,7 @@ func (zts ZetaTxServer) FundEmissionsPool(account, amount string) error {
 	}
 
 	// convert amount
-	amountInt, ok := sdktypes.NewIntFromString(amount)
-	if !ok {
-		return fmt.Errorf("invalid amount: %s", amount)
-	}
+	amountInt := sdktypes.NewIntFromBigInt(amount)
 
 	// fund emissions pool
 	_, err = zts.BroadcastTx(account, banktypes.NewMsgSend(

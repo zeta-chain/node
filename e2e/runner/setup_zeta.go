@@ -209,5 +209,5 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 func (runner *E2ERunner) FundEmissionsPool() error {
 	runner.Logger.Print("⚙️ funding the emissions pool on ZetaChain with 20M ZETA (%s)", txserver.EmissionsPoolAddress)
 
-	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, EmissionsPoolFunding.String())
+	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, EmissionsPoolFunding)
 }
