@@ -31,12 +31,12 @@ func PubKeySet() *common.PubKeySet {
 }
 
 func EthHeader() (header1, header2, header3 *ethtypes.Header, err error) {
-	url := "https://rpc.ankr.com/eth_goerli"
+	url := "https://rpc.ankr.com/eth_sepolia"
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		return
 	}
-	bn := int64(9889649)
+	bn := int64(5000000)
 	block, err := client.BlockByNumber(context.Background(), big.NewInt(bn))
 	if err != nil {
 		return
@@ -59,12 +59,12 @@ func EthHeader() (header1, header2, header3 *ethtypes.Header, err error) {
 
 func Proof() (txIndex int64, block *ethtypes.Block, header ethtypes.Header, headerRLP []byte, proof *common.Proof, tx *ethtypes.Transaction, err error) {
 	txIndex = int64(9)
-	url := "https://rpc.ankr.com/eth_goerli"
+	url := "https://rpc.ankr.com/eth_sepolia"
 	client, err := ethclient.Dial(url)
 	if err != nil {
 		return
 	}
-	bn := int64(9889649)
+	bn := int64(5000000)
 	block, err = client.BlockByNumber(context.Background(), big.NewInt(bn))
 	if err != nil {
 		return
