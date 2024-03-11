@@ -224,4 +224,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	// print and validate report
+	networkReport, err := deployerRunner.GenerateNetworkReport()
+	if err != nil {
+		logger.Print("❌ failed to generate network report %v", err)
+	}
+	deployerRunner.PrintNetworkReport(networkReport)
+	if err := networkReport.Validate(); err != nil {
+		logger.Print("❌ network report validation failed %v", err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }

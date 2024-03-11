@@ -22,6 +22,10 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// EmissionsPoolFunding represents the amount of ZETA to fund the emissions pool with
+// This is the same value as used originally on mainnet (20M ZETA)
+var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
+
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
 func (runner *E2ERunner) SetTSSAddresses() error {
 	runner.Logger.Print("⚙️ setting up TSS address")
@@ -203,5 +207,6 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 // FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
 func (runner *E2ERunner) FundEmissionsPool() error {
 	runner.Logger.Print("⚙️ funding the emissions pool on ZetaChain with 20M ZETA (%s)", txserver.EmissionsPoolAddress)
-	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, "20000000000000000000000000")
+
+	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, EmissionsPoolFunding.String())
 }
