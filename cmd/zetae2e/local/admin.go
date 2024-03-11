@@ -48,9 +48,9 @@ func adminTestRoutine(
 
 		// funding the account
 		txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 1000)
-		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserAdminAddress, 1000)
+		txERC20Send := deployerRunner.SendERC20OnEvm(UserAdminAddress, 1000)
 		adminRunner.WaitForTxReceiptOnEvm(txZetaSend)
-		adminRunner.WaitForTxReceiptOnEvm(txUSDTSend)
+		adminRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := adminRunner.DepositZeta()

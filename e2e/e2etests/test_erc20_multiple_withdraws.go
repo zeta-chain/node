@@ -33,56 +33,56 @@ func TestMultipleWithdraws(r *runner.E2ERunner, args []string) {
 	}
 
 	// deploy withdrawer
-	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZevmAuth, r.ZevmClient)
+	withdrawerAddr, _, withdrawer, err := testcontract.DeployWithdrawer(r.ZEVMAuth, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// approve
-	tx, err := r.USDTZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
+	tx, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	r.Logger.Info("USDT ZRC20 approve receipt: status %d", receipt.Status)
+	r.Logger.Info("ERC20 ZRC20 approve receipt: status %d", receipt.Status)
 
 	// approve gas token
-	tx, err = r.ETHZRC20.Approve(r.ZevmAuth, withdrawerAddr, approvedAmount)
+	tx, err = r.ETHZRC20.Approve(r.ZEVMAuth, withdrawerAddr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve gas token failed")
 	}
 	r.Logger.Info("eth zrc20 approve receipt: status %d", receipt.Status)
 
 	// check the balance
-	bal, err := r.USDTZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
+	bal, err := r.ERC20ZRC20.BalanceOf(&bind.CallOpts{}, r.DeployerAddress)
 	if err != nil {
 		panic(err)
 	}
-	r.Logger.Info("balance of deployer on USDT ZRC20: %d", bal)
+	r.Logger.Info("balance of deployer on ERC20 ZRC20: %d", bal)
 
 	if bal.Int64() < totalWithdrawal.Int64() {
-		panic("not enough USDT ZRC20 balance!")
+		panic("not enough ERC20 ZRC20 balance!")
 	}
 
 	// withdraw
 	tx, err = withdrawer.RunWithdraws(
-		r.ZevmAuth,
+		r.ZEVMAuth,
 		r.DeployerAddress.Bytes(),
-		r.USDTZRC20Addr,
+		r.ERC20ZRC20Addr,
 		withdrawalAmount,
 		numberOfWithdrawals,
 	)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}

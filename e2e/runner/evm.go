@@ -22,47 +22,47 @@ func (runner *E2ERunner) WaitForTxReceiptOnEvm(tx *ethtypes.Transaction) {
 	}()
 	runner.Lock()
 
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
 }
 
-// MintUSDTOnEvm mints USDT on EVM
-// amountUSDT is a multiple of 1e18
-func (runner *E2ERunner) MintUSDTOnEvm(amountUSDT int64) {
+// MintERC20OnEvm mints ERC20 on EVM
+// amount is a multiple of 1e18
+func (runner *E2ERunner) MintERC20OnEvm(amountERC20 int64) {
 	defer func() {
 		runner.Unlock()
 	}()
 	runner.Lock()
 
-	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
-	tx, err := runner.USDTERC20.Mint(runner.GoerliAuth, amount)
+	tx, err := runner.ERC20.Mint(runner.EVMAuth, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("mint failed")
 	}
 	runner.Logger.Info("Mint receipt tx hash: %s", tx.Hash().Hex())
 }
 
-// SendUSDTOnEvm sends USDT to an address on EVM
-// this allows the USDT contract deployer to funds other accounts on EVM
-// amountUSDT is a multiple of 1e18
-func (runner *E2ERunner) SendUSDTOnEvm(address ethcommon.Address, amountUSDT int64) *ethtypes.Transaction {
-	// the deployer might be sending USDT in different goroutines
+// SendERC20OnEvm sends ERC20 to an address on EVM
+// this allows the ERC20 contract deployer to funds other accounts on EVM
+// amountERC20 is a multiple of 1e18
+func (runner *E2ERunner) SendERC20OnEvm(address ethcommon.Address, amountERC20 int64) *ethtypes.Transaction {
+	// the deployer might be sending ERC20 in different goroutines
 	defer func() {
 		runner.Unlock()
 	}()
 	runner.Lock()
 
-	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountUSDT))
+	amount := big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(amountERC20))
 
 	// transfer
-	tx, err := runner.USDTERC20.Transfer(runner.GoerliAuth, address, amount)
+	tx, err := runner.ERC20.Transfer(runner.EVMAuth, address, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -76,33 +76,33 @@ func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
 }
 
 func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
-	// reset allowance, necessary for USDT
-	tx, err := runner.USDTERC20.Approve(runner.GoerliAuth, runner.ERC20CustodyAddr, big.NewInt(0))
+	// reset allowance, necessary for ERC20
+	tx, err := runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	tx, err = runner.USDTERC20.Approve(runner.GoerliAuth, runner.ERC20CustodyAddr, amount)
+	tx, err = runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
-	runner.Logger.Info("USDT Approve receipt tx hash: %s", tx.Hash().Hex())
+	runner.Logger.Info("ERC20 Approve receipt tx hash: %s", tx.Hash().Hex())
 
-	tx, err = runner.ERC20Custody.Deposit(runner.GoerliAuth, to.Bytes(), runner.USDTERC20Addr, amount, msg)
+	tx, err = runner.ERC20Custody.Deposit(runner.EVMAuth, to.Bytes(), runner.ERC20Addr, amount, msg)
 	runner.Logger.Print("TX: %v", tx)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
@@ -136,7 +136,7 @@ func (runner *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int
 	}
 	runner.Logger.EVMTransaction(*signedTx, "send to TSS")
 
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, signedTx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, signedTx, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("deposit failed")
 	}
@@ -151,23 +151,23 @@ func (runner *E2ERunner) DepositEtherWithAmount(testHeader bool, amount *big.Int
 	return signedTx.Hash()
 }
 
-// SendEther sends ethers to the TSS on Goerli
+// SendEther sends ethers to the TSS on EVM
 func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []byte) (*ethtypes.Transaction, error) {
-	goerliClient := runner.GoerliClient
+	evmClient := runner.EVMClient
 
-	nonce, err := goerliClient.PendingNonceAt(runner.Ctx, runner.DeployerAddress)
+	nonce, err := evmClient.PendingNonceAt(runner.Ctx, runner.DeployerAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	gasLimit := uint64(30000) // in units
-	gasPrice, err := goerliClient.SuggestGasPrice(runner.Ctx)
+	gasPrice, err := evmClient.SuggestGasPrice(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	tx := ethtypes.NewTransaction(nonce, runner.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := goerliClient.NetworkID(runner.Ctx)
+	chainID, err := evmClient.NetworkID(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []b
 	if err != nil {
 		return nil, err
 	}
-	err = goerliClient.SendTransaction(runner.Ctx, signedTx)
+	err = evmClient.SendTransaction(runner.Ctx, signedTx)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +199,7 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 	// #nosec G701 test - always in range
 	txIndex := int(receipt.TransactionIndex)
 
-	block, err := runner.GoerliClient.BlockByHash(runner.Ctx, blockHash)
+	block, err := runner.EVMClient.BlockByHash(runner.Ctx, blockHash)
 	if err != nil {
 		panic(err)
 	}

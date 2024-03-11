@@ -43,7 +43,7 @@ contracts:
   zevm:
     system_contract: "0xEdf1c3275d13489aCdC6cD6eD246E72458B8795B"
     eth_zrc20: "0x13A0c5930C028511Dc02665E7285134B6d11A5f4"
-    usdt_zrc20: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
+    erc20_zrc20: "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a"
     btc_zrc20: "0x65a45c57636f9BcCeD4fe193A602008578BcA90b"
     uniswap_factory: "0x9fd96203f7b22bCF72d9DCb40ff98302376cE09c"
     uniswap_router: "0x2ca7d64A7EFE2D62A725E2B35Cf7230D6677FfEe"
@@ -51,7 +51,7 @@ contracts:
     zeta_eth: "0x0000c304d2934c00db1d51995b9f6996affd17c0"
     connector_eth: "0x00005e3125aba53c5652f9f0ce1a4cf91d8b15ea"
     custody: "0x000047f11c6e42293f433c82473532e869ce4ec5"
-    usdt: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
+    erc20: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
 ```
 
 ### Bitcoin setup
@@ -126,9 +126,7 @@ contracts:
 One of the tests can be commented out in case only a deposit or a withdrawal is to be tested.
 Testing an ERC20 ZRC20 from an EVM chain
 
-Testing ZRC20 requires the same config as for the gas tokens, but must include the `usdt` field that contains the address of the ERC20 on the evm chain and `usdt_zrc20` on ZetaChain.
-
-It is currently named USDT because it was the defacto ERC20 tested in local tests, this field will be renamed into a more generic name in the future
+Testing ZRC20 requires the same config as for the gas tokens, but must include the `erc20` field that contains the address of the ERC20 on the evm chain and `erc20_zrc20` on ZetaChain.
 
 ```go
 zeta_chain_id
@@ -142,9 +140,9 @@ rpcs:
   zetacore_rpc
 contracts:
   zevm:
-    usdt_zrc20
+    erc20_zrc20
   evm:
-		usdt
+		erc20
 ```
 
 ### Testing a ZRC20 from a Bitcoin chain
