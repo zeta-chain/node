@@ -1,9 +1,10 @@
 package runner
 
 import (
-	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"math/big"
 	"time"
+
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
