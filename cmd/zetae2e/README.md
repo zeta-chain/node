@@ -63,6 +63,8 @@ If an error occurs mention that wallets are not loaded, this command can be run 
 zetae2e setup-bitcoin [config]
 ```
 
+Note: This command is intended for local testing only and won't work on live networks, where a node with an enabled wallet should already be set up.
+
 ### Commands
 
 Show the balances of the accounts used on the different networks:
