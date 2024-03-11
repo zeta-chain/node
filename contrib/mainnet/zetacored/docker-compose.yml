@@ -12,12 +12,10 @@ services:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: mainnet
       #RESTORE_TYPE=snapshot/snapshot-archive/statesync
-      RESTORE_TYPE: "statesync"
+      RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      COSMOVISOR_VERSION: "v1.5.0"
       CHAIN_ID: "zetachain_7000-1"
-      COSMOVISOR_CHECKSUM: "626dfc58c266b85f84a7ed8e2fe0e2346c15be98cfb9f9b88576ba899ed78cdc"
       VISOR_NAME: "cosmovisor"
       DAEMON_NAME: "zetacored"
       DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
