@@ -41,7 +41,7 @@ function download_configs {
 
 function setup_restore_type {
   if [ "${RESTORE_TYPE}" == "statesync" ]; then
-    logt "Statesync restore. Download state sync rpc address from network-config."
+    logt "Statesync restore. Download state sync rpc address from network-config"
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "MAINNET STATE SYNC"
       logt "STATE_SYNC_RPC_NODE_FILE_MAINNET: ${STATE_SYNC_RPC_NODE_FILE_MAINNET}"
