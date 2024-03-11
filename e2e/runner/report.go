@@ -64,6 +64,7 @@ func (runner *E2ERunner) PrintTestReports(tr TestReports) {
 // NetworkReport is a struct that contains the report for the network used after running e2e tests
 // This report has been initialized to check the emissions pool balance and if the pool is decreasing
 // TODO: add more complete data and validation to the network
+// https://github.com/zeta-chain/node/issues/1873
 type NetworkReport struct {
 	EmissionsPoolBalance sdkmath.Int
 	Height               uint64
