@@ -7,37 +7,26 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
+func TestMsgCreateTSSVoter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgUpdatePolicies
+		msg  *types.MsgCreateTSSVoter
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies()),
+			msg:  types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgUpdatePolicies("invalid", sample.Policies()),
+			msg:  types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, common.ReceiveStatus_Created),
 			err:  sdkerrors.ErrInvalidAddress,
-		},
-		{
-			name: "invalid policies",
-			msg: types.NewMsgUpdatePolicies(sample.AccAddress(), types.Policies{
-				Items: []*types.Policy{
-					{
-						Address:    "invalid",
-						PolicyType: types.PolicyType_groupEmergency,
-					},
-				},
-			}),
-			err: sdkerrors.ErrInvalidRequest,
 		},
 	}
 
@@ -53,21 +42,21 @@ func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdatePolicies_GetSigners(t *testing.T) {
+func TestMsgCreateTSSVoter_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgUpdatePolicies
+		msg    *types.MsgCreateTSSVoter
 		panics bool
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdatePolicies(signer, sample.Policies()),
+			msg:    types.NewMsgCreateTSSVoter(signer, "pubkey", 1, common.ReceiveStatus_Created),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgUpdatePolicies("invalid", sample.Policies()),
+			msg:    types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, common.ReceiveStatus_Created),
 			panics: true,
 		},
 	}
@@ -86,18 +75,18 @@ func TestMsgUpdatePolicies_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgUpdatePolicies_Type(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
-	assert.Equal(t, types.TypeMsgUpdatePolicies, msg.Type())
+func TestMsgCreateTSSVoter_Type(t *testing.T) {
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
+	assert.Equal(t, types.TypeMsgCreateTSSVoter, msg.Type())
 }
 
-func TestMsgUpdatePolicies_Route(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
+func TestMsgCreateTSSVoter_Route(t *testing.T) {
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
 	assert.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgUpdatePolicies_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
+func TestMsgCreateTSSVoter_GetSignBytes(t *testing.T) {
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
 	assert.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})

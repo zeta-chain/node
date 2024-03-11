@@ -7,37 +7,27 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	common "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/fungible/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
+func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgUpdateSystemContract
+		msg  types.MsgGasPriceVoter
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  "invalid_address",
-				NewSystemContractAddress: sample.EthAddress().String(),
+			msg: types.MsgGasPriceVoter{
+				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		},
-		{
-			name: "invalid new system contract address",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  sample.AccAddress(),
-				NewSystemContractAddress: "invalid_address",
-			},
-			err: sdkerrors.ErrInvalidAddress,
-		},
-		{
-			name: "valid message",
-			msg: types.MsgUpdateSystemContract{
-				Creator:                  sample.AccAddress(),
-				NewSystemContractAddress: sample.EthAddress().String(),
+		}, {
+			name: "valid address",
+			msg: types.MsgGasPriceVoter{
+				Creator: sample.AccAddress(),
 			},
 		},
 	}
@@ -53,23 +43,23 @@ func TestMsgUpdateSystemContract_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateSystemContract_GetSigners(t *testing.T) {
+func TestMsgGasPriceVoter_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateSystemContract
+		msg    types.MsgGasPriceVoter
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateSystemContract{
+			msg: types.MsgGasPriceVoter{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateSystemContract{
+			msg: types.MsgGasPriceVoter{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -90,22 +80,22 @@ func TestMsgUpdateSystemContract_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgUpdateSystemContract_Type(t *testing.T) {
-	msg := types.MsgUpdateSystemContract{
+func TestMsgGasPriceVoter_Type(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
-	assert.Equal(t, types.TypeMsgUpdateSystemContract, msg.Type())
+	assert.Equal(t, common.GasPriceVoter.String(), msg.Type())
 }
 
-func TestMsgUpdateSystemContract_Route(t *testing.T) {
-	msg := types.MsgUpdateSystemContract{
+func TestMsgGasPriceVoter_Route(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
 	assert.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgUpdateSystemContract_GetSignBytes(t *testing.T) {
-	msg := types.MsgUpdateSystemContract{
+func TestMsgGasPriceVoter_GetSignBytes(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
 	assert.NotPanics(t, func() {

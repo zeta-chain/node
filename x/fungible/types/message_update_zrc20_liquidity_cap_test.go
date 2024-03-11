@@ -5,7 +5,9 @@ import (
 
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -67,4 +69,64 @@ func TestNewMsgUpdateZRC20LiquidityCap_ValidateBasics(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestNewMsgUpdateZRC20LiquidityCap_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    types.MsgUpdateZRC20LiquidityCap
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: types.MsgUpdateZRC20LiquidityCap{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateZRC20LiquidityCap{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				assert.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestNewMsgUpdateZRC20LiquidityCap_Type(t *testing.T) {
+	msg := types.MsgUpdateZRC20LiquidityCap{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.TypeMsgUpdateZRC20LiquidityCap, msg.Type())
+}
+
+func TestNewMsgUpdateZRC20LiquidityCap_Route(t *testing.T) {
+	msg := types.MsgUpdateZRC20LiquidityCap{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestNewMsgUpdateZRC20LiquidityCap_GetSignBytes(t *testing.T) {
+	msg := types.MsgUpdateZRC20LiquidityCap{
+		Creator: sample.AccAddress(),
+	}
+	assert.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }

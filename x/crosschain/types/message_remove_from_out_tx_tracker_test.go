@@ -9,35 +9,28 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 
-	"github.com/zeta-chain/zetacore/x/authority/types"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
+func TestMsgRemoveFromOutTxTracker_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  *types.MsgUpdatePolicies
+		msg  *types.MsgRemoveFromOutTxTracker
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies()),
+			msg:  types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgUpdatePolicies("invalid", sample.Policies()),
+			msg:  types.NewMsgRemoveFromOutTxTracker("invalid", 1, 0),
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid policies",
-			msg: types.NewMsgUpdatePolicies(sample.AccAddress(), types.Policies{
-				Items: []*types.Policy{
-					{
-						Address:    "invalid",
-						PolicyType: types.PolicyType_groupEmergency,
-					},
-				},
-			}),
-			err: sdkerrors.ErrInvalidRequest,
+			name: "invalid chain id",
+			msg:  types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), -1, 0),
+			err:  sdkerrors.ErrInvalidChainID,
 		},
 	}
 
@@ -53,21 +46,21 @@ func TestMsgUpdatePolicies_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgUpdatePolicies_GetSigners(t *testing.T) {
+func TestMsgRemoveFromOutTxTracker_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    *types.MsgUpdatePolicies
+		msg    *types.MsgRemoveFromOutTxTracker
 		panics bool
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgUpdatePolicies(signer, sample.Policies()),
+			msg:    types.NewMsgRemoveFromOutTxTracker(signer, 1, 0),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgUpdatePolicies("invalid", sample.Policies()),
+			msg:    types.NewMsgRemoveFromOutTxTracker("invalid", 1, 0),
 			panics: true,
 		},
 	}
@@ -86,18 +79,18 @@ func TestMsgUpdatePolicies_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgUpdatePolicies_Type(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
-	assert.Equal(t, types.TypeMsgUpdatePolicies, msg.Type())
+func TestMsgRemoveFromOutTxTracker_Type(t *testing.T) {
+	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
+	assert.Equal(t, types.TypeMsgRemoveFromOutTxTracker, msg.Type())
 }
 
-func TestMsgUpdatePolicies_Route(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
+func TestMsgRemoveFromOutTxTracker_Route(t *testing.T) {
+	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
 	assert.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgUpdatePolicies_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgUpdatePolicies(sample.AccAddress(), sample.Policies())
+func TestMsgRemoveFromOutTxTracker_GetSignBytes(t *testing.T) {
+	msg := types.NewMsgRemoveFromOutTxTracker(sample.AccAddress(), 1, 0)
 	assert.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})

@@ -3,8 +3,12 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -52,4 +56,64 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    crosschaintypes.MsgUpdateTssAddress
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: crosschaintypes.MsgUpdateTssAddress{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: crosschaintypes.MsgUpdateTssAddress{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				assert.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestMessageUpdateTssAddress_Type(t *testing.T) {
+	msg := crosschaintypes.MsgUpdateTssAddress{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.TypeMsgUpdateTssAddress, msg.Type())
+}
+
+func TestMessageUpdateTssAddress_Route(t *testing.T) {
+	msg := crosschaintypes.MsgUpdateTssAddress{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestMessageUpdateTssAddress_GetSignBytes(t *testing.T) {
+	msg := crosschaintypes.MsgUpdateTssAddress{
+		Creator: sample.AccAddress(),
+	}
+	assert.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }

@@ -3,13 +3,15 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestNewMsgUpdateObserver(t *testing.T) {
+func TestNewMsgUpdateObserver_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
 		msg  types.MsgUpdateObserver
@@ -85,4 +87,64 @@ func TestNewMsgUpdateObserver(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+}
+
+func TestNewMsgUpdateObserver_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    types.MsgUpdateObserver
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: types.MsgUpdateObserver{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateObserver{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				assert.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestNewMsgUpdateObserver_Type(t *testing.T) {
+	msg := types.MsgUpdateObserver{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.TypeMsgUpdateObserver, msg.Type())
+}
+
+func TestNewMsgUpdateObserver_Route(t *testing.T) {
+	msg := types.MsgUpdateObserver{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestNewMsgUpdateObserver_GetSignBytes(t *testing.T) {
+	msg := types.MsgUpdateObserver{
+		Creator: sample.AccAddress(),
+	}
+	assert.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }

@@ -6,11 +6,14 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
@@ -238,4 +241,64 @@ func TestMsgVoteOnObservedInboundTx_Digest(t *testing.T) {
 	msg2.EventIndex = 43
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "event index should change hash")
+}
+
+func TestMsgVoteOnObservedInboundTx_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    crosschaintypes.MsgVoteOnObservedInboundTx
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: crosschaintypes.MsgVoteOnObservedInboundTx{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: crosschaintypes.MsgVoteOnObservedInboundTx{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				assert.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestMsgVoteOnObservedInboundTx_Type(t *testing.T) {
+	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, common.InboundVoter.String(), msg.Type())
+}
+
+func TestMsgVoteOnObservedInboundTx_Route(t *testing.T) {
+	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestMsgVoteOnObservedInboundTx_GetSignBytes(t *testing.T) {
+	msg := crosschaintypes.MsgVoteOnObservedInboundTx{
+		Creator: sample.AccAddress(),
+	}
+	assert.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }

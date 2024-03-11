@@ -3,7 +3,9 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -231,4 +233,64 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 			require.EqualValues(t, tt.want, tt.msg.GetRequiredPolicyType())
 		})
 	}
+}
+
+func TestMsgUpdateCrosschainFlags_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    types.MsgUpdateCrosschainFlags
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateCrosschainFlags{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				assert.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestMsgUpdateCrosschainFlags_Type(t *testing.T) {
+	msg := types.MsgUpdateCrosschainFlags{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.TypeMsgUpdateCrosschainFlags, msg.Type())
+}
+
+func TestMsgUpdateCrosschainFlags_Route(t *testing.T) {
+	msg := types.MsgUpdateCrosschainFlags{
+		Creator: sample.AccAddress(),
+	}
+	assert.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestMsgUpdateCrosschainFlags_GetSignBytes(t *testing.T) {
+	msg := types.MsgUpdateCrosschainFlags{
+		Creator: sample.AccAddress(),
+	}
+	assert.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }
