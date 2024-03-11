@@ -256,14 +256,14 @@ func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain co
 	return
 }
 
-func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, receiver ethcommon.Address, amount *big.Int, senderChainId int64, errDeposit error) {
+func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, receiver ethcommon.Address, amount *big.Int, senderChainID int64, errDeposit error) {
 	m.On(
 		"ZRC20DepositAndCallContract",
 		mock.Anything,
 		mock.Anything,
 		receiver,
 		amount,
-		senderChainId,
+		senderChainID,
 		mock.Anything,
 		common.CoinType_ERC20,
 		mock.Anything,

@@ -44,7 +44,7 @@ func GetGranteeKeyName(signerName string) string {
 }
 
 // GetKeyringKeybase return keyring and key info
-func GetKeyringKeybase(cfg *config.Config, hotkeyPassword string) (ckeys.Keyring, string, error) {
+func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring, string, error) {
 	granteeName := cfg.AuthzHotkey
 	chainHomeFolder := cfg.ZetaCoreHome
 	logger := log.Logger.With().Str("module", "GetKeyringKeybase").Logger()

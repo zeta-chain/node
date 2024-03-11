@@ -51,7 +51,7 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 	}
 }
 
-func InboundTxParamsValidChainId(r *rand.Rand) *types.InboundTxParams {
+func InboundTxParamsValidChainID(r *rand.Rand) *types.InboundTxParams {
 	return &types.InboundTxParams{
 		Sender:                          EthAddress().String(),
 		SenderChainId:                   common.GoerliChain().ChainId,
@@ -81,7 +81,7 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 	}
 }
 
-func OutboundTxParamsValidChainId(r *rand.Rand) *types.OutboundTxParams {
+func OutboundTxParamsValidChainID(r *rand.Rand) *types.OutboundTxParams {
 	return &types.OutboundTxParams{
 		Receiver:                         EthAddress().String(),
 		ReceiverChainId:                  common.GoerliChain().ChainId,

@@ -13,12 +13,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-func waitForZetaCore(configData *config.Config, logger zerolog.Logger) {
+func waitForZetaCore(config config.Config, logger zerolog.Logger) {
 	// wait until zetacore is up
 	logger.Debug().Msg("Waiting for ZetaCore to open 9090 port...")
 	for {
 		_, err := grpc.Dial(
-			fmt.Sprintf("%s:9090", configData.ZetaCoreURL),
+			fmt.Sprintf("%s:9090", config.ZetaCoreURL),
 			grpc.WithInsecure(),
 		)
 		if err != nil {
@@ -54,20 +54,18 @@ func validatePeer(seedPeer string) error {
 // maskCfg sensitive fields are masked, currently only the EVM endpoints and bitcoin credentials,
 //
 //	other fields can be added.
-func maskCfg(cfg *config.Config) string {
-	maskedCfg := config.NewConfig()
+func maskCfg(cfg config.Config) string {
+	maskedCfg := cfg
 
-	// Deep copy since cfg contains some references
-	*maskedCfg = *cfg
-	maskedCfg.BitcoinConfig = &config.BTCConfig{
+	maskedCfg.BitcoinConfig = config.BTCConfig{
 		RPCUsername: cfg.BitcoinConfig.RPCUsername,
 		RPCPassword: cfg.BitcoinConfig.RPCPassword,
 		RPCHost:     cfg.BitcoinConfig.RPCHost,
 		RPCParams:   cfg.BitcoinConfig.RPCParams,
 	}
-	maskedCfg.EVMChainConfigs = map[int64]*config.EVMConfig{}
+	maskedCfg.EVMChainConfigs = map[int64]config.EVMConfig{}
 	for key, val := range cfg.EVMChainConfigs {
-		maskedCfg.EVMChainConfigs[key] = &config.EVMConfig{
+		maskedCfg.EVMChainConfigs[key] = config.EVMConfig{
 			Chain:    val.Chain,
 			Endpoint: val.Endpoint,
 		}

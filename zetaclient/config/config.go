@@ -36,12 +36,12 @@ func Save(config *Config, path string) error {
 }
 
 // Load loads ZetaClient config from a filepath
-func Load(path string) (*Config, error) {
+func Load(path string) (Config, error) {
 	// retrieve file
 	file := filepath.Join(path, folder, filename)
 	file, err := filepath.Abs(file)
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 	file = filepath.Clean(file)
 
@@ -49,11 +49,11 @@ func Load(path string) (*Config, error) {
 	cfg := NewConfig()
 	input, err := os.ReadFile(file)
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 	err = json.Unmarshal(input, &cfg)
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 
 	// read keyring backend and use test by default
@@ -61,7 +61,7 @@ func Load(path string) (*Config, error) {
 		cfg.KeyringBackend = KeyringBackendTest
 	}
 	if cfg.KeyringBackend != KeyringBackendFile && cfg.KeyringBackend != KeyringBackendTest {
-		return nil, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
+		return Config{}, fmt.Errorf("invalid keyring backend %s", cfg.KeyringBackend)
 	}
 
 	// fields sanitization
@@ -75,7 +75,7 @@ func Load(path string) (*Config, error) {
 	return cfg, nil
 }
 
-func LoadComplianceConfig(cfg *Config) {
+func LoadComplianceConfig(cfg Config) {
 	restrictedAddressBook = cfg.GetRestrictedAddressBook()
 }
 

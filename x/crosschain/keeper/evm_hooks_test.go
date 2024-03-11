@@ -37,12 +37,15 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 		assetAddress,
 		"ETH",
 	)
+
+	_, err := zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, gasZRC20, big.NewInt(withdrawFee))
 	fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
-	_, err := fungibleMsgServer.UpdateZRC20WithdrawFee(
+	_, err = fungibleMsgServer.UpdateZRC20WithdrawFee(
 		sdk.UnwrapSDKContext(ctx),
 		fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(uint64(withdrawFee)), sdkmath.Uint{}),
 	)
 	require.NoError(t, err)
+
 	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
 		ChainId:     chain.ChainId,
 		MedianIndex: 0,
@@ -56,6 +59,7 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 		zrc20Addr,
 	)
 }
+
 func SetupStateForProcessLogs(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
 
 	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
