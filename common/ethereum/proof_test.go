@@ -2,7 +2,9 @@ package ethereum
 
 import (
 	"context"
+	"encoding/json"
 	"math/big"
+	"os"
 	"testing"
 	"time"
 
@@ -13,14 +15,19 @@ import (
 )
 
 func TestProofGeneration(t *testing.T) {
-	RPC_URL := "https://rpc.ankr.com/eth_goerli"
+	RPC_URL := "https://rpc.ankr.com/eth_sepolia"
 	client, err := ethclient.Dial(RPC_URL)
 	if err != nil {
 		t.Fatal(err)
 	}
-	bn := int64(9509129)
+	bn := int64(5000000)
 	block, err := client.BlockByNumber(context.Background(), big.NewInt(bn))
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Write the block to a JSON file
+	if err := writeJSONToFile(block.Header(), "/Users/lucas/Desktop/header.json"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -76,13 +83,25 @@ func TestProofGeneration(t *testing.T) {
 
 	{
 		var receipts types.Receipts
-		for _, tx := range block.Transactions() {
+		for i, tx := range block.Transactions() {
 			receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
 			if err != nil {
 				t.Fatal(err)
 			}
 			receipts = append(receipts, receipt)
 			time.Sleep(200 * time.Millisecond)
+
+			// Write the receipt to a JSON file
+			if i == 0 {
+				if err := writeJSONToFile(receipt, "/Users/lucas/Desktop/receipt_0.json"); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if i == 1 {
+				if err := writeJSONToFile(receipt, "/Users/lucas/Desktop/receipt_1.json"); err != nil {
+					t.Fatal(err)
+				}
+			}
 		}
 
 		receiptTree := NewTrie(receipts)
@@ -122,4 +141,34 @@ func TestProofGeneration(t *testing.T) {
 			t.Logf("  log %+v\n", log)
 		}
 	}
+}
+
+// Function to write a struct to a JSON file
+func writeJSONToFile(data interface{}, filePath string) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	if err := encoder.Encode(data); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to read a JSON file into a struct
+func readJSONFromFile(data interface{}, filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&data); err != nil {
+		return err
+	}
+	return nil
 }
