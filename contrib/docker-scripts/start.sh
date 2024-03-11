@@ -41,7 +41,7 @@ function download_configs {
 
 function setup_restore_type {
   if [ "${RESTORE_TYPE}" == "statesync" ]; then
-    logt "Statesync restore. Download state sync rpc address from network-config."
+    logt "Statesync restore. Download state sync rpc address from network-config"
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "MAINNET STATE SYNC"
       logt "STATE_SYNC_RPC_NODE_FILE_MAINNET: ${STATE_SYNC_RPC_NODE_FILE_MAINNET}"
@@ -77,7 +77,7 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=athens3 | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-snapshot?network=athens3 | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
@@ -91,7 +91,7 @@ function setup_restore_type {
   elif [ "${RESTORE_TYPE}" == "snapshot-archive"  ]; then
     if [ "${NETWORK}" == "mainnet" ]; then
       logt "Get Latest Snapshot URL"
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=mainnet | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=mainnet | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
@@ -102,7 +102,7 @@ function setup_restore_type {
       logt " Cleanup Snapshot"
       rm -rf ${SNAPSHOT_DIR}/${SNAPSHOT_FILENAME}
     elif [ "${NETWORK}" == "athens3" ]; then
-      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=athens3 | jq .latest_snapshot)
+      SNAPSHOT_URL=$(curl -s ${SNAPSHOT_API}/latest-archive-snapshot?network=athens3 | jq -r .latest_snapshot)
       SNAPSHOT_FILENAME=$(basename "${SNAPSHOT_URL}")
       SNAPSHOT_DIR=$(pwd)
       logt "Download Snapshot from url: ${SNAPSHOT_URL}"
@@ -148,6 +148,7 @@ function change_config_values {
     logt "EXTERNAL_IP: ${EXTERNAL_IP}"
     logt "SED Change Config Files."
     sed -i -e "s/^enable = .*/enable = \"true\"/" ${DAEMON_HOME}/config/config.toml
+    sed '/^\[statesync\]/,/^\[/ s/enable = "true"/enable = "false"/' ${DAEMON_HOME}/config/config.toml
     sed -i -e "s/^moniker = .*/moniker = \"${MONIKER}\"/" ${DAEMON_HOME}/config/config.toml
     sed -i -e "s/^external_address = .*/external_address = \"${EXTERNAL_IP}:26656\"/" ${DAEMON_HOME}/config/config.toml
   fi
@@ -160,18 +161,6 @@ function setup_basic_keyring {
     ${DAEMON_NAME} keys add "$MONIKER" --keyring-backend test
     echo "Key $MONIKER created."
   fi
-}
-
-function install_dependencies {
-  apt-get update
-  apt-get install nano jq python3 -y
-  pip3 install requests
-}
-
-function download_cosmovisor {
-  mkdir -p ${DAEMON_HOME}/cosmovisor/
-  mkdir -p ${DAEMON_HOME}/cosmovisor/upgrades/
-  python3 /scripts/install_cosmovisor.py
 }
 
 function download_binary_version {
@@ -268,9 +257,6 @@ if [[ -f "${DAEMON_HOME}/start_sequence_status" ]] && grep -q "START_SEQUENCE_CO
     logt "Modify Chain Configs"
     change_config_values
 
-    logt "Download Cosmosvisor."
-    download_cosmovisor
-
     logt "Move Zetacored Binaries."
     move_zetacored_binaries
 
@@ -292,9 +278,6 @@ else
 
   logt "Download Configs"
   download_configs
-
-  logt "Download Cosmovisor"
-  download_cosmovisor
 
   logt "Download Historical Binaries"
   download_binary_version
