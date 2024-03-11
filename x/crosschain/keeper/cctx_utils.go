@@ -226,10 +226,10 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 		cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
 
 		// we create a new cached context, and we don't commit the previous one with EVM deposit
-		tmpCtx, commit := ctx.CacheContext()
+		tmpCtxRevert, commitRevert := ctx.CacheContext()
 		err = func() error {
 			err := k.PayGasAndUpdateCctx(
-				tmpCtx,
+				tmpCtxRevert,
 				senderChain.ChainId,
 				cctx,
 				cctx.InboundTxParams.Amount,
@@ -239,13 +239,13 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 				return err
 			}
 			// Update nonce using senderchain id as this is a revert tx and would go back to the original sender
-			return k.UpdateNonce(tmpCtx, senderChain.ChainId, cctx)
+			return k.UpdateNonce(tmpCtxRevert, senderChain.ChainId, cctx)
 		}()
 		if err != nil {
 			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))
 			return
 		}
-		commit()
+		commitRevert()
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
 		return
 	}

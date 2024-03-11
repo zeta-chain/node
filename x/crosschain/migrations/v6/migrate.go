@@ -25,7 +25,8 @@ type crosschainKeeper interface {
 // MigrateStore migrates the x/crosschain module state from the consensus version 4 to 5
 // It resets the aborted zeta amount to use the inbound tx amount instead in situations where the outbound cctx is never created.
 func MigrateStore(ctx sdk.Context, crosschainKeeper crosschainKeeper) error {
-	cctxListV14 := GetV14CCTX(ctx, crosschainKeeper)
+	tmpctx, commit := ctx.CacheContext()
+	cctxListV14 := GetV14CCTX(tmpctx, crosschainKeeper)
 	for _, cctx := range cctxListV14 {
 		OutBoundParamsV15 := make([]*types.OutboundTxParams, len(cctx.OutboundTxParams))
 		for j, outBoundParams := range cctx.OutboundTxParams {
@@ -69,8 +70,9 @@ func MigrateStore(ctx sdk.Context, crosschainKeeper crosschainKeeper) error {
 			RelayedMessage:   cctx.RelayedMessage,
 			EventIndex:       1, // We don't have this information in the old version
 		}
-		crosschainKeeper.SetCrossChainTx(ctx, cctxV15)
+		crosschainKeeper.SetCrossChainTx(tmpctx, cctxV15)
 	}
+	commit()
 	return nil
 }
 
