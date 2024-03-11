@@ -15,6 +15,7 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 
 ### Features
 
