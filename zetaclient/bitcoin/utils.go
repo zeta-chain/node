@@ -188,7 +188,8 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 		feeRate = defaultDepositorFeeRate // use default fee rate if calculation fails, should not happen
 		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
 	}
-	feeRate = feeRate * common.DefaultGasPriceMultiplier
+	// #nosec G701 always in range
+	feeRate = int64(float64(feeRate) * common.BTCOuttxGasPriceMultiplier)
 	return DepositorFee(feeRate)
 }
 

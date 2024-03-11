@@ -75,8 +75,10 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
-	// double the gas price to avoid gas price spike
-	gasPrice = gasPrice * common.DefaultGasPriceMultiplier
+	// apply gas price multiplier for the chain
+	multiplier := common.GasPriceMultiplier(chain.ChainId)
+	// #nosec G701 always in range
+	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
