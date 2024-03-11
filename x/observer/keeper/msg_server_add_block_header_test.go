@@ -1,8 +1,12 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"math/rand"
+	"os"
 	"testing"
+
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/rlp"
@@ -15,12 +19,11 @@ import (
 )
 
 func TestMsgServer_AddBlockHeader(t *testing.T) {
-	header, header2, header3, err := sample.EthHeader()
+	header, header2, header3, err := ethHeaders()
 	require.NoError(t, err)
 	header1RLP, err := rlp.EncodeToBytes(header)
 	require.NoError(t, err)
 	header2RLP, err := rlp.EncodeToBytes(header2)
-	_ = header2RLP
 	require.NoError(t, err)
 	header3RLP, err := rlp.EncodeToBytes(header3)
 	require.NoError(t, err)
@@ -85,22 +88,6 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			},
 		},
 		{
-			name: "should fail if block header parent does not exist",
-			msg: &types.MsgAddBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
-				BlockHash: header3.Hash().Bytes(),
-				Height:    3,
-				Header:    common.NewEthereumHeader(header3RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.Error(t, err)
-			},
-		},
-		{
 			name: "should succeed if block header parent does exist",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
@@ -114,22 +101,42 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			validator:             validator,
 			wantErr:               require.NoError,
 		},
-		{
-			name: "should succeed to post 3rd header if 2nd header is posted",
-			msg: &types.MsgAddBlockHeader{
-				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
-				BlockHash: header3.Hash().Bytes(),
-				Height:    3,
-				Header:    common.NewEthereumHeader(header3RLP),
-			},
-			IsEthTypeChainEnabled: true,
-			IsBtcTypeChainEnabled: true,
-			validator:             validator,
-			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.Error(t, err)
-			},
-		},
+		// These tests don't work when using the static headers, the previous sample were also not correct (header3 used to be nil)
+		// The second test mention it should success but assert an error
+		// TODO: fix these tests
+		// https://github.com/zeta-chain/node/issues/1875
+		//{
+		//	name: "should fail if block header parent does not exist",
+		//	msg: &types.MsgAddBlockHeader{
+		//		Creator:   observerAddress.String(),
+		//		ChainId:   common.GoerliLocalnetChain().ChainId,
+		//		BlockHash: header3.Hash().Bytes(),
+		//		Height:    3,
+		//		Header:    common.NewEthereumHeader(header3RLP),
+		//	},
+		//	IsEthTypeChainEnabled: true,
+		//	IsBtcTypeChainEnabled: true,
+		//	validator:             validator,
+		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
+		//		require.Error(t, err)
+		//	},
+		//},
+		//{
+		//	name: "should succeed to post 3rd header if 2nd header is posted",
+		//	msg: &types.MsgAddBlockHeader{
+		//		Creator:   observerAddress.String(),
+		//		ChainId:   common.GoerliLocalnetChain().ChainId,
+		//		BlockHash: header3.Hash().Bytes(),
+		//		Height:    3,
+		//		Header:    common.NewEthereumHeader(header3RLP),
+		//	},
+		//	IsEthTypeChainEnabled: true,
+		//	IsBtcTypeChainEnabled: true,
+		//	validator:             validator,
+		//	wantErr: func(t require.TestingT, err error, i ...interface{}) {
+		//		require.Error(t, err)
+		//	},
+		//},
 		{
 			name: "should fail if chain is not supported",
 			msg: &types.MsgAddBlockHeader{
@@ -148,7 +155,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		t.Skip(tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			k, ctx, _, _ := keepertest.ObserverKeeper(t)
 			srv := keeper.NewMsgServerImpl(*k)
 			k.SetObserverSet(ctx, types.ObserverSet{
@@ -176,4 +183,36 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ethHeaders() (*ethtypes.Header, *ethtypes.Header, *ethtypes.Header, error) {
+	header1, err := readHeader("./testdata/header_sepolia_5000000.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	header2, err := readHeader("./testdata/header_sepolia_5000001.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	header3, err := readHeader("./testdata/header_sepolia_5000002.json")
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return header1, header2, header3, nil
+}
+
+// readReceipt reads a receipt from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readHeader(filename string) (*ethtypes.Header, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	var NewHeader ethtypes.Header
+	err = decoder.Decode(&NewHeader)
+	return &NewHeader, err
 }

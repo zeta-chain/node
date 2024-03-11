@@ -59,6 +59,8 @@ func TestProofGeneration(t *testing.T) {
 }
 
 // readHeader reads a header from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
 func readHeader() (header types.Header, err error) {
 	file, err := os.Open(headerPath)
 	if err != nil {
@@ -72,6 +74,8 @@ func readHeader() (header types.Header, err error) {
 }
 
 // readReceipt reads a receipt from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
 func readReceipt(index int) (receipt types.Receipt, err error) {
 	filePath := fmt.Sprintf("%s%d.json", receiptPrefixPath, index)
 
