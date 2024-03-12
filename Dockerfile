@@ -14,6 +14,7 @@ WORKDIR /go/delivery/zeta-node
 # Copy module files and download dependencies
 COPY go.mod .
 COPY go.sum .
+
 RUN go mod download
 
 # Copy the rest of the source code and build the application

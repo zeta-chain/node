@@ -7,7 +7,7 @@ rpcs:
   evm: "http://0.0.0.0:8545"
   bitcoin:
     host: "0.0.0.0:18443"
-    user: "e2e"
+    user: "smoketest"
     pass: "123"
     http_post_mode: true
     disable_tls: true

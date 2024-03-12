@@ -32,6 +32,7 @@
 * [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
 * [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
 * [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
+* [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
 
 ### Fixes
 
@@ -94,7 +95,6 @@
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
-
 * [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
 * [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
 

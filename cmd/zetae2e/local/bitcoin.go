@@ -17,6 +17,8 @@ func bitcoinTestRoutine(
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
 	initBitcoinNetwork bool,
+	testHeader bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -59,18 +61,14 @@ func bitcoinTestRoutine(
 		bitcoinRunner.WaitForMinedCCTX(txERC20Deposit)
 
 		bitcoinRunner.SetupBitcoinAccount(initBitcoinNetwork)
-		bitcoinRunner.DepositBTC(true)
+		bitcoinRunner.DepositBTC(testHeader)
 
 		// run bitcoin test
 		// Note: due to the extensive block generation in Bitcoin localnet, block header test is run first
 		// to make it faster to catch up with the latest block header
 		testsToRun, err := bitcoinRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestBitcoinWithdrawInvalidAddressName,
-			e2etests.TestBitcoinWithdrawName,
-			e2etests.TestZetaWithdrawBTCRevertName,
-			e2etests.TestCrosschainSwapName,
-			e2etests.TestBitcoinWithdrawRestrictedName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("bitcoin tests failed: %v", err)

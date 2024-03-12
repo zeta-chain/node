@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	zetae2econfig "github.com/zeta-chain/zetacore/cmd/zetae2e/config"
 	"github.com/zeta-chain/zetacore/e2e/config"
+	"github.com/zeta-chain/zetacore/e2e/e2etests"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"golang.org/x/sync/errgroup"
@@ -19,13 +20,16 @@ const (
 	flagContractsDeployed = "deployed"
 	flagWaitForHeight     = "wait-for"
 	FlagConfigFile        = "config"
+	flagConfigOut         = "config-out"
 	flagVerbose           = "verbose"
 	flagTestAdmin         = "test-admin"
+	flagTestPerformance   = "test-performance"
 	flagTestCustom        = "test-custom"
 	flagSkipRegular       = "skip-regular"
+	flagLight             = "light"
 	flagSetupOnly         = "setup-only"
-	flagConfigOut         = "config-out"
 	flagSkipSetup         = "skip-setup"
+	flagSkipBitcoinSetup  = "skip-bitcoin-setup"
 )
 
 var (
@@ -55,6 +59,11 @@ func NewLocalCmd() *cobra.Command {
 		"",
 		"config file to use for the tests",
 	)
+	cmd.Flags().String(
+		flagConfigOut,
+		"",
+		"config file to write the deployed contracts from the setup",
+	)
 	cmd.Flags().Bool(
 		flagVerbose,
 		false,
@@ -64,6 +73,11 @@ func NewLocalCmd() *cobra.Command {
 		flagTestAdmin,
 		false,
 		"set to true to run admin tests",
+	)
+	cmd.Flags().Bool(
+		flagTestPerformance,
+		false,
+		"set to true to run performance tests",
 	)
 	cmd.Flags().Bool(
 		flagTestCustom,
@@ -76,19 +90,24 @@ func NewLocalCmd() *cobra.Command {
 		"set to true to skip regular tests",
 	)
 	cmd.Flags().Bool(
+		flagLight,
+		false,
+		"run the most basic regular tests, useful for quick checks",
+	)
+	cmd.Flags().Bool(
 		flagSetupOnly,
 		false,
 		"set to true to only setup the networks",
-	)
-	cmd.Flags().String(
-		flagConfigOut,
-		"",
-		"config file to write the deployed contracts from the setup",
 	)
 	cmd.Flags().Bool(
 		flagSkipSetup,
 		false,
 		"set to true to skip setup",
+	)
+	cmd.Flags().Bool(
+		flagSkipBitcoinSetup,
+		false,
+		"set to true to skip bitcoin wallet setup",
 	)
 
 	return cmd
@@ -108,8 +127,15 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
+	configOut, err := cmd.Flags().GetString(flagConfigOut)
+	if err != nil {
+		panic(err)
+	}
 	testAdmin, err := cmd.Flags().GetBool(flagTestAdmin)
+	if err != nil {
+		panic(err)
+	}
+	testPerformance, err := cmd.Flags().GetBool(flagTestPerformance)
 	if err != nil {
 		panic(err)
 	}
@@ -121,11 +147,11 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	setupOnly, err := cmd.Flags().GetBool(flagSetupOnly)
+	light, err := cmd.Flags().GetBool(flagLight)
 	if err != nil {
 		panic(err)
 	}
-	configOut, err := cmd.Flags().GetString(flagConfigOut)
+	setupOnly, err := cmd.Flags().GetBool(flagSetupOnly)
 	if err != nil {
 		panic(err)
 	}
@@ -133,12 +159,23 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if err != nil {
 		panic(err)
 	}
+	skipBitcoinSetup, err := cmd.Flags().GetBool(flagSkipBitcoinSetup)
+	if err != nil {
+		panic(err)
+	}
+
+	logger := runner.NewLogger(verbose, color.FgWhite, "setup")
 
 	testStartTime := time.Now()
 	logger.Print("starting E2E tests")
 
 	if testAdmin {
 		logger.Print("⚠️ admin tests enabled")
+	}
+
+	if testPerformance {
+		logger.Print("⚠️ performance tests enabled, regular tests will be skipped")
+		skipRegular = true
 	}
 
 	// start timer
@@ -166,7 +203,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	setCosmosConfig()
 
 	// wait for Genesis
-	// if setup is skipp, we assume that the genesis is already created
+	// if setup is skip, we assume that the genesis is already created
 	if !skipSetup {
 		logger.Print("⏳ wait 70s for genesis")
 		time.Sleep(70 * time.Second)
@@ -236,16 +273,69 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	// run tests
 	var eg errgroup.Group
 	if !skipRegular {
-		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose))
-		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose))
-		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipSetup))
-		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose))
+		// defines all tests, if light is enabled, only the most basic tests are run
+		erc20Tests := []string{
+			e2etests.TestERC20WithdrawName,
+			e2etests.TestMultipleWithdrawsName,
+			e2etests.TestERC20DepositAndCallRefundName,
+			e2etests.TestZRC20SwapName,
+		}
+		erc20AdvancedTests := []string{
+			e2etests.TestERC20DepositRestrictedName,
+		}
+		zetaTests := []string{
+			e2etests.TestZetaWithdrawName,
+			e2etests.TestMessagePassingName,
+			e2etests.TestMessagePassingRevertFailName,
+			e2etests.TestMessagePassingRevertSuccessName,
+		}
+		zetaAdvancedTests := []string{
+			e2etests.TestZetaDepositRestrictedName,
+		}
+		bitcoinTests := []string{
+			e2etests.TestBitcoinWithdrawName,
+			e2etests.TestBitcoinWithdrawInvalidAddressName,
+			e2etests.TestZetaWithdrawBTCRevertName,
+			e2etests.TestCrosschainSwapName,
+		}
+		bitcoinAdvancedTests := []string{
+			e2etests.TestBitcoinWithdrawRestrictedName,
+		}
+		ethereumTests := []string{
+			e2etests.TestEtherWithdrawName,
+			e2etests.TestContextUpgradeName,
+			e2etests.TestEtherDepositAndCallName,
+			e2etests.TestDepositAndCallRefundName,
+		}
+		ethereumAdvancedTests := []string{
+			e2etests.TestEtherWithdrawRestrictedName,
+		}
+
+		if !light {
+			erc20Tests = append(erc20Tests, erc20AdvancedTests...)
+			zetaTests = append(zetaTests, zetaAdvancedTests...)
+			bitcoinTests = append(bitcoinTests, bitcoinAdvancedTests...)
+			ethereumTests = append(ethereumTests, ethereumAdvancedTests...)
+		}
+
+		eg.Go(erc20TestRoutine(conf, deployerRunner, verbose, erc20Tests...))
+		eg.Go(zetaTestRoutine(conf, deployerRunner, verbose, zetaTests...))
+		eg.Go(bitcoinTestRoutine(conf, deployerRunner, verbose, !skipBitcoinSetup, !light, bitcoinTests...))
+		eg.Go(ethereumTestRoutine(conf, deployerRunner, verbose, !light, ethereumTests...))
 	}
 	if testAdmin {
-		eg.Go(adminTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
+			e2etests.TestPauseZRC20Name,
+			e2etests.TestUpdateBytecodeName,
+			e2etests.TestDepositEtherLiquidityCapName,
+		))
+	}
+	if testPerformance {
+		eg.Go(ethereumDepositPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherDepositName))
+		eg.Go(ethereumWithdrawPerformanceRoutine(conf, deployerRunner, verbose, e2etests.TestStressEtherWithdrawName))
 	}
 	if testCustom {
-		eg.Go(miscTestRoutine(conf, deployerRunner, verbose))
+		eg.Go(miscTestRoutine(conf, deployerRunner, verbose, e2etests.TestMyTestName))
 	}
 
 	if err := eg.Wait(); err != nil {
