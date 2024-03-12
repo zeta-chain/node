@@ -450,7 +450,7 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print(" --- 📜zEVM contracts ---")
 	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())
 	runner.Logger.Print("ETHZRC20:       %s", runner.ETHZRC20Addr.Hex())
-	runner.Logger.Print("ERC20ZRC20:      %s", runner.ERC20ZRC20Addr.Hex())
+	runner.Logger.Print("ERC20ZRC20:     %s", runner.ERC20ZRC20Addr.Hex())
 	runner.Logger.Print("BTCZRC20:       %s", runner.BTCZRC20Addr.Hex())
 	runner.Logger.Print("UniswapFactory: %s", runner.UniswapV2FactoryAddr.Hex())
 	runner.Logger.Print("UniswapRouter:  %s", runner.UniswapV2RouterAddr.Hex())
