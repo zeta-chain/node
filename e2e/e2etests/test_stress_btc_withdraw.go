@@ -30,6 +30,8 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 		panic("Invalid number of withdrawals specified for TestStressBTCWithdraw.")
 	}
 
+	r.SetBtcAddress(r.Name, false)
+
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete

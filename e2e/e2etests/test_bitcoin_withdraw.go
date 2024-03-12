@@ -30,6 +30,8 @@ func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
 	}
 	amount := big.NewInt(int64(withdrawalAmountSat))
 
+	r.SetBtcAddress(r.Name, false)
+
 	WithdrawBitcoin(r, amount)
 }
 
@@ -48,6 +50,8 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	amount := big.NewInt(int64(withdrawalAmountSat))
+
+	r.SetBtcAddress(r.Name, false)
 
 	WithdrawBitcoinRestricted(r, amount)
 }
