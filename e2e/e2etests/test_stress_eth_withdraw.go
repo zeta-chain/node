@@ -45,11 +45,11 @@ func TestStressEtherWithdraw(r *runner.E2ERunner, args []string) {
 	// send the withdraws
 	for i := 0; i < numWithdraws; i++ {
 		i := i
-		tx, err := r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
+		tx, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		if receipt.Status == 0 {
 			//r.Logger.Info("index %d: withdraw evm tx failed", index)
 			panic(fmt.Sprintf("index %d: withdraw evm tx %s failed", i, tx.Hash().Hex()))

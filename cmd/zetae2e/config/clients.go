@@ -35,7 +35,7 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get btc client: %w", err)
 	}
-	goerliClient, goerliAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
+	evmClient, evmAuth, err := getEVMClient(ctx, conf.RPCs.EVM, evmPrivKey)
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get evm client: %w", err)
 	}
@@ -48,8 +48,8 @@ func getClientsFromConfig(ctx context.Context, conf config.Config, evmPrivKey st
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to get zevm client: %w", err)
 	}
 	return btcRPCClient,
-		goerliClient,
-		goerliAuth,
+		evmClient,
+		evmAuth,
 		cctxClient,
 		fungibleClient,
 		authClient,
@@ -84,7 +84,7 @@ func getBtcClient(rpcConf config.BitcoinRPC) (*rpcclient.Client, error) {
 	return rpcclient.New(connCfg, nil)
 }
 
-// getEVMClient get goerli client
+// getEVMClient get evm client
 func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {

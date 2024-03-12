@@ -14,10 +14,12 @@
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+* [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
 
 ### Features
 
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+* [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 
 ### Tests
@@ -27,10 +29,20 @@
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
+* [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
+* [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
+
+### Fixes
+
+* [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+### CI
+
+* [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 
 ## Version: v14
 

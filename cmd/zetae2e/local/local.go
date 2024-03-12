@@ -242,7 +242,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startTime := time.Now()
 		deployerRunner.SetupEVM(contractsDeployed)
 		deployerRunner.SetZEVMContracts()
-		deployerRunner.MintUSDTOnEvm(10000)
+		deployerRunner.MintERC20OnEvm(10000)
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 

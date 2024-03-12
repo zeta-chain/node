@@ -15,7 +15,7 @@ import (
 // these are initialized and updated at runtime at every height
 type ZetaCoreContext struct {
 	coreContextLock    *sync.RWMutex
-	keygen             *observertypes.Keygen
+	keygen             observertypes.Keygen
 	chainsEnabled      []common.Chain
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
@@ -24,7 +24,7 @@ type ZetaCoreContext struct {
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
 // it is initializing chain params from provided config
-func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
+func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	evmChainParams := make(map[int64]*observertypes.ChainParams)
 	for _, e := range cfg.EVMChainConfigs {
 		evmChainParams[e.Chain.ChainId] = &observertypes.ChainParams{}
@@ -45,9 +45,12 @@ func NewZetaCoreContext(cfg *config.Config) *ZetaCoreContext {
 func (c *ZetaCoreContext) GetKeygen() observertypes.Keygen {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	copiedPubkeys := make([]string, len(c.keygen.GranteePubkeys))
-	copy(copiedPubkeys, c.keygen.GranteePubkeys)
 
+	var copiedPubkeys []string
+	if c.keygen.GranteePubkeys != nil {
+		copiedPubkeys = make([]string, len(c.keygen.GranteePubkeys))
+		copy(copiedPubkeys, c.keygen.GranteePubkeys)
+	}
 	return observertypes.Keygen{
 		Status:         c.keygen.Status,
 		GranteePubkeys: copiedPubkeys,
@@ -145,7 +148,7 @@ func (c *ZetaCoreContext) Update(
 			}
 		}
 	}
-	c.keygen = keygen
+	c.keygen = *keygen
 	c.chainsEnabled = newChains
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {

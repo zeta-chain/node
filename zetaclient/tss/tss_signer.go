@@ -127,7 +127,7 @@ func NewTSS(
 	return &newTss, nil
 }
 
-func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg *config.Config, tssPassword string) (*tss.TssServer, error) {
+func SetupTSSServer(peer p2p.AddrList, privkey tmcrypto.PrivKey, preParams *keygen.LocalPreParams, cfg config.Config, tssPassword string) (*tss.TssServer, error) {
 	bootstrapPeers := peer
 	log.Info().Msgf("Peers AddrList %v", bootstrapPeers)
 
