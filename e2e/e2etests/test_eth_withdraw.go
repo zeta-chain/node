@@ -27,26 +27,26 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	}
 
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, approvedAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.EVMTransaction(*tx, "approve")
 
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
 	r.Logger.EVMReceipt(*receipt, "approve")
 
 	// withdraw
-	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
+	tx, err = r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), withdrawalAmount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.EVMTransaction(*tx, "withdraw")
 
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
@@ -78,13 +78,13 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 	}
 
 	// approve
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, r.ETHZRC20Addr, approvedAmount)
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, r.ETHZRC20Addr, approvedAmount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.EVMTransaction(*tx, "approve")
 
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("approve failed")
 	}
@@ -92,13 +92,13 @@ func TestEtherWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	// withdraw
 	restrictedAddress := ethcommon.HexToAddress(testutils.RestrictedEVMAddressTest)
-	tx, err = r.ETHZRC20.Withdraw(r.ZevmAuth, restrictedAddress.Bytes(), withdrawalAmount)
+	tx, err = r.ETHZRC20.Withdraw(r.ZEVMAuth, restrictedAddress.Bytes(), withdrawalAmount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.EVMTransaction(*tx, "withdraw to restricted address")
 
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 0 {
 		panic("withdraw failed")
 	}
