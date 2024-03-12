@@ -98,6 +98,10 @@ install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
+install-zetatool: go.sum
+		@echo "--> Installing zetatool"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetatool
+
 ###############################################################################
 ###                             Local network                               ###
 ###############################################################################
