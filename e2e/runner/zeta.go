@@ -4,13 +4,25 @@ import (
 	"fmt"
 	"math/big"
 
-	utils2 "github.com/zeta-chain/zetacore/e2e/utils"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
+	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
+
+// WaitForTxReceiptOnZEVM waits for a tx receipt on ZEVM
+func (runner *E2ERunner) WaitForTxReceiptOnZEVM(tx *ethtypes.Transaction) {
+	defer func() {
+		runner.Unlock()
+	}()
+	runner.Lock()
+
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	if receipt.Status != 1 {
+		panic("tx failed")
+	}
+}
 
 // WaitForMinedCCTX waits for a cctx to be mined from a tx
 func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
@@ -19,7 +31,7 @@ func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	}()
 	runner.Lock()
 
-	cctx := utils2.WaitCctxMinedByInTxHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	cctx := utils.WaitCctxMinedByInTxHash(runner.Ctx, txHash.Hex(), runner.CctxClient, runner.Logger, runner.CctxTimeout)
 	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
 		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
 			cctx.CctxStatus.Status.String(),
@@ -62,7 +74,7 @@ func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big
 	}
 	runner.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils2.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	runner.Logger.EVMReceipt(*receipt, "approve")
 	if receipt.Status != 1 {
 		panic("approve tx failed")
@@ -89,7 +101,7 @@ func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big
 	}
 	runner.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils2.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	runner.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 1 {
 		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))

@@ -39,6 +39,7 @@ services:
       - "9545:8545"
       - "9546:8546"
       - "26657:26657"
+      - "6060:6060"
       - "9090:9090"
     networks:
       mynetwork:
@@ -120,7 +121,7 @@ services:
       -regtest=1
       -rpcallowip=172.20.0.0/16
       -rpcbind=0.0.0.0
-      -rpcauth=e2e:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
+      -rpcauth=smoketest:63acf9b8dccecce914d85ff8c044b78b$$5892f9bbc84f4364e79f0970039f88bdd823f168d4acc76099ab97b14a766a99
       -txindex=1
 
   orchestrator:
@@ -137,5 +138,5 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.2
-    entrypoint: ["/work/start.sh", "local"]
+    entrypoint: ["/work/start-zetae2e.sh", "local"]
 
