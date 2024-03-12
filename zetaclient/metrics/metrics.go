@@ -74,7 +74,7 @@ var (
 	LastStartTime = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: "zetaclient",
 		Name:      "last_start_timestamp_seconds",
-		Help:      "The start time in Unix time",
+		Help:      "Start time in Unix time",
 	})
 )
 
