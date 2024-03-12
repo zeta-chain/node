@@ -15,6 +15,7 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ### Features
 
@@ -37,7 +38,6 @@
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
-* [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ## Version: v14
 
