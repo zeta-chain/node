@@ -46,6 +46,36 @@ var (
 		Name:      "hotkey_burn_rate",
 		Help:      "Fee burn rate of the hotkey",
 	})
+
+	NumberOfUTXO = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "utxo_number",
+		Help:      "BTC number of UTXOs",
+	})
+
+	LastScannedBlockNumber = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "last_scanned_block_number",
+		Help:      "Last scanned block number per chain",
+	}, []string{"chain"})
+
+	LastCoreBlockNumber = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "last_core_block_number",
+		Help:      "Last core block number",
+	})
+
+	Info = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "info",
+		Help:      "Info",
+	}, []string{"version"})
+
+	LastStartTime = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: "zetaclient",
+		Name:      "last_start_time_seconds",
+		Help:      "The start time in Unix time",
+	})
 )
 
 func NewMetrics() (*Metrics, error) {
