@@ -12,6 +12,7 @@ import (
 )
 
 func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
+	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgUpdateTssAddress
@@ -21,14 +22,14 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 			name: "invalid creator",
 			msg: types.NewMsgUpdateTssAddress(
 				"invalid_address",
-				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
+				sample.PubKeyString(),
 			),
 			error: true,
 		},
 		{
 			name: "invalid pubkey",
 			msg: types.NewMsgUpdateTssAddress(
-				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				sample.AccAddress(),
 				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
 			),
 			error: true,
@@ -36,8 +37,8 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 		{
 			name: "valid msg",
 			msg: types.NewMsgUpdateTssAddress(
-				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
-				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p",
+				sample.AccAddress(),
+				sample.PubKeyString(),
 			),
 			error: false,
 		},
@@ -45,7 +46,6 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

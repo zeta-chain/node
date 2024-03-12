@@ -14,6 +14,7 @@ import (
 )
 
 func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
+	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgMigrateTssFunds
@@ -31,7 +32,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid chain id",
 			msg: types.NewMsgMigrateTssFunds(
-				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				sample.AccAddress(),
 				999,
 				sdkmath.NewUintFromString("100000"),
 			),
@@ -40,7 +41,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid amount",
 			msg: types.NewMsgMigrateTssFunds(
-				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				sample.AccAddress(),
 				common.DefaultChainsList()[0].ChainId,
 				sdkmath.NewUintFromString("0"),
 			),
@@ -49,7 +50,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 		{
 			name: "valid msg",
 			msg: types.NewMsgMigrateTssFunds(
-				"zeta15ruj2tc76pnj9xtw64utktee7cc7w6vzaes73z",
+				sample.AccAddress(),
 				common.DefaultChainsList()[0].ChainId,
 				sdkmath.NewUintFromString("100000"),
 			),
@@ -58,7 +59,6 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

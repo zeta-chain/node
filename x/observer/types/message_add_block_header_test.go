@@ -17,8 +17,9 @@ import (
 )
 
 func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
+	keeper.SetConfig(false)
 	var header ethtypes.Header
-	file, err := os.Open("../../../common/test_data/eth_header_18495266.json")
+	file, err := os.Open("../../../common/testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
@@ -49,7 +50,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid chain id",
 			msg: types.NewMsgAddBlockHeader(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				-1,
 				[]byte{},
 				6,
@@ -60,7 +61,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid header",
 			msg: types.NewMsgAddBlockHeader(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				5,
 				sample.Hash().Bytes(),
 				6,
@@ -71,7 +72,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid blockHash length",
 			msg: types.NewMsgAddBlockHeader(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				5,
 				sample.Hash().Bytes()[:31],
 				6,
@@ -82,7 +83,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.NewMsgAddBlockHeader(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				5,
 				header.Hash().Bytes(),
 				18495266,
@@ -94,7 +95,6 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

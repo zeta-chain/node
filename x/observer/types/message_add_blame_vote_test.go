@@ -13,6 +13,7 @@ import (
 )
 
 func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
+	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgAddBlameVote
@@ -30,7 +31,7 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid chain id",
 			msg: types.NewMsgAddBlameVoteMsg(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				-1,
 				sample.BlameRecordsList(t, 1)[0],
 			),
@@ -39,7 +40,7 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.NewMsgAddBlameVoteMsg(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				5,
 				sample.BlameRecordsList(t, 1)[0],
 			),
@@ -49,7 +50,6 @@ func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)

@@ -12,6 +12,7 @@ import (
 )
 
 func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
+	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
 		msg   *types.MsgWhitelistERC20
@@ -33,7 +34,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid erc20",
 			msg: types.NewMsgWhitelistERC20(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				"0x0",
 				1,
 				"name",
@@ -46,7 +47,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid decimals",
 			msg: types.NewMsgWhitelistERC20(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				sample.EthAddress().Hex(),
 				1,
 				"name",
@@ -59,7 +60,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid gas limit",
 			msg: types.NewMsgWhitelistERC20(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				sample.EthAddress().Hex(),
 				1,
 				"name",
@@ -72,7 +73,7 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.NewMsgWhitelistERC20(
-				"zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+				sample.AccAddress(),
 				sample.EthAddress().Hex(),
 				1,
 				"name",
@@ -86,7 +87,6 @@ func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			keeper.SetConfig(false)
 			err := tt.msg.ValidateBasic()
 			if tt.error {
 				require.Error(t, err)
