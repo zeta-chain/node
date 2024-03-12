@@ -23,8 +23,13 @@ func TestMsgAbortStuckCCTX_ValidateBasic(t *testing.T) {
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "valid",
+			name: "invalid cctx index",
 			msg:  types.NewMsgAbortStuckCCTX(sample.AccAddress(), "cctx_index"),
+			err:  types.ErrInvalidCCTXIndex,
+		},
+		{
+			name: "valid",
+			msg:  types.NewMsgAbortStuckCCTX(sample.AccAddress(), sample.GetCctxIndexFromString("test")),
 			err:  nil,
 		},
 	}
