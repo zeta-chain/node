@@ -50,7 +50,7 @@ var (
 	NumberOfUTXO = promauto.NewGauge(prometheus.GaugeOpts{
 		Namespace: "zetaclient",
 		Name:      "utxo_number",
-		Help:      "BTC number of UTXOs",
+		Help:      "Number of UTXOs",
 	})
 
 	LastScannedBlockNumber = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -68,7 +68,7 @@ var (
 	Info = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "zetaclient",
 		Name:      "info",
-		Help:      "Info",
+		Help:      "Info about Zetaclient environment",
 	}, []string{"version"})
 
 	LastStartTime = promauto.NewGauge(prometheus.GaugeOpts{
