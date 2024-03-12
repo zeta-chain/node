@@ -68,7 +68,7 @@ var (
 	Info = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "zetaclient",
 		Name:      "info",
-		Help:      "Info about Zetaclient environment",
+		Help:      "Information about Zetaclient environment",
 	}, []string{"version"})
 
 	LastStartTime = promauto.NewGauge(prometheus.GaugeOpts{
