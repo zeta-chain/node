@@ -7,9 +7,9 @@ import (
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
-func TestKeeper_GetDistributions(t *testing.T) {
+func TestKeeper_GetRewardsDistributions(t *testing.T) {
 	t.Run("Return fractions of block reward", func(t *testing.T) {
-		val, obs, tss := types.GetDistributions(types.Params{
+		val, obs, tss := types.GetRewardsDistributions(types.Params{
 			ValidatorEmissionPercentage: "0.5",
 			ObserverEmissionPercentage:  "0.25",
 			TssSignerEmissionPercentage: "0.25",
@@ -21,7 +21,7 @@ func TestKeeper_GetDistributions(t *testing.T) {
 	})
 
 	t.Run("Return zero in case of invalid string", func(t *testing.T) {
-		val, obs, tss := types.GetDistributions(types.Params{
+		val, obs, tss := types.GetRewardsDistributions(types.Params{
 			ValidatorEmissionPercentage: "invalid",
 			ObserverEmissionPercentage:  "invalid",
 			TssSignerEmissionPercentage: "invalid",

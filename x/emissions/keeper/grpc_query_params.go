@@ -15,5 +15,5 @@ func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	return &types.QueryParamsResponse{Params: k.GetParamSetIfExists(ctx)}, nil
+	return &types.QueryParamsResponse{Params: k.GetParamsIfExists(ctx)}, nil
 }

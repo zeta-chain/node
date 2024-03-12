@@ -5,10 +5,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetDistributions returns the current distribution of rewards
+// GetRewardsDistributions returns the current distribution of rewards
 // for validators, observers and TSS signers
 // If the percentage is not set, it returns 0
-func GetDistributions(params Params) (sdkmath.Int, sdkmath.Int, sdkmath.Int) {
+func GetRewardsDistributions(params Params) (sdkmath.Int, sdkmath.Int, sdkmath.Int) {
 	// Fetch the validator rewards, use 0 if the percentage is not set
 	validatorRewards := sdk.NewInt(0)
 	validatorRewardsDec, err := sdk.NewDecFromStr(params.ValidatorEmissionPercentage)

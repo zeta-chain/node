@@ -15,8 +15,8 @@ type EmissionParamStore struct {
 	mock.Mock
 }
 
-// GetParamSetIfExists provides a mock function with given fields: ctx, ps
-func (_m *EmissionParamStore) GetParamSetIfExists(ctx types.Context, ps paramstypes.ParamSet) {
+// GetParamsIfExists provides a mock function with given fields: ctx, ps
+func (_m *EmissionParamStore) GetParamsIfExists(ctx types.Context, ps paramstypes.ParamSet) {
 	_m.Called(ctx, ps)
 }
 
