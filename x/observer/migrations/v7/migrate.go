@@ -14,6 +14,7 @@ type observerKeeper interface {
 
 // MigrateStore performs in-place store migrations from v6 to v7
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
+	ctx.Logger().Info("Migrating observer store from v6 to v7")
 	return MigratePolicies(ctx, observerKeeper)
 }
 

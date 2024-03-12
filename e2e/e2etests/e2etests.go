@@ -67,7 +67,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMultipleERC20DepositName,
-		"deposit USDT ERC20 into ZEVM in multiple deposits",
+		"deposit ERC20 into ZEVM in multiple deposits",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount", DefaultValue: "1000000000"},
 			runner.ArgDefinition{Description: "count", DefaultValue: "3"},
@@ -117,7 +117,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMessagePassingName,
-		"goerli->goerli message passing (sending ZETA only)",
+		"evm->evm message passing (sending ZETA only)",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
@@ -125,7 +125,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestZRC20SwapName,
-		"swap ZRC20 USDT for ZRC20 ETH",
+		"swap ZRC20 ERC20 for ZRC20 ETH",
 		[]runner.ArgDefinition{},
 		TestZRC20Swap,
 	),
@@ -153,7 +153,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMessagePassingRevertFailName,
-		"goerli->goerli message passing (revert fail)",
+		"evm->evm message passing (revert fail)",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},
@@ -161,7 +161,7 @@ var AllE2ETests = []runner.E2ETest{
 	),
 	runner.NewE2ETest(
 		TestMessagePassingRevertSuccessName,
-		"goerli->goerli message passing (revert success)",
+		"evm->evm message passing (revert success)",
 		[]runner.ArgDefinition{
 			runner.ArgDefinition{Description: "amount in azeta", DefaultValue: "10000000000000000000"},
 		},

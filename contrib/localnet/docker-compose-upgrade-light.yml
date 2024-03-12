@@ -1,0 +1,32 @@
+version: "3"
+
+# This docker-compose is similar to the docker-compose-upgrade.yml, but it uses a smaller height option for the upgrade (90)
+# By using 90, the orchestrator will automatically run setup only for the first e2e test execution.
+
+services:
+  zetacore0:
+    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade", "90"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
+
+  zetacore1:
+    entrypoint: ["/root/start-zetacored.sh", "2", "upgrade", "90"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
+
+  zetaclient0:
+    entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
+
+  zetaclient1:
+    entrypoint: ["/root/start-zetaclientd.sh", "background"]
+    build:
+      context: ../../.
+      dockerfile: Dockerfile-upgrade
+
+  orchestrator:
+    entrypoint: ["/work/start-zetae2e.sh", "local", "upgrade", "90"]

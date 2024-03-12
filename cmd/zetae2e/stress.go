@@ -89,12 +89,12 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	}
 
 	// Initialize clients ----------------------------------------------------------------
-	goerliClient, err := ethclient.Dial(conf.RPCs.EVM)
+	evmClient, err := ethclient.Dial(conf.RPCs.EVM)
 	if err != nil {
 		panic(err)
 	}
 
-	bal, err := goerliClient.BalanceAt(context.TODO(), local.DeployerAddress, nil)
+	bal, err := evmClient.BalanceAt(context.TODO(), local.DeployerAddress, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +171,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 			panic(err)
 		}
 		e2eTest.ETHZRC20Addr = ethZRC20Addr
-		e2eTest.ETHZRC20, err = zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZevmClient)
+		e2eTest.ETHZRC20, err = zrc20.NewZRC20(e2eTest.ETHZRC20Addr, e2eTest.ZEVMClient)
 		if err != nil {
 			panic(err)
 		}
@@ -190,21 +190,21 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	//Pre-approve ETH withdraw on ZEVM
 	fmt.Printf("approving ETH ZRC20...\n")
 	ethZRC20 := e2eTest.ETHZRC20
-	tx, err := ethZRC20.Approve(e2eTest.ZevmAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18))
+	tx, err := ethZRC20.Approve(e2eTest.ZEVMAuth, e2eTest.ETHZRC20Addr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZevmClient, tx, logger, e2eTest.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(ctx, e2eTest.ZEVMClient, tx, logger, e2eTest.ReceiptTimeout)
 	fmt.Printf("eth zrc20 approve receipt: status %d\n", receipt.Status)
 
 	// Get current nonce on zevm for DeployerAddress - Need to keep track of nonce at client level
-	blockNum, err := e2eTest.ZevmClient.BlockNumber(context.Background())
+	blockNum, err := e2eTest.ZEVMClient.BlockNumber(context.Background())
 	if err != nil {
 		panic(err)
 	}
 
 	// #nosec G701 e2eTest - always in range
-	nonce, err := e2eTest.ZevmClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
+	nonce, err := e2eTest.ZEVMClient.NonceAt(context.Background(), local.DeployerAddress, big.NewInt(int64(blockNum)))
 	if err != nil {
 		panic(err)
 	}
@@ -215,17 +215,17 @@ func StressTest(cmd *cobra.Command, _ []string) {
 	// -------------- TEST BEGINS ------------------
 
 	fmt.Println("**** STRESS TEST BEGINS ****")
-	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM - goerli")
+	fmt.Println("	1. Periodically Withdraw ETH from ZEVM to EVM")
 	fmt.Println("	2. Display Network metrics to monitor performance [Num Pending outbound tx], [Num Trackers]")
 
 	e2eTest.WG.Add(2)
-	go WithdrawCCtx(e2eTest)       // Withdraw USDT from ZEVM to EVM - goerli
+	go WithdrawCCtx(e2eTest)       // Withdraw from ZEVM to EVM
 	go EchoNetworkMetrics(e2eTest) // Display Network metrics periodically to monitor performance
 
 	e2eTest.WG.Wait()
 }
 
-// WithdrawCCtx withdraw USDT from ZEVM to EVM
+// WithdrawCCtx withdraw ETHZRC20 from ZEVM to EVM
 func WithdrawCCtx(runner *runner.E2ERunner) {
 	ticker := time.NewTicker(time.Millisecond * time.Duration(stressTestArgs.txnInterval))
 	for {
@@ -242,7 +242,7 @@ func EchoNetworkMetrics(runner *runner.E2ERunner) {
 	var numTicks = 0
 	var totalMinedTxns = uint64(0)
 	var previousMinedTxns = uint64(0)
-	chainID, err := getChainID(runner.GoerliClient)
+	chainID, err := getChainID(runner.EVMClient)
 
 	if err != nil {
 		panic(err)
@@ -306,8 +306,8 @@ func WithdrawETHZRC20(runner *runner.E2ERunner) {
 
 	ethZRC20 := runner.ETHZRC20
 
-	runner.ZevmAuth.Nonce = zevmNonce
-	_, err := ethZRC20.Withdraw(runner.ZevmAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
+	runner.ZEVMAuth.Nonce = zevmNonce
+	_, err := ethZRC20.Withdraw(runner.ZEVMAuth, local.DeployerAddress.Bytes(), big.NewInt(100))
 	if err != nil {
 		panic(err)
 	}

@@ -1,125 +1,91 @@
 package ethereum
 
 import (
-	"context"
-	"math/big"
+	"encoding/json"
+	"fmt"
+	"os"
 	"testing"
-	"time"
 
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/ethereum/go-ethereum/trie"
+	"github.com/stretchr/testify/require"
+)
+
+const (
+	headerPath        = "./testdata/header.json"
+	receiptPrefixPath = "./testdata/receipt_"
+	receiptCount      = 81
 )
 
 func TestProofGeneration(t *testing.T) {
-	RPC_URL := "https://rpc.ankr.com/eth_goerli"
-	client, err := ethclient.Dial(RPC_URL)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bn := int64(9509129)
-	block, err := client.BlockByNumber(context.Background(), big.NewInt(bn))
-	if err != nil {
-		t.Fatal(err)
-	}
+	header, err := readHeader()
+	require.NoError(t, err)
 
-	headerRLP, _ := rlp.EncodeToBytes(block.Header())
-	t.Logf("block header size %d\n", len(headerRLP))
-
-	var header types.Header
-	rlp.DecodeBytes(headerRLP, &header)
-
-	t.Logf("block %d\n", block.Number())
-	t.Logf("  tx root %x\n", header.TxHash)
-
-	//ttt := new(trie.Trie)
-	tr := NewTrie(block.Transactions())
-	t.Logf("  sha2    %x\n", tr.Hash())
-	if tr.Hash() != header.TxHash {
-		t.Fatal("tx root mismatch")
-	} else {
-		t.Logf("  tx root hash & block tx root match\n")
+	var receipts types.Receipts
+	for i := 0; i < receiptCount; i++ {
+		receipt, err := readReceipt(i)
+		require.NoError(t, err)
+		receipts = append(receipts, &receipt)
 	}
 
-	var indexBuf []byte
-	for i := 0; i < len(block.Transactions()); i++ {
+	// generate a trie from the receipts and compare the root hash with the one in the header
+	receiptTree := NewTrie(receipts)
+	require.EqualValues(t, header.ReceiptHash.Hex(), header.ReceiptHash.Hex())
 
-		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
+	for i, receipt := range receipts {
+		// generate a proof for each receipt and verify it
+		proof, err := receiptTree.GenerateProof(i)
+		require.NoError(t, err)
 
-		proof := NewProof()
-		tr.Prove(indexBuf, 0, proof)
-		t.Logf("proof len %d\n", len(proof.Keys))
-		value, err := proof.Verify(block.Header().TxHash, i)
-		//value, err := trie.VerifyProof(tr.trie.Hash(), indexBuf, proof)
-		t.Logf("pass? %v\n", err == nil)
-		//t.Logf("value %x\n", value)
+		verified, err := proof.Verify(header.ReceiptHash, i)
+		require.NoError(t, err)
 
-		var txx types.Transaction
-		txx.UnmarshalBinary(value)
-		t.Logf("  tx       %+v\n", txx.To().Hex())
-		t.Logf("  tx  hash %+v\n", txx.Hash().Hex())
-		if txx.Hash() != block.Transactions()[i].Hash() {
-			t.Fatal("tx hash mismatch")
-		} else {
-			t.Logf("  tx hash & block tx hash match\n")
-		}
-		signer := types.NewLondonSigner(txx.ChainId())
-		sender, err := types.Sender(signer, &txx)
-		t.Logf("  tx from %s\n", sender.Hex())
-	}
-
-	//for k, v := range proof.Proof {
-	//	key, _ := base64.StdEncoding.DecodeString(k)
-	//	t.Logf("k: %x, v: %x\n", key, v)
-	//}
-
-	{
-		var receipts types.Receipts
-		for _, tx := range block.Transactions() {
-			receipt, err := client.TransactionReceipt(context.Background(), tx.Hash())
-			if err != nil {
-				t.Fatal(err)
-			}
-			receipts = append(receipts, receipt)
-			time.Sleep(200 * time.Millisecond)
-		}
-
-		receiptTree := NewTrie(receipts)
-		t.Logf("  block receipt root %x\n", block.Header().ReceiptHash)
-		t.Logf("  receipt tree root  %x\n", receiptTree.Hash())
-		if receiptTree.Hash() != block.Header().ReceiptHash {
-			t.Fatal("receipt root mismatch")
-		} else {
-			t.Logf("  receipt root hash & block receipt root match\n")
-		}
-
-		i := 1
-		proof := NewProof()
-		indexBuf = rlp.AppendUint64(indexBuf[:0], uint64(i))
-		err = receiptTree.Prove(indexBuf, 0, proof)
-		if err != nil {
-			t.Fatal(err)
-		}
-
+		// recover the receipt from the proof and compare it with the original receipt
 		// NOTE: eth receipts only hashes the following fields
-		// 	data := &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs}
-		value, err := trie.VerifyProof(block.Header().ReceiptHash, indexBuf, proof)
-		t.Logf("pass? %v\n", err == nil)
-		t.Logf("value %x\n", value)
-		value, err = proof.Verify(block.Header().ReceiptHash, i)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		var receipt types.Receipt
-		receipt.UnmarshalBinary(value)
-
-		t.Logf("  receipt %+v\n", receipt)
-		t.Logf("  receipt tx hash %+v\n", receipt.TxHash.Hex())
-
-		for _, log := range receipt.Logs {
-			t.Logf("  log %+v\n", log)
+		// data := &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs}
+		var verifiedReceipt types.Receipt
+		err = verifiedReceipt.UnmarshalBinary(verified)
+		require.NoError(t, err)
+		require.EqualValues(t, receipt.Status, verifiedReceipt.Status)
+		require.EqualValues(t, receipt.CumulativeGasUsed, verifiedReceipt.CumulativeGasUsed)
+		require.EqualValues(t, receipt.Bloom.Bytes(), verifiedReceipt.Bloom.Bytes())
+		require.EqualValues(t, len(receipt.Logs), len(verifiedReceipt.Logs))
+		for i, log := range receipt.Logs {
+			require.EqualValues(t, log.Address, verifiedReceipt.Logs[i].Address)
+			require.EqualValues(t, log.Topics, verifiedReceipt.Logs[i].Topics)
+			require.EqualValues(t, log.Data, verifiedReceipt.Logs[i].Data)
 		}
 	}
+
+}
+
+// readHeader reads a header from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readHeader() (header types.Header, err error) {
+	file, err := os.Open(headerPath)
+	if err != nil {
+		return header, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&header)
+	return header, err
+}
+
+// readReceipt reads a receipt from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readReceipt(index int) (receipt types.Receipt, err error) {
+	filePath := fmt.Sprintf("%s%d.json", receiptPrefixPath, index)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return receipt, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&receipt)
+	return receipt, err
 }

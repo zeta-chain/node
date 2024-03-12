@@ -26,7 +26,7 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 	r.Logger.EVMTransaction(*txDonation, "donation")
 
 	// check contract deployment receipt
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, txDonation, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, txDonation, r.Logger, r.ReceiptTimeout)
 	r.Logger.EVMReceipt(*receipt, "donation")
 	if receipt.Status != 1 {
 		panic("donation tx failed")
