@@ -13,52 +13,52 @@ import (
 )
 
 func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
-	r.ZevmAuth.GasLimit = 10000000
+	r.ZEVMAuth.GasLimit = 10000000
 
 	// TODO: move into setup and skip it if already initialized
 	// https://github.com/zeta-chain/node-private/issues/88
 	// it is kept as is for now to be consistent with the old implementation
 	// if the tx fails due to already initialized, it will be ignored
-	_, err := r.UniswapV2Factory.CreatePair(r.ZevmAuth, r.USDTZRC20Addr, r.BTCZRC20Addr)
+	_, err := r.UniswapV2Factory.CreatePair(r.ZEVMAuth, r.ERC20ZRC20Addr, r.BTCZRC20Addr)
 	if err != nil {
 		r.Logger.Print("ℹ️create pair error")
 	}
-	txUSDTApprove, err := r.USDTZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	txERC20ZRC20Approve, err := r.ERC20ZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
-	txBTCApprove, err := r.BTCZRC20.Approve(r.ZevmAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
+	txBTCApprove, err := r.BTCZRC20.Approve(r.ZEVMAuth, r.UniswapV2RouterAddr, big.NewInt(1e18))
 	if err != nil {
 		panic(err)
 	}
 
 	// Fund ZEVMSwapApp with gas ZRC20s
-	txTransferETH, err := r.ETHZRC20.Transfer(r.ZevmAuth, r.ZEVMSwapAppAddr, big.NewInt(1e7))
+	txTransferETH, err := r.ETHZRC20.Transfer(r.ZEVMAuth, r.ZEVMSwapAppAddr, big.NewInt(1e7))
 	if err != nil {
 		panic(err)
 	}
-	txTransferBTC, err := r.BTCZRC20.Transfer(r.ZevmAuth, r.ZEVMSwapAppAddr, big.NewInt(1e6))
+	txTransferBTC, err := r.BTCZRC20.Transfer(r.ZEVMAuth, r.ZEVMSwapAppAddr, big.NewInt(1e6))
 	if err != nil {
 		panic(err)
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txUSDTApprove, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
-		panic("usdt approve failed")
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txERC20ZRC20Approve, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+		panic("ZRC20 ERC20 approve failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txBTCApprove, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txBTCApprove, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
 		panic("btc approve failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txTransferETH, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txTransferETH, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
 		panic("ETH ZRC20 transfer failed")
 	}
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txTransferBTC, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txTransferBTC, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
 		panic("BTC ZRC20 transfer failed")
 	}
 
-	// Add 100 USDT liq and 0.001 BTC
+	// Add 100 erc20 zrc20 liq and 0.001 BTC
 	txAddLiquidity, err := r.UniswapV2Router.AddLiquidity(
-		r.ZevmAuth,
-		r.USDTZRC20Addr,
+		r.ZEVMAuth,
+		r.ERC20ZRC20Addr,
 		r.BTCZRC20Addr,
 		big.NewInt(1e8),
 		big.NewInt(1e8),
@@ -71,7 +71,7 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 		panic(fmt.Sprintf("Error liq %s", err.Error()))
 	}
 
-	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, txAddLiquidity, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
+	if receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txAddLiquidity, r.Logger, r.ReceiptTimeout); receipt.Status != 1 {
 		panic("add liq receipt status is not 1")
 	}
 
@@ -87,8 +87,8 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 	r.Logger.Info("memobytes(%d) %x", len(memobytes), memobytes)
 	msg = append(msg, memobytes...)
 
-	r.Logger.Info("***** First test: USDT -> BTC")
-	// Should deposit USDT for swap, swap for BTC and withdraw BTC
+	r.Logger.Info("***** First test: ERC20 -> BTC")
+	// Should deposit ERC20 for swap, swap for BTC and withdraw BTC
 	txHash := r.DepositERC20WithAmountAndMessage(r.DeployerAddress, big.NewInt(8e7), msg)
 	cctx1 := utils.WaitCctxMinedByInTxHash(r.Ctx, txHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 
@@ -118,14 +118,14 @@ func TestCrosschainSwap(r *runner.E2ERunner, _ []string) {
 
 	r.Logger.Info("cctx2 outbound tx hash %s", cctx2.GetCurrentOutTxParam().OutboundTxHash)
 
-	r.Logger.Info("******* Second test: BTC -> USDT")
+	r.Logger.Info("******* Second test: BTC -> ERC20ZRC20")
 	utxos, err := r.BtcRPCClient.ListUnspent()
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("#utxos %d", len(utxos))
-	r.Logger.Info("memo address %s", r.USDTZRC20Addr)
-	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.USDTZRC20Addr, r.DeployerAddress.Bytes())
+	r.Logger.Info("memo address %s", r.ERC20ZRC20Addr)
+	memo, err := r.ZEVMSwapApp.EncodeMemo(&bind.CallOpts{}, r.ERC20ZRC20Addr, r.DeployerAddress.Bytes())
 	if err != nil {
 		panic(err)
 	}
