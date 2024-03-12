@@ -39,7 +39,7 @@ func (runner *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int
 
 	amount := big.NewInt(1e18)
 	amount = amount.Mul(amount, big.NewInt(zetaAmount))
-	tx, err := runner.ZetaEth.Transfer(runner.GoerliAuth, address, amount)
+	tx, err := runner.ZetaEth.Transfer(runner.EVMAuth, address, amount)
 	if err != nil {
 		panic(err)
 	}
@@ -56,25 +56,25 @@ func (runner *E2ERunner) DepositZeta() ethcommon.Hash {
 
 // DepositZetaWithAmount deposits ZETA on ZetaChain from the ZETA smart contract on EVM with the specified amount
 func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big.Int) ethcommon.Hash {
-	tx, err := runner.ZetaEth.Approve(runner.GoerliAuth, runner.ConnectorEthAddr, amount)
+	tx, err := runner.ZetaEth.Approve(runner.EVMAuth, runner.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	runner.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils2.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt := utils2.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	runner.Logger.EVMReceipt(*receipt, "approve")
 	if receipt.Status != 1 {
 		panic("approve tx failed")
 	}
 
 	// query the chain ID using zevm client
-	zetaChainID, err := runner.ZevmClient.ChainID(runner.Ctx)
+	zetaChainID, err := runner.ZEVMClient.ChainID(runner.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	tx, err = runner.ConnectorEth.Send(runner.GoerliAuth, zetaconnectoreth.ZetaInterfacesSendInput{
+	tx, err = runner.ConnectorEth.Send(runner.EVMAuth, zetaconnectoreth.ZetaInterfacesSendInput{
 		// TODO: allow user to specify destination chain id
 		// https://github.com/zeta-chain/node-private/issues/41
 		DestinationChainId:  zetaChainID,
@@ -89,7 +89,7 @@ func (runner *E2ERunner) DepositZetaWithAmount(to ethcommon.Address, amount *big
 	}
 	runner.Logger.Info("Send tx hash: %s", tx.Hash().Hex())
 
-	receipt = utils2.MustWaitForTxReceipt(runner.Ctx, runner.GoerliClient, tx, runner.Logger, runner.ReceiptTimeout)
+	receipt = utils2.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, tx, runner.Logger, runner.ReceiptTimeout)
 	runner.Logger.EVMReceipt(*receipt, "send")
 	if receipt.Status != 1 {
 		panic(fmt.Sprintf("expected tx receipt status to be 1; got %d", receipt.Status))

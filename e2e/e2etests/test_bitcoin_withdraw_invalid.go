@@ -35,11 +35,11 @@ func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	approvalAmount := 1000000000000000000
 	// approve the ZRC20 contract to spend approvalAmount BTC from the deployer address.
 	// the actual amount transferred is provided as test arg BTC, but we approve more to cover withdraw fee
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(int64(approvalAmount)))
+	tx, err := r.BTCZRC20.Approve(r.ZEVMAuth, r.BTCZRC20Addr, big.NewInt(int64(approvalAmount)))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
@@ -48,11 +48,11 @@ func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	stop := r.MineBlocks()
 
 	// withdraw amount provided as test arg BTC from ZRC20 to BTC legacy address
-	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)
+	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 1 {
 		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
 	}

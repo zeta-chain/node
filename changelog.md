@@ -30,6 +30,7 @@
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
 * [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
+* [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
 * [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
 
 ### Fixes

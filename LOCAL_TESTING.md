@@ -193,8 +193,8 @@ type E2ETestFunc func(*E2ERunner)
 The test can interact with the different networks using the runned object:
 ```go
 type E2ERunner struct {
-	ZevmClient   *ethclient.Client
-	GoerliClient *ethclient.Client
+	ZEVMClient   *ethclient.Client
+	EVMClient *ethclient.Client
 	BtcRPCClient *rpcclient.Client
 
 	CctxClient     crosschaintypes.QueryClient
@@ -204,8 +204,8 @@ type E2ERunner struct {
 	ObserverClient observertypes.QueryClient
 	ZetaTxServer   txserver.ZetaTxServer
 	
-	GoerliAuth *bind.TransactOpts
-	ZevmAuth   *bind.TransactOpts
+	EVMAuth *bind.TransactOpts
+	ZEVMAuth   *bind.TransactOpts
 	
 	// ...
 }

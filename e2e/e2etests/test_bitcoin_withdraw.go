@@ -57,11 +57,11 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
-	tx, err := r.BTCZRC20.Approve(r.ZevmAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
+	tx, err := r.BTCZRC20.Approve(r.ZEVMAuth, r.BTCZRC20Addr, big.NewInt(amount.Int64()*2)) // approve more to cover withdraw fee
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("approve receipt status is not 1"))
 	}
@@ -70,11 +70,11 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	stop := r.MineBlocks()
 
 	// withdraw 'amount' of BTC from ZRC20 to BTC address
-	tx, err = r.BTCZRC20.Withdraw(r.ZevmAuth, []byte(to.EncodeAddress()), amount)
+	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte(to.EncodeAddress()), amount)
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic(fmt.Errorf("withdraw receipt status is not 1"))
 	}
@@ -149,7 +149,7 @@ func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //		panic(err)
 //	}
 //	r.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
-//	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, r.ZevmClient)
+//	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, r.ZEVMClient)
 //	if err != nil {
 //		panic(err)
 //	}
@@ -163,11 +163,11 @@ func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //	// approve the ZRC20 contract to spend 1 BTC from the deployer address
 //	{
 //		// approve more to cover withdraw fee
-//		tx, err := BTCZRC20.Approve(r.ZevmAuth, BTCZRC20Addr, totalAmount.Mul(totalAmount, big.NewInt(100)))
+//		tx, err := BTCZRC20.Approve(r.ZEVMAuth, BTCZRC20Addr, totalAmount.Mul(totalAmount, big.NewInt(100)))
 //		if err != nil {
 //			panic(err)
 //		}
-//		receipt := config.MustWaitForTxReceipt(r.ZevmClient, tx, r.Logger)
+//		receipt := config.MustWaitForTxReceipt(r.ZEVMClient, tx, r.Logger)
 //		r.Logger.Info("approve receipt: status %d", receipt.Status)
 //		if receipt.Status != 1 {
 //			panic(fmt.Errorf("approve receipt status is not 1"))
@@ -189,11 +189,11 @@ func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 //			panic(err)
 //		}
 //		r.Logger.Info("withdraw gas fee: %d", gasFee)
-//		tx, err := BTCZRC20.Withdraw(r.ZevmAuth, []byte(r.BTCDeployerAddress.EncodeAddress()), amount)
+//		tx, err := BTCZRC20.Withdraw(r.ZEVMAuth, []byte(r.BTCDeployerAddress.EncodeAddress()), amount)
 //		if err != nil {
 //			panic(err)
 //		}
-//		receipt := config.MustWaitForTxReceipt(r.ZevmClient, tx, r.Logger)
+//		receipt := config.MustWaitForTxReceipt(r.ZEVMClient, tx, r.Logger)
 //		r.Logger.Info("withdraw receipt: status %d", receipt.Status)
 //		if receipt.Status != 1 {
 //			panic(fmt.Errorf("withdraw receipt status is not 1"))
