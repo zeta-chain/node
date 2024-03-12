@@ -39,8 +39,8 @@ func FilterBTCTransactions(cmd *cobra.Command, _ []string) {
 	CheckForCCTX(list, cfg)
 }
 
-func getHashList(cfg *config.Config) []deposit {
-	var list []deposit
+func getHashList(cfg *config.Config) []Deposit {
+	var list []Deposit
 	lastHash := ""
 
 	url := cfg.BtcExplorer
@@ -51,6 +51,7 @@ func getHashList(cfg *config.Config) []deposit {
 			path := fmt.Sprintf("/chain/%s", lastHash)
 			nextQuery = url + path
 		}
+		// #nosec G107 url must be variable
 		res, getErr := http.Get(nextQuery)
 		if getErr != nil {
 			log.Fatal(getErr)
@@ -59,6 +60,10 @@ func getHashList(cfg *config.Config) []deposit {
 		body, readErr := ioutil.ReadAll(res.Body)
 		if readErr != nil {
 			log.Fatal(readErr)
+		}
+		closeErr := res.Body.Close()
+		if closeErr != nil {
+			log.Fatal(closeErr)
 		}
 
 		var txns []map[string]interface{}
@@ -107,7 +112,7 @@ func getHashList(cfg *config.Config) []deposit {
 				continue
 			}
 
-			//Check if deposit is a donation
+			//Check if Deposit is a donation
 			scriptpubkey1 := vout1["scriptpubkey"].(string)
 			if len(scriptpubkey1) >= 4 && scriptpubkey1[:2] == "6a" {
 				memoSize, err := strconv.ParseInt(scriptpubkey1[2:4], 16, 32)
@@ -128,9 +133,9 @@ func getHashList(cfg *config.Config) []deposit {
 				continue
 			}
 
-			//Make sure deposit is sent to correct tss address
+			//Make sure Deposit is sent to correct tss address
 			if strings.Compare("0014", scriptpubkey[:4]) == 0 && targetAddr == cfg.TssAddressBTC {
-				entry := deposit{
+				entry := Deposit{
 					hash,
 					vout0["value"].(float64),
 				}

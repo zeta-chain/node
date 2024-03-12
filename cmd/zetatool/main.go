@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
-	"os"
 )
 
 var rootCmd = &cobra.Command{

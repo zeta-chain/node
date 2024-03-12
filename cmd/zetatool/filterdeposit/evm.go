@@ -47,7 +47,7 @@ func FilterEVMTransactions(cmd *cobra.Command, _ []string) {
 	CheckForCCTX(list, cfg)
 }
 
-func GetEthHashList(cfg *config.Config) []deposit {
+func GetEthHashList(cfg *config.Config) []Deposit {
 	startBlock := cfg.EvmStartBlock
 	client, err := ethclient.Dial(cfg.EthRPC)
 	if err != nil {
@@ -63,7 +63,7 @@ func GetEthHashList(cfg *config.Config) []deposit {
 	fmt.Println("latest Block: ", latestBlock)
 
 	endBlock := startBlock + cfg.EvmMaxRange
-	deposits := make([]deposit, 0)
+	deposits := make([]Deposit, 0)
 	segment := 0
 	for startBlock < latestBlock {
 		fmt.Printf("adding segment: %d, startblock: %d\n", segment, startBlock)
@@ -78,8 +78,8 @@ func GetEthHashList(cfg *config.Config) []deposit {
 	return deposits
 }
 
-func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock uint64, cfg *config.Config) []deposit {
-	deposits := make([]deposit, 0)
+func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock uint64, cfg *config.Config) []Deposit {
+	deposits := make([]Deposit, 0)
 
 	connectorAddress := common.HexToAddress(cfg.ConnectorAddress)
 	connectorContract, err := zetaconnector.NewZetaConnectorNonEth(connectorAddress, client)
@@ -112,15 +112,15 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		return deposits
 	}
 
-	// ********************** Get ERC20 Custody deposit events
+	// ********************** Get ERC20 Custody Deposit events
 	for custodyIter.Next() {
 		// sanity check tx event
 		err := CheckEvmTxLog(&custodyIter.Event.Raw, erc20CustodyAddress, "", TopicsDeposited)
 		if err == nil {
 			//fmt.Println("adding deposits")
-			deposits = append(deposits, deposit{
-				txId:   custodyIter.Event.Raw.TxHash.Hex(),
-				amount: float64(custodyIter.Event.Amount.Int64()),
+			deposits = append(deposits, Deposit{
+				TxID:   custodyIter.Event.Raw.TxHash.Hex(),
+				Amount: float64(custodyIter.Event.Amount.Int64()),
 			})
 		}
 	}
@@ -131,9 +131,9 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		err := CheckEvmTxLog(&connectorIter.Event.Raw, connectorAddress, "", TopicsZetaSent)
 		if err == nil {
 			//fmt.Println("adding deposits")
-			deposits = append(deposits, deposit{
-				txId:   connectorIter.Event.Raw.TxHash.Hex(),
-				amount: float64(connectorIter.Event.ZetaValueAndGas.Int64()),
+			deposits = append(deposits, Deposit{
+				TxID:   connectorIter.Event.Raw.TxHash.Hex(),
+				Amount: float64(connectorIter.Event.ZetaValueAndGas.Int64()),
 			})
 		}
 	}
@@ -148,9 +148,9 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 	return deposits
 }
 
-func getTSSDeposits(tssAddress string, startBlock int, endBlock int) ([]deposit, error) {
+func getTSSDeposits(tssAddress string, startBlock int, endBlock int) ([]Deposit, error) {
 	client := etherscan.New(etherscan.Mainnet, "S3AVTNXDJQZQQUVXJM4XVIPBRYECGK88VX")
-	deposits := make([]deposit, 0)
+	deposits := make([]Deposit, 0)
 
 	txns, err := client.NormalTxByAddress(tssAddress, &startBlock, &endBlock, 0, 0, true)
 	if err != nil {
@@ -167,10 +167,10 @@ func getTSSDeposits(tssAddress string, startBlock int, endBlock int) ([]deposit,
 			if tx.TxReceiptStatus != "1" {
 				continue
 			}
-			//fmt.Println("getTSSDeposits - adding deposit")
-			deposits = append(deposits, deposit{
-				txId:   tx.Hash,
-				amount: float64(tx.Value.Int().Int64()),
+			//fmt.Println("getTSSDeposits - adding Deposit")
+			deposits = append(deposits, Deposit{
+				TxID:   tx.Hash,
+				Amount: float64(tx.Value.Int().Int64()),
 			})
 		}
 	}

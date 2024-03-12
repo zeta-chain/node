@@ -8,7 +8,7 @@ import (
 const (
 	Flag               = "config"
 	defaultCfgFileName = "InboundTxFilter_config.json"
-	ZetaUrl            = "http://46.4.15.110:1317" //http://100.71.167.102:26657
+	ZetaURL            = "http://46.4.15.110:1317" //http://100.71.167.102:26657
 	TssAddressBTC      = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
 	TssAddressEVM      = "0x70e967acfcc17c3941e87562161406d41676fd83"
 	BtcExplorer        = "https://blockstream.info/api/address/bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y/txs"
@@ -20,7 +20,7 @@ const (
 )
 
 type Config struct {
-	ZetaUrl          string
+	ZetaURL          string
 	TssAddressBTC    string
 	TssAddressEVM    string
 	BtcExplorer      string
@@ -33,7 +33,7 @@ type Config struct {
 
 func DefaultConfig() *Config {
 	return &Config{
-		ZetaUrl:          ZetaUrl,
+		ZetaURL:          ZetaURL,
 		TssAddressBTC:    TssAddressBTC,
 		TssAddressEVM:    TssAddressEVM,
 		BtcExplorer:      BtcExplorer,
@@ -50,7 +50,7 @@ func (c *Config) Save() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(defaultCfgFileName, file, 0644)
+	err = os.WriteFile(defaultCfgFileName, file, 0600)
 	return err
 }
 

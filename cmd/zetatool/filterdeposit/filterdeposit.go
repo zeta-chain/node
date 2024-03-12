@@ -17,21 +17,22 @@ var Cmd = &cobra.Command{
 	Short: "filter missing inbound deposits",
 }
 
-type deposit struct {
-	txId   string
-	amount float64
+type Deposit struct {
+	TxID   string
+	Amount float64
 }
 
-func CheckForCCTX(list []deposit, cfg *config.Config) {
-	var missedList []deposit
+func CheckForCCTX(list []Deposit, cfg *config.Config) {
+	var missedList []Deposit
 
 	fmt.Println("Going through list, num of transactions: ", len(list))
 	for _, entry := range list {
-		zetaUrl, err := url.JoinPath(cfg.ZetaUrl, "zeta-chain", "crosschain", "in_tx_hash_to_cctx_data", entry.txId)
+		zetaURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "crosschain", "in_tx_hash_to_cctx_data", entry.TxID)
 		if err != nil {
 			log.Fatal(err)
 		}
-		res, getErr := http.Get(zetaUrl)
+		// #nosec G107 url must be variable
+		res, getErr := http.Get(zetaURL)
 		if getErr != nil {
 			log.Fatal(getErr)
 		}
@@ -39,6 +40,10 @@ func CheckForCCTX(list []deposit, cfg *config.Config) {
 		data, readErr := ioutil.ReadAll(res.Body)
 		if readErr != nil {
 			log.Fatal(readErr)
+		}
+		closeErr := res.Body.Close()
+		if closeErr != nil {
+			log.Fatal(closeErr)
 		}
 
 		var cctx map[string]interface{}
@@ -54,6 +59,6 @@ func CheckForCCTX(list []deposit, cfg *config.Config) {
 	}
 
 	for _, entry := range missedList {
-		fmt.Printf("%s, amount: %d\n", entry.txId, int64(entry.amount))
+		fmt.Printf("%s, amount: %d\n", entry.TxID, int64(entry.Amount))
 	}
 }
