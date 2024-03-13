@@ -4,40 +4,44 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
+func TestNewMsgAddBlameVoteMsg_ValidateBasic(t *testing.T) {
 	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
-		msg   *types.MsgUpdateTssAddress
+		msg   *types.MsgAddBlameVote
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.NewMsgUpdateTssAddress(
+			msg: types.NewMsgAddBlameVoteMsg(
 				"invalid_address",
-				sample.PubKeyString(),
+				1,
+				sample.BlameRecordsList(t, 1)[0],
 			),
 			error: true,
 		},
 		{
-			name: "invalid pubkey",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "invalid chain id",
+			msg: types.NewMsgAddBlameVoteMsg(
 				sample.AccAddress(),
-				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
+				-1,
+				sample.BlameRecordsList(t, 1)[0],
 			),
 			error: true,
 		},
 		{
-			name: "valid msg",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "valid",
+			msg: types.NewMsgAddBlameVoteMsg(
 				sample.AccAddress(),
-				sample.PubKeyString(),
+				5,
+				sample.BlameRecordsList(t, 1)[0],
 			),
 			error: false,
 		},
@@ -56,23 +60,23 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
+func TestNewMsgAddBlameVoteMsg_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateTssAddress
+		msg    types.MsgAddBlameVote
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgAddBlameVote{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgAddBlameVote{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -93,25 +97,36 @@ func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMessageUpdateTssAddress_Type(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestNewMsgAddBlameVoteMsg_Type(t *testing.T) {
+	msg := types.MsgAddBlameVote{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgUpdateTssAddress, msg.Type())
+	require.Equal(t, types.TypeMsgAddBlameVote, msg.Type())
 }
 
-func TestMessageUpdateTssAddress_Route(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestNewMsgAddBlameVoteMsg_Route(t *testing.T) {
+	msg := types.MsgAddBlameVote{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMessageUpdateTssAddress_GetSignBytes(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestNewMsgAddBlameVoteMsg_GetSignBytes(t *testing.T) {
+	msg := types.MsgAddBlameVote{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
+}
+
+func TestNewMsgAddBlameVoteMsg_Digest(t *testing.T) {
+	msg := types.MsgAddBlameVote{
+		Creator: sample.AccAddress(),
+	}
+
+	digest := msg.Digest()
+	msg.Creator = ""
+	expectedDigest := crypto.Keccak256Hash([]byte(msg.String()))
+	require.Equal(t, expectedDigest.Hex(), digest)
 }

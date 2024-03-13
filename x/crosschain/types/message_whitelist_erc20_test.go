@@ -10,34 +10,75 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
+func TestMsgWhitelistERC20_ValidateBasic(t *testing.T) {
 	keeper.SetConfig(false)
 	tests := []struct {
 		name  string
-		msg   *types.MsgUpdateTssAddress
+		msg   *types.MsgWhitelistERC20
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.NewMsgUpdateTssAddress(
+			msg: types.NewMsgWhitelistERC20(
 				"invalid_address",
-				sample.PubKeyString(),
+				"0x0",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
 			),
 			error: true,
 		},
 		{
-			name: "invalid pubkey",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "invalid erc20",
+			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
+				"0x0",
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
 			),
 			error: true,
 		},
 		{
-			name: "valid msg",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "invalid decimals",
+			msg: types.NewMsgWhitelistERC20(
 				sample.AccAddress(),
-				sample.PubKeyString(),
+				sample.EthAddress().Hex(),
+				1,
+				"name",
+				"symbol",
+				130,
+				10,
+			),
+			error: true,
+		},
+		{
+			name: "invalid gas limit",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				sample.EthAddress().Hex(),
+				1,
+				"name",
+				"symbol",
+				6,
+				-10,
+			),
+			error: true,
+		},
+		{
+			name: "valid",
+			msg: types.NewMsgWhitelistERC20(
+				sample.AccAddress(),
+				sample.EthAddress().Hex(),
+				1,
+				"name",
+				"symbol",
+				6,
+				10,
 			),
 			error: false,
 		},
@@ -56,23 +97,23 @@ func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
+func TestMsgWhitelistERC20_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateTssAddress
+		msg    types.MsgWhitelistERC20
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgWhitelistERC20{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgWhitelistERC20{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -93,22 +134,22 @@ func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMessageUpdateTssAddress_Type(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgWhitelistERC20_Type(t *testing.T) {
+	msg := types.MsgWhitelistERC20{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgUpdateTssAddress, msg.Type())
+	require.Equal(t, types.TypeMsgWhitelistERC20, msg.Type())
 }
 
-func TestMessageUpdateTssAddress_Route(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgWhitelistERC20_Route(t *testing.T) {
+	msg := types.MsgWhitelistERC20{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMessageUpdateTssAddress_GetSignBytes(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgWhitelistERC20_GetSignBytes(t *testing.T) {
+	msg := types.MsgWhitelistERC20{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

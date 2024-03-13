@@ -34,6 +34,7 @@
 * [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
 * [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
 * [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
+* [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 
 ### Fixes
 

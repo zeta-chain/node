@@ -25,7 +25,7 @@ func (msg *MsgUpdateZRC20LiquidityCap) Route() string {
 }
 
 func (msg *MsgUpdateZRC20LiquidityCap) Type() string {
-	return TypeMsgUpdateSystemContract
+	return TypeMsgUpdateZRC20LiquidityCap
 }
 
 func (msg *MsgUpdateZRC20LiquidityCap) GetSigners() []sdk.AccAddress {
