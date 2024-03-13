@@ -49,7 +49,7 @@ func FilterEVMTransactions(cmd *cobra.Command, _ []string) {
 	CheckForCCTX(list, cfg)
 }
 
-// GetEthHashList is a helper function querying total inbound txns in segments of blocks in ranges defined by the config
+// GetEthHashList is a helper function querying total inbound txns by segments of blocks in ranges defined by the config
 func GetEthHashList(cfg *config.Config) []Deposit {
 	startBlock := cfg.EvmStartBlock
 	client, err := ethclient.Dial(cfg.EthRPC)

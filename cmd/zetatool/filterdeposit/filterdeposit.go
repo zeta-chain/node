@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
@@ -25,7 +26,7 @@ type Deposit struct {
 
 // CheckForCCTX is querying zeta core for a cctx associated with a confirmed transaction hash. If the cctx is not found,
 // then the transaction hash is added to the list of missed inbound transactions.
-func CheckForCCTX(list []Deposit, cfg *config.Config) {
+func CheckForCCTX(list []Deposit, cfg *config.Config) []Deposit {
 	var missedList []Deposit
 
 	fmt.Println("Going through list, num of transactions: ", len(list))
@@ -34,17 +35,24 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		// #nosec G107 url must be variable
-		res, getErr := http.Get(zetaURL)
+
+		request, err := http.NewRequest(http.MethodGet, zetaURL, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		request.Header.Add("Accept", "application/json")
+		client := &http.Client{}
+
+		response, getErr := client.Do(request)
 		if getErr != nil {
 			log.Fatal(getErr)
 		}
 
-		data, readErr := ioutil.ReadAll(res.Body)
+		data, readErr := ioutil.ReadAll(response.Body)
 		if readErr != nil {
 			log.Fatal(readErr)
 		}
-		closeErr := res.Body.Close()
+		closeErr := response.Body.Close()
 		if closeErr != nil {
 			log.Fatal(closeErr)
 		}
@@ -55,14 +63,17 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) {
 			fmt.Println("error unmarshalling: ", err.Error())
 		}
 
-		// successful query of the given cctx will not contain a "code" field, therefore if it exists then the cctx
-		// was not found and is added to the missing list.
-		if _, ok := cctx["code"]; ok {
-			missedList = append(missedList, entry)
+		// successful query of the given cctx will not contain a "message" field with value "not found", if it was not
+		// found then it is added to the missing list.
+		if _, ok := cctx["message"]; ok {
+			if strings.Compare(cctx["message"].(string), "not found") == 0 {
+				missedList = append(missedList, entry)
+			}
 		}
 	}
 
 	for _, entry := range missedList {
 		fmt.Printf("%s, amount: %d\n", entry.TxID, entry.Amount)
 	}
+	return missedList
 }
