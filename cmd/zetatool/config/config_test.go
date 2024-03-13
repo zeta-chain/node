@@ -1,9 +1,10 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestDefaultConfig(t *testing.T) {
