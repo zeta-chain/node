@@ -193,6 +193,7 @@ function move_zetacored_binaries {
 }
 
 function start_network {
+  ${VISOR_NAME} version
   ${VISOR_NAME} run start --home ${DAEMON_HOME} \
     --log_level info \
     --moniker ${MONIKER} \
@@ -232,7 +233,7 @@ function load_defaults {
   export GENESIS_FILE_ATHENS3=${GENESIS_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/genesis.json}
 
   #MAINNET
-  export BINARY_LIST_MAINNET=${BINARY_LIST_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/binary_list.json}
+  export BINARY_LIST_MAINNET=${BINARY_LIST_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/binary_list.json}
   export STATE_SYNC_RPC_NODE_FILE_MAINNET=${STATE_SYNC_RPC_NODE_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/state_sync_node}
   export RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET=${RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/rpc_state_sync_nodes}
   export APP_TOML_FILE_MAINNET=${APP_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/app.toml}
@@ -297,4 +298,3 @@ else
   logt "Start Network"
   start_network
 fi
-

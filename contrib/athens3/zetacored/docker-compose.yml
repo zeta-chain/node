@@ -35,8 +35,8 @@ services:
       - "9090:9090"
       - "9091:9091"
     volumes:
-      - zetacored_data:/root/.zetacored/
-    entrypoint: bash /scripts/start-zetae2e.sh
+      - zetacored_data_athens3:/root/.zetacored/
+    entrypoint: bash /scripts/start.sh
 
 volumes:
-  zetacored_data:
+  zetacored_data_athens3:
