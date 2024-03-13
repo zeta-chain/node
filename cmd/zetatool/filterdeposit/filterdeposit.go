@@ -19,7 +19,7 @@ var Cmd = &cobra.Command{
 
 type Deposit struct {
 	TxID   string
-	Amount float64
+	Amount uint64
 }
 
 func CheckForCCTX(list []Deposit, cfg *config.Config) {
@@ -59,6 +59,6 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) {
 	}
 
 	for _, entry := range missedList {
-		fmt.Printf("%s, amount: %d\n", entry.TxID, int64(entry.Amount))
+		fmt.Printf("%s, amount: %d\n", entry.TxID, entry.Amount)
 	}
 }

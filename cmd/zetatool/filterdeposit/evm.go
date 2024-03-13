@@ -59,7 +59,7 @@ func GetEthHashList(cfg *config.Config) []Deposit {
 	if err != nil {
 		log.Fatal(err)
 	}
-	latestBlock := uint64(header.Number.Int64())
+	latestBlock := header.Number.Uint64()
 	fmt.Println("latest Block: ", latestBlock)
 
 	endBlock := startBlock + cfg.EvmMaxRange
@@ -120,7 +120,7 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 			//fmt.Println("adding deposits")
 			deposits = append(deposits, Deposit{
 				TxID:   custodyIter.Event.Raw.TxHash.Hex(),
-				Amount: float64(custodyIter.Event.Amount.Int64()),
+				Amount: custodyIter.Event.Amount.Uint64(),
 			})
 		}
 	}
@@ -133,13 +133,13 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 			//fmt.Println("adding deposits")
 			deposits = append(deposits, Deposit{
 				TxID:   connectorIter.Event.Raw.TxHash.Hex(),
-				Amount: float64(connectorIter.Event.ZetaValueAndGas.Int64()),
+				Amount: connectorIter.Event.ZetaValueAndGas.Uint64(),
 			})
 		}
 	}
 
 	//********************** Get Transactions sent directly to TSS address
-	tssDeposits, err := getTSSDeposits(cfg.TssAddressEVM, int(startBlock), int(endBlock))
+	tssDeposits, err := getTSSDeposits(cfg.TssAddressEVM, startBlock, endBlock)
 	if err != nil {
 		fmt.Printf("getTSSDeposits returned err: %s", err.Error())
 	}
@@ -148,11 +148,15 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 	return deposits
 }
 
-func getTSSDeposits(tssAddress string, startBlock int, endBlock int) ([]Deposit, error) {
+func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64) ([]Deposit, error) {
 	client := etherscan.New(etherscan.Mainnet, "S3AVTNXDJQZQQUVXJM4XVIPBRYECGK88VX")
 	deposits := make([]Deposit, 0)
 
-	txns, err := client.NormalTxByAddress(tssAddress, &startBlock, &endBlock, 0, 0, true)
+	// #nosec G701 these block numbers need to be *int for this particular client package
+	startInt := int(startBlock)
+	// #nosec G701
+	endInt := int(endBlock)
+	txns, err := client.NormalTxByAddress(tssAddress, &startInt, &endInt, 0, 0, true)
 	if err != nil {
 		return deposits, err
 	}
@@ -170,7 +174,7 @@ func getTSSDeposits(tssAddress string, startBlock int, endBlock int) ([]Deposit,
 			//fmt.Println("getTSSDeposits - adding Deposit")
 			deposits = append(deposits, Deposit{
 				TxID:   tx.Hash,
-				Amount: float64(tx.Value.Int().Int64()),
+				Amount: tx.Value.Int().Uint64(),
 			})
 		}
 	}
