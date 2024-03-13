@@ -17,7 +17,6 @@ $ make zetanode
 
 This Makefile rule builds the zetanode image. **Rebuild if zetacored/zetaclientd code is updated**.
 ```bash
-# in zeta-node/
 $ docker build -t zetanode .
 ```
 
@@ -25,8 +24,17 @@ $ docker build -t zetanode .
 
 Now we have built all the docker images, we can run the e2e test with make command:
 ```bash
-# in zeta-node/
 make start-e2e-test
+```
+
+#### Run admin functions e2e tests
+
+We define e2e tests allowing to test admin functionalities (emergency network pause for example).
+Since these tests interact with the network functionalities, these can't be run concurrently with the regular e2e tests.
+Moreover, these tests test scoped functionalities of the protocol, and won't be tested in the same pipeline as the regular e2e tests.
+Therefore, we provide a separate command to run e2e admin functions tests:
+```bash
+make start-e2e-admin-test
 ```
 
 ### Run upgrade tests
@@ -46,9 +54,14 @@ NOTE: We only specify the major version for `NEW_VERSION` since we use major ver
 
 The upgrade tests can be run with the following command:
 ```bash
-# in zeta-node/
 make start-upgrade-test
 ```
+
+The test the upgrade script faster a light version of the upgrade test can be run with the following command:
+```bash
+make start-upgrade-test-light
+```
+This command will run the upgrade test with a lower height and will not populate the state.
 
 ### Run stress tests
 
@@ -57,7 +70,6 @@ It also stresses the network by sending a large number of cross-chain transactio
 
 The stress tests can be run with the following command:
 ```bash
-# in zeta-node/
 make start-stress-test
 ```
 
@@ -68,7 +80,7 @@ If everything works fine, it should finish without panic.
 
 The logs can be observed with the following command:
 ```bash
-# in zeta-node/contrib/localnet/orchestrator
+# in node/contrib/localnet/orchestrator
 $ docker logs -f orchestrator
 ```
 
@@ -76,7 +88,6 @@ $ docker logs -f orchestrator
 
 To stop the tests,
 ```bash
-# in zeta-node/
 make stop-test
 ```
 
@@ -86,7 +97,6 @@ Before starting the monitoring setup, make sure the Zetacore API is up at http:/
 You can also add any additional ETH addresses to monitor in `zeta-node/contrib/localnet/grafana/addresses.txt` file
 
 ```bash
-# in zeta-node/
 make start-monitoring
 ```
 
@@ -97,7 +107,6 @@ The Grafana default credentials are admin:admin. The dashboards are located at h
 ### Stop monitoring setup
 
 ```bash
-# in zeta-node/
 make stop-monitoring
 ```
 
@@ -108,7 +117,6 @@ In addition to running automated tests, you can also interact with the localnet 
 The localnet can be started without running tests with the following command:
 
 ```bash
-# in zeta-node/
 make start-localnet
 ```
 
@@ -193,8 +201,8 @@ type E2ETestFunc func(*E2ERunner)
 The test can interact with the different networks using the runned object:
 ```go
 type E2ERunner struct {
-	ZevmClient   *ethclient.Client
-	GoerliClient *ethclient.Client
+	ZEVMClient   *ethclient.Client
+	EVMClient *ethclient.Client
 	BtcRPCClient *rpcclient.Client
 
 	CctxClient     crosschaintypes.QueryClient
@@ -204,8 +212,8 @@ type E2ERunner struct {
 	ObserverClient observertypes.QueryClient
 	ZetaTxServer   txserver.ZetaTxServer
 	
-	GoerliAuth *bind.TransactOpts
-	ZevmAuth   *bind.TransactOpts
+	EVMAuth *bind.TransactOpts
+	ZEVMAuth   *bind.TransactOpts
 	
 	// ...
 }

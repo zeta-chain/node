@@ -48,11 +48,14 @@ type ZetaCoreBridge struct {
 }
 
 // NewZetaCoreBridge create a new instance of ZetaCoreBridge
-func NewZetaCoreBridge(k *keys.Keys, chainIP string,
+func NewZetaCoreBridge(
+	k *keys.Keys,
+	chainIP string,
 	signerName string,
 	chainID string,
 	hsmMode bool,
-	telemetry *metrics.TelemetryServer) (*ZetaCoreBridge, error) {
+	telemetry *metrics.TelemetryServer,
+) (*ZetaCoreBridge, error) {
 
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
@@ -205,7 +208,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	if plan != nil && bn == plan.Height-1 { // stop zetaclients; notify operator to upgrade and restart
 		b.logger.Warn().Msgf("Active upgrade plan detected and upgrade height reached: %s at height %d; ZetaClient is stopped;"+
 			"please kill this process, replace zetaclientd binary with upgraded version, and restart zetaclientd", plan.Name, plan.Height)
-		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObservder itself
+		b.pause <- struct{}{} // notify CoreObserver to stop ChainClients, Signers, and CoreObserver itself
 	}
 
 	chainParams, err := b.GetChainParams()

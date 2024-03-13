@@ -15,6 +15,7 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ### Features
@@ -30,6 +31,11 @@
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
+* [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
+* [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
+* [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
+* [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
+* [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 
 ### Fixes
 
@@ -38,6 +44,10 @@
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+### CI
+
+* [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 
 ## Version: v14
 
@@ -88,7 +98,6 @@
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
-
 * [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
 * [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
 

@@ -54,14 +54,14 @@ type EVM struct {
 	ZetaEthAddress   string `yaml:"zeta_eth"`
 	ConnectorEthAddr string `yaml:"connector_eth"`
 	CustodyAddr      string `yaml:"custody"`
-	USDT             string `yaml:"usdt"`
+	ERC20            string `yaml:"erc20"`
 }
 
 // ZEVM contains the addresses of predeployed contracts on the zEVM chain
 type ZEVM struct {
 	SystemContractAddr string `yaml:"system_contract"`
 	ETHZRC20Addr       string `yaml:"eth_zrc20"`
-	USDTZRC20Addr      string `yaml:"usdt_zrc20"`
+	ERC20ZRC20Addr     string `yaml:"erc20_zrc20"`
 	BTCZRC20Addr       string `yaml:"btc_zrc20"`
 	UniswapFactoryAddr string `yaml:"uniswap_factory"`
 	UniswapRouterAddr  string `yaml:"uniswap_router"`
@@ -80,7 +80,7 @@ func DefaultConfig() Config {
 			EVM:  "http://eth:8545",
 			Bitcoin: BitcoinRPC{
 				Host:         "bitcoin:18443",
-				User:         "e2e",
+				User:         "smoketest",
 				Pass:         "123",
 				HTTPPostMode: true,
 				DisableTLS:   true,
@@ -92,7 +92,7 @@ func DefaultConfig() Config {
 		ZetaChainID: "athens_101-1",
 		Contracts: Contracts{
 			EVM: EVM{
-				USDT: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
+				ERC20: "0xff3135df4F2775f4091b81f4c7B6359CfA07862a",
 			},
 		},
 	}

@@ -9,6 +9,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
+const TypeMsgCreateTSSVoter = "CreateTSSVoter"
+
 var _ sdk.Msg = &MsgCreateTSSVoter{}
 
 func NewMsgCreateTSSVoter(creator string, pubkey string, keygenZetaHeight int64, status common.ReceiveStatus) *MsgCreateTSSVoter {
@@ -25,7 +27,7 @@ func (msg *MsgCreateTSSVoter) Route() string {
 }
 
 func (msg *MsgCreateTSSVoter) Type() string {
-	return "CreateTSSVoter"
+	return TypeMsgCreateTSSVoter
 }
 
 func (msg *MsgCreateTSSVoter) GetSigners() []sdk.AccAddress {
