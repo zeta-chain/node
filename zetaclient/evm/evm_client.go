@@ -64,6 +64,8 @@ type Log struct {
 	Compliance           zerolog.Logger // Compliance logger
 }
 
+var _ interfaces.ChainClient = &ChainClient{}
+
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type ChainClient struct {
@@ -81,7 +83,6 @@ type ChainClient struct {
 	outTxPendingTransactions   map[string]*ethtypes.Transaction
 	outTXConfirmedReceipts     map[string]*ethtypes.Receipt
 	outTXConfirmedTransactions map[string]*ethtypes.Transaction
-	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
 	logger                     Log
 	coreContext                *corecontext.ZetaCoreContext
@@ -128,7 +129,6 @@ func NewEVMChainClient(
 	ob.outTxPendingTransactions = make(map[string]*ethtypes.Transaction)
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
-	ob.OutTxChan = make(chan OutTx, 100)
 
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
 	client, err := ethclient.Dial(evmCfg.Endpoint)

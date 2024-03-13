@@ -5,8 +5,11 @@ import (
 	"math"
 	"time"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -32,8 +35,8 @@ type ZetaCoreLog struct {
 // CoreObserver wraps the zetabridge bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
-	signerMap           map[common.Chain]interfaces.ChainSigner
-	clientMap           map[common.Chain]interfaces.ChainClient
+	signerMap           map[int64]interfaces.ChainSigner
+	clientMap           map[int64]interfaces.ChainClient
 	logger              ZetaCoreLog
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
@@ -43,8 +46,8 @@ type CoreObserver struct {
 // NewCoreObserver creates a new CoreObserver
 func NewCoreObserver(
 	bridge interfaces.ZetaCoreBridger,
-	signerMap map[common.Chain]interfaces.ChainSigner,
-	clientMap map[common.Chain]interfaces.ChainClient,
+	signerMap map[int64]interfaces.ChainSigner,
+	clientMap map[int64]interfaces.ChainClient,
 	logger zerolog.Logger,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
@@ -135,21 +138,27 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 					metrics.HotKeyBurnRate.Set(float64(co.ts.HotKeyBurnRate.GetBurnRate().Int64()))
 
 					// schedule keysign for pending cctxs on each chain
-					supportedChains := appContext.ZetaCoreContext().GetEnabledChains()
+					coreContext := appContext.ZetaCoreContext()
+					supportedChains := coreContext.GetEnabledChains()
 					for _, c := range supportedChains {
 						if c.ChainId == co.bridge.ZetaChain().ChainId {
 							continue
 						}
-						signer := co.signerMap[c]
+						// update chain parameters for signer and chain client
+						signer, err := co.GetUpdatedSigner(coreContext, c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getUpdatedSigner failed for chain %d", c.ChainId)
+							continue
+						}
+						ob, err := co.GetUpdatedChainOb(coreContext, c.ChainId)
+						if err != nil {
+							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
+							continue
+						}
 
 						cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: ListPendingCctx failed for chain %d", c.ChainId)
-							continue
-						}
-						ob, err := co.getUpdatedChainOb(appContext, c.ChainId)
-						if err != nil {
-							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
 						}
 						// Set Pending transactions prometheus gauge
@@ -317,15 +326,48 @@ func (co *CoreObserver) scheduleCctxBTC(
 	}
 }
 
-func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, chainID int64) (interfaces.ChainClient, error) {
+// GetUpdatedSigner returns signer with updated chain parameters
+func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainSigner, error) {
+	signer, found := co.signerMap[chainID]
+	if !found {
+		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
+	}
+	// update EVM signer parameters only
+	if common.IsEVMChain(chainID) {
+		evmSigner, ok := signer.(*evm.Signer)
+		if !ok {
+			return signer, fmt.Errorf("signer is not an EVM signer for chainID %d", chainID)
+		}
+		evmParams, found := coreContext.GetEVMChainParams(chainID)
+		if found {
+			// update zeta connector and ERC20 custody addresses
+			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
+			if zetaConnectorAddress != evmSigner.GetZetaConnectorAddress() {
+				evmSigner.SetZetaConnectorAddress(zetaConnectorAddress)
+				co.logger.ZetaChainWatcher.Info().Msgf(
+					"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
+			}
+			if erc20CustodyAddress != evmSigner.GetERC20CustodyAddress() {
+				evmSigner.SetERC20CustodyAddress(erc20CustodyAddress)
+				co.logger.ZetaChainWatcher.Info().Msgf(
+					"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
+			}
+		}
+	}
+	return signer, nil
+}
+
+// GetUpdatedChainOb returns chain client with updated chain parameters
+func (co *CoreObserver) GetUpdatedChainOb(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainClient, error) {
 	chainOb, err := co.getTargetChainOb(chainID)
 	if err != nil {
 		return nil, err
 	}
-	// update chain client core parameters
+	// update chain client chain parameters
 	curParams := chainOb.GetChainParams()
 	if common.IsEVMChain(chainID) {
-		evmParams, found := appContext.ZetaCoreContext().GetEVMChainParams(chainID)
+		evmParams, found := coreContext.GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
@@ -335,7 +377,7 @@ func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, cha
 			)
 		}
 	} else if common.IsBitcoinChain(chainID) {
-		_, btcParams, found := appContext.ZetaCoreContext().GetBTCChainParams()
+		_, btcParams, found := coreContext.GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
 			chainOb.SetChainParams(*btcParams)
@@ -349,11 +391,7 @@ func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, cha
 }
 
 func (co *CoreObserver) getTargetChainOb(chainID int64) (interfaces.ChainClient, error) {
-	c := common.GetChainFromChainID(chainID)
-	if c == nil {
-		return nil, fmt.Errorf("chain not found for chainID %d", chainID)
-	}
-	chainOb, found := co.clientMap[*c]
+	chainOb, found := co.clientMap[chainID]
 	if !found {
 		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
 	}

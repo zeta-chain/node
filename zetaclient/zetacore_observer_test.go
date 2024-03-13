@@ -1,147 +1,129 @@
-//go:build metacore_observer
-// +build metacore_observer
-
 package zetaclient
 
 import (
-	"os"
-	"path/filepath"
-	"time"
-
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"testing"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
-	"github.com/zeta-chain/zetacore/zetaclient/types"
-	. "gopkg.in/check.v1"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
 
-type COSuite struct {
-	bridge1      *zetabridge.ZetaCoreBridge
-	bridge2      *zetabridge.ZetaCoreBridge
-	signer       *evm.Signer
-	coreObserver *CoreObserver
+func MockCoreObserver(t *testing.T, evmChain, btcChain common.Chain, connectorAddress, erc20CustodyAddress ethcommon.Address) *CoreObserver {
+	evmSigner, err := MockEVMSigner(
+		evmChain,
+		connectorAddress,
+		erc20CustodyAddress,
+	)
+	require.NoError(t, err)
+	btcSigner, err := MockBTCSigner(btcChain)
+	require.NoError(t, err)
+
+	observer := &CoreObserver{
+		signerMap: map[int64]interfaces.ChainSigner{
+			evmChain.ChainId: evmSigner,
+			btcChain.ChainId: btcSigner,
+		},
+	}
+	return observer
 }
 
-var _ = Suite(&COSuite{})
-
-const (
-	TEST_SENDER   = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
-	TEST_RECEIVER = "0x566bF3b1993FFd4BA134c107A63bb2aebAcCdbA0"
-)
-
-func (s *COSuite) SetUpTest(c *C) {
-	types.SetupConfigForTest() // setup meta-prefix
-
-	// setup 2 metabridges
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		c.Logf("UserHomeDir error")
-		c.Fail()
-	}
-	c.Logf("user home dir: %s", homeDir)
-	chainHomeFoler := filepath.Join(homeDir, ".zetacored")
-	c.Logf("chain home dir: %s", chainHomeFoler)
-
-	// first signer & zetaClient
-	// alice is the default user created by Starport chain serve
-	{
-		signerName := "alice"
-		signerPass := "password"
-		kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
-		if err != nil {
-			log.Fatal().Err(err).Msg("fail to get keyring keybase")
-		}
-
-		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
-
-		chainIP := os.Getenv("CHAIN_IP")
-		if chainIP == "" {
-			chainIP = "127.0.0.1"
-		}
-		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "alice")
-		if err != nil {
-			c.Fail()
-		}
-		s.bridge1 = bridge
-	}
-
-	// second signer & zetaClient
-	// alice is the default user created by Starport chain serve
-	{
-		signerName := "bob"
-		signerPass := "password"
-		kb, _, err := keys.GetKeyringKeybase(chainHomeFoler, signerName, signerPass)
-		if err != nil {
-			log.Fatal().Err(err).Msg("fail to get keyring keybase")
-		}
-
-		k := keys.NewKeysWithKeybase(kb, signerName, signerPass)
-
-		chainIP := os.Getenv("CHAIN_IP")
-		if chainIP == "" {
-			chainIP = "127.0.0.1"
-		}
-		bridge, err := zetabridge.NewZetaCoreBridge(k, chainIP, "bob")
-		if err != nil {
-			c.Fail()
-		}
-		s.bridge2 = bridge
-	}
-
-	// setup mock TSS signers:
-	// The following PrivKey has address 0xE80B6467863EbF8865092544f441da8fD3cF6074
-	privateKey, err := crypto.HexToECDSA(config.TssTestPrivkey)
-	c.Assert(err, IsNil)
-	tss := interfaces.TestSigner{
-		PrivKey: privateKey,
-	}
-	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	signer, err := evm.NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
-	c.Assert(err, IsNil)
-	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
-	c.Logf("ETH MPI EVMAddress: %s", config.ETH_MPI_ADDRESS)
-
-	s.signer = signer
-
-	// setup zetabridge observer
-	co := &CoreObserver{
-		bridge: s.bridge1,
-		signer: signer,
-	}
-	s.coreObserver = co
-	s.coreObserver.MonitorCore()
+func MockEVMSigner(
+	chain common.Chain,
+	connectorAddress ethcommon.Address,
+	erc20CustodyAddress ethcommon.Address,
+) (*evm.Signer, error) {
+	return evm.NewEVMSigner(
+		chain,
+		stub.EVMRPCEnabled,
+		nil,
+		config.GetConnectorABI(),
+		config.GetERC20CustodyABI(),
+		connectorAddress,
+		erc20CustodyAddress,
+		clientcommon.ClientLogger{},
+		&metrics.TelemetryServer{},
+	)
 }
 
-func (s *COSuite) TestSendFlow(c *C) {
-	b1 := s.bridge1
-	b2 := s.bridge2
-	metaHash, err := b1.PostVoteInbound(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
-		"0xtxhash", 123123, "0xtoken")
-	c.Assert(err, IsNil)
-	c.Logf("PostVoteInbound metaHash %s", metaHash)
+func MockBTCSigner(chain common.Chain) (*bitcoin.BTCSigner, error) {
+	return bitcoin.NewBTCSigner(
+		config.BTCConfig{},
+		nil,
+		clientcommon.ClientLogger{},
+		&metrics.TelemetryServer{},
+	)
+}
 
-	timer1 := time.NewTimer(2 * time.Second)
-	<-timer1.C
+func MockCoreContext(evmChain common.Chain, evmChainParams *observertypes.ChainParams) *corecontext.ZetaCoreContext {
+	// new config
+	cfg := config.NewConfig()
+	cfg.EVMChainConfigs[evmChain.ChainId] = config.EVMConfig{
+		Chain: evmChain,
+	}
+	// new core context
+	coreContext := corecontext.NewZetaCoreContext(cfg)
+	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
+	evmChainParamsMap[evmChain.ChainId] = evmChainParams
 
-	metaHash, err = b2.PostVoteInbound(TEST_SENDER, "Ethereum", TEST_SENDER, TEST_RECEIVER, "BSC", "1337", "0", "treat or trick",
-		"0xtxhash", 123123, "0xtoken")
-	c.Assert(err, IsNil)
-	c.Logf("Second PostVoteInbound metaHash %s", metaHash)
+	// feed with chain params
+	coreContext.Update(
+		&observertypes.Keygen{},
+		[]common.Chain{evmChain},
+		evmChainParamsMap,
+		nil,
+		"",
+		true,
+		zerolog.Logger{},
+	)
+	return coreContext
+}
 
-	timer2 := time.NewTimer(2 * time.Second)
-	<-timer2.C
+func Test_GetUpdatedSigner(t *testing.T) {
+	// create core observer
+	evmChain := common.EthChain()
+	btcChain := common.BtcMainnetChain()
+	connectorAdderss := testutils.ConnectorAddresses[evmChain.ChainId]
+	erc20CustodyAddress := testutils.CustodyAddresses[evmChain.ChainId]
 
-	time.Sleep(15 * time.Second)
-	//ch := make(chan os.Signal, 1)
-	//signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	//<-ch
-	//c.Logf("stop signal received")
+	// update chain params in core context
+	chainParams := &observertypes.ChainParams{
+		ChainId:                     evmChain.ChainId,
+		ConnectorContractAddress:    testutils.OtherAddress1,
+		Erc20CustodyContractAddress: testutils.OtherAddress2,
+	}
+
+	t.Run("signer not found", func(t *testing.T) {
+		observer := MockCoreObserver(t, evmChain, btcChain, connectorAdderss, erc20CustodyAddress)
+		coreContext := MockCoreContext(evmChain, chainParams)
+		_, err := observer.GetUpdatedSigner(coreContext, common.BscMainnetChain().ChainId)
+		require.ErrorContains(t, err, "signer not found")
+	})
+	t.Run("signer is not an EVM signer", func(t *testing.T) {
+		// swap evmChain and btcChain to mess up the signer map
+		observer := MockCoreObserver(t, btcChain, evmChain, connectorAdderss, erc20CustodyAddress)
+		coreContext := MockCoreContext(evmChain, chainParams)
+		_, err := observer.GetUpdatedSigner(coreContext, evmChain.ChainId)
+		require.ErrorContains(t, err, "signer is not an EVM signer")
+	})
+	t.Run("should be able to update connector and erc20 custody address", func(t *testing.T) {
+		observer := MockCoreObserver(t, evmChain, btcChain, connectorAdderss, erc20CustodyAddress)
+		coreContext := MockCoreContext(evmChain, chainParams)
+		signer, err := observer.GetUpdatedSigner(coreContext, evmChain.ChainId)
+		require.NoError(t, err)
+		evmSigner, ok := signer.(*evm.Signer)
+		require.True(t, ok)
+		require.Equal(t, testutils.OtherAddress1, evmSigner.GetZetaConnectorAddress().Hex())
+		require.Equal(t, testutils.OtherAddress2, evmSigner.GetERC20CustodyAddress().Hex())
+	})
 }

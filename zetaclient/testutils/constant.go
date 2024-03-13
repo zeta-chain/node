@@ -6,12 +6,15 @@ const (
 	// tss addresses
 	TSSAddressEVMMainnet = "0x70e967acFcC17c3941E87562161406d41676FD83"
 	TSSAddressBTCMainnet = "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y"
+	TssPubkeyEVMMainnet  = "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc"
 
 	TSSAddressEVMAthens3 = "0x8531a5aB847ff5B22D855633C25ED1DA3255247e"
 	TSSAddressBTCAthens3 = "tb1qy9pqmk2pd9sv63g27jt8r657wy0d9ueeh0nqur"
+	TssPubkeyEVMAthens3  = "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"
 
-	// some other address
-	OtherAddress = "0x21248Decd0B7EcB0F30186297766b8AB6496265b"
+	// some other addresses
+	OtherAddress1 = "0x21248Decd0B7EcB0F30186297766b8AB6496265b"
+	OtherAddress2 = "0x33A351C90aF486AebC35042Bb0544123cAed26AB"
 )
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing
