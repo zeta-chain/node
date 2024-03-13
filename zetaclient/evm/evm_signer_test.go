@@ -56,7 +56,7 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
 
-	return NewEVMChainClient(appCTX, stub.NewZetaCoreBridge(), tss, "", logger, evmcfg, ts)
+	return NewEVMChainClient(appCTX, stub.NewMockZetaCoreBridge(), tss, "", logger, evmcfg, ts)
 }
 
 func getNewOutTxProcessor() *outtxprocessor.Processor {
@@ -85,7 +85,7 @@ func TestSigner_TryProcessOutTx(t *testing.T) {
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 
-	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, stub.NewZetaCoreBridge(), 123)
+	evmSigner.TryProcessOutTx(cctx, processorManager, "123", mockChainClient, stub.NewMockZetaCoreBridge(), 123)
 
 	//Check if cctx was signed and broadcasted
 	list := evmSigner.GetReportedTxList()
@@ -280,7 +280,7 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 		tx, err := evmSigner.SignERC20WithdrawTx(txData)
 		require.NoError(t, err)
 
-		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, stub.NewZetaCoreBridge(), txData)
+		evmSigner.BroadcastOutTx(tx, cctx, zerolog.Logger{}, sdktypes.AccAddress{}, stub.NewMockZetaCoreBridge(), txData)
 
 		//Check if cctx was signed and broadcasted
 		list := evmSigner.GetReportedTxList()
