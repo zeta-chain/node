@@ -177,6 +177,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 }
 
 func ValidateAddressForChain(address string, chainID int64) error {
+	// we do not validate the address for zeta chain as the address field can be btc or eth address
 	if common.IsZetaChain(chainID) {
 		return nil
 	}
