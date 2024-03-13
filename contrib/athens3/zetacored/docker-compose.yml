@@ -6,7 +6,7 @@ services:
 #    build:
 #      context: ../../..
 #      dockerfile: Dockerfile
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14}
+    image: zetachain/zetacored:${DOCKER_TAG:-v14.0.1}
     environment:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: athens3
@@ -35,8 +35,8 @@ services:
       - "9090:9090"
       - "9091:9091"
     volumes:
-      - zetacored_data:/root/.zetacored/
-    entrypoint: bash /scripts/start-zetae2e.sh
+      - zetacored_data_athens3:/root/.zetacored/
+    entrypoint: bash /scripts/start.sh
 
 volumes:
-  zetacored_data:
+  zetacored_data_athens3:
