@@ -174,7 +174,10 @@ func ValidateHashForChain(hash string, chainID int64) error {
 }
 
 func ValidateAddressForChain(address string, chainID int64) error {
-	if common.IsEthereumChain(chainID) || common.IsZetaChain(chainID) {
+	if common.IsZetaChain(chainID) {
+		return nil
+	}
+	if common.IsEthereumChain(chainID) {
 		if !ethcommon.IsHexAddress(address) {
 			return fmt.Errorf("invalid address %s", address)
 		}
