@@ -392,12 +392,14 @@ func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 	t.Run("should not observe on error getting block", func(t *testing.T) {
 		ob := MockEVMClient(chain, evmClient, evmJSONRPC, zetaClient, tss, lastBlock, chainParam)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
+		// error getting block is expected because the mock JSONRPC contains no block
 		require.ErrorContains(t, err, "error getting block")
 	})
 	t.Run("should not observe on error getting receipt", func(t *testing.T) {
 		ob := MockEVMClient(chain, evmClient, evmJSONRPC, zetaClient, tss, lastBlock, chainParam)
 		evmJSONRPC.WithBlock(block)
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
+		// error getting block is expected because the mock evmClient contains no receipt
 		require.ErrorContains(t, err, "error getting receipt")
 	})
 	t.Run("should not observe on error posting vote", func(t *testing.T) {
@@ -408,6 +410,7 @@ func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 		evmClient.WithReceipt(receipt)
 		zetaClient.Pause()
 		err := ob.ObserveTSSReceiveInBlock(blockNumber)
+		// error posting vote is expected because the mock zetaClient is paused
 		require.ErrorContains(t, err, "error checking and voting")
 	})
 }
