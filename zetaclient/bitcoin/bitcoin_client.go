@@ -89,7 +89,6 @@ const (
 	btcBlocksPerDay           = 144       // for LRU block cache size
 	bigValueSats              = 200000000 // 2 BTC
 	bigValueConfirmationCount = 6         // 6 confirmations for value >= 2 BTC
-	DonationMessage           = "I am rich!"
 )
 
 func (ob *BTCChainClient) WithZetaClient(bridge *zetabridge.ZetaCoreBridge) {
@@ -293,8 +292,7 @@ func (ob *BTCChainClient) SetLastBlockHeightScanned(height int64) {
 		panic("lastBlockScanned is negative")
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
-	// #nosec G701 checked as positive
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), uint64(height))
+	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
 func (ob *BTCChainClient) GetLastBlockHeightScanned() int64 {
@@ -769,7 +767,7 @@ func GetBtcEvent(
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
 					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
-				if bytes.Equal(memoBytes, []byte(DonationMessage)) {
+				if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
@@ -889,7 +887,7 @@ func (ob *BTCChainClient) FetchUTXOS() error {
 	}
 
 	ob.Mu.Lock()
-	ob.ts.SetNumberOfUTXOs(len(utxosFiltered))
+	metrics.NumberOfUTXO.Set(float64(len(utxosFiltered)))
 	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil

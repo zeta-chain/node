@@ -13,14 +13,14 @@ import (
 func TestDecodeP2WPKHVout(t *testing.T) {
 	// load archived outtx raw result
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	var rawResult btcjson.TxRawResult
-	err := testutils.LoadObjectFromJSONFile(&rawResult, path.Join("../", testutils.TestDataPathBTC, "outtx_8332_148_raw_result.json"))
-	require.NoError(t, err)
-	require.Len(t, rawResult.Vout, 3)
-
-	// it's a mainnet outtx
 	chain := common.BtcMainnetChain()
 	nonce := uint64(148)
+	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+
+	var rawResult btcjson.TxRawResult
+	err := testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	require.NoError(t, err)
+	require.Len(t, rawResult.Vout, 3)
 
 	// decode vout 0, nonce mark 148
 	receiver, amount, err := DecodeP2WPKHVout(rawResult.Vout[0], chain)
@@ -44,11 +44,13 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	// load archived outtx raw result
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	var rawResult btcjson.TxRawResult
-	err := testutils.LoadObjectFromJSONFile(&rawResult, path.Join("../", testutils.TestDataPathBTC, "outtx_8332_148_raw_result.json"))
-	require.NoError(t, err)
-
 	chain := common.BtcMainnetChain()
+	nonce := uint64(148)
+	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
+
+	var rawResult btcjson.TxRawResult
+	err := testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	require.NoError(t, err)
 
 	t.Run("should return error on invalid amount", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]

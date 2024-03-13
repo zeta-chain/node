@@ -1,0 +1,15 @@
+{
+  "type": "0x0",
+  "nonce": "0x1c5c",
+  "gasPrice": "0x37274f0e36",
+  "maxPriorityFeePerGas": null,
+  "maxFeePerGas": null,
+  "gas": "0x5208",
+  "value": "0x9778b20315e894",
+  "input": "0x",
+  "v": "0x26",
+  "r": "0xb8ec6b365d89b174724e7e92bc2d7ddea9741a412d6d4584cf9c1456b41af837",
+  "s": "0x48d3410e1c18d1bc0f3a509c769b48f0267464507cf41345924f4ebddfdb0781",
+  "to": "0x8e62e3e6fbff3e21f725395416a20ea4e2def015",
+  "hash": "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
+}

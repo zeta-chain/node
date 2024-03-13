@@ -60,7 +60,7 @@ func SetupConfigForTest() {
 
 }
 
-func InitLogger(cfg *config.Config) (clientcommon.ClientLogger, error) {
+func InitLogger(cfg config.Config) (clientcommon.ClientLogger, error) {
 	// open compliance log file
 	file, err := OpenComplianceLogFile(cfg)
 	if err != nil {
@@ -92,10 +92,10 @@ func InitLogger(cfg *config.Config) (clientcommon.ClientLogger, error) {
 	}, nil
 }
 
-func OpenComplianceLogFile(cfg *config.Config) (*os.File, error) {
+func OpenComplianceLogFile(cfg config.Config) (*os.File, error) {
 	// use zetacore home as default
 	logPath := cfg.ZetaCoreHome
-	if cfg.ComplianceConfig != nil && cfg.ComplianceConfig.LogPath != "" {
+	if cfg.ComplianceConfig.LogPath != "" {
 		logPath = cfg.ComplianceConfig.LogPath
 	}
 

@@ -18,8 +18,8 @@ func TestCctxRestricted(t *testing.T) {
 	require.NoError(t, err)
 
 	// create config
-	cfg := &config.Config{
-		ComplianceConfig: &config.ComplianceConfig{},
+	cfg := config.Config{
+		ComplianceConfig: config.ComplianceConfig{},
 	}
 
 	t.Run("should return true if sender is restricted", func(t *testing.T) {

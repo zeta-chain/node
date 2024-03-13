@@ -153,24 +153,8 @@ func TestBeginBlocker(t *testing.T) {
 }
 
 func TestDistributeObserverRewards(t *testing.T) {
-
-	k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
+	keepertest.SetConfig(false)
 	observerSet := sample.ObserverSet(4)
-	zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
-	// Total block rewards is the fixed amount of rewards that are distributed
-	totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
-	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
-	require.NoError(t, err)
-	// Fund the emission pool to start the emission process
-	err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
-	require.NoError(t, err)
-	// Set starting emission for all observers to 100 so that we can calculate the rewards and slashes
-	for _, observer := range observerSet.ObserverList {
-		k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
-			Address: observer,
-			Amount:  sdkmath.NewInt(100),
-		})
-	}
 
 	tt := []struct {
 		name                 string
@@ -256,9 +240,34 @@ func TestDistributeObserverRewards(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+
+			// Keeper initialization
+			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
+			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
+
+			// Total block rewards is the fixed amount of rewards that are distributed
+			totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+			totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+			require.NoError(t, err)
+
+			// Fund the emission pool to start the emission process
+			err = sk.BankKeeper.MintCoins(ctx, emissionstypes.ModuleName, totalRewardCoins)
+			require.NoError(t, err)
+
+			// Set starting emission for all observers to 100 so that we can calculate the rewards and slashes
+			for _, observer := range observerSet.ObserverList {
+				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+					Address: observer,
+					Amount:  sdkmath.NewInt(100),
+				})
+			}
+
+			// Set the params
 			params := emissionstypes.DefaultParams()
 			params.ObserverSlashAmount = tc.slashAmount
 			k.SetParams(ctx, params)
+
+			// Set the ballot list
 			ballotIdentifiers := []string{}
 			for i, votes := range tc.votes {
 				ballot := observerTypes.Ballot{
@@ -276,12 +285,15 @@ func TestDistributeObserverRewards(t *testing.T) {
 			})
 
 			ctx = ctx.WithBlockHeight(100)
-			err := emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k)
+
+			// Distribute the rewards and check if the rewards are distributed correctly
+			err = emissionsModule.DistributeObserverRewards(ctx, tc.totalRewardsForBlock, *k, tc.slashAmount)
 			require.NoError(t, err)
-			for _, observer := range observerSet.ObserverList {
+
+			for i, observer := range observerSet.ObserverList {
 				observerEmission, found := k.GetWithdrawableEmission(ctx, observer)
-				require.True(t, found)
-				require.Equal(t, tc.expectedRewards[observer], observerEmission.Amount.Int64())
+				require.True(t, found, "withdrawable emission not found for observer %d", i)
+				require.Equal(t, tc.expectedRewards[observer], observerEmission.Amount.Int64(), "invalid withdrawable emission for observer %d", i)
 			}
 		})
 	}

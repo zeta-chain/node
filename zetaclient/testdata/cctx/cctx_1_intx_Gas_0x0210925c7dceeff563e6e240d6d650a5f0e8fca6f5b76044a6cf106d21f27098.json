@@ -1,0 +1,35 @@
+{
+  "creator": "zeta1hjct6q7npsspsg3dgvzk3sdf89spmlpf7rqmnw",
+  "index": "0x0210925c7dceeff563e6e240d6d650a5f0e8fca6f5b76044a6cf106d21f27098",
+  "zeta_fees": "0",
+  "cctx_status": {
+    "status": 3,
+    "status_message": "Remote omnichain contract call completed",
+    "lastUpdate_timestamp": 1709177431
+  },
+  "inbound_tx_params": {
+    "sender": "0xF829fa7069680b8C37A8086b37d4a24697E5003b",
+    "sender_chain_id": 1,
+    "tx_origin": "0xF829fa7069680b8C37A8086b37d4a24697E5003b",
+    "coin_type": 1,
+    "amount": "4000000000000000",
+    "inbound_tx_observed_hash": "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532",
+    "inbound_tx_observed_external_height": 19330473,
+    "inbound_tx_ballot_index": "0x0210925c7dceeff563e6e240d6d650a5f0e8fca6f5b76044a6cf106d21f27098",
+    "inbound_tx_finalized_zeta_height": 1965579,
+    "tx_finalization_status": 2
+  },
+  "outbound_tx_params": [
+    {
+      "receiver": "0xF829fa7069680b8C37A8086b37d4a24697E5003b",
+      "receiver_chainId": 7000,
+      "coin_type": 1,
+      "amount": "0",
+      "outbound_tx_gas_limit": 90000,
+      "outbound_tx_hash": "0x3b8c1dab5aa21ff90ddb569f2f962ff2d4aa8d914c9177900102e745955e6f35",
+      "outbound_tx_observed_external_height": 1965579,
+      "outbound_tx_effective_gas_price": "0",
+      "tss_pubkey": "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc"
+    }
+  ]
+}

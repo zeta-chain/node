@@ -1,8 +1,4 @@
 # CHANGELOG
-## Version: v14
-
-### Fixes 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Unreleased
 
@@ -18,10 +14,14 @@
 * [1511](https://github.com/zeta-chain/node/pull/1511) - move ballot voting logic from `crosschain` to `observer`
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
+* [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
+* [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 
 ### Features
 
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
+* [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 
 ### Tests
@@ -29,11 +29,29 @@
 * [1767](https://github.com/zeta-chain/node/pull/1767) - add unit tests for emissions module begin blocker
 * [1816](https://github.com/zeta-chain/node/pull/1816) - add args to e2e tests
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
-* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address 
+* [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
+* [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
+* [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
+* [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
+* [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
+* [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
+* [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
+
+### Fixes
+
+* [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
+
+### CI
+
+* [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
+
+## Version: v14
+
+- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ## Version: v13.0.0
 
@@ -60,6 +78,7 @@
 * [1766](https://github.com/zeta-chain/node/pull/1766) - Refactors the `PostTxProcessing` EVM hook functionality to deal with invalid withdraw events
 * [1630](https://github.com/zeta-chain/node/pull/1630) - added password prompts for hotkey and tss keyshare in zetaclient
 * [1760](https://github.com/zeta-chain/node/pull/1760) - Make staking keeper private in crosschain module
+* [1809](https://github.com/zeta-chain/node/pull/1809) - Refactored tryprocessout function in evm signer
 
 ### Fixes
 
@@ -79,7 +98,6 @@
 * [1584](https://github.com/zeta-chain/node/pull/1584) - allow to run E2E tests on any networks
 * [1746](https://github.com/zeta-chain/node/pull/1746) - rename smoke tests to e2e tests
 * [1753](https://github.com/zeta-chain/node/pull/1753) - fix gosec errors on usage of rand package
-
 * [1762](https://github.com/zeta-chain/node/pull/1762) - improve coverage for fungibile module
 * [1782](https://github.com/zeta-chain/node/pull/1782) - improve coverage for fungibile module system contract
 
@@ -96,6 +114,7 @@
 * Added scripts for the new docker image that facilitate the start up automation.
 * Adjusted the docker pipeline slightly to pull the version on PR from the app.go file.
 * [1781](https://github.com/zeta-chain/node/pull/1781) - add codecov coverage report in CI
+* fixed the download binary script to use relative pathing from binary_list file.
 
 ### Features
 

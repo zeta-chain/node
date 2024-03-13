@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
@@ -15,75 +16,60 @@ import (
 func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  types.MsgVoteOnObservedOutboundTx
+		msg  *types.MsgVoteOnObservedOutboundTx
 		err  error
 	}{
 		{
 			name: "valid message",
-			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                        sample.AccAddress(),
-				CctxHash:                       sample.String(),
-				ObservedOutTxHash:              sample.String(),
-				ObservedOutTxBlockHeight:       42,
-				ObservedOutTxGasUsed:           42,
-				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ObservedOutTxEffectiveGasLimit: 42,
-				ValueReceived:                  math.NewUint(42),
-				Status:                         common.ReceiveStatus_Created,
-				OutTxChain:                     42,
-				OutTxTssNonce:                  42,
-				CoinType:                       common.CoinType_Zeta,
-			},
-		},
-		{
-			name: "effective gas price can be nil",
-			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                  sample.AccAddress(),
-				CctxHash:                 sample.String(),
-				ObservedOutTxHash:        sample.String(),
-				ObservedOutTxBlockHeight: 42,
-				ObservedOutTxGasUsed:     42,
-				ValueReceived:            math.NewUint(42),
-				Status:                   common.ReceiveStatus_Created,
-				OutTxChain:               42,
-				OutTxTssNonce:            42,
-				CoinType:                 common.CoinType_Zeta,
-			},
+			msg: types.NewMsgVoteOnObservedOutboundTx(
+				sample.AccAddress(),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				math.NewInt(42),
+				42,
+				math.NewUint(42),
+				common.ReceiveStatus_Created,
+				42,
+				42,
+				common.CoinType_Zeta,
+			),
 		},
 		{
 			name: "invalid address",
-			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                        "invalid_address",
-				CctxHash:                       sample.String(),
-				ObservedOutTxHash:              sample.String(),
-				ObservedOutTxBlockHeight:       42,
-				ObservedOutTxGasUsed:           42,
-				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ObservedOutTxEffectiveGasLimit: 42,
-				ValueReceived:                  math.NewUint(42),
-				Status:                         common.ReceiveStatus_Created,
-				OutTxChain:                     42,
-				OutTxTssNonce:                  42,
-				CoinType:                       common.CoinType_Zeta,
-			},
+			msg: types.NewMsgVoteOnObservedOutboundTx(
+				"invalid_address",
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				math.NewInt(42),
+				42,
+				math.NewUint(42),
+				common.ReceiveStatus_Created,
+				42,
+				42,
+				common.CoinType_Zeta,
+			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
 			name: "invalid chain ID",
-			msg: types.MsgVoteOnObservedOutboundTx{
-				Creator:                        sample.AccAddress(),
-				CctxHash:                       sample.String(),
-				ObservedOutTxHash:              sample.String(),
-				ObservedOutTxBlockHeight:       42,
-				ObservedOutTxGasUsed:           42,
-				ObservedOutTxEffectiveGasPrice: math.NewInt(42),
-				ObservedOutTxEffectiveGasLimit: 42,
-				ValueReceived:                  math.NewUint(42),
-				Status:                         common.ReceiveStatus_Created,
-				OutTxChain:                     -1,
-				OutTxTssNonce:                  42,
-				CoinType:                       common.CoinType_Zeta,
-			},
+			msg: types.NewMsgVoteOnObservedOutboundTx(
+				sample.AccAddress(),
+				sample.String(),
+				sample.String(),
+				42,
+				42,
+				math.NewInt(42),
+				42,
+				math.NewUint(42),
+				common.ReceiveStatus_Created,
+				-1,
+				42,
+				common.CoinType_Zeta,
+			),
 			err: types.ErrInvalidChainID,
 		},
 	}
@@ -190,4 +176,64 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 	msg2.CoinType = common.CoinType_ERC20
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
+}
+
+func TestMsgVoteOnObservedOutboundTx_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    types.MsgVoteOnObservedOutboundTx
+		panics bool
+	}{
+		{
+			name: "valid signer",
+			msg: types.MsgVoteOnObservedOutboundTx{
+				Creator: signer,
+			},
+			panics: false,
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgVoteOnObservedOutboundTx{
+				Creator: "invalid",
+			},
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				require.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
+		})
+	}
+}
+
+func TestMsgVoteOnObservedOutboundTx_Type(t *testing.T) {
+	msg := types.MsgVoteOnObservedOutboundTx{
+		Creator: sample.AccAddress(),
+	}
+	require.Equal(t, common.OutboundVoter.String(), msg.Type())
+}
+
+func TestMsgVoteOnObservedOutboundTx_Route(t *testing.T) {
+	msg := types.MsgVoteOnObservedOutboundTx{
+		Creator: sample.AccAddress(),
+	}
+	require.Equal(t, types.RouterKey, msg.Route())
+}
+
+func TestMsgVoteOnObservedOutboundTx_GetSignBytes(t *testing.T) {
+	msg := types.MsgVoteOnObservedOutboundTx{
+		Creator: sample.AccAddress(),
+	}
+	require.NotPanics(t, func() {
+		msg.GetSignBytes()
+	})
 }

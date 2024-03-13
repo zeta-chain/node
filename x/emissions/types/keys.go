@@ -29,6 +29,12 @@ const (
 
 	EmissionScheduledYears = 4
 	AvgBlockTime           = "5.7"
+
+	// ObserverSlashAmount is the amount of tokens to be slashed from observer in case of incorrect vote
+	// it is set to 0.1 ZETA
+	// TODO: replace this with a parameter
+	// https://github.com/zeta-chain/node/pull/1861
+	ObserverSlashAmount = "100000000000000000"
 )
 
 func KeyPrefix(p string) []byte {

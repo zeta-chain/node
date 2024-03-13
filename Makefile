@@ -52,11 +52,10 @@ test :clean-test-dir run-test
 test-hsm:
 	@go test ${HSM_BUILD_FLAGS} ${TEST_DIR}
 
-test-coverage-exclude-core:
-	@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out $(go list ./... | grep -v /x/zetacore/)
-
+# Generate the test coverage
+# "|| exit 1" is used to return a non-zero exit code if the tests fail
 test-coverage:
-	-@go test ${TEST_BUILD_FLAGS} -v -coverprofile coverage.out ${TEST_DIR}
+	@go test ${TEST_BUILD_FLAGS} -coverprofile coverage.out ${TEST_DIR} || exit 1
 
 coverage-report: test-coverage
 	@go tool cover -html=coverage.out -o coverage.html
@@ -193,20 +192,35 @@ install-zetae2e: go.sum
 	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetae2e
 .PHONY: install-zetae2e
 
-start-e2e-test:
+start-e2e-test: zetanode
 	@echo "--> Starting e2e test"
 	cd contrib/localnet/ && $(DOCKER) compose up -d
 
+start-e2e-admin-test: zetanode
+	@echo "--> Starting e2e admin test"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-admin.yml up -d
+
+start-e2e-performance-test: zetanode
+	@echo "--> Starting e2e performance test"
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-performance.yml up -d
+
 start-stress-test: zetanode
+	@echo "--> Starting stress test"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-stresstest.yml up -d
 
 start-upgrade-test:
 	@echo "--> Starting upgrade test"
-	$(DOCKER) build --build-arg -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
 	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade.yml up -d
 
-start-localnet:
+start-upgrade-test-light:
+	@echo "--> Starting light upgrade test (no ZetaChain state populating before upgrade)"
+	$(DOCKER) build -t zetanode -f ./Dockerfile-upgrade .
+	$(DOCKER) build -t orchestrator -f contrib/localnet/orchestrator/Dockerfile.fastbuild .
+	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-upgrade-light.yml up -d
+
+start-localnet: zetanode
 	@echo "--> Starting localnet"
 	cd contrib/localnet/ && $(DOCKER) compose -f docker-compose.yml -f docker-compose-setup-only.yml up -d
 
