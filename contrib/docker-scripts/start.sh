@@ -250,6 +250,12 @@ load_defaults
 if [[ -f "${DAEMON_HOME}/start_sequence_status" ]] && grep -q "START_SEQUENCE_COMPLETE" "${DAEMON_HOME}/start_sequence_status" && [[ "$RE_DO_START_SEQUENCE" != "true" ]]; then
     logt "The start sequence is complete and no redo is required."
 
+    logt "Download Configs"
+    download_configs
+
+    logt "Download Historical Binaries"
+    download_binary_version
+
     if [ "${RESTORE_TYPE}" == "statesync" ]; then
       logt "Setup Restore Type: ${RESTORE_TYPE}"
       logt "During restarts, we re-do this to ensure to update the configs with valid values. When you call change config the stuff that gets set in this function for statesync needs to be set. Doesn't effect to re-set this."
