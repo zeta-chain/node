@@ -4,6 +4,49 @@ logt() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') $1"
 }
 
+
+function load_defaults {
+  #DEFAULT: Mainnet Statesync.
+  export DAEMON_HOME=${DAEMON_HOME:=/root/.zetacored}
+  export NETWORK=${NETWORK:=mainnet}
+  export RESTORE_TYPE=${RESTORE_TYPE:=statesync}
+  export SNAPSHOT_API=${SNAPSHOT_API:=https://snapshots.zetachain.com}
+  export TRUST_HEIGHT_DIFFERENCE_STATE_SYNC=${TRUST_HEIGHT_DIFFERENCE_STATE_SYNC:=40000}
+  export COSMOVISOR_VERSION=${COSMOVISOR_VERSION:=v1.5.0}
+  export CHAIN_ID=${CHAIN_ID:=zetachain_7000-1}
+  export COSMOVISOR_CHECKSUM=${COSMOVISOR_CHECKSUM:=626dfc58c266b85f84a7ed8e2fe0e2346c15be98cfb9f9b88576ba899ed78cdc}
+  export VISOR_NAME=${VISOR_NAME:=cosmovisor}
+  export DAEMON_NAME=${DAEMON_NAME:=zetacored}
+  export DAEMON_ALLOW_DOWNLOAD_BINARIES=${DAEMON_ALLOW_DOWNLOAD_BINARIES:=false}
+  export DAEMON_RESTART_AFTER_UPGRADE=${DAEMON_RESTART_AFTER_UPGRADE:=true}
+  export UNSAFE_SKIP_BACKUP=${UNSAFE_SKIP_BACKUP:=true}
+  export CLIENT_DAEMON_NAME=${CLIENT_DAEMON_NAME:=zetaclientd}
+  export CLIENT_DAEMON_ARGS=${CLIENT_DAEMON_ARGS:""}
+  export CLIENT_SKIP_UPGRADE=${CLIENT_SKIP_UPGRADE:=true}
+  export CLIENT_START_PROCESS=${CLIENT_START_PROCESS:=false}
+  export MONIKER=${MONIKER:=local-test}
+  export RE_DO_START_SEQUENCE=${RE_DO_START_SEQUENCE:=false}
+
+  #ATHENS3
+  export BINARY_LIST_ATHENS3=${BINARY_LIST_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/binary_list.json}
+  export STATE_SYNC_RPC_NODE_FILE_ATHENS3=${STATE_SYNC_RPC_NODE_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/state_sync_node}
+  export RPC_STATE_SYNC_RPC_LIST_FILE_ATHENS3=${RPC_STATE_SYNC_RPC_LIST_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/rpc_state_sync_nodes}
+  export APP_TOML_FILE_ATHENS3=${APP_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/app.toml}
+  export CONFIG_TOML_FILE_ATHENS3=${CONFIG_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/config.toml}
+  export CLIENT_TOML_FILE_ATHENS3=${CLIENT_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/client.toml}
+  export GENESIS_FILE_ATHENS3=${GENESIS_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/genesis.json}
+
+  #MAINNET
+  export BINARY_LIST_MAINNET=${BINARY_LIST_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/binary_list.json}
+  export STATE_SYNC_RPC_NODE_FILE_MAINNET=${STATE_SYNC_RPC_NODE_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/state_sync_node}
+  export RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET=${RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/rpc_state_sync_nodes}
+  export APP_TOML_FILE_MAINNET=${APP_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/app.toml}
+  export CONFIG_TOML_FILE_MAINNET=${CONFIG_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/config.toml}
+  export CLIENT_TOML_FILE_MAINNET=${CLIENT_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/client.toml}
+  export GENESIS_FILE_MAINNET=${GENESIS_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/genesis.json}
+
+}
+
 function init_chain {
   if [ -d "${DAEMON_HOME}/config" ]; then
       logt "${DAEMON_NAME} home directory already initialized."
@@ -199,48 +242,6 @@ function start_network {
     --moniker ${MONIKER} \
     --rpc.laddr tcp://0.0.0.0:26657 \
     --minimum-gas-prices 1.0azeta "--grpc.enable=true"
-}
-
-function load_defaults {
-  #DEFAULT: Mainnet Statesync.
-  export DAEMON_HOME=${DAEMON_HOME:=/root/.zetacored}
-  export NETWORK=${NETWORK:=mainnet}
-  export RESTORE_TYPE=${RESTORE_TYPE:=statesync}
-  export SNAPSHOT_API=${SNAPSHOT_API:=https://snapshots.zetachain.com}
-  export TRUST_HEIGHT_DIFFERENCE_STATE_SYNC=${TRUST_HEIGHT_DIFFERENCE_STATE_SYNC:=40000}
-  export COSMOVISOR_VERSION=${COSMOVISOR_VERSION:=v1.5.0}
-  export CHAIN_ID=${CHAIN_ID:=zetachain_7000-1}
-  export COSMOVISOR_CHECKSUM=${COSMOVISOR_CHECKSUM:=626dfc58c266b85f84a7ed8e2fe0e2346c15be98cfb9f9b88576ba899ed78cdc}
-  export VISOR_NAME=${VISOR_NAME:=cosmovisor}
-  export DAEMON_NAME=${DAEMON_NAME:=zetacored}
-  export DAEMON_ALLOW_DOWNLOAD_BINARIES=${DAEMON_ALLOW_DOWNLOAD_BINARIES:=false}
-  export DAEMON_RESTART_AFTER_UPGRADE=${DAEMON_RESTART_AFTER_UPGRADE:=true}
-  export UNSAFE_SKIP_BACKUP=${UNSAFE_SKIP_BACKUP:=true}
-  export CLIENT_DAEMON_NAME=${CLIENT_DAEMON_NAME:=zetaclientd}
-  export CLIENT_DAEMON_ARGS=${CLIENT_DAEMON_ARGS:""}
-  export CLIENT_SKIP_UPGRADE=${CLIENT_SKIP_UPGRADE:=true}
-  export CLIENT_START_PROCESS=${CLIENT_START_PROCESS:=false}
-  export MONIKER=${MONIKER:=local-test}
-  export RE_DO_START_SEQUENCE=${RE_DO_START_SEQUENCE:=false}
-
-  #ATHENS3
-  export BINARY_LIST_ATHENS3=${BINARY_LIST_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/binary_list.json}
-  export STATE_SYNC_RPC_NODE_FILE_ATHENS3=${STATE_SYNC_RPC_NODE_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/state_sync_node}
-  export RPC_STATE_SYNC_RPC_LIST_FILE_ATHENS3=${RPC_STATE_SYNC_RPC_LIST_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/rpc_state_sync_nodes}
-  export APP_TOML_FILE_ATHENS3=${APP_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/app.toml}
-  export CONFIG_TOML_FILE_ATHENS3=${CONFIG_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/config.toml}
-  export CLIENT_TOML_FILE_ATHENS3=${CLIENT_TOML_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/client.toml}
-  export GENESIS_FILE_ATHENS3=${GENESIS_FILE_ATHENS3:=https://raw.githubusercontent.com/zeta-chain/network-config/main/athens3/genesis.json}
-
-  #MAINNET
-  export BINARY_LIST_MAINNET=${BINARY_LIST_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/binary_list.json}
-  export STATE_SYNC_RPC_NODE_FILE_MAINNET=${STATE_SYNC_RPC_NODE_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/state_sync_node}
-  export RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET=${RPC_STATE_SYNC_RPC_LIST_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/rpc_state_sync_nodes}
-  export APP_TOML_FILE_MAINNET=${APP_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/app.toml}
-  export CONFIG_TOML_FILE_MAINNET=${CONFIG_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/config.toml}
-  export CLIENT_TOML_FILE_MAINNET=${CLIENT_TOML_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/client.toml}
-  export GENESIS_FILE_MAINNET=${GENESIS_FILE_MAINNET:=https://raw.githubusercontent.com/zeta-chain/network-config/main/mainnet/genesis.json}
-
 }
 
 logt "Load Default Values for ENV Vars if not set."
