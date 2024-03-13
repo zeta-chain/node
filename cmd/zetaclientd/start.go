@@ -162,12 +162,15 @@ func start(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	metrics, err := metrics.NewMetrics()
+	m, err := metrics.NewMetrics()
 	if err != nil {
 		log.Error().Err(err).Msg("NewMetrics")
 		return err
 	}
-	metrics.Start()
+	m.Start()
+
+	metrics.Info.WithLabelValues(common.Version).Set(1)
+	metrics.LastStartTime.SetToCurrentTime()
 
 	var tssHistoricalList []observerTypes.TSS
 	tssHistoricalList, err = zetaBridge.GetTssHistory()
