@@ -5,7 +5,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
@@ -101,9 +100,9 @@ func TestNewMsgMigrateTssFunds_GetSigners(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if !tt.panics {
 				signers := tt.msg.GetSigners()
-				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+				require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
 			} else {
-				assert.Panics(t, func() {
+				require.Panics(t, func() {
 					tt.msg.GetSigners()
 				})
 			}
@@ -117,7 +116,7 @@ func TestNewMsgMigrateTssFunds_Type(t *testing.T) {
 		ChainId: common.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
-	assert.Equal(t, types.TypeMsgMigrateTssFunds, msg.Type())
+	require.Equal(t, types.TypeMsgMigrateTssFunds, msg.Type())
 }
 
 func TestNewMsgMigrateTssFunds_Route(t *testing.T) {
@@ -126,7 +125,7 @@ func TestNewMsgMigrateTssFunds_Route(t *testing.T) {
 		ChainId: common.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
-	assert.Equal(t, types.RouterKey, msg.Route())
+	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestNewMsgMigrateTssFunds_GetSignBytes(t *testing.T) {
@@ -135,7 +134,7 @@ func TestNewMsgMigrateTssFunds_GetSignBytes(t *testing.T) {
 		ChainId: common.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
-	assert.NotPanics(t, func() {
+	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
 }

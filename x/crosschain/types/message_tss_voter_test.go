@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -65,9 +64,9 @@ func TestMsgCreateTSSVoter_GetSigners(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if !tt.panics {
 				signers := tt.msg.GetSigners()
-				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+				require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
 			} else {
-				assert.Panics(t, func() {
+				require.Panics(t, func() {
 					tt.msg.GetSigners()
 				})
 			}
@@ -77,22 +76,22 @@ func TestMsgCreateTSSVoter_GetSigners(t *testing.T) {
 
 func TestMsgCreateTSSVoter_Type(t *testing.T) {
 	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
-	assert.Equal(t, types.TypeMsgCreateTSSVoter, msg.Type())
+	require.Equal(t, types.TypeMsgCreateTSSVoter, msg.Type())
 }
 
 func TestMsgCreateTSSVoter_Route(t *testing.T) {
 	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
-	assert.Equal(t, types.RouterKey, msg.Route())
+	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgCreateTSSVoter_GetSignBytes(t *testing.T) {
 	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
-	assert.NotPanics(t, func() {
+	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
 }
 
 func TestMsgCreateTSSVoter_Digest(t *testing.T) {
 	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, common.ReceiveStatus_Created)
-	assert.Equal(t, "1-tss-keygen", msg.Digest())
+	require.Equal(t, "1-tss-keygen", msg.Digest())
 }

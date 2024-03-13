@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
@@ -71,9 +70,9 @@ func TestMsgUpdateSystemContract_GetSigners(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if !tt.panics {
 				signers := tt.msg.GetSigners()
-				assert.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+				require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
 			} else {
-				assert.Panics(t, func() {
+				require.Panics(t, func() {
 					tt.msg.GetSigners()
 				})
 			}
@@ -85,21 +84,21 @@ func TestMsgUpdateSystemContract_Type(t *testing.T) {
 	msg := types.MsgUpdateSystemContract{
 		Creator: sample.AccAddress(),
 	}
-	assert.Equal(t, types.TypeMsgUpdateSystemContract, msg.Type())
+	require.Equal(t, types.TypeMsgUpdateSystemContract, msg.Type())
 }
 
 func TestMsgUpdateSystemContract_Route(t *testing.T) {
 	msg := types.MsgUpdateSystemContract{
 		Creator: sample.AccAddress(),
 	}
-	assert.Equal(t, types.RouterKey, msg.Route())
+	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgUpdateSystemContract_GetSignBytes(t *testing.T) {
 	msg := types.MsgUpdateSystemContract{
 		Creator: sample.AccAddress(),
 	}
-	assert.NotPanics(t, func() {
+	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
 }
