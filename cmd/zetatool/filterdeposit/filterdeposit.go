@@ -17,11 +17,14 @@ var Cmd = &cobra.Command{
 	Short: "filter missing inbound deposits",
 }
 
+// Deposit is a data structure for keeping track of inbound transactions
 type Deposit struct {
 	TxID   string
 	Amount uint64
 }
 
+// CheckForCCTX is querying zeta core for a cctx associated with a confirmed transaction hash. If the cctx is not found,
+// then the transaction hash is added to the list of missed inbound transactions.
 func CheckForCCTX(list []Deposit, cfg *config.Config) {
 	var missedList []Deposit
 
@@ -52,9 +55,10 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) {
 			fmt.Println("error unmarshalling: ", err.Error())
 		}
 
+		// successful query of the given cctx will not contain a "code" field, therefore if it exists then the cctx
+		// was not found and is added to the missing list.
 		if _, ok := cctx["code"]; ok {
 			missedList = append(missedList, entry)
-			//fmt.Println("appending to missed list: ", entry)
 		}
 	}
 

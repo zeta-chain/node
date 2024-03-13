@@ -34,6 +34,8 @@ func init() {
 	Cmd.AddCommand(evmCmd)
 }
 
+// FilterEVMTransactions is a command that queries an EVM explorer and Contracts for inbound transactions that qualify
+// for cross chain transactions.
 func FilterEVMTransactions(cmd *cobra.Command, _ []string) {
 	configFile, err := cmd.Flags().GetString(config.Flag)
 	if err != nil {
@@ -47,6 +49,7 @@ func FilterEVMTransactions(cmd *cobra.Command, _ []string) {
 	CheckForCCTX(list, cfg)
 }
 
+// GetEthHashList is a helper function querying total inbound txns in segments of blocks in ranges defined by the config
 func GetEthHashList(cfg *config.Config) []Deposit {
 	startBlock := cfg.EvmStartBlock
 	client, err := ethclient.Dial(cfg.EthRPC)
@@ -78,6 +81,7 @@ func GetEthHashList(cfg *config.Config) []Deposit {
 	return deposits
 }
 
+// GetHashListSegment queries and filters deposits for a given range
 func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock uint64, cfg *config.Config) []Deposit {
 	deposits := make([]Deposit, 0)
 
@@ -148,6 +152,7 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 	return deposits
 }
 
+// getTSSDeposits more specifically queries and filters deposits based on direct transfers the TSS address.
 func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64) ([]Deposit, error) {
 	client := etherscan.New(etherscan.Mainnet, "S3AVTNXDJQZQQUVXJM4XVIPBRYECGK88VX")
 	deposits := make([]Deposit, 0)
@@ -182,6 +187,7 @@ func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64) ([]De
 	return deposits, nil
 }
 
+// CheckEvmTxLog is a helper function used to validate receipts, logic is taken from zetaclient.
 func CheckEvmTxLog(vLog *ethtypes.Log, wantAddress common.Address, wantHash string, wantTopics int) error {
 	if vLog.Removed {
 		return fmt.Errorf("log is removed, chain reorg?")

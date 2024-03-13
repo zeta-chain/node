@@ -25,6 +25,8 @@ func init() {
 	Cmd.AddCommand(btcCmd)
 }
 
+// FilterBTCTransactions is a command that queries the bitcoin explorer for inbound transactions that qualify for
+// cross chain transactions.
 func FilterBTCTransactions(cmd *cobra.Command, _ []string) {
 	configFile, err := cmd.Flags().GetString(config.Flag)
 	fmt.Println("config file name: ", configFile)
@@ -39,6 +41,7 @@ func FilterBTCTransactions(cmd *cobra.Command, _ []string) {
 	CheckForCCTX(list, cfg)
 }
 
+// getHashList is called by FilterBTCTransactions to help query and filter inbound transactions on btc
 func getHashList(cfg *config.Config) []Deposit {
 	var list []Deposit
 	lastHash := ""
@@ -66,6 +69,9 @@ func getHashList(cfg *config.Config) []Deposit {
 			log.Fatal(closeErr)
 		}
 
+		// NOTE: decoding json from request dynamically is not ideal, however there isn't a detailed, defined data structure
+		// provided by blockstream. Will need to create one in the future using following definition:
+		// https://github.com/Blockstream/esplora/blob/master/API.md#transaction-format
 		var txns []map[string]interface{}
 		err := json.Unmarshal(body, &txns)
 		if err != nil {
