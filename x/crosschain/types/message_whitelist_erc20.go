@@ -27,7 +27,7 @@ func NewMsgWhitelistERC20(
 }
 
 func (msg *MsgWhitelistERC20) Route() string {
-	return types.RouterKey
+	return RouterKey
 }
 
 func (msg *MsgWhitelistERC20) Type() string {
@@ -43,7 +43,7 @@ func (msg *MsgWhitelistERC20) GetSigners() []sdk.AccAddress {
 }
 
 func (msg *MsgWhitelistERC20) GetSignBytes() []byte {
-	bz := types.ModuleCdc.MustMarshalJSON(msg)
+	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 

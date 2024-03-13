@@ -4,75 +4,81 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/testutil/keeper"
+	common "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
-func TestMessageUpdateTssAddress_ValidateBasic(t *testing.T) {
-	keeper.SetConfig(false)
+func TestMsgGasPriceVoter_ValidateBasic(t *testing.T) {
 	tests := []struct {
-		name  string
-		msg   *types.MsgUpdateTssAddress
-		error bool
+		name string
+		msg  *types.MsgGasPriceVoter
+		err  error
 	}{
 		{
-			name: "invalid creator",
-			msg: types.NewMsgUpdateTssAddress(
-				"invalid_address",
-				sample.PubKeyString(),
+			name: "invalid address",
+			msg: types.NewMsgGasPriceVoter(
+				"invalid",
+				1,
+				1,
+				"1000",
+				1,
 			),
-			error: true,
+			err: sdkerrors.ErrInvalidAddress,
 		},
 		{
-			name: "invalid pubkey",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "invalid chain id",
+			msg: types.NewMsgGasPriceVoter(
 				sample.AccAddress(),
-				"zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm",
+				-1,
+				1,
+				"1000",
+				1,
 			),
-			error: true,
+			err: sdkerrors.ErrInvalidChainID,
 		},
 		{
-			name: "valid msg",
-			msg: types.NewMsgUpdateTssAddress(
+			name: "valid address",
+			msg: types.NewMsgGasPriceVoter(
 				sample.AccAddress(),
-				sample.PubKeyString(),
+				1,
+				1,
+				"1000",
+				1,
 			),
-			error: false,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.msg.ValidateBasic()
-			if tt.error {
-				require.Error(t, err)
+			if tt.err != nil {
+				require.ErrorIs(t, err, tt.err)
 				return
-			} else {
-				require.NoError(t, err)
 			}
+			require.NoError(t, err)
 		})
 	}
 }
 
-func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
+func TestMsgGasPriceVoter_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgUpdateTssAddress
+		msg    types.MsgGasPriceVoter
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgGasPriceVoter{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgUpdateTssAddress{
+			msg: types.MsgGasPriceVoter{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -93,22 +99,22 @@ func TestMessageUpdateTssAddress_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMessageUpdateTssAddress_Type(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgGasPriceVoter_Type(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgUpdateTssAddress, msg.Type())
+	require.Equal(t, common.GasPriceVoter.String(), msg.Type())
 }
 
-func TestMessageUpdateTssAddress_Route(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgGasPriceVoter_Route(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMessageUpdateTssAddress_GetSignBytes(t *testing.T) {
-	msg := types.MsgUpdateTssAddress{
+func TestMsgGasPriceVoter_GetSignBytes(t *testing.T) {
+	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {

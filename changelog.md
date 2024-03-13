@@ -15,6 +15,8 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
+* [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 
 ### Features
 
@@ -34,6 +36,7 @@
 * [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
 * [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
 * [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
+* [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 
 ### Fixes
 
