@@ -84,13 +84,15 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 	return n
 }
 
-func (k Keeper) ProcessSuccessfullOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
+func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Reverted, "")
 	case types.CctxStatus_PendingOutbound:
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "")
+	default:
+		return
 	}
 	newStatus := cctx.CctxStatus.Status.String()
 	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, *cctx)
@@ -151,7 +153,7 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 	err := func() error {
 		switch ballotStatus {
 		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
-			k.ProcessSuccessfullOutbound(tmpCtx, cctx, valueReceived)
+			k.ProcessSuccessfulOutbound(tmpCtx, cctx, valueReceived)
 		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
 			err := k.ProcessFailedOutbound(tmpCtx, cctx, valueReceived)
 			if err != nil {

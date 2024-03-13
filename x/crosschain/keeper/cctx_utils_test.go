@@ -614,7 +614,6 @@ func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.C
 	cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 	cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 	cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-	cctx.CoinType = common.CoinType_Zeta
 	cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
 	cctx.GetCurrentOutTxParam().ReceiverChainId = senderChain.ChainId
 	cctx.CoinType = common.CoinType_ERC20
