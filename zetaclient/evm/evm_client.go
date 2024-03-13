@@ -69,9 +69,9 @@ type Log struct {
 type ChainClient struct {
 	chain                      common.Chain
 	evmClient                  interfaces.EVMRPCClient
+	evmJSONRPC                 interfaces.EVMJSONRPCClient
 	zetaClient                 interfaces.ZetaCoreBridger
 	Tss                        interfaces.TSSSigner
-	evmJSONRPC                 *ethrpc.EthRPC
 	lastBlockScanned           uint64
 	lastBlock                  uint64
 	BlockTimeExternalChain     uint64 // block time in seconds
@@ -81,7 +81,6 @@ type ChainClient struct {
 	outTxPendingTransactions   map[string]*ethtypes.Transaction
 	outTXConfirmedReceipts     map[string]*ethtypes.Receipt
 	outTXConfirmedTransactions map[string]*ethtypes.Transaction
-	OutTxChan                  chan OutTx // send to this channel if you want something back!
 	stop                       chan struct{}
 	logger                     Log
 	coreContext                *corecontext.ZetaCoreContext
@@ -128,7 +127,6 @@ func NewEVMChainClient(
 	ob.outTxPendingTransactions = make(map[string]*ethtypes.Transaction)
 	ob.outTXConfirmedReceipts = make(map[string]*ethtypes.Receipt)
 	ob.outTXConfirmedTransactions = make(map[string]*ethtypes.Transaction)
-	ob.OutTxChan = make(chan OutTx, 100)
 
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.ChainName.String(), evmCfg.Endpoint)
 	client, err := ethclient.Dial(evmCfg.Endpoint)
@@ -176,13 +174,13 @@ func (ob *ChainClient) WithLogger(logger zerolog.Logger) {
 	}
 }
 
-func (ob *ChainClient) WithEvmClient(client *ethclient.Client) {
+func (ob *ChainClient) WithEvmClient(client interfaces.EVMRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmClient = client
 }
 
-func (ob *ChainClient) WithEvmJSONRPC(client *ethrpc.EthRPC) {
+func (ob *ChainClient) WithEvmJSONRPC(client interfaces.EVMJSONRPCClient) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.evmJSONRPC = client
@@ -946,13 +944,13 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	startBlock, toBlock := ob.calcBlockRangeToScan(confirmedBlockNum, lastScanned, config.MaxBlocksPerPeriod)
 
 	// task 1:  query evm chain for zeta sent logs (read at most 100 blocks in one go)
-	lastScannedZetaSent := ob.observeZetaSent(startBlock, toBlock)
+	lastScannedZetaSent := ob.ObserveZetaSent(startBlock, toBlock)
 
 	// task 2: query evm chain for deposited logs (read at most 100 blocks in one go)
-	lastScannedDeposited := ob.observeERC20Deposited(startBlock, toBlock)
+	lastScannedDeposited := ob.ObserveERC20Deposited(startBlock, toBlock)
 
 	// task 3: query the incoming tx to TSS address (read at most 100 blocks in one go)
-	lastScannedTssRecvd := ob.observerTSSReceive(startBlock, toBlock, flags)
+	lastScannedTssRecvd := ob.ObserverTSSReceive(startBlock, toBlock, flags)
 
 	// note: using lowest height for all 3 events is not perfect, but it's simple and good enough
 	lastScannedLowest := lastScannedZetaSent
@@ -975,13 +973,13 @@ func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	return nil
 }
 
-// observeZetaSent queries the ZetaSent event from the connector contract and posts to zetabridge
+// ObserveZetaSent queries the ZetaSent event from the connector contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
+func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 	// filter ZetaSent logs
 	addrConnector, connector, err := ob.GetConnectorContract()
 	if err != nil {
-		ob.logger.ChainLogger.Warn().Err(err).Msgf("observeZetaSent: GetConnectorContract error:")
+		ob.logger.ChainLogger.Warn().Err(err).Msgf("ObserveZetaSent: GetConnectorContract error:")
 		return startBlock - 1 // lastScanned
 	}
 	iter, err := connector.FilterZetaSent(&bind.FilterOpts{
@@ -991,7 +989,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 	}, []ethcommon.Address{}, []*big.Int{})
 	if err != nil {
 		ob.logger.ChainLogger.Warn().Err(err).Msgf(
-			"observeZetaSent: FilterZetaSent error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
+			"ObserveZetaSent: FilterZetaSent error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
 	}
 
@@ -1004,7 +1002,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
+		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveZetaSent: invalid ZetaSent event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -1030,7 +1028,7 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 		}
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("observeZetaSent: multiple remote call events detected in tx %s", event.Raw.TxHash)
+			ob.logger.ExternalChainWatcher.Warn().Msgf("ObserveZetaSent: multiple remote call events detected in tx %s", event.Raw.TxHash)
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -1047,13 +1045,13 @@ func (ob *ChainClient) observeZetaSent(startBlock, toBlock uint64) uint64 {
 	return toBlock
 }
 
-// observeERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetabridge
+// ObserveERC20Deposited queries the ERC20CustodyDeposited event from the ERC20Custody contract and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 {
+func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 {
 	// filter ERC20CustodyDeposited logs
 	addrCustody, erc20custodyContract, err := ob.GetERC20CustodyContract()
 	if err != nil {
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeERC20Deposited: GetERC20CustodyContract error:")
+		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveERC20Deposited: GetERC20CustodyContract error:")
 		return startBlock - 1 // lastScanned
 	}
 	iter, err := erc20custodyContract.FilterDeposited(&bind.FilterOpts{
@@ -1063,7 +1061,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 
 	}, []ethcommon.Address{})
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf(
-			"observeERC20Deposited: FilterDeposited error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
+			"ObserveERC20Deposited: FilterDeposited error from block %d to %d for chain %d", startBlock, toBlock, ob.chain.ChainId)
 		return startBlock - 1 // lastScanned
 	}
 
@@ -1076,7 +1074,7 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 
 			events = append(events, iter.Event)
 			continue
 		}
-		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("observeERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
+		ob.logger.ExternalChainWatcher.Warn().Err(err).Msgf("ObserveERC20Deposited: invalid Deposited event in tx %s on chain %d at height %d",
 			iter.Event.Raw.TxHash.Hex(), ob.chain.ChainId, iter.Event.Raw.BlockNumber)
 	}
 	sort.SliceStable(events, func(i, j int) bool {
@@ -1103,14 +1101,14 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 
 		tx, _, err := ob.TransactionByHash(event.Raw.TxHash.Hex())
 		if err != nil {
 			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf(
-				"observeERC20Deposited: error getting transaction for intx %s chain %d", event.Raw.TxHash, ob.chain.ChainId)
+				"ObserveERC20Deposited: error getting transaction for intx %s chain %d", event.Raw.TxHash, ob.chain.ChainId)
 			return beingScanned - 1 // we have to re-scan from this block next time
 		}
 		sender := ethcommon.HexToAddress(tx.From)
 
 		// guard against multiple events in the same tx
 		if guard[event.Raw.TxHash.Hex()] {
-			ob.logger.ExternalChainWatcher.Warn().Msgf("observeERC20Deposited: multiple remote call events detected in tx %s", event.Raw.TxHash)
+			ob.logger.ExternalChainWatcher.Warn().Msgf("ObserveERC20Deposited: multiple remote call events detected in tx %s", event.Raw.TxHash)
 			continue
 		}
 		guard[event.Raw.TxHash.Hex()] = true
@@ -1127,9 +1125,9 @@ func (ob *ChainClient) observeERC20Deposited(startBlock, toBlock uint64) uint64 
 	return toBlock
 }
 
-// observerTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
+// ObserverTSSReceive queries the incoming gas asset to TSS address and posts to zetabridge
 // returns the last block successfully scanned
-func (ob *ChainClient) observerTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
+func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags observertypes.CrosschainFlags) uint64 {
 	if !ob.GetChainParams().IsSupported {
 		return startBlock - 1 // lastScanned
 	}
@@ -1147,26 +1145,11 @@ func (ob *ChainClient) observerTSSReceive(startBlock, toBlock uint64, flags obse
 			}
 		}
 
-		// TODO: we can track the total number of 'getBlockByNumber' RPC calls made
-		block, err := ob.GetBlockByNumberCached(bn)
+		// observe TSS received gas token in block 'bn'
+		err := ob.ObserveTSSReceiveInBlock(bn)
 		if err != nil {
-			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("observerTSSReceive: error getting block %d for chain %d", bn, ob.chain.ChainId)
+			ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("ObserverTSSReceive: error observing TSS received token in block %d for chain %d", bn, ob.chain.ChainId)
 			return bn - 1 // we have to re-scan from this block next time
-		}
-		for i := range block.Transactions {
-			tx := block.Transactions[i]
-			if ethcommon.HexToAddress(tx.To) == ob.Tss.EVMAddress() {
-				receipt, err := ob.evmClient.TransactionReceipt(context.Background(), ethcommon.HexToHash(tx.Hash))
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf("observerTSSReceive: error getting receipt for intx %s chain %d", tx.Hash, ob.chain.ChainId)
-					return bn - 1 // we have to re-scan from this block next time
-				}
-				_, err = ob.CheckAndVoteInboundTokenGas(&tx, receipt, true)
-				if err != nil {
-					ob.logger.ExternalChainWatcher.Err(err).Msgf("observerTSSReceive: error checking and voting inbound gas asset for intx %s chain %d", tx.Hash, ob.chain.ChainId)
-					return bn - 1 // we have to re-scan this block next time
-				}
-			}
 		}
 	}
 	// successful processed all gas asset deposits in [startBlock, toBlock]
