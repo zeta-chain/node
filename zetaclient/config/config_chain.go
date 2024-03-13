@@ -39,7 +39,7 @@ func New() Config {
 }
 
 var bitcoinConfigRegnet = BTCConfig{
-	RPCUsername: "e2e",
+	RPCUsername: "smoketest", // smoketest is the previous name for E2E test, we keep this name for compatibility between client versions in upgrade test
 	RPCPassword: "123",
 	RPCHost:     "bitcoin:18443",
 	RPCParams:   "regtest",

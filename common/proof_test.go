@@ -38,7 +38,7 @@ type Blocks struct {
 }
 
 func LoadTestBlocks(t *testing.T) Blocks {
-	file, err := os.Open("./test_data/test_blocks.json")
+	file, err := os.Open("./testdata/test_blocks.json")
 	require.NoError(t, err)
 	defer file.Close()
 
