@@ -90,7 +90,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 
+	_, found = k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return nil, types.ErrCannotFindTSSKeys
+	}
 	// if ballot successful, the value received should be the out tx amount
+	err = SetOutboundValues(ctx, &cctx, *msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, err
 	}

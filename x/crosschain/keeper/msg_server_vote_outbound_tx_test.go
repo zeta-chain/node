@@ -136,6 +136,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundSuccessBallot(observerMock, ctx, cctx, *senderChain, observer)
@@ -186,6 +187,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
 		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
@@ -220,7 +222,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		require.Equal(t, types.CctxStatus_Aborted, c.CctxStatus.Status)
 	})
 
-	t.Run("fail to vote on outbound tx", func(t *testing.T) {
+	t.Run("fail to finalize outbound if not a finalizing vote", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
 		})

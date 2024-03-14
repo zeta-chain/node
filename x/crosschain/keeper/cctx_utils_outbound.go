@@ -13,7 +13,17 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) GetOutbound(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedOutboundTx, ballotStatus observertypes.BallotStatus) error {
+func SetRevertOutboundValues(cctx *types.CrossChainTx, gasLimit uint64) {
+	revertTxParams := &types.OutboundTxParams{
+		Receiver:           cctx.InboundTxParams.Sender,
+		ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
+		Amount:             cctx.InboundTxParams.Amount,
+		OutboundTxGasLimit: gasLimit,
+		TssPubkey:          cctx.GetCurrentOutTxParam().TssPubkey,
+	}
+	cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
+}
+func SetOutboundValues(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedOutboundTx, ballotStatus observertypes.BallotStatus) error {
 	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ValueReceived.Equal(cctx.GetCurrentOutTxParam().Amount) {
 			ctx.Logger().Error(fmt.Sprintf("VoteOnObservedOutboundTx: Mint mismatch: %s value received vs %s cctx amount",
@@ -30,10 +40,6 @@ func (k Keeper) GetOutbound(ctx sdk.Context, cctx *types.CrossChainTx, msg types
 	cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
-	_, found := k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return types.ErrCannotFindTSSKeys
-	}
 	return nil
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -18,14 +19,11 @@ import (
 
 func TestKeeper_GetOutbound(t *testing.T) {
 	t.Run("successfully get outbound tx", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tss := sample.Tss()
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
-		zk.ObserverKeeper.SetTSS(ctx, tss)
-		err := k.GetOutbound(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
+		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
 			ObservedOutTxHash:              hash,
 			ObservedOutTxBlockHeight:       10,
@@ -43,14 +41,11 @@ func TestKeeper_GetOutbound(t *testing.T) {
 	})
 
 	t.Run("successfully get outbound tx for failed ballot without amount check", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tss := sample.Tss()
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
-		zk.ObserverKeeper.SetTSS(ctx, tss)
-		err := k.GetOutbound(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
+		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
 			ObservedOutTxHash:              hash,
 			ObservedOutTxBlockHeight:       10,
 			ObservedOutTxGasUsed:           100,
@@ -67,14 +62,12 @@ func TestKeeper_GetOutbound(t *testing.T) {
 	})
 
 	t.Run("failed to get outbound tx if amount does not match value received", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tss := sample.Tss()
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+
 		cctx := sample.CrossChainTx(t, "test")
 		hash := sample.Hash().String()
 
-		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
-		zk.ObserverKeeper.SetTSS(ctx, tss)
-		err := k.GetOutbound(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
+		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
 			ValueReceived:                  sdkmath.NewUint(100),
 			ObservedOutTxHash:              hash,
 			ObservedOutTxBlockHeight:       10,
@@ -83,24 +76,6 @@ func TestKeeper_GetOutbound(t *testing.T) {
 			ObservedOutTxEffectiveGasLimit: 20,
 		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-	})
-
-	t.Run("failed to get outbound tx if tss not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		tss := sample.Tss()
-		cctx := sample.CrossChainTx(t, "test")
-		hash := sample.Hash().String()
-
-		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
-		err := k.GetOutbound(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: sdkmath.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
-		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
-		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
 	})
 }
 
