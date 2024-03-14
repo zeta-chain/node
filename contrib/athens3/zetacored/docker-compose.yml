@@ -6,17 +6,15 @@ services:
 #    build:
 #      context: ../../..
 #      dockerfile: Dockerfile
-    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14}
+    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1}
     environment:
       DAEMON_HOME: "/root/.zetacored"
       NETWORK: athens3
       #RESTORE_TYPE=snapshot/snapshot-archive/statesync
-      RESTORE_TYPE: "statesync"
+      RESTORE_TYPE: "snapshot"
       SNAPSHOT_API: https://snapshots.zetachain.com
       TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
-      COSMOVISOR_VERSION: "v1.5.0"
       CHAIN_ID: "athens_7001-1"
-      COSMOVISOR_CHECKSUM: "626dfc58c266b85f84a7ed8e2fe0e2346c15be98cfb9f9b88576ba899ed78cdc"
       VISOR_NAME: "cosmovisor"
       DAEMON_NAME: "zetacored"
       DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
@@ -37,8 +35,8 @@ services:
       - "9090:9090"
       - "9091:9091"
     volumes:
-      - zetacored_data:/root/.zetacored/
+      - zetacored_data_athens3:/root/.zetacored/
     entrypoint: bash /scripts/start.sh
 
 volumes:
-  zetacored_data:
+  zetacored_data_athens3:

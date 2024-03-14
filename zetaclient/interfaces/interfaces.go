@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/onrik/ethrpc"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -136,4 +137,10 @@ type EVMRPCClient interface {
 	TransactionByHash(ctx context.Context, hash ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error)
 	TransactionReceipt(ctx context.Context, txHash ethcommon.Hash) (*ethtypes.Receipt, error)
 	TransactionSender(ctx context.Context, tx *ethtypes.Transaction, block ethcommon.Hash, index uint) (ethcommon.Address, error)
+}
+
+// EVMJSONRPCClient is the interface for EVM JSON RPC client
+type EVMJSONRPCClient interface {
+	EthGetBlockByNumber(number int, withTransactions bool) (*ethrpc.Block, error)
+	EthGetTransactionByHash(hash string) (*ethrpc.Transaction, error)
 }

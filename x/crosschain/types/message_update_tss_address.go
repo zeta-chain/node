@@ -7,6 +7,8 @@ import (
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
+const TypeMsgUpdateTssAddress = "UpdateTssAddress"
+
 var _ sdk.Msg = &MsgUpdateTssAddress{}
 
 func NewMsgUpdateTssAddress(creator string, pubkey string) *MsgUpdateTssAddress {
@@ -21,7 +23,7 @@ func (msg *MsgUpdateTssAddress) Route() string {
 }
 
 func (msg *MsgUpdateTssAddress) Type() string {
-	return "UpdateTssAddress"
+	return TypeMsgUpdateTssAddress
 }
 
 func (msg *MsgUpdateTssAddress) GetSigners() []sdk.AccAddress {

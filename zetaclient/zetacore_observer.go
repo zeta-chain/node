@@ -168,7 +168,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 					}
 					// update last processed block number
 					lastBlockNum = bn
-					co.ts.SetCoreBlockNumber(lastBlockNum)
+					metrics.LastCoreBlockNumber.Set(float64(lastBlockNum))
 				}
 			}
 		}
