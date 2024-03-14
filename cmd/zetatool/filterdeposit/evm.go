@@ -25,7 +25,7 @@ const (
 )
 
 var evmCmd = &cobra.Command{
-	Use:   "evm",
+	Use:   "eth",
 	Short: "Filter inbound eth deposits",
 	Run:   FilterEVMTransactions,
 }

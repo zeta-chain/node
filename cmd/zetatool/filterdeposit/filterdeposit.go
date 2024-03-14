@@ -72,6 +72,7 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) []Deposit {
 		}
 	}
 
+	fmt.Printf("Found %d missed transactions.\n", len(missedList))
 	for _, entry := range missedList {
 		fmt.Printf("%s, amount: %d\n", entry.TxID, entry.Amount)
 	}

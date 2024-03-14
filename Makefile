@@ -291,3 +291,13 @@ mainnet-bitcoind-node:
 
 athens3-zetarpc-node:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+###############################################################################
+###                               Debug Tools                               ###
+###############################################################################
+
+filter-missed-btc: install-zetatool
+	./tool/filter_missed_deposits/filter_missed_btc.sh
+
+filter-missed-eth: install-zetatool
+	./tool/filter_missed_deposits/filter_missed_eth.sh

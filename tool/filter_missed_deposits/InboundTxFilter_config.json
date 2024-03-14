@@ -1,0 +1,11 @@
+{
+ "ZetaURL": "http://46.4.15.110:1317",
+ "TssAddressBTC": "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
+ "TssAddressEVM": "0x70e967acfcc17c3941e87562161406d41676fd83",
+ "BtcExplorer": "https://blockstream.info/api/address/bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y/txs",
+ "EthRPC": "https://ethereum-rpc.publicnode.com",
+ "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
+ "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10",
+ "EvmStartBlock": 19200110,
+ "EvmMaxRange": 1000
+}
