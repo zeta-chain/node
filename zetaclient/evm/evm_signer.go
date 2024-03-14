@@ -616,7 +616,7 @@ func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Sig
 	if endpoint == stub.EVMRPCEnabled {
 		chainID := big.NewInt(common.BscMainnetChain().ChainId)
 		ethSigner := ethtypes.NewEIP155Signer(chainID)
-		client := stub.EvmClient{}
+		client := &stub.MockEvmClient{}
 		return client, chainID, ethSigner, nil
 	}
 
