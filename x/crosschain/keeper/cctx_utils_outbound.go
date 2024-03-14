@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"errors"
 	"fmt"
 	"math/big"
 
@@ -109,7 +108,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 
 			gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
 			if err != nil {
-				return errors.New("can't get revert tx gas limit" + err.Error())
+				return cosmoserrors.Wrap(err, "GetRevertGasLimit")
 			}
 			if gasLimit == 0 {
 				// use same gas limit of outbound as a fallback -- should not happen
@@ -122,7 +121,10 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
 				Amount:             cctx.InboundTxParams.Amount,
 				OutboundTxGasLimit: gasLimit,
+				TssPubkey:          cctx.GetCurrentOutTxParam().TssPubkey,
 			}
+			// TODO : consider setting the first outbount to executed
+			// Move this creation to a separate function
 			cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
 
 			err = k.PayGasAndUpdateCctx(
@@ -183,7 +185,7 @@ func (k Keeper) SaveFailedOutBound(ctx sdk.Context, cctx *types.CrossChainTx, er
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }
 
-func (k Keeper) SaveSucessfullOutBound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
+func (k Keeper) SaveSuccessfulOutBound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
 	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey
 	outTxTssNonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce

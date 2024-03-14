@@ -104,6 +104,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SaveFailedOutBound(ctx, &cctx, msg.ValueReceived.String())
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	k.SaveSucessfullOutBound(ctx, &cctx, msg.ValueReceived.String())
+	k.SaveSuccessfulOutBound(ctx, &cctx, msg.ValueReceived.String())
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
