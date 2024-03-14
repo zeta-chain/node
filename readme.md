@@ -105,74 +105,187 @@ To create a release simply execute the publish-release workflow and follow the s
 
 Once the release is approved the pipeline will continue and will publish the releases with the title / version you specified in the user input.
 
-
-Here is the formatted documentation in Markdown:
-
 ---
+## Full Deployment Guide for Zetacored and Bitcoin Nodes
 
-### Starting Full Zetacored Nodes
+This guide details deploying Zetacored nodes on both ZetaChain mainnet and Athens3 (testnet), alongside setting up a Bitcoin node for mainnet. The setup utilizes Docker Compose with environment variables for a streamlined deployment process.
 
-#### Step 1: Choose the Network
+### Deploying Zetacored Nodes
 
-To start a node, use the `make` command with the `DOCKER_TAG` of the image you wish to use from Docker Hub.
+#### Launching a Node
 
-- **For Mainnet:**
-
+**For Mainnet:**
+- Use the `make` command with a specified Docker tag to initiate a mainnet Zetacored node.
   ```shell
-  # Use this command to start a mainnet node with a specific Docker tag
-  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
-  # Example:
-  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
   ```
 
-- **For Athens3:**
-
+**For Athens3 (Testnet):**
+- Similar command structure for Athens3, ensuring the correct Docker tag is used.
   ```shell
-  # The command is the same for Athens3, just ensure you're specifying the correct Docker tag
-  make mainnet-zetarpc-node DOCKER_TAG={THE_DOCKER_TAG_FROM_DOCKER_HUB_YOU_WANT_TO_USE}
-  # Example:
-  make mainnet-zetarpc-node DOCKER_TAG=ubuntu-v12.3.0-docker-test
+  make testnet-zetarpc-node DOCKER_TAG=ubuntu-v14.0.1
+  ```
+  
+#### Modifying the Sync Type
+
+**To change the sync type for your node:**
+- Edit docker-compose.yml in contrib/{NETWORK}/zetacored/.
+- Set RESTORE_TYPE to your desired method (snapshot, snapshot-archive, statesync).
+
+#### Zetacored Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `DAEMON_HOME` | Daemon's home directory (`/root/.zetacored`). |
+| `NETWORK` | Network identifier: `mainnet` or `athens3` (for testnet). |
+| `RESTORE_TYPE` | Node restoration method: `snapshot`, `snapshot-archive`, `statesync`. |
+| `SNAPSHOT_API` | API URL for fetching snapshots. |
+| `TRUST_HEIGHT_DIFFERENCE_STATE_SYNC` | Trust height difference for state synchronization. |
+| `CHAIN_ID` | Chain ID for the network. |
+| `VISOR_NAME` | Visor software name, typically `cosmovisor`. |
+| `DAEMON_NAME` | Daemon software name, `zetacored`. |
+| `DAEMON_ALLOW_DOWNLOAD_BINARIES` | Enable daemon to download binaries. |
+| `DAEMON_RESTART_AFTER_UPGRADE` | Restart daemon after software upgrade. |
+| `UNSAFE_SKIP_BACKUP` | Skip backup during potentially unsafe operations. |
+| `CLIENT_DAEMON_NAME` | Client daemon name, such as `zetaclientd`. |
+| `CLIENT_DAEMON_ARGS` | Extra arguments for the client daemon. |
+| `CLIENT_SKIP_UPGRADE` | Skip client software upgrade. |
+| `CLIENT_START_PROCESS` | Begin client process start-up. |
+| `MONIKER` | Node's moniker or nickname. |
+| `RE_DO_START_SEQUENCE` | Restart node setup from scratch if necessary. |
+
+### Bitcoin Node Setup for Mainnet
+
+**Restoring a BTC Watcher Node:**
+- To deploy a Bitcoin mainnet node, specify the `DOCKER_TAG` for your Docker image.
+  ```shell
+  make mainnet-bitcoind-node DOCKER_TAG=36-mainnet
   ```
 
-**Note:** The default configuration is to restore from state sync. This process will download the necessary configurations and information from [Zeta-Chain Network Config](https://github.com/zeta-chain/network-config) and configure the node for state sync restore.
+#### Bitcoin Node Environment Variables
 
-#### Changing the Sync Type
+| Variable | Description |
+|----------|-------------|
+| `bitcoin_username` | Username for Bitcoin RPC. |
+| `bitcoin_password` | Password for Bitcoin RPC. |
+| `NETWORK_HEIGHT_URL` | URL to fetch the latest block height. |
+| `WALLET_NAME` | Name of the Bitcoin wallet. |
+| `WALLET_ADDRESS` | Bitcoin wallet address for transactions. |
+| `SNAPSHOT_URL` | URL for downloading the blockchain snapshot. |
+| `SNAPSHOT_RESTORE` | Enable restoration from snapshot. |
+| `CLEAN_SNAPSHOT` | Clean existing data before restoring snapshot. |
+| `DOWNLOAD_SNAPSHOT` | Download the snapshot if not present. |
 
-If you wish to change the sync type, you will need to modify the `docker-compose.yml` file located in `contrib/{NETWORK}/zetacored/`.
+### Docker Compose Configurations
 
-Change the following values according to your needs:
+#### Zetacored Mainnet
 
 ```yaml
-# Possible values for RESTORE_TYPE are "snapshot", "snapshot-archive", or "statesync"
-RESTORE_TYPE: "statesync"
-MONIKER: "local-test"
-RE_DO_START_SEQUENCE: "false"
+version: '3.8'
+services:
+  zetachain_mainnet_rpc:
+    platform: linux/amd64
+    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14.0.1}
+    environment:
+      DAEMON_HOME: "/root/.zetacored"
+      NETWORK: mainnet
+      RESTORE_TYPE: "snapshot"
+      SNAPSHOT_API: https://snapshots.zetachain.com
+      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
+      CHAIN_ID: "zetachain_7000-1"
+      VISOR_NAME: "cosmovisor"
+      DAEMON_NAME: "zetacored"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+      DAEMON_RESTART_AFTER_UPGRADE: "true"
+      UNSAFE_SKIP_BACKUP: "true"
+      CLIENT_DAEMON_NAME: "zetaclientd"
+      CLIENT_DAEMON_ARGS: ""
+      CLIENT_SKIP_UPGRADE: "true"
+      CLIENT_START_PROCESS: "false"
+      MONIKER: local-test
+      RE_DO_START_SEQUENCE: "false"
+    ports:
+      - "26656:26656"
+      - "1317:1317"
+      - "8545:8545"
+      - "8546:8546"
+      - "26657:26657"
+      - "9090:9090"
+      - "9091:9091"
+    volumes:
+
+
+      - zetacored_data_mainnet:/root/.zetacored/
+    entrypoint: bash /scripts/start.sh
+volumes:
+  zetacored_data_mainnet:
 ```
 
-To perform a snapshot restore from the latest snapshot, simply change the `RESTORE_TYPE` to either `snapshot` or `snapshot-archive`.
+#### Zetacored Athens3/Testnet
 
----
-
-Here's the formatted documentation in Markdown for starting a full Bitcoind Mainnet node:
-
----
-
-### Starting Full Bitcoind Mainnet Node
-
-#### Step 1: Restore a Mainnet BTC Watcher Node
-
-To restore a mainnet BTC watcher node from a BTC snapshot, run the following `make` command and specify the `DOCKER_TAG` with the image you want to use from Docker Hub.
-
-```commandline
-make mainnet-bitcoind-node DOCKER_TAG={DOCKER_TAG_FROM_DOCKER_HUB_TO_USE}
-# Example:
-make mainnet-bitcoind-node DOCKER_TAG=36-mainnet
+```yaml
+version: '3.8'
+services:
+  zetachain_testnet_rpc:
+    platform: linux/amd64
+    image: zetachain/zetacored:${DOCKER_TAG:-ubuntu-v14-testnet}
+    environment:
+      DAEMON_HOME: "/root/.zetacored"
+      NETWORK: athens3
+      RESTORE_TYPE: "snapshot"
+      SNAPSHOT_API: https://snapshots.zetachain.com
+      TRUST_HEIGHT_DIFFERENCE_STATE_SYNC: 40000
+      CHAIN_ID: "athens_7001-1"
+      VISOR_NAME: "cosmovisor"
+      DAEMON_NAME: "zetacored"
+      DAEMON_ALLOW_DOWNLOAD_BINARIES: "false"
+      DAEMON_RESTART_AFTER_UPGRADE: "true"
+      UNSAFE_SKIP_BACKUP: "true"
+      CLIENT_DAEMON_NAME: "zetaclientd"
+      CLIENT_DAEMON_ARGS: ""
+      CLIENT_SKIP_UPGRADE: "true"
+      CLIENT_START_PROCESS: "false"
+      MONIKER: local-test
+      RE_DO_START_SEQUENCE: "false"
+    ports:
+      - "26656:26656"
+      - "1317:1317"
+      - "8545:8545"
+      - "8546:8546"
+      - "26657:26657"
+      - "9090:9090"
+      - "9091:9091"
+    volumes:
+      - zetacored_data_athens3:/root/.zetacored/
+    entrypoint: bash /scripts/start.sh
+volumes:
+  zetacored_data_athens3:
 ```
 
-#### Updating the TSS Address
+#### Bitcoin Mainnet Node
 
-If you need to update the TSS (Threshold Signature Scheme) address being watched, please edit the `docker-compose.yml` file located at `contrib/mainnet/bitcoind/docker-compose.yml`.
+```yaml
+version: '3'
+services:
+  bitcoin:
+    image: zetachain/bitcoin:${DOCKER_TAG:-36-mainnet}
+    platform: linux/amd64
+    environment:
+      - bitcoin_username=test
+      - bitcoin_password=test
+      - NETWORK_HEIGHT_URL=https://blockstream.info/api/blocks/tip/height
+      - WALLET_NAME=tssMainnet
+      - WALLET_ADDRESS=bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y
+      - SNAPSHOT_URL=https://storage.googleapis.com/bitcoin-rpc-snapshots-prod/bitcoind-mainnet-2024-02-20-00-22-06.tar.gz
+      - SNAPSHOT_RESTORE=true
+      - CLEAN_SNAPSHOT=true
+      - DOWNLOAD_SNAPSHOT=true
+    volumes:
+      - bitcoin_data:/root/
+    ports:
+      - 8332:8332
+volumes:
+  bitcoin_data:
+```
 
-To update, simply change the user and password you wish to use, and the TSS address to watch. Then, run the command provided above to apply your changes.
-
----
+Replace placeholders in Docker Compose files and `make` commands with actual values appropriate for your deployment scenario. This complete setup guide is designed to facilitate the deployment and management of Zetacored and Bitcoin nodes in various environments.
