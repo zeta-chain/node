@@ -17,6 +17,7 @@
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
 * [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
+* [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ### Features
 
