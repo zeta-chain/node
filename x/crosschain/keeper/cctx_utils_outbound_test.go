@@ -85,24 +85,6 @@ func TestKeeper_GetOutbound(t *testing.T) {
 		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 	})
 
-	t.Run("failed to get outbound tx if tss mismatch", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		tss := sample.Tss()
-		cctx := sample.CrossChainTx(t, "test")
-		hash := sample.Hash().String()
-
-		zk.ObserverKeeper.SetTSS(ctx, tss)
-		err := k.GetOutbound(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: sdkmath.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
-		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
-		require.ErrorIs(t, err, types.ErrTssMismatch)
-	})
-
 	t.Run("failed to get outbound tx if tss not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		tss := sample.Tss()

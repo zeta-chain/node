@@ -30,17 +30,14 @@ func (k Keeper) GetOutbound(ctx sdk.Context, cctx *types.CrossChainTx, msg types
 	cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
 
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	_, found := k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return types.ErrCannotFindTSSKeys
-	}
-	if tss.TssPubkey != cctx.GetCurrentOutTxParam().TssPubkey {
-		return types.ErrTssMismatch
 	}
 	return nil
 }
 
-func (k Keeper) FundStabiltityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
+func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
 	// Fund the gas stability pool with the remaining funds
 	if err := k.FundGasStabilityPoolFromRemainingFees(ctx, *cctx.GetCurrentOutTxParam(), cctx.GetCurrentOutTxParam().ReceiverChainId); err != nil {
 		ctx.Logger().Error(fmt.Sprintf("VoteOnObservedOutboundTx: CCTX: %s Can't fund the gas stability pool with remaining fees %s", cctx.Index, err.Error()))
@@ -65,7 +62,6 @@ func (k Keeper) FundGasStabilityPoolFromRemainingFees(ctx sdk.Context, outboundT
 
 			// We fund the stability pool with a portion of the remaining fees
 			remainingFees = percentOf(remainingFees, RemainingFeesToStabilityPoolPercent)
-
 			// Fund the gas stability pool
 			if err := k.fungibleKeeper.FundGasStabilityPool(ctx, chainID, remainingFees); err != nil {
 				return err

@@ -620,5 +620,8 @@ func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.C
 	cctx.RelayedMessage = ""
 	cctx.GetInboundTxParams().Asset = asset
 	cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = 42
+	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = 100
+	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = 100
 	return cctx
 }

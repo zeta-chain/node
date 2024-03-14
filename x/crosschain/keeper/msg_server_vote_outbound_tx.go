@@ -68,7 +68,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	ballotIndex := msg.Digest()
 
 	// vote on outbound ballot
-	isFinalized, isNew, ballot, observationChain, err := k.zetaObserverKeeper.VoteOnOutboundBallot(
+	isFinalizingVote, isNew, ballot, observationChain, err := k.zetaObserverKeeper.VoteOnOutboundBallot(
 		ctx,
 		ballotIndex,
 		msg.OutTxChain,
@@ -77,7 +77,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	if err != nil {
 		return nil, err
 	}
-
 	// if the ballot is new, set the index to the CCTX
 	if isNew {
 		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain)
@@ -87,17 +86,16 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	// if not finalized commit state here
-	if !isFinalized {
+	if !isFinalizingVote {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 
 	// if ballot successful, the value received should be the out tx amount
-	err = k.GetOutbound(ctx, &cctx, *msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, err
 	}
 	// Fund the gas stability pool with the remaining funds
-	k.FundStabiltityPool(ctx, &cctx)
+	k.FundStabilityPool(ctx, &cctx)
 
 	err = k.ProcessOutbound(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
