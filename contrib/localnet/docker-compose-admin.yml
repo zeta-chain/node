@@ -2,8 +2,19 @@ version: "3"
 
 # This docker-compose file overrides the orchestrator service to specify the flag to test the admin functions
 # and skip the regular tests
+# it also adds another local Ethereum network to test EVM chain migration
 
 services:
   orchestrator:
-    entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin"]
+    entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin", "additional-eth"]
 
+  eth2:
+    image: ethereum/client-go:v1.10.26
+    container_name: eth2
+    hostname: eth2
+    ports:
+      - "8546:8545"
+    networks:
+      mynetwork:
+        ipv4_address: 172.20.0.100
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]

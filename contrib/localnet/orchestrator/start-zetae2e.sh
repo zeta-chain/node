@@ -45,6 +45,18 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea44
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
+
+# check if the option is additional-eth
+# in this case an additional eth network is spun up and the deployer and TSS accounts are funded with Ether
+if [ "$OPTION" == "additional-eth" ]; then
+# unlock the deployer account
+  echo "funding deployer address 0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC with 100 Ether on ETH2"
+  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xE5C5367B8224807Ac2207d350E60e1b6F27a7ecC", value: web3.toWei(100,"ether")})' attach http://eth2:8545
+# unlock the TSS account
+  echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether on ETH@"
+  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth2:8545
+fi
+
 ### Run zetae2e command depending on the option passed
 
 if [ "$OPTION" == "upgrade" ]; then

@@ -65,15 +65,17 @@ type E2ERunner struct {
 	EVMAuth  *bind.TransactOpts
 	ZEVMAuth *bind.TransactOpts
 
-	// contracts
-	ZetaEthAddr          ethcommon.Address
-	ZetaEth              *zetaeth.ZetaEth
-	ConnectorEthAddr     ethcommon.Address
-	ConnectorEth         *zetaconnectoreth.ZetaConnectorEth
-	ERC20CustodyAddr     ethcommon.Address
-	ERC20Custody         *erc20custody.ERC20Custody
-	ERC20Addr            ethcommon.Address
-	ERC20                *erc20.ERC20
+	// contracts evm
+	ZetaEthAddr      ethcommon.Address
+	ZetaEth          *zetaeth.ZetaEth
+	ConnectorEthAddr ethcommon.Address
+	ConnectorEth     *zetaconnectoreth.ZetaConnectorEth
+	ERC20CustodyAddr ethcommon.Address
+	ERC20Custody     *erc20custody.ERC20Custody
+	ERC20Addr        ethcommon.Address
+	ERC20            *erc20.ERC20
+
+	// contracts zevm
 	ERC20ZRC20Addr       ethcommon.Address
 	ERC20ZRC20           *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
@@ -88,14 +90,13 @@ type E2ERunner struct {
 	ConnectorZEVM        *connectorzevm.ZetaConnectorZEVM
 	WZetaAddr            ethcommon.Address
 	WZeta                *wzeta.WETH9
-
-	TestDAppAddr       ethcommon.Address
-	ZEVMSwapAppAddr    ethcommon.Address
-	ZEVMSwapApp        *zevmswap.ZEVMSwapApp
-	ContextAppAddr     ethcommon.Address
-	ContextApp         *contextapp.ContextApp
-	SystemContractAddr ethcommon.Address
-	SystemContract     *systemcontract.SystemContract
+	TestDAppAddr         ethcommon.Address
+	ZEVMSwapAppAddr      ethcommon.Address
+	ZEVMSwapApp          *zevmswap.ZEVMSwapApp
+	ContextAppAddr       ethcommon.Address
+	ContextApp           *contextapp.ContextApp
+	SystemContractAddr   ethcommon.Address
+	SystemContract       *systemcontract.SystemContract
 
 	// config
 	CctxTimeout    time.Duration
@@ -261,7 +262,7 @@ func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
 	return nil
 }
 
-// RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
+// RunE2ETestsIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
 // The function doesn't return an error, it returns a report with the error
 func (runner *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, error) {
 	// go through all tests

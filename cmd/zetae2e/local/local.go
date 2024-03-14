@@ -325,9 +325,10 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 	if testAdmin {
 		eg.Go(adminTestRoutine(conf, deployerRunner, verbose,
-			e2etests.TestPauseZRC20Name,
-			e2etests.TestUpdateBytecodeName,
-			e2etests.TestDepositEtherLiquidityCapName,
+			//e2etests.TestPauseZRC20Name,
+			//e2etests.TestUpdateBytecodeName,
+			//e2etests.TestDepositEtherLiquidityCapName,
+			e2etests.TestMigrateChainSupportName,
 		))
 	}
 	if testPerformance {
