@@ -32,7 +32,7 @@ func generateHeader() {
 }
 
 func TestTrueEthereumHeader(t *testing.T) {
-	generateHeader()
+	// generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
@@ -49,6 +49,13 @@ func TestTrueEthereumHeader(t *testing.T) {
 
 	headerData := common.NewEthereumHeader(buffer.Bytes())
 	err = headerData.Validate(header.Hash().Bytes(), 1, 18495266)
+	require.NoError(t, err)
+
+	parentHash, err := headerData.ParentHash()
+	require.NoError(t, err)
+	require.Equal(t, header.ParentHash.Bytes(), parentHash)
+
+	err = headerData.ValidateTimestamp(time.Now())
 	require.NoError(t, err)
 }
 
@@ -101,6 +108,20 @@ func TestFakeBitcoinHeader(t *testing.T) {
 		// Validate
 		validateFakeBitcoinHeader(t, header, headerBytes)
 	}
+}
+
+func TestNonExistentHeaderType(t *testing.T) {
+	headerData := common.HeaderData{}
+
+	err := headerData.Validate([]byte{}, 18332, 0)
+	require.EqualError(t, err, "unrecognized header type")
+
+	parentHash, err := headerData.ParentHash()
+	require.EqualError(t, err, "unrecognized header type")
+	require.Nil(t, parentHash)
+
+	err = headerData.ValidateTimestamp(time.Now())
+	require.ErrorContains(t, err, "unrecognized header type")
 }
 
 func BitcoinHeaderValidationLiveTest(t *testing.T) {
@@ -174,13 +195,18 @@ func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {
 func validateTrueBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
 	blockHash := header.BlockHash()
 
+	headerData := common.NewBitcoinHeader(headerBytes)
 	// True Bitcoin header should pass validation
-	err := common.ValidateBitcoinHeader(headerBytes, blockHash[:], 18332)
+	err := headerData.Validate(blockHash[:], 18332, 0)
 	require.NoError(t, err)
 
 	// True Bitcoin header should pass timestamp validation
-	err = common.NewBitcoinHeader(headerBytes).ValidateTimestamp(time.Now())
+	err = headerData.ValidateTimestamp(time.Now())
 	require.NoError(t, err)
+
+	parentHash, err := headerData.ParentHash()
+	require.NoError(t, err)
+	require.Equal(t, header.PrevBlock.CloneBytes(), parentHash)
 }
 
 func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
