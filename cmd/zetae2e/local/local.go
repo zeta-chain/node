@@ -49,6 +49,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
 	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
 	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
+	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
