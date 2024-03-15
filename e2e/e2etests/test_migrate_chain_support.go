@@ -2,13 +2,14 @@ package e2etests
 
 import (
 	"context"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
-	"math/big"
 )
 
 // EVM2RPCURL is the RPC URL for the additional EVM localnet
