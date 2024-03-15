@@ -100,7 +100,7 @@ func (runner *E2ERunner) GenerateNetworkReport() (NetworkReport, error) {
 	// fetch the height and number of cctxs, this gives a better idea on the activity of the network
 
 	// get the block height
-	blockRes, err := runner.ZevmClient.BlockNumber(runner.Ctx)
+	blockRes, err := runner.ZEVMClient.BlockNumber(runner.Ctx)
 	if err != nil {
 		return NetworkReport{}, err
 	}
