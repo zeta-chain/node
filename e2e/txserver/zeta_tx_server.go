@@ -121,6 +121,20 @@ func (zts ZetaTxServer) GetAccountAddress(index int) string {
 	return zts.address[index]
 }
 
+// GetAccountAddressFromName returns the account address from the given name
+func (zts ZetaTxServer) GetAccountAddressFromName(name string) (string, error) {
+	acc, err := zts.clientCtx.Keyring.Key(name)
+	if err != nil {
+		return "", err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return "", err
+	}
+	return addr.String(), nil
+}
+
+// GetAllAccountAddress returns all account addresses
 func (zts ZetaTxServer) GetAllAccountAddress() []string {
 	return zts.address
 

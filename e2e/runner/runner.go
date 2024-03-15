@@ -109,7 +109,7 @@ type E2ERunner struct {
 	Logger        *Logger
 	WG            sync.WaitGroup
 	BitcoinParams *chaincfg.Params
-	mutex         *sync.Mutex
+	mutex         sync.Mutex
 }
 
 func NewE2ERunner(
