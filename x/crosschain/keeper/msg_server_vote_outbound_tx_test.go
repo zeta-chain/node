@@ -223,26 +223,27 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 	})
 
 	t.Run("fail to finalize outbound if not a finalizing vote", func(t *testing.T) {
-		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
+		k, ctx, sk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
 
 		// Setup mock data
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
 		receiver := sample.EthAddress()
 		amount := big.NewInt(42)
 		senderChain := getValidEthChain(t)
 		asset := ""
-		observer := sample.AccAddress()
+		r := rand.New(rand.NewSource(42))
+		validator := sample.Validator(t, r)
 		tss := sample.Tss()
-		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+
+		// set state to successfully vote on outbound tx
+		accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{accAddress.String(), sample.AccAddress(), sample.AccAddress()}})
+		sk.StakingKeeper.SetValidator(ctx, validator)
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		k.SetCrossChainTx(ctx, *cctx)
-
-		observerMock.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, common.ReceiveStatus_Success, observer).
-			Return(false, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
 		msg := &types.MsgVoteOnObservedOutboundTx{
@@ -250,7 +251,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
 			Status:                         common.ReceiveStatus_Success,
-			Creator:                        observer,
+			Creator:                        accAddress.String(),
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
 			ObservedOutTxBlockHeight:       10,
@@ -258,11 +259,59 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			ObservedOutTxGasUsed:           21,
 			CoinType:                       cctx.CoinType,
 		}
-		_, err := msgServer.VoteOnObservedOutboundTx(ctx, msg)
+		_, err = msgServer.VoteOnObservedOutboundTx(ctx, msg)
 		require.NoError(t, err)
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		// Status not changed if this is not the finalizing vote
 		require.Equal(t, types.CctxStatus_PendingOutbound, c.CctxStatus.Status)
+		ballot, found := zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+		require.True(t, found)
+		require.True(t, ballot.HasVoted(accAddress.String()))
+	})
+
+	t.Run("unable to add vote if tss is not present", func(t *testing.T) {
+		k, ctx, sk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{})
+
+		// Setup mock data
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+		r := rand.New(rand.NewSource(42))
+		validator := sample.Validator(t, r)
+		tss := sample.Tss()
+
+		// set state to successfully vote on outbound tx
+		accAddress, err := observertypes.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{accAddress.String()}})
+		sk.StakingKeeper.SetValidator(ctx, validator)
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, *cctx)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		msg := &types.MsgVoteOnObservedOutboundTx{
+			CctxHash:                       cctx.Index,
+			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
+			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
+			Status:                         common.ReceiveStatus_Success,
+			Creator:                        accAddress.String(),
+			ObservedOutTxHash:              sample.Hash().String(),
+			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
+			ObservedOutTxBlockHeight:       10,
+			ObservedOutTxEffectiveGasPrice: math.NewInt(21),
+			ObservedOutTxGasUsed:           21,
+			CoinType:                       cctx.CoinType,
+		}
+		_, err = msgServer.VoteOnObservedOutboundTx(ctx, msg)
+		require.ErrorIs(t, err, types.ErrCannotFindTSSKeys)
+		c, found := k.GetCrossChainTx(ctx, cctx.Index)
+		require.True(t, found)
+		require.Equal(t, types.CctxStatus_PendingOutbound, c.CctxStatus.Status)
+		_, found = zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
+		require.False(t, found)
+
 	})
 }

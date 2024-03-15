@@ -21,6 +21,8 @@ func SetRevertOutboundValues(cctx *types.CrossChainTx, gasLimit uint64) {
 		OutboundTxGasLimit: gasLimit,
 		TssPubkey:          cctx.GetCurrentOutTxParam().TssPubkey,
 	}
+	// The original outbound has been finalized, the new outbound is pending
+	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
 }
 func SetOutboundValues(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedOutboundTx, ballotStatus observertypes.BallotStatus) error {
@@ -118,16 +120,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			}
 
 			// create new OutboundTxParams for the revert
-			revertTxParams := &types.OutboundTxParams{
-				Receiver:           cctx.InboundTxParams.Sender,
-				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-				Amount:             cctx.InboundTxParams.Amount,
-				OutboundTxGasLimit: gasLimit,
-				TssPubkey:          cctx.GetCurrentOutTxParam().TssPubkey,
-			}
-			// TODO : consider setting the first outbount to executed
-			// Move this creation to a separate function
-			cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
+			SetRevertOutboundValues(cctx, gasLimit)
 
 			err = k.PayGasAndUpdateCctx(
 				ctx,
@@ -173,21 +166,18 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 	return nil
 }
 
-func (k Keeper) SaveFailedOutBound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string) {
-	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
-	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey
-	outTxTssNonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce
-
+func (k Keeper) SaveFailedOutBound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
 	cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, errMessage)
-	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	ctx.Logger().Error(errMessage)
-	// #nosec G701 always in range
-	k.GetObserverKeeper().RemoveFromPendingNonces(ctx, tssPubkey, receiverChain, int64(outTxTssNonce))
-	k.RemoveOutTxTracker(ctx, receiverChain, outTxTssNonce)
-	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
+
+	k.SaveOutbound(ctx, cctx, ballotIndex)
 }
 
 func (k Keeper) SaveSuccessfulOutBound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
+	k.SaveOutbound(ctx, cctx, ballotIndex)
+}
+
+func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
 	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey
 	outTxTssNonce := cctx.GetCurrentOutTxParam().OutboundTxTssNonce

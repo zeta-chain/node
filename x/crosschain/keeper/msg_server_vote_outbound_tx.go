@@ -63,10 +63,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
 		return nil, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
 	}
+	// do not process outbound vote if TSS is not found
+	_, found = k.zetaObserverKeeper.GetTSS(ctx)
+	if !found {
+		return nil, types.ErrCannotFindTSSKeys
+	}
 
 	// get ballot index
 	ballotIndex := msg.Digest()
-
 	// vote on outbound ballot
 	isFinalizingVote, isNew, ballot, observationChain, err := k.zetaObserverKeeper.VoteOnOutboundBallot(
 		ctx,
@@ -80,20 +84,12 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	// if the ballot is new, set the index to the CCTX
 	if isNew {
 		observerkeeper.EmitEventBallotCreated(ctx, ballot, msg.ObservedOutTxHash, observationChain)
-		// Set this the first time when the ballot is created
-		// The ballot might change if there are more votes in a different outbound ballot for this cctx hash
-		cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = ballotIndex
 	}
-
 	// if not finalized commit state here
 	if !isFinalizingVote {
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 
-	_, found = k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return nil, types.ErrCannotFindTSSKeys
-	}
 	// if ballot successful, the value received should be the out tx amount
 	err = SetOutboundValues(ctx, &cctx, *msg, ballot.BallotStatus)
 	if err != nil {
@@ -104,9 +100,9 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	err = k.ProcessOutbound(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		k.SaveFailedOutBound(ctx, &cctx, msg.ValueReceived.String())
+		k.SaveFailedOutBound(ctx, &cctx, err.Error(), ballotIndex)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	k.SaveSuccessfulOutBound(ctx, &cctx, msg.ValueReceived.String())
+	k.SaveSuccessfulOutBound(ctx, &cctx, ballotIndex)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }

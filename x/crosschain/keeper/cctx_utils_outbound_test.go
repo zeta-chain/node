@@ -285,7 +285,7 @@ func TestKeeper_SaveFailedOutBound(t *testing.T) {
 			HashList: nil,
 		})
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveFailedOutBound(ctx, cctx, sample.String())
+		k.SaveFailedOutBound(ctx, cctx, sample.String(), sample.ZetaIndex(t))
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 		_, found := k.GetOutTxTracker(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
@@ -310,4 +310,59 @@ func TestKeeper_SaveSuccessfulOutBound(t *testing.T) {
 		_, found := k.GetOutTxTracker(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 		require.False(t, found)
 	})
+}
+
+func TestKeeper_SaveOutbound(t *testing.T) {
+	t.Run("successfully save outbound", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+
+		// setup state for crosschain and observer modules
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		ballotIndex := sample.String()
+		k.SetOutTxTracker(ctx, types.OutTxTracker{
+			Index:    "",
+			ChainId:  cctx.GetCurrentOutTxParam().ReceiverChainId,
+			Nonce:    cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
+			HashList: nil,
+		})
+
+		zk.ObserverKeeper.SetPendingNonces(ctx, observertypes.PendingNonces{
+			NonceLow:  int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce) - 1,
+			NonceHigh: int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce) + 1,
+			ChainId:   cctx.GetCurrentOutTxParam().ReceiverChainId,
+			Tss:       cctx.GetCurrentOutTxParam().TssPubkey,
+		})
+		zk.ObserverKeeper.SetTSS(ctx, observertypes.TSS{
+			TssPubkey: cctx.GetCurrentOutTxParam().TssPubkey,
+		})
+
+		// Save outbound and assert all values are successfully saved
+		k.SaveOutbound(ctx, cctx, ballotIndex)
+		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxBallotIndex, ballotIndex)
+		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
+		_, found := k.GetOutTxTracker(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
+		require.False(t, found)
+		pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, cctx.GetCurrentOutTxParam().TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId)
+		require.True(t, found)
+		require.Equal(t, pn.NonceLow, int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce)+1)
+		require.Equal(t, pn.NonceHigh, int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce)+1)
+		_, found = k.GetInTxHashToCctx(ctx, cctx.InboundTxParams.InboundTxObservedHash)
+		require.True(t, found)
+		_, found = zk.ObserverKeeper.GetNonceToCctx(ctx, cctx.GetCurrentOutTxParam().TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
+		require.True(t, found)
+	})
+}
+
+func Test_SetRevertOutboundValues(t *testing.T) {
+	cctx := sample.CrossChainTx(t, "test")
+	cctx.OutboundTxParams = cctx.OutboundTxParams[:1]
+	keeper.SetRevertOutboundValues(cctx, 100)
+	require.Len(t, cctx.OutboundTxParams, 2)
+	require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
+	require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
+	require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.InboundTxParams.Amount)
+	require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
+	require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
+	require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
 }
