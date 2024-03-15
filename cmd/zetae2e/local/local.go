@@ -52,6 +52,7 @@ func NewLocalCmd() *cobra.Command {
 	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
 	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
 	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
+	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
 	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
 	cmd.Flags().String(flagConfigOut, "", "config file to write the deployed contracts from the setup")
 	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
