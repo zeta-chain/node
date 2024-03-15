@@ -32,6 +32,7 @@ import (
 	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
+// Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
 	client    interfaces.EVMRPCClient
 	chain     *common.Chain
@@ -56,7 +57,7 @@ func NewEVMSigner(
 	endpoint string,
 	tssSigner interfaces.TSSSigner,
 	zetaConnectorABI string,
-	erc20CustodABI string,
+	erc20CustodyABI string,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 	loggers clientcommon.ClientLogger,
@@ -70,7 +71,7 @@ func NewEVMSigner(
 	if err != nil {
 		return nil, err
 	}
-	erc20CustodyABI, err := abi.JSON(strings.NewReader(erc20CustodABI))
+	custodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABI))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func NewEVMSigner(
 		tssSigner:            tssSigner,
 		ethSigner:            ethSigner,
 		zetaConnectorABI:     connectorABI,
-		erc20CustodyABI:      erc20CustodyABI,
+		erc20CustodyABI:      custodyABI,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
 		logger: clientcommon.ClientLogger{

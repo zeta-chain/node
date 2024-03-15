@@ -9,7 +9,6 @@ import (
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -150,7 +149,7 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getUpdatedSigner failed for chain %d", c.ChainId)
 							continue
 						}
-						ob, err := co.GetUpdatedChainOb(coreContext, c.ChainId)
+						ob, err := co.GetUpdatedChainClient(coreContext, c.ChainId)
 						if err != nil {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
@@ -332,24 +331,20 @@ func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContex
 	if !found {
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
 	}
-	// update EVM signer parameters only
+	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
 	if common.IsEVMChain(chainID) {
-		evmSigner, ok := signer.(*evm.Signer)
-		if !ok {
-			return signer, fmt.Errorf("signer is not an EVM signer for chainID %d", chainID)
-		}
 		evmParams, found := coreContext.GetEVMChainParams(chainID)
 		if found {
 			// update zeta connector and ERC20 custody addresses
 			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
-			if zetaConnectorAddress != evmSigner.GetZetaConnectorAddress() {
-				evmSigner.SetZetaConnectorAddress(zetaConnectorAddress)
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetERC20CustodyContractAddress())
+			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
+				signer.SetZetaConnectorAddress(zetaConnectorAddress)
 				co.logger.ZetaChainWatcher.Info().Msgf(
 					"updated zeta connector address for chainID %d, new address: %s", chainID, zetaConnectorAddress)
 			}
-			if erc20CustodyAddress != evmSigner.GetERC20CustodyAddress() {
-				evmSigner.SetERC20CustodyAddress(erc20CustodyAddress)
+			if erc20CustodyAddress != signer.GetERC20CustodyAddress() {
+				signer.SetERC20CustodyAddress(erc20CustodyAddress)
 				co.logger.ZetaChainWatcher.Info().Msgf(
 					"updated ERC20 custody address for chainID %d, new address: %s", chainID, erc20CustodyAddress)
 			}
@@ -358,11 +353,11 @@ func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContex
 	return signer, nil
 }
 
-// GetUpdatedChainOb returns chain client with updated chain parameters
-func (co *CoreObserver) GetUpdatedChainOb(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainClient, error) {
-	chainOb, err := co.getTargetChainOb(chainID)
-	if err != nil {
-		return nil, err
+// GetUpdatedChainClient returns chain client object with updated chain parameters
+func (co *CoreObserver) GetUpdatedChainClient(coreContext *corecontext.ZetaCoreContext, chainID int64) (interfaces.ChainClient, error) {
+	chainOb, found := co.clientMap[chainID]
+	if !found {
+		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
 	}
 	// update chain client chain parameters
 	curParams := chainOb.GetChainParams()
@@ -371,10 +366,7 @@ func (co *CoreObserver) GetUpdatedChainOb(coreContext *corecontext.ZetaCoreConte
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
-				"updated chain params for chainID %d, new params: %v",
-				chainID,
-				*evmParams,
-			)
+				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
 		}
 	} else if common.IsBitcoinChain(chainID) {
 		_, btcParams, found := coreContext.GetBTCChainParams()
@@ -382,18 +374,8 @@ func (co *CoreObserver) GetUpdatedChainOb(coreContext *corecontext.ZetaCoreConte
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
 			chainOb.SetChainParams(*btcParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
-				"updated chain params for Bitcoin, new params: %v",
-				*btcParams,
-			)
+				"updated chain params for Bitcoin, new params: %v", *btcParams)
 		}
-	}
-	return chainOb, nil
-}
-
-func (co *CoreObserver) getTargetChainOb(chainID int64) (interfaces.ChainClient, error) {
-	chainOb, found := co.clientMap[chainID]
-	if !found {
-		return nil, fmt.Errorf("chain client not found for chainID %d", chainID)
 	}
 	return chainOb, nil
 }

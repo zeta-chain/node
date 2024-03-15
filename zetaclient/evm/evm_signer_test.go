@@ -76,6 +76,30 @@ func getInvalidCCTX() (*types.CrossChainTx, error) {
 	return &cctx, err
 }
 
+func TestSigner_SetGetConnectorAddress(t *testing.T) {
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+	// Get and compare
+	require.Equal(t, ConnectorAddress, evmSigner.GetZetaConnectorAddress())
+
+	// Update and get again
+	newConnector := sample.EthAddress()
+	evmSigner.SetZetaConnectorAddress(newConnector)
+	require.Equal(t, newConnector, evmSigner.GetZetaConnectorAddress())
+}
+
+func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
+	evmSigner, err := getNewEvmSigner()
+	require.NoError(t, err)
+	// Get and compare
+	require.Equal(t, ERC20CustodyAddress, evmSigner.GetERC20CustodyAddress())
+
+	// Update and get again
+	newCustody := sample.EthAddress()
+	evmSigner.SetERC20CustodyAddress(newCustody)
+	require.Equal(t, newCustody, evmSigner.GetERC20CustodyAddress())
+}
+
 func TestSigner_TryProcessOutTx(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)

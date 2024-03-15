@@ -15,6 +15,7 @@ const (
 	// some other addresses
 	OtherAddress1 = "0x21248Decd0B7EcB0F30186297766b8AB6496265b"
 	OtherAddress2 = "0x33A351C90aF486AebC35042Bb0544123cAed26AB"
+	OtherAddress3 = "0x86B77E4fBd07CFdCc486cAe4F2787fB5C5a62cd3"
 )
 
 // ConnectorAddresses contains constants ERC20 connector addresses for testing
