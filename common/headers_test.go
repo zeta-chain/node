@@ -32,7 +32,7 @@ func generateHeader() {
 }
 
 func TestTrueEthereumHeader(t *testing.T) {
-	// generateHeader()
+	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
