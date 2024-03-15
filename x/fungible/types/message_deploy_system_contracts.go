@@ -21,7 +21,7 @@ func (msg *MsgDeploySystemContracts) Route() string {
 }
 
 func (msg *MsgDeploySystemContracts) Type() string {
-	return TypeMsgDeployFungibleCoinZRC20
+	return TypeMsgDeploySystemContracts
 }
 
 func (msg *MsgDeploySystemContracts) GetSigners() []sdk.AccAddress {

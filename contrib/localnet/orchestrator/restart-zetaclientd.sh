@@ -46,5 +46,5 @@ echo upgrade height reached, restarting zetaclients
 
 for NODE in "${CLIENT_LIST[@]}"; do
     ssh -o "StrictHostKeyChecking no" "$NODE" -i ~/.ssh/localtest.pem killall zetaclientd
-    ssh -o "StrictHostKeyChecking no" "$NODE" -i ~/.ssh/localtest.pem "$GOPATH/bin/new/zetaclientd start < /dev/null > $HOME/zetaclient.log 2>&1 &"
+    ssh -o "StrictHostKeyChecking no" "$NODE" -i ~/.ssh/localtest.pem "$GOPATH/bin/new/zetaclientd start < /root/password.file > $HOME/zetaclient.log 2>&1 &"
 done

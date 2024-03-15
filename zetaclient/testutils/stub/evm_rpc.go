@@ -1,6 +1,7 @@
 package stub
 
 import (
+	"errors"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum"
@@ -26,73 +27,103 @@ func (s subscription) Err() <-chan error {
 }
 
 // EvmClient interface
-var _ interfaces.EVMRPCClient = EvmClient{}
+var _ interfaces.EVMRPCClient = &MockEvmClient{}
 
-type EvmClient struct {
+type MockEvmClient struct {
+	Receipts []*ethtypes.Receipt
 }
 
-func (e EvmClient) SubscribeFilterLogs(_ context.Context, _ ethereum.FilterQuery, _ chan<- ethtypes.Log) (ethereum.Subscription, error) {
+func NewMockEvmClient() *MockEvmClient {
+	client := &MockEvmClient{}
+	return client.Reset()
+}
+
+func (e *MockEvmClient) SubscribeFilterLogs(_ context.Context, _ ethereum.FilterQuery, _ chan<- ethtypes.Log) (ethereum.Subscription, error) {
 	return subscription{}, nil
 }
 
-func (e EvmClient) CodeAt(_ context.Context, _ ethcommon.Address, _ *big.Int) ([]byte, error) {
+func (e *MockEvmClient) CodeAt(_ context.Context, _ ethcommon.Address, _ *big.Int) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (e EvmClient) CallContract(_ context.Context, _ ethereum.CallMsg, _ *big.Int) ([]byte, error) {
+func (e *MockEvmClient) CallContract(_ context.Context, _ ethereum.CallMsg, _ *big.Int) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (e EvmClient) HeaderByNumber(_ context.Context, _ *big.Int) (*ethtypes.Header, error) {
+func (e *MockEvmClient) HeaderByNumber(_ context.Context, _ *big.Int) (*ethtypes.Header, error) {
 	return &ethtypes.Header{}, nil
 }
 
-func (e EvmClient) PendingCodeAt(_ context.Context, _ ethcommon.Address) ([]byte, error) {
+func (e *MockEvmClient) PendingCodeAt(_ context.Context, _ ethcommon.Address) ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (e EvmClient) PendingNonceAt(_ context.Context, _ ethcommon.Address) (uint64, error) {
+func (e *MockEvmClient) PendingNonceAt(_ context.Context, _ ethcommon.Address) (uint64, error) {
 	return 0, nil
 }
 
-func (e EvmClient) SuggestGasPrice(_ context.Context) (*big.Int, error) {
+func (e *MockEvmClient) SuggestGasPrice(_ context.Context) (*big.Int, error) {
 	return big.NewInt(0), nil
 }
 
-func (e EvmClient) SuggestGasTipCap(_ context.Context) (*big.Int, error) {
+func (e *MockEvmClient) SuggestGasTipCap(_ context.Context) (*big.Int, error) {
 	return big.NewInt(0), nil
 }
 
-func (e EvmClient) EstimateGas(_ context.Context, _ ethereum.CallMsg) (gas uint64, err error) {
+func (e *MockEvmClient) EstimateGas(_ context.Context, _ ethereum.CallMsg) (gas uint64, err error) {
 	gas = 0
 	err = nil
 	return
 }
 
-func (e EvmClient) SendTransaction(_ context.Context, _ *ethtypes.Transaction) error {
+func (e *MockEvmClient) SendTransaction(_ context.Context, _ *ethtypes.Transaction) error {
 	return nil
 }
 
-func (e EvmClient) FilterLogs(_ context.Context, _ ethereum.FilterQuery) ([]ethtypes.Log, error) {
+func (e *MockEvmClient) FilterLogs(_ context.Context, _ ethereum.FilterQuery) ([]ethtypes.Log, error) {
 	return []ethtypes.Log{}, nil
 }
 
-func (e EvmClient) BlockNumber(_ context.Context) (uint64, error) {
+func (e *MockEvmClient) BlockNumber(_ context.Context) (uint64, error) {
 	return 0, nil
 }
 
-func (e EvmClient) BlockByNumber(_ context.Context, _ *big.Int) (*ethtypes.Block, error) {
+func (e *MockEvmClient) BlockByNumber(_ context.Context, _ *big.Int) (*ethtypes.Block, error) {
 	return &ethtypes.Block{}, nil
 }
 
-func (e EvmClient) TransactionByHash(_ context.Context, _ ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error) {
+func (e *MockEvmClient) TransactionByHash(_ context.Context, _ ethcommon.Hash) (tx *ethtypes.Transaction, isPending bool, err error) {
 	return &ethtypes.Transaction{}, false, nil
 }
 
-func (e EvmClient) TransactionReceipt(_ context.Context, _ ethcommon.Hash) (*ethtypes.Receipt, error) {
-	return &ethtypes.Receipt{}, nil
+func (e *MockEvmClient) TransactionReceipt(_ context.Context, _ ethcommon.Hash) (*ethtypes.Receipt, error) {
+	// pop a receipt from the list
+	if len(e.Receipts) > 0 {
+		receipt := e.Receipts[len(e.Receipts)-1]
+		e.Receipts = e.Receipts[:len(e.Receipts)-1]
+		return receipt, nil
+	}
+	return nil, errors.New("no receipt found")
 }
 
-func (e EvmClient) TransactionSender(_ context.Context, _ *ethtypes.Transaction, _ ethcommon.Hash, _ uint) (ethcommon.Address, error) {
+func (e *MockEvmClient) TransactionSender(_ context.Context, _ *ethtypes.Transaction, _ ethcommon.Hash, _ uint) (ethcommon.Address, error) {
 	return ethcommon.Address{}, nil
+}
+
+func (e *MockEvmClient) Reset() *MockEvmClient {
+	e.Receipts = []*ethtypes.Receipt{}
+	return e
+}
+
+// ----------------------------------------------------------------------------
+// Feed data to the mock evm client for testing
+// ----------------------------------------------------------------------------
+func (e *MockEvmClient) WithReceipt(receipt *ethtypes.Receipt) *MockEvmClient {
+	e.Receipts = append(e.Receipts, receipt)
+	return e
+}
+
+func (e *MockEvmClient) WithReceipts(receipts []*ethtypes.Receipt) *MockEvmClient {
+	e.Receipts = append(e.Receipts, receipts...)
+	return e
 }

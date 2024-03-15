@@ -23,20 +23,20 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 		panic("Invalid amount specified for TestMessagePassing.")
 	}
 
-	chainID, err := r.GoerliClient.ChainID(r.Ctx)
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
 	r.Logger.Info("Approving ConnectorEth to spend deployer's ZetaEth")
-	auth := r.GoerliAuth
+	auth := r.EVMAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -55,7 +55,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 	}
 
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -82,7 +82,7 @@ func TestMessagePassing(r *runner.E2ERunner, args []string) {
 			cctx.CctxStatus.StatusMessage,
 		))
 	}
-	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -113,18 +113,18 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 		panic("Invalid amount specified for TestMessagePassingRevertFail.")
 	}
 
-	chainID, err := r.GoerliClient.ChainID(r.Ctx)
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	auth := r.GoerliAuth
+	auth := r.EVMAuth
 	tx, err := r.ZetaEth.Approve(auth, r.ConnectorEthAddr, amount)
 	if err != nil {
 		panic(err)
 	}
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -142,7 +142,7 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("ConnectorEth.Send tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
@@ -160,7 +160,7 @@ func TestMessagePassingRevertFail(r *runner.E2ERunner, args []string) {
 
 	// expect revert tx to fail
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
-	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(cctx.GetCurrentOutTxParam().OutboundTxHash))
 	if err != nil {
 		panic(err)
 	}
@@ -183,12 +183,12 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 		panic("Invalid amount specified for TestMessagePassingRevertSuccess.")
 	}
 
-	chainID, err := r.GoerliClient.ChainID(r.Ctx)
+	chainID, err := r.EVMClient.ChainID(r.Ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	auth := r.GoerliAuth
+	auth := r.EVMAuth
 
 	tx, err := r.ZetaEth.Approve(auth, r.TestDAppAddr, amount)
 	if err != nil {
@@ -196,14 +196,14 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Info("Approve tx hash: %s", tx.Hash().Hex())
 
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
 	r.Logger.Info("Approve tx receipt: %d", receipt.Status)
 
 	r.Logger.Info("Calling TestDApp.SendHello on contract address %s", r.TestDAppAddr.Hex())
-	testDApp, err := testdapp.NewTestDApp(r.TestDAppAddr, r.GoerliClient)
+	testDApp, err := testdapp.NewTestDApp(r.TestDAppAddr, r.EVMClient)
 	if err != nil {
 		panic(err)
 	}
@@ -221,7 +221,7 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 	r.Logger.Info("TestDApp.SendHello tx hash: %s", tx.Hash().Hex())
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, tx, r.Logger, r.ReceiptTimeout)
 	r.Logger.Info("TestDApp.SendHello tx receipt: status %d", receipt.Status)
 
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.String(), r.CctxClient, r.Logger, r.CctxTimeout)
@@ -229,7 +229,7 @@ func TestMessagePassingRevertSuccess(r *runner.E2ERunner, args []string) {
 		panic("expected cctx to be reverted")
 	}
 	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
-	receipt, err = r.GoerliClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
+	receipt, err = r.EVMClient.TransactionReceipt(r.Ctx, ethcommon.HexToHash(outTxHash))
 	if err != nil {
 		panic(err)
 	}

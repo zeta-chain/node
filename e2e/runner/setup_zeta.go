@@ -74,45 +74,45 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	}()
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
-	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, usdtZRC20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
+	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
 		e2eutils.FungibleAdminName,
-		runner.USDTERC20Addr.Hex(),
+		runner.ERC20Addr.Hex(),
 	)
 	if err != nil {
 		panic(err)
 	}
 
-	// Set USDTZRC20Addr
-	runner.USDTZRC20Addr = ethcommon.HexToAddress(usdtZRC20Addr)
-	runner.USDTZRC20, err = zrc20.NewZRC20(runner.USDTZRC20Addr, runner.ZevmClient)
+	// Set ERC20ZRC20Addr
+	runner.ERC20ZRC20Addr = ethcommon.HexToAddress(erc20zrc20Addr)
+	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// UniswapV2FactoryAddr
 	runner.UniswapV2FactoryAddr = ethcommon.HexToAddress(uniswapV2FactoryAddr)
-	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZevmClient)
+	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// UniswapV2RouterAddr
 	runner.UniswapV2RouterAddr = ethcommon.HexToAddress(uniswapV2RouterAddr)
-	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZevmClient)
+	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// ZevmConnectorAddr
 	runner.ConnectorZEVMAddr = ethcommon.HexToAddress(zevmConnectorAddr)
-	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZevmClient)
+	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
 	// WZetaAddr
 	runner.WZetaAddr = ethcommon.HexToAddress(wzetaAddr)
-	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZevmClient)
+	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
@@ -129,7 +129,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 	SystemContract, err := systemcontract.NewSystemContract(
 		systemContractAddr,
-		runner.ZevmClient,
+		runner.ZEVMClient,
 	)
 	if err != nil {
 		panic(err)
@@ -144,8 +144,8 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 	// deploy ZEVMSwapApp and ContextApp
 	zevmSwapAppAddr, txZEVMSwapApp, zevmSwapApp, err := zevmswap.DeployZEVMSwapApp(
-		runner.ZevmAuth,
-		runner.ZevmClient,
+		runner.ZEVMAuth,
+		runner.ZEVMClient,
 		runner.UniswapV2RouterAddr,
 		runner.SystemContractAddr,
 	)
@@ -153,19 +153,19 @@ func (runner *E2ERunner) SetZEVMContracts() {
 		panic(err)
 	}
 
-	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(runner.ZevmAuth, runner.ZevmClient)
+	contextAppAddr, txContextApp, contextApp, err := contextapp.DeployContextApp(runner.ZEVMAuth, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
 
-	receipt := e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZevmClient, txZEVMSwapApp, runner.Logger, runner.ReceiptTimeout)
+	receipt := e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txZEVMSwapApp, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
 	runner.ZEVMSwapAppAddr = zevmSwapAppAddr
 	runner.ZEVMSwapApp = zevmSwapApp
 
-	receipt = e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZevmClient, txContextApp, runner.Logger, runner.ReceiptTimeout)
+	receipt = e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txContextApp, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
@@ -183,7 +183,7 @@ func (runner *E2ERunner) SetupETHZRC20() {
 		panic("eth zrc20 not found")
 	}
 	runner.ETHZRC20Addr = ethZRC20Addr
-	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, runner.ZevmClient)
+	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
@@ -198,7 +198,7 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 	}
 	runner.BTCZRC20Addr = BTCZRC20Addr
 	runner.Logger.Info("BTCZRC20Addr: %s", BTCZRC20Addr.Hex())
-	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, runner.ZevmClient)
+	BTCZRC20, err := zrc20.NewZRC20(BTCZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
