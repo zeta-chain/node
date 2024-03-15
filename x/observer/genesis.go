@@ -141,7 +141,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the observer module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	params := k.GetParams(ctx)
+	params := k.GetParamsIfExists(ctx)
 
 	chainParams, found := k.GetChainParamsList(ctx)
 	if !found {
