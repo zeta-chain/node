@@ -13,7 +13,6 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/zetacore/common"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -32,7 +31,6 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetSupportedChains(ctx sdk.Context) []*common.Chain
 }
 

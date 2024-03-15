@@ -2,13 +2,10 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"sync"
 
-	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -137,64 +134,4 @@ func (c *Config) GetKeyringBackend() KeyringBackend {
 	c.cfgLock.RLock()
 	defer c.cfgLock.RUnlock()
 	return c.KeyringBackend
-}
-
-// TODO: remove this duplicated function https://github.com/zeta-chain/node/issues/1838
-// ValidateChainParams performs some basic checks on core params
-func ValidateChainParams(chainParams *observertypes.ChainParams) error {
-	if chainParams == nil {
-		return fmt.Errorf("invalid chain params: nil")
-	}
-	chain := common.GetChainFromChainID(chainParams.ChainId)
-	if chain == nil {
-		return fmt.Errorf("invalid chain params: chain %d not supported", chainParams.ChainId)
-	}
-	if chainParams.ConfirmationCount < 1 {
-		return fmt.Errorf("invalid chain params: ConfirmationCount %d", chainParams.ConfirmationCount)
-	}
-	// zeta chain skips the rest of the checks for now
-	if chain.IsZetaChain() {
-		return nil
-	}
-
-	// check tickers
-	if chainParams.GasPriceTicker < 1 {
-		return fmt.Errorf("invalid chain params: GasPriceTicker %d", chainParams.GasPriceTicker)
-	}
-	if chainParams.InTxTicker < 1 {
-		return fmt.Errorf("invalid chain params: InTxTicker %d", chainParams.InTxTicker)
-	}
-	if chainParams.OutTxTicker < 1 {
-		return fmt.Errorf("invalid chain params: OutTxTicker %d", chainParams.OutTxTicker)
-	}
-	if chainParams.OutboundTxScheduleInterval < 1 {
-		return fmt.Errorf("invalid chain params: OutboundTxScheduleInterval %d", chainParams.OutboundTxScheduleInterval)
-	}
-	if chainParams.OutboundTxScheduleLookahead < 1 {
-		return fmt.Errorf("invalid chain params: OutboundTxScheduleLookahead %d", chainParams.OutboundTxScheduleLookahead)
-	}
-
-	// chain type specific checks
-	if common.IsBitcoinChain(chainParams.ChainId) && chainParams.WatchUtxoTicker < 1 {
-		return fmt.Errorf("invalid chain params: watchUtxo ticker %d", chainParams.WatchUtxoTicker)
-	}
-	if common.IsEVMChain(chainParams.ChainId) {
-		if !validCoreContractAddress(chainParams.ZetaTokenContractAddress) {
-			return fmt.Errorf("invalid chain params: zeta token contract address %s", chainParams.ZetaTokenContractAddress)
-		}
-		if !validCoreContractAddress(chainParams.ConnectorContractAddress) {
-			return fmt.Errorf("invalid chain params: connector contract address %s", chainParams.ConnectorContractAddress)
-		}
-		if !validCoreContractAddress(chainParams.Erc20CustodyContractAddress) {
-			return fmt.Errorf("invalid chain params: erc20 custody contract address %s", chainParams.Erc20CustodyContractAddress)
-		}
-	}
-	return nil
-}
-
-func validCoreContractAddress(address string) bool {
-	if !strings.HasPrefix(address, "0x") {
-		return false
-	}
-	return ethcommon.IsHexAddress(address)
 }

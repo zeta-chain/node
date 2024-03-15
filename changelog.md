@@ -15,8 +15,10 @@
 * [1783](https://github.com/zeta-chain/node/pull/1783) - refactor zetaclient metrics naming and structure
 * [1774](https://github.com/zeta-chain/node/pull/1774) - split params and config in zetaclient
 * [1831](https://github.com/zeta-chain/node/pull/1831) - removing unnecessary pointers in context structure
+* [1864](https://github.com/zeta-chain/node/pull/1864) - prevent panic in param management
 * [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
+* [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 
 ### Features
 
@@ -31,6 +33,7 @@
 * [1791](https://github.com/zeta-chain/node/pull/1791) - add e2e tests for feature of restricted address
 * [1787](https://github.com/zeta-chain/node/pull/1787) - add unit tests for cross-chain evm hooks and e2e test failed withdraw to BTC legacy address
 * [1840](https://github.com/zeta-chain/node/pull/1840) - fix code coverage test failures ignored in CI
+* [1870](https://github.com/zeta-chain/node/pull/1870) - enable emissions pool in local e2e testing
 * [1868](https://github.com/zeta-chain/node/pull/1868) - run e2e btc tests locally
 * [1851](https://github.com/zeta-chain/node/pull/1851) - rename usdt to erc20 in e2e tests
 * [1872](https://github.com/zeta-chain/node/pull/1872) - remove usage of RPC in unit test
