@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
@@ -157,7 +158,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	require.NoError(t, err)
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
-	gasRate := int64(avgGasRate * common.BTCOuttxGasPriceMultiplier)
+	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
 	dynamicFee828440 := DepositorFee(gasRate)
 
 	// should return default fee if it's a regtest block

@@ -42,16 +42,6 @@ func StringToHash(chainID int64, hash string) ([]byte, error) {
 	return nil, fmt.Errorf("cannot convert hash to bytes for chain %d", chainID)
 }
 
-// GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chainID int64) float64 {
-	if IsEVMChain(chainID) {
-		return EVMOuttxGasPriceMultiplier
-	} else if IsBitcoinChain(chainID) {
-		return BTCOuttxGasPriceMultiplier
-	}
-	return 1.0
-}
-
 // ParseAddressAndData parses the message string into an address and data
 // message is hex encoded byte array
 // [ contractAddress calldata ]

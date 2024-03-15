@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -76,7 +77,10 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 
 func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	// apply gas price multiplier for the chain
-	multiplier := common.GasPriceMultiplier(chain.ChainId)
+	multiplier, err := clientcommon.GasPriceMultiplier(chain.ChainId)
+	if err != nil {
+		return "", err
+	}
 	// #nosec G701 always in range
 	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := b.keys.GetOperatorAddress().String()
