@@ -31,31 +31,97 @@ func TestProofGeneration(t *testing.T) {
 	receiptTree := NewTrie(receipts)
 	require.EqualValues(t, header.ReceiptHash.Hex(), header.ReceiptHash.Hex())
 
-	for i, receipt := range receipts {
-		// generate a proof for each receipt and verify it
-		proof, err := receiptTree.GenerateProof(i)
-		require.NoError(t, err)
+	t.Run("generate proof for receipts", func(t *testing.T) {
+		for i, receipt := range receipts {
+			// generate a proof for each receipt and verify it
+			proof, err := receiptTree.GenerateProof(i)
+			require.NoError(t, err)
 
-		verified, err := proof.Verify(header.ReceiptHash, i)
-		require.NoError(t, err)
+			verified, err := proof.Verify(header.ReceiptHash, i)
+			require.NoError(t, err)
 
-		// recover the receipt from the proof and compare it with the original receipt
-		// NOTE: eth receipts only hashes the following fields
-		// data := &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs}
-		var verifiedReceipt types.Receipt
-		err = verifiedReceipt.UnmarshalBinary(verified)
-		require.NoError(t, err)
-		require.EqualValues(t, receipt.Status, verifiedReceipt.Status)
-		require.EqualValues(t, receipt.CumulativeGasUsed, verifiedReceipt.CumulativeGasUsed)
-		require.EqualValues(t, receipt.Bloom.Bytes(), verifiedReceipt.Bloom.Bytes())
-		require.EqualValues(t, len(receipt.Logs), len(verifiedReceipt.Logs))
-		for i, log := range receipt.Logs {
-			require.EqualValues(t, log.Address, verifiedReceipt.Logs[i].Address)
-			require.EqualValues(t, log.Topics, verifiedReceipt.Logs[i].Topics)
-			require.EqualValues(t, log.Data, verifiedReceipt.Logs[i].Data)
+			// recover the receipt from the proof and compare it with the original receipt
+			// NOTE: eth receipts only hashes the following fields
+			// data := &receiptRLP{r.statusEncoding(), r.CumulativeGasUsed, r.Bloom, r.Logs}
+			var verifiedReceipt types.Receipt
+			err = verifiedReceipt.UnmarshalBinary(verified)
+			require.NoError(t, err)
+			require.EqualValues(t, receipt.Status, verifiedReceipt.Status)
+			require.EqualValues(t, receipt.CumulativeGasUsed, verifiedReceipt.CumulativeGasUsed)
+			require.EqualValues(t, receipt.Bloom.Bytes(), verifiedReceipt.Bloom.Bytes())
+			require.EqualValues(t, len(receipt.Logs), len(verifiedReceipt.Logs))
+			for i, log := range receipt.Logs {
+				require.EqualValues(t, log.Address, verifiedReceipt.Logs[i].Address)
+				require.EqualValues(t, log.Topics, verifiedReceipt.Logs[i].Topics)
+				require.EqualValues(t, log.Data, verifiedReceipt.Logs[i].Data)
+			}
 		}
-	}
+	})
 
+	t.Run("should not generate proof for negative tx index", func(t *testing.T) {
+		proof, err := receiptTree.GenerateProof(-1)
+		require.Error(t, err)
+		require.Nil(t, proof)
+	})
+
+	t.Run("has key", func(t *testing.T) {
+		proof, err := receiptTree.GenerateProof(0)
+		require.NoError(t, err)
+		require.Greater(t, len(proof.Keys), 0)
+
+		proof2, err := receiptTree.GenerateProof(1)
+		require.NoError(t, err)
+		require.Equal(t, len(proof2.Keys), 3)
+
+		key := proof.Keys[0]
+		has, err := proof.Has(key)
+		require.NoError(t, err)
+		require.True(t, has)
+
+		key2 := proof2.Keys[2]
+		has, err = proof.Has(key2)
+		require.NoError(t, err)
+		require.False(t, has)
+	})
+
+	t.Run("get key", func(t *testing.T) {
+		proof, err := receiptTree.GenerateProof(0)
+		require.NoError(t, err)
+		require.Greater(t, len(proof.Keys), 0)
+
+		proof2, err := receiptTree.GenerateProof(1)
+		require.NoError(t, err)
+		require.Equal(t, len(proof2.Keys), 3)
+
+		key := proof.Keys[0]
+		_, err = proof.Get(key)
+		require.NoError(t, err)
+
+		key2 := proof2.Keys[2]
+		_, err = proof.Get(key2)
+		require.Error(t, err)
+	})
+
+	t.Run("delete key", func(t *testing.T) {
+		proof, err := receiptTree.GenerateProof(0)
+		require.NoError(t, err)
+		require.Greater(t, len(proof.Keys), 0)
+
+		proof2, err := receiptTree.GenerateProof(1)
+		require.NoError(t, err)
+		require.Equal(t, len(proof2.Keys), 3)
+
+		key := proof.Keys[0]
+		err = proof.Delete(key)
+		require.NoError(t, err)
+
+		err = proof.Delete(key)
+		require.Error(t, err)
+
+		key2 := proof2.Keys[2]
+		err = proof.Delete(key2)
+		require.Error(t, err)
+	})
 }
 
 // readHeader reads a header from a file.
