@@ -24,7 +24,7 @@ import (
 func MockBTCClientMainnet() *BTCChainClient {
 	return &BTCChainClient{
 		chain:      common.BtcMainnetChain(),
-		zetaClient: stub.NewZetaCoreBridge(),
+		zetaClient: stub.NewMockZetaCoreBridge(),
 		Tss:        stub.NewTSSMainnet(),
 	}
 }

@@ -8,18 +8,19 @@ import (
 
 // observerKeeper prevents circular dependency
 type observerKeeper interface {
-	GetParams(ctx sdk.Context) (params types.Params)
+	GetParamsIfExists(ctx sdk.Context) (params types.Params)
 	GetAuthorityKeeper() types.AuthorityKeeper
 }
 
 // MigrateStore performs in-place store migrations from v6 to v7
 func MigrateStore(ctx sdk.Context, observerKeeper observerKeeper) error {
+	ctx.Logger().Info("Migrating observer store from v6 to v7")
 	return MigratePolicies(ctx, observerKeeper)
 }
 
 // MigratePolicies migrates policies from observer to authority
 func MigratePolicies(ctx sdk.Context, observerKeeper observerKeeper) error {
-	params := observerKeeper.GetParams(ctx)
+	params := observerKeeper.GetParamsIfExists(ctx)
 	authorityKeeper := observerKeeper.GetAuthorityKeeper()
 
 	var policies authoritytypes.Policies

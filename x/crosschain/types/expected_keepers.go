@@ -33,7 +33,6 @@ type BankKeeper interface {
 type ObserverKeeper interface {
 	GetObserverSet(ctx sdk.Context) (val observertypes.ObserverSet, found bool)
 	GetBallot(ctx sdk.Context, index string) (val observertypes.Ballot, found bool)
-	GetParams(ctx sdk.Context) (params observertypes.Params)
 	GetChainParamsByChainID(ctx sdk.Context, chainID int64) (params *observertypes.ChainParams, found bool)
 	GetNodeAccount(ctx sdk.Context, address string) (nodeAccount observertypes.NodeAccount, found bool)
 	GetAllNodeAccount(ctx sdk.Context) (nodeAccounts []observertypes.NodeAccount)

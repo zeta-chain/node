@@ -17,6 +17,7 @@ func adminTestRoutine(
 	conf config.Config,
 	deployerRunner *runner.E2ERunner,
 	verbose bool,
+	testNames ...string,
 ) func() error {
 	return func() (err error) {
 		// return an error on panic
@@ -48,9 +49,9 @@ func adminTestRoutine(
 
 		// funding the account
 		txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 1000)
-		txUSDTSend := deployerRunner.SendUSDTOnEvm(UserAdminAddress, 1000)
+		txERC20Send := deployerRunner.SendERC20OnEvm(UserAdminAddress, 1000)
 		adminRunner.WaitForTxReceiptOnEvm(txZetaSend)
-		adminRunner.WaitForTxReceiptOnEvm(txUSDTSend)
+		adminRunner.WaitForTxReceiptOnEvm(txERC20Send)
 
 		// depositing the necessary tokens on ZetaChain
 		txZetaDeposit := adminRunner.DepositZeta()
@@ -63,9 +64,7 @@ func adminTestRoutine(
 		// run erc20 advanced test
 		testsToRun, err := adminRunner.GetE2ETestsToRunByName(
 			e2etests.AllE2ETests,
-			e2etests.TestPauseZRC20Name,
-			e2etests.TestUpdateBytecodeName,
-			e2etests.TestDepositEtherLiquidityCapName,
+			testNames...,
 		)
 		if err != nil {
 			return fmt.Errorf("admin tests failed: %v", err)

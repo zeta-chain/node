@@ -36,7 +36,7 @@ A config YAML file can be provided to the E2E test tool via the `--config` flag.
 **EVM Contracts**
 - `ZetaEthAddress`: Address of Zeta token contract on EVM chain.
 - `ConnectorEthAddr`: Address of a connector contract on EVM chain.
-- `USDT`: Address of the USDT token contract on EVM chain.
+- `ERC20`: Address of the ERC20 token contract on EVM chain.
 
 ### Config Example
 
@@ -51,7 +51,7 @@ contracts:
   evm:
     zeta_eth: "0x..."
     connector_eth: "0x..."
-    usdt: "0x..."
+    erc20: "0x..."
 zeta_chain_id: "zetachain-1"
 ```
 

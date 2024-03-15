@@ -30,6 +30,8 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 		panic("Invalid number of withdrawals specified for TestStressBTCWithdraw.")
 	}
 
+	r.SetBtcAddress(r.Name, false)
+
 	r.Logger.Print("starting stress test of %d withdraws", numWithdraws)
 
 	// create a wait group to wait for all the withdraws to complete
@@ -44,14 +46,14 @@ func TestStressBTCWithdraw(r *runner.E2ERunner, args []string) {
 	for i := 0; i < numWithdraws; i++ {
 		i := i
 		tx, err := r.BTCZRC20.Withdraw(
-			r.ZevmAuth,
+			r.ZEVMAuth,
 			[]byte(r.BTCDeployerAddress.EncodeAddress()),
 			big.NewInt(int64(satAmount)),
 		)
 		if err != nil {
 			panic(err)
 		}
-		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 		if receipt.Status == 0 {
 			//r.Logger.Info("index %d: withdraw evm tx failed", index)
 			panic(fmt.Sprintf("index %d: withdraw btc tx %s failed", i, tx.Hash().Hex()))

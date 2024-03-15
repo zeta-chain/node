@@ -2,15 +2,8 @@ package runner
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 	"sync"
 	"time"
-
-	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -29,6 +22,10 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -47,8 +44,8 @@ type E2ERunner struct {
 	FungibleAdminMnemonic string
 
 	// rpc clients
-	ZevmClient   *ethclient.Client
-	GoerliClient *ethclient.Client
+	ZEVMClient   *ethclient.Client
+	EVMClient    *ethclient.Client
 	BtcRPCClient *rpcclient.Client
 
 	// grpc clients
@@ -62,8 +59,8 @@ type E2ERunner struct {
 	ZetaTxServer txserver.ZetaTxServer
 
 	// evm auth
-	GoerliAuth *bind.TransactOpts
-	ZevmAuth   *bind.TransactOpts
+	EVMAuth  *bind.TransactOpts
+	ZEVMAuth *bind.TransactOpts
 
 	// contracts
 	ZetaEthAddr          ethcommon.Address
@@ -72,10 +69,10 @@ type E2ERunner struct {
 	ConnectorEth         *zetaconnectoreth.ZetaConnectorEth
 	ERC20CustodyAddr     ethcommon.Address
 	ERC20Custody         *erc20custody.ERC20Custody
-	USDTERC20Addr        ethcommon.Address
-	USDTERC20            *erc20.USDT
-	USDTZRC20Addr        ethcommon.Address
-	USDTZRC20            *zrc20.ZRC20
+	ERC20Addr            ethcommon.Address
+	ERC20                *erc20.ERC20
+	ERC20ZRC20Addr       ethcommon.Address
+	ERC20ZRC20           *zrc20.ZRC20
 	ETHZRC20Addr         ethcommon.Address
 	ETHZRC20             *zrc20.ZRC20
 	BTCZRC20Addr         ethcommon.Address
@@ -118,7 +115,7 @@ func NewE2ERunner(
 	deployerAddress ethcommon.Address,
 	deployerPrivateKey string,
 	fungibleAdminMnemonic string,
-	goerliClient *ethclient.Client,
+	evmClient *ethclient.Client,
 	zevmClient *ethclient.Client,
 	cctxClient crosschaintypes.QueryClient,
 	zetaTxServer txserver.ZetaTxServer,
@@ -126,7 +123,7 @@ func NewE2ERunner(
 	authClient authtypes.QueryClient,
 	bankClient banktypes.QueryClient,
 	observerClient observertypes.QueryClient,
-	goerliAuth *bind.TransactOpts,
+	evmAuth *bind.TransactOpts,
 	zevmAuth *bind.TransactOpts,
 	btcRPCClient *rpcclient.Client,
 	logger *Logger,
@@ -140,8 +137,8 @@ func NewE2ERunner(
 		DeployerPrivateKey:    deployerPrivateKey,
 		FungibleAdminMnemonic: fungibleAdminMnemonic,
 
-		ZevmClient:     zevmClient,
-		GoerliClient:   goerliClient,
+		ZEVMClient:     zevmClient,
+		EVMClient:      evmClient,
 		ZetaTxServer:   zetaTxServer,
 		CctxClient:     cctxClient,
 		FungibleClient: fungibleClient,
@@ -149,203 +146,14 @@ func NewE2ERunner(
 		BankClient:     bankClient,
 		ObserverClient: observerClient,
 
-		GoerliAuth:   goerliAuth,
-		ZevmAuth:     zevmAuth,
+		EVMAuth:      evmAuth,
+		ZEVMAuth:     zevmAuth,
 		BtcRPCClient: btcRPCClient,
 
 		Logger: logger,
 
 		WG: sync.WaitGroup{},
 	}
-}
-
-// E2ETestFunc is a function representing a E2E test
-// It takes a E2ERunner as an argument
-type E2ETestFunc func(*E2ERunner, []string)
-
-// E2ETest represents a E2E test with a name, args, description and test func
-type E2ETest struct {
-	Name           string
-	Description    string
-	Args           []string
-	ArgsDefinition []ArgDefinition
-	E2ETest        E2ETestFunc
-}
-
-// NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description string, argsDefinition []ArgDefinition, e2eTestFunc E2ETestFunc) E2ETest {
-	return E2ETest{
-		Name:           name,
-		Description:    description,
-		ArgsDefinition: argsDefinition,
-		E2ETest:        e2eTestFunc,
-		Args:           []string{},
-	}
-}
-
-// ArgDefinition defines a structure for holding an argument's description along with it's default value.
-type ArgDefinition struct {
-	Description  string
-	DefaultValue string
-}
-
-// DefaultArgs extracts and returns array of default arguments from the ArgsDefinition.
-func (e E2ETest) DefaultArgs() []string {
-	defaultArgs := make([]string, len(e.ArgsDefinition))
-	for i, spec := range e.ArgsDefinition {
-		defaultArgs[i] = spec.DefaultValue
-	}
-	return defaultArgs
-}
-
-// ArgsDescription returns a string representing the arguments description in a readable format.
-func (e E2ETest) ArgsDescription() string {
-	argsDescription := ""
-	for _, def := range e.ArgsDefinition {
-		argDesc := fmt.Sprintf("%s (%s)", def.Description, def.DefaultValue)
-		if argsDescription != "" {
-			argsDescription += ", "
-		}
-		argsDescription += argDesc
-	}
-	return argsDescription
-}
-
-// E2ETestRunConfig defines the basic configuration for initiating an E2E test, including its name and optional runtime arguments.
-type E2ETestRunConfig struct {
-	Name string
-	Args []string
-}
-
-// GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
-func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
-	tests := []E2ETestRunConfig{}
-	for _, testName := range testNames {
-		tests = append(tests, E2ETestRunConfig{
-			Name: testName,
-			Args: []string{},
-		})
-	}
-	return runner.GetE2ETestsToRunByConfig(availableTests, tests)
-}
-
-// GetE2ETestsToRunByConfig prepares a list of E2ETests to run based on provided test names and their corresponding arguments
-func (runner *E2ERunner) GetE2ETestsToRunByConfig(availableTests []E2ETest, testConfigs []E2ETestRunConfig) ([]E2ETest, error) {
-	tests := []E2ETest{}
-	for _, testSpec := range testConfigs {
-		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)
-		if !found {
-			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
-		}
-		e2eTestToRun := NewE2ETest(
-			e2eTest.Name,
-			e2eTest.Description,
-			e2eTest.ArgsDefinition,
-			e2eTest.E2ETest,
-		)
-		// update e2e test args
-		e2eTestToRun.Args = testSpec.Args
-		tests = append(tests, e2eTestToRun)
-	}
-
-	return tests, nil
-}
-
-// RunE2ETests runs a list of e2e tests
-func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
-	for _, e2eTest := range e2eTests {
-		if err := runner.RunE2ETest(e2eTest, true); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// RunE2ETestsFromNamesIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
-// The function doesn't return an error, it returns a report with the error
-func (runner *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, error) {
-	// go through all tests
-	reports := make(TestReports, 0, len(e2eTests))
-	for _, test := range e2eTests {
-		// get info before test
-		balancesBefore, err := runner.GetAccountBalances(true)
-		if err != nil {
-			return nil, err
-		}
-		timeBefore := time.Now()
-
-		// run test
-		testErr := runner.RunE2ETest(test, false)
-		if testErr != nil {
-			runner.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
-		}
-
-		// wait 5 sec to make sure we get updated balances
-		time.Sleep(5 * time.Second)
-
-		// get info after test
-		balancesAfter, err := runner.GetAccountBalances(true)
-		if err != nil {
-			return nil, err
-		}
-		timeAfter := time.Now()
-
-		// create report
-		report := TestReport{
-			Name:     test.Name,
-			Success:  testErr == nil,
-			Time:     timeAfter.Sub(timeBefore),
-			GasSpent: GetAccountBalancesDiff(balancesBefore, balancesAfter),
-		}
-		reports = append(reports, report)
-	}
-
-	return reports, nil
-}
-
-// RunE2ETest runs a e2e test
-func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error) {
-	// return an error on panic
-	// https://github.com/zeta-chain/node/issues/1500
-	defer func() {
-		if r := recover(); r != nil {
-			// print stack trace
-			stack := make([]byte, 4096)
-			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTest.Name, r, stack[:n])
-		}
-	}()
-
-	startTime := time.Now()
-	runner.Logger.Print("⏳running - %s", e2eTest.Description)
-
-	// run e2e test, if args are not provided, use default args
-	args := e2eTest.Args
-	if len(args) == 0 {
-		args = e2eTest.DefaultArgs()
-	}
-	e2eTest.E2ETest(runner, args)
-
-	//check supplies
-	if checkAccounting {
-		if err := runner.CheckZRC20ReserveAndSupply(); err != nil {
-			return err
-		}
-	}
-
-	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
-
-	return err
-}
-
-// findE2ETest finds a e2e test by name
-func findE2ETestByName(e2eTests []E2ETest, e2eTestName string) (E2ETest, bool) {
-	for _, test := range e2eTests {
-		if test.Name == e2eTestName {
-			return test, true
-		}
-	}
-	return E2ETest{}, false
 }
 
 // CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts
@@ -358,8 +166,8 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.ZetaEthAddr = other.ZetaEthAddr
 	runner.ConnectorEthAddr = other.ConnectorEthAddr
 	runner.ERC20CustodyAddr = other.ERC20CustodyAddr
-	runner.USDTERC20Addr = other.USDTERC20Addr
-	runner.USDTZRC20Addr = other.USDTZRC20Addr
+	runner.ERC20Addr = other.ERC20Addr
+	runner.ERC20ZRC20Addr = other.ERC20ZRC20Addr
 	runner.ETHZRC20Addr = other.ETHZRC20Addr
 	runner.BTCZRC20Addr = other.BTCZRC20Addr
 	runner.UniswapV2FactoryAddr = other.UniswapV2FactoryAddr
@@ -372,60 +180,60 @@ func (runner *E2ERunner) CopyAddressesFrom(other *E2ERunner) (err error) {
 	runner.SystemContractAddr = other.SystemContractAddr
 
 	// create instances of contracts
-	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.GoerliClient)
+	runner.ZetaEth, err = zetaeth.NewZetaEth(runner.ZetaEthAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.GoerliClient)
+	runner.ConnectorEth, err = zetaconnectoreth.NewZetaConnectorEth(runner.ConnectorEthAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.GoerliClient)
+	runner.ERC20Custody, err = erc20custody.NewERC20Custody(runner.ERC20CustodyAddr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.USDTERC20, err = erc20.NewUSDT(runner.USDTERC20Addr, runner.GoerliClient)
+	runner.ERC20, err = erc20.NewERC20(runner.ERC20Addr, runner.EVMClient)
 	if err != nil {
 		return err
 	}
-	runner.USDTZRC20, err = zrc20.NewZRC20(runner.USDTZRC20Addr, runner.ZevmClient)
+	runner.ERC20ZRC20, err = zrc20.NewZRC20(runner.ERC20ZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZevmClient)
+	runner.ETHZRC20, err = zrc20.NewZRC20(runner.ETHZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZevmClient)
+	runner.BTCZRC20, err = zrc20.NewZRC20(runner.BTCZRC20Addr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZevmClient)
+	runner.UniswapV2Factory, err = uniswapv2factory.NewUniswapV2Factory(runner.UniswapV2FactoryAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZevmClient)
+	runner.UniswapV2Router, err = uniswapv2router.NewUniswapV2Router02(runner.UniswapV2RouterAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZevmClient)
+	runner.ConnectorZEVM, err = connectorzevm.NewZetaConnectorZEVM(runner.ConnectorZEVMAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZevmClient)
+	runner.WZeta, err = wzeta.NewWETH9(runner.WZetaAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
 
-	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZevmClient)
+	runner.ZEVMSwapApp, err = zevmswap.NewZEVMSwapApp(runner.ZEVMSwapAppAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZevmClient)
+	runner.ContextApp, err = contextapp.NewContextApp(runner.ContextAppAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
-	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZevmClient)
+	runner.SystemContract, err = systemcontract.NewSystemContract(runner.SystemContractAddr, runner.ZEVMClient)
 	if err != nil {
 		return err
 	}
@@ -450,7 +258,7 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print(" --- 📜zEVM contracts ---")
 	runner.Logger.Print("SystemContract: %s", runner.SystemContractAddr.Hex())
 	runner.Logger.Print("ETHZRC20:       %s", runner.ETHZRC20Addr.Hex())
-	runner.Logger.Print("USDTZRC20:      %s", runner.USDTZRC20Addr.Hex())
+	runner.Logger.Print("ERC20ZRC20:     %s", runner.ERC20ZRC20Addr.Hex())
 	runner.Logger.Print("BTCZRC20:       %s", runner.BTCZRC20Addr.Hex())
 	runner.Logger.Print("UniswapFactory: %s", runner.UniswapV2FactoryAddr.Hex())
 	runner.Logger.Print("UniswapRouter:  %s", runner.UniswapV2RouterAddr.Hex())
@@ -466,5 +274,5 @@ func (runner *E2ERunner) PrintContractAddresses() {
 	runner.Logger.Print("ZetaEth:        %s", runner.ZetaEthAddr.Hex())
 	runner.Logger.Print("ConnectorEth:   %s", runner.ConnectorEthAddr.Hex())
 	runner.Logger.Print("ERC20Custody:   %s", runner.ERC20CustodyAddr.Hex())
-	runner.Logger.Print("USDTERC20:      %s", runner.USDTERC20Addr.Hex())
+	runner.Logger.Print("ERC20:      %s", runner.ERC20Addr.Hex())
 }

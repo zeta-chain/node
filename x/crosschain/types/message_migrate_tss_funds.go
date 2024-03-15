@@ -8,6 +8,8 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 )
 
+const TypeMsgMigrateTssFunds = "MigrateTssFunds"
+
 var _ sdk.Msg = &MsgMigrateTssFunds{}
 
 func NewMsgMigrateTssFunds(creator string, chainID int64, amount sdkmath.Uint) *MsgMigrateTssFunds {
@@ -23,7 +25,7 @@ func (msg *MsgMigrateTssFunds) Route() string {
 }
 
 func (msg *MsgMigrateTssFunds) Type() string {
-	return "MigrateTssFunds"
+	return TypeMsgMigrateTssFunds
 }
 
 func (msg *MsgMigrateTssFunds) GetSigners() []sdk.AccAddress {

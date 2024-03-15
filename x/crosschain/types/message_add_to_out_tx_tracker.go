@@ -58,7 +58,7 @@ func (msg *MsgAddToOutTxTracker) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if msg.ChainId < 0 {
-		return cosmoserrors.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 	return nil
 }

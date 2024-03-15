@@ -31,12 +31,12 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 		panic(err)
 	}
 
-	r.Logger.Info("GOERLI tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.GoerliClient, signedTx, r.Logger, r.ReceiptTimeout)
+	r.Logger.Info("EVM tx sent: %s; to %s, nonce %d", signedTx.Hash().String(), signedTx.To().Hex(), signedTx.Nonce())
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.EVMClient, signedTx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("tx failed")
 	}
-	r.Logger.Info("GOERLI tx receipt: %d", receipt.Status)
+	r.Logger.Info("EVM tx receipt: %d", receipt.Status)
 	r.Logger.Info("  tx hash: %s", receipt.TxHash.String())
 	r.Logger.Info("  to: %s", signedTx.To().String())
 	r.Logger.Info("  value: %d", signedTx.Value())
@@ -63,7 +63,7 @@ func TestContextUpgrade(r *runner.E2ERunner, args []string) {
 			if bytes.Compare(eventIter.Event.Origin, r.DeployerAddress.Bytes()) != 0 {
 				panic("origin mismatch")
 			}
-			chainID, err := r.GoerliClient.ChainID(r.Ctx)
+			chainID, err := r.EVMClient.ChainID(r.Ctx)
 			if err != nil {
 				panic(err)
 			}
