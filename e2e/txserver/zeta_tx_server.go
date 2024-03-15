@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"strings"
 
@@ -32,12 +33,17 @@ import (
 	etherminttypes "github.com/evmos/ethermint/types"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// EmissionsPoolAddress is the address of the emissions pool
+// This address is constant for all networks because it is derived from emissions name
+const EmissionsPoolAddress = "zeta1w43fn2ze2wyhu5hfmegr6vp52c3dgn0srdgymy"
 
 // ZetaTxServer is a ZetaChain tx server for E2E test
 type ZetaTxServer struct {
@@ -277,6 +283,36 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 		return "", "", "", "", "", fmt.Errorf("invalid address in event: %s", erc20zrc20Addr)
 	}
 	return uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, nil
+}
+
+// FundEmissionsPool funds the emissions pool with the given amount
+func (zts ZetaTxServer) FundEmissionsPool(account string, amount *big.Int) error {
+	// retrieve account
+	acc, err := zts.clientCtx.Keyring.Key(account)
+	if err != nil {
+		return err
+	}
+	addr, err := acc.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	// retrieve account address
+	emissionPoolAccAddr, err := sdktypes.AccAddressFromBech32(EmissionsPoolAddress)
+	if err != nil {
+		return err
+	}
+
+	// convert amount
+	amountInt := sdktypes.NewIntFromBigInt(amount)
+
+	// fund emissions pool
+	_, err = zts.BroadcastTx(account, banktypes.NewMsgSend(
+		addr,
+		emissionPoolAccAddr,
+		sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom, amountInt)),
+	))
+	return err
 }
 
 // newCodec returns the codec for msg server
