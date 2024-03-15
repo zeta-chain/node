@@ -555,24 +555,6 @@ func (_m *CrosschainObserverKeeper) GetObserverSet(ctx types.Context) (observert
 	return r0, r1
 }
 
-// GetParams provides a mock function with given fields: ctx
-func (_m *CrosschainObserverKeeper) GetParams(ctx types.Context) observertypes.Params {
-	ret := _m.Called(ctx)
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetParams")
-	}
-
-	var r0 observertypes.Params
-	if rf, ok := ret.Get(0).(func(types.Context) observertypes.Params); ok {
-		r0 = rf(ctx)
-	} else {
-		r0 = ret.Get(0).(observertypes.Params)
-	}
-
-	return r0
-}
-
 // GetPendingNonces provides a mock function with given fields: ctx, tss, chainID
 func (_m *CrosschainObserverKeeper) GetPendingNonces(ctx types.Context, tss string, chainID int64) (observertypes.PendingNonces, bool) {
 	ret := _m.Called(ctx, tss, chainID)

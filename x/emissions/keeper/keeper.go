@@ -9,7 +9,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 type (
@@ -17,7 +16,7 @@ type (
 		cdc              codec.BinaryCodec
 		storeKey         storetypes.StoreKey
 		memKey           storetypes.StoreKey
-		paramstore       paramtypes.Subspace
+		paramStore       types.ParamStore
 		feeCollectorName string
 		bankKeeper       types.BankKeeper
 		stakingKeeper    types.StakingKeeper
@@ -30,7 +29,7 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
+	ps types.ParamStore,
 	feeCollectorName string,
 	bankKeeper types.BankKeeper,
 	stakingKeeper types.StakingKeeper,
@@ -46,7 +45,7 @@ func NewKeeper(
 		cdc:              cdc,
 		storeKey:         storeKey,
 		memKey:           memKey,
-		paramstore:       ps,
+		paramStore:       ps,
 		feeCollectorName: feeCollectorName,
 		bankKeeper:       bankKeeper,
 		stakingKeeper:    stakingKeeper,
@@ -77,4 +76,8 @@ func (k Keeper) GetObserverKeeper() types.ObserverKeeper {
 
 func (k Keeper) GetAuthKeeper() types.AccountKeeper {
 	return k.authKeeper
+}
+
+func (k Keeper) GetParamStore() types.ParamStore {
+	return k.paramStore
 }
