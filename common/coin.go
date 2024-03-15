@@ -24,9 +24,6 @@ func GetAzetaDecFromAmountInZeta(zetaAmount string) (sdk.Dec, error) {
 	if err != nil {
 		return sdk.Dec{}, err
 	}
-	zetaToAzetaConvertionFactor, err := sdk.NewDecFromStr("1000000000000000000")
-	if err != nil {
-		return sdk.Dec{}, err
-	}
+	zetaToAzetaConvertionFactor := sdk.NewDecFromInt(sdk.NewInt(1000000000000000000))
 	return zetaDec.Mul(zetaToAzetaConvertionFactor), nil
 }
