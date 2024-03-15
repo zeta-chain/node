@@ -16,5 +16,5 @@ services:
       - "8546:8545"
     networks:
       mynetwork:
-        ipv4_address: 172.20.0.100
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.100", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+        ipv4_address: 172.20.0.102
+    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.102", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
