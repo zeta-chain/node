@@ -2,11 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
-	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 )
@@ -55,20 +52,11 @@ import (
 func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.MsgVoteOnObservedOutboundTx) (*types.MsgVoteOnObservedOutboundTxResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// check if CCTX exists and if the nonce matches
-	cctx, found := k.GetCrossChainTx(ctx, msg.CctxHash)
-	if !found {
-		return nil, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("CCTX %s does not exist", msg.CctxHash))
+	// Validate the message params to verify it against an existing cctx
+	cctx, err := k.ValidateOutboundMessage(ctx, *msg)
+	if err != nil {
+		return nil, err
 	}
-	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
-		return nil, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
-	}
-	// do not process outbound vote if TSS is not found
-	_, found = k.zetaObserverKeeper.GetTSS(ctx)
-	if !found {
-		return nil, types.ErrCannotFindTSSKeys
-	}
-
 	// get ballot index
 	ballotIndex := msg.Digest()
 	// vote on outbound ballot

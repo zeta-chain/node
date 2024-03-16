@@ -118,7 +118,7 @@ func TestKeeper_FundGasStabilityPoolFromRemainingFees(t *testing.T) {
 }
 
 func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
-	t.Run("successfully vote on outbound tx", func(t *testing.T) {
+	t.Run("successfully vote on outbound tx with status pending outbound ,vote-type success", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
 		})
@@ -167,6 +167,123 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		require.Equal(t, types.CctxStatus_OutboundMined, c.CctxStatus.Status)
 	})
 
+	t.Run("successfully vote on outbound tx, vote-type failed", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+			UseFungibleMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+		observer := sample.AccAddress()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
+
+		// Successfully mock VoteOnOutboundBallot
+		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
+
+		// Successfully mock GetOutBound
+		keepertest.MockGetOutBound(observerMock, ctx)
+
+		// Successfully mock ProcessOutbound
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+
+		//Successfully mock SaveOutBound
+		keepertest.MockSaveOutBoundNewRevertCreated(observerMock, ctx, cctx, tss)
+		oldParamsLen := len(cctx.OutboundTxParams)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err := msgServer.VoteOnObservedOutboundTx(ctx, &types.MsgVoteOnObservedOutboundTx{
+			CctxHash:                       cctx.Index,
+			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
+			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
+			Status:                         common.ReceiveStatus_Failed,
+			Creator:                        observer,
+			ObservedOutTxHash:              sample.Hash().String(),
+			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
+			ObservedOutTxBlockHeight:       10,
+			ObservedOutTxEffectiveGasPrice: math.NewInt(21),
+			ObservedOutTxGasUsed:           21,
+			CoinType:                       cctx.CoinType,
+		})
+		require.NoError(t, err)
+		c, found := k.GetCrossChainTx(ctx, cctx.Index)
+		require.True(t, found)
+		require.Equal(t, types.CctxStatus_PendingRevert, c.CctxStatus.Status)
+		require.Equal(t, oldParamsLen+1, len(c.OutboundTxParams))
+		require.Equal(t, types.TxFinalizationStatus_Executed, c.OutboundTxParams[oldParamsLen-1].TxFinalizationStatus)
+		require.Equal(t, types.TxFinalizationStatus_NotFinalized, cctx.GetCurrentOutTxParam().TxFinalizationStatus)
+	})
+
+	t.Run("unsuccessfully vote on outbound tx, vote-type failed", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+			UseFungibleMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+		observer := sample.AccAddress()
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{ObserverList: []string{observer}})
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, *cctx)
+		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
+
+		// Successfully mock VoteOnOutboundBallot
+		keepertest.MockVoteOnOutboundFailedBallot(observerMock, ctx, cctx, *senderChain, observer)
+
+		// Successfully mock GetOutBound
+		keepertest.MockGetOutBound(observerMock, ctx)
+
+		// Mock Failed ProcessOutbound
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
+			Return(observertypes.ChainNonces{}, false)
+
+		//Successfully mock SaveOutBound
+		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
+		oldParamsLen := len(cctx.OutboundTxParams)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		_, err := msgServer.VoteOnObservedOutboundTx(ctx, &types.MsgVoteOnObservedOutboundTx{
+			CctxHash:                       cctx.Index,
+			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
+			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
+			Status:                         common.ReceiveStatus_Failed,
+			Creator:                        observer,
+			ObservedOutTxHash:              sample.Hash().String(),
+			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
+			ObservedOutTxBlockHeight:       10,
+			ObservedOutTxEffectiveGasPrice: math.NewInt(21),
+			ObservedOutTxGasUsed:           21,
+			CoinType:                       cctx.CoinType,
+		})
+		require.NoError(t, err)
+		c, found := k.GetCrossChainTx(ctx, cctx.Index)
+		require.True(t, found)
+		//require.Equal(t, types.CctxStatus_PendingOutbound, c.CctxStatus.Status)
+		require.Equal(t, oldParamsLen, len(c.OutboundTxParams))
+	})
+
 	t.Run("failure in processing outbound tx", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseObserverMock: true,
@@ -186,6 +303,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+
 		k.SetCrossChainTx(ctx, *cctx)
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
@@ -206,7 +324,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Success,
+			Status:                         common.ReceiveStatus_Failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
