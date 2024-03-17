@@ -144,7 +144,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Successfully mock GetOutBound
 		keepertest.MockGetOutBound(observerMock, ctx)
 
-		//Successfully mock SaveSuccessfulOutBound
+		// Successfully mock SaveSuccessfulOutBound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -280,8 +280,13 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		require.NoError(t, err)
 		c, found := k.GetCrossChainTx(ctx, cctx.Index)
 		require.True(t, found)
-		//require.Equal(t, types.CctxStatus_PendingOutbound, c.CctxStatus.Status)
-		require.Equal(t, oldParamsLen, len(c.OutboundTxParams))
+		require.Equal(t, types.CctxStatus_Aborted, c.CctxStatus.Status)
+		require.Equal(t, oldParamsLen+1, len(c.OutboundTxParams))
+		// The message processing fails during the creation of the revert tx
+		// So the original outbound tx is executed and the revert tx is not finalized.
+		// The cctx status is Aborted
+		require.Equal(t, types.TxFinalizationStatus_NotFinalized, c.GetCurrentOutTxParam().TxFinalizationStatus)
+		require.Equal(t, types.TxFinalizationStatus_Executed, c.OutboundTxParams[oldParamsLen-1].TxFinalizationStatus)
 	})
 
 	t.Run("failure in processing outbound tx", func(t *testing.T) {
@@ -303,8 +308,9 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.GetCurrentOutTxParam().TssPubkey = tss.TssPubkey
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-
 		k.SetCrossChainTx(ctx, *cctx)
+
+		// Successfully mock GetTSS
 		observerMock.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
 
 		// Successfully mock VoteOnOutboundBallot
@@ -430,6 +436,5 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		require.Equal(t, types.CctxStatus_PendingOutbound, c.CctxStatus.Status)
 		_, found = zk.ObserverKeeper.GetBallot(ctx, msg.Digest())
 		require.False(t, found)
-
 	})
 }
