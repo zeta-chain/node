@@ -9,15 +9,11 @@ import (
 
 func TestDefaultConfig(t *testing.T) {
 	cfg := DefaultConfig()
-	require.Equal(t, cfg.EthRPC, EthRPC)
+	require.Equal(t, cfg.EthRPCURL, EthRPCURL)
 	require.Equal(t, cfg.ZetaURL, ZetaURL)
-	require.Equal(t, cfg.TssAddressBTC, TssAddressBTC)
-	require.Equal(t, cfg.TssAddressEVM, TssAddressEVM)
-	require.Equal(t, cfg.BtcExplorer, BtcExplorer)
+	require.Equal(t, cfg.BtcExplorerURL, BtcExplorerURL)
 	require.Equal(t, cfg.ConnectorAddress, ConnectorAddress)
 	require.Equal(t, cfg.CustodyAddress, CustodyAddress)
-	require.Equal(t, cfg.EvmStartBlock, EvmStartBlock)
-	require.Equal(t, cfg.EvmMaxRange, EvmMaxRange)
 }
 
 func TestGetConfig(t *testing.T) {
@@ -66,7 +62,7 @@ func TestConfig_Read(t *testing.T) {
 func TestConfig_Save(t *testing.T) {
 	AppFs = afero.NewMemMapFs()
 	cfg := DefaultConfig()
-	cfg.EvmMaxRange = uint64(2000)
+	cfg.EtherscanAPIkey = "DIFFERENTAPIKEY"
 
 	t.Run("save modified cfg", func(t *testing.T) {
 		err := cfg.Save()

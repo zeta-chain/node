@@ -6,67 +6,91 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
+	"github.com/zeta-chain/zetacore/common"
 )
 
-var btcCmd = &cobra.Command{
-	Use:   "btc",
-	Short: "Filter inbound btc deposits",
-	Run:   FilterBTCTransactions,
-}
-
-func init() {
-	Cmd.AddCommand(btcCmd)
+func NewBtcCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "btc",
+		Short: "Filter inbound btc deposits",
+		RunE:  FilterBTCTransactions,
+	}
 }
 
 // FilterBTCTransactions is a command that queries the bitcoin explorer for inbound transactions that qualify for
 // cross chain transactions.
-func FilterBTCTransactions(cmd *cobra.Command, _ []string) {
-	configFile, err := cmd.Flags().GetString(config.Flag)
+func FilterBTCTransactions(cmd *cobra.Command, _ []string) error {
+	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	fmt.Println("config file name: ", configFile)
 	if err != nil {
-		log.Fatal(err)
+		return err
+	}
+	btcChainID, err := cmd.Flags().GetString(BTCChainIDFlag)
+	if err != nil {
+		return err
 	}
 	cfg, err := config.GetConfig(configFile)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-	list := getHashList(cfg)
-	CheckForCCTX(list, cfg)
+	fmt.Println("getting tss Address")
+	res, err := getTssAddress(cfg, btcChainID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("got tss Address")
+	list, err := getHashList(cfg, res.Btc)
+	if err != nil {
+		return err
+	}
+
+	_, err = CheckForCCTX(list, cfg)
+	return err
 }
 
 // getHashList is called by FilterBTCTransactions to help query and filter inbound transactions on btc
-func getHashList(cfg *config.Config) []Deposit {
+func getHashList(cfg *config.Config, tssAddress string) ([]Deposit, error) {
 	var list []Deposit
 	lastHash := ""
 
-	url := cfg.BtcExplorer
+	// Setup URL for query
+	btcURL, err := url.JoinPath(cfg.BtcExplorerURL, "address", tssAddress, "txs")
+	if err != nil {
+		return list, err
+	}
 
+	// This loop will query the bitcoin explorer for transactions associated with the TSS address. Since the api only
+	// allows a response of 25 transactions per request, several requests will be required in order to retrieve a
+	// complete list.
 	for {
-		nextQuery := url
+		// The Next Query is determined by the last transaction hash provided by the previous response.
+		nextQuery := btcURL
 		if lastHash != "" {
-			path := fmt.Sprintf("/chain/%s", lastHash)
-			nextQuery = url + path
+			nextQuery, err = url.JoinPath(btcURL, "chain", lastHash)
+			if err != nil {
+				return list, err
+			}
 		}
 		// #nosec G107 url must be variable
 		res, getErr := http.Get(nextQuery)
 		if getErr != nil {
-			log.Fatal(getErr)
+			return list, getErr
 		}
 
 		body, readErr := ioutil.ReadAll(res.Body)
 		if readErr != nil {
-			log.Fatal(readErr)
+			return list, readErr
 		}
 		closeErr := res.Body.Close()
 		if closeErr != nil {
-			log.Fatal(closeErr)
+			return list, closeErr
 		}
 
 		// NOTE: decoding json from request dynamically is not ideal, however there isn't a detailed, defined data structure
@@ -75,7 +99,7 @@ func getHashList(cfg *config.Config) []Deposit {
 		var txns []map[string]interface{}
 		err := json.Unmarshal(body, &txns)
 		if err != nil {
-			fmt.Println("error unmarshalling: ", err.Error())
+			return list, err
 		}
 
 		if len(txns) == 0 {
@@ -84,9 +108,15 @@ func getHashList(cfg *config.Config) []Deposit {
 
 		fmt.Println("Length of txns: ", len(txns))
 
+		// The "/address" blockstream api provides a maximum of 25 transactions associated with a given address. This
+		// loop will iterate over that list of transactions to determine whether each transaction can be considered
+		// a deposit to ZetaChain.
 		for _, txn := range txns {
+			// Get tx hash of the current transaction
 			hash := txn["txid"].(string)
 
+			// Read the first output of the transaction and parse the destination address.
+			// This address should be the TSS address.
 			vout := txn["vout"].([]interface{})
 			vout0 := vout[0].(map[string]interface{})
 			var vout1 map[string]interface{}
@@ -132,7 +162,7 @@ func getHashList(cfg *config.Config) []Deposit {
 				if err != nil {
 					continue
 				}
-				if bytes.Equal(memoBytes, []byte(DonationMessage)) {
+				if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
 					continue
 				}
 			} else {
@@ -140,7 +170,7 @@ func getHashList(cfg *config.Config) []Deposit {
 			}
 
 			//Make sure Deposit is sent to correct tss address
-			if strings.Compare("0014", scriptpubkey[:4]) == 0 && targetAddr == cfg.TssAddressBTC {
+			if strings.Compare("0014", scriptpubkey[:4]) == 0 && targetAddr == tssAddress {
 				entry := Deposit{
 					hash,
 					// #nosec G701 parsing json requires float64 type from blockstream
@@ -152,8 +182,7 @@ func getHashList(cfg *config.Config) []Deposit {
 
 		lastTxn := txns[len(txns)-1]
 		lastHash = lastTxn["txid"].(string)
-		//fmt.Println("last hash: ", lastHash)
 	}
 
-	return list
+	return list, nil
 }

@@ -4,7 +4,7 @@ Filter missing inbound deposits
 
 ### Synopsis
 
-Filters relevant inbound transactions for a given network and attempts to find an associated cctx from the core. If a 
+Filters relevant inbound transactions for a given network and attempts to find an associated cctx from zetacore. If a 
 cctx is not found, the associated transaction hash and amount is added to a list and displayed.
 
 ```

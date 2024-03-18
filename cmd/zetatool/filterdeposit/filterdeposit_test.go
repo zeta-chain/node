@@ -33,7 +33,8 @@ func TestCheckForCCTX(t *testing.T) {
 		}}
 		cfg := config.DefaultConfig()
 		cfg.ZetaURL = server.URL
-		missedInbounds := CheckForCCTX(deposits, cfg)
+		missedInbounds, err := CheckForCCTX(deposits, cfg)
+		require.NoError(t, err)
 		require.Equal(t, 0, len(missedInbounds))
 	})
 
@@ -51,7 +52,8 @@ func TestCheckForCCTX(t *testing.T) {
 		}}
 		cfg := config.DefaultConfig()
 		cfg.ZetaURL = server.URL
-		missedInbounds := CheckForCCTX(deposits, cfg)
+		missedInbounds, err := CheckForCCTX(deposits, cfg)
+		require.NoError(t, err)
 		require.Equal(t, 1, len(missedInbounds))
 	})
 }

@@ -297,7 +297,10 @@ athens3-zetarpc-node:
 ###############################################################################
 
 filter-missed-btc: install-zetatool
-	./tool/filter_missed_deposits/filter_missed_btc.sh
+	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json
 
 filter-missed-eth: install-zetatool
-	./tool/filter_missed_deposits/filter_missed_eth.sh
+	zetatool filterdeposit eth \
+		--config ./tool/filter_missed_deposits/zetatool_config.json \
+		--evm-max-range 1000 \
+		--evm-start-block 19464041

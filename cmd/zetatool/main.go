@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
+
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
-	"github.com/zeta-chain/zetacore/cmd/zetatool/filterdeposit"
 )
 
 var rootCmd = &cobra.Command{
@@ -15,8 +16,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(filterdeposit.Cmd)
-	rootCmd.PersistentFlags().String(config.Flag, "", "custom config file: --config filename.json")
+	rootCmd.AddCommand(filterdeposit.NewFilterDepositCmd())
+	rootCmd.PersistentFlags().String(config.FlagConfig, "", "custom config file: --config filename.json")
 }
 
 func main() {

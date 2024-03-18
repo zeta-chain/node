@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/zeta-chain/zetacore/zetaclient/evm"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -16,84 +18,118 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
+	zetacommon "github.com/zeta-chain/zetacore/common"
 )
 
 const (
-	TopicsDeposited = 2
-	TopicsZetaSent  = 3
-	DonationMessage = "I am rich!"
+	EvmMaxRangeFlag   = "evm-max-range"
+	EvmStartBlockFlag = "evm-start-block"
 )
 
-var evmCmd = &cobra.Command{
-	Use:   "eth",
-	Short: "Filter inbound eth deposits",
-	Run:   FilterEVMTransactions,
-}
+func NewEvmCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "eth",
+		Short: "Filter inbound eth deposits",
+		RunE:  FilterEVMTransactions,
+	}
 
-func init() {
-	Cmd.AddCommand(evmCmd)
+	cmd.Flags().Uint64(EvmMaxRangeFlag, 1000, "number of blocks to scan per iteration")
+	cmd.Flags().Uint64(EvmStartBlockFlag, 19463725, "block height to start scanning from")
+
+	return cmd
 }
 
 // FilterEVMTransactions is a command that queries an EVM explorer and Contracts for inbound transactions that qualify
 // for cross chain transactions.
-func FilterEVMTransactions(cmd *cobra.Command, _ []string) {
-	configFile, err := cmd.Flags().GetString(config.Flag)
+func FilterEVMTransactions(cmd *cobra.Command, _ []string) error {
+	// Get flags
+	configFile, err := cmd.Flags().GetString(config.FlagConfig)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	startBlock, err := cmd.Flags().GetUint64(EvmStartBlockFlag)
+	if err != nil {
+		return err
+	}
+	blockRange, err := cmd.Flags().GetUint64(EvmMaxRangeFlag)
+	if err != nil {
+		return err
+	}
+	btcChainID, err := cmd.Flags().GetString(BTCChainIDFlag)
+	if err != nil {
+		return err
+	}
+	// Scan for deposits
 	cfg, err := config.GetConfig(configFile)
 	if err != nil {
 		log.Fatal(err)
 	}
-	list := GetEthHashList(cfg)
-	CheckForCCTX(list, cfg)
+	res, err := getTssAddress(cfg, btcChainID)
+	if err != nil {
+		return err
+	}
+	list, err := GetEthHashList(cfg, res.Eth, startBlock, blockRange)
+	if err != nil {
+		return err
+	}
+	_, err = CheckForCCTX(list, cfg)
+	return nil
 }
 
 // GetEthHashList is a helper function querying total inbound txns by segments of blocks in ranges defined by the config
-func GetEthHashList(cfg *config.Config) []Deposit {
-	startBlock := cfg.EvmStartBlock
-	client, err := ethclient.Dial(cfg.EthRPC)
+func GetEthHashList(cfg *config.Config, tssAddress string, startBlock uint64, blockRange uint64) ([]Deposit, error) {
+	client, err := ethclient.Dial(cfg.EthRPCURL)
 	if err != nil {
-		log.Fatal(err)
+		return []Deposit{}, err
 	}
 	fmt.Println("Connection successful")
 
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
-		log.Fatal(err)
+		return []Deposit{}, err
 	}
 	latestBlock := header.Number.Uint64()
 	fmt.Println("latest Block: ", latestBlock)
 
-	endBlock := startBlock + cfg.EvmMaxRange
+	endBlock := startBlock + blockRange
 	deposits := make([]Deposit, 0)
 	segment := 0
 	for startBlock < latestBlock {
 		fmt.Printf("adding segment: %d, startblock: %d\n", segment, startBlock)
-		deposits = append(deposits, GetHashListSegment(client, startBlock, endBlock, cfg)...)
+		segmentRes, err := GetHashListSegment(client, startBlock, endBlock, tssAddress, cfg)
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
+		}
+		deposits = append(deposits, segmentRes...)
 		startBlock = endBlock
-		endBlock = endBlock + cfg.EvmMaxRange
+		endBlock = endBlock + blockRange
 		if endBlock > latestBlock {
 			endBlock = latestBlock
 		}
 		segment++
 	}
-	return deposits
+	return deposits, nil
 }
 
 // GetHashListSegment queries and filters deposits for a given range
-func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock uint64, cfg *config.Config) []Deposit {
-	deposits := make([]Deposit, 0)
+func GetHashListSegment(
+	client *ethclient.Client,
+	startBlock uint64,
+	endBlock uint64,
+	tssAddress string,
+	cfg *config.Config) ([]Deposit, error) {
 
+	deposits := make([]Deposit, 0)
 	connectorAddress := common.HexToAddress(cfg.ConnectorAddress)
 	connectorContract, err := zetaconnector.NewZetaConnectorNonEth(connectorAddress, client)
 	if err != nil {
-		fmt.Println("error: ", err.Error())
+		return deposits, err
 	}
 	erc20CustodyAddress := common.HexToAddress(cfg.CustodyAddress)
 	erc20CustodyContract, err := erc20custody.NewERC20Custody(erc20CustodyAddress, client)
 	if err != nil {
-		fmt.Println("error: ", err.Error())
+		return deposits, err
 	}
 
 	custodyIter, err := erc20CustodyContract.FilterDeposited(&bind.FilterOpts{
@@ -102,8 +138,7 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		Context: context.TODO(),
 	}, []common.Address{})
 	if err != nil {
-		fmt.Println("error loading filter: ", err.Error())
-		return deposits
+		return deposits, err
 	}
 
 	connectorIter, err := connectorContract.FilterZetaSent(&bind.FilterOpts{
@@ -112,16 +147,14 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		Context: context.TODO(),
 	}, []common.Address{}, []*big.Int{})
 	if err != nil {
-		fmt.Println("error loading filter: ", err.Error())
-		return deposits
+		return deposits, err
 	}
 
-	// ********************** Get ERC20 Custody Deposit events
+	// Get ERC20 Custody Deposit events
 	for custodyIter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&custodyIter.Event.Raw, erc20CustodyAddress, "", TopicsDeposited)
+		err := CheckEvmTxLog(&custodyIter.Event.Raw, erc20CustodyAddress, "", evm.TopicsDeposited)
 		if err == nil {
-			//fmt.Println("adding deposits")
 			deposits = append(deposits, Deposit{
 				TxID:   custodyIter.Event.Raw.TxHash.Hex(),
 				Amount: custodyIter.Event.Amount.Uint64(),
@@ -129,12 +162,11 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		}
 	}
 
-	// ********************** Get Connector ZetaSent events
+	// Get Connector ZetaSent events
 	for connectorIter.Next() {
 		// sanity check tx event
-		err := CheckEvmTxLog(&connectorIter.Event.Raw, connectorAddress, "", TopicsZetaSent)
+		err := CheckEvmTxLog(&connectorIter.Event.Raw, connectorAddress, "", evm.TopicsZetaSent)
 		if err == nil {
-			//fmt.Println("adding deposits")
 			deposits = append(deposits, Deposit{
 				TxID:   connectorIter.Event.Raw.TxHash.Hex(),
 				Amount: connectorIter.Event.ZetaValueAndGas.Uint64(),
@@ -142,19 +174,19 @@ func GetHashListSegment(client *ethclient.Client, startBlock uint64, endBlock ui
 		}
 	}
 
-	//********************** Get Transactions sent directly to TSS address
-	tssDeposits, err := getTSSDeposits(cfg.TssAddressEVM, startBlock, endBlock)
+	// Get Transactions sent directly to TSS address
+	tssDeposits, err := getTSSDeposits(tssAddress, startBlock, endBlock, cfg.EtherscanAPIkey)
 	if err != nil {
-		fmt.Printf("getTSSDeposits returned err: %s", err.Error())
+		return deposits, err
 	}
 	deposits = append(deposits, tssDeposits...)
 
-	return deposits
+	return deposits, nil
 }
 
 // getTSSDeposits more specifically queries and filters deposits based on direct transfers the TSS address.
-func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64) ([]Deposit, error) {
-	client := etherscan.New(etherscan.Mainnet, "S3AVTNXDJQZQQUVXJM4XVIPBRYECGK88VX")
+func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64, apiKey string) ([]Deposit, error) {
+	client := etherscan.New(etherscan.Mainnet, apiKey)
 	deposits := make([]Deposit, 0)
 
 	// #nosec G701 these block numbers need to be *int for this particular client package
@@ -170,7 +202,7 @@ func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64) ([]De
 
 	for _, tx := range txns {
 		if tx.To == tssAddress {
-			if strings.Compare(tx.Input, DonationMessage) == 0 {
+			if strings.Compare(tx.Input, zetacommon.DonationMessage) == 0 {
 				continue // skip donation tx
 			}
 			if tx.TxReceiptStatus != "1" {

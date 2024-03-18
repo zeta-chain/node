@@ -4,18 +4,32 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
+	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-var Cmd = &cobra.Command{
-	Use:   "filterdeposit",
-	Short: "filter missing inbound deposits",
+const (
+	BTCChainIDFlag = "btc-chain-id"
+)
+
+func NewFilterDepositCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "filterdeposit",
+		Short: "filter missing inbound deposits",
+	}
+
+	cmd.AddCommand(NewBtcCmd())
+	cmd.AddCommand(NewEvmCmd())
+
+	// Required for TSS address query
+	cmd.PersistentFlags().String(BTCChainIDFlag, "8332", "chain id used on zetachain to identify bitcoin - default: 8332")
+
+	return cmd
 }
 
 // Deposit is a data structure for keeping track of inbound transactions
@@ -26,41 +40,41 @@ type Deposit struct {
 
 // CheckForCCTX is querying zeta core for a cctx associated with a confirmed transaction hash. If the cctx is not found,
 // then the transaction hash is added to the list of missed inbound transactions.
-func CheckForCCTX(list []Deposit, cfg *config.Config) []Deposit {
+func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 	var missedList []Deposit
 
 	fmt.Println("Going through list, num of transactions: ", len(list))
 	for _, entry := range list {
 		zetaURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "crosschain", "in_tx_hash_to_cctx_data", entry.TxID)
 		if err != nil {
-			log.Fatal(err)
+			return missedList, err
 		}
 
 		request, err := http.NewRequest(http.MethodGet, zetaURL, nil)
 		if err != nil {
-			log.Fatal(err)
+			return missedList, err
 		}
 		request.Header.Add("Accept", "application/json")
 		client := &http.Client{}
 
 		response, getErr := client.Do(request)
 		if getErr != nil {
-			log.Fatal(getErr)
+			return missedList, getErr
 		}
 
 		data, readErr := ioutil.ReadAll(response.Body)
 		if readErr != nil {
-			log.Fatal(readErr)
+			return missedList, readErr
 		}
 		closeErr := response.Body.Close()
 		if closeErr != nil {
-			log.Fatal(closeErr)
+			return missedList, closeErr
 		}
 
 		var cctx map[string]interface{}
 		err = json.Unmarshal(data, &cctx)
 		if err != nil {
-			fmt.Println("error unmarshalling: ", err.Error())
+			return missedList, err
 		}
 
 		// successful query of the given cctx will not contain a "message" field with value "not found", if it was not
@@ -76,5 +90,31 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) []Deposit {
 	for _, entry := range missedList {
 		fmt.Printf("%s, amount: %d\n", entry.TxID, entry.Amount)
 	}
-	return missedList
+	return missedList, nil
+}
+
+func getTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAddressResponse, error) {
+	res := &types.QueryGetTssAddressResponse{}
+	requestURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "observer", "get_tss_address", btcChainID)
+	request, err := http.NewRequest(http.MethodGet, requestURL, nil)
+	if err != nil {
+		return res, err
+	}
+	request.Header.Add("Accept", "application/json")
+	zetacoreHttpClient := &http.Client{}
+	response, getErr := zetacoreHttpClient.Do(request)
+	if getErr != nil {
+		return res, err
+	}
+	data, readErr := ioutil.ReadAll(response.Body)
+	if readErr != nil {
+		return res, err
+	}
+	closeErr := response.Body.Close()
+	if closeErr != nil {
+		return res, closeErr
+	}
+	err = json.Unmarshal(data, res)
+
+	return res, nil
 }

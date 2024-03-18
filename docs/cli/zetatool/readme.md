@@ -26,14 +26,12 @@ When filtering evm transactions, a range of blocks is required and to reduce run
 must be selected and set in these fields: `EvmStartBlock`, `EvmMaxRange`
 
 If a configuration file is not provided, a default config will be generated under the name 
-`InboundTxFilter_config.json`. Below is an example of a configuration file used for mainnet: 
+`zetatool_config.json`. Below is an example of a configuration file used for mainnet: 
 
 ```json
 {
  "ZetaURL": "http://46.4.15.110:1317",
- "TssAddressBTC": "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
- "TssAddressEVM": "0x70e967acfcc17c3941e87562161406d41676fd83",
- "BtcExplorer": "https://blockstream.info/api/address/bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y/txs",
+ "BtcExplorer": "https://blockstream.info/api/",
  "EthRPC": "https://ethereum-rpc.publicnode.com",
  "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
  "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10",
