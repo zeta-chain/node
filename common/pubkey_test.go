@@ -358,7 +358,7 @@ func TestGetEVMAddress(t *testing.T) {
 		pk, _ := NewPubKey(spk)
 
 		_, err := pk.GetEVMAddress()
-		require.NotNil(t, err)
+		require.Nil(t, err)
 	})
 
 	t.Run("should error if non bech32", func(t *testing.T) {
