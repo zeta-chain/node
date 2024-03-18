@@ -174,19 +174,20 @@ func ValidateHashForChain(hash string, chainID int64) error {
 }
 
 func ValidateAddressForChain(address string, chainID int64) error {
+	// we do not validate the address for zeta chain as the address field can be btc or eth address
 	if common.IsZetaChain(chainID) {
 		return nil
 	}
 	if common.IsEthereumChain(chainID) {
 		if !ethcommon.IsHexAddress(address) {
-			return fmt.Errorf("invalid address %s", address)
+			return fmt.Errorf("invalid address %s , chain %d", address, chainID)
 		}
 		return nil
 	}
 	if common.IsBitcoinChain(chainID) {
 		addr, err := common.DecodeBtcAddress(address, chainID)
 		if err != nil {
-			return fmt.Errorf("invalid address %s: %s", address, err)
+			return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
 		}
 		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
 		if !ok {

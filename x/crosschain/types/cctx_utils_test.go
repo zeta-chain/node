@@ -21,6 +21,8 @@ func TestValidateAddressForChain(t *testing.T) {
 	require.Error(t, types.ValidateAddressForChain("", common.BtcRegtestChain().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("bc1qysd4sp9q8my59ul9wsf5rvs9p387hf8vfwatzu", common.BtcMainnetChain().ChainId))
 	require.NoError(t, types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", common.BtcRegtestChain().ChainId))
+	require.NoError(t, types.ValidateAddressForChain("bcrt1qs758ursh4q9z627kt3pp5yysm78ddny6txaqgw", common.ZetaChainMainnet().ChainId))
+	require.NoError(t, types.ValidateAddressForChain("0x792c127Fa3AC1D52F904056Baf1D9257391e7D78", common.ZetaChainMainnet().ChainId))
 }
 
 func TestValidateZetaIndex(t *testing.T) {

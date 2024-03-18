@@ -16,11 +16,11 @@ import (
 func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	// Random approval
 	approved := sample.EthAddress()
-	tx, err := r.ETHZRC20.Approve(r.ZevmAuth, approved, big.NewInt(1e10))
+	tx, err := r.ETHZRC20.Approve(r.ZEVMAuth, approved, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("approval failed")
 	}
@@ -28,8 +28,8 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	// Deploy the TestZRC20 contract
 	r.Logger.Info("Deploying contract with new bytecode")
 	newZRC20Address, tx, newZRC20Contract, err := testzrc20.DeployTestZRC20(
-		r.ZevmAuth,
-		r.ZevmClient,
+		r.ZEVMAuth,
+		r.ZEVMClient,
 		big.NewInt(5),
 		// #nosec G701 test - always in range
 		uint8(common.CoinType_Gas),
@@ -39,7 +39,7 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	}
 
 	// Wait for the contract to be deployed
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("contract deployment failed")
 	}
@@ -137,15 +137,15 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	}
 
 	r.Logger.Info("Can interact with the new code of the contract")
-	testZRC20Contract, err := testzrc20.NewTestZRC20(r.ETHZRC20Addr, r.ZevmClient)
+	testZRC20Contract, err := testzrc20.NewTestZRC20(r.ETHZRC20Addr, r.ZEVMClient)
 	if err != nil {
 		panic(err)
 	}
-	tx, err = testZRC20Contract.UpdateNewField(r.ZevmAuth, big.NewInt(1e10))
+	tx, err = testZRC20Contract.UpdateNewField(r.ZEVMAuth, big.NewInt(1e10))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -158,11 +158,11 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 	}
 
 	r.Logger.Info("Interacting with the bytecode contract doesn't disrupt the zrc20 contract")
-	tx, err = newZRC20Contract.UpdateNewField(r.ZevmAuth, big.NewInt(1e5))
+	tx, err = newZRC20Contract.UpdateNewField(r.ZEVMAuth, big.NewInt(1e5))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("update new field failed")
 	}
@@ -183,11 +183,11 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 
 	// can continue to operate the ZRC20
 	r.Logger.Info("Checking the ZRC20 can continue to operate after state change")
-	tx, err = r.ETHZRC20.Transfer(r.ZevmAuth, approved, big.NewInt(1e14))
+	tx, err = r.ETHZRC20.Transfer(r.ZEVMAuth, approved, big.NewInt(1e14))
 	if err != nil {
 		panic(err)
 	}
-	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZevmClient, tx, r.Logger, r.ReceiptTimeout)
+	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("transfer failed")
 	}
