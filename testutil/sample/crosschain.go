@@ -48,6 +48,7 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		InboundTxObservedExternalHeight: r.Uint64(),
 		InboundTxBallotIndex:            StringRandom(r, 32),
 		InboundTxFinalizedZetaHeight:    r.Uint64(),
+		CoinType:                        common.CoinType(r.Intn(100)),
 	}
 }
 
@@ -78,6 +79,7 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 		OutboundTxObservedExternalHeight: r.Uint64(),
 		OutboundTxGasUsed:                r.Uint64(),
 		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
+		CoinType:                         common.CoinType(r.Intn(100)),
 	}
 }
 
@@ -117,13 +119,11 @@ func CrossChainTx(t *testing.T, index string) *types.CrossChainTx {
 	return &types.CrossChainTx{
 		Creator:          AccAddress(),
 		Index:            GetCctxIndexFromString(index),
-		CoinType:         common.CoinType(r.Intn(100)),
 		ZetaFees:         math.NewUint(uint64(r.Int63())),
 		RelayedMessage:   StringRandom(r, 32),
 		CctxStatus:       Status(t, index),
 		InboundTxParams:  InboundTxParams(r),
 		OutboundTxParams: []*types.OutboundTxParams{OutboundTxParams(r), OutboundTxParams(r)},
-		EventIndex:       r.Uint64(),
 	}
 }
 

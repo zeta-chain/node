@@ -28,7 +28,7 @@ func (k Keeper) PayGasAndUpdateCctx(
 	noEthereumTxEvent bool,
 ) error {
 	// Dispatch to the correct function based on the coin type
-	switch cctx.CoinType {
+	switch cctx.InboundTxParams.CoinType {
 	case common.CoinType_Zeta:
 		return k.PayGasInZetaAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
 	case common.CoinType_Gas:
@@ -37,7 +37,7 @@ func (k Keeper) PayGasAndUpdateCctx(
 		return k.PayGasInERC20AndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
 	default:
 		// can't pay gas with coin type
-		return fmt.Errorf("can't pay gas with coin type %s", cctx.CoinType.String())
+		return fmt.Errorf("can't pay gas with coin type %s", cctx.InboundTxParams.CoinType.String())
 	}
 }
 
@@ -90,8 +90,8 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	inputAmount math.Uint,
 ) error {
 	// preliminary checks
-	if cctx.CoinType != common.CoinType_Gas {
-		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.CoinType.String())
+	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
+		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
 		return observertypes.ErrSupportedChains
@@ -137,8 +137,8 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
-	if cctx.CoinType != common.CoinType_ERC20 {
-		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.CoinType.String())
+	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
+		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
 	}
 
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
@@ -262,8 +262,8 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
-	if cctx.CoinType != common.CoinType_Zeta {
-		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.CoinType.String())
+	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
+		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
 	}
 
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {

@@ -27,6 +27,7 @@ message InboundTxParams {
   string sender = 1; // this address is the immediate contract/EOA that calls the Connector.send()
   int64 sender_chain_id = 2;
   string tx_origin = 3; // this address is the EOA that signs the inbound tx
+  common.CoinType coin_type = 4;
   string asset = 5; // for ERC20 coin type, the asset is an address of the ERC20 contract
   string amount = 6 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
@@ -50,6 +51,7 @@ message ZetaAccounting {
 message OutboundTxParams {
   string receiver = 1;
   int64 receiver_chainId = 2;
+  common.CoinType coin_type = 3;
   string amount = 4 [
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Uint",
     (gogoproto.nullable) = false
@@ -91,6 +93,4 @@ message CrossChainTx {
   Status cctx_status = 8;
   InboundTxParams inbound_tx_params = 9;
   repeated OutboundTxParams outbound_tx_params = 10;
-  uint64 event_index = 11;
-  common.CoinType coin_type = 12;
 }

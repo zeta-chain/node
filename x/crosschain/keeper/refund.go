@@ -12,7 +12,7 @@ import (
 )
 
 func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
-	coinType := cctx.CoinType
+	coinType := cctx.InboundTxParams.CoinType
 	switch coinType {
 	case common.CoinType_Gas:
 		return k.RefundAmountOnZetaChainGas(ctx, cctx, refundAddress)
@@ -75,7 +75,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	refundAmount := GetAbortedAmount(cctx)
 	// preliminary checks
-	if cctx.CoinType != common.CoinType_ERC20 {
+	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")
 	}
 	if !common.IsEVMChain(cctx.InboundTxParams.SenderChainId) {

@@ -111,9 +111,10 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	index := hash.Hex()
 
 	// create a cmd cctx to whitelist the erc20 on the external chain
+	// TODO : refactor this to use the `CreateNewCCTX` function instead.
+	//https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
-		CoinType:       common.CoinType_Cmd,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
@@ -123,16 +124,16 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			LastUpdateTimestamp: 0,
 		},
 		InboundTxParams: &types.InboundTxParams{
-			Sender:        "",
-			SenderChainId: 0,
-			TxOrigin:      "",
-
+			Sender:                          "",
+			SenderChainId:                   0,
+			TxOrigin:                        "",
 			Asset:                           "",
 			Amount:                          math.Uint{},
 			InboundTxObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
 			InboundTxObservedExternalHeight: 0,
 			InboundTxBallotIndex:            "",
 			InboundTxFinalizedZetaHeight:    0,
+			CoinType:                        common.CoinType_Cmd,
 		},
 		OutboundTxParams: []*types.OutboundTxParams{
 			{
@@ -146,6 +147,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 				OutboundTxBallotIndex:            "",
 				OutboundTxObservedExternalHeight: 0,
 				TssPubkey:                        tss.TssPubkey,
+				CoinType:                         common.CoinType_Cmd,
 			},
 		},
 	}

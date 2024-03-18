@@ -43,7 +43,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// Check if aborted amount is available to maintain zeta accounting
-	if cctx.CoinType == common.CoinType_Zeta {
+	if cctx.InboundTxParams.CoinType == common.CoinType_Zeta {
 		err := k.RemoveZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 		// if the zeta accounting is not found, it means the zeta accounting is not set yet and the refund should not be processed
 		if errors.Is(err, types.ErrUnableToFindZetaAccounting) {

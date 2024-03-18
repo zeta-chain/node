@@ -78,9 +78,11 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
+
+	// TODO : Use the `CreateNewCctx` function to create the cctx
+	// https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        "",
-		CoinType:       common.CoinType_Cmd,
 		Index:          index,
 		ZetaFees:       sdkmath.Uint{},
 		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
@@ -99,6 +101,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			InboundTxObservedExternalHeight: 0,
 			InboundTxBallotIndex:            "",
 			InboundTxFinalizedZetaHeight:    0,
+			CoinType:                        common.CoinType_Cmd,
 		},
 		OutboundTxParams: []*types.OutboundTxParams{{
 			Receiver:                         "",
@@ -114,6 +117,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			OutboundTxEffectiveGasPrice:      sdkmath.Int{},
 			OutboundTxEffectiveGasLimit:      0,
 			TssPubkey:                        currentTss.TssPubkey,
+			CoinType:                         common.CoinType_Cmd,
 		}}}
 	// Set the sender and receiver addresses for EVM chain
 	if common.IsEVMChain(chainID) {

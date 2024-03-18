@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"cosmossdk.io/errors"
 	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -106,12 +107,12 @@ func (m InboundTxParams) Validate() error {
 	}
 	err = ValidateHashForChain(m.InboundTxObservedHash, m.SenderChainId)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "invalid inbound tx observed hash")
 	}
 	if m.InboundTxBallotIndex != "" {
 		err = ValidateZetaIndex(m.InboundTxBallotIndex)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid inbound tx ballot index")
 		}
 	}
 	return nil
@@ -134,13 +135,13 @@ func (m OutboundTxParams) Validate() error {
 	if m.OutboundTxBallotIndex != "" {
 		err = ValidateZetaIndex(m.OutboundTxBallotIndex)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid outbound tx ballot index")
 		}
 	}
 	if m.OutboundTxHash != "" {
 		err = ValidateHashForChain(m.OutboundTxHash, m.ReceiverChainId)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid outbound tx hash")
 		}
 	}
 	return nil

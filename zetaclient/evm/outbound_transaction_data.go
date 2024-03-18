@@ -169,7 +169,7 @@ func NewOutBoundTransactionData(
 	}
 
 	// Base64 decode message
-	if cctx.CoinType != common.CoinType_Cmd {
+	if cctx.InboundTxParams.CoinType != common.CoinType_Cmd {
 		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
 			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)

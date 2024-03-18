@@ -324,13 +324,13 @@ func (signer *Signer) TryProcessOutTx(
 	// compliance check goes first
 	if clientcommon.IsCctxRestricted(cctx) {
 		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
-			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.CoinType.String())
+			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.InboundTxParams.CoinType.String())
 		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
 		if err != nil {
 			logger.Warn().Err(err).Msg(SignerErrorMsg(cctx))
 			return
 		}
-	} else if cctx.CoinType == common.CoinType_Cmd { // admin command
+	} else if cctx.InboundTxParams.CoinType == common.CoinType_Cmd { // admin command
 		to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 		if to == (ethcommon.Address{}) {
 			logger.Error().Msgf("invalid receiver %s", cctx.GetCurrentOutTxParam().Receiver)
@@ -353,7 +353,7 @@ func (signer *Signer) TryProcessOutTx(
 			return
 		}
 	} else if IsSenderZetaChain(cctx, zetaBridge, &crossChainflags) {
-		switch cctx.CoinType {
+		switch cctx.InboundTxParams.CoinType {
 		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(txData)
@@ -369,7 +369,7 @@ func (signer *Signer) TryProcessOutTx(
 			return
 		}
 	} else if cctx.CctxStatus.Status == types.CctxStatus_PendingRevert && cctx.OutboundTxParams[0].ReceiverChainId == zetaBridge.ZetaChain().ChainId {
-		switch cctx.CoinType {
+		switch cctx.InboundTxParams.CoinType {
 		case common.CoinType_Gas:
 			logger.Info().Msgf("SignWithdrawTx: %d => %s, nonce %d, gasPrice %d", cctx.InboundTxParams.SenderChainId, toChain, cctx.GetCurrentOutTxParam().OutboundTxTssNonce, txData.gasPrice)
 			tx, err = signer.SignWithdrawTx(txData)

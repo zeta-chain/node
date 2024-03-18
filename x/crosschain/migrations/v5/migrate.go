@@ -93,7 +93,7 @@ func SetZetaAccounting(
 	for _, cctx := range ccctxList {
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
 
-			switch cctx.CoinType {
+			switch cctx.InboundTxParams.CoinType {
 			case common.CoinType_ERC20:
 				{
 					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)

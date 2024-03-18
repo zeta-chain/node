@@ -24,7 +24,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 	inboundAmount := cctx.GetInboundTxParams().Amount.BigInt()
 	inboundSender := cctx.GetInboundTxParams().Sender
 	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
-	inboundCoinType := cctx.CoinType
+	inboundCoinType := cctx.InboundTxParams.CoinType
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
