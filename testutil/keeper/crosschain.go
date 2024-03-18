@@ -269,3 +269,32 @@ func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, 
 		mock.Anything,
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }
+
+func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain common.Chain, observer string) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, common.ReceiveStatus_Success, observer).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
+}
+
+func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain common.Chain, observer string) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, common.ReceiveStatus_Failed, observer).
+		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).Once()
+}
+
+func MockGetOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context) {
+	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true).Once()
+}
+
+func MockSaveOutBound(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
+	m.On("RemoveFromPendingNonces",
+		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		Return().Once()
+	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
+}
+
+func MockSaveOutBoundNewRevertCreated(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, tss observertypes.TSS) {
+	m.On("RemoveFromPendingNonces",
+		ctx, tss.TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, mock.Anything).
+		Return().Once()
+	m.On("GetTSS", ctx).Return(observertypes.TSS{}, true)
+	m.On("SetNonceToCctx", mock.Anything, mock.Anything).Return().Once()
+}
