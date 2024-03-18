@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/chaincfg"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,7 @@ func TestChain_EncodeAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "should error if b is not a valid address on the network",
+			name: "should error if b is not a valid address on the bitcoin network",
 			chain: Chain{
 				ChainName: ChainName_btc_testnet,
 				ChainId:   18332,
@@ -26,14 +27,34 @@ func TestChain_EncodeAddress(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "should pass if b is a valid address on the network",
+			name: "should error if b is not a valid address on the evm network",
 			chain: Chain{
-				ChainName: ChainName_btc_mainnet,
-				ChainId:   8332,
+				ChainName: ChainName_goerli_testnet,
+				ChainId:   5,
 			},
-			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
-			want:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
+			b:       ethcommon.Hex2Bytes("0x321"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name: "should pass if b is a valid address on the evm network",
+			chain: Chain{
+				ChainName: ChainName_goerli_testnet,
+				ChainId:   5,
+			},
+			b:       []byte("0x321"),
+			want:    "0x0000000000000000000000000000003078333231",
 			wantErr: false,
+		},
+		{
+			name: "should error if chain not supported",
+			chain: Chain{
+				ChainName: 999,
+				ChainId:   999,
+			},
+			b:       ethcommon.Hex2Bytes("0x321"),
+			want:    "",
+			wantErr: true,
 		},
 	}
 
@@ -41,6 +62,59 @@ func TestChain_EncodeAddress(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			s, err := tc.chain.EncodeAddress(tc.b)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.Equal(t, tc.want, s)
+		})
+	}
+}
+
+func TestChain_DecodeAddress(t *testing.T) {
+	tests := []struct {
+		name    string
+		chain   Chain
+		b       string
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "should decode on btc chain",
+			chain: Chain{
+				ChainName: ChainName_btc_testnet,
+				ChainId:   18332,
+			},
+			want:    []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			b:       "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
+			wantErr: false,
+		},
+		{
+			name: "should decode on evm chain",
+			chain: Chain{
+				ChainName: ChainName_goerli_testnet,
+				ChainId:   5,
+			},
+			want:    ethcommon.HexToAddress("0x321").Bytes(),
+			b:       "0x321",
+			wantErr: false,
+		},
+		{
+			name: "should error if chain not supported",
+			chain: Chain{
+				ChainName: 999,
+				ChainId:   999,
+			},
+			want:    ethcommon.Hex2Bytes("0x321"),
+			b:       "",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := tc.chain.DecodeAddress(tc.b)
 			if tc.wantErr {
 				require.Error(t, err)
 				return
@@ -98,6 +172,49 @@ func TestIsEVMChain(t *testing.T) {
 	}
 }
 
+func TestIsHeaderSupportedEVMChain(t *testing.T) {
+	tests := []struct {
+		name    string
+		chainID int64
+		want    bool
+	}{
+		{"Ethereum Mainnet", EthChain().ChainId, true},
+		{"Goerli Testnet", GoerliChain().ChainId, true},
+		{"Goerli Localnet", GoerliLocalnetChain().ChainId, true},
+		{"Sepolia Testnet", SepoliaChain().ChainId, true},
+		{"BSC Testnet", BscTestnetChain().ChainId, true},
+		{"BSC Mainnet", BscMainnetChain().ChainId, true},
+		{"Non-EVM", BtcMainnetChain().ChainId, false},
+		{"Zeta Mainnet", ZetaChainMainnet().ChainId, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, IsHeaderSupportedEvmChain(tt.chainID))
+		})
+	}
+}
+
+func TestSupportMerkleProof(t *testing.T) {
+	tests := []struct {
+		name  string
+		chain Chain
+		want  bool
+	}{
+		{"Ethereum Mainnet", EthChain(), true},
+		{"BSC Testnet", BscTestnetChain(), true},
+		{"BSC Mainnet", BscMainnetChain(), true},
+		{"Non-EVM", BtcMainnetChain(), true},
+		{"Zeta Mainnet", ZetaChainMainnet(), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, tt.chain.SupportMerkleProof())
+		})
+	}
+}
+
 func TestIsBitcoinChain(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -143,6 +260,11 @@ func TestChain_IsExternalChain(t *testing.T) {
 	require.True(t, EthChain().IsExternalChain())
 }
 
+func TestChain_IsZetaChain(t *testing.T) {
+	require.True(t, ZetaChainMainnet().IsZetaChain())
+	require.False(t, EthChain().IsZetaChain())
+}
+
 func TestChain_IsEmpty(t *testing.T) {
 	require.True(t, Chain{}.IsEmpty())
 	require.False(t, ZetaChainMainnet().IsEmpty())
@@ -186,6 +308,14 @@ func TestGetBTCChainIDFromChainParams(t *testing.T) {
 	chainID, err := GetBTCChainIDFromChainParams(&chaincfg.MainNetParams)
 	require.NoError(t, err)
 	require.Equal(t, int64(8332), chainID)
+
+	chainID, err = GetBTCChainIDFromChainParams(&chaincfg.RegressionNetParams)
+	require.NoError(t, err)
+	require.Equal(t, int64(18444), chainID)
+
+	chainID, err = GetBTCChainIDFromChainParams(&chaincfg.TestNet3Params)
+	require.NoError(t, err)
+	require.Equal(t, int64(18332), chainID)
 
 	_, err = GetBTCChainIDFromChainParams(&chaincfg.Params{Name: "unknown"})
 	require.Error(t, err)
