@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	. "gopkg.in/check.v1"
 
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
@@ -189,4 +191,146 @@ func (s *PubKeyTestSuite) TestEquals(c *C) {
 	}.Equals(PubKeys{
 		pk1, pk2, pk3, pk4,
 	}), Equals, true)
+}
+
+func TestNewPubKey(t *testing.T) {
+	t.Run("should create new pub key from string", func(t *testing.T) {
+		_, pubKey, _ := testdata.KeyTestPubAddr()
+		spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+		require.Nil(t, err)
+		pk, err := NewPubKey(spk)
+		require.Nil(t, err)
+		require.Equal(t, PubKey(spk), pk)
+	})
+
+	t.Run("should return empty pub key from empty string", func(t *testing.T) {
+		pk, err := NewPubKey("")
+		require.Nil(t, err)
+		require.Equal(t, EmptyPubKey, pk)
+	})
+
+	t.Run("should fail if not bech32 encoded string", func(t *testing.T) {
+		pk, err := NewPubKey("invalid")
+		require.Error(t, err)
+		require.Equal(t, EmptyPubKey, pk)
+	})
+}
+
+func TestGetAddressFromPubkeyString(t *testing.T) {
+	t.Run("should get address from pubkey string", func(t *testing.T) {
+		_, pubKey, _ := testdata.KeyTestPubAddr()
+		spk, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+		require.Nil(t, err)
+		_, err = GetAddressFromPubkeyString(spk)
+		require.Nil(t, err)
+	})
+
+	t.Run("should get address from nonbech32 string", func(t *testing.T) {
+		_, err := GetAddressFromPubkeyString("invalid")
+		require.Error(t, err)
+	})
+}
+
+func TestPubKeys(t *testing.T) {
+	t.Run("should valid if all are valid", func(t *testing.T) {
+		_, pubKey1, _ := testdata.KeyTestPubAddr()
+		spk1, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey1)
+		pk1, _ := NewPubKey(spk1)
+
+		_, pubKey2, _ := testdata.KeyTestPubAddr()
+		spk2, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey2)
+		pk2, _ := NewPubKey(spk2)
+
+		_, pubKey3, _ := testdata.KeyTestPubAddr()
+		spk3, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey3)
+		pk3, _ := NewPubKey(spk3)
+
+		pubKeys := PubKeys{
+			pk1, pk2, pk3,
+		}
+
+		require.Nil(t, pubKeys.Valid())
+	})
+
+	t.Run("should invalid if one is invalid", func(t *testing.T) {
+		_, pubKey1, _ := testdata.KeyTestPubAddr()
+		spk1, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey1)
+		pk1, _ := NewPubKey(spk1)
+
+		_, pubKey2, _ := testdata.KeyTestPubAddr()
+		spk2, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey2)
+		pk2, _ := NewPubKey(spk2)
+
+		_, pubKey3, _ := testdata.KeyTestPubAddr()
+		spk3, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey3)
+		pk3, _ := NewPubKey(spk3)
+
+		pubKeys := PubKeys{
+			pk1, pk2, pk3, PubKey("invalid"),
+		}
+
+		require.NotNil(t, pubKeys.Valid())
+	})
+
+	t.Run("contains", func(t *testing.T) {
+		_, pubKey1, _ := testdata.KeyTestPubAddr()
+		spk1, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey1)
+		pk1, _ := NewPubKey(spk1)
+
+		_, pubKey2, _ := testdata.KeyTestPubAddr()
+		spk2, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey2)
+		pk2, _ := NewPubKey(spk2)
+
+		_, pubKey3, _ := testdata.KeyTestPubAddr()
+		spk3, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey3)
+		pk3, _ := NewPubKey(spk3)
+
+		pubKeys := PubKeys{
+			pk1, pk2,
+		}
+
+		require.True(t, pubKeys.Contains(pk1))
+		require.True(t, pubKeys.Contains(pk2))
+		require.False(t, pubKeys.Contains(pk3))
+	})
+
+	t.Run("should concat string", func(t *testing.T) {
+		_, pubKey1, _ := testdata.KeyTestPubAddr()
+		spk1, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey1)
+		pk1, _ := NewPubKey(spk1)
+
+		_, pubKey2, _ := testdata.KeyTestPubAddr()
+		spk2, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey2)
+		pk2, _ := NewPubKey(spk2)
+
+		_, pubKey3, _ := testdata.KeyTestPubAddr()
+		spk3, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey3)
+		pk3, _ := NewPubKey(spk3)
+
+		pubKeys := PubKeys{
+			pk1, pk2, pk3,
+		}
+
+		require.Equal(t, fmt.Sprintf("%s, %s, %s", pk1.String(), pk2.String(), pk3.String()), pubKeys.String())
+	})
+
+	t.Run("should return strings array", func(t *testing.T) {
+		_, pubKey1, _ := testdata.KeyTestPubAddr()
+		spk1, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey1)
+		pk1, _ := NewPubKey(spk1)
+
+		_, pubKey2, _ := testdata.KeyTestPubAddr()
+		spk2, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey2)
+		pk2, _ := NewPubKey(spk2)
+
+		_, pubKey3, _ := testdata.KeyTestPubAddr()
+		spk3, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey3)
+		pk3, _ := NewPubKey(spk3)
+
+		pubKeys := PubKeys{
+			pk1, pk2, pk3,
+		}
+
+		require.Equal(t, []string{pk1.String(), pk2.String(), pk3.String()}, pubKeys.Strings())
+	})
 }
