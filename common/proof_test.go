@@ -10,9 +10,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -22,7 +25,13 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-const numBlocksToTest = 100
+const (
+	headerPath        = "./ethereum/testdata/header.json"
+	txPrefixPath      = "./ethereum/testdata/tx_"
+	receiptPrefixPath = "./ethereum/testdata/receipt_"
+	txCount           = 81
+	numBlocksToTest   = 100
+)
 
 type Block struct {
 	TssAddress   string `json:"tssAddress"`
@@ -53,7 +62,10 @@ func LoadTestBlocks(t *testing.T) Blocks {
 func Test_IsErrorInvalidProof(t *testing.T) {
 	require.False(t, common.IsErrorInvalidProof(nil))
 	require.False(t, common.IsErrorInvalidProof(errors.New("foo")))
-	require.True(t, common.IsErrorInvalidProof(common.NewErrInvalidProof(errors.New("foo"))))
+	invalidProofErr := errors.New("foo")
+	invalidProof := common.NewErrInvalidProof(invalidProofErr)
+	require.True(t, common.IsErrorInvalidProof(invalidProof))
+	require.Equal(t, invalidProofErr.Error(), invalidProof.Error())
 }
 
 func TestBitcoinMerkleProof(t *testing.T) {
@@ -75,6 +87,62 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
 	}
+}
+
+func TestEthereumMerkleProof(t *testing.T) {
+	header, err := readHeader()
+	require.NoError(t, err)
+	b, err := rlp.EncodeToBytes(&header)
+	require.NoError(t, err)
+
+	headerData := common.NewEthereumHeader(b)
+	t.Run("should verify tx proof", func(t *testing.T) {
+		var txs types.Transactions
+		for i := 0; i < txCount; i++ {
+			tx, err := readTx(i)
+			require.NoError(t, err)
+			txs = append(txs, &tx)
+		}
+
+		// generate a trie from the txs and compare the root hash with the one in the header
+		txsTree := ethereum.NewTrie(txs)
+		require.EqualValues(t, header.TxHash.Hex(), txsTree.Trie.Hash().Hex())
+
+		for i := range txs {
+			// generate a proof for each tx and verify it
+			proof, err := txsTree.GenerateProof(i)
+			require.NoError(t, err)
+
+			ethProof := common.NewEthereumProof(proof)
+
+			_, err = ethProof.Verify(headerData, i)
+			require.NoError(t, err)
+		}
+	})
+
+	t.Run("should fail to verify receipts proof", func(t *testing.T) {
+		var receipts types.Receipts
+		for i := 0; i < txCount; i++ {
+			receipt, err := readReceipt(i)
+			require.NoError(t, err)
+			receipts = append(receipts, &receipt)
+		}
+
+		// generate a trie from the receipts and compare the root hash with the one in the header
+		txsTree := ethereum.NewTrie(receipts)
+		require.EqualValues(t, header.ReceiptHash.Hex(), txsTree.Trie.Hash().Hex())
+
+		for i := range receipts {
+			// generate a proof for each receipt and verify it
+			proof, err := txsTree.GenerateProof(i)
+			require.NoError(t, err)
+
+			ethProof := common.NewEthereumProof(proof)
+
+			_, err = ethProof.Verify(headerData, i)
+			require.Error(t, err)
+		}
+	})
 }
 
 func BitcoinMerkleProofLiveTest(t *testing.T) {
@@ -148,4 +216,53 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 		require.Error(t, err)
 		require.Nil(t, txBytes)
 	}
+}
+
+// readHeader reads a header from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readHeader() (header types.Header, err error) {
+	file, err := os.Open(headerPath)
+	if err != nil {
+		return header, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&header)
+	return header, err
+}
+
+// readTx reads a tx from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readTx(index int) (tx types.Transaction, err error) {
+	filePath := fmt.Sprintf("%s%d.json", txPrefixPath, index)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return tx, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&tx)
+	return tx, err
+}
+
+// readReceipt reads a receipt from a file.
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
+func readReceipt(index int) (receipt types.Receipt, err error) {
+	filePath := fmt.Sprintf("%s%d.json", receiptPrefixPath, index)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return receipt, err
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&receipt)
+	return receipt, err
 }

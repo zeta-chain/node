@@ -29,7 +29,7 @@ func TestProofGeneration(t *testing.T) {
 
 	// generate a trie from the receipts and compare the root hash with the one in the header
 	receiptTree := NewTrie(receipts)
-	require.EqualValues(t, header.ReceiptHash.Hex(), header.ReceiptHash.Hex())
+	require.EqualValues(t, header.ReceiptHash.Hex(), receiptTree.Trie.Hash().Hex())
 
 	t.Run("generate proof for receipts", func(t *testing.T) {
 		for i, receipt := range receipts {
