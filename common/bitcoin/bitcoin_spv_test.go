@@ -8,7 +8,7 @@ import (
 )
 
 func TestProve(t *testing.T) {
-	t.Run("returns true", func(t *testing.T) {
+	t.Run("returns true if empty block", func(t *testing.T) {
 		result := Prove(chainhash.Hash{}, chainhash.Hash{}, []byte{}, 0)
 		require.True(t, result)
 	})

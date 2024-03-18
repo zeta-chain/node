@@ -46,6 +46,8 @@ type Blocks struct {
 	Blocks []Block `json:"blocks"`
 }
 
+// TODO: centralize test data
+// https://github.com/zeta-chain/node/issues/1874
 func LoadTestBlocks(t *testing.T) Blocks {
 	file, err := os.Open("./testdata/test_blocks.json")
 	require.NoError(t, err)

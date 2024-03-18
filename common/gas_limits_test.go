@@ -10,9 +10,9 @@ import (
 func TestMultiplyGasPrice(t *testing.T) {
 	testCases := []struct {
 		name             string
-		medianGasPrice   string // Using string to facilitate easy creation of sdkmath.Uint
+		medianGasPrice   string
 		multiplierString string
-		expectedGasPrice string // Expected result also as string for easy comparison
+		expectedGasPrice string
 		wantErr          bool
 	}{
 		{
