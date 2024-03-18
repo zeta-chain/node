@@ -58,6 +58,15 @@ func TestProofGeneration(t *testing.T) {
 		}
 	})
 
+	t.Run("should error verify for negative key", func(t *testing.T) {
+		proof, err := receiptTree.GenerateProof(0)
+		require.NoError(t, err)
+
+		verified, err := proof.Verify(header.ReceiptHash, -1)
+		require.Error(t, err)
+		require.Nil(t, verified)
+	})
+
 	t.Run("should not generate proof for negative tx index", func(t *testing.T) {
 		proof, err := receiptTree.GenerateProof(-1)
 		require.Error(t, err)
