@@ -19,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/testdata"
 )
 
 const numHeadersToTest = 100
@@ -83,7 +84,7 @@ func TestFalseEthereumHeader(t *testing.T) {
 }
 
 func TestTrueBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
@@ -97,7 +98,7 @@ func TestTrueBitcoinHeader(t *testing.T) {
 }
 
 func TestFakeBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64

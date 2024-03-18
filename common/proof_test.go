@@ -2,7 +2,6 @@ package common_test
 
 import (
 	"errors"
-	"os"
 	"testing"
 
 	"encoding/base64"
@@ -16,6 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/common/ethereum"
+	"github.com/zeta-chain/zetacore/common/testdata"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -26,40 +26,8 @@ import (
 )
 
 const (
-	headerPath        = "./ethereum/testdata/header.json"
-	txPrefixPath      = "./ethereum/testdata/tx_"
-	receiptPrefixPath = "./ethereum/testdata/receipt_"
-	txCount           = 81
-	numBlocksToTest   = 100
+	numBlocksToTest = 100
 )
-
-type Block struct {
-	TssAddress   string `json:"tssAddress"`
-	Height       int    `json:"height"`
-	Nonce        uint64 `json:"nonce"`
-	OutTxid      string `json:"outTxid"`
-	HeaderBase64 string `json:"headerBase64"`
-	BlockBase64  string `json:"blockBase64"`
-}
-
-type Blocks struct {
-	Blocks []Block `json:"blocks"`
-}
-
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func LoadTestBlocks(t *testing.T) Blocks {
-	file, err := os.Open("./testdata/test_blocks.json")
-	require.NoError(t, err)
-	defer file.Close()
-
-	// Decode the JSON into the data struct
-	var blocks Blocks
-	err = json.NewDecoder(file).Decode(&blocks)
-	require.NoError(t, err)
-
-	return blocks
-}
 
 func Test_IsErrorInvalidProof(t *testing.T) {
 	require.False(t, common.IsErrorInvalidProof(nil))
@@ -71,7 +39,7 @@ func Test_IsErrorInvalidProof(t *testing.T) {
 }
 
 func TestBitcoinMerkleProof(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
@@ -92,7 +60,7 @@ func TestBitcoinMerkleProof(t *testing.T) {
 }
 
 func TestEthereumMerkleProof(t *testing.T) {
-	header, err := readHeader()
+	header, err := testdata.ReadEthHeader()
 	require.NoError(t, err)
 	b, err := rlp.EncodeToBytes(&header)
 	require.NoError(t, err)
@@ -100,8 +68,8 @@ func TestEthereumMerkleProof(t *testing.T) {
 	headerData := common.NewEthereumHeader(b)
 	t.Run("should verify tx proof", func(t *testing.T) {
 		var txs types.Transactions
-		for i := 0; i < txCount; i++ {
-			tx, err := readTx(i)
+		for i := 0; i < testdata.TxsCount; i++ {
+			tx, err := testdata.ReadEthTx(i)
 			require.NoError(t, err)
 			txs = append(txs, &tx)
 		}
@@ -124,8 +92,8 @@ func TestEthereumMerkleProof(t *testing.T) {
 
 	t.Run("should fail to verify receipts proof", func(t *testing.T) {
 		var receipts types.Receipts
-		for i := 0; i < txCount; i++ {
-			receipt, err := readReceipt(i)
+		for i := 0; i < testdata.TxsCount; i++ {
+			receipt, err := testdata.ReadEthReceipt(i)
 			require.NoError(t, err)
 			receipts = append(receipts, &receipt)
 		}
@@ -218,53 +186,4 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 		require.Error(t, err)
 		require.Nil(t, txBytes)
 	}
-}
-
-// readHeader reads a header from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readHeader() (header types.Header, err error) {
-	file, err := os.Open(headerPath)
-	if err != nil {
-		return header, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&header)
-	return header, err
-}
-
-// readTx reads a tx from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readTx(index int) (tx types.Transaction, err error) {
-	filePath := fmt.Sprintf("%s%d.json", txPrefixPath, index)
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return tx, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&tx)
-	return tx, err
-}
-
-// readReceipt reads a receipt from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readReceipt(index int) (receipt types.Receipt, err error) {
-	filePath := fmt.Sprintf("%s%d.json", receiptPrefixPath, index)
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return receipt, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&receipt)
-	return receipt, err
 }

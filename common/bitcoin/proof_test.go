@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/btcsuite/btcd/btcjson"
@@ -13,23 +12,11 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/common/testdata"
 )
 
-type Block struct {
-	TssAddress   string `json:"tssAddress"`
-	Height       int    `json:"height"`
-	Nonce        uint64 `json:"nonce"`
-	OutTxid      string `json:"outTxid"`
-	HeaderBase64 string `json:"headerBase64"`
-	BlockBase64  string `json:"blockBase64"`
-}
-
-type Blocks struct {
-	Blocks []Block `json:"blocks"`
-}
-
 func TestBitcoinMerkleProof(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	t.Run("it should verify merkle proof", func(t *testing.T) {
 		for _, b := range blocks.Blocks {
@@ -91,21 +78,6 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		_, _, err := mt.BuildMerkleProof(2)
 		require.Error(t, err)
 	})
-}
-
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func LoadTestBlocks(t *testing.T) Blocks {
-	file, err := os.Open("../testdata/test_blocks.json")
-	require.NoError(t, err)
-	defer file.Close()
-
-	// Decode the JSON into the data struct
-	var blocks Blocks
-	err = json.NewDecoder(file).Decode(&blocks)
-	require.NoError(t, err)
-
-	return blocks
 }
 
 func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {

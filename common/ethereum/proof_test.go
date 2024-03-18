@@ -1,28 +1,20 @@
 package ethereum
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	headerPath        = "./testdata/header.json"
-	receiptPrefixPath = "./testdata/receipt_"
-	receiptCount      = 81
+	"github.com/zeta-chain/zetacore/common/testdata"
 )
 
 func TestProofGeneration(t *testing.T) {
-	header, err := readHeader()
+	header, err := testdata.ReadEthHeader()
 	require.NoError(t, err)
 
 	var receipts types.Receipts
-	for i := 0; i < receiptCount; i++ {
-		receipt, err := readReceipt(i)
+	for i := 0; i < testdata.TxsCount; i++ {
+		receipt, err := testdata.ReadEthReceipt(i)
 		require.NoError(t, err)
 		receipts = append(receipts, &receipt)
 	}
@@ -134,36 +126,4 @@ func TestProofGeneration(t *testing.T) {
 		err = proof.Delete(key2)
 		require.Error(t, err)
 	})
-}
-
-// readHeader reads a header from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readHeader() (header types.Header, err error) {
-	file, err := os.Open(headerPath)
-	if err != nil {
-		return header, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&header)
-	return header, err
-}
-
-// readReceipt reads a receipt from a file.
-// TODO: centralize test data
-// https://github.com/zeta-chain/node/issues/1874
-func readReceipt(index int) (receipt types.Receipt, err error) {
-	filePath := fmt.Sprintf("%s%d.json", receiptPrefixPath, index)
-
-	file, err := os.Open(filePath)
-	if err != nil {
-		return receipt, err
-	}
-	defer file.Close()
-
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&receipt)
-	return receipt, err
 }
