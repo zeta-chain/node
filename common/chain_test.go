@@ -1,9 +1,12 @@
 package common
 
 import (
+	"encoding/hex"
 	"testing"
 
+	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 )
@@ -278,6 +281,47 @@ func TestChain_IsZetaChain(t *testing.T) {
 func TestChain_IsEmpty(t *testing.T) {
 	require.True(t, Chain{}.IsEmpty())
 	require.False(t, ZetaChainMainnet().IsEmpty())
+}
+
+func TestChain_WitnessProgram(t *testing.T) {
+	// Ordinarily the private key would come from whatever storage mechanism
+	// is being used, but for this example just hard code it.
+	privKeyBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2" +
+		"d4f8720ee63e502ee2869afab7de234b80c")
+	require.NoError(t, err)
+
+	t.Run("should return btc address", func(t *testing.T) {
+		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+		require.NoError(t, err)
+
+		chain := BtcTestNetChain()
+		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
+		require.NoError(t, err)
+	})
+
+	t.Run("should fail for wrong chain id", func(t *testing.T) {
+		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+		require.NoError(t, err)
+
+		chain := GoerliChain()
+		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram())
+		require.Error(t, err)
+	})
+
+	t.Run("should fail for wrong witness program", func(t *testing.T) {
+		_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), privKeyBytes)
+		pubKeyHash := btcutil.Hash160(pubKey.SerializeCompressed())
+		addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, &chaincfg.RegressionNetParams)
+		require.NoError(t, err)
+
+		chain := BtcTestNetChain()
+		_, err = chain.BTCAddressFromWitnessProgram(addr.WitnessProgram()[0:19])
+		require.Error(t, err)
+	})
 }
 
 func TestChains_Has(t *testing.T) {
