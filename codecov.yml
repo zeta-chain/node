@@ -68,4 +68,6 @@ ignore:
   - "scripts/"
   - "server/"
   - "testutil/"
+  - "testutils/"
+  - "errors/"
   - "typescript/"
