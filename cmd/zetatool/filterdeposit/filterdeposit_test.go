@@ -2,6 +2,7 @@ package filterdeposit
 
 import (
 	"encoding/json"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -55,5 +56,42 @@ func TestCheckForCCTX(t *testing.T) {
 		missedInbounds, err := CheckForCCTX(deposits, cfg)
 		require.NoError(t, err)
 		require.Equal(t, 1, len(missedInbounds))
+	})
+}
+
+func TestGetTssAddress(t *testing.T) {
+	t.Run("should run successfully", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/zeta-chain/observer/get_tss_address/8332" {
+				t.Errorf("Expected to request '/zeta-chain', got: %s", r.URL.Path)
+			}
+			w.WriteHeader(http.StatusOK)
+			response := observertypes.QueryGetTssAddressResponse{}
+			bytes, err := json.Marshal(response)
+			require.NoError(t, err)
+			_, err = w.Write(bytes)
+			require.NoError(t, err)
+		}))
+		cfg := config.DefaultConfig()
+		cfg.ZetaURL = server.URL
+		_, err := GetTssAddress(cfg, "8332")
+		require.NoError(t, err)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/zeta-chain/observer/get_tss_address/8332" {
+				w.WriteHeader(http.StatusBadRequest)
+				response := observertypes.QueryGetTssAddressResponse{}
+				bytes, err := json.Marshal(response)
+				require.NoError(t, err)
+				_, err = w.Write(bytes)
+				require.NoError(t, err)
+			}
+		}))
+		cfg := config.DefaultConfig()
+		cfg.ZetaURL = server.URL
+		_, err := GetTssAddress(cfg, "8332")
+		require.Error(t, err)
 	})
 }

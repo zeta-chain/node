@@ -41,7 +41,7 @@ func FilterBTCTransactions(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	fmt.Println("getting tss Address")
-	res, err := getTssAddress(cfg, btcChainID)
+	res, err := GetTssAddress(cfg, btcChainID)
 	if err != nil {
 		return err
 	}

@@ -64,7 +64,7 @@ func FilterEVMTransactions(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	res, err := getTssAddress(cfg, btcChainID)
+	res, err := GetTssAddress(cfg, btcChainID)
 	if err != nil {
 		return err
 	}

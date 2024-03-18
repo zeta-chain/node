@@ -93,7 +93,7 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 	return missedList, nil
 }
 
-func getTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAddressResponse, error) {
+func GetTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAddressResponse, error) {
 	res := &types.QueryGetTssAddressResponse{}
 	requestURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "observer", "get_tss_address", btcChainID)
 	if err != nil {
