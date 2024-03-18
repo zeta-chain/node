@@ -18,9 +18,10 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 		ctx.Logger().Info(fmt.Sprintf("Block rewards %s are greater than emission pool balance %s", blockRewards.String(), emissionPoolBalance.String()))
 		return
 	}
-	validatorRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ValidatorEmissionPercentage).Mul(blockRewards).TruncateInt()
-	observerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).ObserverEmissionPercentage).Mul(blockRewards).TruncateInt()
-	tssSignerRewards := sdk.MustNewDecFromStr(keeper.GetParams(ctx).TssSignerEmissionPercentage).Mul(blockRewards).TruncateInt()
+
+	// Get the distribution of rewards
+	params := keeper.GetParamsIfExists(ctx)
+	validatorRewards, observerRewards, tssSignerRewards := types.GetRewardsDistributions(params)
 
 	// TODO : Replace hardcoded slash amount with a parameter
 	// https://github.com/zeta-chain/node/pull/1861
@@ -70,7 +71,6 @@ func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper 
 // The total rewards are distributed equally among all Successful votes
 // NotVoted or Unsuccessful votes are slashed
 // rewards given or slashed amounts are in azeta
-
 func DistributeObserverRewards(
 	ctx sdk.Context,
 	amount sdkmath.Int,
@@ -126,7 +126,6 @@ func DistributeObserverRewards(
 			continue
 		}
 		if observerRewardUnits < 0 {
-
 			keeper.SlashObserverEmission(ctx, observerAddress.String(), slashAmount)
 			finalDistributionList = append(finalDistributionList, &types.ObserverEmission{
 				EmissionType:    types.EmissionType_Slash,

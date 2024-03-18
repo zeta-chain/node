@@ -292,8 +292,7 @@ func (ob *BTCChainClient) SetLastBlockHeightScanned(height int64) {
 		panic("lastBlockScanned is negative")
 	}
 	atomic.StoreInt64(&ob.lastBlockScanned, height)
-	// #nosec G701 checked as positive
-	ob.ts.SetLastScannedBlockNumber((ob.chain.ChainId), uint64(height))
+	metrics.LastScannedBlockNumber.WithLabelValues(ob.chain.ChainName.String()).Set(float64(height))
 }
 
 func (ob *BTCChainClient) GetLastBlockHeightScanned() int64 {
@@ -888,7 +887,7 @@ func (ob *BTCChainClient) FetchUTXOS() error {
 	}
 
 	ob.Mu.Lock()
-	ob.ts.SetNumberOfUTXOs(len(utxosFiltered))
+	metrics.NumberOfUTXO.Set(float64(len(utxosFiltered)))
 	ob.utxos = utxosFiltered
 	ob.Mu.Unlock()
 	return nil
