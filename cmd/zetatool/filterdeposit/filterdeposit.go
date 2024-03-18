@@ -96,13 +96,16 @@ func CheckForCCTX(list []Deposit, cfg *config.Config) ([]Deposit, error) {
 func getTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAddressResponse, error) {
 	res := &types.QueryGetTssAddressResponse{}
 	requestURL, err := url.JoinPath(cfg.ZetaURL, "zeta-chain", "observer", "get_tss_address", btcChainID)
+	if err != nil {
+		return res, err
+	}
 	request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
 		return res, err
 	}
 	request.Header.Add("Accept", "application/json")
-	zetacoreHttpClient := &http.Client{}
-	response, getErr := zetacoreHttpClient.Do(request)
+	zetacoreHTTPClient := &http.Client{}
+	response, getErr := zetacoreHTTPClient.Do(request)
 	if getErr != nil {
 		return res, err
 	}
@@ -115,6 +118,5 @@ func getTssAddress(cfg *config.Config, btcChainID string) (*types.QueryGetTssAdd
 		return res, closeErr
 	}
 	err = json.Unmarshal(data, res)
-
-	return res, nil
+	return res, err
 }

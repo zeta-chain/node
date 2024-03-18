@@ -73,7 +73,7 @@ func FilterEVMTransactions(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	_, err = CheckForCCTX(list, cfg)
-	return nil
+	return err
 }
 
 // GetEthHashList is a helper function querying total inbound txns by segments of blocks in ranges defined by the config
