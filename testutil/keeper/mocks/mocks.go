@@ -94,6 +94,11 @@ type EmissionObserverKeeper interface {
 	emissionstypes.ObserverKeeper
 }
 
+//go:generate mockery --name EmissionParamStore --filename param_store.go --case underscore --output ./emissions
+type EmissionParamStore interface {
+	emissionstypes.ParamStore
+}
+
 /**
  * Observer Mocks
  */
