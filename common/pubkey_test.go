@@ -145,6 +145,9 @@ func (s *PubKeyTestSuite) TestPubKeyGetAddress(c *C) {
 		c.Assert(err, IsNil)
 		c.Assert(addrETH.String(), Equals, d.addrETH.mocknet)
 
+		addrETH, err = pk.GetAddress(BtcRegtestChain())
+		c.Assert(err, IsNil)
+		c.Assert(addrETH.String(), Equals, NoAddress)
 	}
 }
 
@@ -191,6 +194,12 @@ func (s *PubKeyTestSuite) TestEquals(c *C) {
 	}.Equals(PubKeys{
 		pk1, pk2, pk3, pk4,
 	}), Equals, true)
+
+	c.Assert(PubKeys{
+		pk1, pk2, pk3,
+	}.Equals(PubKeys{
+		pk1, pk2, pk4,
+	}), Equals, false)
 }
 
 func TestNewPubKey(t *testing.T) {
@@ -332,5 +341,30 @@ func TestPubKeys(t *testing.T) {
 		}
 
 		require.Equal(t, []string{pk1.String(), pk2.String(), pk3.String()}, pubKeys.Strings())
+	})
+}
+
+func TestGetEVMAddress(t *testing.T) {
+	t.Run("should return empty if pubkey is empty", func(t *testing.T) {
+		pubKey := PubKey("")
+		e, err := pubKey.GetEVMAddress()
+		require.Nil(t, err)
+		require.Equal(t, NoAddress, e)
+	})
+
+	t.Run("should return addr from pubkey", func(t *testing.T) {
+		_, pubKey, _ := testdata.KeyTestPubAddr()
+		spk, _ := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, pubKey)
+		pk, _ := NewPubKey(spk)
+
+		_, err := pk.GetEVMAddress()
+		require.NotNil(t, err)
+	})
+
+	t.Run("should error if non bech32", func(t *testing.T) {
+		pk := PubKey("invalid")
+		e, err := pk.GetEVMAddress()
+		require.NotNil(t, err)
+		require.Equal(t, NoAddress, e)
 	})
 }

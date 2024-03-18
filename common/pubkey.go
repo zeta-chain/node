@@ -175,14 +175,6 @@ func (pks PubKeys) Strings() []string {
 	return allStrings
 }
 
-// NewPubKeySet create a new instance of PubKeySet , which contains two keys
-func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
-	return PubKeySet{
-		Secp256k1: secp256k1,
-		Ed25519:   ed25519,
-	}
-}
-
 func GetPubkeyBech32FromRecord(record *keyring.Record) (string, error) {
 	pk, ok := record.PubKey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {

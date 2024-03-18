@@ -27,6 +27,16 @@ func TestChain_EncodeAddress(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "should pass if b is a valid address on the network",
+			chain: Chain{
+				ChainName: ChainName_btc_mainnet,
+				ChainId:   8332,
+			},
+			b:       []byte("bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c"),
+			want:    "bc1qk0cc73p8m7hswn8y2q080xa4e5pxapnqgp7h9c",
+			wantErr: false,
+		},
+		{
 			name: "should error if b is not a valid address on the evm network",
 			chain: Chain{
 				ChainName: ChainName_goerli_testnet,
