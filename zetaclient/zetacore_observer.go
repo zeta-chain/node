@@ -337,7 +337,7 @@ func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContex
 		if found {
 			// update zeta connector and ERC20 custody addresses
 			zetaConnectorAddress := ethcommon.HexToAddress(evmParams.GetConnectorContractAddress())
-			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetERC20CustodyContractAddress())
+			erc20CustodyAddress := ethcommon.HexToAddress(evmParams.GetErc20CustodyContractAddress())
 			if zetaConnectorAddress != signer.GetZetaConnectorAddress() {
 				signer.SetZetaConnectorAddress(zetaConnectorAddress)
 				co.logger.ZetaChainWatcher.Info().Msgf(
