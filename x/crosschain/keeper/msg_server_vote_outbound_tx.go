@@ -91,6 +91,10 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SaveFailedOutBound(ctx, &cctx, err.Error(), ballotIndex)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
+	err = cctx.Validate()
+	if err != nil {
+		return nil, err
+	}
 	k.SaveSuccessfulOutBound(ctx, &cctx, ballotIndex)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }

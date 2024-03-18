@@ -41,6 +41,4 @@ var (
 	ErrUnableProcessRefund           = errorsmod.Register(ModuleName, 1148, "unable to process refund")
 	ErrUnableToFindZetaAccounting    = errorsmod.Register(ModuleName, 1149, "unable to find zeta accounting")
 	ErrInsufficientZetaAmount        = errorsmod.Register(ModuleName, 1150, "insufficient zeta amount")
-
-	ErrTssMismatch = errorsmod.Register(ModuleName, 1151, "TSS mismatch")
 )

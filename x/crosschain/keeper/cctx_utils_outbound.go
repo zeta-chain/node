@@ -211,10 +211,9 @@ func (k Keeper) SaveSuccessfulOutBound(ctx sdk.Context, cctx *types.CrossChainTx
 
 // SaveOutbound saves the outbound transaction.It does the following things in one function:
 // 1. Set the ballot index for the outbound vote to the cctx
-// 2. Set the finalization status of the current outbound tx to executed
-// 3. Remove the nonce from the pending nonces
-// 4. Remove the outbound tx tracker
-// 5. Set the cctx and nonce to cctx and inTxHash to cctx
+// 2. Remove the nonce from the pending nonces
+// 3. Remove the outbound tx tracker
+// 4. Set the cctx and nonce to cctx and inTxHash to cctx
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
 	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey
@@ -238,7 +237,7 @@ func (k Keeper) ValidateOutboundMessage(ctx sdk.Context, msg types.MsgVoteOnObse
 	if cctx.GetCurrentOutTxParam().OutboundTxTssNonce != msg.OutTxTssNonce {
 		return types.CrossChainTx{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("OutTxTssNonce %d does not match CCTX OutTxTssNonce %d", msg.OutTxTssNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
 	}
-	// do not process outbound vote if TSS is not found
+	// do not process an outbound vote if TSS is not found
 	_, found = k.zetaObserverKeeper.GetTSS(ctx)
 	if !found {
 		return types.CrossChainTx{}, types.ErrCannotFindTSSKeys
