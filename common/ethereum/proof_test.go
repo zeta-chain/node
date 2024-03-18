@@ -87,6 +87,9 @@ func TestProofGeneration(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, has)
 
+		err = proof.Put(key, proof.Values[0])
+		require.NoError(t, err)
+
 		key2 := proof2.Keys[2]
 		has, err = proof.Has(key2)
 		require.NoError(t, err)
