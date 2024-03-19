@@ -3,6 +3,7 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"math"
 	"math/rand"
 	"sort"
@@ -75,7 +76,13 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(config.BTCConfig{}, &tss, clientcommon.DefaultLoggers(), &metrics.TelemetryServer{})
+	cfg := config.NewConfig()
+	s.btcSigner, err = NewBTCSigner(
+		config.BTCConfig{},
+		&tss,
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		corecontext.NewZetaCoreContext(cfg))
 	c.Assert(err, IsNil)
 }
 

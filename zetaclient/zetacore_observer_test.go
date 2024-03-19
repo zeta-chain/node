@@ -62,6 +62,7 @@ func CreateCoreContext(evmChain, btcChain common.Chain, evmChainParams, btcChain
 		evmChainParamsMap,
 		btcChainParams,
 		"",
+		observertypes.CrosschainFlags{},
 		true,
 		zerolog.Logger{},
 	)
