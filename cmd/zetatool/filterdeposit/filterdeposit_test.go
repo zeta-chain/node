@@ -2,7 +2,6 @@ package filterdeposit
 
 import (
 	"encoding/json"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestCheckForCCTX(t *testing.T) {
