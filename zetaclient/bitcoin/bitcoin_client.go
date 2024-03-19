@@ -140,6 +140,7 @@ func NewBitcoinClient(
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
+	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -174,7 +175,6 @@ func NewBitcoinClient(
 	}
 	ob.params = *chainParams
 	// initialize the Client
-	btcCfg := appcontext.Config().BitcoinConfig
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         btcCfg.RPCHost,
