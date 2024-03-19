@@ -3,7 +3,7 @@
 
 ## Version: v15.0.0
 
-- []() - add upgrade handler for version v15.0.0
+- [1913](https://github.com/zeta-chain/node/pull/1913) - add upgrade handler for version v15.0.0
 
 ## Version: v14
 
