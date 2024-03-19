@@ -9,7 +9,7 @@ services:
     entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin", "additional-evm"]
 
   eth2:
-    image: ethereum/client-go:v1.10.26
+    image: trufflesuite/ganache-cli # Replace with your custom image tag if you built your own
     container_name: eth2
     hostname: eth2
     ports:
@@ -17,7 +17,16 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.102
-    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.102", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
+    command: [ "--blockTime", "3", "--host", "0.0.0.0", "--chainId", "11155111", "--port", "8545", "--account", "0x95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083,100000000000000000000"]
+#    image: custom-geth:latest
+#    container_name: eth2
+#    hostname: eth2
+#    ports:
+#      - "8546:8545"
+#    networks:
+#      mynetwork:
+#        ipv4_address: 172.20.0.102
+#    entrypoint: ["geth", "--dev", "--http", "--http.addr", "172.20.0.102", "--http.vhosts", "*", "--http.api", "eth,web3,net", "--http.corsdomain", "https://remix.ethereum.org", "--dev.period", "2"]
 
   zetaclient0:
     entrypoint: [ "/root/start-zetaclientd.sh", "additional-evm" ]

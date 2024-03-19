@@ -46,16 +46,16 @@ echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Et
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 
-# check if the option is additional-evm
-# in this case an additional eth network is spun up and the deployer and TSS accounts are funded with Ether
-if [ "$OPTION" == "additional-evm" ]; then
-# unlock the admin account
-  echo "funding admin address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether on ETH2"
-  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth2:8545
-# unlock the TSS account
-  echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether on ETH2"
-  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth2:8545
-fi
+## check if the option is additional-evm
+## in this case an additional eth network is spun up and the deployer and TSS accounts are funded with Ether
+#if [ "$OPTION" == "additional-evm" ]; then
+## unlock the admin account
+#  echo "funding admin address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether on ETH2"
+#  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth2:8545
+## unlock the TSS account
+#  echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether on ETH2"
+#  geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xF421292cb0d3c97b90EEEADfcD660B893592c6A2", value: web3.toWei(100,"ether")})' attach http://eth2:8545
+#fi
 
 ### Run zetae2e command depending on the option passed
 

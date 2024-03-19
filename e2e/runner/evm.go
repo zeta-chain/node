@@ -168,7 +168,7 @@ func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []b
 	}
 
 	tx := ethtypes.NewTransaction(nonce, runner.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := evmClient.NetworkID(runner.Ctx)
+	chainID, err := evmClient.ChainID(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
