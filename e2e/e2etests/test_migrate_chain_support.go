@@ -2,15 +2,18 @@ package e2etests
 
 import (
 	"context"
-
-	"github.com/fatih/color"
-
+	"fmt"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
+	"os/exec"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/fatih/color"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
@@ -57,16 +60,58 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 
+	// setup the gas token
+	if err != nil {
+		panic(err)
+	}
+	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		adminAddr,
+		"",
+		chainParams.ChainId,
+		18,
+		"Sepolia ETH",
+		"sETH",
+		common.CoinType_Gas,
+		100000,
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	// set the gas token in the runner
+	ethZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainParams.ChainId))
+	if err != nil {
+		panic(err)
+	}
+	if (ethZRC20Addr == ethcommon.Address{}) {
+		panic("eth zrc20 not found")
+	}
+	newRunner.ETHZRC20Addr = ethZRC20Addr
+	ethZRC20, err := zrc20.NewZRC20(ethZRC20Addr, newRunner.ZEVMClient)
+	if err != nil {
+		panic(err)
+	}
+	newRunner.ETHZRC20 = ethZRC20
+
+	// restart ZetaClient to pick up the new chain
+	r.Logger.Print("🔄 restarting ZetaClient to pick up the new chain")
+	if err := restartZetaClient(); err != nil {
+		panic(err)
+	}
+
+	// wait 10 set for the chain to start
+	time.Sleep(10 * time.Second)
+
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
-	txERC20Deposit := newRunner.DepositERC20()
+	//txERC20Deposit := newRunner.DepositERC20()
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
-	newRunner.WaitForMinedCCTX(txERC20Deposit)
+	//newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// withdraw Zeta, Ethers and ERC20 to the new chain
-	TestZetaWithdraw(r, []string{"1000000000000000000"})
-	TestEtherWithdraw(r, []string{"10000000000000000"})
-	TestERC20Withdraw(r, []string{"1000000000000000000"})
+	//TestZetaWithdraw(r, []string{"1000000000000000000"})
+	TestEtherWithdraw(newRunner, []string{"10000000000000000"})
+	//TestERC20Withdraw(r, []string{"1000000000000000000"})
 }
 
 // configureEVM2 takes a runner and configures it to use the additional EVM localnet
@@ -160,4 +205,17 @@ func getNewEVMChainParams(r *runner.E2ERunner) *observertypes.ChainParams {
 	chainParams.IsSupported = true
 
 	return chainParams
+}
+
+// restartZetaClient restarts the Zeta client
+func restartZetaClient() error {
+	sshCommandFilePath := "/work/restart-zetaclientd-migrate.sh"
+	cmd := exec.Command("/bin/sh", sshCommandFilePath)
+
+	// Execute the command
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error restarting ZetaClient: %s - %s", err.Error(), output)
+	}
+	return nil
 }

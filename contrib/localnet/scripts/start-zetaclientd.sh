@@ -68,7 +68,7 @@ fi
 
 # check if the option is background
 # in this case, we tail the zetaclientd log file
-if [ "$OPTION" == "background" ]; then
+#if [ "$OPTION" == "background" ]; then
     sleep 3
     tail -f $HOME/zetaclient.log
-fi
+#fi
