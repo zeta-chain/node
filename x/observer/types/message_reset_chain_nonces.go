@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	cosmoserrors "cosmossdk.io/errors"
 	"github.com/zeta-chain/zetacore/common"
 
@@ -12,7 +14,7 @@ const TypeMsgResetChainNonces = "reset_chain_nonces"
 
 var _ sdk.Msg = &MsgResetChainNonces{}
 
-func NewMsgResetChainNonces(creator string, chainID int64, chainNonceLow uint64, chainNonceHigh uint64) *MsgResetChainNonces {
+func NewMsgResetChainNonces(creator string, chainID int64, chainNonceLow int64, chainNonceHigh int64) *MsgResetChainNonces {
 	return &MsgResetChainNonces{
 		Creator:        creator,
 		ChainId:        chainID,
@@ -52,6 +54,18 @@ func (msg *MsgResetChainNonces) ValidateBasic() error {
 	chain := common.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain id (%d)", msg.ChainId)
+	}
+
+	if msg.ChainNonceLow < 0 {
+		return errors.New("chain nonce low must be greater or equal 0")
+	}
+
+	if msg.ChainNonceHigh < 0 {
+		return errors.New("chain nonce high must be greater or equal 0")
+	}
+
+	if msg.ChainNonceLow > msg.ChainNonceHigh {
+		return errors.New("chain nonce low must be less or equal than chain nonce high")
 	}
 
 	return nil

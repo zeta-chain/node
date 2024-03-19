@@ -98,8 +98,8 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
-			ChainNonceLow:  uint64(nonceLow),
-			ChainNonceHigh: uint64(nonceHigh),
+			ChainNonceLow:  int64(nonceLow),
+			ChainNonceHigh: int64(nonceHigh),
 		})
 		require.NoError(t, err)
 
@@ -121,8 +121,8 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
 			ChainId:        chainId,
-			ChainNonceLow:  uint64(0),
-			ChainNonceHigh: uint64(0),
+			ChainNonceLow:  0,
+			ChainNonceHigh: 0,
 		})
 		require.NoError(t, err)
 
