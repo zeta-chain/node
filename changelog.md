@@ -57,6 +57,12 @@
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.
 * [1894](https://github.com/zeta-chain/node/pull/1894) - added download binaries and configs to the start sequence so it will download binaries that don't exist
 
+## Version: v15
+
+### Features
+
+*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+
 ## Version: v14
 
 - [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
