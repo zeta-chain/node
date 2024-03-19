@@ -8,7 +8,7 @@ network. `filterdeposit`
 #### RPC endpoints
 Configuring the tool for specific networks will require different reliable endpoints. For example, if you wanted to 
 configure an ethereum rpc endpoint, then you will have to find an evm rpc endpoint for eth mainnet and set the field: 
-`EthRPC`
+`EthRPCURL`
 
 #### Zeta URL
 You will need to find an enpoint for zetachain and set the field: `ZetaURL`
@@ -26,11 +26,11 @@ In order to make requests to etherscan, an api key will need to be configured.
 ```
 {
  "ZetaURL": "",
- "BtcExplorer": "https://blockstream.info/api/",
- "EthRPC": "https://ethereum-rpc.publicnode.com",
- "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
- "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10", 
+ "BtcExplorerURL": "https://blockstream.info/api/",
+ "EthRPCURL": "https://ethereum-rpc.publicnode.com",
  "EtherscanAPIkey": "",
+ "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
+ "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
 }
 ```
 
