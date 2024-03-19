@@ -54,6 +54,10 @@ type ChainSigner interface {
 		zetaBridge ZetaCoreBridger,
 		height uint64,
 	)
+	SetZetaConnectorAddress(address ethcommon.Address)
+	SetERC20CustodyAddress(address ethcommon.Address)
+	GetZetaConnectorAddress() ethcommon.Address
+	GetERC20CustodyAddress() ethcommon.Address
 }
 
 // ZetaCoreBridger is the interface to interact with ZetaCore

@@ -64,6 +64,8 @@ type Log struct {
 	Compliance           zerolog.Logger // Compliance logger
 }
 
+var _ interfaces.ChainClient = &ChainClient{}
+
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type ChainClient struct {
