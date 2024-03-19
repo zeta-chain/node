@@ -1,9 +1,11 @@
 # CHANGELOG
 
+## Version: v15
 
-## Version: v15.0.0
+### Features
 
-- [1913](https://github.com/zeta-chain/node/pull/1913) - add upgrade handler for version v15.0.0
+*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+*[1913](https://github.com/zeta-chain/node/pull/1913) - add upgrade handler for version v15.0.0
 
 ## Version: v14
 
