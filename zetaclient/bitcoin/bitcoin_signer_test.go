@@ -3,16 +3,11 @@ package bitcoin
 import (
 	"encoding/hex"
 	"fmt"
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"math"
 	"math/rand"
 	"sort"
 	"sync"
 	"testing"
-
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcec"
@@ -25,7 +20,11 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	. "gopkg.in/check.v1"
 )
 
