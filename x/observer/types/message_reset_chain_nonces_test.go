@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -12,18 +11,29 @@ import (
 
 func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 	tests := []struct {
-		name string
-		msg  types.MsgResetChainNonces
-		err  error
+		name    string
+		msg     types.MsgResetChainNonces
+		wantErr bool
 	}{
 		{
-			name: "valid message",
+			name: "valid message chain nonce high greater than nonce low",
 			msg: types.MsgResetChainNonces{
 				Creator:        sample.AccAddress(),
 				ChainId:        common.ExternalChainList()[0].ChainId,
 				ChainNonceLow:  1,
 				ChainNonceHigh: 5,
 			},
+			wantErr: false,
+		},
+		{
+			name: "valid message chain nonce high same as nonce low",
+			msg: types.MsgResetChainNonces{
+				Creator:        sample.AccAddress(),
+				ChainId:        common.ExternalChainList()[0].ChainId,
+				ChainNonceLow:  1,
+				ChainNonceHigh: 1,
+			},
+			wantErr: false,
 		},
 		{
 			name: "invalid address",
@@ -31,23 +41,51 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 				ChainId: common.ExternalChainList()[0].ChainId,
 			},
-			err: sdkerrors.ErrInvalidAddress,
+			wantErr: true,
 		},
-
 		{
 			name: "invalid chain ID",
 			msg: types.MsgResetChainNonces{
 				Creator: sample.AccAddress(),
 				ChainId: 999,
 			},
-			err: sdkerrors.ErrInvalidChainID,
+			wantErr: true,
+		},
+		{
+			name: "invalid chain nonce low",
+			msg: types.MsgResetChainNonces{
+				Creator:       sample.AccAddress(),
+				ChainId:       common.ExternalChainList()[0].ChainId,
+				ChainNonceLow: -1,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid chain nonce high",
+			msg: types.MsgResetChainNonces{
+				Creator:        sample.AccAddress(),
+				ChainId:        common.ExternalChainList()[0].ChainId,
+				ChainNonceLow:  1,
+				ChainNonceHigh: -1,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid chain nonce low greater than chain nonce high",
+			msg: types.MsgResetChainNonces{
+				Creator:        sample.AccAddress(),
+				ChainId:        common.ExternalChainList()[0].ChainId,
+				ChainNonceLow:  1,
+				ChainNonceHigh: 0,
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.msg.ValidateBasic()
-			if tt.err != nil {
-				require.ErrorIs(t, err, tt.err)
+			if tt.wantErr {
+				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)

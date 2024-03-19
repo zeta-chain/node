@@ -27,14 +27,14 @@ func CmdResetChainNonces() *cobra.Command {
 				return err
 			}
 
-			// get chainNonceLow as uint64
-			chainNonceLow, err := strconv.ParseUint(args[1], 10, 64)
+			// get chainNonceLow as int64
+			chainNonceLow, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
 
-			// get chainNonceHigh as uint64
-			chainNonceHigh, err := strconv.ParseUint(args[2], 10, 64)
+			// get chainNonceHigh as int64
+			chainNonceHigh, err := strconv.ParseInt(args[2], 10, 64)
 			if err != nil {
 				return err
 			}
