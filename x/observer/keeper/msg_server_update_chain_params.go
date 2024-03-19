@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"github.com/zeta-chain/zetacore/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -24,6 +25,17 @@ func (k msgServer) UpdateChainParams(goCtx context.Context, msg *types.MsgUpdate
 	chainParamsList, found := k.GetChainParamsList(ctx)
 	if !found {
 		chainParamsList = types.ChainParamsList{}
+	}
+
+	if msg.ChainParams.ChainId == common.SepoliaChain().ChainId {
+		_, err := k.ResetChainNonces(ctx, &MsgResetChainNonces{
+			Creator: msg.Creator,
+			ChainID: msg.ChainParams.ChainId,
+		})
+		if err != nil {
+			return nil, err
+		}
+		ctx.Logger().Info("ResetChainNonces", "ChainID", msg.ChainParams.ChainId)
 	}
 
 	// find chain params for the chain
