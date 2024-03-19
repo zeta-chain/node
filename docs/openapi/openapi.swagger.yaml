@@ -54314,6 +54314,8 @@ definitions:
     type: object
   observerMsgRemoveChainParamsResponse:
     type: object
+  observerMsgResetChainNoncesResponse:
+    type: object
   observerMsgUpdateChainParamsResponse:
     type: object
   observerMsgUpdateCrosschainFlagsResponse:
