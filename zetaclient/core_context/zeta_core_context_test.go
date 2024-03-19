@@ -125,12 +125,19 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
+		crosschainFlags := observertypes.CrosschainFlags{
+			IsInboundEnabled:             false,
+			IsOutboundEnabled:            false,
+			GasPriceIncreaseFlags:        nil,
+			BlockHeaderVerificationFlags: nil,
+		}
 		zetaContext.Update(
 			&keyGenToUpdate,
 			enabledChainsToUpdate,
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
+			crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -154,6 +161,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		// assert evm chain params still empty because they were not specified in config
 		allEVMChainParams := zetaContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
+
+		ccflags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, crosschainFlags, ccflags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -210,6 +220,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			ChainId: testBtcChain.ChainId,
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
+		crosschainFlags := observertypes.CrosschainFlags{}
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
 			&keyGenToUpdate,
@@ -217,6 +228,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
+			crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -248,6 +260,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		evmChainParams2, found := zetaContext.GetEVMChainParams(2)
 		require.True(t, found)
 		require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
+
+		ccflags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, ccflags, crosschainFlags)
 	})
 }
 
