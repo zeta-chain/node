@@ -8,6 +8,8 @@ import (
 	"math/rand"
 	"time"
 
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -42,6 +44,7 @@ type BTCSigner struct {
 	logger           zerolog.Logger
 	loggerCompliance zerolog.Logger
 	ts               *metrics.TelemetryServer
+	coreContext      *corecontext.ZetaCoreContext
 }
 
 var _ interfaces.ChainSigner = &BTCSigner{}
@@ -50,7 +53,8 @@ func NewBTCSigner(
 	cfg config.BTCConfig,
 	tssSigner interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
-	ts *metrics.TelemetryServer) (*BTCSigner, error) {
+	ts *metrics.TelemetryServer,
+	coreContext *corecontext.ZetaCoreContext) (*BTCSigner, error) {
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,
@@ -70,6 +74,7 @@ func NewBTCSigner(
 		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
 		loggerCompliance: loggers.Compliance,
 		ts:               ts,
+		coreContext:      coreContext,
 	}, nil
 }
 
@@ -290,11 +295,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
-	flags, err := zetaBridge.GetCrosschainFlags()
-	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get crosschain flags")
-		return
-	}
+	flags := signer.coreContext.GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return

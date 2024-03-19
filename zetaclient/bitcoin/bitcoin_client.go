@@ -13,6 +13,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -75,6 +77,7 @@ type BTCChainClient struct {
 	broadcastedTx     map[string]string                        // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
 	params            observertypes.ChainParams
+	coreContext       *corecontext.ZetaCoreContext
 
 	db     *gorm.DB
 	stop   chan struct{}
@@ -166,6 +169,7 @@ func NewBitcoinClient(
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
+	ob.coreContext = appcontext.ZetaCoreContext()
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
@@ -376,10 +380,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 
 func (ob *BTCChainClient) observeInTx() error {
 	// make sure inbound TXS / Send is enabled by the protocol
-	flags, err := ob.zetaClient.GetCrosschainFlags()
-	if err != nil {
-		return err
-	}
+	flags := ob.coreContext.GetCrossChainFlags()
 	if !flags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}

@@ -20,6 +20,7 @@ type ZetaCoreContext struct {
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
 	currentTssPubkey   string
+	crossChainFlags    observertypes.CrosschainFlags
 }
 
 // NewZetaCoreContext creates and returns new ZetaCoreContext
@@ -106,6 +107,12 @@ func (c *ZetaCoreContext) GetBTCChainParams() (common.Chain, *observertypes.Chai
 	return *chain, c.bitcoinChainParams, true
 }
 
+func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
+	c.coreContextLock.RLock()
+	defer c.coreContextLock.RUnlock()
+	return c.crossChainFlags
+}
+
 // Update updates core context and params for all chains
 // this must be the ONLY function that writes to core context
 func (c *ZetaCoreContext) Update(
@@ -114,6 +121,7 @@ func (c *ZetaCoreContext) Update(
 	evmChainParams map[int64]*observertypes.ChainParams,
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,
+	crosschainFlags observertypes.CrosschainFlags,
 	init bool,
 	logger zerolog.Logger,
 ) {
@@ -148,8 +156,11 @@ func (c *ZetaCoreContext) Update(
 			}
 		}
 	}
-	c.keygen = *keygen
+	if keygen != nil {
+		c.keygen = *keygen
+	}
 	c.chainsEnabled = newChains
+	c.crossChainFlags = crosschainFlags
 	// update chain params for bitcoin if it has config in file
 	if c.bitcoinChainParams != nil && btcChainParams != nil {
 		c.bitcoinChainParams = btcChainParams

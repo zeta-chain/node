@@ -907,10 +907,7 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 
 func (ob *ChainClient) observeInTX(sampledLogger zerolog.Logger) error {
 	// make sure inbound TXS / Send is enabled by the protocol
-	flags, err := ob.zetaClient.GetCrosschainFlags()
-	if err != nil {
-		return err
-	}
+	flags := ob.coreContext.GetCrossChainFlags()
 	if !flags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
