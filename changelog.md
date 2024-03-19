@@ -1,4 +1,11 @@
 # CHANGELOG
+
+## Version: v15
+
+### Features
+
+*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+
 ## Version: v14
 
 ### Fixes 
