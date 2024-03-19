@@ -18,6 +18,11 @@ btc         Filter inbound btc deposits
 eth         Filter inbound eth deposits
 ```
 
+### Flags
+```
+--btc-chain-id string   chain id used on zetachain to identify bitcoin - default: 8332 (default "8332")
+```
+
 ### Options inherited from parent commands
 ```
 --config string   custom config file: --config filename.json

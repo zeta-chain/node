@@ -13,30 +13,24 @@ configure an ethereum rpc endpoint, then you will have to find an evm rpc endpoi
 #### Zeta URL
 You will need to find an enpoint for zetachain and set the field: `ZetaURL`
 
-#### TSS Addresses
-Depending on which network you are using, you will have to populate the tss addresses for both EVM and BTC using these
-fields: `TssAddressBTC`, `TssAddressEVM`
-
 #### Contract Addresses
 Depending on the network, connector and custody contract addresses must be set using these fields: `ConnectorAddress`,
 `CustodyAddress`
 
-#### EVM Block Ranges
-When filtering evm transactions, a range of blocks is required and to reduce runtime of the command, a suitable range
-must be selected and set in these fields: `EvmStartBlock`, `EvmMaxRange`
-
 If a configuration file is not provided, a default config will be generated under the name 
 `zetatool_config.json`. Below is an example of a configuration file used for mainnet: 
 
-```json
+#### Etherscan API Key
+In order to make requests to etherscan, an api key will need to be configured.
+
+```
 {
- "ZetaURL": "http://46.4.15.110:1317",
+ "ZetaURL": "",
  "BtcExplorer": "https://blockstream.info/api/",
  "EthRPC": "https://ethereum-rpc.publicnode.com",
  "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
- "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10",
- "EvmStartBlock": 19200110,
- "EvmMaxRange": 1000
+ "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10", 
+ "EtherscanAPIkey": "",
 }
 ```
 
