@@ -3,11 +3,12 @@ package e2etests
 import (
 	"context"
 	"fmt"
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	"math/big"
 	"os/exec"
 	"time"
+
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -105,10 +106,10 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
 	//txERC20Deposit := newRunner.DepositERC20()
+	newRunner.ProduceBlocks(34)
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
-	//newRunner.WaitForMinedCCTX(txERC20Deposit)
-
 	// withdraw Zeta, Ethers and ERC20 to the new chain
+
 	//TestZetaWithdraw(r, []string{"1000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"10000000000000000"})
 	//TestERC20Withdraw(r, []string{"1000000000000000000"})

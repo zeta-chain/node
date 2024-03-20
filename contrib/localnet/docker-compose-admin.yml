@@ -17,7 +17,7 @@ services:
     networks:
       mynetwork:
         ipv4_address: 172.20.0.102
-    command: [ "--blockTime", "3", "--host", "0.0.0.0", "--chainId", "11155111", "--port", "8545", "--account", "0x95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083,100000000000000000000"]
+    command: ["--host", "0.0.0.0", "--chainId", "11155111", "--port", "8545", "--account", "0x95409f1f0e974871cc26ba98ffd31f613aa1287d40c0aea6a87475fc3521d083,100000000000000000000"]
 #    image: custom-geth:latest
 #    container_name: eth2
 #    hostname: eth2
