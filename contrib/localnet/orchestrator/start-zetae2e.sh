@@ -38,8 +38,8 @@ echo "funding deployer address 0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf with 1
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 # unlock admin erc20 tests accounts
-echo "funding deployer address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth:8545
+echo "funding deployer address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 # unlock the TSS account
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"

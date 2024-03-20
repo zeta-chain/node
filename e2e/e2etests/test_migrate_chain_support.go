@@ -110,9 +110,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 	// withdraw Zeta, Ethers and ERC20 to the new chain
 
-	//TestZetaWithdraw(newRunner, []string{"10000000000000000"})
-	TestEtherWithdraw(newRunner, []string{"10000000000000000"})
-	//TestERC20Withdraw(newRunner, []string{"10000000000000000"})
+	//TestZetaWithdraw(r, []string{"1000000000000000000"})
+	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
+	//TestERC20Withdraw(r, []string{"1000000000000000000"})
 }
 
 // configureEVM2 takes a runner and configures it to use the additional EVM localnet
@@ -136,7 +136,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
-		runner.NewLogger(false, color.FgHiYellow, "admin-evm2"),
+		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
