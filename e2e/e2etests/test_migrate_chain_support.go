@@ -112,7 +112,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	//TestZetaWithdraw(r, []string{"1000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"10000000000000000"})
-	//TestERC20Withdraw(r, []string{"1000000000000000000"})
+	TestERC20Withdraw(r, []string{"10000000000000000"})
 }
 
 // configureEVM2 takes a runner and configures it to use the additional EVM localnet
