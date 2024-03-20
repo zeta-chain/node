@@ -15,6 +15,7 @@ import (
 
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -140,6 +141,7 @@ func NewBitcoinClient(
 	tss interfaces.TSSSigner,
 	dbpath string,
 	loggers clientcommon.ClientLogger,
+	btcCfg config.BTCConfig,
 	ts *metrics.TelemetryServer,
 ) (*BTCChainClient, error) {
 	ob := BTCChainClient{
@@ -174,7 +176,6 @@ func NewBitcoinClient(
 	}
 	ob.params = *chainParams
 	// initialize the Client
-	btcCfg := appcontext.Config().BitcoinConfig
 	ob.logger.ChainLogger.Info().Msgf("Chain %s endpoint %s", ob.chain.String(), btcCfg.RPCHost)
 	connCfg := &rpcclient.ConnConfig{
 		Host:         btcCfg.RPCHost,
@@ -712,7 +713,7 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
 			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
@@ -1230,7 +1231,7 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 	}
 
 	// differentiate between normal and restricted cctx
-	if clientcommon.IsCctxRestricted(cctx) {
+	if compliance.IsCctxRestricted(cctx) {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)

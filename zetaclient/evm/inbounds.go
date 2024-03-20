@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 
@@ -228,7 +228,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), maybeReceiver) {
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
 			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender.Hex(), clienttypes.BytesToEthHex(event.Recipient), "ERC20")
 		return nil
 	}
@@ -272,7 +272,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 	// compliance check
 	sender := event.ZetaTxSenderAddress.Hex()
 	if config.ContainRestrictedAddress(sender, destAddr, event.SourceTxOriginAddress.Hex()) {
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
 			false, ob.chain.ChainId, event.Raw.TxHash.Hex(), sender, destAddr, "Zeta")
 		return nil
 	}
@@ -322,7 +322,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		maybeReceiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(sender.Hex(), maybeReceiver) {
-		clientcommon.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.ExternalChainWatcher, ob.logger.Compliance,
 			false, ob.chain.ChainId, tx.Hash, sender.Hex(), sender.Hex(), "Gas")
 		return nil
 	}

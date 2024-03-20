@@ -40,6 +40,7 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 	"gorm.io/driver/sqlite"
@@ -63,6 +64,8 @@ type Log struct {
 	ObserveOutTx         zerolog.Logger // Observes external Chains for outgoing transactions
 	Compliance           zerolog.Logger // Compliance logger
 }
+
+var _ interfaces.ChainClient = &ChainClient{}
 
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
@@ -328,7 +331,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 	logger = logger.With().Str("sendID", sendID).Logger()
 
 	// compliance check, special handling the cancelled cctx
-	if clientcommon.IsCctxRestricted(cctx) {
+	if compliance.IsCctxRestricted(cctx) {
 		recvStatus := common.ReceiveStatus_Failed
 		if receipt.Status == 1 {
 			recvStatus = common.ReceiveStatus_Success
