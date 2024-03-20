@@ -108,3 +108,17 @@ message MsgAddBlockHeader {
 }
 ```
 
+## MsgResetChainNonces
+
+ResetChainNonces handles resetting chain nonces
+Authorized: policy group admin
+
+```proto
+message MsgResetChainNonces {
+	string creator = 1;
+	int64 chain_id = 2;
+	uint64 chain_nonce_low = 3;
+	uint64 chain_nonce_high = 4;
+}
+```
+

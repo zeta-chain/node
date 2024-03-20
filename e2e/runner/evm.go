@@ -1,10 +1,11 @@
 package runner
 
 import (
-	"github.com/ethereum/go-ethereum/rpc"
 	"log"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/rpc"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"

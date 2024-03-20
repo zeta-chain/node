@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"os/exec"
 	"strings"
 	"time"
+
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"

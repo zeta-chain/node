@@ -2,12 +2,13 @@ package runner
 
 import (
 	"fmt"
+	"math/big"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	"math/big"
 )
 
 // WaitForTxReceiptOnZEVM waits for a tx receipt on ZEVM
