@@ -1,26 +1,10 @@
-package common
+package compliance
 
 import (
-	"fmt"
-
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
-
-type ClientLogger struct {
-	Std        zerolog.Logger
-	Compliance zerolog.Logger
-}
-
-func DefaultLoggers() ClientLogger {
-	return ClientLogger{
-		Std:        log.Logger,
-		Compliance: log.Logger,
-	}
-}
 
 // IsCctxRestricted returns true if the cctx involves restricted addresses
 func IsCctxRestricted(cctx *crosschaintypes.CrossChainTx) bool {
@@ -52,14 +36,4 @@ func PrintComplianceLog(
 	}
 	logWithFields1.Warn().Msg(logMsg)
 	logWithFields2.Warn().Msg(logMsg)
-}
-
-// GasPriceMultiplier returns the gas price multiplier for the given chain
-func GasPriceMultiplier(chainID int64) (float64, error) {
-	if common.IsEVMChain(chainID) {
-		return EVMOuttxGasPriceMultiplier, nil
-	} else if common.IsBitcoinChain(chainID) {
-		return BTCOuttxGasPriceMultiplier, nil
-	}
-	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
 }
