@@ -13,6 +13,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -188,7 +189,8 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 		feeRate = defaultDepositorFeeRate // use default fee rate if calculation fails, should not happen
 		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
 	}
-	feeRate = feeRate * common.DefaultGasPriceMultiplier
+	// #nosec G701 always in range
+	feeRate = int64(float64(feeRate) * clientcommon.BTCOuttxGasPriceMultiplier)
 	return DepositorFee(feeRate)
 }
 
