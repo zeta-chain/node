@@ -509,9 +509,6 @@ func (signer *Signer) reportToOutTxTracker(zetaBridge interfaces.ZetaCoreBridger
 			// give up after 10 minutes of monitoring
 			time.Sleep(10 * time.Second)
 
-			report = true
-			break
-
 			if time.Since(tStart) > OutTxInclusionTimeout {
 				// if tx is still pending after timeout, report to outTxTracker anyway as we cannot monitor forever
 				if isPending {

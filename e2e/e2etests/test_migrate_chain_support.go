@@ -2,9 +2,12 @@ package e2etests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"math/big"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
@@ -45,15 +48,21 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 	newRunner.SetupEVM(false)
+
+	// mint some ERC20
 	newRunner.MintERC20OnEvm(10000)
 
+	// we deploy connectorETH in this test to simulate a new "canonical" chain emitting ZETA
+	// to represent the ZETA already existing on ZetaChain we manually send the minted ZETA to the connector
+	newRunner.SendZetaOnEvm(newRunner.ConnectorEthAddr, 20_000_000_000)
+
 	// update the chain params to set up the chain
-	chainParams := getNewEVMChainParams(r)
-	adminAddr, err := r.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
+	chainParams := getNewEVMChainParams(newRunner)
+	adminAddr, err := newRunner.ZetaTxServer.GetAccountAddressFromName(utils.FungibleAdminName)
 	if err != nil {
 		panic(err)
 	}
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
 		adminAddr,
 		chainParams,
 	))
@@ -65,7 +74,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		adminAddr,
 		"",
 		chainParams.ChainId,
@@ -80,7 +89,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 
 	// set the gas token in the runner
-	ethZRC20Addr, err := r.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainParams.ChainId))
+	ethZRC20Addr, err := newRunner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chainParams.ChainId))
 	if err != nil {
 		panic(err)
 	}
@@ -93,6 +102,36 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		panic(err)
 	}
 	newRunner.ETHZRC20 = ethZRC20
+
+	// deploy erc20 zrc20
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
+		adminAddr,
+		newRunner.ERC20Addr.Hex(),
+		common.SepoliaChain().ChainId,
+		18,
+		"USDT",
+		"USDT",
+		common.CoinType_ERC20,
+		100000,
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	// fetch the erc20 zrc20 contract address and remove the quotes
+	erc20zrc20Addr, err := fetchAttribute(res, "Contract")
+	if err != nil {
+		panic(err)
+	}
+	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
+		panic(fmt.Errorf("invalid contract address: %s", erc20zrc20Addr))
+	}
+
+	erc20ZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(erc20zrc20Addr), newRunner.ZEVMClient)
+	if err != nil {
+		panic(err)
+	}
+	newRunner.ERC20ZRC20 = erc20ZRC20
 
 	// set the chain nonces for the new chain
 	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgResetChainNonces(
@@ -121,13 +160,14 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
-	//txERC20Deposit := newRunner.DepositERC20()
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
+	txERC20Deposit := newRunner.DepositERC20()
+	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// perform withdrawals on the new chain
-	TestZetaWithdraw(r, []string{"1000000000000000000"})
+	TestZetaWithdraw(newRunner, []string{"10000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
-	//TestERC20Withdraw(r, []string{"1000000000000000000"})
+	TestERC20Withdraw(r, []string{"100000"})
 
 	// finally try to deposit Zeta back
 	TestZetaDeposit(newRunner, []string{"100000000000000000"})
@@ -157,7 +197,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
-		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
+		runner.NewLogger(false, color.FgHiYellow, "admin-evm2"),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
@@ -240,4 +280,51 @@ func restartZetaClient() error {
 		return fmt.Errorf("error restarting ZetaClient: %s - %s", err.Error(), output)
 	}
 	return nil
+}
+
+// fetchAttribute fetches the attribute from the tx response
+// TODO: use tx server
+func fetchAttribute(res *sdktypes.TxResponse, key string) (string, error) {
+	var logs []messageLog
+	err := json.Unmarshal([]byte(res.RawLog), &logs)
+	if err != nil {
+		return "", err
+	}
+
+	var attributes []string
+	for _, log := range logs {
+		for _, event := range log.Events {
+			for _, attr := range event.Attributes {
+				attributes = append(attributes, attr.Key)
+				if strings.EqualFold(attr.Key, key) {
+					address := attr.Value
+
+					if len(address) < 2 {
+						return "", fmt.Errorf("invalid address: %s", address)
+					}
+
+					// trim the quotes
+					address = address[1 : len(address)-1]
+
+					return address, nil
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
+}
+
+type messageLog struct {
+	Events []event `json:"events"`
+}
+
+type event struct {
+	Type       string      `json:"type"`
+	Attributes []attribute `json:"attributes"`
+}
+
+type attribute struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }
