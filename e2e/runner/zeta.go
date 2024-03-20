@@ -2,15 +2,12 @@ package runner
 
 import (
 	"fmt"
-	"math/big"
-	"time"
-
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	zetaconnectoreth "github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.eth.sol"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	"math/big"
 )
 
 // WaitForTxReceiptOnZEVM waits for a tx receipt on ZEVM
@@ -39,19 +36,6 @@ func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 			cctx.CctxStatus.Status.String(),
 			cctx.CctxStatus.StatusMessage),
 		)
-	}
-}
-
-func (runner *E2ERunner) ProduceBlocks(n int) {
-	smallAmount := big.NewInt(1e12)
-	randomAddress := sample.EthAddress()
-	for i := 0; i < n; i++ {
-		_, err := runner.SendEther(randomAddress, smallAmount, nil)
-		if err != nil {
-			runner.Logger.Print("Error sending ether: %s", err.Error())
-		}
-		waitTime := time.Duration(1) * time.Second
-		time.Sleep(waitTime)
 	}
 }
 

@@ -85,7 +85,6 @@ func TestZetaWithdraw(r *runner.E2ERunner, args []string) {
 	}
 	r.Logger.Info("waiting for cctx status to change to final...")
 
-	r.ProduceBlocks(34)
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, tx.Hash().Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "zeta withdraw")
 	if cctx.CctxStatus.Status != cctxtypes.CctxStatus_OutboundMined {

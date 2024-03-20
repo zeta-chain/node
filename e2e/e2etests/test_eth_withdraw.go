@@ -56,7 +56,6 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	r.Logger.ZRC20Withdrawal(r.ETHZRC20, *receipt, "withdraw")
 
 	// verify the withdraw value
-	r.ProduceBlocks(34)
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
 	r.Logger.CCTX(*cctx, "withdraw")
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
