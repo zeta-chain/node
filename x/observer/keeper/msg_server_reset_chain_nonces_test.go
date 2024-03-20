@@ -8,30 +8,25 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_ResetChainNonces(t *testing.T) {
 	t.Run("cannot reset chain nonces if not authorized", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
-		srv := keeper.NewMsgServerImpl(*k)
-
-		chainId := common.GoerliLocalnetChain().ChainId
-		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
-			Creator:        sample.AccAddress(),
-			ChainId:        chainId,
-			ChainNonceLow:  1,
-			ChainNonceHigh: 5,
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		srv := keeper.NewMsgServerImpl(*k)
+		chainId := common.GoerliLocalnetChain().ChainId
 
-		// group 1 should not be able to reset chain nonces
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group1)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
 
-		_, err = srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
-			Creator:        sample.AccAddress(),
+		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
+			Creator:        admin,
 			ChainId:        chainId,
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
@@ -40,11 +35,14 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 	})
 
 	t.Run("cannot reset chain nonces if tss not found", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		chainId := common.GoerliLocalnetChain().ChainId
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
@@ -57,13 +55,16 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 	})
 
 	t.Run("cannot reset chain nonces if chain not supported", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 		k.SetTSS(ctx, tss)
 
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
@@ -75,13 +76,17 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 	})
 
 	t.Run("can reset chain nonces", func(t *testing.T) {
-		k, ctx := keepertest.ObserverKeeper(t)
+		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
+			UseAuthorityMock: true,
+		})
 		srv := keeper.NewMsgServerImpl(*k)
 		tss := sample.Tss()
 		k.SetTSS(ctx, tss)
 
 		admin := sample.AccAddress()
-		setAdminCrossChainFlags(ctx, k, admin, types.Policy_Type_group2)
+		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		chainId := common.GoerliLocalnetChain().ChainId
 		index := common.GoerliLocalnetChain().ChainName.String()
