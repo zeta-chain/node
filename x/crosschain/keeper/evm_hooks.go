@@ -170,9 +170,9 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 	sendHash := msg.Digest()
 
-	cctx := CreateNewCCTX(
+	cctx := types.CreateNewCCTX(
 		ctx,
-		msg,
+		*msg,
 		sendHash,
 		tss.TssPubkey,
 		types.CctxStatus_PendingOutbound,
@@ -249,9 +249,9 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	sendHash := msg.Digest()
 
 	// Create the CCTX
-	cctx := CreateNewCCTX(
+	cctx := types.CreateNewCCTX(
 		ctx,
-		msg,
+		*msg,
 		sendHash,
 		tss.TssPubkey,
 		types.CctxStatus_PendingOutbound,

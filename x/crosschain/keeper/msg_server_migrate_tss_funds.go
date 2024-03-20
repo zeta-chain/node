@@ -79,7 +79,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
 
-	// TODO : Use the `CreateNewCctx` function to create the cctx
+	// TODO : Use the `GetInbound` method to create the cctx
 	// https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        "",

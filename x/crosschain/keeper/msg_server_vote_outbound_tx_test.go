@@ -441,68 +441,6 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 	})
 }
 
-func TestKeeper_GetOutbound(t *testing.T) {
-	t.Run("successfully get outbound tx", func(t *testing.T) {
-		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
-		hash := sample.Hash().String()
-
-		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: math.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
-		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
-		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxHash, hash)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasUsed, uint64(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice, math.NewInt(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit, uint64(20))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight, uint64(10))
-		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
-	})
-
-	t.Run("successfully get outbound tx for failed ballot without amount check", func(t *testing.T) {
-		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
-		hash := sample.Hash().String()
-
-		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: math.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
-		}, observertypes.BallotStatus_BallotFinalized_FailureObservation)
-		require.NoError(t, err)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxHash, hash)
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasUsed, uint64(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice, math.NewInt(100))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit, uint64(20))
-		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight, uint64(10))
-		require.Equal(t, cctx.CctxStatus.LastUpdateTimestamp, ctx.BlockHeader().Time.Unix())
-	})
-
-	t.Run("failed to get outbound tx if amount does not match value received", func(t *testing.T) {
-		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-
-		cctx := sample.CrossChainTx(t, "test")
-		hash := sample.Hash().String()
-
-		err := keeper.SetOutboundValues(ctx, cctx, types.MsgVoteOnObservedOutboundTx{
-			ValueReceived:                  math.NewUint(100),
-			ObservedOutTxHash:              hash,
-			ObservedOutTxBlockHeight:       10,
-			ObservedOutTxGasUsed:           100,
-			ObservedOutTxEffectiveGasPrice: math.NewInt(100),
-			ObservedOutTxEffectiveGasLimit: 20,
-		}, observertypes.BallotStatus_BallotFinalized_SuccessObservation)
-		require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
-	})
-}
-
 func TestKeeper_ProcessSuccessfulOutbound(t *testing.T) {
 	k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 	cctx := sample.CrossChainTx(t, "test")
@@ -829,19 +767,6 @@ func TestKeeper_SaveOutbound(t *testing.T) {
 		_, found = zk.ObserverKeeper.GetNonceToCctx(ctx, cctx.GetCurrentOutTxParam().TssPubkey, cctx.GetCurrentOutTxParam().ReceiverChainId, int64(cctx.GetCurrentOutTxParam().OutboundTxTssNonce))
 		require.True(t, found)
 	})
-}
-
-func Test_SetRevertOutboundValues(t *testing.T) {
-	cctx := sample.CrossChainTx(t, "test")
-	cctx.OutboundTxParams = cctx.OutboundTxParams[:1]
-	keeper.SetRevertOutboundValues(cctx, 100)
-	require.Len(t, cctx.OutboundTxParams, 2)
-	require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
-	require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
-	require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.InboundTxParams.Amount)
-	require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
-	require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
-	require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
 }
 
 func TestKeeper_ValidateOutboundMessage(t *testing.T) {

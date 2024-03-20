@@ -86,7 +86,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	}
 
 	// if ballot successful, the value received should be the out tx amount
-	err = SetOutboundValues(ctx, &cctx, *msg, ballot.BallotStatus)
+	err = cctx.AddOutbound(ctx, *msg, ballot.BallotStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -106,45 +106,10 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
-// SetRevertOutboundValues does the following things in one function:
+// AddRevertOutbound does the following things in one function:
 // 1. create a new OutboundTxParams for the revert
 // 2. append the new OutboundTxParams to the current OutboundTxParams
 // 3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
-func SetRevertOutboundValues(cctx *types.CrossChainTx, gasLimit uint64) {
-	revertTxParams := &types.OutboundTxParams{
-		Receiver:           cctx.InboundTxParams.Sender,
-		ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-		Amount:             cctx.InboundTxParams.Amount,
-		OutboundTxGasLimit: gasLimit,
-		TssPubkey:          cctx.GetCurrentOutTxParam().TssPubkey,
-	}
-	// The original outbound has been finalized, the new outbound is pending
-	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-	cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
-}
-
-// SetOutboundValues sets the required values for the outbound transaction
-// Note: It expects the cctx to already have been created,
-// it updates the cctx based on the MsgVoteOnObservedOutboundTx message which is signed and broadcasted by the observer
-func SetOutboundValues(ctx sdk.Context, cctx *types.CrossChainTx, msg types.MsgVoteOnObservedOutboundTx, ballotStatus observertypes.BallotStatus) error {
-	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
-		if !msg.ValueReceived.Equal(cctx.GetCurrentOutTxParam().Amount) {
-			ctx.Logger().Error(fmt.Sprintf("VoteOnObservedOutboundTx: Mint mismatch: %s value received vs %s cctx amount",
-				msg.ValueReceived,
-				cctx.GetCurrentOutTxParam().Amount))
-			return cosmoserrors.Wrap(sdkerrors.ErrInvalidRequest, fmt.Sprintf("ValueReceived %s does not match sent value %s", msg.ValueReceived, cctx.GetCurrentOutTxParam().Amount))
-		}
-	}
-	// Update CCTX values
-	cctx.GetCurrentOutTxParam().OutboundTxHash = msg.ObservedOutTxHash
-	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = msg.ObservedOutTxGasUsed
-	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasPrice = msg.ObservedOutTxEffectiveGasPrice
-	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = msg.ObservedOutTxEffectiveGasLimit
-	cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
-	cctx.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-
-	return nil
-}
 
 // FundStabilityPool funds the stability pool with the remaining fees of an outbound tx
 // The funds are sent to the gas stability pool associated with the receiver chain
@@ -199,9 +164,9 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
 	case types.CctxStatus_PendingRevert:
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Reverted, "")
+		cctx.SetReverted("Outbound succeeded, revert executed")
 	case types.CctxStatus_PendingOutbound:
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "")
+		cctx.SetOutBoundMined("Outbound succeeded, mined")
 	default:
 		return
 	}
@@ -235,7 +200,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			}
 
 			// create new OutboundTxParams for the revert
-			SetRevertOutboundValues(cctx, gasLimit)
+			cctx.AddRevertOutbound(gasLimit)
 
 			err = k.PayGasAndUpdateCctx(
 				ctx,
@@ -252,10 +217,10 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 				return err
 			}
 			// Not setting the finalization status here, the required changes have been mad while creating the revert tx
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, "Outbound failed, start revert")
+			cctx.SetPendingRevert("Outbound failed, start revert")
 		case types.CctxStatus_PendingRevert:
 			cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "Outbound failed: revert failed; abort TX")
+			cctx.SetAbort("Outbound failed: revert failed; abort TX")
 		}
 	}
 	newStatus := cctx.CctxStatus.Status.String()

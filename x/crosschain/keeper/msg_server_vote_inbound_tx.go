@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	cosmoserrors "cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -90,8 +89,11 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !finalized {
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
-
-	inboundCctx := k.GetInbound(ctx, msg)
+	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
+	if !tssFound {
+		return nil, types.ErrCannotFindTSSKeys
+	}
+	inboundCctx := types.GetInbound(ctx, *msg, tss.TssPubkey)
 	err = inboundCctx.Validate()
 	if err != nil {
 		return nil, err
@@ -102,73 +104,6 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 }
 
 // GetInbound returns a new CCTX from a given inbound message.
-func (k Keeper) GetInbound(ctx sdk.Context, msg *types.MsgVoteOnObservedInboundTx) types.CrossChainTx {
-
-	// get the latest TSS to set the TSS public key in the CCTX
-	tssPub := ""
-	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
-	if tssFound {
-		tssPub = tss.TssPubkey
-	}
-	return CreateNewCCTX(ctx, msg, msg.Digest(), tssPub, types.CctxStatus_PendingInbound, msg.SenderChainId, msg.ReceiverChain)
-}
-
-// CreateNewCCTX creates a new CCTX with the given parameters.
-func CreateNewCCTX(
-	ctx sdk.Context,
-	msg *types.MsgVoteOnObservedInboundTx,
-	index string,
-	tssPubkey string,
-	s types.CctxStatus,
-	senderChainID,
-	receiverChainID int64,
-) types.CrossChainTx {
-	if msg.TxOrigin == "" {
-		msg.TxOrigin = msg.Sender
-	}
-	inboundParams := &types.InboundTxParams{
-		Sender:                          msg.Sender,
-		SenderChainId:                   senderChainID,
-		TxOrigin:                        msg.TxOrigin,
-		Asset:                           msg.Asset,
-		Amount:                          msg.Amount,
-		InboundTxObservedHash:           msg.InTxHash,
-		InboundTxObservedExternalHeight: msg.InBlockHeight,
-		InboundTxFinalizedZetaHeight:    0,
-		InboundTxBallotIndex:            index,
-		CoinType:                        msg.CoinType,
-	}
-
-	outBoundParams := &types.OutboundTxParams{
-		Receiver:                         msg.Receiver,
-		ReceiverChainId:                  receiverChainID,
-		OutboundTxHash:                   "",
-		OutboundTxTssNonce:               0,
-		OutboundTxGasLimit:               msg.GasLimit,
-		OutboundTxGasPrice:               "",
-		OutboundTxBallotIndex:            "",
-		OutboundTxObservedExternalHeight: 0,
-		Amount:                           sdkmath.ZeroUint(),
-		TssPubkey:                        tssPubkey,
-		CoinType:                         msg.CoinType,
-	}
-	status := &types.Status{
-		Status:              s,
-		StatusMessage:       "",
-		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
-		IsAbortRefunded:     false,
-	}
-	newCctx := types.CrossChainTx{
-		Creator:          msg.Creator,
-		Index:            index,
-		ZetaFees:         sdkmath.ZeroUint(),
-		RelayedMessage:   msg.Message,
-		CctxStatus:       status,
-		InboundTxParams:  inboundParams,
-		OutboundTxParams: []*types.OutboundTxParams{outBoundParams},
-	}
-	return newCctx
-}
 
 // ProcessInbound processes the inbound CCTX.
 // It does a conditional dispatch to ProcessZEVMDeposit or ProcessCrosschainMsgPassing based on the receiver chain.
@@ -193,19 +128,19 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 	isContractReverted, err := k.HandleEVMDeposit(tmpCtx, cctx)
 
 	if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+		cctx.SetAbort(err.Error())
 		return
 	} else if err != nil && isContractReverted { // contract call reverted; should refund
 		revertMessage := err.Error()
 		senderChain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
 		if senderChain == nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
+			cctx.SetAbort(fmt.Sprintf("invalid sender chain id %d", cctx.InboundTxParams.SenderChainId))
 			return
 		}
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("can't get revert tx gas limit,%s", err.Error()))
+			cctx.SetAbort(fmt.Sprintf("revert gas limit error: %s", err.Error()))
 			return
 		}
 		if gasLimit == 0 {
@@ -213,14 +148,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
 		}
 
-		// create new OutboundTxParams for the revert
-		revertTxParams := &types.OutboundTxParams{
-			Receiver:           cctx.InboundTxParams.Sender,
-			ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-			Amount:             cctx.InboundTxParams.Amount,
-			OutboundTxGasLimit: gasLimit,
-		}
-		cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
+		cctx.AddRevertOutbound(gasLimit)
 
 		// we create a new cached context, and we don't commit the previous one with EVM deposit
 		tmpCtxRevert, commitRevert := ctx.CacheContext()
@@ -239,16 +167,16 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			return k.UpdateNonce(tmpCtxRevert, senderChain.ChainId, cctx)
 		}()
 		if err != nil {
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))
+			cctx.SetAbort(fmt.Sprintf("deposit revert message: %s err : %s", revertMessage, err.Error()))
 			return
 		}
 		commitRevert()
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
+		cctx.SetPendingRevert(revertMessage)
 		return
 	}
 	// successful HandleEVMDeposit;
 	commit()
-	cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
+	cctx.SetOutBoundMined("Remote omnichain contract call completed")
 	return
 }
 
@@ -275,11 +203,11 @@ func (k Keeper) ProcessCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossCh
 	}()
 	if err != nil {
 		// do not commit anything here as the CCTX should be aborted
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
+		cctx.SetAbort(err.Error())
 		return
 	}
 	commit()
-	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+	cctx.SetPendingOutbound("")
 	return
 }
 
