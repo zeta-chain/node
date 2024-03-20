@@ -69,6 +69,16 @@ func (m CrossChainTx) Validate() error {
 	return nil
 }
 
+/*
+AddRevertOutbound does the following things in one function:
+
+	1. create a new OutboundTxParams for the revert
+
+	2. append the new OutboundTxParams to the current OutboundTxParams
+
+	3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
+*/
+
 func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) {
 	revertTxParams := &OutboundTxParams{
 		Receiver:           m.InboundTxParams.Sender,
@@ -82,9 +92,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) {
 	m.OutboundTxParams = append(m.OutboundTxParams, revertTxParams)
 }
 
-// AddOutbound sets the required values for the outbound transaction
-// Note: It expects the cctx to already have been created,
-// it updates the cctx based on the MsgVoteOnObservedOutboundTx message which is signed and broadcasted by the observer
+// AddOutbound adds a new outbound tx to the CCTX.
 func (m *CrossChainTx) AddOutbound(ctx sdk.Context, msg MsgVoteOnObservedOutboundTx, ballotStatus observertypes.BallotStatus) error {
 	if ballotStatus != observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		if !msg.ValueReceived.Equal(m.GetCurrentOutTxParam().Amount) {
@@ -101,7 +109,6 @@ func (m *CrossChainTx) AddOutbound(ctx sdk.Context, msg MsgVoteOnObservedOutboun
 	m.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = msg.ObservedOutTxEffectiveGasLimit
 	m.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = msg.ObservedOutTxBlockHeight
 	m.CctxStatus.LastUpdateTimestamp = ctx.BlockHeader().Time.Unix()
-
 	return nil
 }
 
@@ -115,38 +122,31 @@ func (m CrossChainTx) SetPendingRevert(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_PendingRevert, message)
 }
 
+// SetPendingOutbound sets the CCTX status to PendingOutbound with the given error message.
 func (m CrossChainTx) SetPendingOutbound(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_PendingOutbound, message)
 }
 
+// SetOutBoundMined sets the CCTX status to OutboundMined with the given error message.
 func (m CrossChainTx) SetOutBoundMined(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_OutboundMined, message)
 }
 
+// SetReverted sets the CCTX status to Reverted with the given error message.
 func (m CrossChainTx) SetReverted(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
 }
 
-func GetInbound(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey string) CrossChainTx {
-	return CreateNewCCTX(ctx, msg, msg.Digest(), tssPubkey, CctxStatus_PendingInbound, msg.SenderChainId, msg.ReceiverChain)
-}
+// InitializeCCTX initializes the CCTX with the given message and tssPubkey
+func InitializeCCTX(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey string) CrossChainTx {
+	index := msg.Digest()
 
-// CreateNewCCTX creates a new CCTX with the given parameters.
-func CreateNewCCTX(
-	ctx sdk.Context,
-	msg MsgVoteOnObservedInboundTx,
-	index string,
-	tssPubkey string,
-	s CctxStatus,
-	senderChainID,
-	receiverChainID int64,
-) CrossChainTx {
 	if msg.TxOrigin == "" {
 		msg.TxOrigin = msg.Sender
 	}
 	inboundParams := &InboundTxParams{
 		Sender:                          msg.Sender,
-		SenderChainId:                   senderChainID,
+		SenderChainId:                   msg.SenderChainId,
 		TxOrigin:                        msg.TxOrigin,
 		Asset:                           msg.Asset,
 		Amount:                          msg.Amount,
@@ -159,7 +159,7 @@ func CreateNewCCTX(
 
 	outBoundParams := &OutboundTxParams{
 		Receiver:                         msg.Receiver,
-		ReceiverChainId:                  receiverChainID,
+		ReceiverChainId:                  msg.ReceiverChain,
 		OutboundTxHash:                   "",
 		OutboundTxTssNonce:               0,
 		OutboundTxGasLimit:               msg.GasLimit,
@@ -171,12 +171,12 @@ func CreateNewCCTX(
 		CoinType:                         msg.CoinType,
 	}
 	status := &Status{
-		Status:              s,
+		Status:              CctxStatus_PendingInbound,
 		StatusMessage:       "",
 		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
 		IsAbortRefunded:     false,
 	}
-	newCctx := CrossChainTx{
+	cctx := CrossChainTx{
 		Creator:          msg.Creator,
 		Index:            index,
 		ZetaFees:         sdkmath.ZeroUint(),
@@ -185,5 +185,5 @@ func CreateNewCCTX(
 		InboundTxParams:  inboundParams,
 		OutboundTxParams: []*OutboundTxParams{outBoundParams},
 	}
-	return newCctx
+	return cctx
 }

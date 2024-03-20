@@ -168,17 +168,9 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		foreignCoin.Asset,
 		event.Raw.Index,
 	)
-	sendHash := msg.Digest()
 
-	cctx := types.CreateNewCCTX(
-		ctx,
-		*msg,
-		sendHash,
-		tss.TssPubkey,
-		types.CctxStatus_PendingOutbound,
-		senderChain.ChainId,
-		receiverChain.ChainId,
-	)
+	// Create a new cctx with status as pending Inbound, this is created directly from the event without waiting for any observer votes
+	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
 
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
@@ -246,18 +238,10 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		"",
 		event.Raw.Index,
 	)
-	sendHash := msg.Digest()
 
-	// Create the CCTX
-	cctx := types.CreateNewCCTX(
-		ctx,
-		*msg,
-		sendHash,
-		tss.TssPubkey,
-		types.CctxStatus_PendingOutbound,
-		senderChain.ChainId,
-		receiverChain.ChainId,
-	)
+	// create a new cctx with status as pending Inbound,
+	// this is created directly from the event without waiting for any observer votes
+	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
 
 	if err := k.PayGasAndUpdateCctx(
 		ctx,

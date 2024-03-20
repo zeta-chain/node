@@ -14,6 +14,58 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+func Test_InitializeCCTX(t *testing.T) {
+	t.Run("should return a cctx with correct values", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		senderChain := common.GoerliChain()
+		sender := sample.EthAddress()
+		receiverChain := common.GoerliChain()
+		receiver := sample.EthAddress()
+		creator := sample.AccAddress()
+		amount := sdkmath.NewUint(42)
+		message := "test"
+		intxBlockHeight := uint64(420)
+		intxHash := sample.Hash()
+		gasLimit := uint64(100)
+		asset := "test-asset"
+		eventIndex := uint64(1)
+		cointType := common.CoinType_ERC20
+		tss := sample.Tss()
+		msg := types.MsgVoteOnObservedInboundTx{
+			Creator:       creator,
+			Sender:        sender.String(),
+			SenderChainId: senderChain.ChainId,
+			Receiver:      receiver.String(),
+			ReceiverChain: receiverChain.ChainId,
+			Amount:        amount,
+			Message:       message,
+			InTxHash:      intxHash.String(),
+			InBlockHeight: intxBlockHeight,
+			GasLimit:      gasLimit,
+			CoinType:      cointType,
+			TxOrigin:      sender.String(),
+			Asset:         asset,
+			EventIndex:    eventIndex,
+		}
+		cctx := types.InitializeCCTX(ctx, msg, tss.TssPubkey)
+		require.Equal(t, receiver.String(), cctx.GetCurrentOutTxParam().Receiver)
+		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutTxParam().ReceiverChainId)
+		require.Equal(t, sender.String(), cctx.GetInboundTxParams().Sender)
+		require.Equal(t, senderChain.ChainId, cctx.GetInboundTxParams().SenderChainId)
+		require.Equal(t, amount, cctx.GetInboundTxParams().Amount)
+		require.Equal(t, message, cctx.RelayedMessage)
+		require.Equal(t, intxHash.String(), cctx.GetInboundTxParams().InboundTxObservedHash)
+		require.Equal(t, intxBlockHeight, cctx.GetInboundTxParams().InboundTxObservedExternalHeight)
+		require.Equal(t, gasLimit, cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
+		require.Equal(t, asset, cctx.GetInboundTxParams().Asset)
+		require.Equal(t, cointType, cctx.InboundTxParams.CoinType)
+		require.Equal(t, uint64(0), cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
+		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutTxParam().Amount)
+		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
+		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
+	})
+}
+
 func TestCrossChainTx_Validate(t *testing.T) {
 	cctx := sample.CrossChainTx(t, "foo")
 	cctx.InboundTxParams = nil
@@ -85,59 +137,7 @@ func TestCrossChainTx_OriginalDestinationChainID(t *testing.T) {
 	require.Equal(t, cctx.OutboundTxParams[0].ReceiverChainId, cctx.OriginalDestinationChainID())
 }
 
-func Test_GetInbound(t *testing.T) {
-	t.Run("should return a cctx with correct values", func(t *testing.T) {
-		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := common.GoerliChain()
-		sender := sample.EthAddress()
-		receiverChain := common.GoerliChain()
-		receiver := sample.EthAddress()
-		creator := sample.AccAddress()
-		amount := sdkmath.NewUint(42)
-		message := "test"
-		intxBlockHeight := uint64(420)
-		intxHash := sample.Hash()
-		gasLimit := uint64(100)
-		asset := "test-asset"
-		eventIndex := uint64(1)
-		cointType := common.CoinType_ERC20
-		tss := sample.Tss()
-		msg := types.MsgVoteOnObservedInboundTx{
-			Creator:       creator,
-			Sender:        sender.String(),
-			SenderChainId: senderChain.ChainId,
-			Receiver:      receiver.String(),
-			ReceiverChain: receiverChain.ChainId,
-			Amount:        amount,
-			Message:       message,
-			InTxHash:      intxHash.String(),
-			InBlockHeight: intxBlockHeight,
-			GasLimit:      gasLimit,
-			CoinType:      cointType,
-			TxOrigin:      sender.String(),
-			Asset:         asset,
-			EventIndex:    eventIndex,
-		}
-		cctx := types.GetInbound(ctx, msg, tss.TssPubkey)
-		require.Equal(t, receiver.String(), cctx.GetCurrentOutTxParam().Receiver)
-		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutTxParam().ReceiverChainId)
-		require.Equal(t, sender.String(), cctx.GetInboundTxParams().Sender)
-		require.Equal(t, senderChain.ChainId, cctx.GetInboundTxParams().SenderChainId)
-		require.Equal(t, amount, cctx.GetInboundTxParams().Amount)
-		require.Equal(t, message, cctx.RelayedMessage)
-		require.Equal(t, intxHash.String(), cctx.GetInboundTxParams().InboundTxObservedHash)
-		require.Equal(t, intxBlockHeight, cctx.GetInboundTxParams().InboundTxObservedExternalHeight)
-		require.Equal(t, gasLimit, cctx.GetCurrentOutTxParam().OutboundTxGasLimit)
-		require.Equal(t, asset, cctx.GetInboundTxParams().Asset)
-		require.Equal(t, cointType, cctx.InboundTxParams.CoinType)
-		require.Equal(t, uint64(0), cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
-		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutTxParam().Amount)
-		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
-		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
-	})
-}
-
-func TestC_GetOutbound(t *testing.T) {
+func TestCrossChainTx_AddOutbound(t *testing.T) {
 	t.Run("successfully get outbound tx", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")

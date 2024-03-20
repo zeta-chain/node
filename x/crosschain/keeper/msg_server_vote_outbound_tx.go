@@ -106,11 +106,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
-// AddRevertOutbound does the following things in one function:
-// 1. create a new OutboundTxParams for the revert
-// 2. append the new OutboundTxParams to the current OutboundTxParams
-// 3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
-
 // FundStabilityPool funds the stability pool with the remaining fees of an outbound tx
 // The funds are sent to the gas stability pool associated with the receiver chain
 func (k Keeper) FundStabilityPool(ctx sdk.Context, cctx *types.CrossChainTx) {
@@ -156,10 +151,17 @@ func percentOf(n *big.Int, percent int64) *big.Int {
 	return n
 }
 
-// ProcessSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
-// 1. Change the status of the CCTX from PendingRevert to Reverted or from PendingOutbound to OutboundMined
-// 2. Set the finalization status of the current outbound tx to executed
-// 3. Emit an event for the successful outbound transaction
+/* ProcessSuccessfulOutbound processes a successful outbound transaction. It does the following things in one function:
+
+	1. Change the status of the CCTX from
+	 - PendingRevert to Reverted
+     - PendingOutbound to OutboundMined
+
+	2. Set the finalization status of the current outbound tx to executed
+
+	3. Emit an event for the successful outbound transaction
+*/
+
 func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) {
 	oldStatus := cctx.CctxStatus.Status
 	switch oldStatus {
@@ -175,11 +177,19 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, *cctx)
 }
 
-// ProcessFailedOutbound processes a failed outbound transaction. It does the following things in one function:
-// 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
-// 2. For other CCTX, it creates a revert tx if the outbound tx is pending. If the status is pending revert, it aborts the CCTX
-// 3. Emit an event for the failed outbound transaction
-// 4. Set the finalization status of the current outbound tx to executed. If a revert tx is is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
+/*
+ProcessFailedOutbound processes a failed outbound transaction. It does the following things in one function:
+
+ 1. For Admin Tx or a withdrawal from Zeta chain, it aborts the CCTX
+
+ 2. For other CCTX
+    - If the CCTX is in PendingOutbound, it creates a revert tx and sets the finalization status of the current outbound tx to executed
+    - If the CCTX is in PendingRevert, it sets the Status to Aborted
+
+ 3. Emit an event for the failed outbound transaction
+
+ 4. Set the finalization status of the current outbound tx to executed. If a revert tx is is created, the finalization status is not set, it would get set when the revert is processed via a subsequent transaction
+*/
 func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) error {
 	oldStatus := cctx.CctxStatus.Status
 	if cctx.InboundTxParams.CoinType == common.CoinType_Cmd || common.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
@@ -251,10 +261,13 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 	return nil
 }
 
-// SaveFailedOutBound saves a failed outbound transaction.
-// It does the following things in one function:
-// 1. Change the status of the CCTX to Aborted
-// 2. Save the outbound
+/*
+SaveFailedOutBound saves a failed outbound transaction.It does the following things in one function:
+
+ 1. Change the status of the CCTX to Aborted
+
+ 2. Save the outbound
+*/
 func (k Keeper) SaveFailedOutBound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
 	cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, errMessage)
 	ctx.Logger().Error(errMessage)
@@ -267,11 +280,17 @@ func (k Keeper) SaveSuccessfulOutBound(ctx sdk.Context, cctx *types.CrossChainTx
 	k.SaveOutbound(ctx, cctx, ballotIndex)
 }
 
-// SaveOutbound saves the outbound transaction.It does the following things in one function:
-// 1. Set the ballot index for the outbound vote to the cctx
-// 2. Remove the nonce from the pending nonces
-// 3. Remove the outbound tx tracker
-// 4. Set the cctx and nonce to cctx and inTxHash to cctx
+/*
+SaveOutbound saves the outbound transaction.It does the following things in one function:
+
+ 1. Set the ballot index for the outbound vote to the cctx
+
+ 2. Remove the nonce from the pending nonces
+
+ 3. Remove the outbound tx tracker
+
+ 4. Set the cctx and nonce to cctx and inTxHash to cctx
+*/
 func (k Keeper) SaveOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	receiverChain := cctx.GetCurrentOutTxParam().ReceiverChainId
 	tssPubkey := cctx.GetCurrentOutTxParam().TssPubkey

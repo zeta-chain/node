@@ -93,20 +93,27 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
 	}
-	inboundCctx := types.GetInbound(ctx, *msg, tss.TssPubkey)
-	err = inboundCctx.Validate()
+	// 1 .create a new CCTX from the inbound message. The status of the new CCTX is set to PendingInbound.
+	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
+
+	// 2. Validate the CCTX
+	err = cctx.Validate()
 	if err != nil {
 		return nil, err
 	}
-	k.ProcessInbound(ctx, &inboundCctx)
-	k.SaveInbound(ctx, &inboundCctx, msg.EventIndex)
+
+	// 3. Process the inbound CCTX, the process function manages the state commit and cctx status change.If the process fails the changes to the evm state are rolled back.
+	k.ProcessInbound(ctx, &cctx)
+	// 4. Save the inbound CCTX to the store.This is called irrespective of the status of the CCTX or the outcome of the process function.
+	k.SaveInbound(ctx, &cctx, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
 
-// GetInbound returns a new CCTX from a given inbound message.
+// InitializeCCTX returns a new CCTX from a given inbound message.
 
 // ProcessInbound processes the inbound CCTX.
 // It does a conditional dispatch to ProcessZEVMDeposit or ProcessCrosschainMsgPassing based on the receiver chain.
+// The internal functions handle the state changes and error handling.
 func (k Keeper) ProcessInbound(ctx sdk.Context, cctx *types.CrossChainTx) {
 	if common.IsZetaChain(cctx.GetCurrentOutTxParam().ReceiverChainId) {
 		k.ProcessZEVMDeposit(ctx, cctx)
@@ -115,14 +122,17 @@ func (k Keeper) ProcessInbound(ctx sdk.Context, cctx *types.CrossChainTx) {
 	}
 }
 
-// ProcessZEVMDeposit processes the EVM deposit CCTX. A deposit is a cctx which has Zetachain as the receiver chain.
-// If the deposit is successful, the CCTX status is changed to OutboundMined.
-// If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
-// If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
-// If the creation of revert tx also fails it changes the status to Aborted.
-// Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
-// We do not return an error from this function , as all changes need to be persisted to the state.
-// Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
+/*
+ProcessZEVMDeposit processes the EVM deposit CCTX. A deposit is a cctx which has Zetachain as the receiver chain.It trasnsitions state according to the following rules:
+  - If the deposit is successful, the CCTX status is changed to OutboundMined.
+  - If the deposit returns an internal error i.e if HandleEVMDeposit() returns an error, but isContractReverted is false, the CCTX status is changed to Aborted.
+  - If the deposit is reverted, the function tries to create a revert cctx with status PendingRevert.
+  - If the creation of revert tx also fails it changes the status to Aborted.
+
+Note : Aborted CCTXs are not refunded in this function. The refund is done using a separate refunding mechanism.
+We do not return an error from this function , as all changes need to be persisted to the state.
+Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to OutboundMined.
+*/
 func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 	tmpCtx, commit := ctx.CacheContext()
 	isContractReverted, err := k.HandleEVMDeposit(tmpCtx, cctx)
@@ -180,11 +190,13 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 	return
 }
 
-// ProcessCrosschainMsgPassing processes the CCTX for crosschain message passing. A crosschain message passing is a cctx which has a non-Zetachain as the receiver chain.
-// If the crosschain message passing is successful, the CCTX status is changed to PendingOutbound.
-// If the crosschain message passing returns an error, the CCTX status is changed to Aborted.
-// We do not return an error from this function , as all changes need to be persisted to the state.
-// Instead we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to PendingOutbound.
+/*
+ProcessCrosschainMsgPassing processes the CCTX for crosschain message passing. A crosschain message passing is a cctx which has a non-Zetachain as the receiver chain.It trasnsitions state according to the following rules:
+  - If the crosschain message passing is successful, the CCTX status is changed to PendingOutbound.
+  - If the crosschain message passing returns an error, the CCTX status is changed to Aborted.
+    We do not return an error from this function, as all changes need to be persisted to the state.
+    Instead, we use a temporary context to make changes and then commit the context on for the happy path ,i.e cctx is set to PendingOutbound.
+*/
 func (k Keeper) ProcessCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossChainTx) {
 	tmpCtx, commit := ctx.CacheContext()
 	outboundReceiverChainID := cctx.GetCurrentOutTxParam().ReceiverChainId
@@ -210,6 +222,14 @@ func (k Keeper) ProcessCrosschainMsgPassing(ctx sdk.Context, cctx *types.CrossCh
 	cctx.SetPendingOutbound("")
 	return
 }
+
+/* SaveInbound saves the inbound CCTX to the store.It does the following:
+    - Emits an event for the finalized inbound CCTX.
+	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
+	- Updates the CCTX with the finalized height and finalization status.
+	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via InTx tracker suggestions
+	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
+*/
 
 func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
 	EmitEventInboundFinalized(ctx, cctx)

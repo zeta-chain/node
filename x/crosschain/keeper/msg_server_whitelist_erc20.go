@@ -111,7 +111,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	index := hash.Hex()
 
 	// create a cmd cctx to whitelist the erc20 on the external chain
-	// TODO : refactor this to use the `GetInbound` function instead.
+	// TODO : refactor this to use the `InitializeCCTX` function instead.
 	//https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
