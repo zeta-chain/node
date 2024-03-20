@@ -331,7 +331,7 @@ func (ob *BTCChainClient) WatchInTx() {
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.observeInTx()
+			err := ob.ObserveInTx()
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
 			}
@@ -378,7 +378,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	return err
 }
 
-func (ob *BTCChainClient) observeInTx() error {
+func (ob *BTCChainClient) ObserveInTx() error {
 	// make sure inbound TXS / Send is enabled by the protocol
 	flags := ob.coreContext.GetCrossChainFlags()
 	if !flags.IsInboundEnabled {

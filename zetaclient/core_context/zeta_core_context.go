@@ -40,6 +40,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 		chainsEnabled:      []common.Chain{},
 		evmChainParams:     evmChainParams,
 		bitcoinChainParams: bitcoinChainParams,
+		crossChainFlags:    observertypes.CrosschainFlags{},
 	}
 }
 

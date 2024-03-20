@@ -16,17 +16,45 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 )
 
 func MockBTCClientMainnet() *BTCChainClient {
+	cfg := config.NewConfig()
+	coreContext := corecontext.NewZetaCoreContext(cfg)
+
 	return &BTCChainClient{
-		chain:      common.BtcMainnetChain(),
-		zetaClient: stub.NewMockZetaCoreBridge(),
-		Tss:        stub.NewTSSMainnet(),
+		chain:       common.BtcMainnetChain(),
+		zetaClient:  stub.NewMockZetaCoreBridge(),
+		Tss:         stub.NewTSSMainnet(),
+		coreContext: coreContext,
 	}
+}
+
+func TestNewBitcoinClient(t *testing.T) {
+	t.Run("should return error because zetacore doesn't update core context", func(t *testing.T) {
+		cfg := config.NewConfig()
+		coreContext := corecontext.NewZetaCoreContext(cfg)
+		appContext := appcontext.NewAppContext(coreContext, cfg)
+		chain := common.BtcMainnetChain()
+		bridge := stub.NewMockZetaCoreBridge()
+		tss := stub.NewMockTSS(sample.EthAddress().String(), "")
+		loggers := clientcommon.ClientLogger{}
+		btcCfg := cfg.BitcoinConfig
+		ts := metrics.NewTelemetryServer()
+
+		client, err := NewBitcoinClient(appContext, chain, bridge, tss, tempSQLiteDbPath, loggers, btcCfg, ts)
+		require.ErrorContains(t, err, "btc chains params not initialized")
+		require.Nil(t, client)
+	})
 }
 
 func TestConfirmationThreshold(t *testing.T) {
@@ -314,5 +342,14 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
 		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
+	})
+}
+
+func TestBTCChainClient_ObserveInTx(t *testing.T) {
+	t.Run("should return error", func(t *testing.T) {
+		// create mainnet mock client
+		btcClient := MockBTCClientMainnet()
+		err := btcClient.ObserveInTx()
+		require.ErrorContains(t, err, "inbound TXS / Send has been disabled by the protocol")
 	})
 }
