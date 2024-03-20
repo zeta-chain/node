@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/common"
@@ -9,10 +10,12 @@ import (
 )
 
 // ResetChainNonces handles resetting chain nonces
-// Authorized: admin policy group 2 (admin update)
+// Authorized: policy group admin
 func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetChainNonces) (*types.MsgResetChainNoncesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Creator != k.GetParams(ctx).GetAdminPolicyAccount(types.Policy_Type_group2) {
+
+	// check permission
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 		return &types.MsgResetChainNoncesResponse{}, types.ErrNotAuthorizedPolicy
 	}
 

@@ -94,6 +94,17 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 	newRunner.ETHZRC20 = ethZRC20
 
+	// set the chain nonces for the new chain
+	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgResetChainNonces(
+		adminAddr,
+		chainParams.ChainId,
+		0,
+		0,
+	))
+	if err != nil {
+		panic(err)
+	}
+
 	// restart ZetaClient to pick up the new chain
 	r.Logger.Print("🔄 restarting ZetaClient to pick up the new chain")
 	if err := restartZetaClient(); err != nil {
@@ -112,11 +123,14 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	txEtherDeposit := newRunner.DepositEther(false)
 	//txERC20Deposit := newRunner.DepositERC20()
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
-	// withdraw Zeta, Ethers and ERC20 to the new chain
 
-	//TestZetaWithdraw(r, []string{"1000000000000000000"})
+	// perform withdrawals on the new chain
+	TestZetaWithdraw(r, []string{"1000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 	//TestERC20Withdraw(r, []string{"1000000000000000000"})
+
+	// finally try to deposit Zeta back
+	TestZetaDeposit(newRunner, []string{"100000000000000000"})
 
 	// stop mining
 	stopMining()
@@ -143,7 +157,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
-		runner.NewLogger(false, color.FgHiYellow, "admin-evm2"),
+		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
