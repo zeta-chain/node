@@ -1,6 +1,8 @@
 package runner
 
 import (
+	"github.com/ethereum/go-ethereum/rpc"
+	"log"
 	"math/big"
 	"time"
 
@@ -254,4 +256,37 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		panic("txProof invalid") // FIXME: don't do this in production
 	}
 	runner.Logger.Info("OK: txProof verified")
+}
+
+// AnvilMineBlocks mines blocks on Anvil localnet
+// the block time is provided in seconds
+// the method returns a function to stop the mining
+func (runner *E2ERunner) AnvilMineBlocks(url string, blockTime int) (func(), error) {
+	stop := make(chan struct{})
+
+	client, err := rpc.Dial(url)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	go func() {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				time.Sleep(time.Duration(blockTime) * time.Second)
+
+				var result interface{}
+				err = client.CallContext(runner.Ctx, &result, "evm_mine")
+				if err != nil {
+					log.Fatalf("Failed to mine a new block: %v", err)
+				}
+			}
+		}
+	}()
+	return func() {
+		close(stop)
+	}, nil
 }

@@ -103,6 +103,11 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// wait 10 set for the chain to start
 	time.Sleep(10 * time.Second)
 
+	// test cross-chain functionalities on the new network
+	// we use a Go routine to manually mine blocks because Anvil network only mine blocks on tx by default
+	// we need automatic block mining to get the necessary confirmations for the cross-chain functionalities
+	stopMining, err := newRunner.AnvilMineBlocks(EVM2RPCURL, 3)
+
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
 	//txERC20Deposit := newRunner.DepositERC20()
@@ -112,6 +117,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	//TestZetaWithdraw(r, []string{"1000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
 	//TestERC20Withdraw(r, []string{"1000000000000000000"})
+
+	// stop mining
+	stopMining()
 }
 
 // configureEVM2 takes a runner and configures it to use the additional EVM localnet
@@ -135,7 +143,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
-		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
+		runner.NewLogger(false, color.FgHiYellow, "admin-evm2"),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
