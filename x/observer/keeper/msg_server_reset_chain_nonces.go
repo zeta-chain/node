@@ -30,7 +30,8 @@ func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetCh
 	chainNonce := types.ChainNonces{
 		Index:   chain.ChainName.String(),
 		ChainId: chain.ChainId,
-		Nonce:   msg.ChainNonceHigh,
+		// #nosec G701 always positive
+		Nonce: uint64(msg.ChainNonceHigh),
 		// #nosec G701 always positive
 		FinalizedHeight: uint64(ctx.BlockHeight()),
 	}
@@ -38,10 +39,8 @@ func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetCh
 
 	// set pending nonces
 	p := types.PendingNonces{
-		// #nosec G701 always in the range
-		NonceLow: int64(msg.ChainNonceLow),
-		// #nosec G701 always in the range
-		NonceHigh: int64(msg.ChainNonceHigh),
+		NonceLow:  msg.ChainNonceLow,
+		NonceHigh: msg.ChainNonceHigh,
 		ChainId:   chain.ChainId,
 		Tss:       tss.TssPubkey,
 	}

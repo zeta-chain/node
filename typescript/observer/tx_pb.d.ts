@@ -465,12 +465,12 @@ export declare class MsgResetChainNonces extends Message<MsgResetChainNonces> {
   chainId: bigint;
 
   /**
-   * @generated from field: uint64 chain_nonce_low = 3;
+   * @generated from field: int64 chain_nonce_low = 3;
    */
   chainNonceLow: bigint;
 
   /**
-   * @generated from field: uint64 chain_nonce_high = 4;
+   * @generated from field: int64 chain_nonce_high = 4;
    */
   chainNonceHigh: bigint;
 
