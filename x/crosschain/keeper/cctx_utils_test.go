@@ -19,7 +19,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 	t.Run("should return 0 if no inbound tx params", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{})
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{})
 		require.NoError(t, err)
 		require.Equal(t, uint64(0), gasLimit)
 	})
@@ -27,7 +27,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 	t.Run("should return 0 if coin type is not gas or erc20", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: common.CoinType_Zeta,
 			},
@@ -47,7 +47,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, gas, big.NewInt(42))
 		require.NoError(t, err)
 
-		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: chainID,
@@ -78,7 +78,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		_, err := zk.FungibleKeeper.UpdateZRC20GasLimit(ctx, zrc20Addr, big.NewInt(42))
 		require.NoError(t, err)
 
-		gasLimit, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: chainID,
@@ -92,7 +92,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 	t.Run("should fail if no gas coin found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: 999999,
@@ -114,7 +114,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		})
 
 		// no contract deployed therefore will fail
-		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: chainID,
@@ -126,7 +126,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 	t.Run("should fail if no asset found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
-		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: 999999,
@@ -150,7 +150,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		})
 
 		// no contract deployed therefore will fail
-		_, err := k.GetRevertGasLimit(ctx, &types.CrossChainTx{
+		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
 				SenderChainId: chainID,
 				Asset:         asset,

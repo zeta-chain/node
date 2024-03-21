@@ -59,10 +59,10 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 
 }
 
-func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctx types.CrossChainTx) {
+func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundSuccess{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:     cctx.Index,
+		CctxIndex:     cctxIndex,
 		ValueReceived: valueReceived,
 		OldStatus:     oldStatus,
 		NewStatus:     newStatus,
@@ -73,10 +73,10 @@ func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string
 
 }
 
-func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctx types.CrossChainTx) {
+func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundFailure{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:     cctx.Index,
+		CctxIndex:     cctxIndex,
 		ValueReceived: valueReceived,
 		OldStatus:     oldStatus,
 		NewStatus:     newStatus,

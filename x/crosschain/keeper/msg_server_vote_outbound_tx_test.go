@@ -146,7 +146,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Successfully mock GetOutBound
 		keepertest.MockGetOutBound(observerMock, ctx)
 
-		// Successfully mock SaveSuccessfulOutBound
+		// Successfully mock SaveSuccessfulOutbound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -324,7 +324,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 		// Fail ProcessOutbound so that changes are not committed to the state
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, mock.Anything, mock.Anything).Return(fungibletypes.ForeignCoins{}, false)
 
-		//Successfully mock SaveFailedOutBound
+		//Successfully mock SaveFailedOutbound
 		keepertest.MockSaveOutBound(observerMock, ctx, cctx, tss)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -703,7 +703,7 @@ func TestKeeper_SaveFailedOutBound(t *testing.T) {
 			HashList: nil,
 		})
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveFailedOutBound(ctx, cctx, sample.String(), sample.ZetaIndex(t))
+		k.SaveFailedOutbound(ctx, cctx, sample.String(), sample.ZetaIndex(t))
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
 		_, found := k.GetOutTxTracker(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 		require.False(t, found)
@@ -721,7 +721,7 @@ func TestKeeper_SaveSuccessfulOutBound(t *testing.T) {
 			HashList: nil,
 		})
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		k.SaveSuccessfulOutBound(ctx, cctx, sample.String())
+		k.SaveSuccessfulOutbound(ctx, cctx, sample.String())
 		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxBallotIndex, sample.String())
 		_, found := k.GetOutTxTracker(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 		require.False(t, found)

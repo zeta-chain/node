@@ -54,7 +54,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 // GetRevertGasLimit returns the gas limit for the revert transaction in a CCTX
 // It returns 0 if there is no error but the gas limit can't be determined from the CCTX data
-func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx *types.CrossChainTx) (uint64, error) {
+func (k Keeper) GetRevertGasLimit(ctx sdk.Context, cctx types.CrossChainTx) (uint64, error) {
 	if cctx.InboundTxParams == nil {
 		return 0, nil
 	}

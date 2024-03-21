@@ -170,7 +170,10 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	)
 
 	// Create a new cctx with status as pending Inbound, this is created directly from the event without waiting for any observer votes
-	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	if err != nil {
+		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to initialize cctx: %s", err.Error())
+	}
 
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
@@ -241,7 +244,10 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 
 	// create a new cctx with status as pending Inbound,
 	// this is created directly from the event without waiting for any observer votes
-	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	if err != nil {
+		return fmt.Errorf("ProcessZetaSentEvent: failed to initialize cctx: %s", err.Error())
+	}
 
 	if err := k.PayGasAndUpdateCctx(
 		ctx,

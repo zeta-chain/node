@@ -35,8 +35,7 @@ func (m CrossChainTx) OriginalDestinationChainID() int64 {
 	return m.OutboundTxParams[0].ReceiverChainId
 }
 
-// GetAllAuthzZetaclientTxTypes returns all the authz types for zetaclient
-
+// Validate checks if the CCTX is valid.
 func (m CrossChainTx) Validate() error {
 	if m.InboundTxParams == nil {
 		return fmt.Errorf("inbound tx params cannot be nil")
@@ -137,8 +136,8 @@ func (m CrossChainTx) SetReverted(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
 }
 
-// InitializeCCTX initializes the CCTX with the given message and tssPubkey
-func InitializeCCTX(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey string) CrossChainTx {
+// NewCCTX initializes the CCTX with the given message and tssPubkey
+func NewCCTX(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey string) (CrossChainTx, error) {
 	index := msg.Digest()
 
 	if msg.TxOrigin == "" {
@@ -185,5 +184,9 @@ func InitializeCCTX(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey s
 		InboundTxParams:  inboundParams,
 		OutboundTxParams: []*OutboundTxParams{outBoundParams},
 	}
-	return cctx
+	err := cctx.Validate()
+	if err != nil {
+		return CrossChainTx{}, err
+	}
+	return cctx, nil
 }

@@ -47,7 +47,8 @@ func Test_InitializeCCTX(t *testing.T) {
 			Asset:         asset,
 			EventIndex:    eventIndex,
 		}
-		cctx := types.InitializeCCTX(ctx, msg, tss.TssPubkey)
+		cctx, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
+		require.NoError(t, err)
 		require.Equal(t, receiver.String(), cctx.GetCurrentOutTxParam().Receiver)
 		require.Equal(t, receiverChain.ChainId, cctx.GetCurrentOutTxParam().ReceiverChainId)
 		require.Equal(t, sender.String(), cctx.GetInboundTxParams().Sender)
@@ -63,6 +64,41 @@ func Test_InitializeCCTX(t *testing.T) {
 		require.Equal(t, sdkmath.ZeroUint(), cctx.GetCurrentOutTxParam().Amount)
 		require.Equal(t, types.CctxStatus_PendingInbound, cctx.CctxStatus.Status)
 		require.Equal(t, false, cctx.CctxStatus.IsAbortRefunded)
+	})
+	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
+		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		senderChain := common.GoerliChain()
+		sender := sample.EthAddress()
+		receiverChain := common.GoerliChain()
+		receiver := sample.EthAddress()
+		creator := sample.AccAddress()
+		amount := sdkmath.NewUint(42)
+		message := "test"
+		intxBlockHeight := uint64(420)
+		intxHash := sample.Hash()
+		gasLimit := uint64(100)
+		asset := "test-asset"
+		eventIndex := uint64(1)
+		cointType := common.CoinType_ERC20
+		tss := sample.Tss()
+		msg := types.MsgVoteOnObservedInboundTx{
+			Creator:       creator,
+			Sender:        "invalid",
+			SenderChainId: senderChain.ChainId,
+			Receiver:      receiver.String(),
+			ReceiverChain: receiverChain.ChainId,
+			Amount:        amount,
+			Message:       message,
+			InTxHash:      intxHash.String(),
+			InBlockHeight: intxBlockHeight,
+			GasLimit:      gasLimit,
+			CoinType:      cointType,
+			TxOrigin:      sender.String(),
+			Asset:         asset,
+			EventIndex:    eventIndex,
+		}
+		_, err := types.NewCCTX(ctx, msg, tss.TssPubkey)
+		require.ErrorContains(t, err, "invalid address")
 	})
 }
 

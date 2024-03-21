@@ -95,14 +95,14 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 
 	err = k.ProcessOutbound(ctx, &cctx, ballot.BallotStatus, msg.ValueReceived.String())
 	if err != nil {
-		k.SaveFailedOutBound(ctx, &cctx, err.Error(), ballotIndex)
+		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
 	err = cctx.Validate()
 	if err != nil {
 		return nil, err
 	}
-	k.SaveSuccessfulOutBound(ctx, &cctx, ballotIndex)
+	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
 
@@ -174,7 +174,7 @@ func (k Keeper) ProcessSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChai
 	}
 	cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 	newStatus := cctx.CctxStatus.Status.String()
-	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, *cctx)
+	EmitOutboundSuccess(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
 }
 
 /*
@@ -200,7 +200,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		switch oldStatus {
 		case types.CctxStatus_PendingOutbound:
 
-			gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
+			gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
 			if err != nil {
 				return cosmoserrors.Wrap(err, "GetRevertGasLimit")
 			}
@@ -234,7 +234,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 		}
 	}
 	newStatus := cctx.CctxStatus.Status.String()
-	EmitOutboundFailure(ctx, valueReceived, oldStatus.String(), newStatus, *cctx)
+	EmitOutboundFailure(ctx, valueReceived, oldStatus.String(), newStatus, cctx.Index)
 	return nil
 }
 
@@ -262,21 +262,21 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 }
 
 /*
-SaveFailedOutBound saves a failed outbound transaction.It does the following things in one function:
+SaveFailedOutbound saves a failed outbound transaction.It does the following things in one function:
 
  1. Change the status of the CCTX to Aborted
 
  2. Save the outbound
 */
-func (k Keeper) SaveFailedOutBound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
+func (k Keeper) SaveFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, errMessage string, ballotIndex string) {
 	cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, errMessage)
 	ctx.Logger().Error(errMessage)
 
 	k.SaveOutbound(ctx, cctx, ballotIndex)
 }
 
-// SaveSuccessfulOutBound saves a successful outbound transaction.
-func (k Keeper) SaveSuccessfulOutBound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
+// SaveSuccessfulOutbound saves a successful outbound transaction.
+func (k Keeper) SaveSuccessfulOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotIndex string) {
 	k.SaveOutbound(ctx, cctx, ballotIndex)
 }
 

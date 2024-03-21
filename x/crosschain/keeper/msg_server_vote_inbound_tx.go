@@ -93,23 +93,17 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
 	}
-	// 1 .create a new CCTX from the inbound message. The status of the new CCTX is set to PendingInbound.
-	cctx := types.InitializeCCTX(ctx, *msg, tss.TssPubkey)
-
-	// 2. Validate the CCTX
-	err = cctx.Validate()
+	// create a new CCTX from the inbound message. The status of the new CCTX is set to PendingInbound.
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
 	if err != nil {
 		return nil, err
 	}
-
-	// 3. Process the inbound CCTX, the process function manages the state commit and cctx status change.If the process fails the changes to the evm state are rolled back.
+	// Process the inbound CCTX, the process function manages the state commit and cctx status change.If the process fails the changes to the evm state are rolled back.
 	k.ProcessInbound(ctx, &cctx)
-	// 4. Save the inbound CCTX to the store.This is called irrespective of the status of the CCTX or the outcome of the process function.
+	// Save the inbound CCTX to the store.This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveInbound(ctx, &cctx, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }
-
-// InitializeCCTX returns a new CCTX from a given inbound message.
 
 // ProcessInbound processes the inbound CCTX.
 // It does a conditional dispatch to ProcessZEVMDeposit or ProcessCrosschainMsgPassing based on the receiver chain.
@@ -148,7 +142,7 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			return
 		}
 
-		gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
+		gasLimit, err := k.GetRevertGasLimit(ctx, *cctx)
 		if err != nil {
 			cctx.SetAbort(fmt.Sprintf("revert gas limit error: %s", err.Error()))
 			return

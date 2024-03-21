@@ -8,10 +8,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// GetAllAuthzZetaclientTxTypes returns all the authz types for zetaclient
 func GetAllAuthzZetaclientTxTypes() []string {
 	return []string{
 		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
@@ -24,12 +26,15 @@ func GetAllAuthzZetaclientTxTypes() []string {
 	}
 }
 
+// ValidateZetaIndex validates the zeta index
 func ValidateZetaIndex(index string) error {
-	if len(index) != 66 {
-		return fmt.Errorf("invalid index hash %s", index)
+	if len(index) != ZetaIndexLength {
+		return errors.Wrap(ErrInvalidIndexValue, fmt.Sprintf("invalid index length %d", len(index)))
 	}
 	return nil
 }
+
+// ValidateHashForChain validates the hash for the chain
 func ValidateHashForChain(hash string, chainID int64) error {
 	if common.IsEthereumChain(chainID) || common.IsZetaChain(chainID) {
 		_, err := hexutil.Decode(hash)
@@ -51,6 +56,7 @@ func ValidateHashForChain(hash string, chainID int64) error {
 	return fmt.Errorf("invalid chain id %d", chainID)
 }
 
+// ValidateAddressForChain validates the address for the chain
 func ValidateAddressForChain(address string, chainID int64) error {
 	// we do not validate the address for zeta chain as the address field can be btc or eth address
 	if common.IsZetaChain(chainID) {
