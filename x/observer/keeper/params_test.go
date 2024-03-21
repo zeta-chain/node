@@ -18,7 +18,7 @@ func TestGetParams(t *testing.T) {
 
 	k.SetParams(ctx, params)
 
-	require.EqualValues(t, params, k.GetParams(ctx))
+	require.EqualValues(t, params, k.GetParamsIfExists(ctx))
 }
 
 func TestGenerateAddress(t *testing.T) {

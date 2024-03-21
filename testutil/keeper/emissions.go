@@ -15,18 +15,15 @@ import (
 )
 
 type EmissionMockOptions struct {
-	UseBankMock     bool
-	UseStakingMock  bool
-	UseObserverMock bool
-	UseAccountMock  bool
+	UseBankMock       bool
+	UseStakingMock    bool
+	UseObserverMock   bool
+	UseAccountMock    bool
+	UseParamStoreMock bool
 }
 
 func EmissionsKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, SDKKeepers, ZetaKeepers) {
-	return EmissionKeeperWithMockOptions(t, EmissionMockOptions{
-		UseBankMock:     false,
-		UseStakingMock:  false,
-		UseObserverMock: false,
-	})
+	return EmissionKeeperWithMockOptions(t, EmissionMockOptions{})
 }
 func EmissionKeeperWithMockOptions(
 	t testing.TB,
@@ -91,18 +88,31 @@ func EmissionKeeperWithMockOptions(
 		observerKeeper = emissionsmocks.NewEmissionObserverKeeper(t)
 	}
 
+	var paramStore types.ParamStore
+	if mockOptions.UseParamStoreMock {
+		mock := emissionsmocks.NewEmissionParamStore(t)
+		// mock this method for the keeper constructor
+		mock.On("HasKeyTable").Maybe().Return(true)
+		paramStore = mock
+	} else {
+		paramStore = sdkKeepers.ParamsKeeper.Subspace(types.ModuleName)
+	}
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
-		sdkKeepers.ParamsKeeper.Subspace(types.ModuleName),
+		paramStore,
 		authtypes.FeeCollectorName,
 		bankKeeper,
 		stakingKeeper,
 		observerKeeper,
 		authKeeper,
 	)
-	k.SetParams(ctx, types.DefaultParams())
+
+	if !mockOptions.UseParamStoreMock {
+		k.SetParams(ctx, types.DefaultParams())
+	}
 
 	return k, ctx, sdkKeepers, zetaKeepers
 }
@@ -111,4 +121,10 @@ func GetEmissionsBankMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.E
 	cbk, ok := keeper.GetBankKeeper().(*emissionsmocks.EmissionBankKeeper)
 	require.True(t, ok)
 	return cbk
+}
+
+func GetEmissionsParamStoreMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionParamStore {
+	m, ok := keeper.GetParamStore().(*emissionsmocks.EmissionParamStore)
+	require.True(t, ok)
+	return m
 }

@@ -181,7 +181,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 	})
 	t.Run("should not act if receiver is not TSS", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
-		tx.To = testutils.OtherAddress // use other address
+		tx.To = testutils.OtherAddress1 // use other address
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -342,9 +342,9 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	t.Run("should return nil msg if receiver is restricted", func(t *testing.T) {
 		txCopy := &ethrpc.Transaction{}
 		*txCopy = *tx
-		message := hex.EncodeToString(ethcommon.HexToAddress(testutils.OtherAddress).Bytes())
+		message := hex.EncodeToString(ethcommon.HexToAddress(testutils.OtherAddress1).Bytes())
 		txCopy.Input = message // use other address as receiver
-		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress}
+		cfg.ComplianceConfig.RestrictedAddresses = []string{testutils.OtherAddress1}
 		config.LoadComplianceConfig(cfg)
 		msg := ob.BuildInboundVoteMsgForTokenSentToTSS(txCopy, ethcommon.HexToAddress(txCopy.From), receipt.BlockNumber.Uint64())
 		require.Nil(t, msg)

@@ -5,12 +5,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// GetParams get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	k.paramstore.GetParamSet(ctx, &params)
-	return
-}
-
 func (k Keeper) GetParamsIfExists(ctx sdk.Context) (params types.Params) {
 	k.paramstore.GetParamSetIfExists(ctx, &params)
 	return

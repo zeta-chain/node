@@ -8,7 +8,9 @@ import (
 	"math/rand"
 	"time"
 
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -34,6 +36,7 @@ const (
 	outTxBytesMax      = uint64(1531) // 1531v == EstimateSegWitTxSize(21, 3)
 )
 
+// BTCSigner deals with signing BTC transactions and implements the ChainSigner interface
 type BTCSigner struct {
 	tssSigner        interfaces.TSSSigner
 	rpcClient        interfaces.BTCRPCClient
@@ -69,6 +72,24 @@ func NewBTCSigner(
 		loggerCompliance: loggers.Compliance,
 		ts:               ts,
 	}, nil
+}
+
+// SetZetaConnectorAddress does nothing for BTC
+func (signer *BTCSigner) SetZetaConnectorAddress(_ ethcommon.Address) {
+}
+
+// SetERC20CustodyAddress does nothing for BTC
+func (signer *BTCSigner) SetERC20CustodyAddress(_ ethcommon.Address) {
+}
+
+// GetZetaConnectorAddress returns dummy address
+func (signer *BTCSigner) GetZetaConnectorAddress() ethcommon.Address {
+	return ethcommon.Address{}
+}
+
+// GetERC20CustodyAddress returns dummy address
+func (signer *BTCSigner) GetERC20CustodyAddress() ethcommon.Address {
+	return ethcommon.Address{}
 }
 
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
@@ -325,9 +346,9 @@ func (signer *BTCSigner) TryProcessOutTx(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := clientcommon.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
-		clientcommon.PrintComplianceLog(logger, signer.loggerCompliance,
+		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
 			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
