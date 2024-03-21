@@ -66,3 +66,111 @@ func TestZetaCoreBridge_GetBallot(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedOutput, *resp)
 }
+
+func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetChainParams(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetUpgradePlan(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetAllCctx(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetCctxByHash(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetCctxByNonce(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetObserverList(t *testing.T) {
+}
+
+func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetGenesisSupply(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetZetaTokenSupplyOnNode(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetLastBlockHeight(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetLatestZetaBlock(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetNodeInfo(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetLastBlockHeightByChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetZetaBlockHeight(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetNonceByChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetAllNodeAccounts(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetKeyGen(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetBallotByID(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetInboundTrackersForChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetCurrentTss(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetEthTssAddress(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetBtcTssAddress(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetTssHistory(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetPendingNoncesByChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetBlockHeaderStateByChain(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetPendingNonces(t *testing.T) {
+}
+
+func TestZetaCoreBridge_Prove(t *testing.T) {
+}
+
+func TestZetaCoreBridge_HasVoted(t *testing.T) {
+}
+
+func TestZetaCoreBridge_GetZetaHotKeyBalance(t *testing.T) {
+}
