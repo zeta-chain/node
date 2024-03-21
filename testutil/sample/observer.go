@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 

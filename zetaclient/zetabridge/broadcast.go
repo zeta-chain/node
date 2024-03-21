@@ -20,7 +20,7 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 

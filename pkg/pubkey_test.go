@@ -13,7 +13,7 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
 type KeyDataAddr struct {

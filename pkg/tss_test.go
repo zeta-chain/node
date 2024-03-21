@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
 func TestGetTssAddrEVM(t *testing.T) {

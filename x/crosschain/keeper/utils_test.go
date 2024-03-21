@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	zetacommon "github.com/zeta-chain/zetacore/common"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -27,13 +27,13 @@ func getValidEthChainID(t *testing.T) int64 {
 }
 
 // getValidEthChain get a valid eth chain
-func getValidEthChain(_ *testing.T) *zetacommon.Chain {
-	goerli := zetacommon.GoerliLocalnetChain()
+func getValidEthChain(_ *testing.T) *pkg.Chain {
+	goerli := pkg.GoerliLocalnetChain()
 	return &goerli
 }
 
-func getValidBTCChain() *zetacommon.Chain {
-	btcRegNet := zetacommon.BtcRegtestChain()
+func getValidBTCChain() *pkg.Chain {
+	btcRegNet := pkg.BtcRegtestChain()
 	return &btcRegNet
 }
 
@@ -45,9 +45,9 @@ func getValidBtcChainID() int64 {
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return zetacommon.GoerliLocalnetChain().ChainId
+		return pkg.GoerliLocalnetChain().ChainId
 	case 1:
-		return zetacommon.GoerliChain().ChainId
+		return pkg.GoerliChain().ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}

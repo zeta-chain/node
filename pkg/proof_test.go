@@ -12,10 +12,10 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
-	"github.com/zeta-chain/zetacore/common/ethereum"
-	"github.com/zeta-chain/zetacore/common/testdata"
+	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/ethereum"
+	"github.com/zeta-chain/zetacore/pkg/testdata"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -30,11 +30,11 @@ const (
 )
 
 func Test_IsErrorInvalidProof(t *testing.T) {
-	require.False(t, common.IsErrorInvalidProof(nil))
-	require.False(t, common.IsErrorInvalidProof(errors.New("foo")))
+	require.False(t, pkg.IsErrorInvalidProof(nil))
+	require.False(t, pkg.IsErrorInvalidProof(errors.New("foo")))
 	invalidProofErr := errors.New("foo")
-	invalidProof := common.NewErrInvalidProof(invalidProofErr)
-	require.True(t, common.IsErrorInvalidProof(invalidProof))
+	invalidProof := pkg.NewErrInvalidProof(invalidProofErr)
+	require.True(t, pkg.IsErrorInvalidProof(invalidProof))
 	require.Equal(t, invalidProofErr.Error(), invalidProof.Error())
 }
 
@@ -65,7 +65,7 @@ func TestEthereumMerkleProof(t *testing.T) {
 	b, err := rlp.EncodeToBytes(&header)
 	require.NoError(t, err)
 
-	headerData := common.NewEthereumHeader(b)
+	headerData := pkg.NewEthereumHeader(b)
 	t.Run("should verify tx proof", func(t *testing.T) {
 		var txs types.Transactions
 		for i := 0; i < testdata.TxsCount; i++ {
@@ -83,7 +83,7 @@ func TestEthereumMerkleProof(t *testing.T) {
 			proof, err := txsTree.GenerateProof(i)
 			require.NoError(t, err)
 
-			ethProof := common.NewEthereumProof(proof)
+			ethProof := pkg.NewEthereumProof(proof)
 
 			_, err = ethProof.Verify(headerData, i)
 			require.NoError(t, err)
@@ -107,7 +107,7 @@ func TestEthereumMerkleProof(t *testing.T) {
 			proof, err := txsTree.GenerateProof(i)
 			require.NoError(t, err)
 
-			ethProof := common.NewEthereumProof(proof)
+			ethProof := pkg.NewEthereumProof(proof)
 
 			_, err = ethProof.Verify(headerData, i)
 			require.Error(t, err)
@@ -156,7 +156,7 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 		// Validate Tss SegWit transaction if it's an outTx
 		if res.Txid == outTxid {
 			msg := &crosschaintypes.MsgAddToOutTxTracker{
-				ChainId: common.BtcTestNetChain().ChainId,
+				ChainId: pkg.BtcTestNetChain().ChainId,
 				Nonce:   nonce,
 				TxHash:  outTxid,
 			}
@@ -174,15 +174,15 @@ func validateBitcoinBlock(t *testing.T, _ *wire.BlockHeader, headerBytes []byte,
 		require.NoError(t, err)
 
 		// True proof should verify
-		proof := common.NewBitcoinProof(txBodies[i], path, index)
-		txBytes, err := proof.Verify(common.NewBitcoinHeader(headerBytes), 0)
+		proof := pkg.NewBitcoinProof(txBodies[i], path, index)
+		txBytes, err := proof.Verify(pkg.NewBitcoinHeader(headerBytes), 0)
 		require.NoError(t, err)
 		require.Equal(t, txBytes, txBodies[i])
 
 		// Fake proof should not verify
 		fakeIndex := index ^ 0xffffffff // flip all bits
-		fakeProof := common.NewBitcoinProof(txBodies[i], path, fakeIndex)
-		txBytes, err = fakeProof.Verify(common.NewBitcoinHeader(headerBytes), 0)
+		fakeProof := pkg.NewBitcoinProof(txBodies[i], path, fakeIndex)
+		txBytes, err = fakeProof.Verify(pkg.NewBitcoinHeader(headerBytes), 0)
 		require.Error(t, err)
 		require.Nil(t, txBytes)
 	}

@@ -15,7 +15,7 @@ import (
 
 	eth "github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
 // PubKey is bech32 encoded string

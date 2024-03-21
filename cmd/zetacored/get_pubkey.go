@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
 func GetPubKeyCmd() *cobra.Command {
@@ -33,8 +33,8 @@ func GetPubKeyCmd() *cobra.Command {
 	return cmd
 }
 
-func GetPubKeySet(clientctx client.Context, tssAccountName, password string) (common.PubKeySet, error) {
-	pubkeySet := common.PubKeySet{
+func GetPubKeySet(clientctx client.Context, tssAccountName, password string) (pkg.PubKeySet, error) {
+	pubkeySet := pkg.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
@@ -52,7 +52,7 @@ func GetPubKeySet(clientctx client.Context, tssAccountName, password string) (co
 	if err != nil {
 		return pubkeySet, err
 	}
-	pubkey, err := common.NewPubKey(s)
+	pubkey, err := pkg.NewPubKey(s)
 	if err != nil {
 		return pubkeySet, err
 	}

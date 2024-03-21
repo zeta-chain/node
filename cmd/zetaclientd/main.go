@@ -13,7 +13,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"

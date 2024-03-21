@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"

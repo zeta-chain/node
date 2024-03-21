@@ -19,7 +19,7 @@ import (
 	. "gopkg.in/check.v1"
 
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 )
 
 type KeysSuite struct{}
