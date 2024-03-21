@@ -450,3 +450,61 @@ export declare class MsgUpdateKeygenResponse extends Message<MsgUpdateKeygenResp
   static equals(a: MsgUpdateKeygenResponse | PlainMessage<MsgUpdateKeygenResponse> | undefined, b: MsgUpdateKeygenResponse | PlainMessage<MsgUpdateKeygenResponse> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.observer.MsgResetChainNonces
+ */
+export declare class MsgResetChainNonces extends Message<MsgResetChainNonces> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: int64 chain_id = 2;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: int64 chain_nonce_low = 3;
+   */
+  chainNonceLow: bigint;
+
+  /**
+   * @generated from field: int64 chain_nonce_high = 4;
+   */
+  chainNonceHigh: bigint;
+
+  constructor(data?: PartialMessage<MsgResetChainNonces>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgResetChainNonces";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgResetChainNonces;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgResetChainNonces;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgResetChainNonces;
+
+  static equals(a: MsgResetChainNonces | PlainMessage<MsgResetChainNonces> | undefined, b: MsgResetChainNonces | PlainMessage<MsgResetChainNonces> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgResetChainNoncesResponse
+ */
+export declare class MsgResetChainNoncesResponse extends Message<MsgResetChainNoncesResponse> {
+  constructor(data?: PartialMessage<MsgResetChainNoncesResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgResetChainNoncesResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgResetChainNoncesResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgResetChainNoncesResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgResetChainNoncesResponse;
+
+  static equals(a: MsgResetChainNoncesResponse | PlainMessage<MsgResetChainNoncesResponse> | undefined, b: MsgResetChainNoncesResponse | PlainMessage<MsgResetChainNoncesResponse> | undefined): boolean;
+}
+
