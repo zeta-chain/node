@@ -98,6 +98,10 @@ install-zetaclient-race-test-only-build: go.sum
 		@echo "--> Installing zetaclientd"
 		@go install -race -mod=readonly $(BUILD_FLAGS) ./cmd/zetaclientd
 
+install-zetatool: go.sum
+		@echo "--> Installing zetatool"
+		@go install -mod=readonly $(BUILD_FLAGS) ./cmd/zetatool
+
 ###############################################################################
 ###                             Local network                               ###
 ###############################################################################
@@ -287,3 +291,16 @@ mainnet-bitcoind-node:
 
 athens3-zetarpc-node:
 	cd contrib/athens3/zetacored && DOCKER_TAG=$(DOCKER_TAG) docker-compose up
+
+###############################################################################
+###                               Debug Tools                               ###
+###############################################################################
+
+filter-missed-btc: install-zetatool
+	zetatool filterdeposit btc --config ./tool/filter_missed_deposits/zetatool_config.json
+
+filter-missed-eth: install-zetatool
+	zetatool filterdeposit eth \
+		--config ./tool/filter_missed_deposits/zetatool_config.json \
+		--evm-max-range 1000 \
+		--evm-start-block 19464041
