@@ -10,6 +10,7 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -345,9 +346,9 @@ func (signer *BTCSigner) TryProcessOutTx(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := clientcommon.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
-		clientcommon.PrintComplianceLog(logger, signer.loggerCompliance,
+		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
 			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
