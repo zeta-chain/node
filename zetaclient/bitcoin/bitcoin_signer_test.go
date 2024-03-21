@@ -23,7 +23,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 )
@@ -452,7 +452,7 @@ func mineTxNSetNonceMark(ob *BTCChainClient, nonce uint64, txid string, preMarkI
 
 	// Set nonce mark
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(common.NonceMarkAmount(nonce)) * 1e-8}
+	nonceMark := btcjson.ListUnspentResult{TxID: txid, Address: tssAddress, Amount: float64(pkg.NonceMarkAmount(nonce)) * 1e-8}
 	if preMarkIndex >= 0 { // replace nonce-mark utxo
 		ob.utxos[preMarkIndex] = nonceMark
 

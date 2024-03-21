@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -22,8 +22,8 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: types.NewMsgAddToInTxTracker(
 				"invalid_address",
-				common.GoerliChain().ChainId,
-				common.CoinType_Gas,
+				pkg.GoerliChain().ChainId,
+				pkg.CoinType_Gas,
 				"hash",
 			),
 			err: sdkerrors.ErrInvalidAddress,
@@ -33,7 +33,7 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			msg: types.NewMsgAddToInTxTracker(
 				sample.AccAddress(),
 				42,
-				common.CoinType_Gas,
+				pkg.CoinType_Gas,
 				"hash",
 			),
 			err: errorsmod.Wrapf(types.ErrInvalidChainID, "chain id (%d)", 42),
@@ -42,17 +42,17 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "invalid proof",
 			msg: &types.MsgAddToInTxTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  common.ZetaTestnetChain().ChainId,
-				CoinType: common.CoinType_Gas,
-				Proof:    &common.Proof{},
+				ChainId:  pkg.ZetaTestnetChain().ChainId,
+				CoinType: pkg.CoinType_Gas,
+				Proof:    &pkg.Proof{},
 			},
-			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", common.ZetaTestnetChain().ChainId),
+			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "chain id %d does not support proof-based trackers", pkg.ZetaTestnetChain().ChainId),
 		},
 		{
 			name: "invalid coin type",
 			msg: &types.MsgAddToInTxTracker{
 				Creator:  sample.AccAddress(),
-				ChainId:  common.ZetaTestnetChain().ChainId,
+				ChainId:  pkg.ZetaTestnetChain().ChainId,
 				CoinType: 5,
 			},
 			err: errorsmod.Wrapf(types.ErrProofVerificationFail, "coin-type not supported"),
@@ -61,8 +61,8 @@ func TestMsgAddToInTxTracker_ValidateBasic(t *testing.T) {
 			name: "valid",
 			msg: types.NewMsgAddToInTxTracker(
 				sample.AccAddress(),
-				common.GoerliChain().ChainId,
-				common.CoinType_Gas,
+				pkg.GoerliChain().ChainId,
+				pkg.CoinType_Gas,
 				"hash",
 			),
 			err: nil,
@@ -91,8 +91,8 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.NewMsgAddToInTxTracker(
 				signer,
-				common.GoerliChain().ChainId,
-				common.CoinType_Gas,
+				pkg.GoerliChain().ChainId,
+				pkg.CoinType_Gas,
 				"hash",
 			),
 			panics: false,
@@ -101,8 +101,8 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.NewMsgAddToInTxTracker(
 				"invalid_address",
-				common.GoerliChain().ChainId,
-				common.CoinType_Gas,
+				pkg.GoerliChain().ChainId,
+				pkg.CoinType_Gas,
 				"hash",
 			),
 			panics: true,
@@ -126,8 +126,8 @@ func TestMsgAddToInTxTracker_GetSigners(t *testing.T) {
 func TestMsgAddToInTxTracker_Type(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		common.GoerliChain().ChainId,
-		common.CoinType_Gas,
+		pkg.GoerliChain().ChainId,
+		pkg.CoinType_Gas,
 		"hash",
 	)
 	require.Equal(t, types.TypeMsgAddToInTxTracker, msg.Type())
@@ -136,8 +136,8 @@ func TestMsgAddToInTxTracker_Type(t *testing.T) {
 func TestMsgAddToInTxTracker_Route(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		common.GoerliChain().ChainId,
-		common.CoinType_Gas,
+		pkg.GoerliChain().ChainId,
+		pkg.CoinType_Gas,
 		"hash",
 	)
 	require.Equal(t, types.RouterKey, msg.Route())
@@ -146,8 +146,8 @@ func TestMsgAddToInTxTracker_Route(t *testing.T) {
 func TestMsgAddToInTxTracker_GetSignBytes(t *testing.T) {
 	msg := types.NewMsgAddToInTxTracker(
 		sample.AccAddress(),
-		common.GoerliChain().ChainId,
-		common.CoinType_Gas,
+		pkg.GoerliChain().ChainId,
+		pkg.CoinType_Gas,
 		"hash",
 	)
 	require.NotPanics(t, func() {

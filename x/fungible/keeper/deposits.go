@@ -7,7 +7,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -28,7 +28,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	amount *big.Int,
 	senderChainID int64,
 	data []byte,
-	coinType common.CoinType,
+	coinType pkg.CoinType,
 	asset string,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var ZRC20Contract eth.Address
@@ -36,7 +36,7 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	var found bool
 
 	// get foreign coin
-	if coinType == common.CoinType_Gas {
+	if coinType == pkg.CoinType_Gas {
 		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrGasCoinNotFound

@@ -18,7 +18,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc"
@@ -193,7 +193,7 @@ func (b *ZetaCoreBridge) GetNodeInfo() (*tmservice.GetNodeInfoResponse, error) {
 	return nil, err
 }
 
-func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain common.Chain) (*types.LastBlockHeight, error) {
+func (b *ZetaCoreBridge) GetLastBlockHeightByChain(chain pkg.Chain) (*types.LastBlockHeight, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.LastBlockHeight(context.Background(), &types.QueryGetLastBlockHeightRequest{Index: chain.ChainName.String()})
 	if err != nil {
@@ -230,7 +230,7 @@ func (b *ZetaCoreBridge) GetBallotByID(id string) (*observertypes.QueryBallotByI
 	})
 }
 
-func (b *ZetaCoreBridge) GetNonceByChain(chain common.Chain) (observertypes.ChainNonces, error) {
+func (b *ZetaCoreBridge) GetNonceByChain(chain pkg.Chain) (observertypes.ChainNonces, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.ChainNonces(context.Background(), &observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()})
 	if err != nil {
@@ -322,7 +322,7 @@ func (b *ZetaCoreBridge) GetTssHistory() ([]observertypes.TSS, error) {
 	return resp.TssList, nil
 }
 
-func (b *ZetaCoreBridge) GetOutTxTracker(chain common.Chain, nonce uint64) (*types.OutTxTracker, error) {
+func (b *ZetaCoreBridge) GetOutTxTracker(chain pkg.Chain, nonce uint64) (*types.OutTxTracker, error) {
 	client := types.NewQueryClient(b.grpcConn)
 	resp, err := client.OutTxTracker(context.Background(), &types.QueryGetOutTxTrackerRequest{
 		ChainID: chain.ChainId,
@@ -380,7 +380,7 @@ func (b *ZetaCoreBridge) GetBlockHeaderStateByChain(chainID int64) (observertype
 	return *resp, nil
 }
 
-func (b *ZetaCoreBridge) GetSupportedChains() ([]*common.Chain, error) {
+func (b *ZetaCoreBridge) GetSupportedChains() ([]*pkg.Chain, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.SupportedChains(context.Background(), &observertypes.QuerySupportedChains{})
 	if err != nil {
@@ -398,7 +398,7 @@ func (b *ZetaCoreBridge) GetPendingNonces() (*observertypes.QueryAllPendingNonce
 	return resp, nil
 }
 
-func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *common.Proof, chainID int64) (bool, error) {
+func (b *ZetaCoreBridge) Prove(blockHash string, txHash string, txIndex int64, proof *pkg.Proof, chainID int64) (bool, error) {
 	client := observertypes.NewQueryClient(b.grpcConn)
 	resp, err := client.Prove(context.Background(), &observertypes.QueryProveRequest{
 		BlockHash: blockHash,

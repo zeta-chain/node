@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 func TestCosmosToEthChainID(t *testing.T) {
@@ -51,7 +51,7 @@ func TestCosmosToEthChainID(t *testing.T) {
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			ethChainID, err := common.CosmosToEthChainID(tc.chainID)
+			ethChainID, err := pkg.CosmosToEthChainID(tc.chainID)
 			if tc.isErr {
 				require.Error(t, err)
 			} else {

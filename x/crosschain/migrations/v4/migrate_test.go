@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -96,49 +96,49 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "0",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.GoerliChain().ChainId,
+				SenderChainId:         pkg.GoerliChain().ChainId,
 				InboundTxObservedHash: "0xaaa",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "1",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.BtcMainnetChain().ChainId,
+				SenderChainId:         pkg.BtcMainnetChain().ChainId,
 				InboundTxObservedHash: "0x111",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "2",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.EthChain().ChainId,
+				SenderChainId:         pkg.EthChain().ChainId,
 				InboundTxObservedHash: "0xbbb",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "3",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.BtcTestNetChain().ChainId,
+				SenderChainId:         pkg.BtcTestNetChain().ChainId,
 				InboundTxObservedHash: "0x222",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "4",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.BtcTestNetChain().ChainId,
+				SenderChainId:         pkg.BtcTestNetChain().ChainId,
 				InboundTxObservedHash: "0x333",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "5",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.MumbaiChain().ChainId,
+				SenderChainId:         pkg.MumbaiChain().ChainId,
 				InboundTxObservedHash: "0xccc",
 			},
 		})
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index: "6",
 			InboundTxParams: &types.InboundTxParams{
-				SenderChainId:         common.BtcRegtestChain().ChainId,
+				SenderChainId:         pkg.BtcRegtestChain().ChainId,
 				InboundTxObservedHash: "0x444",
 			},
 		})
@@ -147,13 +147,13 @@ func TestSetBitcoinFinalizedInbound(t *testing.T) {
 		v4.SetBitcoinFinalizedInbound(ctx, k)
 
 		// check finalized inbound
-		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", common.GoerliChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", common.EthChain().ChainId, 0))
-		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", common.MumbaiChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x111", common.BtcMainnetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x222", common.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x333", common.BtcTestNetChain().ChainId, 0))
-		require.True(t, k.IsFinalizedInbound(ctx, "0x444", common.BtcRegtestChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xaaa", pkg.GoerliChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xbbb", pkg.EthChain().ChainId, 0))
+		require.False(t, k.IsFinalizedInbound(ctx, "0xccc", pkg.MumbaiChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x111", pkg.BtcMainnetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x222", pkg.BtcTestNetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x333", pkg.BtcTestNetChain().ChainId, 0))
+		require.True(t, k.IsFinalizedInbound(ctx, "0x444", pkg.BtcRegtestChain().ChainId, 0))
 
 	})
 }
@@ -170,7 +170,7 @@ func SetRandomCctx(ctx sdk.Context, k keeper.Keeper) sdkmath.Uint {
 			CctxStatus: &types.Status{Status: types.CctxStatus_Aborted},
 			OutboundTxParams: []*types.OutboundTxParams{{
 				Amount:   amount,
-				CoinType: common.CoinType_Zeta,
+				CoinType: pkg.CoinType_Zeta,
 			}},
 		})
 		totalZeta = totalZeta.Add(amount)

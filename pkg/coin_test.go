@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
@@ -54,7 +54,7 @@ func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			azeta, err := common.GetAzetaDecFromAmountInZeta(tc.zetaAmount)
+			azeta, err := pkg.GetAzetaDecFromAmountInZeta(tc.zetaAmount)
 			tc.err(t, err)
 			if err == nil {
 				require.Equal(t, tc.azetaAmount, azeta)
@@ -68,56 +68,56 @@ func TestGetCoinType(t *testing.T) {
 	tests := []struct {
 		name    string
 		coin    string
-		want    common.CoinType
+		want    pkg.CoinType
 		wantErr bool
 	}{
 		{
 			name:    "valid coin type 0",
 			coin:    "0",
-			want:    common.CoinType(0),
+			want:    pkg.CoinType(0),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 1",
 			coin:    "1",
-			want:    common.CoinType(1),
+			want:    pkg.CoinType(1),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 2",
 			coin:    "2",
-			want:    common.CoinType(2),
+			want:    pkg.CoinType(2),
 			wantErr: false,
 		},
 		{
 			name:    "valid coin type 3",
 			coin:    "3",
-			want:    common.CoinType(3),
+			want:    pkg.CoinType(3),
 			wantErr: false,
 		},
 		{
 			name:    "invalid coin type negative",
 			coin:    "-1",
-			want:    common.CoinType_Cmd,
+			want:    pkg.CoinType_Cmd,
 			wantErr: true,
 		},
 		{
 			name:    "invalid coin type large number",
 			coin:    "4",
-			want:    common.CoinType_Cmd,
+			want:    pkg.CoinType_Cmd,
 			wantErr: true,
 		},
 		{
 			name:    "invalid coin type non-integer",
 			coin:    "abc",
-			want:    common.CoinType_Cmd,
+			want:    pkg.CoinType_Cmd,
 			wantErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := common.GetCoinType(tt.coin)
+			got, err := pkg.GetCoinType(tt.coin)
 			if tt.wantErr {
 				require.Error(t, err)
 			} else {

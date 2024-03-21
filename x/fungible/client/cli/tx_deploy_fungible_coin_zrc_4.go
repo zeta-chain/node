@@ -3,7 +3,7 @@ package cli
 import (
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -50,7 +50,7 @@ func CmdDeployFungibleCoinZRC4() *cobra.Command {
 				uint32(argDecimals),
 				argName,
 				argSymbol,
-				common.CoinType(argCoinType),
+				pkg.CoinType(argCoinType),
 				argGasLimit,
 			)
 

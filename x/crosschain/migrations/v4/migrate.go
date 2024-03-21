@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -54,7 +54,7 @@ func SetZetaAccounting(
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.CrossChainTx
 		cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.GetCurrentOutTxParam().CoinType == pkg.CoinType_Zeta {
 			abortedAmountZeta = abortedAmountZeta.Add(val.GetCurrentOutTxParam().Amount)
 		}
 	}
@@ -176,7 +176,7 @@ func SetBitcoinFinalizedInbound(ctx sdk.Context, crosschainKeeper crosschainKeep
 	for _, cctx := range crosschainKeeper.GetAllCrossChainTx(ctx) {
 		if cctx.InboundTxParams != nil {
 			// check if bitcoin inbound
-			if common.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) {
+			if pkg.IsBitcoinChain(cctx.InboundTxParams.SenderChainId) {
 				// add finalized inbound
 				crosschainKeeper.AddFinalizedInbound(
 					ctx,

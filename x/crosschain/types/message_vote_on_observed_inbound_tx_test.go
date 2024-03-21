@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -36,7 +36,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				42,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 				sample.String(),
 				42,
 			),
@@ -55,7 +55,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				42,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 				sample.String(),
 				42,
 			),
@@ -75,7 +75,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				42,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 				sample.String(),
 				42,
 			),
@@ -95,7 +95,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				42,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 				sample.String(),
 				42,
 			),
@@ -115,7 +115,7 @@ func TestMsgVoteOnObservedInboundTx_ValidateBasic(t *testing.T) {
 				sample.String(),
 				42,
 				42,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 				sample.String(),
 				42,
 			),
@@ -149,7 +149,7 @@ func TestMsgVoteOnObservedInboundTx_Digest(t *testing.T) {
 		InTxHash:      sample.String(),
 		InBlockHeight: 42,
 		GasLimit:      42,
-		CoinType:      common.CoinType_Zeta,
+		CoinType:      pkg.CoinType_Zeta,
 		Asset:         sample.String(),
 		EventIndex:    42,
 	}
@@ -224,7 +224,7 @@ func TestMsgVoteOnObservedInboundTx_Digest(t *testing.T) {
 
 	// coin type used
 	msg2 = msg
-	msg2.CoinType = common.CoinType_ERC20
+	msg2.CoinType = pkg.CoinType_ERC20
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 
@@ -282,7 +282,7 @@ func TestMsgVoteOnObservedInboundTx_Type(t *testing.T) {
 	msg := types.MsgVoteOnObservedInboundTx{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, common.InboundVoter.String(), msg.Type())
+	require.Equal(t, pkg.InboundVoter.String(), msg.Type())
 }
 
 func TestMsgVoteOnObservedInboundTx_Route(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 var _ sdk.Msg = &MsgAddBlockHeader{}
@@ -15,7 +15,7 @@ const (
 	TypeMsgAddBlockHeader = "add_block_header"
 )
 
-func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header common.HeaderData) *MsgAddBlockHeader {
+func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header pkg.HeaderData) *MsgAddBlockHeader {
 	return &MsgAddBlockHeader{
 		Creator:   creator,
 		ChainId:   chainID,
@@ -52,7 +52,7 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
 	}
 
-	if common.IsHeaderSupportedEvmChain(msg.ChainId) || common.IsBitcoinChain(msg.ChainId) {
+	if pkg.IsHeaderSupportedEvmChain(msg.ChainId) || pkg.IsBitcoinChain(msg.ChainId) {
 		if len(msg.BlockHash) != 32 {
 			return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid block hash length (%d)", len(msg.BlockHash))
 		}

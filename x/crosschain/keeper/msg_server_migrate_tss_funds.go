@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -82,7 +82,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		Creator:        "",
 		Index:          index,
 		ZetaFees:       sdkmath.Uint{},
-		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
+		RelayedMessage: fmt.Sprintf("%s:%s", pkg.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
 		CctxStatus: &types.Status{
 			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",
@@ -92,7 +92,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			Sender:                          "",
 			SenderChainId:                   chainID,
 			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
+			CoinType:                        pkg.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          amount,
 			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
@@ -103,7 +103,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		OutboundTxParams: []*types.OutboundTxParams{{
 			Receiver:                         "",
 			ReceiverChainId:                  chainID,
-			CoinType:                         common.CoinType_Cmd,
+			CoinType:                         pkg.CoinType_Cmd,
 			Amount:                           amount,
 			OutboundTxTssNonce:               0,
 			OutboundTxGasLimit:               1_000_000,
@@ -117,21 +117,21 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
 	// Set the sender and receiver addresses for EVM chain
-	if common.IsEVMChain(chainID) {
-		ethAddressOld, err := common.GetTssAddrEVM(currentTss.TssPubkey)
+	if pkg.IsEVMChain(chainID) {
+		ethAddressOld, err := pkg.GetTssAddrEVM(currentTss.TssPubkey)
 		if err != nil {
 			return err
 		}
-		ethAddressNew, err := common.GetTssAddrEVM(newTss.TssPubkey)
+		ethAddressNew, err := pkg.GetTssAddrEVM(newTss.TssPubkey)
 		if err != nil {
 			return err
 		}
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
 		// Tss migration is a send transaction, so the gas limit is set to 21000
-		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = common.EVMSend
+		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = pkg.EVMSend
 		// Multiple current gas price with standard multiplier to add some buffer
-		multipliedGasPrice, err := common.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
+		multipliedGasPrice, err := pkg.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
 		if err != nil {
 			return err
 		}
@@ -143,16 +143,16 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		cctx.GetCurrentOutTxParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
-	if common.IsBitcoinChain(chainID) {
-		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+	if pkg.IsBitcoinChain(chainID) {
+		bitcoinNetParams, err := pkg.BitcoinNetParamsFromChainID(chainID)
 		if err != nil {
 			return err
 		}
-		btcAddressOld, err := common.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
+		btcAddressOld, err := pkg.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}
-		btcAddressNew, err := common.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
+		btcAddressNew, err := pkg.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}

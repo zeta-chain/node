@@ -36,7 +36,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -67,7 +67,7 @@ type Log struct {
 // ChainClient represents the chain configuration for an EVM chain
 // Filled with above constants depending on chain
 type ChainClient struct {
-	chain                      common.Chain
+	chain                      pkg.Chain
 	evmClient                  interfaces.EVMRPCClient
 	evmJSONRPC                 interfaces.EVMJSONRPCClient
 	zetaClient                 interfaces.ZetaCoreBridger
@@ -158,7 +158,7 @@ func NewEVMChainClient(
 
 	return &ob, nil
 }
-func (ob *ChainClient) WithChain(chain common.Chain) {
+func (ob *ChainClient) WithChain(chain pkg.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
@@ -329,9 +329,9 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 
 	// compliance check, special handling the cancelled cctx
 	if clientcommon.IsCctxRestricted(cctx) {
-		recvStatus := common.ReceiveStatus_Failed
+		recvStatus := pkg.ReceiveStatus_Failed
 		if receipt.Status == 1 {
-			recvStatus = common.ReceiveStatus_Success
+			recvStatus = pkg.ReceiveStatus_Success
 		}
 		zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 			sendHash,
@@ -345,7 +345,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 			recvStatus,
 			ob.chain,
 			nonce,
-			common.CoinType_Cmd,
+			pkg.CoinType_Cmd,
 		)
 		if err != nil {
 			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -355,10 +355,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 		return true, true, nil
 	}
 
-	if cointype == common.CoinType_Cmd {
-		recvStatus := common.ReceiveStatus_Failed
+	if cointype == pkg.CoinType_Cmd {
+		recvStatus := pkg.ReceiveStatus_Failed
 		if receipt.Status == 1 {
-			recvStatus = common.ReceiveStatus_Success
+			recvStatus = pkg.ReceiveStatus_Success
 		}
 		zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 			sendHash,
@@ -371,7 +371,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 			recvStatus,
 			ob.chain,
 			nonce,
-			common.CoinType_Cmd,
+			pkg.CoinType_Cmd,
 		)
 		if err != nil {
 			logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -380,7 +380,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 		}
 		return true, true, nil
 
-	} else if cointype == common.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
+	} else if cointype == pkg.CoinType_Gas { // the outbound is a regular Ether/BNB/Matic transfer; no need to check events
 		if receipt.Status == 1 {
 			zetaTxHash, ballot, err := ob.zetaClient.PostVoteOutbound(
 				sendHash,
@@ -390,10 +390,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				transaction.Value(),
-				common.ReceiveStatus_Success,
+				pkg.ReceiveStatus_Success,
 				ob.chain,
 				nonce,
-				common.CoinType_Gas,
+				pkg.CoinType_Gas,
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -411,10 +411,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				common.ReceiveStatus_Failed,
+				pkg.ReceiveStatus_Failed,
 				ob.chain,
 				nonce,
-				common.CoinType_Gas,
+				pkg.CoinType_Gas,
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s cctx %s nonce %d", zetaTxHash, sendHash, nonce)
@@ -423,7 +423,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 			}
 			return true, true, nil
 		}
-	} else if cointype == common.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
+	} else if cointype == pkg.CoinType_Zeta { // the outbound is a Zeta transfer; need to check events ZetaReceived
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			for _, vLog := range logs {
@@ -455,10 +455,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							mMint,
-							common.ReceiveStatus_Success,
+							pkg.ReceiveStatus_Success,
 							ob.chain,
 							nonce,
-							common.CoinType_Zeta,
+							pkg.CoinType_Zeta,
 						)
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -492,10 +492,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							mMint,
-							common.ReceiveStatus_Success,
+							pkg.ReceiveStatus_Success,
 							ob.chain,
 							nonce,
-							common.CoinType_Zeta,
+							pkg.CoinType_Zeta,
 						)
 						if err != nil {
 							logger.Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -520,10 +520,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				common.ReceiveStatus_Failed,
+				pkg.ReceiveStatus_Failed,
 				ob.chain,
 				nonce,
-				common.CoinType_Zeta,
+				pkg.CoinType_Zeta,
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -532,7 +532,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 			}
 			return true, true, nil
 		}
-	} else if cointype == common.CoinType_ERC20 {
+	} else if cointype == pkg.CoinType_ERC20 {
 		if receipt.Status == 1 {
 			logs := receipt.Logs
 			addrCustody, ERC20Custody, err := ob.GetERC20CustodyContract()
@@ -560,10 +560,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 							transaction.GasPrice(),
 							transaction.Gas(),
 							event.Amount,
-							common.ReceiveStatus_Success,
+							pkg.ReceiveStatus_Success,
 							ob.chain,
 							nonce,
-							common.CoinType_ERC20,
+							pkg.CoinType_ERC20,
 						)
 						if err != nil {
 							logger.Error().Err(err).Msgf("error posting confirmation to meta core for cctx %s nonce %d", sendHash, nonce)
@@ -587,10 +587,10 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 				transaction.GasPrice(),
 				transaction.Gas(),
 				big.NewInt(0),
-				common.ReceiveStatus_Failed,
+				pkg.ReceiveStatus_Failed,
 				ob.chain,
 				nonce,
-				common.CoinType_ERC20,
+				pkg.CoinType_ERC20,
 			)
 			if err != nil {
 				logger.Error().Err(err).Msgf("PostVoteOutbound error in WatchTxHashWithTimeout; zeta tx hash %s", zetaTxHash)
@@ -894,7 +894,7 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 		ob.chain.ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),
-		common.NewEthereumHeader(headerRLP),
+		pkg.NewEthereumHeader(headerRLP),
 	)
 	if err != nil {
 		ob.logger.ExternalChainWatcher.Error().Err(err).Msgf("postBlockHeader: error posting block header: %d", bn)
@@ -1035,7 +1035,7 @@ func (ob *ChainClient) ObserveZetaSent(startBlock, toBlock uint64) uint64 {
 
 		msg := ob.BuildInboundVoteMsgForZetaSentEvent(event)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(msg, common.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
+			_, err = ob.PostVoteInbound(msg, pkg.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
 			if err != nil {
 				return beingScanned - 1 // we have to re-scan from this block next time
 			}
@@ -1115,7 +1115,7 @@ func (ob *ChainClient) ObserveERC20Deposited(startBlock, toBlock uint64) uint64 
 
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		if msg != nil {
-			_, err = ob.PostVoteInbound(msg, common.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
+			_, err = ob.PostVoteInbound(msg, pkg.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
 			if err != nil {
 				return beingScanned - 1 // we have to re-scan from this block next time
 			}
@@ -1138,7 +1138,7 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags obse
 		// TODO: consider having a independent ticker(from TSS scaning) for posting block headers
 		if flags.BlockHeaderVerificationFlags != nil &&
 			flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled &&
-			common.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
+			pkg.IsHeaderSupportedEvmChain(ob.chain.ChainId) { // post block header for supported chains
 			err := ob.postBlockHeader(toBlock)
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Error().Err(err).Msg("error posting block header")
@@ -1280,7 +1280,7 @@ func (ob *ChainClient) BuildReceiptsMap() error {
 }
 
 // LoadDB open sql database and load data into EVMChainClient
-func (ob *ChainClient) LoadDB(dbPath string, chain common.Chain) error {
+func (ob *ChainClient) LoadDB(dbPath string, chain pkg.Chain) error {
 	if dbPath != "" {
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 			err := os.MkdirAll(dbPath, os.ModePerm)

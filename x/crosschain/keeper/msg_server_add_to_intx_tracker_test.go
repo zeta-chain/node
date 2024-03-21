@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -18,12 +18,12 @@ import (
 func setupVerificationParams(zk keepertest.ZetaKeepers, ctx sdk.Context, tx_index int64, chainID int64, header ethtypes.Header, headerRLP []byte, block *ethtypes.Block) {
 	params := zk.ObserverKeeper.GetParamsIfExists(ctx)
 	zk.ObserverKeeper.SetParams(ctx, params)
-	zk.ObserverKeeper.SetBlockHeader(ctx, common.BlockHeader{
+	zk.ObserverKeeper.SetBlockHeader(ctx, pkg.BlockHeader{
 		Height:     block.Number().Int64(),
 		Hash:       block.Hash().Bytes(),
 		ParentHash: header.ParentHash.Bytes(),
 		ChainId:    chainID,
-		Header:     common.NewEthereumHeader(headerRLP),
+		Header:     pkg.NewEthereumHeader(headerRLP),
 	})
 	zk.ObserverKeeper.SetChainParamsList(ctx, observertypes.ChainParamsList{ChainParams: []*observertypes.ChainParams{
 		{
@@ -56,7 +56,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			Creator:   sample.AccAddress(),
 			ChainId:   chainID,
 			TxHash:    tx_hash,
-			CoinType:  common.CoinType_Zeta,
+			CoinType:  pkg.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
@@ -85,7 +85,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    tx_hash,
-			CoinType:  common.CoinType_Zeta,
+			CoinType:  pkg.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
@@ -114,7 +114,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			Creator:   admin,
 			ChainId:   chainID,
 			TxHash:    "Malicious TX HASH",
-			CoinType:  common.CoinType_Zeta,
+			CoinType:  pkg.CoinType_Zeta,
 			Proof:     nil,
 			BlockHash: "",
 			TxIndex:   0,
@@ -143,7 +143,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	//		Creator:   sample.AccAddress(),
 	//		ChainId:   chainID,
 	//		TxHash:    tx.Hash().Hex(),
-	//		CoinType:  common.CoinType_Zeta,
+	//		CoinType:  pkg.CoinType_Zeta,
 	//		Proof:     proof,
 	//		BlockHash: block.Hash().Hex(),
 	//		TxIndex:   txIndex,
@@ -166,7 +166,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	//		Creator:   sample.AccAddress(),
 	//		ChainId:   chainID,
 	//		TxHash:    "fake_hash",
-	//		CoinType:  common.CoinType_Zeta,
+	//		CoinType:  pkg.CoinType_Zeta,
 	//		Proof:     proof,
 	//		BlockHash: block.Hash().Hex(),
 	//		TxIndex:   txIndex,
@@ -190,7 +190,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 	//		Creator:   sample.AccAddress(),
 	//		ChainId:   97,
 	//		TxHash:    tx.Hash().Hex(),
-	//		CoinType:  common.CoinType_Zeta,
+	//		CoinType:  pkg.CoinType_Zeta,
 	//		Proof:     proof,
 	//		BlockHash: block.Hash().Hex(),
 	//		TxIndex:   txIndex,

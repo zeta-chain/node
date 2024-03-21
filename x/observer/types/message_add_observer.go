@@ -4,7 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 const TypeMsgAddObserver = "add_observer"
@@ -50,11 +50,11 @@ func (msg *MsgAddObserver) ValidateBasic() error {
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid observer address (%s)", err)
 	}
-	_, err = common.NewPubKey(msg.ZetaclientGranteePubkey)
+	_, err = pkg.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidPubKey, "invalid zetaclient grantee pubkey (%s)", err)
 	}
-	_, err = common.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	_, err = pkg.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidPubKey, "invalid zetaclient grantee pubkey (%s)", err)
 	}

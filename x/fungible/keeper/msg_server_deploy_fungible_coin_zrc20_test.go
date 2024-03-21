@@ -7,7 +7,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -39,7 +39,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			8,
 			"foo",
 			"foo",
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			1000000,
 		))
 		require.NoError(t, err)
@@ -49,7 +49,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		// can retrieve the gas coin
 		foreignCoin, found := k.GetForeignCoins(ctx, gasAddress)
 		require.True(t, found)
-		require.Equal(t, foreignCoin.CoinType, common.CoinType_Gas)
+		require.Equal(t, foreignCoin.CoinType, pkg.CoinType_Gas)
 		require.Contains(t, foreignCoin.Name, "foo")
 
 		// check gas limit
@@ -71,7 +71,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			8,
 			"bar",
 			"bar",
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			2000000,
 		))
 		require.NoError(t, err)
@@ -79,7 +79,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 
 		foreignCoin, found = k.GetForeignCoins(ctx, res.Address)
 		require.True(t, found)
-		require.Equal(t, foreignCoin.CoinType, common.CoinType_ERC20)
+		require.Equal(t, foreignCoin.CoinType, pkg.CoinType_ERC20)
 		require.Contains(t, foreignCoin.Name, "bar")
 
 		// check gas limit
@@ -115,7 +115,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			8,
 			"foo",
 			"foo",
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			1000000,
 		))
 		require.Error(t, err)
@@ -142,7 +142,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			78,
 			"foo",
 			"foo",
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			1000000,
 		))
 		require.Error(t, err)
@@ -169,7 +169,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			8,
 			"foo",
 			"foo",
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			1000000,
 		))
 		require.Error(t, err)
@@ -196,7 +196,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			8,
 			"foo",
 			"foo",
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			1000000,
 		)
 
@@ -213,7 +213,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrForeignCoinAlreadyExist)
 
 		// Similar to above, redeploying existing erc20 should also fail
-		deployMsg.CoinType = common.CoinType_ERC20
+		deployMsg.CoinType = pkg.CoinType_ERC20
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
 
 		_, err = keeper.NewMsgServerImpl(*k).DeployFungibleCoinZRC20(ctx, deployMsg)

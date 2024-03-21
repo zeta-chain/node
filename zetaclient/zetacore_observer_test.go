@@ -17,7 +17,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/types"
 	. "gopkg.in/check.v1"
@@ -104,7 +104,7 @@ func (s *COSuite) SetUpTest(c *C) {
 		PrivKey: privateKey,
 	}
 	metaContractAddress := ethcommon.HexToAddress(config.ETH_MPI_ADDRESS)
-	signer, err := evm.NewEVMSigner(common.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
+	signer, err := evm.NewEVMSigner(pkg.Chain("ETH"), config.GOERLI_RPC_ENDPOINT, tss.EVMAddress(), tss, config.META_TEST_GOERLI_ABI, metaContractAddress)
 	c.Assert(err, IsNil)
 	c.Logf("TSS EVMAddress %s", tss.EVMAddress().Hex())
 	c.Logf("ETH MPI EVMAddress: %s", config.ETH_MPI_ADDRESS)

@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/go-tss/p2p"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -99,7 +99,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	zetaBridge.WaitForCoreToCreateBlocks()
 	startLogger.Info().Msgf("ZetaBridge is ready")
-	zetaBridge.SetAccountNumber(common.ZetaClientGranteeKey)
+	zetaBridge.SetAccountNumber(pkg.ZetaClientGranteeKey)
 
 	// cross-check chainid
 	res, err := zetaBridge.GetNodeInfo()
@@ -169,7 +169,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	m.Start()
 
-	metrics.Info.WithLabelValues(common.Version).Set(1)
+	metrics.Info.WithLabelValues(pkg.Version).Set(1)
 	metrics.LastStartTime.SetToCurrentTime()
 
 	var tssHistoricalList []observerTypes.TSS

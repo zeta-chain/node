@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -23,8 +23,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			sample.AccAddress(),
 			"index",
 			"inTxHash",
@@ -45,8 +45,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			sample.AccAddress(),
 			"index",
 			"inTxHash",
@@ -67,8 +67,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err = k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			sample.AccAddress(),
 			"index",
 			"inTxHash",
@@ -96,8 +96,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			sample.AccAddress(),
 			"index",
 			"inTxHash",
@@ -133,8 +133,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err := k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",
@@ -150,7 +150,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 					IsSupported: true,
 				},
 				{
-					ChainId:     common.ZetaPrivnetChain().ChainId,
+					ChainId:     pkg.ZetaPrivnetChain().ChainId,
 					IsSupported: false,
 				},
 			},
@@ -161,8 +161,8 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 		_, _, err = k.VoteOnInboundBallot(
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
-			common.ZetaPrivnetChain().ChainId,
-			common.CoinType_ERC20,
+			pkg.ZetaPrivnetChain().ChainId,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",
@@ -204,7 +204,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
-			common.CoinType_Zeta,
+			pkg.CoinType_Zeta,
 			observer,
 			"index",
 			"inTxHash",
@@ -245,7 +245,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",
@@ -298,7 +298,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",
@@ -362,7 +362,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",
@@ -424,7 +424,7 @@ func TestKeeper_VoteOnInboundBallot(t *testing.T) {
 			ctx,
 			getValidEthChainIDWithIndex(t, 0),
 			getValidEthChainIDWithIndex(t, 1),
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			observer,
 			"index",
 			"inTxHash",

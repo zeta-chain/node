@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -23,9 +23,9 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		// mock the authority keeper for authorization
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
 
-		chain1 := common.ExternalChainList()[0].ChainId
-		chain2 := common.ExternalChainList()[1].ChainId
-		chain3 := common.ExternalChainList()[2].ChainId
+		chain1 := pkg.ExternalChainList()[0].ChainId
+		chain2 := pkg.ExternalChainList()[1].ChainId
+		chain3 := pkg.ExternalChainList()[2].ChainId
 
 		// set admin
 		admin := sample.AccAddress()
@@ -97,7 +97,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: common.ExternalChainList()[0].ChainId,
+			ChainId: pkg.ExternalChainList()[0].ChainId,
 		})
 		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 	})
@@ -119,16 +119,16 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: common.ExternalChainList()[0].ChainId,
+			ChainId: pkg.ExternalChainList()[0].ChainId,
 		})
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 
 		// add chain params
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{
-				sample.ChainParams(common.ExternalChainList()[0].ChainId),
-				sample.ChainParams(common.ExternalChainList()[1].ChainId),
-				sample.ChainParams(common.ExternalChainList()[2].ChainId),
+				sample.ChainParams(pkg.ExternalChainList()[0].ChainId),
+				sample.ChainParams(pkg.ExternalChainList()[1].ChainId),
+				sample.ChainParams(pkg.ExternalChainList()[2].ChainId),
 			},
 		})
 
@@ -137,7 +137,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		// not found if chain ID not in list
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
-			ChainId: common.ExternalChainList()[3].ChainId,
+			ChainId: pkg.ExternalChainList()[3].ChainId,
 		})
 		require.ErrorIs(t, err, types.ErrChainParamsNotFound)
 	})

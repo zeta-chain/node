@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 
@@ -38,31 +38,31 @@ func TestKeeper_GetGasCoinForForeignCoin(t *testing.T) {
 		types.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             pkg.CoinType_ERC20,
 			Name:                 "foo",
 		},
 		types.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             pkg.CoinType_ERC20,
 			Name:                 "foo",
 		},
 		types.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       1,
-			CoinType:             common.CoinType_Gas,
+			CoinType:             pkg.CoinType_Gas,
 			Name:                 "bar",
 		},
 		types.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       2,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             pkg.CoinType_ERC20,
 			Name:                 "foo",
 		},
 		types.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       2,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             pkg.CoinType_ERC20,
 			Name:                 "foo",
 		},
 	)
@@ -88,35 +88,35 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       1,
-				CoinType:             common.CoinType_ERC20,
+				CoinType:             pkg.CoinType_ERC20,
 				Name:                 "foo",
 			},
 			types.ForeignCoins{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                gasAsset,
 				ForeignChainId:       1,
-				CoinType:             common.CoinType_ERC20,
+				CoinType:             pkg.CoinType_ERC20,
 				Name:                 "bar",
 			},
 			types.ForeignCoins{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       1,
-				CoinType:             common.CoinType_Gas,
+				CoinType:             pkg.CoinType_Gas,
 				Name:                 "foo",
 			},
 			types.ForeignCoins{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       2,
-				CoinType:             common.CoinType_ERC20,
+				CoinType:             pkg.CoinType_ERC20,
 				Name:                 "foo",
 			},
 			types.ForeignCoins{
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                sample.EthAddress().String(),
 				ForeignChainId:       2,
-				CoinType:             common.CoinType_ERC20,
+				CoinType:             pkg.CoinType_ERC20,
 				Name:                 "foo",
 			},
 		)
@@ -142,7 +142,7 @@ func TestKeeperGetForeignCoinFromAsset(t *testing.T) {
 				Zrc20ContractAddress: sample.EthAddress().String(),
 				Asset:                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
 				ForeignChainId:       1,
-				CoinType:             common.CoinType_ERC20,
+				CoinType:             pkg.CoinType_ERC20,
 				Name:                 "foo",
 			},
 		)

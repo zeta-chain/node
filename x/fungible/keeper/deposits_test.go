@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -21,7 +21,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -37,7 +37,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
@@ -69,7 +69,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			assetAddress,
 		)
 		require.NoError(t, err)
@@ -84,7 +84,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
@@ -101,7 +101,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte("DEADBEEF"),
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			assetAddress,
 		)
 		require.ErrorIs(t, err, types.ErrCallNonContract)
@@ -112,7 +112,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -142,7 +142,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(500),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
@@ -158,7 +158,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -179,7 +179,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.ErrorIs(t, err, types.ErrPausedZRC20)
@@ -190,7 +190,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -220,7 +220,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(501),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.ErrorIs(t, err, types.ErrForeignCoinCapReached)
@@ -231,7 +231,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -246,7 +246,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.ErrorIs(t, err, crosschaintypes.ErrGasCoinNotFound)
@@ -256,7 +256,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 		assetAddress := sample.EthAddress().String()
 
@@ -272,7 +272,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_ERC20,
+			pkg.CoinType_ERC20,
 			assetAddress,
 		)
 		require.ErrorIs(t, err, crosschaintypes.ErrForeignCoinNotFound)
@@ -283,7 +283,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -302,7 +302,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.NoError(t, err)
@@ -321,7 +321,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 		k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
 
-		chainList := common.DefaultChainsList()
+		chainList := pkg.DefaultChainsList()
 		chain := chainList[0].ChainId
 
 		// deploy the system contracts
@@ -340,7 +340,7 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 			big.NewInt(42),
 			chain,
 			[]byte{},
-			common.CoinType_Gas,
+			pkg.CoinType_Gas,
 			sample.EthAddress().String(),
 		)
 		require.Error(t, err)

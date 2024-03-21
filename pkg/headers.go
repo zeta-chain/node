@@ -13,7 +13,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/bitcoin"
 )
 
 // NewEthereumHeader returns a new HeaderData containing an Ethereum header

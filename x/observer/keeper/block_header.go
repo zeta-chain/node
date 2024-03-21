@@ -5,19 +5,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // SetBlockHeader set a specific block header in the store from its index
-func (k Keeper) SetBlockHeader(ctx sdk.Context, header common.BlockHeader) {
+func (k Keeper) SetBlockHeader(ctx sdk.Context, header pkg.BlockHeader) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockHeaderKey))
 	b := k.cdc.MustMarshal(&header)
 	store.Set(header.Hash, b)
 }
 
 // GetBlockHeader returns a block header from its hash
-func (k Keeper) GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool) {
+func (k Keeper) GetBlockHeader(ctx sdk.Context, hash []byte) (val pkg.BlockHeader, found bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.BlockHeaderKey))
 
 	b := store.Get(hash)

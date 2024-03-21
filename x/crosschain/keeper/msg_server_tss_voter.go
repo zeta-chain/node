@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	math2 "github.com/ethereum/go-ethereum/common/math"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -65,12 +65,12 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 		k.zetaObserverKeeper.AddBallotToList(ctx, ballot)
 	}
 	var err error
-	if msg.Status == common.ReceiveStatus_Success {
+	if msg.Status == pkg.ReceiveStatus_Success {
 		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observertypes.VoteType_SuccessObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err
 		}
-	} else if msg.Status == common.ReceiveStatus_Failed {
+	} else if msg.Status == pkg.ReceiveStatus_Failed {
 		ballot, err = k.zetaObserverKeeper.AddVoteToBallot(ctx, ballot, msg.Creator, observertypes.VoteType_FailureObservation)
 		if err != nil {
 			return &types.MsgCreateTSSVoterResponse{}, err

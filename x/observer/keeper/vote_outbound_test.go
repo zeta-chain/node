@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -21,7 +21,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -41,7 +41,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -64,7 +64,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus(1000),
+			pkg.ReceiveStatus(1000),
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -88,7 +88,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			sample.AccAddress(),
 		)
 		require.Error(t, err)
@@ -120,7 +120,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -166,7 +166,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -224,7 +224,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			observer,
 		)
 		require.NoError(t, err)
@@ -280,7 +280,7 @@ func TestKeeper_VoteOnOutboundBallot(t *testing.T) {
 			ctx,
 			"index",
 			getValidEthChainIDWithIndex(t, 0),
-			common.ReceiveStatus_Success,
+			pkg.ReceiveStatus_Success,
 			observer,
 		)
 		require.NoError(t, err)

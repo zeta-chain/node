@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -16,7 +16,7 @@ func (k Keeper) VoteOnInboundBallot(
 	ctx sdk.Context,
 	senderChainID int64,
 	receiverChainID int64,
-	coinType common.CoinType,
+	coinType pkg.CoinType,
 	voter string,
 	ballotIndex string,
 	inTxHash string,
@@ -58,7 +58,7 @@ func (k Keeper) VoteOnInboundBallot(
 		if !found {
 			return false, false, types.ErrChainParamsNotFound
 		}
-		if coreParams.ZetaTokenContractAddress == "" && coinType == common.CoinType_Zeta {
+		if coreParams.ZetaTokenContractAddress == "" && coinType == pkg.CoinType_Zeta {
 			return false, false, types.ErrInvalidZetaCoinTypes
 		}
 	}

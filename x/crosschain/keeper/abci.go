@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 
 	cosmoserrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
@@ -30,7 +30,7 @@ type CheckAndUpdateCctxGasPriceFunc func(
 // The function returns the number of cctxs updated and the gas price increase flags used
 func (k Keeper) IterateAndUpdateCctxGasPrice(
 	ctx sdk.Context,
-	chains []*common.Chain,
+	chains []*pkg.Chain,
 	updateFunc CheckAndUpdateCctxGasPriceFunc,
 ) (int, observertypes.GasPriceIncreaseFlags) {
 	// fetch the gas price increase flags or use default
@@ -50,7 +50,7 @@ func (k Keeper) IterateAndUpdateCctxGasPrice(
 IterateChains:
 	for _, chain := range chains {
 		// support only external evm chains
-		if common.IsEVMChain(chain.ChainId) && !common.IsZetaChain(chain.ChainId) {
+		if pkg.IsEVMChain(chain.ChainId) && !pkg.IsZetaChain(chain.ChainId) {
 			res, err := k.CctxListPending(sdk.UnwrapSDKContext(ctx), &types.QueryListCctxPendingRequest{
 				ChainId: chain.ChainId,
 				Limit:   gasPriceIncreaseFlags.MaxPendingCctxs,

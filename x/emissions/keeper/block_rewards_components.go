@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
@@ -66,7 +66,7 @@ func (k Keeper) GetFixedBlockRewards() (sdk.Dec, error) {
 }
 
 func CalculateFixedValidatorRewards(avgBlockTimeString string) (sdk.Dec, error) {
-	azetaAmountTotalRewards, err := common.GetAzetaDecFromAmountInZeta(types.BlockRewardsInZeta)
+	azetaAmountTotalRewards, err := pkg.GetAzetaDecFromAmountInZeta(types.BlockRewardsInZeta)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}

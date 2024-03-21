@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 func (m *ObserverSet) Len() int {
@@ -24,11 +24,11 @@ func (m *ObserverSet) Validate() error {
 	return nil
 }
 
-func CheckReceiveStatus(status common.ReceiveStatus) error {
+func CheckReceiveStatus(status pkg.ReceiveStatus) error {
 	switch status {
-	case common.ReceiveStatus_Success:
+	case pkg.ReceiveStatus_Success:
 		return nil
-	case common.ReceiveStatus_Failed:
+	case pkg.ReceiveStatus_Failed:
 		return nil
 	default:
 		return ErrInvalidStatus

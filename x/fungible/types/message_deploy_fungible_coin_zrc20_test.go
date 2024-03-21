@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -27,7 +27,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				6,
 				"test",
 				"test",
-				common.CoinType_ERC20,
+				pkg.CoinType_ERC20,
 				10,
 			),
 			err: sdkerrors.ErrInvalidAddress,
@@ -41,7 +41,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				6,
 				"test",
 				"test",
-				common.CoinType_ERC20,
+				pkg.CoinType_ERC20,
 				-1,
 			),
 			err: sdkerrors.ErrInvalidGasLimit,
@@ -55,7 +55,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				78,
 				"test",
 				"test",
-				common.CoinType_ERC20,
+				pkg.CoinType_ERC20,
 				10,
 			),
 			err: cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "decimals must be less than 78"),
@@ -69,7 +69,7 @@ func TestMsgDeployFungibleCoinZRC4_ValidateBasic(t *testing.T) {
 				6,
 				"test",
 				"test",
-				common.CoinType_ERC20,
+				pkg.CoinType_ERC20,
 				10,
 			),
 		},

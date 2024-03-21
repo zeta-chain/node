@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -83,7 +83,7 @@ func (k Keeper) GetAllForeignCoins(ctx sdk.Context) (list []types.ForeignCoins) 
 func (k Keeper) GetGasCoinForForeignCoin(ctx sdk.Context, chainID int64) (types.ForeignCoins, bool) {
 	foreignCoinList := k.GetAllForeignCoinsForChain(ctx, chainID)
 	for _, coin := range foreignCoinList {
-		if coin.CoinType == common.CoinType_Gas {
+		if coin.CoinType == pkg.CoinType_Gas {
 			return coin, true
 		}
 	}

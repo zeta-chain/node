@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/go-tss/blame"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -74,9 +74,9 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 	return &authzMessage, authzSigner, nil
 }
 
-func (b *ZetaCoreBridge) PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
+func (b *ZetaCoreBridge) PostGasPrice(chain pkg.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
 	// double the gas price to avoid gas price spike
-	gasPrice = gasPrice * common.DefaultGasPriceMultiplier
+	gasPrice = gasPrice * pkg.DefaultGasPriceMultiplier
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 
@@ -101,12 +101,12 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	chainID int64,
 	nonce uint64,
 	txHash string,
-	proof *common.Proof,
+	proof *pkg.Proof,
 	blockHash string,
 	txIndex int64,
 ) (string, error) {
 	// don't report if the tracker already contains the txHash
-	tracker, err := b.GetOutTxTracker(common.Chain{ChainId: chainID}, nonce)
+	tracker, err := b.GetOutTxTracker(pkg.Chain{ChainId: chainID}, nonce)
 	if err == nil {
 		for _, hash := range tracker.HashList {
 			if strings.EqualFold(hash.TxHash, txHash) {
@@ -129,7 +129,7 @@ func (b *ZetaCoreBridge) AddTxHashToOutTxTracker(
 	return zetaTxHash, nil
 }
 
-func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status common.ReceiveStatus) (string, error) {
+func (b *ZetaCoreBridge) SetTSS(tssPubkey string, keyGenZetaHeight int64, status pkg.ReceiveStatus) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgCreateTSSVoter(signerAddress, tssPubkey, keyGenZetaHeight, status)
 
@@ -197,7 +197,7 @@ func (b *ZetaCoreBridge) PostBlameData(blame *blame.Blame, chainID int64, index 
 	return "", fmt.Errorf("post blame data failed after %d retries", DefaultRetryCount)
 }
 
-func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, height int64, header common.HeaderData) (string, error) {
+func (b *ZetaCoreBridge) PostAddBlockHeader(chainID int64, blockHash []byte, height int64, header pkg.HeaderData) (string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 
 	msg := observerTypes.NewMsgAddBlockHeader(signerAddress, chainID, blockHash, height, header)
@@ -313,10 +313,10 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	outTxEffectiveGasPrice *big.Int,
 	outTxEffectiveGasLimit uint64,
 	amount *big.Int,
-	status common.ReceiveStatus,
-	chain common.Chain,
+	status pkg.ReceiveStatus,
+	chain pkg.Chain,
 	nonce uint64,
-	coinType common.CoinType,
+	coinType pkg.CoinType,
 ) (string, string, error) {
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgVoteOnObservedOutboundTx(
@@ -339,7 +339,7 @@ func (b *ZetaCoreBridge) PostVoteOutbound(
 	// the higher gas limit is only necessary when the vote is finalized and the outbound is processed
 	// therefore we use a retryGasLimit with a higher value to resend the tx if it fails (when the vote is finalized)
 	retryGasLimit := uint64(0)
-	if msg.Status == common.ReceiveStatus_Failed {
+	if msg.Status == pkg.ReceiveStatus_Failed {
 		retryGasLimit = PostVoteOutboundRevertGasLimit
 	}
 

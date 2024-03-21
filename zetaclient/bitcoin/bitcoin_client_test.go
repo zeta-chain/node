@@ -15,7 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
@@ -23,7 +23,7 @@ import (
 
 func MockBTCClientMainnet() *BTCChainClient {
 	return &BTCChainClient{
-		chain:      common.BtcMainnetChain(),
+		chain:      pkg.BtcMainnetChain(),
 		zetaClient: stub.NewMockZetaCoreBridge(),
 		Tss:        stub.NewTSSMainnet(),
 	}
@@ -155,7 +155,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	var blockVb btcjson.GetBlockVerboseTxResult
 	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	require.NoError(t, err)
-	dynamicFee828440 := DepositorFee(32 * common.DefaultGasPriceMultiplier)
+	dynamicFee828440 := DepositorFee(32 * pkg.DefaultGasPriceMultiplier)
 
 	// should return default fee if it's a regtest block
 	fee := CalcDepositorFee(&blockVb, 18444, &chaincfg.RegressionNetParams, log.Logger)

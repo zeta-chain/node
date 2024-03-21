@@ -5,7 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common/testdata"
+	"github.com/zeta-chain/zetacore/pkg/testdata"
 )
 
 func TestProofGeneration(t *testing.T) {

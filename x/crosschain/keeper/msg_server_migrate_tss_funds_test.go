@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -20,7 +20,7 @@ func setupTssMigrationParams(
 	zk keepertest.ZetaKeepers,
 	k *keeper.Keeper,
 	ctx sdk.Context,
-	chain common.Chain,
+	chain pkg.Chain,
 	amount sdkmath.Uint,
 	setNewTss bool,
 	setCurrentTSS bool,
@@ -102,7 +102,7 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		index := hash.Hex()
 		cctx, found := k.GetCrossChainTx(ctx, index)
 		require.True(t, found)
-		multipliedValue, err := common.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
+		multipliedValue, err := pkg.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
 		require.NoError(t, err)
 		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 

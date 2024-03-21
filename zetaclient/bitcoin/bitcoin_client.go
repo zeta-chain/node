@@ -31,7 +31,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -59,7 +59,7 @@ type BTCLog struct {
 // BTCChainClient represents a chain configuration for Bitcoin
 // Filled with above constants depending on chain
 type BTCChainClient struct {
-	chain            common.Chain
+	chain            pkg.Chain
 	netParams        *chaincfg.Params
 	rpcClient        interfaces.BTCRPCClient
 	zetaClient       interfaces.ZetaCoreBridger
@@ -114,7 +114,7 @@ func (ob *BTCChainClient) WithBtcClient(client *rpcclient.Client) {
 	ob.rpcClient = client
 }
 
-func (ob *BTCChainClient) WithChain(chain common.Chain) {
+func (ob *BTCChainClient) WithChain(chain pkg.Chain) {
 	ob.Mu.Lock()
 	defer ob.Mu.Unlock()
 	ob.chain = chain
@@ -135,7 +135,7 @@ func (ob *BTCChainClient) GetChainParams() observertypes.ChainParams {
 // NewBitcoinClient returns a new configuration based on supplied target chain
 func NewBitcoinClient(
 	appcontext *appcontext.AppContext,
-	chain common.Chain,
+	chain pkg.Chain,
 	bridge interfaces.ZetaCoreBridger,
 	tss interfaces.TSSSigner,
 	dbpath string,
@@ -147,7 +147,7 @@ func NewBitcoinClient(
 	}
 	ob.stop = make(chan struct{})
 	ob.chain = chain
-	netParams, err := common.BitcoinNetParamsFromChainID(ob.chain.ChainId)
+	netParams, err := pkg.BitcoinNetParamsFromChainID(ob.chain.ChainId)
 	if err != nil {
 		return nil, fmt.Errorf("error getting net params for chain %d: %s", ob.chain.ChainId, err)
 	}
@@ -365,7 +365,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,
-		common.NewBitcoinHeader(headerBuf.Bytes()),
+		pkg.NewBitcoinHeader(headerBuf.Bytes()),
 	)
 	ob.logger.WatchInTx.Info().Msgf("posted block header %d: %s", bn, blockHash)
 	if err != nil { // error shouldn't block the process
@@ -557,10 +557,10 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 		nil, // gas price not used with Bitcoin
 		0,   // gas limit not used with Bitcoin
 		amountInSat,
-		common.ReceiveStatus_Success,
+		pkg.ReceiveStatus_Success,
 		ob.chain,
 		nonce,
-		common.CoinType_Gas,
+		pkg.CoinType_Gas,
 	)
 	if err != nil {
 		logger.Error().Err(err).Msgf("IsSendOutTxProcessed: error confirming bitcoin outTx %s, nonce %d ballot %s", res.TxID, nonce, ballot)
@@ -697,7 +697,7 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 		inTx.TxHash,
 		inTx.BlockNumber,
 		0,
-		common.CoinType_Gas,
+		pkg.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		0,
@@ -707,7 +707,7 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 // IsInTxRestricted returns true if the inTx contains restricted addresses
 func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 	receiver := ""
-	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
+	parsedAddress, _, err := pkg.ParseAddressAndData(hex.EncodeToString(inTx.MemoBytes))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		receiver = parsedAddress.Hex()
 	}
@@ -767,7 +767,7 @@ func GetBtcEvent(
 					logger.Warn().Err(err).Msgf("error hex decoding memo")
 					return nil, fmt.Errorf("error hex decoding memo: %s", err)
 				}
-				if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
+				if bytes.Equal(memoBytes, []byte(pkg.DonationMessage)) {
 					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
 					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
 				}
@@ -850,7 +850,7 @@ func (ob *BTCChainClient) FetchUTXOS() error {
 
 	// List all unspent UTXOs (160ms)
 	tssAddr := ob.Tss.BTCAddress()
-	address, err := common.DecodeBtcAddress(tssAddr, ob.chain.ChainId)
+	address, err := pkg.DecodeBtcAddress(tssAddr, ob.chain.ChainId)
 	if err != nil {
 		return fmt.Errorf("btc: error decoding wallet address (%s) : %s", tssAddr, err.Error())
 	}
@@ -965,7 +965,7 @@ func (ob *BTCChainClient) getOutTxidByNonce(nonce uint64, test bool) (string, er
 
 func (ob *BTCChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, error) {
 	tssAddress := ob.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-	amount := common.NonceMarkAmount(nonce)
+	amount := pkg.NonceMarkAmount(nonce)
 	for i, utxo := range ob.utxos {
 		sats, err := GetSatoshis(utxo.Amount)
 		if err != nil {
@@ -1338,8 +1338,8 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 			if recvAddress != tssAddress {
 				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
 			}
-			if amount != common.NonceMarkAmount(nonce) {
-				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
+			if amount != pkg.NonceMarkAmount(nonce) {
+				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, pkg.NonceMarkAmount(nonce))
 			}
 		}
 		// 2nd vout: payment to recipient
@@ -1383,8 +1383,8 @@ func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, 
 			if recvAddress != tssAddress {
 				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
 			}
-			if amount != common.NonceMarkAmount(nonce) {
-				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
+			if amount != pkg.NonceMarkAmount(nonce) {
+				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark amount %d not match nonce-mark amount %d", amount, pkg.NonceMarkAmount(nonce))
 			}
 		}
 		// 2nd vout: change to TSS (optional)

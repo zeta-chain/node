@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -21,9 +21,9 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 
-		chain1 := common.ExternalChainList()[0].ChainId
-		chain2 := common.ExternalChainList()[1].ChainId
-		chain3 := common.ExternalChainList()[2].ChainId
+		chain1 := pkg.ExternalChainList()[0].ChainId
+		chain2 := pkg.ExternalChainList()[1].ChainId
+		chain3 := pkg.ExternalChainList()[2].ChainId
 
 		// set admin
 		admin := sample.AccAddress()
@@ -115,7 +115,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
 			Creator:     admin,
-			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
+			ChainParams: sample.ChainParams(pkg.ExternalChainList()[0].ChainId),
 		})
 		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
 	})

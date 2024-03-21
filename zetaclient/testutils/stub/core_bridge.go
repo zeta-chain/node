@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -21,11 +21,11 @@ var _ interfaces.ZetaCoreBridger = &MockZetaCoreBridge{}
 
 type MockZetaCoreBridge struct {
 	paused    bool
-	zetaChain common.Chain
+	zetaChain pkg.Chain
 }
 
 func NewMockZetaCoreBridge() *MockZetaCoreBridge {
-	zetaChain, err := common.ZetaChainFromChainID("zetachain_7000-1")
+	zetaChain, err := pkg.ZetaChainFromChainID("zetachain_7000-1")
 	if err != nil {
 		panic(err)
 	}
@@ -42,21 +42,21 @@ func (z *MockZetaCoreBridge) PostVoteInbound(_, _ uint64, _ *cctxtypes.MsgVoteOn
 	return "", "", nil
 }
 
-func (z *MockZetaCoreBridge) PostVoteOutbound(_ string, _ string, _ uint64, _ uint64, _ *big.Int, _ uint64, _ *big.Int, _ common.ReceiveStatus, _ common.Chain, _ uint64, _ common.CoinType) (string, string, error) {
+func (z *MockZetaCoreBridge) PostVoteOutbound(_ string, _ string, _ uint64, _ uint64, _ *big.Int, _ uint64, _ *big.Int, _ pkg.ReceiveStatus, _ pkg.Chain, _ uint64, _ pkg.CoinType) (string, string, error) {
 	if z.paused {
 		return "", "", errors.New(ErrMsgPaused)
 	}
 	return "", "", nil
 }
 
-func (z *MockZetaCoreBridge) PostGasPrice(_ common.Chain, _ uint64, _ string, _ uint64) (string, error) {
+func (z *MockZetaCoreBridge) PostGasPrice(_ pkg.Chain, _ uint64, _ string, _ uint64) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) PostAddBlockHeader(_ int64, _ []byte, _ int64, _ common.HeaderData) (string, error) {
+func (z *MockZetaCoreBridge) PostAddBlockHeader(_ int64, _ []byte, _ int64, _ pkg.HeaderData) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -77,7 +77,7 @@ func (z *MockZetaCoreBridge) PostBlameData(_ *blame.Blame, _ int64, _ string) (s
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) AddTxHashToOutTxTracker(_ int64, _ uint64, _ string, _ *common.Proof, _ string, _ int64) (string, error) {
+func (z *MockZetaCoreBridge) AddTxHashToOutTxTracker(_ int64, _ uint64, _ string, _ *pkg.Proof, _ string, _ int64) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}
@@ -102,7 +102,7 @@ func (z *MockZetaCoreBridge) GetZetaBlockHeight() (int64, error) {
 	return 0, nil
 }
 
-func (z *MockZetaCoreBridge) GetLastBlockHeightByChain(_ common.Chain) (*cctxtypes.LastBlockHeight, error) {
+func (z *MockZetaCoreBridge) GetLastBlockHeightByChain(_ pkg.Chain) (*cctxtypes.LastBlockHeight, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
@@ -130,7 +130,7 @@ func (z *MockZetaCoreBridge) GetCctxByNonce(_ int64, _ uint64) (*cctxtypes.Cross
 	return &cctxtypes.CrossChainTx{}, nil
 }
 
-func (z *MockZetaCoreBridge) GetOutTxTracker(_ common.Chain, _ uint64) (*cctxtypes.OutTxTracker, error) {
+func (z *MockZetaCoreBridge) GetOutTxTracker(_ pkg.Chain, _ uint64) (*cctxtypes.OutTxTracker, error) {
 	if z.paused {
 		return nil, errors.New(ErrMsgPaused)
 	}
@@ -183,7 +183,7 @@ func (z *MockZetaCoreBridge) GetLogger() *zerolog.Logger {
 	return nil
 }
 
-func (z *MockZetaCoreBridge) ZetaChain() common.Chain {
+func (z *MockZetaCoreBridge) ZetaChain() pkg.Chain {
 	return z.zetaChain
 }
 

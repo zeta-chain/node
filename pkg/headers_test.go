@@ -18,8 +18,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/testdata"
+	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/testdata"
 )
 
 const numHeadersToTest = 100
@@ -48,7 +48,7 @@ func TestTrueEthereumHeader(t *testing.T) {
 	err = header.EncodeRLP(&buffer)
 	require.NoError(t, err)
 
-	headerData := common.NewEthereumHeader(buffer.Bytes())
+	headerData := pkg.NewEthereumHeader(buffer.Bytes())
 	err = headerData.Validate(header.Hash().Bytes(), 1, 18495266)
 	require.NoError(t, err)
 
@@ -78,7 +78,7 @@ func TestFalseEthereumHeader(t *testing.T) {
 	err = header.EncodeRLP(&buffer)
 	require.NoError(t, err)
 
-	headerData := common.NewEthereumHeader(buffer.Bytes())
+	headerData := pkg.NewEthereumHeader(buffer.Bytes())
 	err = headerData.Validate(hash.Bytes(), 1, 18495267)
 	require.Error(t, err)
 }
@@ -112,7 +112,7 @@ func TestFakeBitcoinHeader(t *testing.T) {
 }
 
 func TestNonExistentHeaderType(t *testing.T) {
-	headerData := common.HeaderData{}
+	headerData := pkg.HeaderData{}
 
 	err := headerData.Validate([]byte{}, 18332, 0)
 	require.EqualError(t, err, "unrecognized header type")
@@ -196,7 +196,7 @@ func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {
 func validateTrueBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
 	blockHash := header.BlockHash()
 
-	headerData := common.NewBitcoinHeader(headerBytes)
+	headerData := pkg.NewBitcoinHeader(headerBytes)
 	// True Bitcoin header should pass validation
 	err := headerData.Validate(blockHash[:], 18332, 0)
 	require.NoError(t, err)
@@ -214,7 +214,7 @@ func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerByt
 	blockHash := header.BlockHash()
 
 	// Incorrect header length should fail validation
-	err := common.ValidateBitcoinHeader(headerBytes[:79], blockHash[:], 18332)
+	err := pkg.ValidateBitcoinHeader(headerBytes[:79], blockHash[:], 18332)
 	require.Error(t, err)
 
 	// Incorrect version should fail validation
@@ -222,7 +222,7 @@ func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerByt
 	fakeHeader.Version = 0
 	fakeBytes := marshalHeader(t, fakeHeader)
 	fakeHash := fakeHeader.BlockHash()
-	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
+	err = pkg.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
 	require.Error(t, err)
 
 	// Incorrect timestamp should fail validation
@@ -231,24 +231,24 @@ func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerByt
 	fakeHeader.Timestamp = chaincfg.TestNet3Params.GenesisBlock.Header.Timestamp.Add(-time.Second)
 	fakeBytes = marshalHeader(t, fakeHeader)
 	fakeHash = fakeHeader.BlockHash()
-	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
+	err = pkg.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
 	require.Error(t, err)
 	// Case2: timestamp is after 2 hours in the future
 	fakeHeader = copyHeader(header)
 	fakeHeader.Timestamp = header.Timestamp.Add(time.Second * (blockchain.MaxTimeOffsetSeconds + 1))
 	fakeBytes = marshalHeader(t, fakeHeader)
-	err = common.NewBitcoinHeader(fakeBytes).ValidateTimestamp(header.Timestamp)
+	err = pkg.NewBitcoinHeader(fakeBytes).ValidateTimestamp(header.Timestamp)
 	require.Error(t, err)
 
 	// Incorrect block hash should fail validation
 	fakeHeader = copyHeader(header)
 	header.Nonce = 0
 	fakeBytes = marshalHeader(t, header)
-	err = common.ValidateBitcoinHeader(fakeBytes, blockHash[:], 18332)
+	err = pkg.ValidateBitcoinHeader(fakeBytes, blockHash[:], 18332)
 	require.Error(t, err)
 
 	// PoW not satisfied should fail validation
 	fakeHash = fakeHeader.BlockHash()
-	err = common.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
+	err = pkg.ValidateBitcoinHeader(fakeBytes, fakeHash[:], 18332)
 	require.Error(t, err)
 }

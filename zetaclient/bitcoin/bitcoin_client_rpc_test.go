@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -47,7 +47,7 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 		PrivKey: privateKey,
 	}
 	appContext := appcontext.NewAppContext(&corecontext.ZetaCoreContext{}, config.Config{})
-	client, err := NewBitcoinClient(appContext, common.BtcRegtestChain(), nil, tss, "/tmp", clientcommon.DefaultLoggers(), nil)
+	client, err := NewBitcoinClient(appContext, pkg.BtcRegtestChain(), nil, tss, "/tmp", clientcommon.DefaultLoggers(), nil)
 	suite.Require().NoError(err)
 	suite.BitcoinChainClient = client
 	skBytes, err := hex.DecodeString(skHex)

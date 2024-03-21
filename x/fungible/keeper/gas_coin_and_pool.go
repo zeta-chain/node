@@ -10,7 +10,7 @@ import (
 	systemcontract "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -26,7 +26,7 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	decimals uint8,
 	gasLimit *big.Int,
 ) (ethcommon.Address, error) {
-	chain := common.GetChainFromChainID(chainID)
+	chain := pkg.GetChainFromChainID(chainID)
 	if chain == nil {
 		return ethcommon.Address{}, zetaObserverTypes.ErrSupportedChains
 	}
@@ -43,12 +43,12 @@ func (k Keeper) SetupChainGasCoinAndPool(
 	// default values
 	if transferGasLimit == nil {
 		transferGasLimit = big.NewInt(21_000)
-		if common.IsBitcoinChain(chain.ChainId) {
+		if pkg.IsBitcoinChain(chain.ChainId) {
 			transferGasLimit = big.NewInt(100) // 100B for a typical tx
 		}
 	}
 
-	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, common.CoinType_Gas, "", transferGasLimit)
+	zrc20Addr, err := k.DeployZRC20Contract(ctx, name, symbol, decimals, chain.ChainId, pkg.CoinType_Gas, "", transferGasLimit)
 	if err != nil {
 		return ethcommon.Address{}, cosmoserrors.Wrapf(err, "failed to DeployZRC20Contract")
 	}

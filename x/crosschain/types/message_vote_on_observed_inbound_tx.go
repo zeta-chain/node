@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 // MaxMessageLength is the maximum length of a message in a cctx
@@ -29,7 +29,7 @@ func NewMsgVoteOnObservedInboundTx(
 	inTxHash string,
 	inBlockHeight,
 	gasLimit uint64,
-	coinType common.CoinType,
+	coinType pkg.CoinType,
 	asset string,
 	eventIndex uint,
 ) *MsgVoteOnObservedInboundTx {
@@ -56,7 +56,7 @@ func (msg *MsgVoteOnObservedInboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedInboundTx) Type() string {
-	return common.InboundVoter.String()
+	return pkg.InboundVoter.String()
 }
 
 func (msg *MsgVoteOnObservedInboundTx) GetSigners() []sdk.AccAddress {

@@ -14,7 +14,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/require"
 	cmdcfg "github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -61,8 +61,8 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 	}
 
 	if setupChainNonces {
-		chainNonceList := make([]observertypes.ChainNonces, len(common.PrivnetChainList()))
-		for i, chain := range common.PrivnetChainList() {
+		chainNonceList := make([]observertypes.ChainNonces, len(pkg.PrivnetChainList()))
+		for i, chain := range pkg.PrivnetChainList() {
 			chainNonceList[i] = observertypes.ChainNonces{
 				Index:   chain.ChainName.String(),
 				ChainId: chain.ChainId,
@@ -139,8 +139,8 @@ func AddObserverData(t *testing.T, n int, genesisState map[string]json.RawMessag
 		FinalizedZetaHeight: 1,
 		KeyGenZetaHeight:    1,
 	}
-	pendingNonces := make([]observertypes.PendingNonces, len(common.DefaultChainsList()))
-	for i, chain := range common.DefaultChainsList() {
+	pendingNonces := make([]observertypes.PendingNonces, len(pkg.DefaultChainsList()))
+	for i, chain := range pkg.DefaultChainsList() {
 		pendingNonces[i] = observertypes.PendingNonces{
 			ChainId:   chain.ChainId,
 			NonceLow:  0,
@@ -205,7 +205,7 @@ func AddCrosschainData(t *testing.T, n int, genesisState map[string]json.RawMess
 		inTxTracker := types.InTxTracker{
 			ChainId:  5,
 			TxHash:   fmt.Sprintf("txHash-%d", i),
-			CoinType: common.CoinType_Gas,
+			CoinType: pkg.CoinType_Gas,
 		}
 		nullify.Fill(&inTxTracker)
 		state.InTxTrackerList = append(state.InTxTrackerList, inTxTracker)

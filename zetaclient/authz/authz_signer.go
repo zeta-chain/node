@@ -2,12 +2,12 @@ package authz
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 type Signer struct {
-	KeyType        common.KeyType
+	KeyType        pkg.KeyType
 	GranterAddress string
 	GranteeAddress sdk.AccAddress
 }
@@ -21,7 +21,7 @@ var signers map[string]Signer
 func init() {
 	signersList := make(map[string]Signer)
 	for _, tx := range crosschaintypes.GetAllAuthzZetaclientTxTypes() {
-		signersList[tx] = Signer{KeyType: common.ZetaClientGranteeKey}
+		signersList[tx] = Signer{KeyType: pkg.ZetaClientGranteeKey}
 	}
 	signers = signersList
 }

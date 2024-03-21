@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 var _ sdk.Msg = &MsgVoteOnObservedOutboundTx{}
@@ -20,10 +20,10 @@ func NewMsgVoteOnObservedOutboundTx(
 	outTxEffectiveGasPrice math.Int,
 	outTxEffectiveGasLimit uint64,
 	valueReceived math.Uint,
-	status common.ReceiveStatus,
+	status pkg.ReceiveStatus,
 	chain int64,
 	nonce uint64,
-	coinType common.CoinType,
+	coinType pkg.CoinType,
 ) *MsgVoteOnObservedOutboundTx {
 	return &MsgVoteOnObservedOutboundTx{
 		Creator:                        creator,
@@ -46,7 +46,7 @@ func (msg *MsgVoteOnObservedOutboundTx) Route() string {
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) Type() string {
-	return common.OutboundVoter.String()
+	return pkg.OutboundVoter.String()
 }
 
 func (msg *MsgVoteOnObservedOutboundTx) GetSigners() []sdk.AccAddress {
@@ -79,7 +79,7 @@ func (msg *MsgVoteOnObservedOutboundTx) Digest() string {
 	m.Creator = ""
 
 	// Set status to ReceiveStatus_Created to make sure both successful and failed votes are added to the same ballot
-	m.Status = common.ReceiveStatus_Created
+	m.Status = pkg.ReceiveStatus_Created
 
 	// Outbound and reverted txs have different digest as ObservedOutTxHash is different so they are stored in different ballots
 	hash := crypto.Keccak256Hash([]byte(m.String()))

@@ -3,7 +3,7 @@ package main
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
@@ -55,8 +55,8 @@ func CreateSignerMap(
 	tss interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-) (map[common.Chain]interfaces.ChainSigner, error) {
-	signerMap := make(map[common.Chain]interfaces.ChainSigner)
+) (map[pkg.Chain]interfaces.ChainSigner, error) {
+	signerMap := make(map[pkg.Chain]interfaces.ChainSigner)
 	// EVM signers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
@@ -100,8 +100,8 @@ func CreateChainClientMap(
 	dbpath string,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-) (map[common.Chain]interfaces.ChainClient, error) {
-	clientMap := make(map[common.Chain]interfaces.ChainClient)
+) (map[pkg.Chain]interfaces.ChainClient, error) {
+	clientMap := make(map[pkg.Chain]interfaces.ChainClient)
 	// EVM clients
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {

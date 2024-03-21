@@ -15,7 +15,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -72,7 +72,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		// #nosec G701 always in range
 		uint8(msg.Decimals),
 		chain.ChainId,
-		common.CoinType_ERC20,
+		pkg.CoinType_ERC20,
 		msg.Erc20Address,
 		big.NewInt(msg.GasLimit),
 	)
@@ -115,7 +115,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		Creator:        msg.Creator,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
-		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
+		RelayedMessage: fmt.Sprintf("%s:%s", pkg.CmdWhitelistERC20, msg.Erc20Address),
 		CctxStatus: &types.Status{
 			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",
@@ -125,7 +125,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			Sender:                          "",
 			SenderChainId:                   0,
 			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
+			CoinType:                        pkg.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          math.Uint{},
 			InboundTxObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
@@ -137,7 +137,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			{
 				Receiver:                         param.Erc20CustodyContractAddress,
 				ReceiverChainId:                  msg.ChainId,
-				CoinType:                         common.CoinType_Cmd,
+				CoinType:                         pkg.CoinType_Cmd,
 				Amount:                           math.NewUint(0),
 				OutboundTxTssNonce:               0,
 				OutboundTxGasLimit:               100_000,
@@ -162,7 +162,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		Decimals:             msg.Decimals,
 		Name:                 msg.Name,
 		Symbol:               msg.Symbol,
-		CoinType:             common.CoinType_ERC20,
+		CoinType:             pkg.CoinType_ERC20,
 		// #nosec G701 always positive
 		GasLimit: uint64(msg.GasLimit),
 	}

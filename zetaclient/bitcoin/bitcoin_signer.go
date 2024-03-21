@@ -21,7 +21,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -80,11 +80,11 @@ func (signer *BTCSigner) SignWithdrawTx(
 	btcClient *BTCChainClient,
 	height uint64,
 	nonce uint64,
-	chain *common.Chain,
+	chain *pkg.Chain,
 	cancelTx bool,
 ) (*wire.MsgTx, error) {
 	estimateFee := float64(gasPrice.Uint64()*outTxBytesMax) / 1e8
-	nonceMark := common.NonceMarkAmount(nonce)
+	nonceMark := pkg.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
 	err := btcClient.FetchUTXOS()
@@ -259,7 +259,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		Logger()
 
 	params := cctx.GetCurrentOutTxParam()
-	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
+	if params.CoinType == pkg.CoinType_Zeta || params.CoinType == pkg.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
@@ -290,12 +290,12 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	// Check receiver P2WPKH address
-	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(params.ReceiverChainId)
+	bitcoinNetParams, err := pkg.BitcoinNetParamsFromChainID(params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot get bitcoin net params%v", err)
 		return
 	}
-	addr, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
+	addr, err := pkg.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return

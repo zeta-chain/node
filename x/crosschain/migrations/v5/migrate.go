@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -69,17 +69,17 @@ func ResetTestnetNonce(
 }
 
 type TestnetNonce struct {
-	chain     common.Chain
+	chain     pkg.Chain
 	nonceHigh uint64
 	nonceLow  uint64
 }
 
 func CurrentTestnetChains() []TestnetNonce {
 	return []TestnetNonce{
-		{chain: common.GoerliChain(), nonceHigh: 226841, nonceLow: 226841},
-		{chain: common.MumbaiChain(), nonceHigh: 200599, nonceLow: 200599},
-		{chain: common.BscTestnetChain(), nonceHigh: 110454, nonceLow: 110454},
-		{chain: common.BtcTestNetChain(), nonceHigh: 4881, nonceLow: 4881},
+		{chain: pkg.GoerliChain(), nonceHigh: 226841, nonceLow: 226841},
+		{chain: pkg.MumbaiChain(), nonceHigh: 200599, nonceLow: 200599},
+		{chain: pkg.BscTestnetChain(), nonceHigh: 110454, nonceLow: 110454},
+		{chain: pkg.BtcTestNetChain(), nonceHigh: 4881, nonceLow: 4881},
 	}
 }
 
@@ -94,7 +94,7 @@ func SetZetaAccounting(
 		if cctx.CctxStatus.Status == types.CctxStatus_Aborted {
 
 			switch cctx.InboundTxParams.CoinType {
-			case common.CoinType_ERC20:
+			case pkg.CoinType_ERC20:
 				{
 					receiverChain := observerKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
 					if receiverChain == nil {
@@ -110,7 +110,7 @@ func SetZetaAccounting(
 						cctx.CctxStatus.IsAbortRefunded = false
 					}
 				}
-			case common.CoinType_Zeta:
+			case pkg.CoinType_Zeta:
 				{
 					// add the required amount into the zeta accounting.
 					// GetAbortedAmount replaces using Outbound Amount directly, to make sure we refund the amount deposited by the user if the outbound is never created and the cctx is aborted.
@@ -120,7 +120,7 @@ func SetZetaAccounting(
 					cctx.CctxStatus.IsAbortRefunded = false
 
 				}
-			case common.CoinType_Gas:
+			case pkg.CoinType_Gas:
 				{
 					// CointType gas can be processed as normal and we can issue the refund using the admin refund tx .
 					cctx.CctxStatus.IsAbortRefunded = false

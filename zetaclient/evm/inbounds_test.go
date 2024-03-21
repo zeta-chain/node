@@ -10,7 +10,7 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
@@ -22,7 +22,7 @@ import (
 
 // MockEVMClient creates a mock ChainClient with custom chain, TSS, params etc
 func MockEVMClient(
-	chain common.Chain,
+	chain pkg.Chain,
 	evmClient interfaces.EVMRPCClient,
 	evmJSONRPC interfaces.EVMJSONRPCClient,
 	zetClient interfaces.ZetaCoreBridger,
@@ -52,14 +52,14 @@ func MockEVMClient(
 func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 	// load archived ZetaSent intx, receipt and cctx
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
 	intxHash := "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76"
 
 	t.Run("should pass for archived intx, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Zeta)
+		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Zeta)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -69,7 +69,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Zeta)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
@@ -78,7 +78,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no ZetaSent event", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Zeta)
 		receipt.Logs = receipt.Logs[:2] // remove ZetaSent event
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -89,7 +89,7 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if emitter is not ZetaConnector", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Zeta)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Zeta)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -103,14 +103,14 @@ func TestEVM_CheckAndVoteInboundTokenZeta(t *testing.T) {
 func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 	// load archived ERC20 intx, receipt and cctx
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
 	intxHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
 
 	t.Run("should pass for archived intx, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_ERC20)
+		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_ERC20)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -120,7 +120,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_ERC20)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
@@ -129,7 +129,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if no Deposit event", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_ERC20)
 		receipt.Logs = receipt.Logs[:1] // remove Deposit event
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -140,7 +140,7 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if emitter is not ERC20 Custody", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_ERC20)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_ERC20)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -154,14 +154,14 @@ func TestEVM_CheckAndVoteInboundTokenERC20(t *testing.T) {
 func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 	// load archived Gas intx, receipt and cctx
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	confirmation := uint64(10)
 	chainID := chain.ChainId
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 
 	t.Run("should pass for archived intx, receipt and cctx", func(t *testing.T) {
-		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
+		tx, receipt, cctx := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Gas)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -171,7 +171,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.Equal(t, cctx.InboundTxParams.InboundTxBallotIndex, ballot)
 	})
 	t.Run("should fail on unconfirmed intx", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Gas)
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation - 1
 
@@ -180,7 +180,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.ErrorContains(t, err, "not been confirmed")
 	})
 	t.Run("should not act if receiver is not TSS", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Gas)
 		tx.To = testutils.OtherAddress // use other address
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -191,7 +191,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act if transaction failed", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Gas)
 		receipt.Status = ethtypes.ReceiptStatusFailed
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
@@ -202,8 +202,8 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 		require.Equal(t, "", ballot)
 	})
 	t.Run("should not act on nil message", func(t *testing.T) {
-		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, common.CoinType_Gas)
-		tx.Input = hex.EncodeToString([]byte(common.DonationMessage)) // donation will result in nil message
+		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, pkg.CoinType_Gas)
+		tx.Input = hex.EncodeToString([]byte(pkg.DonationMessage)) // donation will result in nil message
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -218,10 +218,10 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 	// load archived ZetaSent receipt
 	// https://etherscan.io/tx/0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76
 	chainID := int64(1)
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	intxHash := "0xf3935200c80f98502d5edc7e871ffc40ca898e134525c42c2ae3cbc5725f9d76"
-	receipt := testutils.LoadEVMIntxReceipt(t, chainID, intxHash, common.CoinType_Zeta)
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, common.CoinType_Zeta)
+	receipt := testutils.LoadEVMIntxReceipt(t, chainID, intxHash, pkg.CoinType_Zeta)
+	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, pkg.CoinType_Zeta)
 
 	// parse ZetaSent event
 	ob := MockEVMClient(chain, nil, nil, nil, nil, 1, stub.MockChainParams(1, 1))
@@ -264,11 +264,11 @@ func TestEVM_BuildInboundVoteMsgForZetaSentEvent(t *testing.T) {
 func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 	// load archived Deposited receipt
 	// https://etherscan.io/tx/0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	chainID := chain.ChainId
 	intxHash := "0x4ea69a0e2ff36f7548ab75791c3b990e076e2a4bffeb616035b239b7d33843da"
-	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, common.CoinType_ERC20)
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, common.CoinType_ERC20)
+	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, pkg.CoinType_ERC20)
+	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, pkg.CoinType_ERC20)
 
 	// parse Deposited event
 	ob := MockEVMClient(chain, nil, nil, nil, nil, 1, stub.MockChainParams(1, 1))
@@ -300,7 +300,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
-		event.Message = []byte(common.DonationMessage)
+		event.Message = []byte(pkg.DonationMessage)
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})
@@ -309,17 +309,17 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 	// load archived gas token transfer to TSS
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	chainID := chain.ChainId
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
-	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, common.CoinType_Gas)
+	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, pkg.CoinType_Gas)
 	require.NoError(t, evm.ValidateEvmTransaction(tx))
-	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, common.CoinType_Gas)
+	cctx := testutils.LoadEVMIntxCctx(t, chainID, intxHash, pkg.CoinType_Gas)
 
 	// load archived gas token donation to TSS
 	// https://etherscan.io/tx/0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155
 	inTxHashDonation := "0x52f214cf7b10be71f4d274193287d47bc9632b976e69b9d2cdeb527c2ba32155"
-	txDonation, receiptDonation := testutils.LoadEVMIntxNReceiptDonation(t, chainID, inTxHashDonation, common.CoinType_Gas)
+	txDonation, receiptDonation := testutils.LoadEVMIntxNReceiptDonation(t, chainID, inTxHashDonation, pkg.CoinType_Gas)
 	require.NoError(t, evm.ValidateEvmTransaction(txDonation))
 
 	// create test compliance config
@@ -358,14 +358,14 @@ func TestEVM_BuildInboundVoteMsgForTokenSentToTSS(t *testing.T) {
 
 func TestEVM_ObserveTSSReceiveInBlock(t *testing.T) {
 	// https://etherscan.io/tx/0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532
-	chain := common.EthChain()
+	chain := pkg.EthChain()
 	chainID := chain.ChainId
 	confirmation := uint64(1)
 	chainParam := stub.MockChainParams(chain.ChainId, confirmation)
 	intxHash := "0xeaec67d5dd5d85f27b21bef83e01cbdf59154fd793ea7a22c297f7c3a722c532"
 
 	// load archived tx and receipt
-	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, common.CoinType_Gas)
+	tx, receipt := testutils.LoadEVMIntxNReceipt(t, chainID, intxHash, pkg.CoinType_Gas)
 	require.NoError(t, evm.ValidateEvmTransaction(tx))
 
 	// load archived evm block

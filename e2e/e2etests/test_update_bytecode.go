@@ -4,10 +4,10 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/contracts/testzrc20"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -32,7 +32,7 @@ func TestUpdateBytecode(r *runner.E2ERunner, _ []string) {
 		r.ZEVMClient,
 		big.NewInt(5),
 		// #nosec G701 test - always in range
-		uint8(common.CoinType_Gas),
+		uint8(pkg.CoinType_Gas),
 	)
 	if err != nil {
 		panic(err)

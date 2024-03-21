@@ -15,7 +15,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -32,8 +32,8 @@ type ZetaCoreLog struct {
 // CoreObserver wraps the zetabridge bridge and adds the client and signer maps to it . This is the high level object used for CCTX interactions
 type CoreObserver struct {
 	bridge              interfaces.ZetaCoreBridger
-	signerMap           map[common.Chain]interfaces.ChainSigner
-	clientMap           map[common.Chain]interfaces.ChainClient
+	signerMap           map[pkg.Chain]interfaces.ChainSigner
+	clientMap           map[pkg.Chain]interfaces.ChainClient
 	logger              ZetaCoreLog
 	ts                  *metrics.TelemetryServer
 	stop                chan struct{}
@@ -43,8 +43,8 @@ type CoreObserver struct {
 // NewCoreObserver creates a new CoreObserver
 func NewCoreObserver(
 	bridge interfaces.ZetaCoreBridger,
-	signerMap map[common.Chain]interfaces.ChainSigner,
-	clientMap map[common.Chain]interfaces.ChainClient,
+	signerMap map[pkg.Chain]interfaces.ChainSigner,
+	clientMap map[pkg.Chain]interfaces.ChainClient,
 	logger zerolog.Logger,
 	ts *metrics.TelemetryServer,
 ) *CoreObserver {
@@ -157,9 +157,9 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						if common.IsEVMChain(c.ChainId) {
+						if pkg.IsEVMChain(c.ChainId) {
 							co.scheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if common.IsBitcoinChain(c.ChainId) {
+						} else if pkg.IsBitcoinChain(c.ChainId) {
 							co.scheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							co.logger.ZetaChainWatcher.Error().Msgf("startCctxScheduler: unsupported chain %d", c.ChainId)
@@ -324,7 +324,7 @@ func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, cha
 	}
 	// update chain client core parameters
 	curParams := chainOb.GetChainParams()
-	if common.IsEVMChain(chainID) {
+	if pkg.IsEVMChain(chainID) {
 		evmParams, found := appContext.ZetaCoreContext().GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
@@ -334,7 +334,7 @@ func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, cha
 				*evmParams,
 			)
 		}
-	} else if common.IsBitcoinChain(chainID) {
+	} else if pkg.IsBitcoinChain(chainID) {
 		_, btcParams, found := appContext.ZetaCoreContext().GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {
@@ -349,7 +349,7 @@ func (co *CoreObserver) getUpdatedChainOb(appContext *appcontext.AppContext, cha
 }
 
 func (co *CoreObserver) getTargetChainOb(chainID int64) (interfaces.ChainClient, error) {
-	c := common.GetChainFromChainID(chainID)
+	c := pkg.GetChainFromChainID(chainID)
 	if c == nil {
 		return nil, fmt.Errorf("chain not found for chainID %d", chainID)
 	}

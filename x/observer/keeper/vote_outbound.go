@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -15,7 +15,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	ctx sdk.Context,
 	ballotIndex string,
 	outTxChainID int64,
-	receiveStatus common.ReceiveStatus,
+	receiveStatus pkg.ReceiveStatus,
 	voter string,
 ) (isFinalized bool, isNew bool, ballot observertypes.Ballot, observationChainName string, err error) {
 	// Observer Chain already checked then inbound is created

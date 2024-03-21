@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -49,12 +49,12 @@ func TestKeeper_GetSupportedChains(t *testing.T) {
 	t.Run("return list containing supported chains", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 
-		require.Greater(t, len(common.ExternalChainList()), 5)
-		supported1 := common.ExternalChainList()[0]
-		supported2 := common.ExternalChainList()[1]
-		unsupported := common.ExternalChainList()[2]
-		supported3 := common.ExternalChainList()[3]
-		supported4 := common.ExternalChainList()[4]
+		require.Greater(t, len(pkg.ExternalChainList()), 5)
+		supported1 := pkg.ExternalChainList()[0]
+		supported2 := pkg.ExternalChainList()[1]
+		unsupported := pkg.ExternalChainList()[2]
+		supported3 := pkg.ExternalChainList()[3]
+		supported4 := pkg.ExternalChainList()[4]
 
 		var chainParamsList []*types.ChainParams
 		chainParamsList = append(chainParamsList, sample.ChainParamsSupported(supported1.ChainId))

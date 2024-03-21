@@ -7,18 +7,18 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
 func (k Keeper) RefundAbortedAmountOnZetaChain(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	coinType := cctx.InboundTxParams.CoinType
 	switch coinType {
-	case common.CoinType_Gas:
+	case pkg.CoinType_Gas:
 		return k.RefundAmountOnZetaChainGas(ctx, cctx, refundAddress)
-	case common.CoinType_Zeta:
+	case pkg.CoinType_Zeta:
 		return k.RefundAmountOnZetaChainZeta(ctx, cctx, refundAddress)
-	case common.CoinType_ERC20:
+	case pkg.CoinType_ERC20:
 		return k.RefundAmountOnZetaChainERC20(ctx, cctx, refundAddress)
 	default:
 		return errors.New("unsupported coin type for refund on ZetaChain")
@@ -56,7 +56,7 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 	refundAmount := GetAbortedAmount(cctx)
 	chainID := cctx.InboundTxParams.SenderChainId
 	// check if chain is an EVM chain
-	if !common.IsEVMChain(chainID) {
+	if !pkg.IsEVMChain(chainID) {
 		return errors.New("only EVM chains are supported for refund when coin type is Zeta")
 	}
 	if cctx.InboundTxParams.Amount.IsNil() || cctx.InboundTxParams.Amount.IsZero() {
@@ -75,10 +75,10 @@ func (k Keeper) RefundAmountOnZetaChainZeta(ctx sdk.Context, cctx types.CrossCha
 func (k Keeper) RefundAmountOnZetaChainERC20(ctx sdk.Context, cctx types.CrossChainTx, refundAddress ethcommon.Address) error {
 	refundAmount := GetAbortedAmount(cctx)
 	// preliminary checks
-	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
+	if cctx.InboundTxParams.CoinType != pkg.CoinType_ERC20 {
 		return errors.New("unsupported coin type for refund on ZetaChain")
 	}
-	if !common.IsEVMChain(cctx.InboundTxParams.SenderChainId) {
+	if !pkg.IsEVMChain(cctx.InboundTxParams.SenderChainId) {
 		return errors.New("only EVM chains are supported for refund on ZetaChain")
 	}
 

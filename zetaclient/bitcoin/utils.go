@@ -12,7 +12,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
@@ -171,11 +171,11 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 	dynamicFee := true
 
 	// use default fee for regnet
-	if common.IsBitcoinRegnet(chainID) {
+	if pkg.IsBitcoinRegnet(chainID) {
 		dynamicFee = false
 	}
 	// mainnet dynamic fee takes effect only after a planned upgrade height
-	if common.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
+	if pkg.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
 		dynamicFee = false
 	}
 	if !dynamicFee {
@@ -188,7 +188,7 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 		feeRate = defaultDepositorFeeRate // use default fee rate if calculation fails, should not happen
 		logger.Error().Err(err).Msgf("cannot calculate fee rate for block %d", blockVb.Height)
 	}
-	feeRate = feeRate * common.DefaultGasPriceMultiplier
+	feeRate = feeRate * pkg.DefaultGasPriceMultiplier
 	return DepositorFee(feeRate)
 }
 
@@ -225,7 +225,7 @@ func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 }
 
 // DecodeP2WPKHVout decodes receiver and amount from P2WPKH output
-func DecodeP2WPKHVout(vout btcjson.Vout, chain common.Chain) (string, int64, error) {
+func DecodeP2WPKHVout(vout btcjson.Vout, chain pkg.Chain) (string, int64, error) {
 	amount, err := GetSatoshis(vout.Value)
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error getting satoshis")

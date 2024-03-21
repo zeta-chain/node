@@ -4,7 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 )
 
 var _ sdk.Msg = &MsgGasPriceVoter{}
@@ -24,7 +24,7 @@ func (msg *MsgGasPriceVoter) Route() string {
 }
 
 func (msg *MsgGasPriceVoter) Type() string {
-	return common.GasPriceVoter.String()
+	return pkg.GasPriceVoter.String()
 }
 
 func (msg *MsgGasPriceVoter) GetSigners() []sdk.AccAddress {
