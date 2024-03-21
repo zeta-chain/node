@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -89,6 +90,39 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgResetChainNonces_GetSigners(t *testing.T) {
+	signer := sample.AccAddress()
+	tests := []struct {
+		name   string
+		msg    *types.MsgResetChainNonces
+		panics bool
+	}{
+		{
+			name:   "valid signer",
+			msg:    types.NewMsgResetChainNonces(signer, 5, 1, 5),
+			panics: false,
+		},
+		{
+			name:   "invalid signer",
+			msg:    types.NewMsgResetChainNonces("invalid", 5, 1, 5),
+			panics: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.panics {
+				signers := tt.msg.GetSigners()
+				require.Equal(t, []sdk.AccAddress{sdk.MustAccAddressFromBech32(signer)}, signers)
+			} else {
+				require.Panics(t, func() {
+					tt.msg.GetSigners()
+				})
+			}
 		})
 	}
 }
