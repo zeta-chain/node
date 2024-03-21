@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/app"
@@ -35,7 +34,6 @@ type ZetaCoreBridge struct {
 	accountNumber map[common.KeyType]uint64
 	seqNumber     map[common.KeyType]uint64
 	grpcConn      *grpc.ClientConn
-	httpClient    *retryablehttp.Client
 	cfg           config.ClientConfiguration
 	encodingCfg   params.EncodingConfig
 	keys          *keys.Keys
@@ -67,9 +65,6 @@ func NewZetaCoreBridge(
 		HsmMode:      hsmMode,
 	}
 
-	httpClient := retryablehttp.NewClient()
-	httpClient.Logger = nil
-
 	grpcConn, err := grpc.Dial(
 		fmt.Sprintf("%s:9090", chainIP),
 		grpc.WithInsecure(),
@@ -93,7 +88,6 @@ func NewZetaCoreBridge(
 	return &ZetaCoreBridge{
 		logger:        logger,
 		grpcConn:      grpcConn,
-		httpClient:    httpClient,
 		accountNumber: accountsMap,
 		seqNumber:     seqMap,
 		cfg:           cfg,
