@@ -25,6 +25,7 @@
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
 * [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
+* [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
 
 ### Tests
 
