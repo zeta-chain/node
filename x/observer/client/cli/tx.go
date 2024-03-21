@@ -29,6 +29,7 @@ func GetTxCmd() *cobra.Command {
 		CmdAddBlameVote(),
 		CmdUpdateObserver(),
 		CmdEncode(),
+		CmdResetChainNonces(),
 	)
 
 	return cmd
