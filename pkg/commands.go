@@ -1,4 +1,4 @@
-package common
+package pkg
 
 // commands for the zetaclient; mostly administrative commands/txs
 

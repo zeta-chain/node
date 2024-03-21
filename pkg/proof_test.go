@@ -1,4 +1,4 @@
-package common_test
+package pkg_test
 
 import (
 	"errors"
