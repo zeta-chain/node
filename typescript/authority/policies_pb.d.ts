@@ -13,14 +13,25 @@ import { Message, proto3 } from "@bufbuild/protobuf";
  */
 export declare enum PolicyType {
   /**
+   * Used for emergency situations that require immediate action
+   *
    * @generated from enum value: groupEmergency = 0;
    */
   groupEmergency = 0,
 
   /**
-   * @generated from enum value: groupAdmin = 1;
+   * Used for operational tasks like changing non-sensitive protocol parameters
+   *
+   * @generated from enum value: groupOperational = 1;
    */
-  groupAdmin = 1,
+  groupOperational = 1,
+
+  /**
+   * Used for administrative tasks like changing sensitive protocol parameters or moving funds
+   *
+   * @generated from enum value: groupAdmin = 2;
+   */
+  groupAdmin = 2,
 }
 
 /**
