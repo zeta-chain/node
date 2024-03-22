@@ -721,9 +721,9 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 	return false
 }
 
-// GetSenderAddressByVinP2TR get the P2TR sender address from the previous transaction
+// GetSenderAddressByVin get the sender address from the previous transaction
 // Note: this function requires the bitcoin node index the previous transaction
-func GetSenderAddressByVinP2TR(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
+func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
 	// query previous transaction
 	hash, res, err := GetTxResultByHash(rpcClient, vin.Txid)
 	if err != nil {
@@ -738,10 +738,19 @@ func GetSenderAddressByVinP2TR(rpcClient interfaces.BTCRPCClient, vin btcjson.Vi
 	if len(rawResult.Vout) <= int(vin.Vout) {
 		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
 	}
-	// decode sender address from previous vout script if it is a P2TR script
+	// decode sender address from previous vout script
 	vout := rawResult.Vout[vin.Vout]
-	if vout.ScriptPubKey.Type == ScriptTypeP2TR {
+	switch vout.ScriptPubKey.Type {
+	case ScriptTypeP2TR:
 		return DecodeVoutP2TR(vout, net)
+	case ScriptTypeP2WSH:
+		return DecodeVoutP2WSH(vout, net)
+	case ScriptTypeP2WPKH:
+		return DecodeVoutP2WPKH(vout, net)
+	case ScriptTypeP2SH:
+		return DecodeVoutP2SH(vout, net)
+	case ScriptTypeP2PKH:
+		return DecodeVoutP2PKH(vout, net)
 	}
 	return "", nil
 }
@@ -799,8 +808,8 @@ func GetBtcEvent(
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
 				fromAddress = addr.EncodeAddress()
-			} else { // try getting P2TR sender address from previous output
-				sender, err := GetSenderAddressByVinP2TR(rpcClient, vin, netParams)
+			} else { // try getting sender address from previous output
+				sender, err := GetSenderAddressByVin(rpcClient, vin, netParams)
 				if err != nil {
 					return nil, errors.Wrapf(err, "error getting sender address")
 				}
