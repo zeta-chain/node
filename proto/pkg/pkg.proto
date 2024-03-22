@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "pkg/bitcoin/bitcoin.proto";
 import "pkg/ethereum/ethereum.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/pkg";
+option go_package = "github.com/zeta-chain/zetacore/pkg/proto";
 
 // PubKeySet contains two pub keys , secp256k1 and ed25519
 message PubKeySet {

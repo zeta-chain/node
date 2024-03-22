@@ -10,7 +10,7 @@ import (
 	math_bits "math/bits"
 
 	proto "github.com/gogo/protobuf/proto"
-	pkg "github.com/zeta-chain/zetacore/pkg"
+	proto1 "github.com/zeta-chain/zetacore/pkg/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -25,9 +25,9 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type InTxTracker struct {
-	ChainId  int64        `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	TxHash   string       `protobuf:"bytes,2,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
-	CoinType pkg.CoinType `protobuf:"varint,3,opt,name=coin_type,json=coinType,proto3,enum=pkg.CoinType" json:"coin_type,omitempty"`
+	ChainId  int64           `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	TxHash   string          `protobuf:"bytes,2,opt,name=tx_hash,json=txHash,proto3" json:"tx_hash,omitempty"`
+	CoinType proto1.CoinType `protobuf:"varint,3,opt,name=coin_type,json=coinType,proto3,enum=pkg.CoinType" json:"coin_type,omitempty"`
 }
 
 func (m *InTxTracker) Reset()         { *m = InTxTracker{} }
@@ -77,11 +77,11 @@ func (m *InTxTracker) GetTxHash() string {
 	return ""
 }
 
-func (m *InTxTracker) GetCoinType() pkg.CoinType {
+func (m *InTxTracker) GetCoinType() proto1.CoinType {
 	if m != nil {
 		return m.CoinType
 	}
-	return pkg.CoinType_Zeta
+	return proto1.CoinType_Zeta
 }
 
 func init() {
@@ -279,7 +279,7 @@ func (m *InTxTracker) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CoinType |= pkg.CoinType(b&0x7F) << shift
+				m.CoinType |= proto1.CoinType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
