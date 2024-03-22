@@ -9,10 +9,6 @@ import (
 	"sync"
 	"testing"
 
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/btcjson"
@@ -24,7 +20,11 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	. "gopkg.in/check.v1"
 )
 
@@ -75,7 +75,13 @@ func (s *BTCSignerSuite) SetUpTest(c *C) {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	s.btcSigner, err = NewBTCSigner(config.BTCConfig{}, &tss, clientcommon.DefaultLoggers(), &metrics.TelemetryServer{})
+	cfg := config.NewConfig()
+	s.btcSigner, err = NewBTCSigner(
+		config.BTCConfig{},
+		&tss,
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		corecontext.NewZetaCoreContext(cfg))
 	c.Assert(err, IsNil)
 }
 
@@ -659,4 +665,25 @@ func TestUTXOConsolidation(t *testing.T) {
 		require.Equal(t, uint16(8), clsdtUtxo)
 		require.Equal(t, 22.31, clsdtValue)
 	})
+}
+
+// Coverage doesn't seem to pick this up from the suite
+func TestNewBTCSigner(t *testing.T) {
+	// test private key with EVM address
+	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
+	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
+	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
+	privateKey, err := crypto.HexToECDSA(skHex)
+	require.NoError(t, err)
+	tss := interfaces.TestSigner{
+		PrivKey: privateKey,
+	}
+	cfg := config.NewConfig()
+	btcSigner, err := NewBTCSigner(
+		config.BTCConfig{},
+		&tss,
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		corecontext.NewZetaCoreContext(cfg))
+	require.NotNil(t, btcSigner)
 }
