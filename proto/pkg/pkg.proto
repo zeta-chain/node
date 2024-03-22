@@ -1,14 +1,14 @@
 syntax = "proto3";
-package common;
+package pkg;
 
-import "common/bitcoin/bitcoin.proto";
-import "common/ethereum/ethereum.proto";
 //option (gogoproto.goproto_stringer_all) = false;
 //option (gogoproto.stringer_all)         = false;
 //option (gogoproto.goproto_getters_all)  = false;
 import "gogoproto/gogo.proto";
+import "pkg/bitcoin/bitcoin.proto";
+import "pkg/ethereum/ethereum.proto";
 
-option go_package = "github.com/zeta-chain/zetacore/common";
+option go_package = "github.com/zeta-chain/zetacore/pkg";
 
 // PubKeySet contains two pub keys , secp256k1 and ed25519
 message PubKeySet {
