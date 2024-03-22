@@ -25,7 +25,7 @@ func TestOutboundTxParams_Validate(t *testing.T) {
 	require.ErrorContains(t, outTxParams.Validate(), "amount cannot be nil")
 	outTxParams = sample.OutboundTxParamsValidChainID(r)
 	outTxParams.OutboundTxBallotIndex = "12"
-	require.ErrorContains(t, outTxParams.Validate(), "invalid index hash 12")
+	require.ErrorContains(t, outTxParams.Validate(), "invalid index length 2")
 	outTxParams = sample.OutboundTxParamsValidChainID(r)
 	outTxParams.OutboundTxBallotIndex = sample.ZetaIndex(t)
 	outTxParams.OutboundTxHash = sample.Hash().String()

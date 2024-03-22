@@ -599,7 +599,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 func TestKeeper_ProcessOutbound(t *testing.T) {
 	t.Run("successfully process outbound with ballot finalized to success", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
+		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
 		require.NoError(t, err)
@@ -608,7 +608,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and old status is Pending Revert", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
+		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
 		require.NoError(t, err)
@@ -618,7 +618,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and coin-type is CMD", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := sample.CrossChainTx(t, "test")
+		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundTxParams.CoinType = common.CoinType_Cmd
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
@@ -654,6 +654,28 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		// New outbound not added and the old outbound is not finalized
 		require.Len(t, cctx.OutboundTxParams, oldOutTxParamsLen)
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_NotFinalized)
+	})
+
+	t.Run("do not process outbound if the cctx has already been reverted once", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.OutboundTxParams = append(cctx.OutboundTxParams, sample.OutboundTxParams(sample.Rand()))
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		// mock successful GetRevertGasLimit for ERC20
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+
+		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		require.ErrorContains(t, err, "cannot revert a revert")
 	})
 
 	t.Run("successfully revert a outbound and create a new revert tx", func(t *testing.T) {

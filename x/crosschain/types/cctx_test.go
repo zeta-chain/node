@@ -117,7 +117,7 @@ func TestCrossChainTx_Validate(t *testing.T) {
 	require.ErrorContains(t, cctx.Validate(), "outbound tx params cannot be more than 2")
 	cctx = sample.CrossChainTx(t, "foo")
 	cctx.Index = "0"
-	require.ErrorContains(t, cctx.Validate(), "invalid index hash 0")
+	require.ErrorContains(t, cctx.Validate(), "invalid index length 1")
 	cctx = sample.CrossChainTx(t, "foo")
 	cctx.InboundTxParams = sample.InboundTxParamsValidChainID(rand.New(rand.NewSource(42)))
 	cctx.InboundTxParams.SenderChainId = 1000
@@ -236,16 +236,25 @@ func TestCrossChainTx_AddOutbound(t *testing.T) {
 }
 
 func Test_SetRevertOutboundValues(t *testing.T) {
-	cctx := sample.CrossChainTx(t, "test")
-	cctx.OutboundTxParams = cctx.OutboundTxParams[:1]
-	cctx.AddRevertOutbound(100)
-	require.Len(t, cctx.OutboundTxParams, 2)
-	require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
-	require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
-	require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.InboundTxParams.Amount)
-	require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
-	require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
-	require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
+	t.Run("successfully set revert outbound values", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		cctx.OutboundTxParams = cctx.OutboundTxParams[:1]
+		err := cctx.AddRevertOutbound(100)
+		require.NoError(t, err)
+		require.Len(t, cctx.OutboundTxParams, 2)
+		require.Equal(t, cctx.GetCurrentOutTxParam().Receiver, cctx.InboundTxParams.Sender)
+		require.Equal(t, cctx.GetCurrentOutTxParam().ReceiverChainId, cctx.InboundTxParams.SenderChainId)
+		require.Equal(t, cctx.GetCurrentOutTxParam().Amount, cctx.InboundTxParams.Amount)
+		require.Equal(t, cctx.GetCurrentOutTxParam().OutboundTxGasLimit, uint64(100))
+		require.Equal(t, cctx.GetCurrentOutTxParam().TssPubkey, cctx.OutboundTxParams[0].TssPubkey)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
+	})
+
+	t.Run("failed to set revert outbound values if revert outbound already exists", func(t *testing.T) {
+		cctx := sample.CrossChainTx(t, "test")
+		err := cctx.AddRevertOutbound(100)
+		require.ErrorContains(t, err, "cannot revert a revert tx")
+	})
 }
 
 func TestCrossChainTx_SetAbort(t *testing.T) {

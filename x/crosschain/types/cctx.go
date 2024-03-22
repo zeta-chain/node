@@ -23,7 +23,7 @@ func (m CrossChainTx) GetCurrentOutTxParam() *OutboundTxParams {
 
 // IsCurrentOutTxRevert returns true if the current outbound tx is the revert tx.
 func (m CrossChainTx) IsCurrentOutTxRevert() bool {
-	return len(m.OutboundTxParams) == 2
+	return len(m.OutboundTxParams) >= 2
 }
 
 // OriginalDestinationChainID returns the original destination of the outbound tx, reverted or not
@@ -78,7 +78,10 @@ AddRevertOutbound does the following things in one function:
 	3. update the TxFinalizationStatus of the current OutboundTxParams to Executed.
 */
 
-func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) {
+func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) error {
+	if m.IsCurrentOutTxRevert() {
+		return fmt.Errorf("cannot revert a revert tx")
+	}
 	revertTxParams := &OutboundTxParams{
 		Receiver:           m.InboundTxParams.Sender,
 		ReceiverChainId:    m.InboundTxParams.SenderChainId,
@@ -89,6 +92,7 @@ func (m *CrossChainTx) AddRevertOutbound(gasLimit uint64) {
 	// The original outbound has been finalized, the new outbound is pending
 	m.GetCurrentOutTxParam().TxFinalizationStatus = TxFinalizationStatus_Executed
 	m.OutboundTxParams = append(m.OutboundTxParams, revertTxParams)
+	return nil
 }
 
 // AddOutbound adds a new outbound tx to the CCTX.

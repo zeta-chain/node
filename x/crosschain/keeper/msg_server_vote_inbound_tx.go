@@ -153,7 +153,11 @@ func (k Keeper) ProcessZEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) {
 			gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
 		}
 
-		cctx.AddRevertOutbound(gasLimit)
+		err = cctx.AddRevertOutbound(gasLimit)
+		if err != nil {
+			cctx.SetAbort(fmt.Sprintf("revert outbound error: %s", err.Error()))
+			return
+		}
 
 		// we create a new cached context, and we don't commit the previous one with EVM deposit
 		tmpCtxRevert, commitRevert := ctx.CacheContext()

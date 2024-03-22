@@ -98,10 +98,6 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 		k.SaveFailedOutbound(ctx, &cctx, err.Error(), ballotIndex)
 		return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 	}
-	err = cctx.Validate()
-	if err != nil {
-		return nil, err
-	}
 	k.SaveSuccessfulOutbound(ctx, &cctx, ballotIndex)
 	return &types.MsgVoteOnObservedOutboundTxResponse{}, nil
 }
@@ -210,7 +206,10 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			}
 
 			// create new OutboundTxParams for the revert
-			cctx.AddRevertOutbound(gasLimit)
+			err = cctx.AddRevertOutbound(gasLimit)
+			if err != nil {
+				return cosmoserrors.Wrap(err, "AddRevertOutbound")
+			}
 
 			err = k.PayGasAndUpdateCctx(
 				ctx,
@@ -226,7 +225,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 			if err != nil {
 				return err
 			}
-			// Not setting the finalization status here, the required changes have been mad while creating the revert tx
+			// Not setting the finalization status here, the required changes have been made while creating the revert tx
 			cctx.SetPendingRevert("Outbound failed, start revert")
 		case types.CctxStatus_PendingRevert:
 			cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
@@ -254,6 +253,10 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 		}
 		return nil
 	}()
+	if err != nil {
+		return err
+	}
+	err = cctx.Validate()
 	if err != nil {
 		return err
 	}

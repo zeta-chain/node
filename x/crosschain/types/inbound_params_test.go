@@ -35,7 +35,7 @@ func TestInboundTxParams_Validate(t *testing.T) {
 	inTxParams = sample.InboundTxParamsValidChainID(r)
 	inTxParams.InboundTxObservedHash = sample.Hash().String()
 	inTxParams.InboundTxBallotIndex = "12"
-	require.ErrorContains(t, inTxParams.Validate(), "invalid index hash 12")
+	require.ErrorContains(t, inTxParams.Validate(), "invalid index length 2")
 	inTxParams = sample.InboundTxParamsValidChainID(r)
 	inTxParams.InboundTxObservedHash = sample.Hash().String()
 	inTxParams.InboundTxBallotIndex = sample.ZetaIndex(t)

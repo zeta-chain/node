@@ -435,6 +435,39 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.StatusMessage)
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
 	})
+
+	t.Run("unable to process zevm deposit HandleEVMDeposit revert fails as the cctx has already been reverted", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+		errDeposit := fmt.Errorf("deposit failed")
+
+		// Setup expected calls
+		// mock unsuccessful HandleEVMDeposit which reverts , i.e returns err and isContractReverted = true
+		keepertest.MockRevertForHandleEVMDeposit(fungibleMock, receiver, amount, senderChain.ChainId, errDeposit)
+
+		// Mock successful GetSupportedChainFromChainID
+		keepertest.MockGetSupportedChainFromChainID(observerMock, senderChain)
+
+		// mock successful GetRevertGasLimit for ERC20
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+
+		// call ProcessZEVMDeposit
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.OutboundTxParams = append(cctx.OutboundTxParams, cctx.GetCurrentOutTxParam())
+		k.ProcessZEVMDeposit(ctx, cctx)
+		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
+		require.Contains(t, cctx.CctxStatus.StatusMessage, fmt.Sprintf("revert outbound error: %s", "cannot revert a revert tx"))
+	})
 }
 
 func TestKeeper_ProcessCrosschainMsgPassing(t *testing.T) {
