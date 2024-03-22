@@ -160,7 +160,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		require.Empty(t, allEVMChainParams)
 
 		ccFlags := zetaContext.GetCrossChainFlags()
-		require.Equal(t, crosschainFlags, ccFlags)
+		require.Equal(t, *crosschainFlags, ccFlags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -260,7 +260,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
 
 		ccFlags := zetaContext.GetCrossChainFlags()
-		require.Equal(t, ccFlags, crosschainFlags)
+		require.Equal(t, ccFlags, *crosschainFlags)
 	})
 }
 
