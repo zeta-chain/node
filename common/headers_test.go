@@ -24,7 +24,7 @@ import (
 const numHeadersToTest = 100
 
 func generateHeader() {
-	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
+	rpcclient, _ := ethclient.Dial("https://ethereum.blockpi.network/v1/rpc/public")
 	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
 	file, _ := os.Create("testdata/eth_header_18495266.json")
 	b, _ := header.MarshalJSON()

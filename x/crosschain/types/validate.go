@@ -4,27 +4,12 @@ import (
 	"fmt"
 	"regexp"
 
+	"cosmossdk.io/errors"
 	"github.com/btcsuite/btcutil"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
-
-// GetAllAuthzZetaclientTxTypes returns all the authz types for zetaclient
-func GetAllAuthzZetaclientTxTypes() []string {
-	return []string{
-		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
-		sdk.MsgTypeURL(&MsgVoteOnObservedInboundTx{}),
-		sdk.MsgTypeURL(&MsgVoteOnObservedOutboundTx{}),
-		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
-		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
-		sdk.MsgTypeURL(&observertypes.MsgAddBlameVote{}),
-		sdk.MsgTypeURL(&observertypes.MsgAddBlockHeader{}),
-	}
-}
 
 // ValidateZetaIndex validates the zeta index
 func ValidateZetaIndex(index string) error {
