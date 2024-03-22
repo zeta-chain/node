@@ -666,3 +666,24 @@ func TestUTXOConsolidation(t *testing.T) {
 		require.Equal(t, 22.31, clsdtValue)
 	})
 }
+
+// Coverage doesn't seem to pick this up from the suite
+func TestNewBTCSigner(t *testing.T) {
+	// test private key with EVM address
+	//// EVM: 0x236C7f53a90493Bb423411fe4117Cb4c2De71DfB
+	// BTC testnet3: muGe9prUBjQwEnX19zG26fVRHNi8z7kSPo
+	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
+	privateKey, err := crypto.HexToECDSA(skHex)
+	require.NoError(t, err)
+	tss := interfaces.TestSigner{
+		PrivKey: privateKey,
+	}
+	cfg := config.NewConfig()
+	btcSigner, err := NewBTCSigner(
+		config.BTCConfig{},
+		&tss,
+		clientcommon.DefaultLoggers(),
+		&metrics.TelemetryServer{},
+		corecontext.NewZetaCoreContext(cfg))
+	require.NotNil(t, btcSigner)
+}
