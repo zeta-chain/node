@@ -18,7 +18,6 @@ import (
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	fungiblekeeper "github.com/zeta-chain/zetacore/x/fungible/keeper"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -42,11 +41,8 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 	)
 
 	_, err := zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, gasZRC20, big.NewInt(withdrawFee))
-	fungibleMsgServer := fungiblekeeper.NewMsgServerImpl(*zk.FungibleKeeper)
-	_, err = fungibleMsgServer.UpdateZRC20WithdrawFee(
-		sdk.UnwrapSDKContext(ctx),
-		fungibletypes.NewMsgUpdateZRC20WithdrawFee(admin, gasZRC20.String(), sdk.NewUint(uint64(withdrawFee)), sdkmath.Uint{}),
-	)
+	require.NoError(t, err)
+	_, err = zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, zrc20Addr, big.NewInt(withdrawFee))
 	require.NoError(t, err)
 
 	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
