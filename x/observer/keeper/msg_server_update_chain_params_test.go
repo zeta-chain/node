@@ -33,7 +33,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		_, found := k.GetChainParamsList(ctx)
 		require.False(t, found)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chain params can be added
 		chainParams1 := sample.ChainParams(chain1)
@@ -49,7 +49,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Len(t, chainParamsList.ChainParams, 1)
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chian params can be added
 		chainParams2 := sample.ChainParams(chain2)
@@ -66,7 +66,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chain params can be added
 		chainParams3 := sample.ChainParams(chain3)
@@ -84,7 +84,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// chain params can be updated
 		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
@@ -111,7 +111,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
 			Creator:     admin,

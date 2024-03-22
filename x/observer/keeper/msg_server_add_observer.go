@@ -18,7 +18,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
 

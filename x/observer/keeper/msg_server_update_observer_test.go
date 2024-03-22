@@ -325,7 +325,7 @@ func TestMsgServer_UpdateObserver(t *testing.T) {
 		srv := keeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// #nosec G404 test purpose - weak randomness is not an issue here
 		r := rand.New(rand.NewSource(9))

@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
-// Authorized: admin policy group 2.
+// UpdateSystemContract updates the system contract
 func (k msgServer) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpdateSystemContract) (*types.MsgUpdateSystemContractResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {

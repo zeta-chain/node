@@ -23,7 +23,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 
 		// mock the authority keeper for authorization
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		_, err := srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -51,7 +51,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.True(t, flags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled)
 		require.False(t, flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// can update flags again
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
@@ -131,7 +131,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		_, found = k.GetCrosschainFlags(ctx)
 		require.False(t, found)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,
@@ -167,7 +167,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 		require.Error(t, err)
 		require.Equal(t, types.ErrNotAuthorizedPolicy, err)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err = srv.UpdateCrosschainFlags(sdk.WrapSDKContext(ctx), &types.MsgUpdateCrosschainFlags{
 			Creator:           admin,

@@ -39,7 +39,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			},
 		})
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// remove chain params
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
@@ -55,7 +55,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.Equal(t, chain1, chainParamsList.ChainParams[0].ChainId)
 		require.Equal(t, chain3, chainParamsList.ChainParams[1].ChainId)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
@@ -70,7 +70,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		require.Len(t, chainParamsList.ChainParams, 1)
 		require.Equal(t, chain3, chainParamsList.ChainParams[0].ChainId)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// remove chain params
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
@@ -93,7 +93,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{
 			Creator: admin,
@@ -111,7 +111,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 		// set admin
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// not found if no chain params
 		_, found := k.GetChainParamsList(ctx)
@@ -132,7 +132,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			},
 		})
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// not found if chain ID not in list
 		_, err = srv.RemoveChainParams(sdk.WrapSDKContext(ctx), &types.MsgRemoveChainParams{

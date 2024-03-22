@@ -78,13 +78,13 @@ func (gpf GasPriceIncreaseFlags) Validate() error {
 // https://github.com/zeta-chain/node/issues/1562
 func (msg *MsgUpdateCrosschainFlags) GetRequiredPolicyType() authoritytypes.PolicyType {
 	if msg.IsInboundEnabled || msg.IsOutboundEnabled {
-		return authoritytypes.PolicyType_groupAdmin
+		return authoritytypes.PolicyType_groupOperational
 	}
 	if msg.GasPriceIncreaseFlags != nil {
-		return authoritytypes.PolicyType_groupAdmin
+		return authoritytypes.PolicyType_groupOperational
 	}
 	if msg.BlockHeaderVerificationFlags != nil && (msg.BlockHeaderVerificationFlags.IsEthTypeChainEnabled || msg.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled) {
-		return authoritytypes.PolicyType_groupAdmin
+		return authoritytypes.PolicyType_groupOperational
 
 	}
 	return authoritytypes.PolicyType_groupEmergency
