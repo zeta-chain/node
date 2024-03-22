@@ -5,10 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/keys"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -23,6 +19,9 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"google.golang.org/grpc"
 )
 
