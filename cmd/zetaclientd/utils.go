@@ -57,6 +57,7 @@ func CreateSignerMap(
 ) (map[int64]interfaces.ChainSigner, error) {
 	coreContext := appContext.ZetaCoreContext()
 	signerMap := make(map[int64]interfaces.ChainSigner)
+
 	// EVM signers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {

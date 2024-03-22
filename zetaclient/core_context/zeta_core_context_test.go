@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -125,19 +126,15 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
-		crosschainFlags := observertypes.CrosschainFlags{
-			IsInboundEnabled:             false,
-			IsOutboundEnabled:            false,
-			GasPriceIncreaseFlags:        nil,
-			BlockHeaderVerificationFlags: nil,
-		}
+		crosschainFlags := sample.CrosschainFlags()
+		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
 			&keyGenToUpdate,
 			enabledChainsToUpdate,
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
-			crosschainFlags,
+			*crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -162,8 +159,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		allEVMChainParams := zetaContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
 
-		ccflags := zetaContext.GetCrossChainFlags()
-		require.Equal(t, crosschainFlags, ccflags)
+		ccFlags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, crosschainFlags, ccFlags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -220,7 +217,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			ChainId: testBtcChain.ChainId,
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
-		crosschainFlags := observertypes.CrosschainFlags{}
+		crosschainFlags := sample.CrosschainFlags()
+		require.NotNil(t, crosschainFlags)
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
 			&keyGenToUpdate,
@@ -228,7 +226,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
-			crosschainFlags,
+			*crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -261,8 +259,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
 
-		ccflags := zetaContext.GetCrossChainFlags()
-		require.Equal(t, ccflags, crosschainFlags)
+		ccFlags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, ccFlags, crosschainFlags)
 	})
 }
 

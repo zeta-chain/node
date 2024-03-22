@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -54,6 +55,7 @@ func CreateCoreContext(evmChain, btcChain common.Chain, evmChainParams, btcChain
 	coreContext := corecontext.NewZetaCoreContext(cfg)
 	evmChainParamsMap := make(map[int64]*observertypes.ChainParams)
 	evmChainParamsMap[evmChain.ChainId] = evmChainParams
+	ccFlags := sample.CrosschainFlags()
 
 	// feed chain params
 	coreContext.Update(
@@ -62,7 +64,7 @@ func CreateCoreContext(evmChain, btcChain common.Chain, evmChainParams, btcChain
 		evmChainParamsMap,
 		btcChainParams,
 		"",
-		observertypes.CrosschainFlags{},
+		*ccFlags,
 		true,
 		zerolog.Logger{},
 	)
