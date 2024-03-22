@@ -59,6 +59,7 @@ require (
 
 require (
 	github.com/binance-chain/tss-lib v0.0.0-20201118045712-70b2cb4bf916
+	github.com/nanmu42/etherscan-api v1.10.0
 	github.com/onrik/ethrpc v1.2.0
 )
 

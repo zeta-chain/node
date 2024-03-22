@@ -2,15 +2,8 @@ package runner
 
 import (
 	"context"
-	"fmt"
-	"runtime"
 	"sync"
 	"time"
-
-	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
-	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
-	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/txserver"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/rpcclient"
@@ -29,6 +22,10 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
+	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
+	"github.com/zeta-chain/zetacore/e2e/contracts/erc20"
+	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -158,195 +155,6 @@ func NewE2ERunner(
 
 		WG: sync.WaitGroup{},
 	}
-}
-
-// E2ETestFunc is a function representing a E2E test
-// It takes a E2ERunner as an argument
-type E2ETestFunc func(*E2ERunner, []string)
-
-// E2ETest represents a E2E test with a name, args, description and test func
-type E2ETest struct {
-	Name           string
-	Description    string
-	Args           []string
-	ArgsDefinition []ArgDefinition
-	E2ETest        E2ETestFunc
-}
-
-// NewE2ETest creates a new instance of E2ETest with specified parameters.
-func NewE2ETest(name, description string, argsDefinition []ArgDefinition, e2eTestFunc E2ETestFunc) E2ETest {
-	return E2ETest{
-		Name:           name,
-		Description:    description,
-		ArgsDefinition: argsDefinition,
-		E2ETest:        e2eTestFunc,
-		Args:           []string{},
-	}
-}
-
-// ArgDefinition defines a structure for holding an argument's description along with it's default value.
-type ArgDefinition struct {
-	Description  string
-	DefaultValue string
-}
-
-// DefaultArgs extracts and returns array of default arguments from the ArgsDefinition.
-func (e E2ETest) DefaultArgs() []string {
-	defaultArgs := make([]string, len(e.ArgsDefinition))
-	for i, spec := range e.ArgsDefinition {
-		defaultArgs[i] = spec.DefaultValue
-	}
-	return defaultArgs
-}
-
-// ArgsDescription returns a string representing the arguments description in a readable format.
-func (e E2ETest) ArgsDescription() string {
-	argsDescription := ""
-	for _, def := range e.ArgsDefinition {
-		argDesc := fmt.Sprintf("%s (%s)", def.Description, def.DefaultValue)
-		if argsDescription != "" {
-			argsDescription += ", "
-		}
-		argsDescription += argDesc
-	}
-	return argsDescription
-}
-
-// E2ETestRunConfig defines the basic configuration for initiating an E2E test, including its name and optional runtime arguments.
-type E2ETestRunConfig struct {
-	Name string
-	Args []string
-}
-
-// GetE2ETestsToRunByName prepares a list of E2ETests to run based on given test names without arguments
-func (runner *E2ERunner) GetE2ETestsToRunByName(availableTests []E2ETest, testNames ...string) ([]E2ETest, error) {
-	tests := []E2ETestRunConfig{}
-	for _, testName := range testNames {
-		tests = append(tests, E2ETestRunConfig{
-			Name: testName,
-			Args: []string{},
-		})
-	}
-	return runner.GetE2ETestsToRunByConfig(availableTests, tests)
-}
-
-// GetE2ETestsToRunByConfig prepares a list of E2ETests to run based on provided test names and their corresponding arguments
-func (runner *E2ERunner) GetE2ETestsToRunByConfig(availableTests []E2ETest, testConfigs []E2ETestRunConfig) ([]E2ETest, error) {
-	tests := []E2ETest{}
-	for _, testSpec := range testConfigs {
-		e2eTest, found := findE2ETestByName(availableTests, testSpec.Name)
-		if !found {
-			return nil, fmt.Errorf("e2e test %s not found", testSpec.Name)
-		}
-		e2eTestToRun := NewE2ETest(
-			e2eTest.Name,
-			e2eTest.Description,
-			e2eTest.ArgsDefinition,
-			e2eTest.E2ETest,
-		)
-		// update e2e test args
-		e2eTestToRun.Args = testSpec.Args
-		tests = append(tests, e2eTestToRun)
-	}
-
-	return tests, nil
-}
-
-// RunE2ETests runs a list of e2e tests
-func (runner *E2ERunner) RunE2ETests(e2eTests []E2ETest) (err error) {
-	for _, e2eTest := range e2eTests {
-		if err := runner.RunE2ETest(e2eTest, true); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// RunE2ETestsIntoReport runs a list of e2e tests by name in a list of e2e tests and returns a report
-// The function doesn't return an error, it returns a report with the error
-func (runner *E2ERunner) RunE2ETestsIntoReport(e2eTests []E2ETest) (TestReports, error) {
-	// go through all tests
-	reports := make(TestReports, 0, len(e2eTests))
-	for _, test := range e2eTests {
-		// get info before test
-		balancesBefore, err := runner.GetAccountBalances(true)
-		if err != nil {
-			return nil, err
-		}
-		timeBefore := time.Now()
-
-		// run test
-		testErr := runner.RunE2ETest(test, false)
-		if testErr != nil {
-			runner.Logger.Print("test %s failed: %s", test.Name, testErr.Error())
-		}
-
-		// wait 5 sec to make sure we get updated balances
-		time.Sleep(5 * time.Second)
-
-		// get info after test
-		balancesAfter, err := runner.GetAccountBalances(true)
-		if err != nil {
-			return nil, err
-		}
-		timeAfter := time.Now()
-
-		// create report
-		report := TestReport{
-			Name:     test.Name,
-			Success:  testErr == nil,
-			Time:     timeAfter.Sub(timeBefore),
-			GasSpent: GetAccountBalancesDiff(balancesBefore, balancesAfter),
-		}
-		reports = append(reports, report)
-	}
-
-	return reports, nil
-}
-
-// RunE2ETest runs a e2e test
-func (runner *E2ERunner) RunE2ETest(e2eTest E2ETest, checkAccounting bool) (err error) {
-	// return an error on panic
-	// https://github.com/zeta-chain/node/issues/1500
-	defer func() {
-		if r := recover(); r != nil {
-			// print stack trace
-			stack := make([]byte, 4096)
-			n := runtime.Stack(stack, false)
-			err = fmt.Errorf("%s failed: %v, stack trace %s", e2eTest.Name, r, stack[:n])
-		}
-	}()
-
-	startTime := time.Now()
-	runner.Logger.Print("⏳running - %s", e2eTest.Description)
-
-	// run e2e test, if args are not provided, use default args
-	args := e2eTest.Args
-	if len(args) == 0 {
-		args = e2eTest.DefaultArgs()
-	}
-	e2eTest.E2ETest(runner, args)
-
-	//check supplies
-	if checkAccounting {
-		if err := runner.CheckZRC20ReserveAndSupply(); err != nil {
-			return err
-		}
-	}
-
-	runner.Logger.Print("✅ completed in %s - %s", time.Since(startTime), e2eTest.Description)
-
-	return err
-}
-
-// findE2ETest finds a e2e test by name
-func findE2ETestByName(e2eTests []E2ETest, e2eTestName string) (E2ETest, bool) {
-	for _, test := range e2eTests {
-		if test.Name == e2eTestName {
-			return test, true
-		}
-	}
-	return E2ETest{}, false
 }
 
 // CopyAddressesFrom copies addresses from another E2ETestRunner that initialized the contracts

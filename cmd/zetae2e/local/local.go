@@ -44,71 +44,19 @@ func NewLocalCmd() *cobra.Command {
 		Short: "Run Local E2E tests",
 		Run:   localE2ETest,
 	}
-	cmd.Flags().Bool(
-		flagContractsDeployed,
-		false,
-		"set to to true if running tests again with existing state",
-	)
-	cmd.Flags().Int64(
-		flagWaitForHeight,
-		0,
-		"block height for tests to begin, ex. --wait-for 100",
-	)
-	cmd.Flags().String(
-		FlagConfigFile,
-		"",
-		"config file to use for the tests",
-	)
-	cmd.Flags().String(
-		flagConfigOut,
-		"",
-		"config file to write the deployed contracts from the setup",
-	)
-	cmd.Flags().Bool(
-		flagVerbose,
-		false,
-		"set to true to enable verbose logging",
-	)
-	cmd.Flags().Bool(
-		flagTestAdmin,
-		false,
-		"set to true to run admin tests",
-	)
-	cmd.Flags().Bool(
-		flagTestPerformance,
-		false,
-		"set to true to run performance tests",
-	)
-	cmd.Flags().Bool(
-		flagTestCustom,
-		false,
-		"set to true to run custom tests",
-	)
-	cmd.Flags().Bool(
-		flagSkipRegular,
-		false,
-		"set to true to skip regular tests",
-	)
-	cmd.Flags().Bool(
-		flagLight,
-		false,
-		"run the most basic regular tests, useful for quick checks",
-	)
-	cmd.Flags().Bool(
-		flagSetupOnly,
-		false,
-		"set to true to only setup the networks",
-	)
-	cmd.Flags().Bool(
-		flagSkipSetup,
-		false,
-		"set to true to skip setup",
-	)
-	cmd.Flags().Bool(
-		flagSkipBitcoinSetup,
-		false,
-		"set to true to skip bitcoin wallet setup",
-	)
+	cmd.Flags().Bool(flagContractsDeployed, false, "set to to true if running tests again with existing state")
+	cmd.Flags().Int64(flagWaitForHeight, 0, "block height for tests to begin, ex. --wait-for 100")
+	cmd.Flags().String(FlagConfigFile, "", "config file to use for the tests")
+	cmd.Flags().Bool(flagVerbose, false, "set to true to enable verbose logging")
+	cmd.Flags().Bool(flagTestAdmin, false, "set to true to run admin tests")
+	cmd.Flags().Bool(flagTestPerformance, false, "set to true to run performance tests")
+	cmd.Flags().Bool(flagTestCustom, false, "set to true to run custom tests")
+	cmd.Flags().Bool(flagSkipRegular, false, "set to true to skip regular tests")
+	cmd.Flags().Bool(flagLight, false, "run the most basic regular tests, useful for quick checks")
+	cmd.Flags().Bool(flagSetupOnly, false, "set to true to only setup the networks")
+	cmd.Flags().String(flagConfigOut, "", "config file to write the deployed contracts from the setup")
+	cmd.Flags().Bool(flagSkipSetup, false, "set to true to skip setup")
+	cmd.Flags().Bool(flagSkipBitcoinSetup, false, "set to true to skip bitcoin wallet setup")
 
 	return cmd
 }
@@ -242,7 +190,16 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 		startTime := time.Now()
 		deployerRunner.SetupEVM(contractsDeployed)
 		deployerRunner.SetZEVMContracts()
+
+		// NOTE: this method return an error so we handle it and panic if it occurs unlike other method that panics directly
+		// TODO: all methods should return errors instead of panicking and this current function should also return an error
+		// https://github.com/zeta-chain/node/issues/1500
+		if err := deployerRunner.FundEmissionsPool(); err != nil {
+			panic(err)
+		}
+
 		deployerRunner.MintERC20OnEvm(10000)
+
 		logger.Print("✅ setup completed in %s", time.Since(startTime))
 	}
 
@@ -347,4 +304,17 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	}
 
 	logger.Print("✅ e2e tests completed in %s", time.Since(testStartTime).String())
+
+	// print and validate report
+	networkReport, err := deployerRunner.GenerateNetworkReport()
+	if err != nil {
+		logger.Print("❌ failed to generate network report %v", err)
+	}
+	deployerRunner.PrintNetworkReport(networkReport)
+	if err := networkReport.Validate(); err != nil {
+		logger.Print("❌ network report validation failed %v", err)
+		os.Exit(1)
+	}
+
+	os.Exit(0)
 }

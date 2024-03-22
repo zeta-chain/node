@@ -16,10 +16,15 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
-	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
+	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
+
+// EmissionsPoolFunding represents the amount of ZETA to fund the emissions pool with
+// This is the same value as used originally on mainnet (20M ZETA)
+var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
 
 // SetTSSAddresses set TSS addresses from information queried from ZetaChain
 func (runner *E2ERunner) SetTSSAddresses() error {
@@ -69,7 +74,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 	// deploy system contracts and ZRC20 contracts on ZetaChain
 	uniswapV2FactoryAddr, uniswapV2RouterAddr, zevmConnectorAddr, wzetaAddr, erc20zrc20Addr, err := runner.ZetaTxServer.DeploySystemContractsAndZRC20(
-		utils.FungibleAdminName,
+		e2eutils.FungibleAdminName,
 		runner.ERC20Addr.Hex(),
 	)
 	if err != nil {
@@ -152,14 +157,14 @@ func (runner *E2ERunner) SetZEVMContracts() {
 		panic(err)
 	}
 
-	receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txZEVMSwapApp, runner.Logger, runner.ReceiptTimeout)
+	receipt := e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txZEVMSwapApp, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ZEVMSwapApp deployment failed")
 	}
 	runner.ZEVMSwapAppAddr = zevmSwapAppAddr
 	runner.ZEVMSwapApp = zevmSwapApp
 
-	receipt = utils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txContextApp, runner.Logger, runner.ReceiptTimeout)
+	receipt = e2eutils.MustWaitForTxReceipt(runner.Ctx, runner.ZEVMClient, txContextApp, runner.Logger, runner.ReceiptTimeout)
 	if receipt.Status != 1 {
 		panic("ContextApp deployment failed")
 	}
@@ -167,6 +172,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 	runner.ContextApp = contextApp
 }
 
+// SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupETHZRC20() {
 	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.GoerliLocalnetChain().ChainId))
 	if err != nil {
@@ -183,6 +189,7 @@ func (runner *E2ERunner) SetupETHZRC20() {
 	runner.ETHZRC20 = ethZRC20
 }
 
+// SetupBTCZRC20 sets up the BTC ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupBTCZRC20() {
 	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(common.BtcRegtestChain().ChainId))
 	if err != nil {
@@ -195,4 +202,11 @@ func (runner *E2ERunner) SetupBTCZRC20() {
 		panic(err)
 	}
 	runner.BTCZRC20 = BTCZRC20
+}
+
+// FundEmissionsPool funds the emissions pool on ZetaChain with the same value as used originally on mainnet (20M ZETA)
+func (runner *E2ERunner) FundEmissionsPool() error {
+	runner.Logger.Print("⚙️ funding the emissions pool on ZetaChain with 20M ZETA (%s)", txserver.EmissionsPoolAddress)
+
+	return runner.ZetaTxServer.FundEmissionsPool(e2eutils.FungibleAdminName, EmissionsPoolFunding)
 }
