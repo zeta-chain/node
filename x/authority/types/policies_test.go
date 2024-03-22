@@ -14,7 +14,6 @@ import (
 func setConfig() {
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cfg.Seal()
 }
 
 func TestPolicies_Validate(t *testing.T) {
