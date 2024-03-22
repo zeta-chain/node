@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -51,7 +51,7 @@ func (msg *MsgResetChainNonces) ValidateBasic() error {
 	}
 
 	// Check if chain exists
-	chain := common.GetChainFromChainID(msg.ChainId)
+	chain := pkg.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain id (%d)", msg.ChainId)
 	}
