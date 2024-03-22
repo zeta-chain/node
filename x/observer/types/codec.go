@@ -16,6 +16,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateKeygen{}, "crosschain/UpdateKeygen", nil)
 	cdc.RegisterConcrete(&MsgAddBlockHeader{}, "crosschain/AddBlockHeader", nil)
 	cdc.RegisterConcrete(&MsgUpdateObserver{}, "observer/UpdateObserver", nil)
+	cdc.RegisterConcrete(&MsgResetChainNonces{}, "observer/ResetChainNonces", nil)
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
@@ -28,6 +29,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateKeygen{},
 		&MsgAddBlockHeader{},
 		&MsgUpdateObserver{},
+		&MsgResetChainNonces{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
