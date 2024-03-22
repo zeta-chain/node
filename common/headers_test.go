@@ -2,7 +2,6 @@ package common_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"math/big"
@@ -16,7 +15,6 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/testdata"
@@ -24,16 +22,7 @@ import (
 
 const numHeadersToTest = 100
 
-func generateHeader() {
-	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
-	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
-	file, _ := os.Create("testdata/eth_header_18495266.json")
-	b, _ := header.MarshalJSON()
-	file.Write(b)
-}
-
 func TestTrueEthereumHeader(t *testing.T) {
-	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
@@ -61,7 +50,6 @@ func TestTrueEthereumHeader(t *testing.T) {
 }
 
 func TestFalseEthereumHeader(t *testing.T) {
-	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
