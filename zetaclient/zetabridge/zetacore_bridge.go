@@ -252,7 +252,7 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 
 	tss, err := b.GetCurrentTss()
 	if err != nil {
-		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetabridge")
+		b.logger.Info().Err(err).Msg("Unable to fetch TSS from zetabridge")
 		return err
 	}
 	tssPubKey := tss.GetTssPubkey()
