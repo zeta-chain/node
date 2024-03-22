@@ -10,7 +10,6 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
-	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -38,16 +37,19 @@ func SaveObjectToJSONFile(obj interface{}, filename string) error {
 }
 
 // LoadObjectFromJSONFile loads an object from a file in JSON format
-func LoadObjectFromJSONFile(obj interface{}, filename string) error {
+func LoadObjectFromJSONFile(obj interface{}, filename string) {
 	file, err := os.Open(filepath.Clean(filename))
 	if err != nil {
-		return err
+		panic(err)
 	}
 	defer file.Close()
 
 	// read the struct from the file
 	decoder := json.NewDecoder(file)
-	return decoder.Decode(&obj)
+	err = decoder.Decode(&obj)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func ComplianceConfigTest() config.ComplianceConfig {
@@ -78,81 +80,74 @@ func SaveBTCBlockTrimTx(blockVb *btcjson.GetBlockVerboseTxResult, filename strin
 }
 
 // LoadEVMBlock loads archived evm block from file
-func LoadEVMBlock(t *testing.T, chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block {
+func LoadEVMBlock(chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block {
 	name := path.Join("../", TestDataPathEVM, FileNameEVMBlock(chainID, blockNumber, trimmed))
 	block := &ethrpc.Block{}
-	err := LoadObjectFromJSONFile(block, name)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(block, name)
 	return block
 }
 
 // LoadBTCTxRawResultNCctx loads archived Bitcoin outtx raw result and corresponding cctx
-func LoadBTCTxRawResultNCctx(t *testing.T, chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
+func LoadBTCTxRawResultNCctx(chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
 	//nameTx := FileNameBTCOuttx(chainID, nonce)
 	nameTx := path.Join("../", TestDataPathBTC, FileNameBTCOuttx(chainID, nonce))
 	rawResult := &btcjson.TxRawResult{}
-	err := LoadObjectFromJSONFile(rawResult, nameTx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(rawResult, nameTx)
 
 	nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByNonce(chainID, nonce))
 	cctx := &crosschaintypes.CrossChainTx{}
-	err = LoadObjectFromJSONFile(cctx, nameCctx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(cctx, nameCctx)
 	return rawResult, cctx
 }
 
 // LoadEVMIntx loads archived intx from file
 func LoadEVMIntx(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethrpc.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, false))
 
 	tx := &ethrpc.Transaction{}
-	err := LoadObjectFromJSONFile(&tx, nameTx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&tx, nameTx)
 	return tx
 }
 
 // LoadEVMIntxReceipt loads archived intx receipt from file
 func LoadEVMIntxReceipt(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, false))
 
 	receipt := &ethtypes.Receipt{}
-	err := LoadObjectFromJSONFile(&receipt, nameReceipt)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&receipt, nameReceipt)
 	return receipt
 }
 
 // LoadEVMIntxCctx loads archived intx cctx from file
 func LoadEVMIntxCctx(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *crosschaintypes.CrossChainTx {
 	nameCctx := path.Join("../", TestDataPathCctx, FileNameEVMIntxCctx(chainID, intxHash, coinType))
 
 	cctx := &crosschaintypes.CrossChainTx{}
-	err := LoadObjectFromJSONFile(&cctx, nameCctx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&cctx, nameCctx)
 	return cctx
 }
 
 // LoadCctxByNonce loads archived cctx by nonce from file
 func LoadCctxByNonce(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	nonce uint64) *crosschaintypes.CrossChainTx {
 	nameCctx := path.Join("../", TestDataPathCctx, FileNameCctxByNonce(chainID, nonce))
 
 	cctx := &crosschaintypes.CrossChainTx{}
-	err := LoadObjectFromJSONFile(&cctx, nameCctx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&cctx, nameCctx)
 	return cctx
 }
 
@@ -171,29 +166,27 @@ func LoadEVMIntxNReceipt(
 
 // LoadEVMIntxDonation loads archived donation intx from file
 func LoadEVMIntxDonation(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethrpc.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, true))
 
 	tx := &ethrpc.Transaction{}
-	err := LoadObjectFromJSONFile(&tx, nameTx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&tx, nameTx)
 	return tx
 }
 
 // LoadEVMIntxReceiptDonation loads archived donation intx receipt from file
 func LoadEVMIntxReceiptDonation(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, true))
 
 	receipt := &ethtypes.Receipt{}
-	err := LoadObjectFromJSONFile(&receipt, nameReceipt)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&receipt, nameReceipt)
 	return receipt
 }
 
@@ -226,29 +219,27 @@ func LoadEVMIntxNReceiptNCctx(
 
 // LoadEVMOuttx loads archived evm outtx from file
 func LoadEVMOuttx(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethtypes.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMOuttx(chainID, intxHash, coinType))
 
 	tx := &ethtypes.Transaction{}
-	err := LoadObjectFromJSONFile(&tx, nameTx)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&tx, nameTx)
 	return tx
 }
 
 // LoadEVMOuttxReceipt loads archived evm outtx receipt from file
 func LoadEVMOuttxReceipt(
-	t *testing.T,
+	_ *testing.T,
 	chainID int64,
 	intxHash string,
 	coinType common.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMOuttxReceipt(chainID, intxHash, coinType))
 
 	receipt := &ethtypes.Receipt{}
-	err := LoadObjectFromJSONFile(&receipt, nameReceipt)
-	require.NoError(t, err)
+	LoadObjectFromJSONFile(&receipt, nameReceipt)
 	return receipt
 }
 

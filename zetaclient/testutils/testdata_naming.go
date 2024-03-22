@@ -48,6 +48,12 @@ func FileNameBTCOuttx(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("chain_%d_outtx_raw_result_nonce_%d.json", chainID, nonce)
 }
 
+// FileNameBTCTxByType returns unified archive file name for tx by type
+// txType: "P2TR", "P2WPKH", "P2WSH", "P2PKH", "P2SH
+func FileNameBTCTxByType(chainID int64, txType string, txHash string) string {
+	return fmt.Sprintf("chain_%d_tx_raw_result_%s_%s.json", chainID, txType, txHash)
+}
+
 // FileNameCctxByNonce returns unified archive file name for cctx by nonce
 func FileNameCctxByNonce(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("cctx_%d_%d.json", chainID, nonce)

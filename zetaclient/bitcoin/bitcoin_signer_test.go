@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
+	"math/big"
 	"math/rand"
+	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -12,6 +14,7 @@ import (
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcec"
@@ -98,7 +101,7 @@ func (s *BTCSignerSuite) TestP2PH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := txscript.PayToAddrScript(addr)
+	pkScript, err := PayToAddrScript(addr)
 
 	c.Assert(err, IsNil)
 
@@ -170,7 +173,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	prevOut := wire.NewOutPoint(&chainhash.Hash{}, ^uint32(0))
 	txIn := wire.NewTxIn(prevOut, []byte{txscript.OP_0, txscript.OP_0}, nil)
 	originTx.AddTxIn(txIn)
-	pkScript, err := txscript.PayToAddrScript(addr)
+	pkScript, err := PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 	txOut := wire.NewTxOut(100000000, pkScript)
 	originTx.AddTxOut(txOut)
@@ -191,7 +194,7 @@ func (s *BTCSignerSuite) TestP2WPH(c *C) {
 	txOut = wire.NewTxOut(0, nil)
 	redeemTx.AddTxOut(txOut)
 	txSigHashes := txscript.NewTxSigHashes(redeemTx)
-	pkScript, err = PayToWitnessPubKeyHashScript(addr.WitnessProgram())
+	pkScript, err = PayToAddrScript(addr)
 	c.Assert(err, IsNil)
 
 	{
@@ -240,7 +243,7 @@ func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, []b
 	addr, err := btcutil.NewAddressWitnessPubKeyHash(pubKeyHash, net)
 	require.Nil(t, err)
 	//fmt.Printf("New address: %s\n", addr.EncodeAddress())
-	pkScript, err := PayToWitnessPubKeyHashScript(addr.WitnessProgram())
+	pkScript, err := PayToAddrScript(addr)
 	require.Nil(t, err)
 	return privateKey, pkScript
 }
@@ -313,7 +316,7 @@ func signTx(t *testing.T, tx *wire.MsgTx, payerScript []byte, privateKey *btcec.
 	}
 }
 
-func TestP2WPHSize2In3Out(t *testing.T) {
+func TestP2WPKHSize2In3Out(t *testing.T) {
 	// Generate payer/payee private keys and P2WPKH addresss
 	privateKey, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 	_, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
@@ -342,7 +345,7 @@ func TestP2WPHSize2In3Out(t *testing.T) {
 	require.Equal(t, vBytes, outTxBytesMin)
 }
 
-func TestP2WPHSize21In3Out(t *testing.T) {
+func TestP2WPKHSize21In3Out(t *testing.T) {
 	// Generate payer/payee private keys and P2WPKH addresss
 	privateKey, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 	_, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
@@ -370,7 +373,7 @@ func TestP2WPHSize21In3Out(t *testing.T) {
 	}
 }
 
-func TestP2WPHSizeXIn3Out(t *testing.T) {
+func TestP2WPKHSizeXIn3Out(t *testing.T) {
 	// Generate payer/payee private keys and P2WPKH addresss
 	privateKey, payerScript := generateKeyPair(t, &chaincfg.TestNet3Params)
 	_, payeeScript := generateKeyPair(t, &chaincfg.TestNet3Params)
@@ -401,7 +404,7 @@ func TestP2WPHSizeXIn3Out(t *testing.T) {
 	}
 }
 
-func TestP2WPHSizeBreakdown(t *testing.T) {
+func TestP2WPKHSizeBreakdown(t *testing.T) {
 	txSize2In3Out := EstimateSegWitTxSize(2, 3)
 	require.Equal(t, outTxBytesMin, txSize2In3Out)
 
@@ -419,7 +422,7 @@ func TestP2WPHSizeBreakdown(t *testing.T) {
 	require.Equal(t, depositFee, 0.00001360)
 }
 
-// helper function to create a new BitcoinChainClient
+// helper function to create a test BitcoinChainClient
 func createTestClient(t *testing.T) *BTCChainClient {
 	skHex := "7b8507ba117e069f4a3f456f505276084f8c92aee86ac78ae37b4d1801d35fa8"
 	privateKey, err := crypto.HexToECDSA(skHex)
@@ -427,14 +430,18 @@ func createTestClient(t *testing.T) *BTCChainClient {
 	tss := interfaces.TestSigner{
 		PrivKey: privateKey,
 	}
-	tssAddress := tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
-
-	// Create BitcoinChainClient
-	client := &BTCChainClient{
+	return &BTCChainClient{
 		Tss:               tss,
 		Mu:                &sync.Mutex{},
 		includedTxResults: make(map[string]*btcjson.GetTransactionResult),
 	}
+}
+
+// helper function to create a test BitcoinChainClient with UTXOs
+func createTestClientWithUTXOs(t *testing.T) *BTCChainClient {
+	// Create BitcoinChainClient
+	client := createTestClient(t)
+	tssAddress := client.Tss.BTCAddressWitnessPubkeyHash().EncodeAddress()
 
 	// Create 10 dummy UTXOs (22.44 BTC in total)
 	client.utxos = make([]btcjson.ListUnspentResult, 0, 10)
@@ -443,6 +450,139 @@ func createTestClient(t *testing.T) *BTCChainClient {
 		client.utxos = append(client.utxos, btcjson.ListUnspentResult{Address: tssAddress, Amount: amount})
 	}
 	return client
+}
+
+func TestAddWithdrawTxOutputs(t *testing.T) {
+	// Create test signer and receiver address
+	signer, err := NewBTCSigner(config.BTCConfig{}, stub.NewTSSMainnet(), clientcommon.DefaultLoggers(), &metrics.TelemetryServer{})
+	require.NoError(t, err)
+
+	// tss address and script
+	tssAddr := signer.tssSigner.BTCAddressWitnessPubkeyHash()
+	tssScript, err := PayToAddrScript(tssAddr)
+	require.NoError(t, err)
+	fmt.Printf("tss address: %s", tssAddr.EncodeAddress())
+
+	// receiver addresses
+	receiver := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
+	to, err := common.DecodeBtcAddress(receiver, common.BtcMainnetChain().ChainId)
+	require.NoError(t, err)
+	toScript, err := PayToAddrScript(to)
+	require.NoError(t, err)
+
+	// test cases
+	tests := []struct {
+		name     string
+		tx       *wire.MsgTx
+		to       btcutil.Address
+		total    float64
+		amount   float64
+		nonce    int64
+		fees     *big.Int
+		cancelTx bool
+		fail     bool
+		message  string
+		txout    []*wire.TxOut
+	}{
+		{
+			name:   "should add outputs successfully",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     to,
+			total:  1.00012000,
+			amount: 0.2,
+			nonce:  10000,
+			fees:   big.NewInt(2000),
+			fail:   false,
+			txout: []*wire.TxOut{
+				{Value: 10000, PkScript: tssScript},
+				{Value: 20000000, PkScript: toScript},
+				{Value: 80000000, PkScript: tssScript},
+			},
+		},
+		{
+			name:     "should cancel tx successfully",
+			tx:       wire.NewMsgTx(wire.TxVersion),
+			to:       to,
+			total:    1.00012000,
+			amount:   0.2,
+			nonce:    10000,
+			fees:     big.NewInt(2000),
+			cancelTx: true,
+			fail:     false,
+			txout: []*wire.TxOut{
+				{Value: 10000, PkScript: tssScript},
+				{Value: 100000000, PkScript: tssScript},
+			},
+		},
+		{
+			name:   "should fail on invalid amount",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     to,
+			total:  1.00012000,
+			amount: -0.5,
+			fail:   true,
+		},
+		{
+			name:   "should fail when total < amount",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     to,
+			total:  0.00012000,
+			amount: 0.2,
+			fail:   true,
+		},
+		{
+			name:    "should fail when total < fees + amount + nonce",
+			tx:      wire.NewMsgTx(wire.TxVersion),
+			to:      to,
+			total:   0.20011000,
+			amount:  0.2,
+			nonce:   10000,
+			fees:    big.NewInt(2000),
+			fail:    true,
+			message: "remainder value is negative",
+		},
+		{
+			name:   "should not produce duplicate nonce mark",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     to,
+			total:  0.20022000, //  0.2 + fee + nonceMark * 2
+			amount: 0.2,
+			nonce:  10000,
+			fees:   big.NewInt(2000),
+			fail:   false,
+			txout: []*wire.TxOut{
+				{Value: 10000, PkScript: tssScript},
+				{Value: 20000000, PkScript: toScript},
+				{Value: 9999, PkScript: tssScript}, // nonceMark - 1
+			},
+		},
+		{
+			name:   "should fail on invalid to address",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     nil,
+			total:  1.00012000,
+			amount: 0.2,
+			nonce:  10000,
+			fees:   big.NewInt(2000),
+			fail:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := signer.AddWithdrawTxOutputs(tt.tx, tt.to, tt.total, tt.amount, tt.nonce, tt.fees, tt.cancelTx)
+			if tt.fail {
+				require.Error(t, err)
+				if tt.message != "" {
+					require.Contains(t, err.Error(), tt.message)
+				}
+				return
+			} else {
+				require.NoError(t, err)
+				require.True(t, reflect.DeepEqual(tt.txout, tt.tx.TxOut))
+			}
+		})
+	}
 }
 
 func mineTxNSetNonceMark(ob *BTCChainClient, nonce uint64, txid string, preMarkIndex int) {
@@ -465,7 +605,7 @@ func mineTxNSetNonceMark(ob *BTCChainClient, nonce uint64, txid string, preMarkI
 }
 
 func TestSelectUTXOs(t *testing.T) {
-	ob := createTestClient(t)
+	ob := createTestClientWithUTXOs(t)
 	dummyTxID := "6e6f71d281146c1fc5c755b35908ee449f26786c84e2ae18f98b268de40b7ec4"
 
 	// Case1: nonce = 0, bootstrap
@@ -557,7 +697,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	dummyTxID := "6e6f71d281146c1fc5c755b35908ee449f26786c84e2ae18f98b268de40b7ec4"
 
 	t.Run("should not consolidate", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 10, amount = 0.01, nonce = 1, rank = 10
@@ -571,7 +711,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 1 utxo", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 9, amount = 0.01, nonce = 1, rank = 9
@@ -585,7 +725,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 3 utxos", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 5, amount = 0.01, nonce = 0, rank = 5
@@ -604,7 +744,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate all utxos using rank 1", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 0, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 0
 
 		// input: utxoCap = 12, amount = 0.01, nonce = 0, rank = 1
@@ -623,7 +763,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate 3 utxos sparse", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 5, amount = 0.13, nonce = 24105432, rank = 5
@@ -641,7 +781,7 @@ func TestUTXOConsolidation(t *testing.T) {
 	})
 
 	t.Run("should consolidate all utxos sparse", func(t *testing.T) {
-		ob := createTestClient(t)
+		ob := createTestClientWithUTXOs(t)
 		mineTxNSetNonceMark(ob, 24105431, dummyTxID, -1) // mine a transaction and set nonce-mark utxo for nonce 24105431
 
 		// input: utxoCap = 12, amount = 0.13, nonce = 24105432, rank = 1

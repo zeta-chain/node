@@ -8,6 +8,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcutil/bech32"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 )
 
@@ -23,7 +24,7 @@ type AddressTaproot struct {
 	AddressSegWit
 }
 
-var _ btcutil.Address = AddressTaproot{}
+var _ btcutil.Address = &AddressTaproot{}
 
 // NewAddressTaproot returns a new AddressTaproot.
 func NewAddressTaproot(witnessProg []byte,
@@ -171,7 +172,7 @@ func decodeSegWitAddress(address string) (string, byte, []byte, error) {
 // ScriptAddress returns the witness program for this address.
 //
 // NOTE: This method is part of the Address interface.
-func (a AddressSegWit) ScriptAddress() []byte {
+func (a *AddressSegWit) ScriptAddress() []byte {
 	return a.witnessProgram[:]
 }
 
@@ -179,7 +180,7 @@ func (a AddressSegWit) ScriptAddress() []byte {
 // bitcoin network.
 //
 // NOTE: This method is part of the Address interface.
-func (a AddressSegWit) IsForNet(net *chaincfg.Params) bool {
+func (a *AddressSegWit) IsForNet(net *chaincfg.Params) bool {
 	return a.hrp == net.Bech32HRPSegwit
 }
 
@@ -188,23 +189,29 @@ func (a AddressSegWit) IsForNet(net *chaincfg.Params) bool {
 // can be used as a fmt.Stringer.
 //
 // NOTE: This method is part of the Address interface.
-func (a AddressSegWit) String() string {
+func (a *AddressSegWit) String() string {
 	return a.EncodeAddress()
 }
 
-func DecodeTaprootAddress(addr string) (AddressTaproot, error) {
+func DecodeTaprootAddress(addr string) (*AddressTaproot, error) {
 	hrp, version, program, err := decodeSegWitAddress(addr)
 	if err != nil {
-		return AddressTaproot{}, err
+		return nil, err
 	}
 	if version != 1 {
-		return AddressTaproot{}, errors.New("invalid witness version; taproot address must be version 1")
+		return nil, errors.New("invalid witness version; taproot address must be version 1")
 	}
-	return AddressTaproot{
+	return &AddressTaproot{
 		AddressSegWit{
 			hrp:            hrp,
 			witnessVersion: version,
 			witnessProgram: program,
 		},
 	}, nil
+}
+
+// PayToWitnessTaprootScript creates a new script to pay to a version 1
+// (taproot) witness program. The passed hash is expected to be valid.
+func PayToWitnessTaprootScript(rawKey []byte) ([]byte, error) {
+	return txscript.NewScriptBuilder().AddOp(txscript.OP_1).AddData(rawKey).Script()
 }

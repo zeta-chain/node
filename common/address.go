@@ -57,6 +57,7 @@ func ConvertRecoverToError(r interface{}) error {
 	}
 }
 
+// DecodeBtcAddress decodes a BTC address from a given string and chainID
 func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Address, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -74,17 +75,38 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	}
 	// test taproot address type
 	address, err = bitcoin.DecodeTaprootAddress(inputAddress)
-	if err == nil && address.IsForNet(chainParams) {
-		return address, nil
+	if err == nil {
+		if address.IsForNet(chainParams) {
+			return address, nil
+		}
+		return nil, fmt.Errorf("address %s is not for network %s", inputAddress, chainParams.Name)
 	}
-	// test taproot address fail; continue other types
+	// test taproot address failed; continue testing other types: P2WSH, P2WPKH, P2SH, P2PKH
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	if err != nil {
-		return nil, fmt.Errorf("decode address failed: %s , for input address %s", err.Error(), inputAddress)
+		return nil, fmt.Errorf("decode address failed: %s, for input address %s", err.Error(), inputAddress)
 	}
 	ok := address.IsForNet(chainParams)
 	if !ok {
-		return nil, fmt.Errorf("address is not for network %s", chainParams.Name)
+		return nil, fmt.Errorf("address %s is not for network %s", inputAddress, chainParams.Name)
 	}
 	return
+}
+
+// IsBtcAddressSupported returns true if the given BTC address is supported
+func IsBtcAddressSupported(addr btcutil.Address) bool {
+	switch addr.(type) {
+	// P2TR address
+	case *bitcoin.AddressTaproot,
+		// P2WSH address
+		*btcutil.AddressWitnessScriptHash,
+		// P2WPKH address
+		*btcutil.AddressWitnessPubKeyHash,
+		// P2SH address
+		*btcutil.AddressScriptHash,
+		// P2PKH address
+		*btcutil.AddressPubKeyHash:
+		return true
+	}
+	return false
 }

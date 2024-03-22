@@ -266,10 +266,11 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
 	events := zetabitcoin.FilterAndParseIncomingTx(
+		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
 		0,
 		runner.BTCTSSAddress.EncodeAddress(),
-		&log.Logger,
+		log.Logger,
 		runner.BitcoinParams,
 		depositorFee,
 	)

@@ -92,9 +92,70 @@ func (signer *BTCSigner) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
 }
 
+// AddWithdrawTxOutputs adds the outputs to the withdraw tx
+func (signer *BTCSigner) AddWithdrawTxOutputs(
+	tx *wire.MsgTx,
+	to btcutil.Address,
+	total float64,
+	amount float64,
+	nonceMark int64,
+	fees *big.Int,
+	cancelTx bool,
+) error {
+	// convert withdraw amount to satoshis
+	amountSatoshis, err := GetSatoshis(amount)
+	if err != nil {
+		return err
+	}
+
+	// calculate remaining btc (the change) to TSS self
+	remaining := total - amount
+	remainingSats, err := GetSatoshis(remaining)
+	if err != nil {
+		return err
+	}
+	remainingSats -= fees.Int64()
+	remainingSats -= nonceMark
+	if remainingSats < 0 {
+		return fmt.Errorf("remainder value is negative: %d", remainingSats)
+	} else if remainingSats == nonceMark {
+		signer.logger.Info().Msgf("adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
+		remainingSats--
+	}
+
+	// 1st output: the nonce-mark btc to TSS self
+	tssAddrP2WPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
+	payToSelfScript, err := PayToAddrScript(tssAddrP2WPKH)
+	if err != nil {
+		return err
+	}
+	txOut1 := wire.NewTxOut(nonceMark, payToSelfScript)
+	tx.AddTxOut(txOut1)
+
+	// 2nd output: the payment to the recipient
+	if !cancelTx {
+		pkScript, err := PayToAddrScript(to)
+		if err != nil {
+			return err
+		}
+		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
+		tx.AddTxOut(txOut2)
+	} else {
+		// send the amount to TSS self if tx is cancelled
+		remainingSats += amountSatoshis
+	}
+
+	// 3rd output: the remaining btc to TSS self
+	if remainingSats > 0 {
+		txOut3 := wire.NewTxOut(remainingSats, payToSelfScript)
+		tx.AddTxOut(txOut3)
+	}
+	return nil
+}
+
 // SignWithdrawTx receives utxos sorted by value, amount in BTC, feeRate in BTC per Kb
 func (signer *BTCSigner) SignWithdrawTx(
-	to *btcutil.AddressWitnessPubKeyHash,
+	to btcutil.Address,
 	amount float64,
 	gasPrice *big.Int,
 	sizeLimit uint64,
@@ -131,11 +192,6 @@ func (signer *BTCSigner) SignWithdrawTx(
 		tx.AddTxIn(txIn)
 	}
 
-	amountSatoshis, err := GetSatoshis(amount)
-	if err != nil {
-		return nil, err
-	}
-
 	// size checking
 	// #nosec G701 always positive
 	txSize := EstimateSegWitTxSize(uint64(len(prevOuts)), 3)
@@ -157,44 +213,10 @@ func (signer *BTCSigner) SignWithdrawTx(
 	signer.logger.Info().Msgf("bitcoin outTx nonce %d gasPrice %s size %d fees %s consolidated %d utxos of value %v",
 		nonce, gasPrice.String(), txSize, fees.String(), consolidatedUtxo, consolidatedValue)
 
-	// calculate remaining btc to TSS self
-	tssAddrWPKH := signer.tssSigner.BTCAddressWitnessPubkeyHash()
-	payToSelf, err := PayToWitnessPubKeyHashScript(tssAddrWPKH.WitnessProgram())
+	// add tx outputs
+	err = signer.AddWithdrawTxOutputs(tx, to, total, amount, nonceMark, fees, cancelTx)
 	if err != nil {
 		return nil, err
-	}
-	remaining := total - amount
-	remainingSats, err := GetSatoshis(remaining)
-	if err != nil {
-		return nil, err
-	}
-	remainingSats -= fees.Int64()
-	remainingSats -= nonceMark
-	if remainingSats < 0 {
-		return nil, fmt.Errorf("remainder value is negative: %d", remainingSats)
-	} else if remainingSats == nonceMark {
-		signer.logger.Info().Msgf("SignWithdrawTx: adjust remainder value to avoid duplicate nonce-mark: %d", remainingSats)
-		remainingSats--
-	}
-
-	// 1st output: the nonce-mark btc to TSS self
-	txOut1 := wire.NewTxOut(nonceMark, payToSelf)
-	tx.AddTxOut(txOut1)
-
-	// 2nd output: the payment to the recipient
-	if !cancelTx {
-		pkScript, err := PayToWitnessPubKeyHashScript(to.WitnessProgram())
-		if err != nil {
-			return nil, err
-		}
-		txOut2 := wire.NewTxOut(amountSatoshis, pkScript)
-		tx.AddTxOut(txOut2)
-	}
-
-	// 3rd output: the remaining btc to TSS self
-	if remainingSats > 0 {
-		txOut3 := wire.NewTxOut(remainingSats, payToSelf)
-		tx.AddTxOut(txOut3)
 	}
 
 	// sign the tx
@@ -311,27 +333,13 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	// Check receiver P2WPKH address
-	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(params.ReceiverChainId)
-	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get bitcoin net params%v", err)
-		return
-	}
-	addr, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
+	to, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-	if !addr.IsForNet(bitcoinNetParams) {
-		logger.Error().Msgf(
-			"address %s is not for network %s",
-			params.Receiver,
-			bitcoinNetParams.Name,
-		)
-		return
-	}
-	to, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
-	if err != nil || !ok {
-		logger.Error().Err(err).Msgf("cannot convert address %s to P2WPKH address", params.Receiver)
+	if !common.IsBtcAddressSupported(to) {
+		logger.Error().Msgf("unsupported address %s", params.Receiver)
 		return
 	}
 	amount := float64(params.Amount.Uint64()) / 1e8
@@ -353,7 +361,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		amount = 0.0 // zero out the amount to cancel the tx
 	}
 
-	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", addr.EncodeAddress(), params.Amount.Uint64())
+	logger.Info().Msgf("SignWithdrawTx: to %s, value %d sats", to.EncodeAddress(), params.Amount.Uint64())
 	logger.Info().Msgf("using utxos: %v", btcClient.utxos)
 
 	tx, err := signer.SignWithdrawTx(

@@ -64,16 +64,16 @@ func getNewOutTxProcessor() *outtxprocessor.Processor {
 	return outtxprocessor.NewOutTxProcessorManager(logger)
 }
 
-func getCCTX() (*types.CrossChainTx, error) {
+func getCCTX() *types.CrossChainTx {
 	var cctx crosschaintypes.CrossChainTx
-	err := testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270.json"))
-	return &cctx, err
+	testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270.json"))
+	return &cctx
 }
 
-func getInvalidCCTX() (*types.CrossChainTx, error) {
+func getInvalidCCTX() *types.CrossChainTx {
 	var cctx crosschaintypes.CrossChainTx
-	err := testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270_invalidChainID.json"))
-	return &cctx, err
+	testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270_invalidChainID.json"))
+	return &cctx
 }
 
 func TestSigner_SetGetConnectorAddress(t *testing.T) {
@@ -103,8 +103,7 @@ func TestSigner_SetGetERC20CustodyAddress(t *testing.T) {
 func TestSigner_TryProcessOutTx(t *testing.T) {
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	processorManager := getNewOutTxProcessor()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
@@ -123,8 +122,7 @@ func TestSigner_SignOutboundTx(t *testing.T) {
 
 	// Setup txData struct
 
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -153,8 +151,7 @@ func TestSigner_SignRevertTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -183,8 +180,7 @@ func TestSigner_SignWithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -213,8 +209,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -261,8 +256,7 @@ func TestSigner_SignERC20WithdrawTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -291,8 +285,7 @@ func TestSigner_BroadcastOutTx(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
@@ -322,8 +315,7 @@ func TestSigner_getEVMRPC(t *testing.T) {
 }
 
 func TestSigner_SignerErrorMsg(t *testing.T) {
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 
 	msg := SignerErrorMsg(cctx)
 	require.Contains(t, msg, "nonce 68270 chain 56")
@@ -335,8 +327,7 @@ func TestSigner_SignWhitelistERC20Cmd(t *testing.T) {
 	require.NoError(t, err)
 
 	// Setup txData struct
-	cctx, err := getCCTX()
-	require.NoError(t, err)
+	cctx := getCCTX()
 	mockChainClient, err := getNewEvmChainClient()
 	require.NoError(t, err)
 	txData, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)

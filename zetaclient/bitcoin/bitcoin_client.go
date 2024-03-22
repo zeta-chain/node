@@ -8,7 +8,6 @@ import (
 	"math/big"
 	"os"
 	"sort"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -448,10 +447,11 @@ func (ob *BTCChainClient) observeInTx() error {
 			tssAddress := ob.Tss.BTCAddress()
 			// #nosec G701 always positive
 			inTxs := FilterAndParseIncomingTx(
+				ob.rpcClient,
 				res.Block.Tx,
 				uint64(res.Block.Height),
 				tssAddress,
-				&ob.logger.WatchInTx,
+				ob.logger.WatchInTx,
 				ob.netParams,
 				depositorFee,
 			)
@@ -650,10 +650,11 @@ type BTCInTxEvnet struct {
 // vout0: p2wpkh to the TSS address (targetAddress)
 // vout1: OP_RETURN memo, base64 encoded
 func FilterAndParseIncomingTx(
+	rpcClient interfaces.BTCRPCClient,
 	txs []btcjson.TxRawResult,
 	blockNumber uint64,
-	targetAddress string,
-	logger *zerolog.Logger,
+	tssAddress string,
+	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	depositorFee float64,
 ) []*BTCInTxEvnet {
@@ -662,7 +663,7 @@ func FilterAndParseIncomingTx(
 		if idx == 0 {
 			continue // the first tx is coinbase; we do not process coinbase tx
 		}
-		inTx, err := GetBtcEvent(tx, targetAddress, blockNumber, logger, netParams, depositorFee)
+		inTx, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
 			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 			continue
@@ -720,11 +721,37 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 	return false
 }
 
+// GetSenderAddressByVinP2TR get the P2TR sender address from the previous transaction
+// Note: this function requires the bitcoin node index the previous transaction
+func GetSenderAddressByVinP2TR(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
+	// query previous transaction
+	hash, res, err := GetTxResultByHash(rpcClient, vin.Txid)
+	if err != nil {
+		return "", err
+	}
+	// query previous transaction raw result
+	rawResult, err := GetRawTxResult(rpcClient, hash, res)
+	if err != nil {
+		return "", err
+	}
+	// #nosec G701 - always in range
+	if len(rawResult.Vout) <= int(vin.Vout) {
+		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
+	}
+	// decode sender address from previous vout script if it is a P2TR script
+	vout := rawResult.Vout[vin.Vout]
+	if vout.ScriptPubKey.Type == ScriptTypeP2TR {
+		return DecodeVoutP2TR(vout, net)
+	}
+	return "", nil
+}
+
 func GetBtcEvent(
+	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
-	targetAddress string,
+	tssAddress string,
 	blockNumber uint64,
-	logger *zerolog.Logger,
+	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	depositorFee float64,
 ) (*BTCInTxEvnet, error) {
@@ -732,49 +759,27 @@ func GetBtcEvent(
 	var value float64
 	var memo []byte
 	if len(tx.Vout) >= 2 {
-		// first vout must to addressed to the targetAddress with p2wpkh scriptPubKey
-		out := tx.Vout[0]
-		script := out.ScriptPubKey.Hex
-		if len(script) == 44 && script[:4] == "0014" { // segwit output: 0x00 + 20 bytes of pubkey hash
-			hash, err := hex.DecodeString(script[4:])
-			if err != nil {
-				return nil, err
-			}
-			wpkhAddress, err := btcutil.NewAddressWitnessPubKeyHash(hash, netParams)
-			if err != nil {
-				return nil, err
-			}
-			if wpkhAddress.EncodeAddress() != targetAddress {
-				return nil, nil // irrelevant tx to us, skip
-			}
-			// deposit amount has to be no less than the minimum depositor fee
-			if out.Value < depositorFee {
-				return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than depositor fee %v", value, tx.Txid, depositorFee)
-			}
-			value = out.Value - depositorFee
+		// 1st vout must to addressed to the tssAddress with p2wpkh scriptPubKey
+		out0 := tx.Vout[0]
+		receiver, err := DecodeVoutP2WPKH(out0, netParams)
+		if err != nil {
+			return nil, err
+		}
+		if receiver != tssAddress {
+			// skip irrelevant tx to us
+			return nil, nil
+		}
+		// deposit amount has to be no less than the minimum depositor fee
+		if out0.Value < depositorFee {
+			return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than depositor fee %v", value, tx.Txid, depositorFee)
+		}
+		value = out0.Value - depositorFee
 
-			out = tx.Vout[1]
-			script = out.ScriptPubKey.Hex
-			if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
-				memoSize, err := strconv.ParseInt(script[2:4], 16, 32)
-				if err != nil {
-					return nil, errors.Wrapf(err, "error decoding pubkey hash")
-				}
-				if int(memoSize) != (len(script)-4)/2 {
-					return nil, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
-				}
-				memoBytes, err := hex.DecodeString(script[4:])
-				if err != nil {
-					logger.Warn().Err(err).Msgf("error hex decoding memo")
-					return nil, fmt.Errorf("error hex decoding memo: %s", err)
-				}
-				if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
-					logger.Info().Msgf("donation tx: %s; value %f", tx.Txid, value)
-					return nil, fmt.Errorf("donation tx: %s; value %f", tx.Txid, value)
-				}
-				memo = memoBytes
-				found = true
-			}
+		// 2nd vout must be an OP_RETURN memo
+		out1 := tx.Vout[1]
+		memo, found, err = DecodeVoutMemoP2WPKH(out1, tx.Txid)
+		if err != nil {
+			return nil, err
 		}
 	}
 	if found {
@@ -782,8 +787,7 @@ func GetBtcEvent(
 		var fromAddress string
 		if len(tx.Vin) > 0 {
 			vin := tx.Vin[0]
-			//log.Info().Msgf("vin: %v", vin.Witness)
-			if len(vin.Witness) == 2 {
+			if len(vin.Witness) == 2 { // decode P2WPKH sender address
 				pk := vin.Witness[1]
 				pkBytes, err := hex.DecodeString(pk)
 				if err != nil {
@@ -795,11 +799,17 @@ func GetBtcEvent(
 					return nil, errors.Wrapf(err, "error decoding pubkey hash")
 				}
 				fromAddress = addr.EncodeAddress()
+			} else { // try getting P2TR sender address from previous output
+				sender, err := GetSenderAddressByVinP2TR(rpcClient, vin, netParams)
+				if err != nil {
+					return nil, errors.Wrapf(err, "error getting sender address")
+				}
+				fromAddress = sender
 			}
 		}
 		return &BTCInTxEvnet{
 			FromAddress: fromAddress,
-			ToAddress:   targetAddress,
+			ToAddress:   tssAddress,
 			Value:       value,
 			MemoBytes:   memo,
 			BlockNumber: blockNumber,
@@ -952,7 +962,7 @@ func (ob *BTCChainClient) getOutTxidByNonce(nonce uint64, test bool) (string, er
 			return "", fmt.Errorf("getOutTxidByNonce: cannot find outTx txid for nonce %d", nonce)
 		}
 		// make sure it's a real Bitcoin txid
-		_, getTxResult, err := ob.GetTxResultByHash(txid)
+		_, getTxResult, err := GetTxResultByHash(ob.rpcClient, txid)
 		if err != nil {
 			return "", errors.Wrapf(err, "getOutTxidByNonce: error getting outTx result for nonce %d hash %s", nonce, txid)
 		}
@@ -972,7 +982,7 @@ func (ob *BTCChainClient) findNonceMarkUTXO(nonce uint64, txid string) (int, err
 		if err != nil {
 			ob.logger.ObserveOutTx.Error().Err(err).Msgf("findNonceMarkUTXO: error getting satoshis for utxo %v", utxo)
 		}
-		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid {
+		if utxo.Address == tssAddress && sats == amount && utxo.TxID == txid && utxo.Vout == 0 {
 			ob.logger.ObserveOutTx.Info().Msgf("findNonceMarkUTXO: found nonce-mark utxo with txid %s, amount %d satoshi", utxo.TxID, sats)
 			return i, nil
 		}
@@ -1147,7 +1157,7 @@ func (ob *BTCChainClient) observeOutTx() {
 // Note: if txResult is nil, then inMempool flag should be ignored.
 func (ob *BTCChainClient) checkIncludedTx(cctx *types.CrossChainTx, txHash string) (*btcjson.GetTransactionResult, bool) {
 	outTxID := ob.GetTxID(cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
-	hash, getTxResult, err := ob.GetTxResultByHash(txHash)
+	hash, getTxResult, err := GetTxResultByHash(ob.rpcClient, txHash)
 	if err != nil {
 		ob.logger.ObserveOutTx.Error().Err(err).Msgf("checkIncludedTx: error GetTxResultByHash: %s", txHash)
 		return nil, false
@@ -1221,7 +1231,7 @@ func (ob *BTCChainClient) removeIncludedTx(nonce uint64) {
 func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *chainhash.Hash, res *btcjson.GetTransactionResult) error {
 	params := cctx.GetCurrentOutTxParam()
 	nonce := params.OutboundTxTssNonce
-	rawResult, err := ob.getRawTxResult(hash, res)
+	rawResult, err := GetRawTxResult(ob.rpcClient, hash, res)
 	if err != nil {
 		return errors.Wrapf(err, "checkTssOutTxResult: error GetRawTxResultByHash %s", hash.String())
 	}
@@ -1232,12 +1242,12 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 
 	// differentiate between normal and restricted cctx
 	if compliance.IsCctxRestricted(cctx) {
-		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
+		err = ob.checkTSSVoutCancelled(params, rawResult.Vout, ob.chain)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)
 		}
 	} else {
-		err = ob.checkTSSVout(params, rawResult.Vout)
+		err = ob.checkTSSVout(params, rawResult.Vout, ob.chain)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
 		}
@@ -1245,23 +1255,25 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 	return nil
 }
 
-func (ob *BTCChainClient) GetTxResultByHash(txID string) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
+// GetTxResultByHash gets the transaction result by hash
+func GetTxResultByHash(rpcClient interfaces.BTCRPCClient, txID string) (*chainhash.Hash, *btcjson.GetTransactionResult, error) {
 	hash, err := chainhash.NewHashFromStr(txID)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "GetTxResultByHash: error NewHashFromStr: %s", txID)
 	}
 
 	// The Bitcoin node has to be configured to watch TSS address
-	txResult, err := ob.rpcClient.GetTransaction(hash)
+	txResult, err := rpcClient.GetTransaction(hash)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "GetOutTxByTxHash: error GetTransaction %s", hash.String())
 	}
 	return hash, txResult, nil
 }
 
-func (ob *BTCChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.GetTransactionResult) (btcjson.TxRawResult, error) {
+// GetRawTxResult gets the raw tx result
+func GetRawTxResult(rpcClient interfaces.BTCRPCClient, hash *chainhash.Hash, res *btcjson.GetTransactionResult) (btcjson.TxRawResult, error) {
 	if res.Confirmations == 0 { // for pending tx, we query the raw tx directly
-		rawResult, err := ob.rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
+		rawResult, err := rpcClient.GetRawTransactionVerbose(hash) // for pending tx, we query the raw tx
 		if err != nil {
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetRawTransactionVerbose %s", res.TxID)
 		}
@@ -1271,7 +1283,7 @@ func (ob *BTCChainClient) getRawTxResult(hash *chainhash.Hash, res *btcjson.GetT
 		if err != nil {
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error NewHashFromStr for block hash %s", res.BlockHash)
 		}
-		block, err := ob.rpcClient.GetBlockVerboseTx(blkHash)
+		block, err := rpcClient.GetBlockVerboseTx(blkHash)
 		if err != nil {
 			return btcjson.TxRawResult{}, errors.Wrapf(err, "getRawTxResult: error GetBlockVerboseTx %s", res.BlockHash)
 		}
@@ -1321,7 +1333,7 @@ func (ob *BTCChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)
-func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
+func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []btcjson.Vout, chain common.Chain) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
 	if !(len(vouts) == 2 || len(vouts) == 3) {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
@@ -1330,14 +1342,20 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 	nonce := params.OutboundTxTssNonce
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
+		// decode receiver and amount from vout
+		receiverExpected := tssAddress
+		if vout.N == 1 {
+			// the 2nd output is the payment to recipient
+			receiverExpected = params.Receiver
+		}
+		receiverVout, amount, err := DecodeTSSVout(vout, receiverExpected, chain)
 		if err != nil {
-			return errors.Wrap(err, "checkTSSVout: error decoding P2WPKH vout")
+			return err
 		}
 		// 1st vout: nonce-mark
 		if vout.N == 0 {
-			if recvAddress != tssAddress {
-				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
+			if receiverVout != tssAddress {
+				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 			if amount != common.NonceMarkAmount(nonce) {
 				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
@@ -1345,8 +1363,8 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 		}
 		// 2nd vout: payment to recipient
 		if vout.N == 1 {
-			if recvAddress != params.Receiver {
-				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", recvAddress, params.Receiver)
+			if receiverVout != params.Receiver {
+				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", receiverVout, params.Receiver)
 			}
 			// #nosec G701 always positive
 			if uint64(amount) != params.Amount.Uint64() {
@@ -1355,8 +1373,8 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 		}
 		// 3rd vout: change to TSS (optional)
 		if vout.N == 2 {
-			if recvAddress != tssAddress {
-				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", recvAddress, tssAddress)
+			if receiverVout != tssAddress {
+				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 		}
 	}
@@ -1366,7 +1384,7 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 // checkTSSVoutCancelled vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the change to TSS (optional)
-func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
+func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, vouts []btcjson.Vout, chain common.Chain) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
 	if !(len(vouts) == 1 || len(vouts) == 2) {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
@@ -1375,14 +1393,15 @@ func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, 
 	nonce := params.OutboundTxTssNonce
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
-		recvAddress, amount, err := DecodeP2WPKHVout(vout, ob.chain)
+		// decode receiver and amount from vout
+		receiverVout, amount, err := DecodeTSSVout(vout, tssAddress, chain)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}
 		// 1st vout: nonce-mark
 		if vout.N == 0 {
-			if recvAddress != tssAddress {
-				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s", recvAddress, tssAddress)
+			if receiverVout != tssAddress {
+				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 			if amount != common.NonceMarkAmount(nonce) {
 				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
@@ -1390,8 +1409,8 @@ func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, 
 		}
 		// 2nd vout: change to TSS (optional)
 		if vout.N == 2 {
-			if recvAddress != tssAddress {
-				return fmt.Errorf("checkTSSVoutCancelled: change address %s not match TSS address %s", recvAddress, tssAddress)
+			if receiverVout != tssAddress {
+				return fmt.Errorf("checkTSSVoutCancelled: change address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 		}
 	}

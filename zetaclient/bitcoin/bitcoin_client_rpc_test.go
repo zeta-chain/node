@@ -146,10 +146,11 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
 	inTxs := FilterAndParseIncomingTx(
+		suite.BitcoinChainClient.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
-		&log.Logger,
+		log.Logger,
 		&chaincfg.TestNet3Params,
 		0.0,
 	)
@@ -183,10 +184,11 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
 	inTxs := FilterAndParseIncomingTx(
+		suite.BitcoinChainClient.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
-		&log.Logger,
+		log.Logger,
 		&chaincfg.TestNet3Params,
 		0.0,
 	)
