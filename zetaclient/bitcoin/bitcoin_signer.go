@@ -8,8 +8,11 @@ import (
 	"math/rand"
 	"time"
 
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -42,6 +45,7 @@ type BTCSigner struct {
 	logger           zerolog.Logger
 	loggerCompliance zerolog.Logger
 	ts               *metrics.TelemetryServer
+	coreContext      *corecontext.ZetaCoreContext
 }
 
 var _ interfaces.ChainSigner = &BTCSigner{}
@@ -50,7 +54,8 @@ func NewBTCSigner(
 	cfg config.BTCConfig,
 	tssSigner interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
-	ts *metrics.TelemetryServer) (*BTCSigner, error) {
+	ts *metrics.TelemetryServer,
+	coreContext *corecontext.ZetaCoreContext) (*BTCSigner, error) {
 	connCfg := &rpcclient.ConnConfig{
 		Host:         cfg.RPCHost,
 		User:         cfg.RPCUsername,
@@ -70,6 +75,7 @@ func NewBTCSigner(
 		logger:           loggers.Std.With().Str("chain", "BTC").Str("module", "BTCSigner").Logger(),
 		loggerCompliance: loggers.Compliance,
 		ts:               ts,
+		coreContext:      coreContext,
 	}, nil
 }
 
@@ -291,11 +297,7 @@ func (signer *BTCSigner) TryProcessOutTx(
 		logger.Error().Msgf("chain client is not a bitcoin client")
 		return
 	}
-	flags, err := zetaBridge.GetCrosschainFlags()
-	if err != nil {
-		logger.Error().Err(err).Msgf("cannot get crosschain flags")
-		return
-	}
+	flags := signer.coreContext.GetCrossChainFlags()
 	if !flags.IsOutboundEnabled {
 		logger.Info().Msgf("outbound is disabled")
 		return
@@ -346,9 +348,9 @@ func (signer *BTCSigner) TryProcessOutTx(
 	gasprice.Add(gasprice, satPerByte)
 
 	// compliance check
-	cancelTx := clientcommon.IsCctxRestricted(cctx)
+	cancelTx := compliance.IsCctxRestricted(cctx)
 	if cancelTx {
-		clientcommon.PrintComplianceLog(logger, signer.loggerCompliance,
+		compliance.PrintComplianceLog(logger, signer.loggerCompliance,
 			true, btcClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, params.Receiver, "BTC")
 		amount = 0.0 // zero out the amount to cancel the tx
 	}

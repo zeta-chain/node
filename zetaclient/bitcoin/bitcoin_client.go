@@ -13,8 +13,11 @@ import (
 	"sync/atomic"
 	"time"
 
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -75,6 +78,7 @@ type BTCChainClient struct {
 	broadcastedTx     map[string]string                        // key: chain-tss-nonce, value: outTx hash
 	utxos             []btcjson.ListUnspentResult
 	params            observertypes.ChainParams
+	coreContext       *corecontext.ZetaCoreContext
 
 	db     *gorm.DB
 	stop   chan struct{}
@@ -166,6 +170,7 @@ func NewBitcoinClient(
 
 	ob.zetaClient = bridge
 	ob.Tss = tss
+	ob.coreContext = appcontext.ZetaCoreContext()
 	ob.includedTxHashes = make(map[string]bool)
 	ob.includedTxResults = make(map[string]*btcjson.GetTransactionResult)
 	ob.broadcastedTx = make(map[string]string)
@@ -327,7 +332,7 @@ func (ob *BTCChainClient) WatchInTx() {
 	for {
 		select {
 		case <-ticker.C():
-			err := ob.observeInTx()
+			err := ob.ObserveInTx()
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
 			}
@@ -374,12 +379,9 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 	return err
 }
 
-func (ob *BTCChainClient) observeInTx() error {
+func (ob *BTCChainClient) ObserveInTx() error {
 	// make sure inbound TXS / Send is enabled by the protocol
-	flags, err := ob.zetaClient.GetCrosschainFlags()
-	if err != nil {
-		return err
-	}
+	flags := ob.coreContext.GetCrossChainFlags()
 	if !flags.IsInboundEnabled {
 		return errors.New("inbound TXS / Send has been disabled by the protocol")
 	}
@@ -712,7 +714,7 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
 			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
@@ -1230,7 +1232,7 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 	}
 
 	// differentiate between normal and restricted cctx
-	if clientcommon.IsCctxRestricted(cctx) {
+	if compliance.IsCctxRestricted(cctx) {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)

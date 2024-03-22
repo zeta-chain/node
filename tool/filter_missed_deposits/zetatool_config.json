@@ -1,0 +1,8 @@
+{
+ "ZetaURL": "127.0.0.1:1317",
+ "BtcExplorerURL": "https://blockstream.info/api/",
+ "EthRPCURL": "https://ethereum-rpc.publicnode.com",
+ "EtherscanAPIkey": "",
+ "ConnectorAddress": "0x000007Cf399229b2f5A4D043F20E90C9C98B7C6a",
+ "CustodyAddress": "0x0000030Ec64DF25301d8414eE5a29588C4B0dE10"
+}
