@@ -192,12 +192,70 @@ func TestZetaCoreBridge_GetCctxByHash(t *testing.T) {
 }
 
 func TestZetaCoreBridge_GetCctxByNonce(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryGetCctxResponse{CrossChainTx: &crosschainTypes.CrossChainTx{
+		Index: "9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3",
+	}}
+	input := crosschainTypes.QueryGetCctxByNonceRequest{
+		ChainID: 7000,
+		Nonce:   55,
+	}
+	method := "/zetachain.zetacore.crosschain.Query/CctxByNonce"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetCctxByNonce(7000, 55)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.CrossChainTx, resp)
 }
 
 func TestZetaCoreBridge_GetObserverList(t *testing.T) {
+	expectedOutput := observertypes.QueryObserverSetResponse{
+		Observers: []string{
+			"zeta19jr7nl82lrktge35f52x9g5y5prmvchmk40zhg",
+			"zeta1cxj07f3ju484ry2cnnhxl5tryyex7gev0yzxtj",
+			"zeta1hjct6q7npsspsg3dgvzk3sdf89spmlpf7rqmnw",
+		},
+	}
+	input := observertypes.QueryObserverSet{}
+	method := "/zetachain.zetacore.observer.Query/ObserverSet"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetObserverList()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Observers, resp)
 }
 
 func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryListCctxPendingResponse{
+		CrossChainTx: []*crosschainTypes.CrossChainTx{
+			{
+				Index: "cross-chain4456",
+			},
+		},
+		TotalPending: 1,
+	}
+	input := crosschainTypes.QueryListCctxPendingRequest{ChainId: 7000}
+	method := "/zetachain.zetacore.crosschain.Query/CctxListPending"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, totalPending, err := zetabridge.ListPendingCctx(7000)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.CrossChainTx, resp)
+	require.Equal(t, expectedOutput.TotalPending, totalPending)
 }
 
 func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
