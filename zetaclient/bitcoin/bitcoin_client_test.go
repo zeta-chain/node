@@ -183,7 +183,10 @@ func TestCalcDepositorFee828440(t *testing.T) {
 	var blockVb btcjson.GetBlockVerboseTxResult
 	err := testutils.LoadObjectFromJSONFile(&blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	require.NoError(t, err)
-	dynamicFee828440 := DepositorFee(32 * common.DefaultGasPriceMultiplier)
+	avgGasRate := float64(32.0)
+	// #nosec G701 test - always in range
+	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
+	dynamicFee828440 := DepositorFee(gasRate)
 
 	// should return default fee if it's a regtest block
 	fee := CalcDepositorFee(&blockVb, 18444, &chaincfg.RegressionNetParams, log.Logger)

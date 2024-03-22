@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -349,8 +350,8 @@ func (signer *Signer) TryProcessOutTx(
 
 	var tx *ethtypes.Transaction
 	// compliance check goes first
-	if clientcommon.IsCctxRestricted(cctx) {
-		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
+	if compliance.IsCctxRestricted(cctx) {
+		compliance.PrintComplianceLog(logger, signer.logger.Compliance,
 			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
 		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
 		if err != nil {

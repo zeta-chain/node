@@ -26,6 +26,7 @@
 * [1789](https://github.com/zeta-chain/node/issues/1789) - block cross-chain transactions that involve restricted addresses
 * [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
+* [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
 
 ### Tests
 
@@ -45,6 +46,7 @@
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
+* [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 
 ### Chores
@@ -57,7 +59,13 @@
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.
 * [1894](https://github.com/zeta-chain/node/pull/1894) - added download binaries and configs to the start sequence so it will download binaries that don't exist
 
-## Version: v14
+## Version: v15.0.0
+
+### Features
+
+*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+
+## Version: v14.0.1
 
 - [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 

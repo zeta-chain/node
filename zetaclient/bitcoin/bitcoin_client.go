@@ -17,6 +17,7 @@ import (
 
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -713,7 +714,7 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 		receiver = parsedAddress.Hex()
 	}
 	if config.ContainRestrictedAddress(inTx.FromAddress, receiver) {
-		clientcommon.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
+		compliance.PrintComplianceLog(ob.logger.WatchInTx, ob.logger.Compliance,
 			false, ob.chain.ChainId, inTx.TxHash, inTx.FromAddress, receiver, "BTC")
 		return true
 	}
@@ -1231,7 +1232,7 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 	}
 
 	// differentiate between normal and restricted cctx
-	if clientcommon.IsCctxRestricted(cctx) {
+	if compliance.IsCctxRestricted(cctx) {
 		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)

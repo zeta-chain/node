@@ -1,4 +1,4 @@
-package common
+package compliance
 
 import (
 	"path"
