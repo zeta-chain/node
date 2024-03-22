@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	authz2 "github.com/zeta-chain/zetacore/zetaclient/authz"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
@@ -19,47 +20,15 @@ import (
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-const (
-	// DefaultGasLimit is the default gas limit used for broadcasting txs
-	DefaultGasLimit = 200_000
-
-	// PostGasPriceGasLimit is the gas limit for voting new gas price
-	PostGasPriceGasLimit = 1_500_000
-
-	// AddTxHashToOutTxTrackerGasLimit is the gas limit for adding tx hash to out tx tracker
-	AddTxHashToOutTxTrackerGasLimit = 200_000
-
-	// PostBlameDataGasLimit is the gas limit for voting on blames
-	PostBlameDataGasLimit = 200_000
-
-	// DefaultRetryCount is the number of retries for broadcasting a tx
-	DefaultRetryCount = 5
-
-	// ExtendedRetryCount is an extended number of retries for broadcasting a tx, used in keygen operations
-	ExtendedRetryCount = 15
-
-	// DefaultRetryInterval is the interval between retries in seconds
-	DefaultRetryInterval = 5
-
-	// MonitorVoteInboundTxResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteInboundTxResultInterval = 5
-
-	// MonitorVoteInboundTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteInboundTxResultRetryCount = 20
-
-	// PostVoteOutboundGasLimit is the gas limit for voting on observed outbound tx
-	PostVoteOutboundGasLimit = 400_000
-
-	// PostVoteOutboundRevertGasLimit is the gas limit for voting on observed outbound tx for revert (when outbound fails)
-	// The value needs to be higher because reverting implies interacting with the EVM to perform swaps for the gas token
-	PostVoteOutboundRevertGasLimit = 1_500_000
-
-	// MonitorVoteOutboundTxResultInterval is the interval between retries for monitoring tx result in seconds
-	MonitorVoteOutboundTxResultInterval = 5
-
-	// MonitorVoteOutboundTxResultRetryCount is the number of retries to fetch monitoring tx result
-	MonitorVoteOutboundTxResultRetryCount = 20
-)
+// GasPriceMultiplier returns the gas price multiplier for the given chain
+func GasPriceMultiplier(chainID int64) (float64, error) {
+	if pkg.IsEVMChain(chainID) {
+		return clientcommon.EVMOuttxGasPriceMultiplier, nil
+	} else if pkg.IsBitcoinChain(chainID) {
+		return clientcommon.BTCOuttxGasPriceMultiplier, nil
+	}
+	return 0, fmt.Errorf("cannot get gas price multiplier for unknown chain %d", chainID)
+}
 
 func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Signer, error) {
 	msgURL := sdk.MsgTypeURL(msg)
@@ -75,8 +44,13 @@ func (b *ZetaCoreBridge) WrapMessageWithAuthz(msg sdk.Msg) (sdk.Msg, authz2.Sign
 }
 
 func (b *ZetaCoreBridge) PostGasPrice(chain pkg.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error) {
-	// double the gas price to avoid gas price spike
-	gasPrice = gasPrice * pkg.DefaultGasPriceMultiplier
+	// apply gas price multiplier for the chain
+	multiplier, err := GasPriceMultiplier(chain.ChainId)
+	if err != nil {
+		return "", err
+	}
+	// #nosec G701 always in range
+	gasPrice = uint64(float64(gasPrice) * multiplier)
 	signerAddress := b.keys.GetOperatorAddress().String()
 	msg := types.NewMsgGasPriceVoter(signerAddress, chain.ChainId, gasPrice, supply, blockNum)
 

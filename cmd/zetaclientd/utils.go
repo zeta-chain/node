@@ -3,7 +3,6 @@ package main
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
@@ -55,8 +54,8 @@ func CreateSignerMap(
 	tss interfaces.TSSSigner,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-) (map[pkg.Chain]interfaces.ChainSigner, error) {
-	signerMap := make(map[pkg.Chain]interfaces.ChainSigner)
+) (map[int64]interfaces.ChainSigner, error) {
+	signerMap := make(map[int64]interfaces.ChainSigner)
 	// EVM signers
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
@@ -77,7 +76,7 @@ func CreateSignerMap(
 			loggers.Std.Error().Err(err).Msgf("NewEVMSigner error for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		signerMap[evmConfig.Chain] = signer
+		signerMap[evmConfig.Chain.ChainId] = signer
 	}
 	// BTC signer
 	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
@@ -86,7 +85,7 @@ func CreateSignerMap(
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewBTCSigner error for chain %s", btcChain.String())
 		} else {
-			signerMap[btcChain] = signer
+			signerMap[btcChain.ChainId] = signer
 		}
 	}
 
@@ -100,8 +99,8 @@ func CreateChainClientMap(
 	dbpath string,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
-) (map[pkg.Chain]interfaces.ChainClient, error) {
-	clientMap := make(map[pkg.Chain]interfaces.ChainClient)
+) (map[int64]interfaces.ChainClient, error) {
+	clientMap := make(map[int64]interfaces.ChainClient)
 	// EVM clients
 	for _, evmConfig := range appContext.Config().GetAllEVMConfigs() {
 		if evmConfig.Chain.IsZetaChain() {
@@ -120,17 +119,17 @@ func CreateChainClientMap(
 			loggers.Std.Error().Err(err).Msgf("NewEVMChainClient error for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		clientMap[evmConfig.Chain] = co
+		clientMap[evmConfig.Chain.ChainId] = co
 	}
 	// BTC client
-	btcChain, _, enabled := appContext.GetBTCChainAndConfig()
+	btcChain, btcConfig, enabled := appContext.GetBTCChainAndConfig()
 	if enabled {
-		co, err := bitcoin.NewBitcoinClient(appContext, btcChain, bridge, tss, dbpath, loggers, ts)
+		co, err := bitcoin.NewBitcoinClient(appContext, btcChain, bridge, tss, dbpath, loggers, btcConfig, ts)
 		if err != nil {
 			loggers.Std.Error().Err(err).Msgf("NewBitcoinClient error for chain %s", btcChain.String())
 
 		} else {
-			clientMap[btcChain] = co
+			clientMap[btcChain.ChainId] = co
 		}
 	}
 

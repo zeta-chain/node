@@ -25,6 +25,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -32,21 +33,21 @@ import (
 	zbridge "github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
+// Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
-	client                      interfaces.EVMRPCClient
-	chain                       *pkg.Chain
-	chainID                     *big.Int
-	tssSigner                   interfaces.TSSSigner
-	ethSigner                   ethtypes.Signer
-	abi                         abi.ABI
-	erc20CustodyABI             abi.ABI
-	metaContractAddress         ethcommon.Address
-	erc20CustodyContractAddress ethcommon.Address
-	logger                      clientcommon.ClientLogger
-	ts                          *metrics.TelemetryServer
+	client    interfaces.EVMRPCClient
+	chain     *pkg.Chain
+	tssSigner interfaces.TSSSigner
+	ethSigner ethtypes.Signer
+	logger    clientcommon.ClientLogger
+	ts        *metrics.TelemetryServer
 
-	// for outTx tracker report only
+	// mu protects below fields from concurrent access
 	mu                     *sync.Mutex
+	zetaConnectorABI       abi.ABI
+	erc20CustodyABI        abi.ABI
+	zetaConnectorAddress   ethcommon.Address
+	er20CustodyAddress     ethcommon.Address
 	outTxHashBeingReported map[string]bool
 }
 
@@ -56,36 +57,35 @@ func NewEVMSigner(
 	chain pkg.Chain,
 	endpoint string,
 	tssSigner interfaces.TSSSigner,
-	abiString string,
-	erc20CustodyABIString string,
-	metaContract ethcommon.Address,
-	erc20CustodyContract ethcommon.Address,
+	zetaConnectorABI string,
+	erc20CustodyABI string,
+	zetaConnectorAddress ethcommon.Address,
+	erc20CustodyAddress ethcommon.Address,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
-	client, chainID, ethSigner, err := getEVMRPC(endpoint)
+	client, ethSigner, err := getEVMRPC(endpoint)
 	if err != nil {
 		return nil, err
 	}
-	connectorABI, err := abi.JSON(strings.NewReader(abiString))
+	connectorABI, err := abi.JSON(strings.NewReader(zetaConnectorABI))
 	if err != nil {
 		return nil, err
 	}
-	erc20CustodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABIString))
+	custodyABI, err := abi.JSON(strings.NewReader(erc20CustodyABI))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Signer{
-		client:                      client,
-		chain:                       &chain,
-		tssSigner:                   tssSigner,
-		chainID:                     chainID,
-		ethSigner:                   ethSigner,
-		abi:                         connectorABI,
-		erc20CustodyABI:             erc20CustodyABI,
-		metaContractAddress:         metaContract,
-		erc20CustodyContractAddress: erc20CustodyContract,
+		client:               client,
+		chain:                &chain,
+		tssSigner:            tssSigner,
+		ethSigner:            ethSigner,
+		zetaConnectorABI:     connectorABI,
+		erc20CustodyABI:      custodyABI,
+		zetaConnectorAddress: zetaConnectorAddress,
+		er20CustodyAddress:   erc20CustodyAddress,
 		logger: clientcommon.ClientLogger{
 			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
 			Compliance: loggers.Compliance,
@@ -94,6 +94,34 @@ func NewEVMSigner(
 		mu:                     &sync.Mutex{},
 		outTxHashBeingReported: make(map[string]bool),
 	}, nil
+}
+
+// SetZetaConnectorAddress sets the zeta connector address
+func (signer *Signer) SetZetaConnectorAddress(addr ethcommon.Address) {
+	signer.mu.Lock()
+	defer signer.mu.Unlock()
+	signer.zetaConnectorAddress = addr
+}
+
+// SetERC20CustodyAddress sets the erc20 custody address
+func (signer *Signer) SetERC20CustodyAddress(addr ethcommon.Address) {
+	signer.mu.Lock()
+	defer signer.mu.Unlock()
+	signer.er20CustodyAddress = addr
+}
+
+// GetZetaConnectorAddress returns the zeta connector address
+func (signer *Signer) GetZetaConnectorAddress() ethcommon.Address {
+	signer.mu.Lock()
+	defer signer.mu.Unlock()
+	return signer.zetaConnectorAddress
+}
+
+// GetERC20CustodyAddress returns the erc20 custody address
+func (signer *Signer) GetERC20CustodyAddress() ethcommon.Address {
+	signer.mu.Lock()
+	defer signer.mu.Unlock()
+	return signer.er20CustodyAddress
 }
 
 // Sign given data, and metadata (gas, nonce, etc)
@@ -150,7 +178,7 @@ func (signer *Signer) SignOutboundTx(txData *OutBoundTransactionData) (*ethtypes
 	var data []byte
 	var err error
 
-	data, err = signer.abi.Pack("onReceive",
+	data, err = signer.zetaConnectorABI.Pack("onReceive",
 		txData.sender.Bytes(),
 		txData.srcChainID,
 		txData.to,
@@ -162,7 +190,7 @@ func (signer *Signer) SignOutboundTx(txData *OutBoundTransactionData) (*ethtypes
 	}
 
 	tx, _, _, err := signer.Sign(data,
-		signer.metaContractAddress,
+		signer.zetaConnectorAddress,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -188,7 +216,7 @@ func (signer *Signer) SignRevertTx(txData *OutBoundTransactionData) (*ethtypes.T
 	var data []byte
 	var err error
 
-	data, err = signer.abi.Pack("onRevert",
+	data, err = signer.zetaConnectorABI.Pack("onRevert",
 		txData.sender,
 		txData.srcChainID,
 		txData.to.Bytes(),
@@ -201,7 +229,7 @@ func (signer *Signer) SignRevertTx(txData *OutBoundTransactionData) (*ethtypes.T
 	}
 
 	tx, _, _, err := signer.Sign(data,
-		signer.metaContractAddress,
+		signer.zetaConnectorAddress,
 		txData.gasLimit,
 		txData.gasPrice,
 		txData.nonce,
@@ -322,8 +350,8 @@ func (signer *Signer) TryProcessOutTx(
 
 	var tx *ethtypes.Transaction
 	// compliance check goes first
-	if clientcommon.IsCctxRestricted(cctx) {
-		clientcommon.PrintComplianceLog(logger, signer.logger.Compliance,
+	if compliance.IsCctxRestricted(cctx) {
+		compliance.PrintComplianceLog(logger, signer.logger.Compliance,
 			true, evmClient.chain.ChainId, cctx.Index, cctx.InboundTxParams.Sender, txData.to.Hex(), cctx.GetCurrentOutTxParam().CoinType.String())
 		tx, err = signer.SignCancelTx(txData.nonce, txData.gasPrice, height) // cancel the tx
 		if err != nil {
@@ -556,7 +584,7 @@ func (signer *Signer) SignERC20WithdrawTx(txData *OutBoundTransactionData) (*eth
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, txData.gasLimit, txData.gasPrice, txData.nonce, txData.height)
+	tx, _, _, err := signer.Sign(data, signer.er20CustodyAddress, txData.gasLimit, txData.gasPrice, txData.nonce, txData.height)
 	if err != nil {
 		return nil, fmt.Errorf("sign error: %w", err)
 	}
@@ -589,7 +617,7 @@ func (signer *Signer) SignWhitelistTx(
 		return nil, fmt.Errorf("pack error: %w", err)
 	}
 
-	tx, _, _, err := signer.Sign(data, signer.erc20CustodyContractAddress, gasLimit, gasPrice, nonce, height)
+	tx, _, _, err := signer.Sign(data, signer.er20CustodyAddress, gasLimit, gasPrice, nonce, height)
 	if err != nil {
 		return nil, fmt.Errorf("Sign error: %w", err)
 	}
@@ -612,25 +640,25 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 // ________________________
 
 // getEVMRPC is a helper function to set up the client and signer, also initializes a mock client for unit tests
-func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, *big.Int, ethtypes.Signer, error) {
+func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == stub.EVMRPCEnabled {
 		chainID := big.NewInt(pkg.BscMainnetChain().ChainId)
 		ethSigner := ethtypes.NewEIP155Signer(chainID)
 		client := &stub.MockEvmClient{}
-		return client, chainID, ethSigner, nil
+		return client, ethSigner, nil
 	}
 
 	client, err := ethclient.Dial(endpoint)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
 	chainID, err := client.ChainID(context.TODO())
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	ethSigner := ethtypes.LatestSignerForChainID(chainID)
-	return client, chainID, ethSigner, nil
+	return client, ethSigner, nil
 }
 
 func roundUpToNearestGwei(gasPrice *big.Int) *big.Int {
