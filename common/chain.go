@@ -9,13 +9,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 )
 
-// ParseChainName returns the ChainName from a string
-// if no such name exists, returns the empty chain name: ChainName_empty
-func ParseChainName(chain string) ChainName {
-	c := ChainName_value[chain]
-	return ChainName(c)
-}
-
 type SigninAlgo string
 
 // Chains represent a slice of Chain

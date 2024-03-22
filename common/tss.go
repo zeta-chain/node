@@ -15,8 +15,6 @@ func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	if err != nil {
 		return keyAddr, err
 	}
-	//keyAddrBytes := pubk.EVMAddress().Bytes()
-	pubk.Bytes()
 	decompresspubkey, err := crypto.DecompressPubkey(pubk.Bytes())
 	if err != nil {
 		return keyAddr, err
