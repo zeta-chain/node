@@ -93,14 +93,15 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 	if !tssFound {
 		return nil, types.ErrCannotFindTSSKeys
 	}
-	// create a new CCTX from the inbound message. The status of the new CCTX is set to PendingInbound.
+	// create a new CCTX from the inbound message.The status of the new CCTX is set to PendingInbound.
 	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
 	if err != nil {
 		return nil, err
 	}
-	// Process the inbound CCTX, the process function manages the state commit and cctx status change.If the process fails the changes to the evm state are rolled back.
+	// Process the inbound CCTX, the process function manages the state commit and cctx status change.
+	//	If the process fails, the changes to the evm state are rolled back.
 	k.ProcessInbound(ctx, &cctx)
-	// Save the inbound CCTX to the store.This is called irrespective of the status of the CCTX or the outcome of the process function.
+	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
 	k.SaveInbound(ctx, &cctx, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 }

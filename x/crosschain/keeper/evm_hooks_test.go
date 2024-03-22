@@ -23,6 +23,9 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
+// SetupStateForProcessLogsZetaSent sets up additional state required for processing logs for ZetaSent events
+// This sets up the gas coin, zrc20 contract, gas price, zrc20 pool.
+// This should be used in conjunction with SetupStateForProcessLogs for processing ZetaSent events
 func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain, admin string) {
 
 	assetAddress := sample.EthAddress().String()
@@ -60,6 +63,8 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 	)
 }
 
+// SetupStateForProcessLogs sets up observer state for required for processing logs
+// It deploys system contracts, sets up TSS, gas price, chain nonce's, pending nonce's.These are all required to create a cctx from a log
 func SetupStateForProcessLogs(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
 
 	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)

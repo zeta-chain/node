@@ -136,7 +136,8 @@ func (m CrossChainTx) SetReverted(message string) {
 	m.CctxStatus.ChangeStatus(CctxStatus_Reverted, message)
 }
 
-// NewCCTX initializes the CCTX with the given message and tssPubkey
+// NewCCTX creates a new CCTX.From a MsgVoteOnObservedInboundTx message and a TSS pubkey.
+// It also validates the created cctx
 func NewCCTX(ctx sdk.Context, msg MsgVoteOnObservedInboundTx, tssPubkey string) (CrossChainTx, error) {
 	index := msg.Digest()
 
