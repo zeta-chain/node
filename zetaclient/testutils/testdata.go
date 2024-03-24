@@ -87,6 +87,14 @@ func LoadEVMBlock(chainID int64, blockNumber uint64, trimmed bool) *ethrpc.Block
 	return block
 }
 
+// LoadBTCIntxRawResult loads archived Bitcoin intx raw result from file
+func LoadBTCIntxRawResult(chainID int64, txHash string, donation bool) *btcjson.TxRawResult {
+	name := path.Join("../", TestDataPathBTC, FileNameBTCIntx(chainID, txHash, donation))
+	rawResult := &btcjson.TxRawResult{}
+	LoadObjectFromJSONFile(rawResult, name)
+	return rawResult
+}
+
 // LoadBTCTxRawResultNCctx loads archived Bitcoin outtx raw result and corresponding cctx
 func LoadBTCTxRawResultNCctx(chainID int64, nonce uint64) (*btcjson.TxRawResult, *crosschaintypes.CrossChainTx) {
 	//nameTx := FileNameBTCOuttx(chainID, nonce)

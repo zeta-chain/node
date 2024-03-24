@@ -1,6 +1,7 @@
 package bitcoin
 
 import (
+	"encoding/hex"
 	"path"
 	"strings"
 	"testing"
@@ -25,7 +26,7 @@ func TestDecodeVoutP2TR(t *testing.T) {
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2TR
-	receiver, err := DecodeVoutP2TR(rawResult.Vout[0], net)
+	receiver, err := DecodeScriptP2TR(rawResult.Vout[0].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9", receiver)
 }
@@ -41,37 +42,31 @@ func TestDecodeVoutP2TRErrors(t *testing.T) {
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
 
-	t.Run("should return error on wrong script type", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		invalidVout.ScriptPubKey.Type = "witness_v0_keyhash" // use non-P2TR script type
-		_, err := DecodeVoutP2TR(invalidVout, net)
-		require.ErrorContains(t, err, "want scriptPubKey type witness_v1_taproot")
-	})
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "invalid script"
-		_, err := DecodeVoutP2TR(invalidVout, net)
-		require.ErrorContains(t, err, "error decoding scriptPubKey")
+		_, err := DecodeScriptP2TR(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "error decoding script")
 	})
 	t.Run("should return error on wrong script length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "0020" // 2 bytes, should be 34
-		_, err := DecodeVoutP2TR(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2TR scriptPubKey")
+		_, err := DecodeScriptP2TR(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2TR script")
 	})
 	t.Run("should return error on invalid OP_1", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_1 '51' to OP_2 '52'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "51", "52", 1)
-		_, err := DecodeVoutP2TR(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2TR scriptPubKey")
+		_, err := DecodeScriptP2TR(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2TR script")
 	})
 	t.Run("should return error on wrong hash length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the length '20' to '19'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "5120", "5119", 1)
-		_, err := DecodeVoutP2TR(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2TR scriptPubKey")
+		_, err := DecodeScriptP2TR(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2TR script")
 	})
 }
 
@@ -88,7 +83,7 @@ func TestDecodeVoutP2WSH(t *testing.T) {
 	require.Len(t, rawResult.Vout, 1)
 
 	// decode vout 0, P2WSH
-	receiver, err := DecodeVoutP2WSH(rawResult.Vout[0], net)
+	receiver, err := DecodeScriptP2WSH(rawResult.Vout[0].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc", receiver)
 }
@@ -104,37 +99,31 @@ func TestDecodeVoutP2WSHErrors(t *testing.T) {
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
 
-	t.Run("should return error on wrong script type", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		invalidVout.ScriptPubKey.Type = "witness_v0_keyhash" // use non-P2WSH script type
-		_, err := DecodeVoutP2WSH(invalidVout, net)
-		require.ErrorContains(t, err, "want scriptPubKey type witness_v0_scripthash")
-	})
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "invalid script"
-		_, err := DecodeVoutP2WSH(invalidVout, net)
-		require.ErrorContains(t, err, "error decoding scriptPubKey")
+		_, err := DecodeScriptP2WSH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "error decoding script")
 	})
 	t.Run("should return error on wrong script length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "0020" // 2 bytes, should be 34
-		_, err := DecodeVoutP2WSH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2WSH scriptPubKey")
+		_, err := DecodeScriptP2WSH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2WSH script")
 	})
 	t.Run("should return error on invalid OP_0", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_0 '00' to OP_1 '51'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "00", "51", 1)
-		_, err := DecodeVoutP2WSH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2WSH scriptPubKey")
+		_, err := DecodeScriptP2WSH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2WSH script")
 	})
 	t.Run("should return error on wrong hash length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the length '20' to '19'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "0020", "0019", 1)
-		_, err := DecodeVoutP2WSH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2WSH scriptPubKey")
+		_, err := DecodeScriptP2WSH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2WSH script")
 	})
 }
 
@@ -151,17 +140,17 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 	require.Len(t, rawResult.Vout, 3)
 
 	// decode vout 0, nonce mark 148
-	receiver, err := DecodeVoutP2WPKH(rawResult.Vout[0], net)
+	receiver, err := DecodeScriptP2WPKH(rawResult.Vout[0].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, testutils.TSSAddressBTCMainnet, receiver)
 
 	// decode vout 1, payment 0.00012000 BTC
-	receiver, err = DecodeVoutP2WPKH(rawResult.Vout[1], net)
+	receiver, err = DecodeScriptP2WPKH(rawResult.Vout[1].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, "bc1qpsdlklfcmlcfgm77c43x65ddtrt7n0z57hsyjp", receiver)
 
 	// decode vout 2, change 0.39041489 BTC
-	receiver, err = DecodeVoutP2WPKH(rawResult.Vout[2], net)
+	receiver, err = DecodeScriptP2WPKH(rawResult.Vout[2].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, testutils.TSSAddressBTCMainnet, receiver)
 }
@@ -177,30 +166,24 @@ func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
 
-	t.Run("should return error on wrong script type", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		invalidVout.ScriptPubKey.Type = "scripthash" // use non-P2WPKH script type
-		_, err := DecodeVoutP2WPKH(invalidVout, net)
-		require.ErrorContains(t, err, "want scriptPubKey type witness_v0_keyhash")
-	})
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "invalid script"
-		_, err := DecodeVoutP2WPKH(invalidVout, net)
-		require.ErrorContains(t, err, "error decoding scriptPubKey")
+		_, err := DecodeScriptP2WPKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "error decoding script")
 	})
 	t.Run("should return error on wrong script length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "0014" // 2 bytes, should be 22
-		_, err := DecodeVoutP2WPKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2WPKH scriptPubKey")
+		_, err := DecodeScriptP2WPKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2WPKH script")
 	})
 	t.Run("should return error on wrong hash length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the length '14' to '13'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "0014", "0013", 1)
-		_, err := DecodeVoutP2WPKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2WPKH scriptPubKey")
+		_, err := DecodeScriptP2WPKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2WPKH script")
 	})
 }
 
@@ -217,7 +200,7 @@ func TestDecodeVoutP2SH(t *testing.T) {
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2SH
-	receiver, err := DecodeVoutP2SH(rawResult.Vout[0], net)
+	receiver, err := DecodeScriptP2SH(rawResult.Vout[0].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, "327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE", receiver)
 }
@@ -233,43 +216,37 @@ func TestDecodeVoutP2SHErrors(t *testing.T) {
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
 
-	t.Run("should return error on wrong script type", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		invalidVout.ScriptPubKey.Type = "witness_v0_keyhash" // use non-P2SH script type
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "want scriptPubKey type scripthash")
-	})
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "invalid script"
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "error decoding scriptPubKey")
+		_, err := DecodeScriptP2SH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "error decoding script")
 	})
 	t.Run("should return error on wrong script length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "0014" // 2 bytes, should be 23
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2SH scriptPubKey")
+		_, err := DecodeScriptP2SH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2SH script")
 	})
 	t.Run("should return error on invalid OP_HASH160", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_HASH160 'a9' to OP_HASH256 'aa'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "a9", "aa", 1)
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2SH scriptPubKey")
+		_, err := DecodeScriptP2SH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2SH script")
 	})
 	t.Run("should return error on wrong data length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the length '14' to '13'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "a914", "a913", 1)
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2SH scriptPubKey")
+		_, err := DecodeScriptP2SH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2SH script")
 	})
 	t.Run("should return error on invalid OP_EQUAL", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "87", "88", 1)
-		_, err := DecodeVoutP2SH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2SH scriptPubKey")
+		_, err := DecodeScriptP2SH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2SH script")
 	})
 }
 
@@ -286,7 +263,7 @@ func TestDecodeVoutP2PKH(t *testing.T) {
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2PKH
-	receiver, err := DecodeVoutP2PKH(rawResult.Vout[0], net)
+	receiver, err := DecodeScriptP2PKH(rawResult.Vout[0].ScriptPubKey.Hex, net)
 	require.NoError(t, err)
 	require.Equal(t, "1FueivsE338W2LgifJ25HhTcVJ7CRT8kte", receiver)
 }
@@ -302,58 +279,126 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 	var rawResult btcjson.TxRawResult
 	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
 
-	t.Run("should return error on wrong script type", func(t *testing.T) {
-		invalidVout := rawResult.Vout[0]
-		invalidVout.ScriptPubKey.Type = "scripthash" // use non-P2PKH script type
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "want scriptPubKey type pubkeyhash")
-	})
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "invalid script"
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "error decoding scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "error decoding script")
 	})
 	t.Run("should return error on wrong script length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		invalidVout.ScriptPubKey.Hex = "76a914" // 3 bytes, should be 25
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
 	})
 	t.Run("should return error on invalid OP_DUP", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_DUP '76' to OP_NIP '77'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "76", "77", 1)
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
 	})
 	t.Run("should return error on invalid OP_HASH160", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_HASH160 'a9' to OP_HASH256 'aa'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "76a9", "76aa", 1)
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
 	})
 	t.Run("should return error on wrong data length", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the length '14' to '13'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "76a914", "76a913", 1)
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
 	})
 	t.Run("should return error on invalid OP_EQUALVERIFY", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_EQUALVERIFY '88' to OP_RESERVED1 '89'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "88ac", "89ac", 1)
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
 	})
 	t.Run("should return error on invalid OP_CHECKSIG", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
 		// modify the OP_CHECKSIG 'ac' to OP_CHECKSIGVERIFY 'ad'
 		invalidVout.ScriptPubKey.Hex = strings.Replace(invalidVout.ScriptPubKey.Hex, "88ac", "88ad", 1)
-		_, err := DecodeVoutP2PKH(invalidVout, net)
-		require.ErrorContains(t, err, "invalid P2PKH scriptPubKey")
+		_, err := DecodeScriptP2PKH(invalidVout.ScriptPubKey.Hex, net)
+		require.ErrorContains(t, err, "invalid P2PKH script")
+	})
+}
+
+func TestDecodeOpReturnMemo(t *testing.T) {
+	// load archived intx raw result
+	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
+	chain := common.BtcMainnetChain()
+	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
+	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
+	rawResult := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+	require.True(t, len(rawResult.Vout) >= 2)
+	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
+
+	t.Run("should decode memo from OP_RETURN output", func(t *testing.T) {
+		memo, found, err := DecodeOpReturnMemo(rawResult.Vout[1].ScriptPubKey.Hex, txHash)
+		require.NoError(t, err)
+		require.True(t, found)
+		// [OP_RETURN, 0x14,<20-byte-hash>]
+		require.Equal(t, scriptHex[4:], hex.EncodeToString(memo))
+	})
+	t.Run("should return nil memo non-OP_RETURN output", func(t *testing.T) {
+		// modify the OP_RETURN to OP_1
+		scriptInvalid := strings.Replace(scriptHex, "6a", "51", 1)
+		memo, found, err := DecodeOpReturnMemo(scriptInvalid, txHash)
+		require.NoError(t, err)
+		require.False(t, found)
+		require.Nil(t, memo)
+	})
+	t.Run("should return nil memo on invalid script", func(t *testing.T) {
+		// use known short script
+		scriptInvalid := "00"
+		memo, found, err := DecodeOpReturnMemo(scriptInvalid, txHash)
+		require.NoError(t, err)
+		require.False(t, found)
+		require.Nil(t, memo)
+	})
+}
+
+func TestDecodeOpReturnMemoErrors(t *testing.T) {
+	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
+	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
+	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
+
+	t.Run("should return error on invalid memo size", func(t *testing.T) {
+		// use invalid memo size
+		scriptInvalid := strings.Replace(scriptHex, "6a14", "6axy", 1)
+		memo, found, err := DecodeOpReturnMemo(scriptInvalid, txHash)
+		require.ErrorContains(t, err, "error decoding memo size")
+		require.False(t, found)
+		require.Nil(t, memo)
+	})
+	t.Run("should return error on memo size mismatch", func(t *testing.T) {
+		// use wrong memo size
+		scriptInvalid := strings.Replace(scriptHex, "6a14", "6a13", 1)
+		memo, found, err := DecodeOpReturnMemo(scriptInvalid, txHash)
+		require.ErrorContains(t, err, "memo size mismatch")
+		require.False(t, found)
+		require.Nil(t, memo)
+	})
+	t.Run("should return error on invalid hex", func(t *testing.T) {
+		// use invalid hex
+		scriptInvalid := strings.Replace(scriptHex, "6a1467", "6a14xy", 1)
+		memo, found, err := DecodeOpReturnMemo(scriptInvalid, txHash)
+		require.ErrorContains(t, err, "error hex decoding memo")
+		require.False(t, found)
+		require.Nil(t, memo)
+	})
+	t.Run("should return nil memo on donation tx", func(t *testing.T) {
+		// use donation sctipt "6a0a4920616d207269636821"
+		scriptDonation := "6a0a" + hex.EncodeToString([]byte(common.DonationMessage))
+		memo, found, err := DecodeOpReturnMemo(scriptDonation, txHash)
+		require.ErrorContains(t, err, "donation tx")
+		require.False(t, found)
+		require.Nil(t, memo)
 	})
 }
 

@@ -54,6 +54,11 @@ func FileNameBTCTxByType(chainID int64, txType string, txHash string) string {
 	return fmt.Sprintf("chain_%d_tx_raw_result_%s_%s.json", chainID, txType, txHash)
 }
 
+// FileNameBTCMsgTx returns unified archive file name for btc MsgTx
+func FileNameBTCMsgTx(chainID int64, txHash string) string {
+	return fmt.Sprintf("chain_%d_msgtx_%s.json", chainID, txHash)
+}
+
 // FileNameCctxByNonce returns unified archive file name for cctx by nonce
 func FileNameCctxByNonce(chainID int64, nonce uint64) string {
 	return fmt.Sprintf("cctx_%d_%d.json", chainID, nonce)

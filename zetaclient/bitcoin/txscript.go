@@ -19,20 +19,12 @@ import (
 )
 
 const (
-	// P2TR script type
-	ScriptTypeP2TR = "witness_v1_taproot"
-
-	// P2WSH script type
-	ScriptTypeP2WSH = "witness_v0_scripthash"
-
-	// P2WPKH script type
-	ScriptTypeP2WPKH = "witness_v0_keyhash"
-
-	// P2SH script type
-	ScriptTypeP2SH = "scripthash"
-
-	// P2PKH script type
-	ScriptTypeP2PKH = "pubkeyhash"
+	// Length of P2TR, P2WSH, P2WPKH, P2SH, P2PKH scripts
+	LengthScriptP2TR   = 34
+	LengthScriptP2WSH  = 34
+	LengthScriptP2WPKH = 22
+	LengthScriptP2SH   = 23
+	LengthScriptP2PKH  = 25
 )
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
@@ -46,142 +38,135 @@ func PayToAddrScript(addr btcutil.Address) ([]byte, error) {
 	}
 }
 
-// DecodeVoutP2TR decodes receiver and amount from P2TR output
-func DecodeVoutP2TR(vout btcjson.Vout, net *chaincfg.Params) (string, error) {
-	// check tx script type
-	if vout.ScriptPubKey.Type != ScriptTypeP2TR {
-		return "", fmt.Errorf("want scriptPubKey type witness_v1_taproot, got %s", vout.ScriptPubKey.Type)
-	}
-	// decode P2TR scriptPubKey [OP_1 0x20 <32-byte-hash>]
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+// IsPkScriptP2TR checks if the given script is a P2TR script
+func IsPkScriptP2TR(script []byte) bool {
+	// [OP_1 0x20 <32-byte-hash>]
+	return len(script) == LengthScriptP2TR && script[0] == txscript.OP_1 && script[1] == 0x20
+}
+
+// IsPkScriptP2WSH checks if the given script is a P2WSH script
+func IsPkScriptP2WSH(script []byte) bool {
+	// [OP_0 0x20 <32-byte-hash>]
+	return len(script) == LengthScriptP2WSH && script[0] == txscript.OP_0 && script[1] == 0x20
+}
+
+// IsPkScriptP2WPKH checks if the given script is a P2WPKH script
+func IsPkScriptP2WPKH(script []byte) bool {
+	// [OP_0 0x14 <20-byte-hash>]
+	return len(script) == LengthScriptP2WPKH && script[0] == txscript.OP_0 && script[1] == 0x14
+}
+
+// IsPkScriptP2SH checks if the given script is a P2SH script
+func IsPkScriptP2SH(script []byte) bool {
+	// [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
+	return len(script) == LengthScriptP2SH &&
+		script[0] == txscript.OP_HASH160 &&
+		script[1] == 0x14 &&
+		script[22] == txscript.OP_EQUAL
+}
+
+// IsPkScriptP2PKH checks if the given script is a P2PKH script
+func IsPkScriptP2PKH(script []byte) bool {
+	// [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
+	return len(script) == LengthScriptP2PKH &&
+		script[0] == txscript.OP_DUP &&
+		script[1] == txscript.OP_HASH160 &&
+		script[2] == 0x14 &&
+		script[23] == txscript.OP_EQUALVERIFY &&
+		script[24] == txscript.OP_CHECKSIG
+}
+
+// DecodeScriptP2TR decodes address from P2TR script
+func DecodeScriptP2TR(scriptHex string, net *chaincfg.Params) (string, error) {
+	script, err := hex.DecodeString(scriptHex)
 	if err != nil {
-		return "", errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error decoding script %s", scriptHex)
 	}
-	if len(decodedScriptPubKey) != 34 ||
-		decodedScriptPubKey[0] != txscript.OP_1 ||
-		decodedScriptPubKey[1] != 0x20 {
-		return "", fmt.Errorf("invalid P2TR scriptPubKey: %s", scriptPubKey)
+	if !IsPkScriptP2TR(script) {
+		return "", fmt.Errorf("invalid P2TR script: %s", scriptHex)
 	}
-	witnessProg := decodedScriptPubKey[2:]
+	witnessProg := script[2:]
 	receiverAddress, err := bitcoin.NewAddressTaproot(witnessProg, net)
 	if err != nil { // should never happen
-		return "", errors.Wrapf(err, "error getting receiver from scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error getting address from script %s", scriptHex)
 	}
 	return receiverAddress.EncodeAddress(), nil
 }
 
-// DecodeVoutP2WSH decodes receiver and amount from P2WSH output
-func DecodeVoutP2WSH(vout btcjson.Vout, net *chaincfg.Params) (string, error) {
-	// check tx script type
-	if vout.ScriptPubKey.Type != ScriptTypeP2WSH {
-		return "", fmt.Errorf("want scriptPubKey type witness_v0_scripthash, got %s", vout.ScriptPubKey.Type)
-	}
-	// decode P2WSH scriptPubKey [OP_0 0x20 <32-byte-hash>]
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+// DecodeScriptP2WSH decodes address from P2WSH script
+func DecodeScriptP2WSH(scriptHex string, net *chaincfg.Params) (string, error) {
+	script, err := hex.DecodeString(scriptHex)
 	if err != nil {
-		return "", errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error decoding script: %s", scriptHex)
 	}
-	if len(decodedScriptPubKey) != 34 ||
-		decodedScriptPubKey[0] != txscript.OP_0 ||
-		decodedScriptPubKey[1] != 0x20 {
-		return "", fmt.Errorf("invalid P2WSH scriptPubKey: %s", scriptPubKey)
+	if !IsPkScriptP2WSH(script) {
+		return "", fmt.Errorf("invalid P2WSH script: %s", scriptHex)
 	}
-	witnessProg := decodedScriptPubKey[2:]
+	witnessProg := script[2:]
 	receiverAddress, err := btcutil.NewAddressWitnessScriptHash(witnessProg, net)
 	if err != nil { // should never happen
-		return "", errors.Wrapf(err, "error getting receiver from scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error getting receiver from script: %s", scriptHex)
 	}
 	return receiverAddress.EncodeAddress(), nil
 }
 
-// DecodeVoutP2WPKH decodes receiver and amount from P2WPKH output
-func DecodeVoutP2WPKH(vout btcjson.Vout, net *chaincfg.Params) (string, error) {
-	// check tx script type
-	if vout.ScriptPubKey.Type != ScriptTypeP2WPKH {
-		return "", fmt.Errorf("want scriptPubKey type witness_v0_keyhash, got %s", vout.ScriptPubKey.Type)
-	}
-	// decode P2WPKH scriptPubKey [OP_0 0x14 <20-byte-hash>]
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+// DecodeScriptP2WPKH decodes address from P2WPKH script
+func DecodeScriptP2WPKH(scriptHex string, net *chaincfg.Params) (string, error) {
+	script, err := hex.DecodeString(scriptHex)
 	if err != nil {
-		return "", errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error decoding script: %s", scriptHex)
 	}
-	if len(decodedScriptPubKey) != 22 ||
-		decodedScriptPubKey[0] != txscript.OP_0 ||
-		decodedScriptPubKey[1] != 0x14 {
-		return "", fmt.Errorf("invalid P2WPKH scriptPubKey: %s", scriptPubKey)
+	if !IsPkScriptP2WPKH(script) {
+		return "", fmt.Errorf("invalid P2WPKH script: %s", scriptHex)
 	}
-	witnessProg := decodedScriptPubKey[2:]
+	witnessProg := script[2:]
 	receiverAddress, err := btcutil.NewAddressWitnessPubKeyHash(witnessProg, net)
 	if err != nil { // should never happen
-		return "", errors.Wrapf(err, "error getting receiver from scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error getting receiver from script: %s", scriptHex)
 	}
 	return receiverAddress.EncodeAddress(), nil
 }
 
-// DecodeVoutP2SH decodes receiver address from P2SH output
-func DecodeVoutP2SH(vout btcjson.Vout, net *chaincfg.Params) (string, error) {
-	// check tx script type
-	if vout.ScriptPubKey.Type != ScriptTypeP2SH {
-		return "", fmt.Errorf("want scriptPubKey type scripthash, got %s", vout.ScriptPubKey.Type)
-	}
-	// decode P2SH scriptPubKey [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+// DecodeScriptP2SH decodes address from P2SH script
+func DecodeScriptP2SH(scriptHex string, net *chaincfg.Params) (string, error) {
+	script, err := hex.DecodeString(scriptHex)
 	if err != nil {
-		return "", errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error decoding script: %s", scriptHex)
 	}
-	if len(decodedScriptPubKey) != 23 ||
-		decodedScriptPubKey[0] != txscript.OP_HASH160 ||
-		decodedScriptPubKey[1] != 0x14 ||
-		decodedScriptPubKey[22] != txscript.OP_EQUAL {
-		return "", fmt.Errorf("invalid P2SH scriptPubKey: %s", scriptPubKey)
+	if !IsPkScriptP2SH(script) {
+		return "", fmt.Errorf("invalid P2SH script: %s", scriptHex)
 	}
-	scriptHash := decodedScriptPubKey[2:22]
+	scriptHash := script[2:22]
 	return EncodeAddress(scriptHash, net.ScriptHashAddrID), nil
 }
 
-// DecodeVoutP2PKH decodes receiver address from P2PKH output
-func DecodeVoutP2PKH(vout btcjson.Vout, net *chaincfg.Params) (string, error) {
-	// check tx script type
-	if vout.ScriptPubKey.Type != ScriptTypeP2PKH {
-		return "", fmt.Errorf("want scriptPubKey type pubkeyhash, got %s", vout.ScriptPubKey.Type)
-	}
-	// decode P2PKH scriptPubKey [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
-	scriptPubKey := vout.ScriptPubKey.Hex
-	decodedScriptPubKey, err := hex.DecodeString(scriptPubKey)
+// DecodeScriptP2PKH decodes address from P2PKH script
+func DecodeScriptP2PKH(scriptHex string, net *chaincfg.Params) (string, error) {
+	script, err := hex.DecodeString(scriptHex)
 	if err != nil {
-		return "", errors.Wrapf(err, "error decoding scriptPubKey %s", scriptPubKey)
+		return "", errors.Wrapf(err, "error decoding script: %s", scriptHex)
 	}
-	if len(decodedScriptPubKey) != 25 ||
-		decodedScriptPubKey[0] != txscript.OP_DUP ||
-		decodedScriptPubKey[1] != txscript.OP_HASH160 ||
-		decodedScriptPubKey[2] != 0x14 ||
-		decodedScriptPubKey[23] != txscript.OP_EQUALVERIFY ||
-		decodedScriptPubKey[24] != txscript.OP_CHECKSIG {
-		return "", fmt.Errorf("invalid P2PKH scriptPubKey: %s", scriptPubKey)
+	if !IsPkScriptP2PKH(script) {
+		return "", fmt.Errorf("invalid P2PKH script: %s", scriptHex)
 	}
-	pubKeyHash := decodedScriptPubKey[3:23]
+	pubKeyHash := script[3:23]
 	return EncodeAddress(pubKeyHash, net.PubKeyHashAddrID), nil
 }
 
-// DecodeVoutMemoP2WPKH decodes memo from P2WPKH output
+// DecodeOpReturnMemo decodes memo from OP_RETURN script
 // returns (memo, found, error)
-func DecodeVoutMemoP2WPKH(vout btcjson.Vout, txid string) ([]byte, bool, error) {
-	script := vout.ScriptPubKey.Hex
-	if len(script) >= 4 && script[:2] == "6a" { // OP_RETURN
-		memoSize, err := strconv.ParseInt(script[2:4], 16, 32)
+func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
+	if len(scriptHex) >= 4 && scriptHex[:2] == "6a" { // OP_RETURN
+		memoSize, err := strconv.ParseInt(scriptHex[2:4], 16, 32)
 		if err != nil {
-			return nil, false, errors.Wrapf(err, "error decoding memo size: %s", script)
+			return nil, false, errors.Wrapf(err, "error decoding memo size: %s", scriptHex)
 		}
-		if int(memoSize) != (len(script)-4)/2 {
-			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(script)-4)/2)
+		if int(memoSize) != (len(scriptHex)-4)/2 {
+			return nil, false, fmt.Errorf("memo size mismatch: %d != %d", memoSize, (len(scriptHex)-4)/2)
 		}
-		memoBytes, err := hex.DecodeString(script[4:])
+		memoBytes, err := hex.DecodeString(scriptHex[4:])
 		if err != nil {
-			return nil, false, errors.Wrapf(err, "error hex decoding memo: %s", script)
+			return nil, false, errors.Wrapf(err, "error hex decoding memo: %s", scriptHex)
 		}
 		if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
 			return nil, false, fmt.Errorf("donation tx: %s", txid)
@@ -223,15 +208,15 @@ func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain common.Chai
 	var receiverVout string
 	switch addr.(type) {
 	case *bitcoin.AddressTaproot:
-		receiverVout, err = DecodeVoutP2TR(vout, chainParams)
+		receiverVout, err = DecodeScriptP2TR(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressWitnessScriptHash:
-		receiverVout, err = DecodeVoutP2WSH(vout, chainParams)
+		receiverVout, err = DecodeScriptP2WSH(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressWitnessPubKeyHash:
-		receiverVout, err = DecodeVoutP2WPKH(vout, chainParams)
+		receiverVout, err = DecodeScriptP2WPKH(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressScriptHash:
-		receiverVout, err = DecodeVoutP2SH(vout, chainParams)
+		receiverVout, err = DecodeScriptP2SH(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressPubKeyHash:
-		receiverVout, err = DecodeVoutP2PKH(vout, chainParams)
+		receiverVout, err = DecodeScriptP2PKH(vout.ScriptPubKey.Hex, chainParams)
 	default:
 		return "", 0, fmt.Errorf("unsupported receiver address type: %T", addr)
 	}

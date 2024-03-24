@@ -446,7 +446,7 @@ func (ob *BTCChainClient) observeInTx() error {
 			// filter incoming txs to TSS address
 			tssAddress := ob.Tss.BTCAddress()
 			// #nosec G701 always positive
-			inTxs := FilterAndParseIncomingTx(
+			inTxs, err := FilterAndParseIncomingTx(
 				ob.rpcClient,
 				res.Block.Tx,
 				uint64(res.Block.Height),
@@ -455,6 +455,10 @@ func (ob *BTCChainClient) observeInTx() error {
 				ob.netParams,
 				depositorFee,
 			)
+			if err != nil {
+				ob.logger.WatchInTx.Error().Err(err).Msgf("observeInTxBTC: error filtering incoming txs for block %d", bn)
+				return err // we have to re-scan this block next time
+			}
 
 			// post inbound vote message to zetacore
 			for _, inTx := range inTxs {
@@ -657,7 +661,7 @@ func FilterAndParseIncomingTx(
 	logger zerolog.Logger,
 	netParams *chaincfg.Params,
 	depositorFee float64,
-) []*BTCInTxEvnet {
+) ([]*BTCInTxEvnet, error) {
 	inTxs := make([]*BTCInTxEvnet, 0)
 	for idx, tx := range txs {
 		if idx == 0 {
@@ -665,15 +669,15 @@ func FilterAndParseIncomingTx(
 		}
 		inTx, err := GetBtcEvent(rpcClient, tx, tssAddress, blockNumber, logger, netParams, depositorFee)
 		if err != nil {
-			logger.Error().Err(err).Msgf("FilterAndParseIncomingTx: error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
-			continue
+			// unable to parse the tx, the caller should retry
+			return nil, errors.Wrapf(err, "error getting btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 		if inTx != nil {
 			inTxs = append(inTxs, inTx)
 			logger.Info().Msgf("FilterAndParseIncomingTx: found btc event for tx %s in block %d", tx.Txid, blockNumber)
 		}
 	}
-	return inTxs
+	return inTxs, nil
 }
 
 func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) *types.MsgVoteOnObservedInboundTx {
@@ -721,40 +725,8 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 	return false
 }
 
-// GetSenderAddressByVin get the sender address from the previous transaction
-// Note: this function requires the bitcoin node index the previous transaction
-func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
-	// query previous transaction
-	hash, res, err := GetTxResultByHash(rpcClient, vin.Txid)
-	if err != nil {
-		return "", err
-	}
-	// query previous transaction raw result
-	rawResult, err := GetRawTxResult(rpcClient, hash, res)
-	if err != nil {
-		return "", err
-	}
-	// #nosec G701 - always in range
-	if len(rawResult.Vout) <= int(vin.Vout) {
-		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
-	}
-	// decode sender address from previous vout script
-	vout := rawResult.Vout[vin.Vout]
-	switch vout.ScriptPubKey.Type {
-	case ScriptTypeP2TR:
-		return DecodeVoutP2TR(vout, net)
-	case ScriptTypeP2WSH:
-		return DecodeVoutP2WSH(vout, net)
-	case ScriptTypeP2WPKH:
-		return DecodeVoutP2WPKH(vout, net)
-	case ScriptTypeP2SH:
-		return DecodeVoutP2SH(vout, net)
-	case ScriptTypeP2PKH:
-		return DecodeVoutP2PKH(vout, net)
-	}
-	return "", nil
-}
-
+// GetBtcEvent either returns a valid BTCInTxEvnet or nil
+// Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 func GetBtcEvent(
 	rpcClient interfaces.BTCRPCClient,
 	tx btcjson.TxRawResult,
@@ -769,52 +741,41 @@ func GetBtcEvent(
 	var memo []byte
 	if len(tx.Vout) >= 2 {
 		// 1st vout must to addressed to the tssAddress with p2wpkh scriptPubKey
-		out0 := tx.Vout[0]
-		receiver, err := DecodeVoutP2WPKH(out0, netParams)
-		if err != nil {
-			return nil, err
-		}
-		if receiver != tssAddress {
+		vout0 := tx.Vout[0]
+		script := vout0.ScriptPubKey.Hex
+		if len(script) == 44 && script[:4] == "0014" { // P2WPKH output: 0x00 + 20 bytes of pubkey hash
+			receiver, err := DecodeScriptP2WPKH(vout0.ScriptPubKey.Hex, netParams)
+			if err != nil { // should never happen
+				return nil, err
+			}
 			// skip irrelevant tx to us
-			return nil, nil
-		}
-		// deposit amount has to be no less than the minimum depositor fee
-		if out0.Value < depositorFee {
-			return nil, fmt.Errorf("btc deposit amount %v in txid %s is less than depositor fee %v", value, tx.Txid, depositorFee)
-		}
-		value = out0.Value - depositorFee
+			if receiver != tssAddress {
+				return nil, nil
+			}
+			// deposit amount has to be no less than the minimum depositor fee
+			if vout0.Value < depositorFee {
+				logger.Info().Msgf("GetBtcEvent: btc deposit amount %v in txid %s is less than depositor fee %v", vout0.Value, tx.Txid, depositorFee)
+				return nil, nil
+			}
+			value = vout0.Value - depositorFee
 
-		// 2nd vout must be an OP_RETURN memo
-		out1 := tx.Vout[1]
-		memo, found, err = DecodeVoutMemoP2WPKH(out1, tx.Txid)
-		if err != nil {
-			return nil, err
+			// 2nd vout must be a valid OP_RETURN memo
+			vout1 := tx.Vout[1]
+			memo, found, err = DecodeOpReturnMemo(vout1.ScriptPubKey.Hex, tx.Txid)
+			if err != nil {
+				logger.Error().Err(err).Msgf("GetBtcEvent: error decoding OP_RETURN memo: %s", vout1.ScriptPubKey.Hex)
+				return nil, nil
+			}
 		}
 	}
+	// event found, get sender address
 	if found {
-		logger.Info().Msgf("found bitcoin intx: %s", tx.Txid)
-		var fromAddress string
-		if len(tx.Vin) > 0 {
-			vin := tx.Vin[0]
-			if len(vin.Witness) == 2 { // decode P2WPKH sender address
-				pk := vin.Witness[1]
-				pkBytes, err := hex.DecodeString(pk)
-				if err != nil {
-					return nil, errors.Wrapf(err, "error decoding pubkey")
-				}
-				hash := btcutil.Hash160(pkBytes)
-				addr, err := btcutil.NewAddressWitnessPubKeyHash(hash, netParams)
-				if err != nil {
-					return nil, errors.Wrapf(err, "error decoding pubkey hash")
-				}
-				fromAddress = addr.EncodeAddress()
-			} else { // try getting sender address from previous output
-				sender, err := GetSenderAddressByVin(rpcClient, vin, netParams)
-				if err != nil {
-					return nil, errors.Wrapf(err, "error getting sender address")
-				}
-				fromAddress = sender
-			}
+		if len(tx.Vin) == 0 { // should never happen
+			return nil, fmt.Errorf("GetBtcEvent: no input found for intx: %s", tx.Txid)
+		}
+		fromAddress, err := GetSenderAddressByVin(rpcClient, tx.Vin[0], netParams)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error getting sender address for intx: %s", tx.Txid)
 		}
 		return &BTCInTxEvnet{
 			FromAddress: fromAddress,
@@ -826,6 +787,45 @@ func GetBtcEvent(
 		}, nil
 	}
 	return nil, nil
+}
+
+// GetSenderAddressByVin get the sender address from the previous transaction
+func GetSenderAddressByVin(rpcClient interfaces.BTCRPCClient, vin btcjson.Vin, net *chaincfg.Params) (string, error) {
+	// query previous raw transaction by txid
+	// GetTransaction requires reconfiguring the bitcoin node (txindex=1), so we use GetRawTransaction instead
+	hash, err := chainhash.NewHashFromStr(vin.Txid)
+	if err != nil {
+		return "", err
+	}
+	tx, err := rpcClient.GetRawTransaction(hash)
+	if err != nil {
+		return "", errors.Wrapf(err, "error getting raw transaction %s", vin.Txid)
+	}
+	// #nosec G701 - always in range
+	if len(tx.MsgTx().TxOut) <= int(vin.Vout) {
+		return "", fmt.Errorf("vout index %d out of range for tx %s", vin.Vout, vin.Txid)
+	}
+
+	// decode sender address from previous pkScript
+	pkScript := tx.MsgTx().TxOut[vin.Vout].PkScript
+	scriptHex := hex.EncodeToString(pkScript)
+	if IsPkScriptP2TR(pkScript) {
+		return DecodeScriptP2TR(scriptHex, net)
+	}
+	if IsPkScriptP2WSH(pkScript) {
+		return DecodeScriptP2WSH(scriptHex, net)
+	}
+	if IsPkScriptP2WPKH(pkScript) {
+		return DecodeScriptP2WPKH(scriptHex, net)
+	}
+	if IsPkScriptP2SH(pkScript) {
+		return DecodeScriptP2SH(scriptHex, net)
+	}
+	if IsPkScriptP2PKH(pkScript) {
+		return DecodeScriptP2PKH(scriptHex, net)
+	}
+	// sender address not found, return nil and move on to the next tx
+	return "", nil
 }
 
 func (ob *BTCChainClient) WatchUTXOS() {

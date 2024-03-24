@@ -265,7 +265,7 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 	}
 
 	depositorFee := zetabitcoin.DefaultDepositorFee
-	events := zetabitcoin.FilterAndParseIncomingTx(
+	events, err := zetabitcoin.FilterAndParseIncomingTx(
 		btcRPC,
 		[]btcjson.TxRawResult{*rawtx},
 		0,
@@ -274,6 +274,9 @@ func (runner *E2ERunner) SendToTSSFromDeployerWithMemo(
 		runner.BitcoinParams,
 		depositorFee,
 	)
+	if err != nil {
+		panic(err)
+	}
 	runner.Logger.Info("bitcoin intx events:")
 	for _, event := range events {
 		runner.Logger.Info("  TxHash: %s", event.TxHash)
