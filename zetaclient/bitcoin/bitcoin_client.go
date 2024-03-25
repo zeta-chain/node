@@ -692,7 +692,7 @@ func (ob *BTCChainClient) GetInboundVoteMessageFromBtcEvent(inTx *BTCInTxEvnet) 
 		inTx.FromAddress,
 		ob.chain.ChainId,
 		inTx.FromAddress,
-		inTx.ToAddress,
+		inTx.FromAddress,
 		ob.zetaClient.ZetaChain().ChainId,
 		cosmosmath.NewUintFromBigInt(amountInt),
 		message,

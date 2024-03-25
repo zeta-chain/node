@@ -174,7 +174,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if err != nil {
 		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to initialize cctx: %s", err.Error())
 	}
-
+	cctx.SetPendingOutbound("ZRC20 withdrawal event setting to pending outbound directly")
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
@@ -248,6 +248,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	if err != nil {
 		return fmt.Errorf("ProcessZetaSentEvent: failed to initialize cctx: %s", err.Error())
 	}
+	cctx.SetPendingOutbound("ZetaSent event setting to pending outbound directly")
 
 	if err := k.PayGasAndUpdateCctx(
 		ctx,
