@@ -9,7 +9,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,6 +17,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
 var ErrSample = errors.New("sample error")
@@ -86,7 +86,7 @@ func PubKeyString() string {
 	if err != nil {
 		panic(err)
 	}
-	pubkey, err := pkg.NewPubKey(s)
+	pubkey, err := crypto.NewPubKey(s)
 	if err != nil {
 		panic(err)
 	}

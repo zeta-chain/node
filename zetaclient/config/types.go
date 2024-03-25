@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 // KeyringBackend is the type of keyring backend to use for the hotkey
@@ -27,7 +27,7 @@ type ClientConfiguration struct {
 }
 
 type EVMConfig struct {
-	Chain    pkg.Chain
+	Chain    chains.Chain
 	Endpoint string
 }
 

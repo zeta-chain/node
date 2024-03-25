@@ -7,7 +7,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -42,12 +42,12 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
 		to, from := int64(1337), int64(101)
-		chains := zk.ObserverKeeper.GetSupportedChains(ctx)
-		for _, chain := range chains {
-			if pkg.IsEVMChain(chain.ChainId) {
+		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
+		for _, chain := range supportedChains {
+			if chains.IsEVMChain(chain.ChainId) {
 				from = chain.ChainId
 			}
-			if pkg.IsZetaChain(chain.ChainId) {
+			if chains.IsZetaChain(chain.ChainId) {
 				to = chain.ChainId
 			}
 		}

@@ -1,7 +1,7 @@
 package appcontext
 
 import (
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 )
@@ -32,12 +32,12 @@ func (a AppContext) ZetaCoreContext() *corecontext.ZetaCoreContext {
 }
 
 // GetBTCChainAndConfig returns btc chain and config if enabled
-func (a AppContext) GetBTCChainAndConfig() (pkg.Chain, config.BTCConfig, bool) {
+func (a AppContext) GetBTCChainAndConfig() (chains.Chain, config.BTCConfig, bool) {
 	btcConfig, configEnabled := a.Config().GetBTCConfig()
 	btcChain, _, paramsEnabled := a.ZetaCoreContext().GetBTCChainParams()
 
 	if !configEnabled || !paramsEnabled {
-		return pkg.Chain{}, config.BTCConfig{}, false
+		return chains.Chain{}, config.BTCConfig{}, false
 	}
 
 	return btcChain, btcConfig, true

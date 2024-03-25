@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -22,7 +22,7 @@ func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetCh
 		return nil, types.ErrTssNotFound
 	}
 
-	chain := pkg.GetChainFromChainID(msg.ChainId)
+	chain := chains.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return nil, types.ErrSupportedChains
 	}

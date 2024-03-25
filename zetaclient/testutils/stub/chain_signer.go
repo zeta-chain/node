@@ -2,7 +2,7 @@ package stub
 
 import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -15,13 +15,13 @@ var _ interfaces.ChainSigner = (*EVMSigner)(nil)
 
 // EVMSigner is a mock of evm chain signer for testing
 type EVMSigner struct {
-	Chain                pkg.Chain
+	Chain                chains.Chain
 	ZetaConnectorAddress ethcommon.Address
 	ERC20CustodyAddress  ethcommon.Address
 }
 
 func NewEVMSigner(
-	chain pkg.Chain,
+	chain chains.Chain,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
 ) *EVMSigner {

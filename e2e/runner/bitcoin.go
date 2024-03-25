@@ -17,7 +17,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/e2e/utils"
 	"github.com/zeta-chain/zetacore/pkg"
-	"github.com/zeta-chain/zetacore/pkg/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	zetabitcoin "github.com/zeta-chain/zetacore/zetaclient/bitcoin"
@@ -387,10 +389,10 @@ func (runner *E2ERunner) ProveBTCTransaction(txHash *chainhash.Hash) {
 
 	// verify merkle proof through RPC
 	res, err := runner.ObserverClient.Prove(runner.Ctx, &observertypes.QueryProveRequest{
-		ChainId:   pkg.BtcRegtestChain().ChainId,
+		ChainId:   chains.BtcRegtestChain().ChainId,
 		TxHash:    txHash.String(),
 		BlockHash: blockHash.String(),
-		Proof:     pkg.NewBitcoinProof(txBytes, path, index),
+		Proof:     proofs.NewBitcoinProof(txBytes, path, index),
 		TxIndex:   0, // bitcoin doesn't use txIndex
 	})
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -37,7 +37,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			types.MsgVoteOnObservedInboundTx{
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_Zeta,
+				CoinType: coin.CoinType_Zeta,
 			},
 			0,
 		)
@@ -66,7 +66,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			types.MsgVoteOnObservedInboundTx{
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_Zeta,
+				CoinType: coin.CoinType_Zeta,
 			},
 			0,
 		)
@@ -96,7 +96,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
@@ -108,7 +108,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -141,7 +141,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, errDeposit)
 
@@ -153,7 +153,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -186,7 +186,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 
@@ -198,7 +198,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -230,7 +230,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrForeignCoinCapReached)
 
@@ -242,7 +242,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -274,7 +274,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrPausedZRC20)
 
@@ -286,7 +286,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -316,7 +316,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			mock.Anything,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, fungibletypes.ErrCallNonContract)
 
@@ -328,7 +328,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "",
 				Asset:    "",
 			},
@@ -352,7 +352,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: sample.EthAddress().String(),
 				Amount:   math.NewUint(42),
-				CoinType: pkg.CoinType_Gas,
+				CoinType: coin.CoinType_Gas,
 				Message:  "not_hex",
 				Asset:    "",
 			},
@@ -382,7 +382,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			data,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
@@ -393,7 +393,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: sample.EthAddress().String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  receiver.Hex()[2:] + "DEADBEEF",
 				Asset:    "",
 			},
@@ -425,7 +425,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 			amount,
 			senderChain,
 			data,
-			pkg.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			mock.Anything,
 		).Return(&evmtypes.MsgEthereumTxResponse{}, false, nil)
 
@@ -436,7 +436,7 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 				Sender:   sample.EthAddress().String(),
 				Receiver: receiver.String(),
 				Amount:   math.NewUintFromBigInt(amount),
-				CoinType: pkg.CoinType_ERC20,
+				CoinType: coin.CoinType_ERC20,
 				Message:  "DEADBEEF",
 				Asset:    "",
 			},

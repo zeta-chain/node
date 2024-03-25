@@ -2,7 +2,7 @@ package types
 
 import (
 	cosmoserrors "cosmossdk.io/errors"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -47,7 +47,7 @@ func (msg *MsgRemoveChainParams) ValidateBasic() error {
 	}
 
 	// Check if chain exists
-	chain := pkg.GetChainFromChainID(msg.ChainId)
+	chain := chains.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidChainID, "invalid chain id (%d)", msg.ChainId)
 	}

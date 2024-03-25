@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -103,7 +103,7 @@ func TestMsgGasPriceVoter_Type(t *testing.T) {
 	msg := types.MsgGasPriceVoter{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, pkg.GasPriceVoter.String(), msg.Type())
+	require.Equal(t, authz.GasPriceVoter.String(), msg.Type())
 }
 
 func TestMsgGasPriceVoter_Route(t *testing.T) {

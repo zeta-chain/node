@@ -2,14 +2,14 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
-func ConvertReceiveStatusToVoteType(status pkg.ReceiveStatus) VoteType {
+func ConvertReceiveStatusToVoteType(status chains.ReceiveStatus) VoteType {
 	switch status {
-	case pkg.ReceiveStatus_Success:
+	case chains.ReceiveStatus_Success:
 		return VoteType_SuccessObservation
-	case pkg.ReceiveStatus_Failed:
+	case chains.ReceiveStatus_Failed:
 		return VoteType_FailureObservation
 	default:
 		return VoteType_NotYetVoted

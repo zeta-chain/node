@@ -7,7 +7,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -46,7 +46,7 @@ func NewTSSAthens3() *TSS {
 }
 
 // Sign uses test key unrelated to any tss key in production
-func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *pkg.Chain, _ string) ([65]byte, error) {
+func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *chains.Chain, _ string) ([65]byte, error) {
 	signature, err := crypto.Sign(data, TestPrivateKey)
 	if err != nil {
 		return [65]byte{}, err

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/zeta-chain/zetacore/e2e/txserver"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -18,7 +19,6 @@ import (
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -31,7 +31,7 @@ var EmissionsPoolFunding = big.NewInt(0).Mul(big.NewInt(1e18), big.NewInt(2e7))
 func (runner *E2ERunner) SetTSSAddresses() error {
 	runner.Logger.Print("⚙️ setting up TSS address")
 
-	btcChainID, err := pkg.GetBTCChainIDFromChainParams(runner.BitcoinParams)
+	btcChainID, err := chains.GetBTCChainIDFromChainParams(runner.BitcoinParams)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (runner *E2ERunner) SetZEVMContracts() {
 
 // SetupETHZRC20 sets up the ETH ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupETHZRC20() {
-	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(pkg.GoerliLocalnetChain().ChainId))
+	ethZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chains.GoerliLocalnetChain().ChainId))
 	if err != nil {
 		panic(err)
 	}
@@ -192,7 +192,7 @@ func (runner *E2ERunner) SetupETHZRC20() {
 
 // SetupBTCZRC20 sets up the BTC ZRC20 in the runner from the values queried from the chain
 func (runner *E2ERunner) SetupBTCZRC20() {
-	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(pkg.BtcRegtestChain().ChainId))
+	BTCZRC20Addr, err := runner.SystemContract.GasCoinZRC20ByChainId(&bind.CallOpts{}, big.NewInt(chains.BtcRegtestChain().ChainId))
 	if err != nil {
 		panic(err)
 	}

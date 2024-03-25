@@ -21,6 +21,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/secp256k1"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/authz"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	mc "github.com/zeta-chain/zetacore/zetaclient"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -99,7 +100,7 @@ func start(_ *cobra.Command, _ []string) error {
 	}
 	zetaBridge.WaitForCoreToCreateBlocks()
 	startLogger.Info().Msgf("ZetaBridge is ready")
-	zetaBridge.SetAccountNumber(pkg.ZetaClientGranteeKey)
+	zetaBridge.SetAccountNumber(authz.ZetaClientGranteeKey)
 
 	// cross-check chainid
 	res, err := zetaBridge.GetNodeInfo()

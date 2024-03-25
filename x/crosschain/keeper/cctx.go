@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -48,7 +48,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 			Tss:       tss.TssPubkey,
 		})
 	}
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == pkg.CoinType_Zeta {
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == coin.CoinType_Zeta {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }

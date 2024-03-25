@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -24,7 +24,7 @@ func CmdAddToInTxTracker() *cobra.Command {
 				return err
 			}
 			argTxHash := args[1]
-			argsCoinType, err := pkg.GetCoinType(args[2])
+			argsCoinType, err := coin.GetCoinType(args[2])
 			if err != nil {
 				return err
 			}

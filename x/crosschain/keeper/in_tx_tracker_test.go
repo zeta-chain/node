@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/nullify"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -20,7 +20,7 @@ func createNInTxTracker(keeper *keeper.Keeper, ctx sdk.Context, n int, chainID i
 	for i := range items {
 		items[i].TxHash = fmt.Sprintf("TxHash-%d", i)
 		items[i].ChainId = chainID
-		items[i].CoinType = pkg.CoinType_Gas
+		items[i].CoinType = coin.CoinType_Gas
 		keeper.SetInTxTracker(ctx, items[i])
 	}
 	return items

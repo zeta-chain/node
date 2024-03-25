@@ -6,7 +6,8 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -31,10 +32,10 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	if crosschainFlags.BlockHeaderVerificationFlags == nil {
 		return nil, fmt.Errorf("block header verification flags not found")
 	}
-	if pkg.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+	if chains.IsBitcoinChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
 		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for bitcoin ,chain id: %d", msg.ChainId)
 	}
-	if pkg.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
+	if chains.IsEVMChain(msg.ChainId) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
 		return nil, cosmoserrors.Wrapf(types.ErrBlockHeaderVerificationDisabled, "proof verification not enabled for evm ,chain id: %d", msg.ChainId)
 	}
 
@@ -111,7 +112,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	}
 	k.Keeper.SetBlockHeaderState(ctx, bhs)
 
-	bh := pkg.BlockHeader{
+	bh := proofs.BlockHeader{
 		Header:     msg.Header,
 		Height:     msg.Height,
 		Hash:       msg.BlockHash,

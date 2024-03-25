@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -32,7 +32,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
 		}
 
-		if pkg.IsEVMChain(msg.ChainId) {
+		if chains.IsEVMChain(msg.ChainId) {
 			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
 			if err != nil {
 				return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())

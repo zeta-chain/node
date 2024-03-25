@@ -8,8 +8,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	ethpkg "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg"
+	ethchains "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const (
@@ -27,7 +27,7 @@ func (cpl ChainParamsList) Validate() error {
 	chainMap := make(map[int64]struct{})
 	existingChainMap := make(map[int64]struct{})
 
-	externalChainList := pkg.DefaultChainsList()
+	externalChainList := chains.DefaultChainsList()
 	for _, chain := range externalChainList {
 		chainMap[chain.ChainId] = struct{}{}
 	}
@@ -54,7 +54,7 @@ func ValidateChainParams(params *ChainParams) error {
 	if params == nil {
 		return fmt.Errorf("chain params cannot be nil")
 	}
-	chain := pkg.GetChainFromChainID(params.ChainId)
+	chain := chains.GetChainFromChainID(params.ChainId)
 	if chain == nil {
 		return fmt.Errorf("ChainId %d not supported", params.ChainId)
 	}
@@ -83,12 +83,12 @@ func ValidateChainParams(params *ChainParams) error {
 	}
 
 	// chain type specific checks
-	if pkg.IsBitcoinChain(params.ChainId) {
+	if chains.IsBitcoinChain(params.ChainId) {
 		if params.WatchUtxoTicker == 0 || params.WatchUtxoTicker > 300 {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "WatchUtxoTicker %d out of range", params.WatchUtxoTicker)
 		}
 	}
-	if pkg.IsEVMChain(params.ChainId) {
+	if chains.IsEVMChain(params.ChainId) {
 		if !validChainContractAddress(params.ZetaTokenContractAddress) {
 			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid ZetaTokenContractAddress %s", params.ZetaTokenContractAddress)
 		}
@@ -115,7 +115,7 @@ func validChainContractAddress(address string) bool {
 	if !strings.HasPrefix(address, "0x") {
 		return false
 	}
-	return ethpkg.IsHexAddress(address)
+	return ethchains.IsHexAddress(address)
 }
 
 // GetDefaultChainParams returns a list of default chain params
@@ -140,7 +140,7 @@ func GetDefaultChainParams() ChainParamsList {
 
 func GetDefaultEthMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.EthChain().ChainId,
+		ChainId:                     chains.EthChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -158,7 +158,7 @@ func GetDefaultEthMainnetChainParams() *ChainParams {
 }
 func GetDefaultBscMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.BscMainnetChain().ChainId,
+		ChainId:                     chains.BscMainnetChain().ChainId,
 		ConfirmationCount:           14,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -176,7 +176,7 @@ func GetDefaultBscMainnetChainParams() *ChainParams {
 }
 func GetDefaultBtcMainnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.BtcMainnetChain().ChainId,
+		ChainId:                     chains.BtcMainnetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -194,7 +194,7 @@ func GetDefaultBtcMainnetChainParams() *ChainParams {
 }
 func GetDefaultGoerliTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:           pkg.GoerliChain().ChainId,
+		ChainId:           chains.GoerliChain().ChainId,
 		ConfirmationCount: 6,
 		// This is the actual Zeta token Goerli testnet, we need to specify this address for the integration tests to pass
 		ZetaTokenContractAddress:    "0x0000c304d2934c00db1d51995b9f6996affd17c0",
@@ -213,7 +213,7 @@ func GetDefaultGoerliTestnetChainParams() *ChainParams {
 }
 func GetDefaultBscTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.BscTestnetChain().ChainId,
+		ChainId:                     chains.BscTestnetChain().ChainId,
 		ConfirmationCount:           6,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -231,7 +231,7 @@ func GetDefaultBscTestnetChainParams() *ChainParams {
 }
 func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.MumbaiChain().ChainId,
+		ChainId:                     chains.MumbaiChain().ChainId,
 		ConfirmationCount:           12,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -249,7 +249,7 @@ func GetDefaultMumbaiTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcTestnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.BtcTestNetChain().ChainId,
+		ChainId:                     chains.BtcTestNetChain().ChainId,
 		ConfirmationCount:           2,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -267,7 +267,7 @@ func GetDefaultBtcTestnetChainParams() *ChainParams {
 }
 func GetDefaultBtcRegtestChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.BtcRegtestChain().ChainId,
+		ChainId:                     chains.BtcRegtestChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,
@@ -285,7 +285,7 @@ func GetDefaultBtcRegtestChainParams() *ChainParams {
 }
 func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.GoerliLocalnetChain().ChainId,
+		ChainId:                     chains.GoerliLocalnetChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    "0x733aB8b06DDDEf27Eaa72294B0d7c9cEF7f12db9",
 		ConnectorContractAddress:    "0xD28D6A0b8189305551a0A8bd247a6ECa9CE781Ca",
@@ -303,7 +303,7 @@ func GetDefaultGoerliLocalnetChainParams() *ChainParams {
 }
 func GetDefaultZetaPrivnetChainParams() *ChainParams {
 	return &ChainParams{
-		ChainId:                     pkg.ZetaPrivnetChain().ChainId,
+		ChainId:                     chains.ZetaPrivnetChain().ChainId,
 		ConfirmationCount:           1,
 		ZetaTokenContractAddress:    zeroAddress,
 		ConnectorContractAddress:    zeroAddress,

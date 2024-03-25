@@ -2,7 +2,6 @@ syntax = "proto3";
 package zetachain.zetacore.observer;
 
 import "gogoproto/gogo.proto";
-import "pkg/pkg.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 

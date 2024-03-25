@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	v5 "github.com/zeta-chain/zetacore/x/observer/migrations/v5"
@@ -68,13 +68,13 @@ func TestMigrateObserverParams(t *testing.T) {
 	params := types.Params{
 		ObserverParams: []*types.ObserverParams{
 			{
-				Chain:                 &pkg.Chain{ChainId: 2},
+				Chain:                 &chains.Chain{ChainId: 2},
 				BallotThreshold:       dec42,
 				MinObserverDelegation: dec1000,
 				IsSupported:           true,
 			},
 			{
-				Chain:                 &pkg.Chain{ChainId: 3},
+				Chain:                 &chains.Chain{ChainId: 3},
 				BallotThreshold:       dec43,
 				MinObserverDelegation: dec1001,
 				IsSupported:           true,

@@ -4,7 +4,7 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 )
 
 const TypeMsgAddToOutTxTracker = "AddToTracker"
@@ -16,7 +16,7 @@ func NewMsgAddToOutTxTracker(
 	chain int64,
 	nonce uint64,
 	txHash string,
-	proof *pkg.Proof,
+	proof *proofs.Proof,
 	blockHash string,
 	txIndex int64,
 ) *MsgAddToOutTxTracker {

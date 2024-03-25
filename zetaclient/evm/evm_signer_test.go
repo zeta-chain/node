@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -35,7 +36,7 @@ func getNewEvmSigner() (*Signer, error) {
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 	return NewEVMSigner(
-		pkg.BscMainnetChain(),
+		chains.BscMainnetChain(),
 		stub.EVMRPCEnabled,
 		stub.NewTSSMainnet(),
 		config.GetConnectorABI(),
@@ -53,8 +54,8 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	cfg := config.NewConfig()
 	tss := stub.NewTSSMainnet()
 
-	evmcfg := config.EVMConfig{Chain: pkg.BscMainnetChain(), Endpoint: "http://localhost:8545"}
-	cfg.EVMChainConfigs[pkg.BscMainnetChain().ChainId] = evmcfg
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain(), Endpoint: "http://localhost:8545"}
+	cfg.EVMChainConfigs[chains.BscMainnetChain().ChainId] = evmcfg
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
 

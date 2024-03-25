@@ -1,9 +1,0 @@
-syntax = "proto3";
-package ethereum;
-
-option go_package = "github.com/zeta-chain/zetacore/pkg/ethereum";
-
-message Proof {
-  repeated bytes keys = 1;
-  repeated bytes values = 2;
-}

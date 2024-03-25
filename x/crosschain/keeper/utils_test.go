@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -27,13 +27,13 @@ func getValidEthChainID(t *testing.T) int64 {
 }
 
 // getValidEthChain get a valid eth chain
-func getValidEthChain(_ *testing.T) *pkg.Chain {
-	goerli := pkg.GoerliLocalnetChain()
+func getValidEthChain(_ *testing.T) *chains.Chain {
+	goerli := chains.GoerliLocalnetChain()
 	return &goerli
 }
 
-func getValidBTCChain() *pkg.Chain {
-	btcRegNet := pkg.BtcRegtestChain()
+func getValidBTCChain() *chains.Chain {
+	btcRegNet := chains.BtcRegtestChain()
 	return &btcRegNet
 }
 
@@ -45,9 +45,9 @@ func getValidBtcChainID() int64 {
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return pkg.GoerliLocalnetChain().ChainId
+		return chains.GoerliLocalnetChain().ChainId
 	case 1:
-		return pkg.GoerliChain().ChainId
+		return chains.GoerliChain().ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}

@@ -5,13 +5,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
 func Test_LoadTssFilesFromDirectory(t *testing.T) {
@@ -63,7 +63,7 @@ func GenerateKeyshareFiles(n int, dir string) error {
 		if err != nil {
 			return err
 		}
-		pk, err := pkg.NewPubKey(spk)
+		pk, err := crypto.NewPubKey(spk)
 		if err != nil {
 			return err
 		}

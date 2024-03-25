@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -193,7 +193,7 @@ func (tss *TSS) Pubkey() []byte {
 // Sign signs a digest
 // digest should be Hashes of some data
 // NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *pkg.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -263,7 +263,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *pkg.Chai
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *pkg.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *chains.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -589,7 +589,7 @@ func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.A
 		return nil, err
 	}
 
-	bitcoinNetParams, err := pkg.BitcoinNetParamsFromChainID(chainID)
+	bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 	if err != nil {
 		return nil, err
 	}

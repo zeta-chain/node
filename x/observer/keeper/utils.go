@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -48,7 +48,7 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string) bool {
 func (k Keeper) FindBallot(
 	ctx sdk.Context,
 	index string,
-	chain *pkg.Chain,
+	chain *chains.Chain,
 	observationType types.ObservationType,
 ) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false

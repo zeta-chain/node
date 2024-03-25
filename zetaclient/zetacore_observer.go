@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
@@ -17,7 +18,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -165,9 +165,9 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 
 						// #nosec G701 range is verified
 						zetaHeight := uint64(bn)
-						if pkg.IsEVMChain(c.ChainId) {
+						if chains.IsEVMChain(c.ChainId) {
 							co.scheduleCctxEVM(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
-						} else if pkg.IsBitcoinChain(c.ChainId) {
+						} else if chains.IsBitcoinChain(c.ChainId) {
 							co.scheduleCctxBTC(outTxMan, zetaHeight, c.ChainId, cctxList, ob, signer)
 						} else {
 							co.logger.ZetaChainWatcher.Error().Msgf("startCctxScheduler: unsupported chain %d", c.ChainId)
@@ -332,7 +332,7 @@ func (co *CoreObserver) GetUpdatedSigner(coreContext *corecontext.ZetaCoreContex
 		return nil, fmt.Errorf("signer not found for chainID %d", chainID)
 	}
 	// update EVM signer parameters only. BTC signer doesn't use chain parameters for now.
-	if pkg.IsEVMChain(chainID) {
+	if chains.IsEVMChain(chainID) {
 		evmParams, found := coreContext.GetEVMChainParams(chainID)
 		if found {
 			// update zeta connector and ERC20 custody addresses
@@ -361,14 +361,14 @@ func (co *CoreObserver) GetUpdatedChainClient(coreContext *corecontext.ZetaCoreC
 	}
 	// update chain client chain parameters
 	curParams := chainOb.GetChainParams()
-	if pkg.IsEVMChain(chainID) {
+	if chains.IsEVMChain(chainID) {
 		evmParams, found := coreContext.GetEVMChainParams(chainID)
 		if found && !observertypes.ChainParamsEqual(curParams, *evmParams) {
 			chainOb.SetChainParams(*evmParams)
 			co.logger.ZetaChainWatcher.Info().Msgf(
 				"updated chain params for chainID %d, new params: %v", chainID, *evmParams)
 		}
-	} else if pkg.IsBitcoinChain(chainID) {
+	} else if chains.IsBitcoinChain(chainID) {
 		_, btcParams, found := coreContext.GetBTCChainParams()
 
 		if found && !observertypes.ChainParamsEqual(curParams, *btcParams) {

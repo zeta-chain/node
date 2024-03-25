@@ -6,7 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
@@ -15,7 +15,7 @@ import (
 
 func (k Keeper) ConvertGasToZeta(context context.Context, request *types.QueryConvertGasToZetaRequest) (*types.QueryConvertGasToZetaResponse, error) {
 	ctx := sdk.UnwrapSDKContext(context)
-	chain := pkg.GetChainFromChainID(request.ChainId)
+	chain := chains.GetChainFromChainID(request.ChainId)
 
 	if chain == nil {
 		return nil, zetaObserverTypes.ErrSupportedChains

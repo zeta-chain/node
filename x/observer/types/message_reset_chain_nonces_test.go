@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -20,7 +20,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "valid message chain nonce high greater than nonce low",
 			msg: types.MsgResetChainNonces{
 				Creator:        sample.AccAddress(),
-				ChainId:        pkg.ExternalChainList()[0].ChainId,
+				ChainId:        chains.ExternalChainList()[0].ChainId,
 				ChainNonceLow:  1,
 				ChainNonceHigh: 5,
 			},
@@ -30,7 +30,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "valid message chain nonce high same as nonce low",
 			msg: types.MsgResetChainNonces{
 				Creator:        sample.AccAddress(),
-				ChainId:        pkg.ExternalChainList()[0].ChainId,
+				ChainId:        chains.ExternalChainList()[0].ChainId,
 				ChainNonceLow:  1,
 				ChainNonceHigh: 1,
 			},
@@ -40,7 +40,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: types.MsgResetChainNonces{
 				Creator: "invalid_address",
-				ChainId: pkg.ExternalChainList()[0].ChainId,
+				ChainId: chains.ExternalChainList()[0].ChainId,
 			},
 			wantErr: true,
 		},
@@ -56,7 +56,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "invalid chain nonce low",
 			msg: types.MsgResetChainNonces{
 				Creator:       sample.AccAddress(),
-				ChainId:       pkg.ExternalChainList()[0].ChainId,
+				ChainId:       chains.ExternalChainList()[0].ChainId,
 				ChainNonceLow: -1,
 			},
 			wantErr: true,
@@ -65,7 +65,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "invalid chain nonce high",
 			msg: types.MsgResetChainNonces{
 				Creator:        sample.AccAddress(),
-				ChainId:        pkg.ExternalChainList()[0].ChainId,
+				ChainId:        chains.ExternalChainList()[0].ChainId,
 				ChainNonceLow:  1,
 				ChainNonceHigh: -1,
 			},
@@ -75,7 +75,7 @@ func TestMsgResetChainNonces_ValidateBasic(t *testing.T) {
 			name: "invalid chain nonce low greater than chain nonce high",
 			msg: types.MsgResetChainNonces{
 				Creator:        sample.AccAddress(),
-				ChainId:        pkg.ExternalChainList()[0].ChainId,
+				ChainId:        chains.ExternalChainList()[0].ChainId,
 				ChainNonceLow:  1,
 				ChainNonceHigh: 0,
 			},

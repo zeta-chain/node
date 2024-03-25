@@ -4,12 +4,12 @@ import (
 	"context"
 	"math"
 
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -22,11 +22,11 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
 	}
 
-	pubkey, err := pkg.NewPubKey(msg.ZetaclientGranteePubkey)
+	pubkey, err := crypto.NewPubKey(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 	}
-	granteeAddress, err := pkg.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
+	granteeAddress, err := crypto.GetAddressFromPubkeyString(msg.ZetaclientGranteePubkey)
 	if err != nil {
 		return &types.MsgAddObserverResponse{}, cosmoserrors.Wrap(sdkerrors.ErrInvalidPubKey, err.Error())
 	}
@@ -38,7 +38,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 	// False: adds observer to the observer list, and not the node account list
 	// Inbound is disabled in both cases and needs to be enabled manually using an admin TX
 	if msg.AddNodeAccountOnly {
-		pubkeySet := pkg.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
+		pubkeySet := crypto.PubKeySet{Secp256k1: pubkey, Ed25519: ""}
 		k.SetNodeAccount(ctx, types.NodeAccount{
 			Operator:       msg.ObserverAddress,
 			GranteeAddress: granteeAddress.String(),

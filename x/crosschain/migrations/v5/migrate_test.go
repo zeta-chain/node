@@ -7,7 +7,8 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -24,7 +25,7 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.GetCurrentOutTxParam().CoinType != pkg.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.GetCurrentOutTxParam().CoinType != coin.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))
@@ -45,7 +46,7 @@ func TestMigrateStore(t *testing.T) {
 		// Check refund status of the cctx
 		for _, cctx := range cctxListUpdated {
 			switch cctx.InboundTxParams.CoinType {
-			case pkg.CoinType_ERC20:
+			case coin.CoinType_ERC20:
 				receiverChain := zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.GetCurrentOutTxParam().ReceiverChainId)
 				require.NotNil(t, receiverChain)
 				if receiverChain.IsZetaChain() {
@@ -53,9 +54,9 @@ func TestMigrateStore(t *testing.T) {
 				} else {
 					require.False(t, cctx.CctxStatus.IsAbortRefunded)
 				}
-			case pkg.CoinType_Zeta:
+			case coin.CoinType_Zeta:
 				require.False(t, cctx.CctxStatus.IsAbortRefunded)
-			case pkg.CoinType_Gas:
+			case coin.CoinType_Gas:
 				require.False(t, cctx.CctxStatus.IsAbortRefunded)
 			}
 		}
@@ -66,8 +67,8 @@ func TestMigrateStore(t *testing.T) {
 func TestResetTestnetNonce(t *testing.T) {
 	t.Run("reset only testnet nonce without changing mainnet chains", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []pkg.Chain{pkg.GoerliChain(), pkg.MumbaiChain(), pkg.BscTestnetChain(), pkg.BtcTestNetChain()}
-		mainnetChains := []pkg.Chain{pkg.EthChain(), pkg.BscMainnetChain(), pkg.BtcMainnetChain()}
+		testnetChains := []chains.Chain{chains.GoerliChain(), chains.MumbaiChain(), chains.BscTestnetChain(), chains.BtcTestNetChain()}
+		mainnetChains := []chains.Chain{chains.EthChain(), chains.BscMainnetChain(), chains.BtcMainnetChain()}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
@@ -100,11 +101,11 @@ func TestResetTestnetNonce(t *testing.T) {
 		}
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
-		assertValues := map[pkg.Chain]int64{
-			pkg.GoerliChain():     226841,
-			pkg.MumbaiChain():     200599,
-			pkg.BscTestnetChain(): 110454,
-			pkg.BtcTestNetChain(): 4881,
+		assertValues := map[chains.Chain]int64{
+			chains.GoerliChain():     226841,
+			chains.MumbaiChain():     200599,
+			chains.BscTestnetChain(): 110454,
+			chains.BtcTestNetChain(): 4881,
 		}
 
 		for _, chain := range testnetChains {
@@ -129,7 +130,7 @@ func TestResetTestnetNonce(t *testing.T) {
 
 	t.Run("reset nonce even if some chain values are missing", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
-		testnetChains := []pkg.Chain{pkg.GoerliChain()}
+		testnetChains := []chains.Chain{chains.GoerliChain()}
 		nonceLow := int64(1)
 		nonceHigh := int64(10)
 		tss := sample.Tss()
@@ -149,10 +150,10 @@ func TestResetTestnetNonce(t *testing.T) {
 		}
 		err := v5.MigrateStore(ctx, k, zk.ObserverKeeper)
 		require.NoError(t, err)
-		assertValuesSet := map[pkg.Chain]int64{
-			pkg.GoerliChain(): 226841,
+		assertValuesSet := map[chains.Chain]int64{
+			chains.GoerliChain(): 226841,
 		}
-		assertValuesNotSet := []pkg.Chain{pkg.MumbaiChain(), pkg.BscTestnetChain(), pkg.BtcTestNetChain()}
+		assertValuesNotSet := []chains.Chain{chains.MumbaiChain(), chains.BscTestnetChain(), chains.BtcTestNetChain()}
 
 		for _, chain := range testnetChains {
 			pn, found := zk.ObserverKeeper.GetPendingNonces(ctx, tss.TssPubkey, chain.ChainId)
@@ -183,11 +184,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 			CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 			InboundTxParams: &crosschaintypes.InboundTxParams{
 				Amount:   amount.Add(math.NewUint(uint64(r.Uint32()))),
-				CoinType: pkg.CoinType_Zeta,
+				CoinType: coin.CoinType_Zeta,
 			},
 			OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 				Amount:   amount,
-				CoinType: pkg.CoinType_Zeta,
+				CoinType: coin.CoinType_Zeta,
 			}},
 		}
 		for ; i < count; i++ {
@@ -197,11 +198,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
 					Amount:   amount,
-					CoinType: pkg.CoinType_Zeta,
+					CoinType: coin.CoinType_Zeta,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:   math.ZeroUint(),
-					CoinType: pkg.CoinType_Zeta,
+					CoinType: coin.CoinType_Zeta,
 				}},
 			}
 		}
@@ -212,12 +213,12 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
 					Amount:   amount,
-					CoinType: pkg.CoinType_ERC20,
+					CoinType: coin.CoinType_ERC20,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        pkg.CoinType_ERC20,
-					ReceiverChainId: pkg.ZetaPrivnetChain().ChainId,
+					CoinType:        coin.CoinType_ERC20,
+					ReceiverChainId: chains.ZetaPrivnetChain().ChainId,
 				}},
 			}
 		}
@@ -228,12 +229,12 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
 					Amount:   amount,
-					CoinType: pkg.CoinType_ERC20,
+					CoinType: coin.CoinType_ERC20,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        pkg.CoinType_ERC20,
-					ReceiverChainId: pkg.GoerliLocalnetChain().ChainId,
+					CoinType:        coin.CoinType_ERC20,
+					ReceiverChainId: chains.GoerliLocalnetChain().ChainId,
 				}},
 			}
 		}
@@ -244,11 +245,11 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
 					Amount:   amount,
-					CoinType: pkg.CoinType_Gas,
+					CoinType: coin.CoinType_Gas,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:   amount,
-					CoinType: pkg.CoinType_Gas,
+					CoinType: coin.CoinType_Gas,
 				}},
 			}
 		}

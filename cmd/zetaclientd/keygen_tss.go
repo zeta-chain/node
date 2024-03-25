@@ -17,7 +17,7 @@ import (
 	tsscommon "github.com/zeta-chain/go-tss/common"
 	"github.com/zeta-chain/go-tss/keygen"
 	"github.com/zeta-chain/go-tss/p2p"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 )
@@ -37,7 +37,7 @@ func GenerateTss(
 	// Bitcoin chain ID is currently used for using the correct signature format
 	// TODO: remove this once we have a better way to determine the signature format
 	// https://github.com/zeta-chain/node/issues/1397
-	bitcoinChainID := pkg.BtcRegtestChain().ChainId
+	bitcoinChainID := chains.BtcRegtestChain().ChainId
 	btcChain, _, btcEnabled := appContext.GetBTCChainAndConfig()
 	if btcEnabled {
 		bitcoinChainID = btcChain.ChainId
@@ -109,7 +109,7 @@ func GenerateTss(
 				err = keygenTss(keyGen, tss, keygenLogger)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("keygenTss error")
-					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, pkg.ReceiveStatus_Failed)
+					tssFailedVoteHash, err := zetaBridge.SetTSS("", keyGen.BlockNumber, chains.ReceiveStatus_Failed)
 					if err != nil {
 						keygenLogger.Error().Err(err).Msg("Failed to broadcast Failed TSS Vote to zetacore")
 						return nil, err
@@ -127,7 +127,7 @@ func GenerateTss(
 				}
 
 				// If TSS is successful , broadcast the vote to zetacore and set Pubkey
-				tssSuccessVoteHash, err := zetaBridge.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, pkg.ReceiveStatus_Success)
+				tssSuccessVoteHash, err := zetaBridge.SetTSS(newTss.CurrentPubkey, keyGen.BlockNumber, chains.ReceiveStatus_Success)
 				if err != nil {
 					keygenLogger.Error().Err(err).Msg("TSS successful but unable to broadcast vote to zeta-core")
 					return nil, err

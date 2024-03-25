@@ -2,7 +2,7 @@ package zetabridge
 
 import (
 	"cosmossdk.io/math"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -30,7 +30,7 @@ func GetInBoundVoteMessage(
 	inTxHash string,
 	inBlockHeight uint64,
 	gasLimit uint64,
-	coinType pkg.CoinType,
+	coinType coin.CoinType,
 	asset string,
 	signerAddress string,
 	eventIndex uint,

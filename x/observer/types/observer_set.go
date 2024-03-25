@@ -2,7 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func (m *ObserverSet) Len() int {
@@ -24,11 +24,11 @@ func (m *ObserverSet) Validate() error {
 	return nil
 }
 
-func CheckReceiveStatus(status pkg.ReceiveStatus) error {
+func CheckReceiveStatus(status chains.ReceiveStatus) error {
 	switch status {
-	case pkg.ReceiveStatus_Success:
+	case chains.ReceiveStatus_Success:
 		return nil
-	case pkg.ReceiveStatus_Failed:
+	case chains.ReceiveStatus_Failed:
 		return nil
 	default:
 		return ErrInvalidStatus

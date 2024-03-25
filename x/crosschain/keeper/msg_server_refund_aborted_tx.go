@@ -6,7 +6,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -43,7 +43,7 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	}
 
 	// Check if aborted amount is available to maintain zeta accounting
-	if cctx.InboundTxParams.CoinType == pkg.CoinType_Zeta {
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
 		err := k.RemoveZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 		// if the zeta accounting is not found, it means the zeta accounting is not set yet and the refund should not be processed
 		if errors.Is(err, types.ErrUnableToFindZetaAccounting) {

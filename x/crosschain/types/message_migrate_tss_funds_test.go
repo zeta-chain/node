@@ -6,7 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -23,7 +23,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 			name: "invalid creator",
 			msg: types.NewMsgMigrateTssFunds(
 				"invalid address",
-				pkg.DefaultChainsList()[0].ChainId,
+				chains.DefaultChainsList()[0].ChainId,
 				sdkmath.NewUintFromString("100000"),
 			),
 			error: true,
@@ -41,7 +41,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 			name: "invalid amount",
 			msg: types.NewMsgMigrateTssFunds(
 				sample.AccAddress(),
-				pkg.DefaultChainsList()[0].ChainId,
+				chains.DefaultChainsList()[0].ChainId,
 				sdkmath.NewUintFromString("0"),
 			),
 			error: true,
@@ -50,7 +50,7 @@ func TestNewMsgMigrateTssFunds_ValidateBasic(t *testing.T) {
 			name: "valid msg",
 			msg: types.NewMsgMigrateTssFunds(
 				sample.AccAddress(),
-				pkg.DefaultChainsList()[0].ChainId,
+				chains.DefaultChainsList()[0].ChainId,
 				sdkmath.NewUintFromString("100000"),
 			),
 			error: false,
@@ -80,7 +80,7 @@ func TestNewMsgMigrateTssFunds_GetSigners(t *testing.T) {
 			name: "valid signer",
 			msg: types.MsgMigrateTssFunds{
 				Creator: signer,
-				ChainId: pkg.DefaultChainsList()[0].ChainId,
+				ChainId: chains.DefaultChainsList()[0].ChainId,
 				Amount:  sdkmath.NewUintFromString("100000"),
 			},
 			panics: false,
@@ -89,7 +89,7 @@ func TestNewMsgMigrateTssFunds_GetSigners(t *testing.T) {
 			name: "invalid signer",
 			msg: types.MsgMigrateTssFunds{
 				Creator: "invalid_address",
-				ChainId: pkg.DefaultChainsList()[0].ChainId,
+				ChainId: chains.DefaultChainsList()[0].ChainId,
 				Amount:  sdkmath.NewUintFromString("100000"),
 			},
 			panics: true,
@@ -113,7 +113,7 @@ func TestNewMsgMigrateTssFunds_GetSigners(t *testing.T) {
 func TestNewMsgMigrateTssFunds_Type(t *testing.T) {
 	msg := types.MsgMigrateTssFunds{
 		Creator: sample.AccAddress(),
-		ChainId: pkg.DefaultChainsList()[0].ChainId,
+		ChainId: chains.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
 	require.Equal(t, types.TypeMsgMigrateTssFunds, msg.Type())
@@ -122,7 +122,7 @@ func TestNewMsgMigrateTssFunds_Type(t *testing.T) {
 func TestNewMsgMigrateTssFunds_Route(t *testing.T) {
 	msg := types.MsgMigrateTssFunds{
 		Creator: sample.AccAddress(),
-		ChainId: pkg.DefaultChainsList()[0].ChainId,
+		ChainId: chains.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
@@ -131,7 +131,7 @@ func TestNewMsgMigrateTssFunds_Route(t *testing.T) {
 func TestNewMsgMigrateTssFunds_GetSignBytes(t *testing.T) {
 	msg := types.MsgMigrateTssFunds{
 		Creator: sample.AccAddress(),
-		ChainId: pkg.DefaultChainsList()[0].ChainId,
+		ChainId: chains.DefaultChainsList()[0].ChainId,
 		Amount:  sdkmath.NewUintFromString("100000"),
 	}
 	require.NotPanics(t, func() {

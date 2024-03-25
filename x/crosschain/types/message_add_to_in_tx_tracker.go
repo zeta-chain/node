@@ -4,14 +4,15 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 )
 
 const TypeMsgAddToInTxTracker = "AddToInTxTracker"
 
 var _ sdk.Msg = &MsgAddToInTxTracker{}
 
-func NewMsgAddToInTxTracker(creator string, chain int64, coinType pkg.CoinType, txHash string) *MsgAddToInTxTracker {
+func NewMsgAddToInTxTracker(creator string, chain int64, coinType coin.CoinType, txHash string) *MsgAddToInTxTracker {
 	return &MsgAddToInTxTracker{
 		Creator:  creator,
 		ChainId:  chain,
@@ -46,14 +47,14 @@ func (msg *MsgAddToInTxTracker) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	chain := pkg.GetChainFromChainID(msg.ChainId)
+	chain := chains.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return errorsmod.Wrapf(ErrInvalidChainID, "chain id (%d)", msg.ChainId)
 	}
 	if msg.Proof != nil && !chain.SupportMerkleProof() {
 		return errorsmod.Wrapf(ErrProofVerificationFail, "chain id %d does not support proof-based trackers", msg.ChainId)
 	}
-	_, ok := pkg.CoinType_value[msg.CoinType.String()]
+	_, ok := coin.CoinType_value[msg.CoinType.String()]
 	if !ok {
 		return errorsmod.Wrapf(ErrProofVerificationFail, "coin-type not supported")
 	}

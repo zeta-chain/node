@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -43,7 +43,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 			return address.Hex()
 		}
 
-		chains := pkg.DefaultChainsList()
+		chains := chains.DefaultChainsList()
 		require.True(t, len(chains) > 1)
 		require.NotNil(t, chains[0])
 		require.NotNil(t, chains[1])
@@ -193,7 +193,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
-		chains := pkg.DefaultChainsList()
+		chains := chains.DefaultChainsList()
 		require.True(t, len(chains) > 1)
 		require.NotNil(t, chains[0])
 		chainID1 := chains[0].ChainId

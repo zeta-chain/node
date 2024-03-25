@@ -13,6 +13,11 @@ import (
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/zetacore/pkg/gas"
+
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -92,7 +97,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			Sender:                          "",
 			SenderChainId:                   chainID,
 			TxOrigin:                        "",
-			CoinType:                        pkg.CoinType_Cmd,
+			CoinType:                        coin.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          amount,
 			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
@@ -103,7 +108,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		OutboundTxParams: []*types.OutboundTxParams{{
 			Receiver:                         "",
 			ReceiverChainId:                  chainID,
-			CoinType:                         pkg.CoinType_Cmd,
+			CoinType:                         coin.CoinType_Cmd,
 			Amount:                           amount,
 			OutboundTxTssNonce:               0,
 			OutboundTxGasLimit:               1_000_000,
@@ -117,21 +122,21 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
 	// Set the sender and receiver addresses for EVM chain
-	if pkg.IsEVMChain(chainID) {
-		ethAddressOld, err := pkg.GetTssAddrEVM(currentTss.TssPubkey)
+	if chains.IsEVMChain(chainID) {
+		ethAddressOld, err := zetacrypto.GetTssAddrEVM(currentTss.TssPubkey)
 		if err != nil {
 			return err
 		}
-		ethAddressNew, err := pkg.GetTssAddrEVM(newTss.TssPubkey)
+		ethAddressNew, err := zetacrypto.GetTssAddrEVM(newTss.TssPubkey)
 		if err != nil {
 			return err
 		}
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
 		// Tss migration is a send transaction, so the gas limit is set to 21000
-		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = pkg.EVMSend
+		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = gas.EVMSend
 		// Multiple current gas price with standard multiplier to add some buffer
-		multipliedGasPrice, err := pkg.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
+		multipliedGasPrice, err := gas.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
 		if err != nil {
 			return err
 		}
@@ -143,16 +148,16 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		cctx.GetCurrentOutTxParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
-	if pkg.IsBitcoinChain(chainID) {
-		bitcoinNetParams, err := pkg.BitcoinNetParamsFromChainID(chainID)
+	if chains.IsBitcoinChain(chainID) {
+		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 		if err != nil {
 			return err
 		}
-		btcAddressOld, err := pkg.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
+		btcAddressOld, err := zetacrypto.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}
-		btcAddressNew, err := pkg.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
+		btcAddressNew, err := zetacrypto.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}

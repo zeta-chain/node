@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
@@ -31,7 +31,7 @@ func TestNewZetaCoreContext(t *testing.T) {
 
 		// assert btc chain params
 		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
-		require.Equal(t, pkg.Chain{}, chain)
+		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
 		require.Equal(t, &observertypes.ChainParams{}, btcChainParams)
 
@@ -44,13 +44,13 @@ func TestNewZetaCoreContext(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
-				Chain: pkg.Chain{
+				Chain: chains.Chain{
 					ChainName: 1,
 					ChainId:   1,
 				},
 			},
 			2: {
-				Chain: pkg.Chain{
+				Chain: chains.Chain{
 					ChainName: 2,
 					ChainId:   2,
 				},
@@ -103,7 +103,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			Status:         observertypes.KeygenStatus_KeyGenSuccess,
 			GranteePubkeys: []string{"testpubkey1"},
 		}
-		enabledChainsToUpdate := []pkg.Chain{
+		enabledChainsToUpdate := []chains.Chain{
 			{
 				ChainName: 1,
 				ChainId:   1,
@@ -151,7 +151,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 
 		// assert btc chain params still empty because they were not specified in config
 		chain, btcChainParams, btcChainParamsFound := zetaContext.GetBTCChainParams()
-		require.Equal(t, pkg.Chain{}, chain)
+		require.Equal(t, chains.Chain{}, chain)
 		require.False(t, btcChainParamsFound)
 		require.Equal(t, &observertypes.ChainParams{}, btcChainParams)
 
@@ -167,13 +167,13 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		testCfg := config.NewConfig()
 		testCfg.EVMChainConfigs = map[int64]config.EVMConfig{
 			1: {
-				Chain: pkg.Chain{
+				Chain: chains.Chain{
 					ChainName: 1,
 					ChainId:   1,
 				},
 			},
 			2: {
-				Chain: pkg.Chain{
+				Chain: chains.Chain{
 					ChainName: 2,
 					ChainId:   2,
 				},
@@ -193,7 +193,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			Status:         observertypes.KeygenStatus_KeyGenSuccess,
 			GranteePubkeys: []string{"testpubkey1"},
 		}
-		enabledChainsToUpdate := []pkg.Chain{
+		enabledChainsToUpdate := []chains.Chain{
 			{
 				ChainName: 1,
 				ChainId:   1,
@@ -212,7 +212,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			},
 		}
 
-		testBtcChain := pkg.BtcTestNetChain()
+		testBtcChain := chains.BtcTestNetChain()
 		btcChainParamsToUpdate := &observertypes.ChainParams{
 			ChainId: testBtcChain.ChainId,
 		}

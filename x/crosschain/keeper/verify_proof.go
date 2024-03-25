@@ -7,12 +7,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func (k Keeper) VerifyProof(ctx sdk.Context, proof *pkg.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
+func (k Keeper) VerifyProof(ctx sdk.Context, proof *proofs.Proof, chainID int64, blockHash string, txIndex int64) ([]byte, error) {
 	// header-based merkle proof verification must be enabled
 	crosschainFlags, found := k.zetaObserverKeeper.GetCrosschainFlags(ctx)
 	if !found {
@@ -21,15 +23,15 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *pkg.Proof, chainID int64, bl
 	if crosschainFlags.BlockHeaderVerificationFlags == nil {
 		return nil, fmt.Errorf("block header verification flags not found")
 	}
-	if pkg.IsBitcoinChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
+	if chains.IsBitcoinChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
 		return nil, fmt.Errorf("proof verification not enabled for bitcoin chain")
 	}
-	if pkg.IsEVMChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
+	if chains.IsEVMChain(chainID) && !crosschainFlags.BlockHeaderVerificationFlags.IsEthTypeChainEnabled {
 		return nil, fmt.Errorf("proof verification not enabled for evm chain")
 	}
 
 	// chain must support header-based merkle proof verification
-	senderChain := pkg.GetChainFromChainID(chainID)
+	senderChain := chains.GetChainFromChainID(chainID)
 	if senderChain == nil {
 		return nil, types.ErrUnsupportedChain
 	}
@@ -38,7 +40,7 @@ func (k Keeper) VerifyProof(ctx sdk.Context, proof *pkg.Proof, chainID int64, bl
 	}
 
 	// get block header from the store
-	hashBytes, err := pkg.StringToHash(chainID, blockHash)
+	hashBytes, err := chains.StringToHash(chainID, blockHash)
 	if err != nil {
 		return nil, fmt.Errorf("block hash %s conversion failed %s", blockHash, err)
 	}
@@ -68,7 +70,7 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 		return fmt.Errorf("want evm chain id %d, got %d", txx.ChainId(), msg.ChainId)
 	}
 	switch msg.CoinType {
-	case pkg.CoinType_Zeta:
+	case coin.CoinType_Zeta:
 		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 		if !found {
 			return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
@@ -77,7 +79,7 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 			return fmt.Errorf("receiver is not connector contract for coin type %s", msg.CoinType)
 		}
 		return nil
-	case pkg.CoinType_ERC20:
+	case coin.CoinType_ERC20:
 		chainParams, found := k.zetaObserverKeeper.GetChainParamsByChainID(ctx, msg.ChainId)
 		if !found {
 			return types.ErrUnsupportedChain.Wrapf("chain params not found for chain %d", msg.ChainId)
@@ -86,7 +88,7 @@ func (k Keeper) VerifyEVMInTxBody(ctx sdk.Context, msg *types.MsgAddToInTxTracke
 			return fmt.Errorf("receiver is not erc20Custory contract for coin type %s", msg.CoinType)
 		}
 		return nil
-	case pkg.CoinType_Gas:
+	case coin.CoinType_Gas:
 		tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
 			BitcoinChainId: msg.ChainId,
 		})

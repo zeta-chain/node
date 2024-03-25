@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -29,11 +29,11 @@ func CmdCreateTSSVoter() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			var status pkg.ReceiveStatus
+			var status chains.ReceiveStatus
 			if args[2] == "0" {
-				status = pkg.ReceiveStatus_Success
+				status = chains.ReceiveStatus_Success
 			} else if args[2] == "1" {
-				status = pkg.ReceiveStatus_Failed
+				status = chains.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
 			}

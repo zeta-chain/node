@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -32,9 +32,9 @@ func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs .
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return pkg.GoerliLocalnetChain().ChainId
+		return chains.GoerliLocalnetChain().ChainId
 	case 1:
-		return pkg.GoerliChain().ChainId
+		return chains.GoerliChain().ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}

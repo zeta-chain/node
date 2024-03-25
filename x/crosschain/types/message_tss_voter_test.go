@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -20,11 +20,11 @@ func TestMsgCreateTSSVoter_ValidateBasic(t *testing.T) {
 	}{
 		{
 			name: "valid message",
-			msg:  types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, pkg.ReceiveStatus_Created),
+			msg:  types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_Created),
 		},
 		{
 			name: "invalid creator address",
-			msg:  types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, pkg.ReceiveStatus_Created),
+			msg:  types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, chains.ReceiveStatus_Created),
 			err:  sdkerrors.ErrInvalidAddress,
 		},
 	}
@@ -50,12 +50,12 @@ func TestMsgCreateTSSVoter_GetSigners(t *testing.T) {
 	}{
 		{
 			name:   "valid signer",
-			msg:    types.NewMsgCreateTSSVoter(signer, "pubkey", 1, pkg.ReceiveStatus_Created),
+			msg:    types.NewMsgCreateTSSVoter(signer, "pubkey", 1, chains.ReceiveStatus_Created),
 			panics: false,
 		},
 		{
 			name:   "invalid signer",
-			msg:    types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, pkg.ReceiveStatus_Created),
+			msg:    types.NewMsgCreateTSSVoter("invalid", "pubkey", 1, chains.ReceiveStatus_Created),
 			panics: true,
 		},
 	}
@@ -75,23 +75,23 @@ func TestMsgCreateTSSVoter_GetSigners(t *testing.T) {
 }
 
 func TestMsgCreateTSSVoter_Type(t *testing.T) {
-	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, pkg.ReceiveStatus_Created)
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_Created)
 	require.Equal(t, types.TypeMsgCreateTSSVoter, msg.Type())
 }
 
 func TestMsgCreateTSSVoter_Route(t *testing.T) {
-	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, pkg.ReceiveStatus_Created)
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_Created)
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
 func TestMsgCreateTSSVoter_GetSignBytes(t *testing.T) {
-	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, pkg.ReceiveStatus_Created)
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_Created)
 	require.NotPanics(t, func() {
 		msg.GetSignBytes()
 	})
 }
 
 func TestMsgCreateTSSVoter_Digest(t *testing.T) {
-	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, pkg.ReceiveStatus_Created)
+	msg := types.NewMsgCreateTSSVoter(sample.AccAddress(), "pubkey", 1, chains.ReceiveStatus_Created)
 	require.Equal(t, "1-tss-keygen", msg.Digest())
 }

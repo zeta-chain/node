@@ -10,7 +10,8 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 )
@@ -66,7 +67,7 @@ func (txData *OutBoundTransactionData) SetupGas(
 	cctx *types.CrossChainTx,
 	logger zerolog.Logger,
 	client interfaces.EVMRPCClient,
-	chain *pkg.Chain,
+	chain *chains.Chain,
 ) error {
 
 	txData.gasLimit = cctx.GetCurrentOutTxParam().OutboundTxGasLimit
@@ -85,7 +86,7 @@ func (txData *OutBoundTransactionData) SetupGas(
 	// we should possibly remove it completely and return an error if no OutboundTxGasPrice is provided because it means no fee is processed on ZetaChain
 	specified, ok := new(big.Int).SetString(cctx.GetCurrentOutTxParam().OutboundTxGasPrice, 10)
 	if !ok {
-		if pkg.IsEthereumChain(chain.ChainId) {
+		if chains.IsEthereumChain(chain.ChainId) {
 			suggested, err := client.SuggestGasPrice(context.Background())
 			if err != nil {
 				return errors.Join(err, fmt.Errorf("cannot get gas price from chain %s ", chain))
@@ -127,7 +128,7 @@ func NewOutBoundTransactionData(
 		return nil, true, nil
 	}
 
-	toChain := pkg.GetChainFromChainID(txData.toChainID.Int64())
+	toChain := chains.GetChainFromChainID(txData.toChainID.Int64())
 	if toChain == nil {
 		return nil, true, fmt.Errorf("unknown chain: %d", txData.toChainID.Int64())
 	}
@@ -169,7 +170,7 @@ func NewOutBoundTransactionData(
 	}
 
 	// Base64 decode message
-	if cctx.GetCurrentOutTxParam().CoinType != pkg.CoinType_Cmd {
+	if cctx.GetCurrentOutTxParam().CoinType != coin.CoinType_Cmd {
 		txData.message, err = base64.StdEncoding.DecodeString(cctx.RelayedMessage)
 		if err != nil {
 			logger.Err(err).Msgf("decode CCTX.Message %s error", cctx.RelayedMessage)

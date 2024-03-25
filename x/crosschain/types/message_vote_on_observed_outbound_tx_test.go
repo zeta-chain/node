@@ -8,7 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
@@ -30,10 +32,10 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				pkg.ReceiveStatus_Created,
+				chains.ReceiveStatus_Created,
 				42,
 				42,
-				pkg.CoinType_Zeta,
+				coin.CoinType_Zeta,
 			),
 		},
 		{
@@ -47,10 +49,10 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				pkg.ReceiveStatus_Created,
+				chains.ReceiveStatus_Created,
 				42,
 				42,
-				pkg.CoinType_Zeta,
+				coin.CoinType_Zeta,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
@@ -65,10 +67,10 @@ func TestMsgVoteOnObservedOutboundTx_ValidateBasic(t *testing.T) {
 				math.NewInt(42),
 				42,
 				math.NewUint(42),
-				pkg.ReceiveStatus_Created,
+				chains.ReceiveStatus_Created,
 				-1,
 				42,
-				pkg.CoinType_Zeta,
+				coin.CoinType_Zeta,
 			),
 			err: types.ErrInvalidChainID,
 		},
@@ -97,10 +99,10 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 		ObservedOutTxEffectiveGasPrice: math.NewInt(42),
 		ObservedOutTxEffectiveGasLimit: 42,
 		ValueReceived:                  math.NewUint(42),
-		Status:                         pkg.ReceiveStatus_Created,
+		Status:                         chains.ReceiveStatus_Created,
 		OutTxChain:                     42,
 		OutTxTssNonce:                  42,
-		CoinType:                       pkg.CoinType_Zeta,
+		CoinType:                       coin.CoinType_Zeta,
 	}
 	hash := msg.Digest()
 	require.NotEmpty(t, hash, "hash should not be empty")
@@ -113,7 +115,7 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 
 	// status not used
 	msg2 = msg
-	msg2.Status = pkg.ReceiveStatus_Failed
+	msg2.Status = chains.ReceiveStatus_Failed
 	hash2 = msg2.Digest()
 	require.Equal(t, hash, hash2, "status should not change hash")
 
@@ -173,7 +175,7 @@ func TestMsgVoteOnObservedOutboundTx_Digest(t *testing.T) {
 
 	// coin type used
 	msg2 = msg
-	msg2.CoinType = pkg.CoinType_ERC20
+	msg2.CoinType = coin.CoinType_ERC20
 	hash2 = msg2.Digest()
 	require.NotEqual(t, hash, hash2, "coin type should change hash")
 }
@@ -219,7 +221,7 @@ func TestMsgVoteOnObservedOutboundTx_Type(t *testing.T) {
 	msg := types.MsgVoteOnObservedOutboundTx{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, pkg.OutboundVoter.String(), msg.Type())
+	require.Equal(t, authz.OutboundVoter.String(), msg.Type())
 }
 
 func TestMsgVoteOnObservedOutboundTx_Route(t *testing.T) {

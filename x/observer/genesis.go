@@ -2,7 +2,7 @@ package observer
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -106,7 +106,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			k.SetPendingNonces(ctx, pendingNonce)
 		}
 	} else {
-		for _, chain := range pkg.DefaultChainsList() {
+		for _, chain := range chains.DefaultChainsList() {
 			if genState.Tss != nil {
 				k.SetPendingNonces(ctx, types.PendingNonces{
 					NonceLow:  0,

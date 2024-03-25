@@ -9,7 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -29,7 +29,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 	var buffer bytes.Buffer
 	err = header.EncodeRLP(&buffer)
 	require.NoError(t, err)
-	headerData := pkg.NewEthereumHeader(buffer.Bytes())
+	headerData := proofs.NewEthereumHeader(buffer.Bytes())
 	tests := []struct {
 		name  string
 		msg   *types.MsgAddBlockHeader
@@ -42,7 +42,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 				1,
 				[]byte{},
 				6,
-				pkg.HeaderData{},
+				proofs.HeaderData{},
 			),
 			error: true,
 		},
@@ -53,7 +53,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 				-1,
 				[]byte{},
 				6,
-				pkg.HeaderData{},
+				proofs.HeaderData{},
 			),
 			error: true,
 		},
@@ -64,7 +64,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 				5,
 				sample.Hash().Bytes(),
 				6,
-				pkg.HeaderData{},
+				proofs.HeaderData{},
 			),
 			error: true,
 		},
@@ -75,7 +75,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 				5,
 				sample.Hash().Bytes()[:31],
 				6,
-				pkg.HeaderData{},
+				proofs.HeaderData{},
 			),
 			error: true,
 		},

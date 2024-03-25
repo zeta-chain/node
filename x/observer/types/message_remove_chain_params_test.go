@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -21,14 +21,14 @@ func TestMsgRemoveChainParams_ValidateBasic(t *testing.T) {
 			name: "valid message",
 			msg: types.NewMsgRemoveChainParams(
 				sample.AccAddress(),
-				pkg.ExternalChainList()[0].ChainId,
+				chains.ExternalChainList()[0].ChainId,
 			),
 		},
 		{
 			name: "invalid address",
 			msg: types.NewMsgRemoveChainParams(
 				"invalid_address",
-				pkg.ExternalChainList()[0].ChainId,
+				chains.ExternalChainList()[0].ChainId,
 			),
 			err: sdkerrors.ErrInvalidAddress,
 		},
