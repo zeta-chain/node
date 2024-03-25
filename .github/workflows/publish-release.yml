@@ -322,6 +322,37 @@ jobs:
         run: |
           echo "Check Skipped, Mark Green for Pipeline Execution"
 
+
+
+
+  e2e-admin-tests:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute e2e-admin-tests
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-admin-test
+
+  e2e-upgrade-test:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute upgrade-test
+        if: ${{ github.event.inputs.skip_checks != 'true' }}
+        shell: bash
+        run: |
+          make start-upgrade-test
+
   approval:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -333,6 +364,8 @@ jobs:
       - check-upgrade-handler-updated
       - smoke-test
       - build-test
+      - e2e-admin-tests
+      - e2e-upgrade-test
     steps:
 
       - uses: trstringer/manual-approval@v1
