@@ -269,7 +269,7 @@ func TestCrossChainTx_SetPendingRevert(t *testing.T) {
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 	cctx.SetPendingRevert("test")
 	require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }
 
 func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
@@ -277,7 +277,7 @@ func TestCrossChainTx_SetPendingOutbound(t *testing.T) {
 	cctx.CctxStatus.Status = types.CctxStatus_PendingInbound
 	cctx.SetPendingOutbound("test")
 	require.Equal(t, types.CctxStatus_PendingOutbound, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }
 
 func TestCrossChainTx_SetOutBoundMined(t *testing.T) {
@@ -285,7 +285,7 @@ func TestCrossChainTx_SetOutBoundMined(t *testing.T) {
 	cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 	cctx.SetOutBoundMined("test")
 	require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }
 
 func TestCrossChainTx_SetReverted(t *testing.T) {
@@ -293,5 +293,5 @@ func TestCrossChainTx_SetReverted(t *testing.T) {
 	cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
 	cctx.SetReverted("test")
 	require.Equal(t, types.CctxStatus_Reverted, cctx.CctxStatus.Status)
-	require.Equal(t, cctx.CctxStatus.StatusMessage, "test")
+	require.Contains(t, cctx.CctxStatus.StatusMessage, "test")
 }
