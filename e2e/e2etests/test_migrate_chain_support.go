@@ -158,6 +158,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// we use a Go routine to manually mine blocks because Anvil network only mine blocks on tx by default
 	// we need automatic block mining to get the necessary confirmations for the cross-chain functionalities
 	stopMining, err := newRunner.AnvilMineBlocks(EVM2RPCURL, 3)
+	if err != nil {
+		panic(err)
+	}
 
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
@@ -272,7 +275,7 @@ func getNewEVMChainParams(r *runner.E2ERunner) *observertypes.ChainParams {
 
 // restartZetaClient restarts the Zeta client
 func restartZetaClient() error {
-	sshCommandFilePath := "/work/restart-zetaclientd-migrate.sh"
+	sshCommandFilePath := "/work/restart-zetaclientd.sh"
 	cmd := exec.Command("/bin/sh", sshCommandFilePath)
 
 	// Execute the command

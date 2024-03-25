@@ -6,7 +6,7 @@ version: "3"
 
 services:
   orchestrator:
-    entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin", "additional-evm"]
+    entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin"]
 
   eth2:
     image: anvil:latest
