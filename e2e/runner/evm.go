@@ -79,7 +79,7 @@ func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
 }
 
 func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
-	// reset allowance, necessary for ERC20
+	// reset allowance, necessary for USDT
 	tx, err := runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
