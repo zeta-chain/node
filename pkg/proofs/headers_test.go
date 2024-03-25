@@ -24,7 +24,7 @@ const numHeadersToTest = 100
 func TestTrueEthereumHeader(t *testing.T) {
 	var header ethtypes.Header
 	// read file into a byte slice
-	file, err := os.Open("./testdata/eth_header_18495266.json")
+	file, err := os.Open("../testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
@@ -51,7 +51,7 @@ func TestTrueEthereumHeader(t *testing.T) {
 func TestFalseEthereumHeader(t *testing.T) {
 	var header ethtypes.Header
 	// read file into a byte slice
-	file, err := os.Open("./testdata/eth_header_18495266.json")
+	file, err := os.Open("../testdata/eth_header_18495266.json")
 	require.NoError(t, err)
 	defer file.Close()
 	headerBytes := make([]byte, 4096)
