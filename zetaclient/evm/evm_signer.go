@@ -676,7 +676,7 @@ func (signer *Signer) EvmSigner() ethtypes.Signer {
 func getEVMRPC(endpoint string) (interfaces.EVMRPCClient, ethtypes.Signer, error) {
 	if endpoint == stub.EVMRPCEnabled {
 		chainID := big.NewInt(common.BscMainnetChain().ChainId)
-		ethSigner := ethtypes.NewEIP155Signer(chainID)
+		ethSigner := ethtypes.NewLondonSigner(chainID)
 		client := &stub.MockEvmClient{}
 		return client, ethSigner, nil
 	}
