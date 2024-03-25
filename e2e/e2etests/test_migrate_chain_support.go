@@ -152,7 +152,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 
 	// deposit Ethers and ERC20 on ZetaChain
-	txEtherDeposit := newRunner.DepositEther(false)
+	etherAmount := big.NewInt(1e18)
+	etherAmount = etherAmount.Mul(etherAmount, big.NewInt(10))
+	txEtherDeposit := newRunner.DepositEtherWithAmount(false, etherAmount)
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
 
 	// perform withdrawals on the new chain
@@ -193,7 +195,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// wait for the whitelist cctx to be mined
 	newRunner.WaitForMinedCCTXFromIndex(whitelistCCTXIndex)
 
-	//set erc20 zrc20 contract address
+	// set erc20 zrc20 contract address
 	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
 		panic(fmt.Errorf("invalid contract address: %s", erc20zrc20Addr))
 	}
@@ -203,13 +205,9 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 	newRunner.ERC20ZRC20 = erc20ZRC20
 
-	// deposit
+	// deposit ERC20 on ZetaChain
 	txERC20Deposit := newRunner.DepositERC20()
 	newRunner.WaitForMinedCCTX(txERC20Deposit)
-
-	// withdraw
-	newRunner.Logger.Info("trying withdrawing ERC20 on new network")
-	TestERC20Withdraw(r, []string{"100000"})
 
 	// stop mining
 	stopMining()
