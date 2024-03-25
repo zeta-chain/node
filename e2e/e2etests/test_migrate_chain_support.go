@@ -2,14 +2,13 @@ package e2etests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/big"
 	"os/exec"
-	"strings"
 	"time"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -48,7 +47,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	if err != nil {
 		panic(err)
 	}
-	newRunner.SetupEVM(false)
+	newRunner.SetupEVM(false, false)
 
 	// mint some ERC20
 	newRunner.MintERC20OnEvm(10000)
@@ -104,42 +103,23 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	}
 	newRunner.ETHZRC20 = ethZRC20
 
-	// deploy erc20 zrc20
-	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, fungibletypes.NewMsgDeployFungibleCoinZRC20(
-		adminAddr,
-		newRunner.ERC20Addr.Hex(),
-		common.SepoliaChain().ChainId,
-		18,
-		"USDT",
-		"USDT",
-		common.CoinType_ERC20,
-		100000,
-	))
-	if err != nil {
-		panic(err)
-	}
-
-	// fetch the erc20 zrc20 contract address and remove the quotes
-	erc20zrc20Addr, err := fetchAttribute(res, "Contract")
-	if err != nil {
-		panic(err)
-	}
-	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
-		panic(fmt.Errorf("invalid contract address: %s", erc20zrc20Addr))
-	}
-
-	erc20ZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(erc20zrc20Addr), newRunner.ZEVMClient)
-	if err != nil {
-		panic(err)
-	}
-	newRunner.ERC20ZRC20 = erc20ZRC20
-
 	// set the chain nonces for the new chain
 	_, err = r.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgResetChainNonces(
 		adminAddr,
 		chainParams.ChainId,
 		0,
 		0,
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	// deactivate the previous chain
+	chainParams = observertypes.GetDefaultGoerliLocalnetChainParams()
+	chainParams.IsSupported = false
+	_, err = newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, observertypes.NewMsgUpdateChainParams(
+		adminAddr,
+		chainParams,
 	))
 	if err != nil {
 		panic(err)
@@ -154,6 +134,19 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// wait 10 set for the chain to start
 	time.Sleep(10 * time.Second)
 
+	// emitting a withdraw with the previous chain should fail
+	txWithdraw, err := r.ETHZRC20.Withdraw(r.ZEVMAuth, r.DeployerAddress.Bytes(), big.NewInt(10000000000000000))
+	if err == nil {
+		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txWithdraw, r.Logger, r.ReceiptTimeout)
+		if receipt.Status == 1 {
+			panic("withdraw should have failed on the previous chain")
+		} else {
+			r.Logger.Info("withdraw failed on the previous chain as expected with receipt")
+		}
+	} else {
+		r.Logger.Info("withdraw failed on the previous chain as expected")
+	}
+
 	// test cross-chain functionalities on the new network
 	// we use a Go routine to manually mine blocks because Anvil network only mine blocks on tx by default
 	// we need automatic block mining to get the necessary confirmations for the cross-chain functionalities
@@ -165,16 +158,62 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit Ethers and ERC20 on ZetaChain
 	txEtherDeposit := newRunner.DepositEther(false)
 	newRunner.WaitForMinedCCTX(txEtherDeposit)
-	txERC20Deposit := newRunner.DepositERC20()
-	newRunner.WaitForMinedCCTX(txERC20Deposit)
 
 	// perform withdrawals on the new chain
 	TestZetaWithdraw(newRunner, []string{"10000000000000000000"})
 	TestEtherWithdraw(newRunner, []string{"50000000000000000"})
-	TestERC20Withdraw(r, []string{"100000"})
 
 	// finally try to deposit Zeta back
 	TestZetaDeposit(newRunner, []string{"100000000000000000"})
+
+	// ERC20 test
+
+	// whitelist erc20 zrc20
+	newRunner.Logger.Info("whitelisting ERC20 on new network")
+	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
+		adminAddr,
+		newRunner.ERC20Addr.Hex(),
+		common.SepoliaChain().ChainId,
+		"USDT",
+		"USDT",
+		18,
+		100000,
+	))
+	if err != nil {
+		panic(err)
+	}
+
+	// retrieve zrc20 and cctx from event
+	whitelistCCTXIndex, err := txserver.FetchAttributeFromTxResponse(res, "whitelist_cctx_index")
+	if err != nil {
+		panic(err)
+	}
+
+	erc20zrc20Addr, err := txserver.FetchAttributeFromTxResponse(res, "zrc20_address")
+	if err != nil {
+		panic(err)
+	}
+
+	// wait for the whitelist cctx to be mined
+	newRunner.WaitForMinedCCTXFromIndex(whitelistCCTXIndex)
+
+	//set erc20 zrc20 contract address
+	if !ethcommon.IsHexAddress(erc20zrc20Addr) {
+		panic(fmt.Errorf("invalid contract address: %s", erc20zrc20Addr))
+	}
+	erc20ZRC20, err := zrc20.NewZRC20(ethcommon.HexToAddress(erc20zrc20Addr), newRunner.ZEVMClient)
+	if err != nil {
+		panic(err)
+	}
+	newRunner.ERC20ZRC20 = erc20ZRC20
+
+	// deposit
+	txERC20Deposit := newRunner.DepositERC20()
+	newRunner.WaitForMinedCCTX(txERC20Deposit)
+
+	// withdraw
+	newRunner.Logger.Info("trying withdrawing ERC20 on new network")
+	TestERC20Withdraw(r, []string{"100000"})
 
 	// stop mining
 	stopMining()
@@ -201,7 +240,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 		r.EVMAuth,
 		r.ZEVMAuth,
 		r.BtcRPCClient,
-		runner.NewLogger(false, color.FgHiYellow, "admin-evm2"),
+		runner.NewLogger(true, color.FgHiYellow, "admin-evm2"),
 	)
 
 	// All existing fields of the runner are the same except for the RPC URL and client for EVM
@@ -230,8 +269,7 @@ func configureEVM2(r *runner.E2ERunner) (*runner.E2ERunner, error) {
 	return newRunner, nil
 }
 
-// getEVMClient get evm client
-// TODO: put this logic in common with the one in cmd/zetae2e/config/clients.go
+// getEVMClient get evm client from rpc and private key
 func getEVMClient(ctx context.Context, rpc, privKey string) (*ethclient.Client, *bind.TransactOpts, error) {
 	evmClient, err := ethclient.Dial(rpc)
 	if err != nil {
@@ -284,51 +322,4 @@ func restartZetaClient() error {
 		return fmt.Errorf("error restarting ZetaClient: %s - %s", err.Error(), output)
 	}
 	return nil
-}
-
-// fetchAttribute fetches the attribute from the tx response
-// TODO: use tx server
-func fetchAttribute(res *sdktypes.TxResponse, key string) (string, error) {
-	var logs []messageLog
-	err := json.Unmarshal([]byte(res.RawLog), &logs)
-	if err != nil {
-		return "", err
-	}
-
-	var attributes []string
-	for _, log := range logs {
-		for _, event := range log.Events {
-			for _, attr := range event.Attributes {
-				attributes = append(attributes, attr.Key)
-				if strings.EqualFold(attr.Key, key) {
-					address := attr.Value
-
-					if len(address) < 2 {
-						return "", fmt.Errorf("invalid address: %s", address)
-					}
-
-					// trim the quotes
-					address = address[1 : len(address)-1]
-
-					return address, nil
-				}
-			}
-		}
-	}
-
-	return "", fmt.Errorf("attribute %s not found, attributes:  %+v", key, attributes)
-}
-
-type messageLog struct {
-	Events []event `json:"events"`
-}
-
-type event struct {
-	Type       string      `json:"type"`
-	Attributes []attribute `json:"attributes"`
-}
-
-type attribute struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
 }

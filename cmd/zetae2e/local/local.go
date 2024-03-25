@@ -188,7 +188,7 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 	if !skipSetup {
 		logger.Print("⚙️ setting up networks")
 		startTime := time.Now()
-		deployerRunner.SetupEVM(contractsDeployed)
+		deployerRunner.SetupEVM(contractsDeployed, true)
 		deployerRunner.SetZEVMContracts()
 
 		// NOTE: this method return an error so we handle it and panic if it occurs unlike other method that panics directly
