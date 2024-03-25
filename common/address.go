@@ -7,7 +7,6 @@ import (
 
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 type Address string
@@ -27,10 +26,6 @@ func NewAddress(address string) Address {
 		return Address(address)
 	}
 	return NoAddress
-}
-
-func (addr Address) AccAddress() (cosmos.AccAddress, error) {
-	return cosmos.AccAddressFromBech32(addr.String())
 }
 
 func (addr Address) Equals(addr2 Address) bool {
@@ -67,9 +62,6 @@ func DecodeBtcAddress(inputAddress string, chainID int64) (address btcutil.Addre
 	chainParams, err := GetBTCChainParams(chainID)
 	if err != nil {
 		return nil, err
-	}
-	if chainParams == nil {
-		return nil, fmt.Errorf("chain params not found")
 	}
 	address, err = btcutil.DecodeAddress(inputAddress, chainParams)
 	if err != nil {
