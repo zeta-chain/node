@@ -432,33 +432,233 @@ func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
 }
 
 func TestZetaCoreBridge_GetNonceByChain(t *testing.T) {
+	chain := common.BscMainnetChain()
+	expectedOutput := observertypes.QueryGetChainNoncesResponse{
+		ChainNonces: observertypes.ChainNonces{
+			Creator:         "",
+			Index:           "",
+			ChainId:         chain.ChainId,
+			Nonce:           8446,
+			Signers:         nil,
+			FinalizedHeight: 0,
+		},
+	}
+	input := observertypes.QueryGetChainNoncesRequest{Index: chain.ChainName.String()}
+	method := "/zetachain.zetacore.observer.Query/ChainNonces"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetNonceByChain(chain)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.ChainNonces, resp)
 }
 
 func TestZetaCoreBridge_GetAllNodeAccounts(t *testing.T) {
+	expectedOutput := observertypes.QueryAllNodeAccountResponse{
+		NodeAccount: []*observertypes.NodeAccount{
+			{
+				Operator:       "zeta19jr7nl82lrktge35f52x9g5y5prmvchmk40zhg",
+				GranteeAddress: "zeta1kxhesgcvl6j5upupd9m3d3g3gfz4l3pcpqfnw6",
+				GranteePubkey:  nil,
+				NodeStatus:     0,
+			},
+		},
+	}
+	input := observertypes.QueryAllNodeAccountRequest{}
+	method := "/zetachain.zetacore.observer.Query/NodeAccountAll"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetAllNodeAccounts()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.NodeAccount, resp)
 }
 
 func TestZetaCoreBridge_GetKeyGen(t *testing.T) {
+	expectedOutput := observertypes.QueryGetKeygenResponse{
+		Keygen: &observertypes.Keygen{
+			Status:         observertypes.KeygenStatus_KeyGenSuccess,
+			GranteePubkeys: nil,
+			BlockNumber:    5646,
+		}}
+	input := observertypes.QueryGetKeygenRequest{}
+	method := "/zetachain.zetacore.observer.Query/Keygen"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetKeyGen()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Keygen, resp)
 }
 
 func TestZetaCoreBridge_GetBallotByID(t *testing.T) {
+	expectedOutput := observertypes.QueryBallotByIdentifierResponse{
+		BallotIdentifier: "ballot1235",
+	}
+	input := observertypes.QueryBallotByIdentifierRequest{BallotIdentifier: "ballot1235"}
+	method := "/zetachain.zetacore.observer.Query/BallotByIdentifier"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetBallot("ballot1235")
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, *resp)
 }
 
 func TestZetaCoreBridge_GetInboundTrackersForChain(t *testing.T) {
+	chainID := common.BscMainnetChain().ChainId
+	expectedOutput := crosschainTypes.QueryAllInTxTrackerByChainResponse{
+		InTxTracker: []crosschainTypes.InTxTracker{
+			{
+				ChainId:  chainID,
+				TxHash:   "DC76A6DCCC3AA62E89E69042ADC44557C50D59E4D3210C37D78DC8AE49B3B27F",
+				CoinType: common.CoinType_Gas,
+			},
+		},
+	}
+	input := crosschainTypes.QueryAllInTxTrackerByChainRequest{ChainId: chainID}
+	method := "/zetachain.zetacore.crosschain.Query/InTxTrackerAllByChain"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetInboundTrackersForChain(chainID)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.InTxTracker, resp)
 }
 
 func TestZetaCoreBridge_GetCurrentTss(t *testing.T) {
+	expectedOutput := observertypes.QueryGetTSSResponse{
+		TSS: observertypes.TSS{
+			TssPubkey:           "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
+			TssParticipantList:  nil,
+			OperatorAddressList: nil,
+			FinalizedZetaHeight: 1000,
+			KeyGenZetaHeight:    900,
+		},
+	}
+	input := observertypes.QueryGetTSSRequest{}
+	method := "/zetachain.zetacore.observer.Query/TSS"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetCurrentTss()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.TSS, resp)
 }
 
 func TestZetaCoreBridge_GetEthTssAddress(t *testing.T) {
+	expectedOutput := observertypes.QueryGetTssAddressResponse{
+		Eth: "0x70e967acfcc17c3941e87562161406d41676fd83",
+		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
+	}
+	input := observertypes.QueryGetTssAddressRequest{}
+	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetEthTssAddress()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Eth, resp)
 }
 
 func TestZetaCoreBridge_GetBtcTssAddress(t *testing.T) {
+	expectedOutput := observertypes.QueryGetTssAddressResponse{
+		Eth: "0x70e967acfcc17c3941e87562161406d41676fd83",
+		Btc: "bc1qm24wp577nk8aacckv8np465z3dvmu7ry45el6y",
+	}
+	input := observertypes.QueryGetTssAddressRequest{BitcoinChainId: 8332}
+	method := "/zetachain.zetacore.observer.Query/GetTssAddress"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetBtcTssAddress(8332)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Btc, resp)
 }
 
 func TestZetaCoreBridge_GetTssHistory(t *testing.T) {
+	expectedOutput := observertypes.QueryTssHistoryResponse{
+		TssList: []observertypes.TSS{
+			{
+				TssPubkey:           "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
+				TssParticipantList:  nil,
+				OperatorAddressList: nil,
+				FinalizedZetaHeight: 46546,
+				KeyGenZetaHeight:    6897,
+			},
+		},
+	}
+	input := observertypes.QueryTssHistoryRequest{}
+	method := "/zetachain.zetacore.observer.Query/TssHistory"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetTssHistory()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.TssList, resp)
 }
 
 func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
+	chain := common.BscMainnetChain()
+	expectedOutput := crosschainTypes.QueryGetOutTxTrackerResponse{
+		OutTxTracker: crosschainTypes.OutTxTracker{
+			Index:    "tracker12345",
+			ChainId:  chain.ChainId,
+			Nonce:    456,
+			HashList: nil,
+		},
+	}
+	input := crosschainTypes.QueryGetOutTxTrackerRequest{
+		ChainID: chain.ChainId,
+		Nonce:   456,
+	}
+	method := "/zetachain.zetacore.crosschain.Query/OutTxTracker"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetOutTxTracker(chain, 456)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.OutTxTracker, *resp)
 }
 
 func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
