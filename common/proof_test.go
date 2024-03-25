@@ -2,7 +2,6 @@ package common_test
 
 import (
 	"errors"
-	"os"
 	"testing"
 
 	"encoding/base64"
@@ -10,9 +9,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/common/ethereum"
+	"github.com/zeta-chain/zetacore/common/testdata"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 
@@ -22,42 +25,21 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
-const numBlocksToTest = 100
-
-type Block struct {
-	TssAddress   string `json:"tssAddress"`
-	Height       int    `json:"height"`
-	Nonce        uint64 `json:"nonce"`
-	OutTxid      string `json:"outTxid"`
-	HeaderBase64 string `json:"headerBase64"`
-	BlockBase64  string `json:"blockBase64"`
-}
-
-type Blocks struct {
-	Blocks []Block `json:"blocks"`
-}
-
-func LoadTestBlocks(t *testing.T) Blocks {
-	file, err := os.Open("./testdata/test_blocks.json")
-	require.NoError(t, err)
-	defer file.Close()
-
-	// Decode the JSON into the data struct
-	var blocks Blocks
-	err = json.NewDecoder(file).Decode(&blocks)
-	require.NoError(t, err)
-
-	return blocks
-}
+const (
+	numBlocksToTest = 100
+)
 
 func Test_IsErrorInvalidProof(t *testing.T) {
 	require.False(t, common.IsErrorInvalidProof(nil))
 	require.False(t, common.IsErrorInvalidProof(errors.New("foo")))
-	require.True(t, common.IsErrorInvalidProof(common.NewErrInvalidProof(errors.New("foo"))))
+	invalidProofErr := errors.New("foo")
+	invalidProof := common.NewErrInvalidProof(invalidProofErr)
+	require.True(t, common.IsErrorInvalidProof(invalidProof))
+	require.Equal(t, invalidProofErr.Error(), invalidProof.Error())
 }
 
 func TestBitcoinMerkleProof(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
@@ -75,6 +57,62 @@ func TestBitcoinMerkleProof(t *testing.T) {
 		// Validate block
 		validateBitcoinBlock(t, header, headerBytes, blockVerbose, b.OutTxid, b.TssAddress, b.Nonce)
 	}
+}
+
+func TestEthereumMerkleProof(t *testing.T) {
+	header, err := testdata.ReadEthHeader()
+	require.NoError(t, err)
+	b, err := rlp.EncodeToBytes(&header)
+	require.NoError(t, err)
+
+	headerData := common.NewEthereumHeader(b)
+	t.Run("should verify tx proof", func(t *testing.T) {
+		var txs types.Transactions
+		for i := 0; i < testdata.TxsCount; i++ {
+			tx, err := testdata.ReadEthTx(i)
+			require.NoError(t, err)
+			txs = append(txs, &tx)
+		}
+
+		// generate a trie from the txs and compare the root hash with the one in the header
+		txsTree := ethereum.NewTrie(txs)
+		require.EqualValues(t, header.TxHash.Hex(), txsTree.Trie.Hash().Hex())
+
+		for i := range txs {
+			// generate a proof for each tx and verify it
+			proof, err := txsTree.GenerateProof(i)
+			require.NoError(t, err)
+
+			ethProof := common.NewEthereumProof(proof)
+
+			_, err = ethProof.Verify(headerData, i)
+			require.NoError(t, err)
+		}
+	})
+
+	t.Run("should fail to verify receipts proof", func(t *testing.T) {
+		var receipts types.Receipts
+		for i := 0; i < testdata.TxsCount; i++ {
+			receipt, err := testdata.ReadEthReceipt(i)
+			require.NoError(t, err)
+			receipts = append(receipts, &receipt)
+		}
+
+		// generate a trie from the receipts and compare the root hash with the one in the header
+		txsTree := ethereum.NewTrie(receipts)
+		require.EqualValues(t, header.ReceiptHash.Hex(), txsTree.Trie.Hash().Hex())
+
+		for i := range receipts {
+			// generate a proof for each receipt and verify it
+			proof, err := txsTree.GenerateProof(i)
+			require.NoError(t, err)
+
+			ethProof := common.NewEthereumProof(proof)
+
+			_, err = ethProof.Verify(headerData, i)
+			require.Error(t, err)
+		}
+	})
 }
 
 func BitcoinMerkleProofLiveTest(t *testing.T) {

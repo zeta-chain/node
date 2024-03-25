@@ -2,7 +2,6 @@ package common_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"fmt"
 	"math/big"
@@ -16,23 +15,14 @@ import (
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/wire"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/testdata"
 )
 
 const numHeadersToTest = 100
 
-func generateHeader() {
-	rpcclient, _ := ethclient.Dial("https://eth.llamarpc.com")
-	header, _ := rpcclient.HeaderByNumber(context.Background(), big.NewInt(18495266))
-	file, _ := os.Create("testdata/eth_header_18495266.json")
-	b, _ := header.MarshalJSON()
-	file.Write(b)
-}
-
 func TestTrueEthereumHeader(t *testing.T) {
-	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
@@ -50,10 +40,16 @@ func TestTrueEthereumHeader(t *testing.T) {
 	headerData := common.NewEthereumHeader(buffer.Bytes())
 	err = headerData.Validate(header.Hash().Bytes(), 1, 18495266)
 	require.NoError(t, err)
+
+	parentHash, err := headerData.ParentHash()
+	require.NoError(t, err)
+	require.Equal(t, header.ParentHash.Bytes(), parentHash)
+
+	err = headerData.ValidateTimestamp(time.Now())
+	require.NoError(t, err)
 }
 
 func TestFalseEthereumHeader(t *testing.T) {
-	generateHeader()
 	var header ethtypes.Header
 	// read file into a byte slice
 	file, err := os.Open("./testdata/eth_header_18495266.json")
@@ -76,7 +72,7 @@ func TestFalseEthereumHeader(t *testing.T) {
 }
 
 func TestTrueBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
@@ -90,7 +86,7 @@ func TestTrueBitcoinHeader(t *testing.T) {
 }
 
 func TestFakeBitcoinHeader(t *testing.T) {
-	blocks := LoadTestBlocks(t)
+	blocks := testdata.LoadTestBlocks(t)
 
 	for _, b := range blocks.Blocks {
 		// Deserialize the header bytes from base64
@@ -101,6 +97,20 @@ func TestFakeBitcoinHeader(t *testing.T) {
 		// Validate
 		validateFakeBitcoinHeader(t, header, headerBytes)
 	}
+}
+
+func TestNonExistentHeaderType(t *testing.T) {
+	headerData := common.HeaderData{}
+
+	err := headerData.Validate([]byte{}, 18332, 0)
+	require.EqualError(t, err, "unrecognized header type")
+
+	parentHash, err := headerData.ParentHash()
+	require.EqualError(t, err, "unrecognized header type")
+	require.Nil(t, parentHash)
+
+	err = headerData.ValidateTimestamp(time.Now())
+	require.ErrorContains(t, err, "unrecognized header type")
 }
 
 func BitcoinHeaderValidationLiveTest(t *testing.T) {
@@ -174,13 +184,18 @@ func unmarshalHeader(t *testing.T, headerBytes []byte) *wire.BlockHeader {
 func validateTrueBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
 	blockHash := header.BlockHash()
 
+	headerData := common.NewBitcoinHeader(headerBytes)
 	// True Bitcoin header should pass validation
-	err := common.ValidateBitcoinHeader(headerBytes, blockHash[:], 18332)
+	err := headerData.Validate(blockHash[:], 18332, 0)
 	require.NoError(t, err)
 
 	// True Bitcoin header should pass timestamp validation
-	err = common.NewBitcoinHeader(headerBytes).ValidateTimestamp(time.Now())
+	err = headerData.ValidateTimestamp(time.Now())
 	require.NoError(t, err)
+
+	parentHash, err := headerData.ParentHash()
+	require.NoError(t, err)
+	require.Equal(t, header.PrevBlock.CloneBytes(), parentHash)
 }
 
 func validateFakeBitcoinHeader(t *testing.T, header *wire.BlockHeader, headerBytes []byte) {
