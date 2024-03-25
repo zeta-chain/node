@@ -1,3 +1,6 @@
+# This Dockerfile is used to build a Docker image for Anvil, a localnet for testing purposes.
+# Currently we directly set the chain ID to 11155111 and expose the default Anvil port specifically for the chain migration test.
+
 # Start from the latest Rust image as Anvil is built with Rust
 FROM ghcr.io/foundry-rs/foundry:latest
 

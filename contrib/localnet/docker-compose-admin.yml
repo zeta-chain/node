@@ -9,7 +9,8 @@ services:
     entrypoint: ["/work/start-zetae2e.sh", "local --skip-regular --test-admin"]
 
   eth2:
-    image: anvil:latest
+    build:
+      context: ./anvil
     container_name: eth2
     hostname: eth2
     ports:
