@@ -8,7 +8,6 @@ import (
 	"github.com/btcsuite/btcutil"
 	eth "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 type Address string
@@ -28,10 +27,6 @@ func NewAddress(address string) Address {
 		return Address(address)
 	}
 	return NoAddress
-}
-
-func (addr Address) AccAddress() (cosmos.AccAddress, error) {
-	return cosmos.AccAddressFromBech32(addr.String())
 }
 
 func (addr Address) Equals(addr2 Address) bool {

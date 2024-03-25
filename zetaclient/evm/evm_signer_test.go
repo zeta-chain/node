@@ -33,6 +33,7 @@ func getNewEvmSigner() (*Signer, error) {
 	erc20CustodyAddress := ERC20CustodyAddress
 	logger := common.ClientLogger{}
 	ts := &metrics.TelemetryServer{}
+	cfg := config.NewConfig()
 	return NewEVMSigner(
 		corecommon.BscMainnetChain(),
 		stub.EVMRPCEnabled,
@@ -41,6 +42,7 @@ func getNewEvmSigner() (*Signer, error) {
 		config.GetERC20CustodyABI(),
 		mpiAddress,
 		erc20CustodyAddress,
+		corecontext.NewZetaCoreContext(cfg),
 		logger,
 		ts)
 }

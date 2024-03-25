@@ -41,6 +41,11 @@ func TestCosmosToEthChainID(t *testing.T) {
 			chainID: "athens-701_2",
 			isErr:   true,
 		},
+		{
+			name:    "invalid number format",
+			chainID: "cosmoshub_abc-1",
+			isErr:   true,
+		},
 	}
 
 	for _, tc := range testCases {

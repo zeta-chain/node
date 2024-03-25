@@ -19,6 +19,7 @@
 * [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
+* [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 
 ### Features
 
@@ -41,6 +42,7 @@
 * [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
+* [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
 
 ### Fixes
 

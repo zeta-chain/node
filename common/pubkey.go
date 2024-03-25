@@ -10,13 +10,10 @@ import (
 	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/btcsuite/btcutil/bech32"
-	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 
 	eth "github.com/ethereum/go-ethereum/crypto"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/zeta-chain/zetacore/common/cosmos"
 )
@@ -56,19 +53,6 @@ func NewPubKey(key string) (PubKey, error) {
 		return EmptyPubKey, fmt.Errorf("%s is not bech32 encoded pub key,err : %w", key, err)
 	}
 	return PubKey(key), nil
-}
-
-// NewPubKeyFromCrypto
-func NewPubKeyFromCrypto(pk crypto.PubKey) (PubKey, error) {
-	tmp, err := codec.FromTmPubKeyInterface(pk)
-	if err != nil {
-		return EmptyPubKey, fmt.Errorf("fail to create PubKey from crypto.PubKey,err:%w", err)
-	}
-	s, err := cosmos.Bech32ifyPubKey(cosmos.Bech32PubKeyTypeAccPub, tmp)
-	if err != nil {
-		return EmptyPubKey, fmt.Errorf("fail to create PubKey from crypto.PubKey,err:%w", err)
-	}
-	return PubKey(s), nil
 }
 
 // Equals check whether two are the same
@@ -112,14 +96,6 @@ func (pubKey PubKey) GetEVMAddress() (Address, error) {
 	}
 	str := strings.ToLower(eth.PubkeyToAddress(*pub.ToECDSA()).String())
 	return NewAddress(str), nil
-}
-
-func (pubKey PubKey) GetZetaAddress() (cosmos.AccAddress, error) {
-	addr, err := pubKey.GetEVMAddress()
-	if err != nil {
-		return nil, err
-	}
-	return cosmos.AccAddressFromBech32(addr.String())
 }
 
 // MarshalJSON to Marshals to JSON using Bech32
@@ -197,23 +173,6 @@ func (pks PubKeys) Strings() []string {
 		allStrings[i] = pk.String()
 	}
 	return allStrings
-}
-
-// ConvertAndEncode converts from a base64 encoded byte string to hex or base32 encoded byte string and then to bech32
-func ConvertAndEncode(hrp string, data []byte) (string, error) {
-	converted, err := bech32.ConvertBits(data, 8, 5, true)
-	if err != nil {
-		return "", fmt.Errorf("encoding bech32 failed,%w", err)
-	}
-	return bech32.Encode(hrp, converted)
-}
-
-// NewPubKeySet create a new instance of PubKeySet , which contains two keys
-func NewPubKeySet(secp256k1, ed25519 PubKey) PubKeySet {
-	return PubKeySet{
-		Secp256k1: secp256k1,
-		Ed25519:   ed25519,
-	}
 }
 
 func GetPubkeyBech32FromRecord(record *keyring.Record) (string, error) {
