@@ -1,14 +1,22 @@
 package zetabridge
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	"github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 	"github.com/stretchr/testify/require"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	"github.com/zeta-chain/zetacore/common"
 	crosschainTypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
+
 	"net"
 	"testing"
 )
@@ -259,30 +267,168 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 }
 
 func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryZetaAccountingResponse{AbortedZetaAmount: "1080999"}
+	input := crosschainTypes.QueryZetaAccountingRequest{}
+	method := "/zetachain.zetacore.crosschain.Query/ZetaAccounting"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetAbortedZetaAmount()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.AbortedZetaAmount, resp)
 }
 
 func TestZetaCoreBridge_GetGenesisSupply(t *testing.T) {
+
 }
 
 func TestZetaCoreBridge_GetZetaTokenSupplyOnNode(t *testing.T) {
+	expectedOutput := banktypes.QuerySupplyOfResponse{
+		Amount: types.Coin{
+			Denom:  config.BaseDenom,
+			Amount: types.NewInt(329438),
+		}}
+	input := banktypes.QuerySupplyOfRequest{Denom: config.BaseDenom}
+	method := "/cosmos.bank.v1beta1.Query/SupplyOf"
+	server := setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetZetaTokenSupplyOnNode()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.GetAmount().Amount, resp)
 }
 
 func TestZetaCoreBridge_GetLastBlockHeight(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryAllLastBlockHeightResponse{
+		LastBlockHeight: []*crosschainTypes.LastBlockHeight{
+			{
+				Index:             "test12345",
+				Chain:             "7000",
+				LastSendHeight:    32345,
+				LastReceiveHeight: 23623,
+			},
+		},
+	}
+	input := crosschainTypes.QueryAllLastBlockHeightRequest{}
+	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeightAll"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetLastBlockHeight()
+	require.Equal(t, expectedOutput.LastBlockHeight, resp)
 }
 
 func TestZetaCoreBridge_GetLatestZetaBlock(t *testing.T) {
+	expectedOutput := tmservice.GetLatestBlockResponse{
+		SdkBlock: &tmservice.Block{
+			Header:     tmservice.Header{},
+			Data:       tmtypes.Data{},
+			Evidence:   tmtypes.EvidenceList{},
+			LastCommit: nil,
+		},
+	}
+	input := tmservice.GetLatestBlockRequest{}
+	method := "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock"
+	server := setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetLatestZetaBlock()
+	require.Equal(t, expectedOutput.SdkBlock, resp)
 }
 
 func TestZetaCoreBridge_GetNodeInfo(t *testing.T) {
+	expectedOutput := tmservice.GetNodeInfoResponse{
+		DefaultNodeInfo:    nil,
+		ApplicationVersion: &tmservice.VersionInfo{},
+	}
+	input := tmservice.GetNodeInfoRequest{}
+	method := "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo"
+	server := setupMockServer(t, tmservice.RegisterServiceServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetNodeInfo()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput, *resp)
 }
 
 func TestZetaCoreBridge_GetLastBlockHeightByChain(t *testing.T) {
+	index := common.BscMainnetChain()
+	expectedOutput := crosschainTypes.QueryGetLastBlockHeightResponse{
+		LastBlockHeight: &crosschainTypes.LastBlockHeight{
+			Index:             index.ChainName.String(),
+			Chain:             "7000",
+			LastSendHeight:    2134123,
+			LastReceiveHeight: 1234333,
+		},
+	}
+	input := crosschainTypes.QueryGetLastBlockHeightRequest{Index: index.ChainName.String()}
+	method := "/zetachain.zetacore.crosschain.Query/LastBlockHeight"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetLastBlockHeightByChain(index)
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.LastBlockHeight, resp)
 }
 
 func TestZetaCoreBridge_GetZetaBlockHeight(t *testing.T) {
+	expectedOutput := crosschainTypes.QueryLastZetaHeightResponse{Height: 12345}
+	input := crosschainTypes.QueryLastZetaHeightRequest{}
+	method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+	server := setupMockServer(t, crosschainTypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetZetaBlockHeight()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Height, resp)
 }
 
 func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
+	expectedOutput := feemarkettypes.QueryParamsResponse{
+		Params: feemarkettypes.Params{
+			BaseFee: types.NewInt(23455),
+		},
+	}
+	input := feemarkettypes.QueryParamsRequest{}
+	method := "/ethermint.feemarket.v1.Query/Params"
+	server := setupMockServer(t, feemarkettypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+
+	resp, err := zetabridge.GetBaseGasPrice()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Params.BaseFee.Int64(), resp)
 }
 
 func TestZetaCoreBridge_GetNonceByChain(t *testing.T) {
