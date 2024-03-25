@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { PubKeySet } from "../common/common_pb.js";
+import type { PubKeySet } from "../pkg/crypto/crypto_pb.js";
 
 /**
  * @generated from enum zetachain.zetacore.observer.NodeStatus
@@ -57,7 +57,7 @@ export declare class NodeAccount extends Message<NodeAccount> {
   granteeAddress: string;
 
   /**
-   * @generated from field: common.PubKeySet granteePubkey = 3;
+   * @generated from field: crypto.PubKeySet granteePubkey = 3;
    */
   granteePubkey?: PubKeySet;
 

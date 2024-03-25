@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { ObserverUpdateReason } from "./observer_pb.js";
-import type { HeaderData } from "../common/common_pb.js";
+import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
@@ -94,7 +94,7 @@ export declare class MsgAddBlockHeader extends Message<MsgAddBlockHeader> {
   height: bigint;
 
   /**
-   * @generated from field: common.HeaderData header = 5;
+   * @generated from field: proofs.HeaderData header = 5;
    */
   header?: HeaderData;
 
