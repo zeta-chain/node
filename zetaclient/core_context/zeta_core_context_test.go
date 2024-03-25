@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -125,12 +126,15 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
 		loggers := clientcommon.DefaultLoggers()
+		crosschainFlags := sample.CrosschainFlags()
+		require.NotNil(t, crosschainFlags)
 		zetaContext.Update(
 			&keyGenToUpdate,
 			enabledChainsToUpdate,
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
+			*crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -154,6 +158,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		// assert evm chain params still empty because they were not specified in config
 		allEVMChainParams := zetaContext.GetAllEVMChainParams()
 		require.Empty(t, allEVMChainParams)
+
+		ccFlags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, *crosschainFlags, ccFlags)
 	})
 
 	t.Run("should update core context after being created from config with evm and btc chain params", func(t *testing.T) {
@@ -210,6 +217,8 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			ChainId: testBtcChain.ChainId,
 		}
 		tssPubKeyToUpdate := "tsspubkeytest"
+		crosschainFlags := sample.CrosschainFlags()
+		require.NotNil(t, crosschainFlags)
 		loggers := clientcommon.DefaultLoggers()
 		zetaContext.Update(
 			&keyGenToUpdate,
@@ -217,6 +226,7 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 			evmChainParamsToUpdate,
 			btcChainParamsToUpdate,
 			tssPubKeyToUpdate,
+			*crosschainFlags,
 			false,
 			loggers.Std,
 		)
@@ -248,6 +258,9 @@ func TestUpdateZetaCoreContext(t *testing.T) {
 		evmChainParams2, found := zetaContext.GetEVMChainParams(2)
 		require.True(t, found)
 		require.Equal(t, evmChainParamsToUpdate[2], evmChainParams2)
+
+		ccFlags := zetaContext.GetCrossChainFlags()
+		require.Equal(t, ccFlags, *crosschainFlags)
 	})
 }
 

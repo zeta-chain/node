@@ -23,6 +23,9 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"google.golang.org/grpc"
 )
 
@@ -248,17 +251,23 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	keyGen, err := b.GetKeyGen()
 	if err != nil {
 		b.logger.Info().Msg("Unable to fetch keygen from zetabridge")
+		return err
 	}
 
-	tssPubKey := ""
 	tss, err := b.GetCurrentTss()
 	if err != nil {
-		b.logger.Debug().Err(err).Msg("Unable to fetch TSS from zetabridge")
-	} else {
-		tssPubKey = tss.GetTssPubkey()
+		b.logger.Info().Err(err).Msg("Unable to fetch TSS from zetabridge")
+		return err
+	}
+	tssPubKey := tss.GetTssPubkey()
+
+	crosschainFlags, err := b.GetCrosschainFlags()
+	if err != nil {
+		b.logger.Info().Msg("Unable to fetch cross-chain flags from zetabridge")
+		return err
 	}
 
-	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, tssPubKey, init, b.logger)
+	coreContext.Update(keyGen, newChains, newEVMParams, newBTCParams, tssPubKey, crosschainFlags, init, b.logger)
 	return nil
 }
 
