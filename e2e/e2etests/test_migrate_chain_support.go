@@ -140,11 +140,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		receipt := utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, txWithdraw, r.Logger, r.ReceiptTimeout)
 		if receipt.Status == 1 {
 			panic("withdraw should have failed on the previous chain")
-		} else {
-			r.Logger.Info("withdraw failed on the previous chain as expected with receipt")
 		}
-	} else {
-		r.Logger.Info("withdraw failed on the previous chain as expected")
 	}
 
 	// test cross-chain functionalities on the new network
