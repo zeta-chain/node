@@ -49,6 +49,7 @@
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
+* [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 
 ### Chores
 
