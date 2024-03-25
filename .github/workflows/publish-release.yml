@@ -110,6 +110,7 @@ jobs:
         if: github.event_name == 'pull_request'
         uses: softprops/action-gh-release@v1
         with:
+          prerelease: true
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
           tag_name: ${{ env.GITHUB_TAG_MAJOR_VERSION }}
