@@ -19,6 +19,7 @@
 * [1848](https://github.com/zeta-chain/node/issues/1848) - create a method to observe deposits to tss address in one evm block
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
+* [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 
 ### Features
 
@@ -41,6 +42,7 @@
 * [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
+* [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
 
 ### Fixes
 
@@ -53,12 +55,18 @@
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ### CI
-
+* [1940](https://github.com/zeta-chain/node/pull/1940) - adjust release pipeline to be created as pre-release instead of latest
 * [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.
 * [1894](https://github.com/zeta-chain/node/pull/1894) - added download binaries and configs to the start sequence so it will download binaries that don't exist
 
-## Version: v14
+## Version: v15.0.0
+
+### Features
+
+*[1912](https://github.com/zeta-chain/node/pull/1912) - add reset chain nonces msg
+
+## Version: v14.0.1
 
 - [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
