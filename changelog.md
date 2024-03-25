@@ -55,6 +55,7 @@
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ### CI
+* [1940](https://github.com/zeta-chain/node/pull/1940) - update advanced testing pipeline to not execute tests that weren't selected so they show skipped instead of skipping steps.
 * [1940](https://github.com/zeta-chain/node/pull/1940) - adjust release pipeline to be created as pre-release instead of latest
 * [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.

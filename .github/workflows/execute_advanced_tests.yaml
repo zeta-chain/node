@@ -22,57 +22,53 @@ on:
 
 jobs:
   e2e-admin-tests:
+    if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
         uses: actions/checkout@v3
 
       - name: Execute e2e-admin-tests
-        if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
         shell: bash
         run: |
           make start-e2e-admin-test
 
   e2e-upgrade-test:
+    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
         uses: actions/checkout@v3
 
       - name: Execute upgrade-test
-        if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
         shell: bash
         run: |
           make start-upgrade-test
 
   e2e-upgrade-test-light:
+    if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
         uses: actions/checkout@v3
 
       - name: Execute upgrade-test-light
-        if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
         shell: bash
         run: |
           make start-upgrade-test-light
 
   e2e-performance-test:
+    if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
     timeout-minutes: 120
     steps:
       - name: "Checkout Code"
-        if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
         uses: actions/checkout@v3
 
       - name: Execute Performance Tests
-        if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
         shell: bash
         run: |
           make start-e2e-performance-test
