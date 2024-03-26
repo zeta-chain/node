@@ -13,7 +13,6 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -84,7 +83,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
 			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
+				require.ErrorIs(t, err, types.ErrNotObserver)
 			},
 		},
 		{
