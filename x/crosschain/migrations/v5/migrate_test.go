@@ -24,7 +24,7 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.GetCurrentOutTxParam().CoinType != common.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))
@@ -208,7 +208,8 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 		for ; i < count+20; i++ {
 			amount := math.NewUint(uint64(r.Uint32()))
 			cctxList[i] = crosschaintypes.CrossChainTx{
-				Index:      fmt.Sprintf("%d", i),
+				Index: fmt.Sprintf("%d", i),
+
 				CctxStatus: &crosschaintypes.Status{Status: crosschaintypes.CctxStatus_Aborted},
 				InboundTxParams: &crosschaintypes.InboundTxParams{
 					Amount:   amount,
@@ -216,7 +217,6 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        common.CoinType_ERC20,
 					ReceiverChainId: common.ZetaPrivnetChain().ChainId,
 				}},
 			}
@@ -232,7 +232,6 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
 					Amount:          math.ZeroUint(),
-					CoinType:        common.CoinType_ERC20,
 					ReceiverChainId: common.GoerliLocalnetChain().ChainId,
 				}},
 			}
@@ -247,8 +246,7 @@ func CrossChainTxList(count int) []crosschaintypes.CrossChainTx {
 					CoinType: common.CoinType_Gas,
 				},
 				OutboundTxParams: []*crosschaintypes.OutboundTxParams{{
-					Amount:   amount,
-					CoinType: common.CoinType_Gas,
+					Amount: amount,
 				}},
 			}
 		}

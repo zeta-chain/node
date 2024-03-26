@@ -45,8 +45,8 @@ func (msg *MsgRefundAbortedCCTX) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if len(msg.CctxIndex) != 66 {
-		return ErrInvalidCCTXIndex
+	if len(msg.CctxIndex) != ZetaIndexLength {
+		return ErrInvalidIndexValue
 	}
 	if msg.RefundAddress != "" && !ethcommon.IsHexAddress(msg.RefundAddress) {
 		return ErrInvalidAddress

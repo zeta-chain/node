@@ -69,7 +69,7 @@ func TestTSSQuerySingle(t *testing.T) {
 }
 
 func TestTSSQueryHistory(t *testing.T) {
-	keeper, ctx, _, _ := keepertest.ObserverKeeper(t)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	wctx := sdk.WrapSDKContext(ctx)
 	for _, tc := range []struct {
 		desc          string
@@ -94,16 +94,16 @@ func TestTSSQueryHistory(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			tssList := sample.TssList(tc.tssCount)
 			for _, tss := range tssList {
-				keeper.SetTSS(ctx, tss)
-				keeper.SetTSSHistory(ctx, tss)
+				k.SetTSS(ctx, tss)
+				k.SetTSSHistory(ctx, tss)
 			}
 			request := &types.QueryTssHistoryRequest{}
-			response, err := keeper.TssHistory(wctx, request)
+			response, err := k.TssHistory(wctx, request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
 				require.Equal(t, len(tssList), len(response.TssList))
-				prevTss, found := keeper.GetPreviousTSS(ctx)
+				prevTss, found := k.GetPreviousTSS(ctx)
 				require.Equal(t, tc.foundPrevious, found)
 				if found {
 					require.Equal(t, tssList[len(tssList)-2], prevTss)

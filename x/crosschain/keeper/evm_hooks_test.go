@@ -22,7 +22,11 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
+// SetupStateForProcessLogsZetaSent sets up additional state required for processing logs for ZetaSent events
+// This sets up the gas coin, zrc20 contract, gas price, zrc20 pool.
+// This should be used in conjunction with SetupStateForProcessLogs for processing ZetaSent events
+func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain, admin string) {
+
 	assetAddress := sample.EthAddress().String()
 	gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chain.ChainId, "ethereum", "ETH")
 	zrc20Addr := deployZRC20(
@@ -37,6 +41,8 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 	)
 
 	_, err := zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, gasZRC20, big.NewInt(withdrawFee))
+	require.NoError(t, err)
+	_, err = zk.FungibleKeeper.UpdateZRC20ProtocolFlatFee(ctx, zrc20Addr, big.NewInt(withdrawFee))
 	require.NoError(t, err)
 
 	k.SetGasPrice(ctx, crosschaintypes.GasPrice{
@@ -53,6 +59,8 @@ func SetupStateForProcessLogsZetaSent(t *testing.T, ctx sdk.Context, k *crosscha
 	)
 }
 
+// SetupStateForProcessLogs sets up observer state for required for processing logs
+// It deploys system contracts, sets up TSS, gas price, chain nonce's, pending nonce's.These are all required to create a cctx from a log
 func SetupStateForProcessLogs(t *testing.T, ctx sdk.Context, k *crosschainkeeper.Keeper, zk keepertest.ZetaKeepers, sdkk keepertest.SDKKeepers, chain common.Chain) {
 
 	deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
@@ -428,14 +436,16 @@ func TestKeeper_ParseZetaSentEvent(t *testing.T) {
 func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 	t.Run("successfully process ZetaSentEvent", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
 		chain := common.EthChain()
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
+
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
 		require.True(t, ok)
 		err := sdkk.BankKeeper.MintCoins(ctx, fungibletypes.ModuleName, sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount)))
@@ -465,7 +475,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		event, err := crosschainkeeper.ParseZetaSentEvent(*sample.GetValidZetaSentDestinationExternal(t).Logs[4], sample.GetValidZetaSentDestinationExternal(t).Logs[4].Address)
 		require.NoError(t, err)
@@ -483,7 +494,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 
 		chain := common.EthChain()
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
 		require.True(t, ok)
@@ -507,7 +519,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
 		require.True(t, ok)
@@ -556,7 +569,8 @@ func TestKeeper_ProcessZetaSentEvent(t *testing.T) {
 		setSupportedChain(ctx, zk, chainID)
 
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		zk.ObserverKeeper.SetChainNonces(ctx, observertypes.ChainNonces{
 			Index:   chain.ChainName.String(),
@@ -613,7 +627,8 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		chainID := chain.ChainId
 		setSupportedChain(ctx, zk, chainID)
 		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain)
+		admin := keepertest.SetAdminPolices(ctx, zk.AuthorityKeeper)
+		SetupStateForProcessLogsZetaSent(t, ctx, k, zk, sdkk, chain, admin)
 
 		amount, ok := sdkmath.NewIntFromString("20000000000000000000000")
 		require.True(t, ok)

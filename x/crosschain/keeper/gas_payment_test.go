@@ -52,6 +52,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
 					ReceiverChainId: zetacommon.ZetaPrivnetChain().ChainId,
+					CoinType:        zetacommon.CoinType_Gas,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -141,7 +142,9 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_Gas,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      zetacommon.CoinType_Gas,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -201,9 +204,10 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: zetacommon.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -234,7 +238,7 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_Gas,
+				CoinType: zetacommon.CoinType_Zeta,
 			},
 		}
 		err := k.PayGasInERC20AndUpdateCctx(ctx, chainID, &cctx, math.NewUint(inputAmount), false)
@@ -306,8 +310,8 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: zetacommon.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -358,8 +362,8 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: zetacommon.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -416,8 +420,8 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: zetacommon.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -545,7 +549,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_Zeta,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      zetacommon.CoinType_Zeta,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -577,7 +583,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: zetacommon.CoinType_Zeta,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      zetacommon.CoinType_Zeta,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{

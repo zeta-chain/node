@@ -42,7 +42,21 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		Sender:                          EthAddress().String(),
 		SenderChainId:                   r.Int63(),
 		TxOrigin:                        EthAddress().String(),
+		Asset:                           StringRandom(r, 32),
+		Amount:                          math.NewUint(uint64(r.Int63())),
+		InboundTxObservedHash:           StringRandom(r, 32),
+		InboundTxObservedExternalHeight: r.Uint64(),
+		InboundTxBallotIndex:            StringRandom(r, 32),
+		InboundTxFinalizedZetaHeight:    r.Uint64(),
 		CoinType:                        common.CoinType(r.Intn(100)),
+	}
+}
+
+func InboundTxParamsValidChainID(r *rand.Rand) *types.InboundTxParams {
+	return &types.InboundTxParams{
+		Sender:                          EthAddress().String(),
+		SenderChainId:                   common.GoerliChain().ChainId,
+		TxOrigin:                        EthAddress().String(),
 		Asset:                           StringRandom(r, 32),
 		Amount:                          math.NewUint(uint64(r.Int63())),
 		InboundTxObservedHash:           StringRandom(r, 32),
@@ -56,7 +70,23 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 	return &types.OutboundTxParams{
 		Receiver:                         EthAddress().String(),
 		ReceiverChainId:                  r.Int63(),
+		Amount:                           math.NewUint(uint64(r.Int63())),
+		OutboundTxTssNonce:               r.Uint64(),
+		OutboundTxGasLimit:               r.Uint64(),
+		OutboundTxGasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		OutboundTxHash:                   StringRandom(r, 32),
+		OutboundTxBallotIndex:            StringRandom(r, 32),
+		OutboundTxObservedExternalHeight: r.Uint64(),
+		OutboundTxGasUsed:                r.Uint64(),
+		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
 		CoinType:                         common.CoinType(r.Intn(100)),
+	}
+}
+
+func OutboundTxParamsValidChainID(r *rand.Rand) *types.OutboundTxParams {
+	return &types.OutboundTxParams{
+		Receiver:                         EthAddress().String(),
+		ReceiverChainId:                  common.GoerliChain().ChainId,
 		Amount:                           math.NewUint(uint64(r.Int63())),
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),

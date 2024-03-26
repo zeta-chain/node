@@ -22,7 +22,7 @@ func TestMsgRefundAbortedCCTX_ValidateBasic(t *testing.T) {
 	})
 	t.Run("invalid cctx index", func(t *testing.T) {
 		msg := types.NewMsgRefundAbortedCCTX(sample.AccAddress(), "invalid", "")
-		require.ErrorContains(t, msg.ValidateBasic(), "invalid cctx index")
+		require.ErrorContains(t, msg.ValidateBasic(), "invalid index hash")
 	})
 	t.Run("invalid refund address", func(t *testing.T) {
 		cctx := sample.CrossChainTx(t, "test")

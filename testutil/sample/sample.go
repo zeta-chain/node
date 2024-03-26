@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -109,6 +110,12 @@ func EthAddress() ethcommon.Address {
 // Hash returns a sample hash
 func Hash() ethcommon.Hash {
 	return EthAddress().Hash()
+}
+
+func ZetaIndex(t *testing.T) string {
+	msg := CrossChainTx(t, "foo")
+	hash := crypto.Keccak256Hash([]byte(msg.String()))
+	return hash.Hex()
 }
 
 // Bytes returns a sample byte array

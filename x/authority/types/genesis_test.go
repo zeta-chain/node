@@ -9,7 +9,7 @@ import (
 )
 
 func TestGenesisState_Validate(t *testing.T) {
-	setConfig()
+	setConfig(t)
 
 	tests := []struct {
 		name        string

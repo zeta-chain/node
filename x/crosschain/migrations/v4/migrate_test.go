@@ -168,6 +168,9 @@ func SetRandomCctx(ctx sdk.Context, k keeper.Keeper) sdkmath.Uint {
 		k.SetCrossChainTx(ctx, types.CrossChainTx{
 			Index:      fmt.Sprintf("%d", i),
 			CctxStatus: &types.Status{Status: types.CctxStatus_Aborted},
+			InboundTxParams: &types.InboundTxParams{
+				CoinType: common.CoinType_Zeta,
+			},
 			OutboundTxParams: []*types.OutboundTxParams{{
 				Amount:   amount,
 				CoinType: common.CoinType_Zeta,

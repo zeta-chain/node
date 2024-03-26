@@ -27,6 +27,7 @@ const (
 	ProtocolFee = 2000000000000000000
 	//TssMigrationGasMultiplierEVM is multiplied to the median gas price to get the gas price for the tss migration . This is done to avoid the tss migration tx getting stuck in the mempool
 	TssMigrationGasMultiplierEVM = "2.5"
+	ZetaIndexLength              = 66
 )
 
 func GetProtocolFee() sdk.Uint {
@@ -75,7 +76,6 @@ func (m CrossChainTx) LogIdentifierForCCTX() string {
 	i := len(m.OutboundTxParams) - 1
 	outTx := m.OutboundTxParams[i]
 	return fmt.Sprintf("%s-%d-%d-%d", m.InboundTxParams.Sender, m.InboundTxParams.SenderChainId, outTx.ReceiverChainId, outTx.OutboundTxTssNonce)
-
 }
 
 func FinalizedInboundKey(intxHash string, chainID int64, eventIndex uint64) string {

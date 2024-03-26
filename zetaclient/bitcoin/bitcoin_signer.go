@@ -285,7 +285,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		Logger()
 
 	params := cctx.GetCurrentOutTxParam()
-	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
+	coinType := cctx.InboundTxParams.CoinType
+	if coinType == common.CoinType_Zeta || coinType == common.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
