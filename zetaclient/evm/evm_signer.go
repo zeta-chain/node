@@ -20,9 +20,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -297,9 +297,9 @@ func (signer *Signer) SignWithdrawTx(txData *OutBoundTransactionData) (*ethtypes
 //	cmd_migrate_tss_funds
 func (signer *Signer) SignCommandTx(txData *OutBoundTransactionData, cmd string, params string) (*ethtypes.Transaction, error) {
 	switch cmd {
-	case pkg.CmdWhitelistERC20:
+	case constant.CmdWhitelistERC20:
 		return signer.SignWhitelistERC20Cmd(txData, params)
-	case pkg.CmdMigrateTssFunds:
+	case constant.CmdMigrateTssFunds:
 		return signer.SignMigrateTssFundsCmd(txData)
 	}
 	return nil, fmt.Errorf("SignCommandTx: unknown command %s", cmd)

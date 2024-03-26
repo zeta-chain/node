@@ -13,7 +13,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
 func NewBtcCmd() *cobra.Command {
@@ -162,7 +162,7 @@ func getHashList(cfg *config.Config, tssAddress string) ([]Deposit, error) {
 				if err != nil {
 					continue
 				}
-				if bytes.Equal(memoBytes, []byte(pkg.DonationMessage)) {
+				if bytes.Equal(memoBytes, []byte(constant.DonationMessage)) {
 					continue
 				}
 			} else {

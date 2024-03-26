@@ -8,8 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -225,7 +225,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
-		cmd := pkg.CmdWhitelistERC20
+		cmd := constant.CmdWhitelistERC20
 		params := ConnectorAddress.Hex()
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(txData, cmd, params)
@@ -242,7 +242,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	})
 
 	t.Run("SignCommandTx CmdMigrateTssFunds", func(t *testing.T) {
-		cmd := pkg.CmdMigrateTssFunds
+		cmd := constant.CmdMigrateTssFunds
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(txData, cmd, "")
 		require.NoError(t, err)

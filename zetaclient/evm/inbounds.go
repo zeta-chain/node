@@ -20,7 +20,7 @@ import (
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"golang.org/x/net/context"
@@ -236,7 +236,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 	}
 
 	// donation check
-	if bytes.Equal(event.Message, []byte(pkg.DonationMessage)) {
+	if bytes.Equal(event.Message, []byte(constant.DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil
 	}
@@ -332,7 +332,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 	// donation check
 	// #nosec G703 err is already checked
 	data, _ := hex.DecodeString(message)
-	if bytes.Equal(data, []byte(pkg.DonationMessage)) {
+	if bytes.Equal(data, []byte(constant.DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return nil
 	}

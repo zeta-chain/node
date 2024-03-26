@@ -10,9 +10,9 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
@@ -205,7 +205,7 @@ func TestEVM_CheckAndVoteInboundTokenGas(t *testing.T) {
 	})
 	t.Run("should not act on nil message", func(t *testing.T) {
 		tx, receipt, _ := testutils.LoadEVMIntxNReceiptNCctx(t, chainID, intxHash, coin.CoinType_Gas)
-		tx.Input = hex.EncodeToString([]byte(pkg.DonationMessage)) // donation will result in nil message
+		tx.Input = hex.EncodeToString([]byte(constant.DonationMessage)) // donation will result in nil message
 		require.NoError(t, evm.ValidateEvmTransaction(tx))
 		lastBlock := receipt.BlockNumber.Uint64() + confirmation
 
@@ -302,7 +302,7 @@ func TestEVM_BuildInboundVoteMsgForDepositedEvent(t *testing.T) {
 		require.Nil(t, msg)
 	})
 	t.Run("should return nil msg on donation transaction", func(t *testing.T) {
-		event.Message = []byte(pkg.DonationMessage)
+		event.Message = []byte(constant.DonationMessage)
 		msg := ob.BuildInboundVoteMsgForDepositedEvent(event, sender)
 		require.Nil(t, msg)
 	})

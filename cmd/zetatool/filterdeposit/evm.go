@@ -18,7 +18,7 @@ import (
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetatool/config"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
 const (
@@ -202,7 +202,7 @@ func getTSSDeposits(tssAddress string, startBlock uint64, endBlock uint64, apiKe
 
 	for _, tx := range txns {
 		if tx.To == tssAddress {
-			if strings.Compare(tx.Input, pkg.DonationMessage) == 0 {
+			if strings.Compare(tx.Input, constant.DonationMessage) == 0 {
 				continue // skip donation tx
 			}
 			if tx.TxReceiptStatus != "1" {

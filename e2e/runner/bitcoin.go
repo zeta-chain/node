@@ -16,8 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/pkg/proofs/bitcoin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -119,7 +119,7 @@ func (runner *E2ERunner) DepositBTC(testHeader bool) {
 		0.11,
 		utxos[4:5],
 		btc,
-		[]byte(pkg.DonationMessage),
+		[]byte(constant.DonationMessage),
 		runner.BTCDeployerAddress,
 	)
 	if err != nil {

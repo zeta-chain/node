@@ -1,4 +1,4 @@
-package pkg
+package constant
 
 const (
 	// DonationMessage is the message for donation transactions

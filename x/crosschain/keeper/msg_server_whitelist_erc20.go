@@ -6,6 +6,7 @@ import (
 	"math/big"
 
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -16,7 +17,6 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 
-	"github.com/zeta-chain/zetacore/pkg"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -116,7 +116,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		Creator:        msg.Creator,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
-		RelayedMessage: fmt.Sprintf("%s:%s", pkg.CmdWhitelistERC20, msg.Erc20Address),
+		RelayedMessage: fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, msg.Erc20Address),
 		CctxStatus: &types.Status{
 			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",

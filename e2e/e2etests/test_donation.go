@@ -5,7 +5,7 @@ import (
 
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
-	"github.com/zeta-chain/zetacore/pkg"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
 // TestDonationEther tests donation of ether to the tss address
@@ -19,7 +19,7 @@ func TestDonationEther(r *runner.E2ERunner, args []string) {
 		panic("Invalid amount specified for TestDonationEther.")
 	}
 
-	txDonation, err := r.SendEther(r.TSSAddress, amount, []byte(pkg.DonationMessage))
+	txDonation, err := r.SendEther(r.TSSAddress, amount, []byte(constant.DonationMessage))
 	if err != nil {
 		panic(err)
 	}
