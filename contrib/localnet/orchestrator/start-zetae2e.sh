@@ -51,8 +51,8 @@ if [ "$OPTION" == "upgrade" ]; then
 
   # Run the e2e tests, then restart zetaclientd at upgrade height and run the e2e tests again
 
-  # Fetch the height of the upgrade, default is 200, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-200}
+  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
+  UPGRADE_HEIGHT=${3:-225}
 
   # Run zetae2e, if the upgrade height is lower than 100, we use the setup-only flag
   if [ "$UPGRADE_HEIGHT" -lt 100 ]; then
