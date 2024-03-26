@@ -1,0 +1,78 @@
+name: "TESTING:ADVANCED:E2E"
+
+on:
+  workflow_dispatch:
+    inputs:
+      e2e-admin-tests:
+        type: boolean
+        required: false
+        default: false
+      e2e-upgrade-test:
+        type: boolean
+        required: false
+        default: false
+      e2e-performance-test:
+        type: boolean
+        required: false
+        default: false
+      e2e-upgrade-test-light:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  e2e-admin-tests:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute e2e-admin-tests
+        if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-admin-test
+
+  e2e-upgrade-test:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute upgrade-test
+        if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
+        shell: bash
+        run: |
+          make start-upgrade-test
+
+  e2e-upgrade-test-light:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute upgrade-test-light
+        if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
+        shell: bash
+        run: |
+          make start-upgrade-test-light
+
+  e2e-performance-test:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
+        uses: actions/checkout@v3
+
+      - name: Execute Performance Tests
+        if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
+        shell: bash
+        run: |
+          make start-e2e-performance-test
