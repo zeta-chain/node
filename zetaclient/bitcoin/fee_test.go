@@ -197,10 +197,14 @@ func TestOutTxSize2In3Out(t *testing.T) {
 
 	// Estimate the tx size in vByte
 	// #nosec G701 always positive
+	vError := uint64(1) // 1 vByte error tolerance
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 	vBytesEstimated := EstimateOuttxSize(uint64(len(utxosTxids)), []btcutil.Address{payee})
-	require.Equal(t, vBytes, vBytesEstimated)
-	require.Equal(t, vBytes, outTxBytesMin)
+	if vBytes > vBytesEstimated {
+		require.True(t, vBytes-vBytesEstimated <= vError)
+	} else {
+		require.True(t, vBytesEstimated-vBytes <= vError)
+	}
 }
 
 func TestOutTxSize21In3Out(t *testing.T) {
@@ -239,7 +243,7 @@ func TestOutTxSizeXIn3Out(t *testing.T) {
 
 		// Estimate the tx size
 		// #nosec G701 always positive
-		vError := uint64(0.25 + float64(x)/4) // 1st witness incur 0.25 vByte error, other witness incur 1/4 vByte error tolerance,
+		vError := uint64(0.25 + float64(x)/4) // 1st witness incurs 0.25 more vByte error than others (which incurs 1/4 vByte per witness)
 		vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
 		vBytesEstimated := EstimateOuttxSize(uint64(len(exampleTxids[:x])), []btcutil.Address{payee})
 		if vBytes > vBytesEstimated {

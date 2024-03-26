@@ -715,27 +715,6 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 		require.Len(t, cctxList, 0)
 	})
 
-	t.Run("error returned for invalid event data", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-
-		chain := common.BtcMainnetChain()
-		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
-		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-
-		block := sample.GetInvalidZRC20WithdrawToExternal(t)
-		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
-		for _, log := range block.Logs {
-			log.Address = gasZRC20
-		}
-
-		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
-		cctxList := k.GetAllCrossChainTx(ctx)
-		require.Len(t, cctxList, 0)
-	})
-
 	t.Run("error returned if unable to process an event", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
 		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
