@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Refactor
+
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 
 
