@@ -43,27 +43,18 @@ jobs:
           fi
           
           echo "Monitoring Orchestrator container with ID: $container_id"
-          
-          # Loop indefinitely until the orchestrator container has stopped
           while true; do
-              # Check if the orchestrator container is still running
               current_status=$(docker ps -q | grep $container_id)
               if [ -z "$current_status" ]; then
-                  # The orchestrator container has stopped, fetch and display its logs
-                  echo "Container $container_id (orchestrator) has stopped. Fetching logs:"
-                  docker logs $container_id
+                  docker logs $container_id || echo "no logs"
                   echo "-----------------------------------"
-                  break # Exit the loop since the container has stopped
+                  exit 0
               else
                   echo "Orchestrator container is still running..."
-                  docker logs $container_id
+                  docker logs $container_id || echo "no logs"
               fi
-              
-              # Wait a bit before checking again
               sleep 5
           done
-          
-          echo "Orchestrator container has stopped."
 
   e2e-upgrade-test:
     if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
