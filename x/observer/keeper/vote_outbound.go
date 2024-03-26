@@ -31,7 +31,7 @@ func (k Keeper) VoteOnOutboundBallot(
 	}
 
 	// check if voter is authorized
-	if ok := k.IsAuthorized(ctx, voter); !ok {
+	if ok := k.IsNonTombstonedObserver(ctx, voter); !ok {
 		return false, false, ballot, "", observertypes.ErrNotObserver
 	}
 

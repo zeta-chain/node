@@ -27,7 +27,7 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 	if chain == nil {
 		return nil, observertypes.ErrSupportedChains
 	}
-	if ok := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator); !ok {
+	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, observertypes.ErrNotObserver
 	}
 	if chain == nil {

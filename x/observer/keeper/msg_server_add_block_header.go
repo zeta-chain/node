@@ -20,7 +20,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 		return nil, cosmoserrors.Wrapf(types.ErrSupportedChains, "chain id: %d", msg.ChainId)
 	}
 
-	if ok := k.IsAuthorized(ctx, msg.Creator); !ok {
+	if ok := k.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, types.ErrNotObserver
 	}
 
