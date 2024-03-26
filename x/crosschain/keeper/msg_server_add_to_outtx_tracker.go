@@ -54,7 +54,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 
 		// Sender needs to be either the admin policy account or an observer
 		if !(isAdmin || isObserver) {
-			return nil, cosmoserrors.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+			return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 		}
 	}
 

@@ -20,7 +20,7 @@ func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVo
 	}
 	// IsAuthorized does various checks against the list of observer mappers
 	if ok := k.IsAuthorized(ctx, vote.Creator); !ok {
-		return nil, types.ErrNotAuthorizedPolicy
+		return nil, types.ErrNotObserver
 	}
 
 	index := vote.Digest()

@@ -14,7 +14,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func Test_GetRefundAddress(t *testing.T) {
@@ -496,6 +495,6 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 			CctxIndex:     cctx.Index,
 			RefundAddress: cctx.InboundTxParams.Sender,
 		})
-		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

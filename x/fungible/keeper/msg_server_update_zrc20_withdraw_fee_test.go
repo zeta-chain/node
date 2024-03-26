@@ -110,7 +110,7 @@ func TestKeeper_UpdateZRC20WithdrawFee(t *testing.T) {
 			math.NewUint(42),
 			math.Uint{},
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if invalid zrc20 address", func(t *testing.T) {

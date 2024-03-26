@@ -204,7 +204,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			sample.EthAddress().Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail invalid contract address", func(t *testing.T) {

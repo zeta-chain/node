@@ -6,7 +6,6 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/common"
 	zetacommon "github.com/zeta-chain/zetacore/common"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -42,7 +41,7 @@ func (k msgServer) DeployFungibleCoinZRC20(goCtx context.Context, msg *types.Msg
 	}
 
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 
 	if msg.CoinType == zetacommon.CoinType_Gas {

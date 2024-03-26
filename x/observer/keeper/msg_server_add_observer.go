@@ -19,7 +19,7 @@ func (k msgServer) AddObserver(goCtx context.Context, msg *types.MsgAddObserver)
 
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgAddObserverResponse{}, types.ErrNotAuthorizedPolicy
+		return &types.MsgAddObserverResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	pubkey, err := common.NewPubKey(msg.ZetaclientGranteePubkey)

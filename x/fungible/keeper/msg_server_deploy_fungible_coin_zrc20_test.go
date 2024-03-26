@@ -119,7 +119,7 @@ func TestMsgServer_DeployFungibleCoinZRC20(t *testing.T) {
 			1000000,
 		))
 		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should not deploy a new zrc20 with wrong decimal", func(t *testing.T) {

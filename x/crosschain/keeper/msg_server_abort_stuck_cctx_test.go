@@ -9,7 +9,6 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_AbortStuckCCTX(t *testing.T) {
@@ -129,7 +128,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
-		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("cannot abort a cctx if doesn't exist", func(t *testing.T) {

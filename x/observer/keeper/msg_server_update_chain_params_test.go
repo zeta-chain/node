@@ -117,6 +117,6 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 			Creator:     admin,
 			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

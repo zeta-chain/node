@@ -57,7 +57,7 @@ func TestMsgServer_RemoveForeignCoin(t *testing.T) {
 
 		_, err := msgServer.RemoveForeignCoin(ctx, types.NewMsgRemoveForeignCoin(admin, zrc20.Hex()))
 		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if not found", func(t *testing.T) {

@@ -8,7 +8,6 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -34,7 +33,7 @@ func (k msgServer) UpdateZRC20PausedStatus(
 		requiredPolicyAccount = authoritytypes.PolicyType_groupOperational
 	}
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, requiredPolicyAccount) {
-		return nil, cosmoserrors.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
+		return nil, cosmoserrors.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 
 	pausedStatus := true

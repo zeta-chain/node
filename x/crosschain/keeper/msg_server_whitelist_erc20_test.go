@@ -110,7 +110,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if invalid erc20 address", func(t *testing.T) {

@@ -21,7 +21,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	}
 
 	if ok := k.IsAuthorized(ctx, msg.Creator); !ok {
-		return nil, types.ErrNotAuthorizedPolicy
+		return nil, types.ErrNotObserver
 	}
 
 	crosschainFlags, found := k.GetCrosschainFlags(ctx)

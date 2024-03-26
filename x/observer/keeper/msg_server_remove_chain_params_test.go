@@ -99,7 +99,7 @@ func TestMsgServer_RemoveChainParams(t *testing.T) {
 			Creator: admin,
 			ChainId: common.ExternalChainList()[0].ChainId,
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("cannot remove if chain ID not found", func(t *testing.T) {

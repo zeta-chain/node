@@ -165,7 +165,7 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 			IsOutboundEnabled: false,
 		})
 		require.Error(t, err)
-		require.Equal(t, types.ErrNotAuthorizedPolicy, err)
+		require.Equal(t, authoritytypes.ErrUnauthorized, err)
 
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
@@ -175,6 +175,6 @@ func TestMsgServer_UpdateCrosschainFlags(t *testing.T) {
 			IsOutboundEnabled: true,
 		})
 		require.Error(t, err)
-		require.Equal(t, types.ErrNotAuthorizedPolicy, err)
+		require.Equal(t, authoritytypes.ErrUnauthorized, err)
 	})
 }

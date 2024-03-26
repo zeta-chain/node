@@ -17,7 +17,7 @@ func (k msgServer) UpdateChainParams(goCtx context.Context, msg *types.MsgUpdate
 
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
-		return &types.MsgUpdateChainParamsResponse{}, types.ErrNotAuthorizedPolicy
+		return &types.MsgUpdateChainParamsResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	// find current chain params list or initialize a new one

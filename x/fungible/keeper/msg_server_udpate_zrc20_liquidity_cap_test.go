@@ -6,7 +6,6 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	"cosmossdk.io/math"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -108,7 +107,7 @@ func TestMsgServer_UpdateZRC20LiquidityCap(t *testing.T) {
 			math.NewUint(42),
 		))
 		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {

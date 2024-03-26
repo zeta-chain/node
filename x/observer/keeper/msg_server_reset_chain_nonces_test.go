@@ -31,7 +31,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("cannot reset chain nonces if tss not found", func(t *testing.T) {
