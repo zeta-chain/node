@@ -5,10 +5,6 @@
 ### Refactor
 * [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 
-## Version: v14
-
-### Fixes 
-- [1817](https://github.com/zeta-chain/node/pull/1817) - Add migration script to fix pending and chain nonces on testnet
 
 ### Breaking Changes
 
