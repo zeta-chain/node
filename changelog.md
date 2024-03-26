@@ -27,6 +27,7 @@
 * [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
+* [1942](https://github.com/zeta-chain/node/pull/1942) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 
 ### Tests
 
