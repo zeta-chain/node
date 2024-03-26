@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	corecommon "github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/common"
@@ -66,13 +65,13 @@ func getNewOutTxProcessor() *outtxprocessor.Processor {
 	return outtxprocessor.NewOutTxProcessorManager(logger)
 }
 
-func getCCTX() *types.CrossChainTx {
+func getCCTX() *crosschaintypes.CrossChainTx {
 	var cctx crosschaintypes.CrossChainTx
 	testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270.json"))
 	return &cctx
 }
 
-func getInvalidCCTX() *types.CrossChainTx {
+func getInvalidCCTX() *crosschaintypes.CrossChainTx {
 	var cctx crosschaintypes.CrossChainTx
 	testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_56_68270_invalidChainID.json"))
 	return &cctx

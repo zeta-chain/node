@@ -96,7 +96,6 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}
-	fmt.Printf("addr %v\n", addr.EncodeAddress())
 
 	hash, err := chainhash.NewHashFromStr(prevOut)
 	if err != nil {

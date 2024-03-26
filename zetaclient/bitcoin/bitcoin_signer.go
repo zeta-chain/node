@@ -32,10 +32,11 @@ import (
 )
 
 const (
+	// the maximum number of inputs per outtx
 	maxNoOfInputsPerTx = 20
-	consolidationRank  = 10           // the rank below (or equal to) which we consolidate UTXOs
-	outTxBytesMin      = uint64(239)  // 239vB == EstimateSegWitTxSize(2, 3)
-	outTxBytesMax      = uint64(1531) // 1531v == EstimateSegWitTxSize(21, 3)
+
+	// the rank below (or equal to) which we consolidate UTXOs
+	consolidationRank = 10
 )
 
 // BTCSigner deals with signing BTC transactions and implements the ChainSigner interface
@@ -199,7 +200,7 @@ func (signer *BTCSigner) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize := EstimateSegWitTxSize(uint64(len(prevOuts)), 3)
+	txSize := EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
 	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
 		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}
