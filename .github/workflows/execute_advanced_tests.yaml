@@ -68,6 +68,28 @@ jobs:
         shell: bash
         run: |
           make start-upgrade-test
+          
+          # Find the container ID of the orchestrator container by its image name
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id)
+              if [ -z "$current_status" ]; then
+                  docker logs $container_id || echo "no logs"
+                  echo "-----------------------------------"
+                  exit 0
+              else
+                  echo "Orchestrator container is still running..."
+                  docker logs $container_id || echo "no logs"
+              fi
+              sleep 5
+          done
 
   e2e-upgrade-test-light:
     if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
@@ -81,6 +103,28 @@ jobs:
         shell: bash
         run: |
           make start-upgrade-test-light
+          
+          # Find the container ID of the orchestrator container by its image name
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id)
+              if [ -z "$current_status" ]; then
+                  docker logs $container_id || echo "no logs"
+                  echo "-----------------------------------"
+                  exit 0
+              else
+                  echo "Orchestrator container is still running..."
+                  docker logs $container_id || echo "no logs"
+              fi
+              sleep 5
+          done
 
   e2e-performance-test:
     if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
@@ -94,3 +138,25 @@ jobs:
         shell: bash
         run: |
           make start-e2e-performance-test
+          
+          # Find the container ID of the orchestrator container by its image name
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id)
+              if [ -z "$current_status" ]; then
+                  docker logs $container_id || echo "no logs"
+                  echo "-----------------------------------"
+                  exit 0
+              else
+                  echo "Orchestrator container is still running..."
+                  docker logs $container_id || echo "no logs"
+              fi
+              sleep 5
+          done
