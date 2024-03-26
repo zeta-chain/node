@@ -34,6 +34,38 @@ jobs:
         run: |
           make start-e2e-admin-test
 
+          # Loop indefinitely until no containers are running
+          while true; do
+              # Get the IDs of all running containers
+              running_containers=$(docker ps -q)
+              
+              # If no containers are running, exit the loop
+              if [ -z "$running_containers" ]; then
+                  echo "No running containers. Exiting..."
+                  break
+              fi
+          
+              # For each running container, check if it has stopped and log its output
+              for container_id in $running_containers; do
+                  # Check if the specific container is still running
+                  if [ -z "$(docker ps -q | grep $container_id)" ]; then
+                      # Since the container has stopped, fetch and display its logs
+                      echo "Container $container_id has stopped. Fetching logs:"
+                      docker logs $container_id
+                      echo "-----------------------------------"
+                  fi
+              done
+              
+              # Show the current state of running containers
+              echo "Current running containers:"
+              docker ps
+              
+              # Wait a bit before checking again
+              sleep 5
+          done
+          
+          echo "All containers have stopped."
+          
   e2e-upgrade-test:
     if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
     runs-on: buildjet-4vcpu-ubuntu-2204
