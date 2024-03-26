@@ -12,7 +12,7 @@ import (
 )
 
 // UpdateObserver handles updating an observer address
-// Authorized: admin policy group 2 (admin update), old observer address (if the
+// Authorized: admin policy (admin update), old observer address (if the
 // reason is that the observer was tombstoned).
 func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -81,7 +81,7 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
 			// Operational policy is required to update an observer for admin update
-			if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+			if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
 				return false, authoritytypes.ErrUnauthorized
 			}
 			return true, nil
