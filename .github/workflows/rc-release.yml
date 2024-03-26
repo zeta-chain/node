@@ -71,6 +71,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          prerelease: true
           token: ${{ secrets.PAT_GITHUB_SERVICE_ACCT }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
           generate_release_notes: true

@@ -26,6 +26,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
@@ -35,12 +36,13 @@ import (
 
 // Signer deals with the signing EVM transactions and implements the ChainSigner interface
 type Signer struct {
-	client    interfaces.EVMRPCClient
-	chain     *common.Chain
-	tssSigner interfaces.TSSSigner
-	ethSigner ethtypes.Signer
-	logger    clientcommon.ClientLogger
-	ts        *metrics.TelemetryServer
+	client      interfaces.EVMRPCClient
+	chain       *common.Chain
+	tssSigner   interfaces.TSSSigner
+	ethSigner   ethtypes.Signer
+	logger      clientcommon.ClientLogger
+	ts          *metrics.TelemetryServer
+	coreContext *corecontext.ZetaCoreContext
 
 	// mu protects below fields from concurrent access
 	mu                     *sync.Mutex
@@ -61,6 +63,7 @@ func NewEVMSigner(
 	erc20CustodyABI string,
 	zetaConnectorAddress ethcommon.Address,
 	erc20CustodyAddress ethcommon.Address,
+	coreContext *corecontext.ZetaCoreContext,
 	loggers clientcommon.ClientLogger,
 	ts *metrics.TelemetryServer,
 ) (*Signer, error) {
@@ -86,6 +89,7 @@ func NewEVMSigner(
 		erc20CustodyABI:      custodyABI,
 		zetaConnectorAddress: zetaConnectorAddress,
 		er20CustodyAddress:   erc20CustodyAddress,
+		coreContext:          coreContext,
 		logger: clientcommon.ClientLogger{
 			Std:        loggers.Std.With().Str("chain", chain.ChainName.String()).Str("module", "EVMSigner").Logger(),
 			Compliance: loggers.Compliance,
@@ -374,11 +378,7 @@ func (signer *Signer) TryProcessOutTx(
 	toChain := common.GetChainFromChainID(txData.toChainID.Int64())
 
 	// Get cross-chain flags
-	crossChainflags, err := zetaBridge.GetCrosschainFlags()
-	if err != nil {
-		logger.Err(err).Msg("couldn't retrieve crosschain flags from core")
-		return
-	}
+	crossChainflags := signer.coreContext.GetCrossChainFlags()
 
 	var tx *ethtypes.Transaction
 	// compliance check goes first

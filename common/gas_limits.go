@@ -18,9 +18,6 @@ func MultiplyGasPrice(medianGasPrice sdkmath.Uint, multiplierString string) (sdk
 	if err != nil {
 		return sdkmath.ZeroUint(), err
 	}
-	gasPrice, err := sdk.NewDecFromStr(medianGasPrice.String())
-	if err != nil {
-		return sdkmath.ZeroUint(), err
-	}
+	gasPrice := sdk.NewDecFromBigInt(medianGasPrice.BigInt())
 	return sdkmath.NewUintFromString(gasPrice.Mul(multiplier).TruncateInt().String()), nil
 }

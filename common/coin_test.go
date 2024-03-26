@@ -63,3 +63,67 @@ func Test_GetAzetaDecFromAmountInZeta(t *testing.T) {
 	}
 
 }
+
+func TestGetCoinType(t *testing.T) {
+	tests := []struct {
+		name    string
+		coin    string
+		want    common.CoinType
+		wantErr bool
+	}{
+		{
+			name:    "valid coin type 0",
+			coin:    "0",
+			want:    common.CoinType(0),
+			wantErr: false,
+		},
+		{
+			name:    "valid coin type 1",
+			coin:    "1",
+			want:    common.CoinType(1),
+			wantErr: false,
+		},
+		{
+			name:    "valid coin type 2",
+			coin:    "2",
+			want:    common.CoinType(2),
+			wantErr: false,
+		},
+		{
+			name:    "valid coin type 3",
+			coin:    "3",
+			want:    common.CoinType(3),
+			wantErr: false,
+		},
+		{
+			name:    "invalid coin type negative",
+			coin:    "-1",
+			want:    common.CoinType_Cmd,
+			wantErr: true,
+		},
+		{
+			name:    "invalid coin type large number",
+			coin:    "4",
+			want:    common.CoinType_Cmd,
+			wantErr: true,
+		},
+		{
+			name:    "invalid coin type non-integer",
+			coin:    "abc",
+			want:    common.CoinType_Cmd,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := common.GetCoinType(tt.coin)
+			if tt.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
