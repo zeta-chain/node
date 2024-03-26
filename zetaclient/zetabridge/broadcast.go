@@ -20,7 +20,6 @@ import (
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/app/ante"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 
@@ -87,7 +86,7 @@ func (b *ZetaCoreBridge) Broadcast(gaslimit uint64, authzWrappedMsg sdktypes.Msg
 
 	// #nosec G701 always in range
 	fee := sdktypes.NewCoins(sdktypes.NewCoin(config.BaseDenom,
-		cosmos.NewInt(int64(gaslimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt())))
+		sdktypes.NewInt(int64(gaslimit)).Mul(adjustedBaseGasPrice.Ceil().RoundInt())))
 	builder.SetFeeAmount(fee)
 	err = b.SignTx(factory, ctx.GetFromName(), builder, true, ctx.TxConfig)
 	if err != nil {

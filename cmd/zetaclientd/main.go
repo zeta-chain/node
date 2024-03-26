@@ -8,12 +8,12 @@ import (
 	ecdsakeygen "github.com/binance-chain/tss-lib/ecdsa/keygen"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
 
 	//mcconfig "github.com/Meta-Protocol/zetacore/metaclient/config"
 	"github.com/cosmos/cosmos-sdk/types"
@@ -46,7 +46,7 @@ func main() {
 }
 
 func SetupConfigForTest() {
-	config := cosmos.GetConfig()
+	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)

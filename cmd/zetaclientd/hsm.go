@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	keystone "github.com/zeta-chain/keystone/keys"
@@ -63,7 +64,7 @@ func GetHsmAddress(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	address, err := cosmos.Bech32ifyAddressBytes(cmd.Bech32PrefixAccAddr, pubKey.Address().Bytes())
+	address, err := sdk.Bech32ifyAddressBytes(cmd.Bech32PrefixAccAddr, pubKey.Address().Bytes())
 	if err != nil {
 		return err
 	}

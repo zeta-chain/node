@@ -3,7 +3,6 @@ package main
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
@@ -34,7 +33,7 @@ func CreateZetaBridge(cfg config.Config, telemetry *metrics.TelemetryServer, hot
 		return nil, err
 	}
 
-	granterAddreess, err := cosmos.AccAddressFromBech32(cfg.AuthzGranter)
+	granterAddreess, err := sdk.AccAddressFromBech32(cfg.AuthzGranter)
 	if err != nil {
 		return nil, err
 	}
