@@ -16,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
 
@@ -48,7 +49,6 @@ func closeMockServer(t *testing.T, server *grpcmock.Server) {
 }
 
 func setupCorBridge() (*ZetaCoreBridge, error) {
-	keys.SetupConfigForTest()
 	return NewZetaCoreBridge(
 		&keys.Keys{},
 		"127.0.0.1",
@@ -846,30 +846,26 @@ func TestZetaCoreBridge_HasVoted(t *testing.T) {
 }
 
 func TestZetaCoreBridge_GetZetaHotKeyBalance(t *testing.T) {
-	//expectedOutput := banktypes.QueryBalanceResponse{
-	//	Balance: &types.Coin{
-	//		Denom:  config.BaseDenom,
-	//		Amount: types.NewInt(55646484),
-	//	},
-	//}
-	//input := banktypes.QueryBalanceRequest{
-	//	Address: "zeta1qn2rzc0ac5utg4esh2rmertzkwq6vrdehl8ac7",
-	//	Denom:   config.BaseDenom,
-	//}
-	//method := "/cosmos.bank.v1beta1.Query/Balance"
-	//server := setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
-	//server.Serve()
-	//defer closeMockServer(t, server)
-	//
-	//zetabridge, err := setupCorBridge()
-	//require.NoError(t, err)
-	//addr, err := types.AccAddressFromBech32("zeta1qn2rzc0ac5utg4esh2rmertzkwq6vrdehl8ac7")
-	//require.NoError(t, err)
-	//zetabridge.keys = &keys.Keys{
-	//	OperatorAddress: addr,
-	//}
-	//
-	//resp, err := zetabridge.GetZetaHotKeyBalance()
-	//require.NoError(t, err)
-	//require.Equal(t, expectedOutput.Balance.Amount, resp)
+	expectedOutput := banktypes.QueryBalanceResponse{
+		Balance: &types.Coin{
+			Denom:  config.BaseDenom,
+			Amount: types.NewInt(55646484),
+		},
+	}
+	input := banktypes.QueryBalanceRequest{
+		Address: types.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes()).String(),
+		Denom:   config.BaseDenom,
+	}
+	method := "/cosmos.bank.v1beta1.Query/Balance"
+	server := setupMockServer(t, banktypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), types.AccAddress{}, "", "")
+
+	resp, err := zetabridge.GetZetaHotKeyBalance()
+	require.NoError(t, err)
+	require.Equal(t, expectedOutput.Balance.Amount, resp)
 }
