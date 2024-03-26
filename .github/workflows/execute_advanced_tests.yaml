@@ -44,8 +44,10 @@ jobs:
           
           echo "Monitoring Orchestrator container with ID: $container_id"
           while true; do
+              echo "get current status"
               current_status=$(docker ps -q | grep $container_id)
               if [ -z "$current_status" ]; then
+                  echo "no current container get logs"
                   docker logs $container_id || echo "no logs"
                   echo "-----------------------------------"
                   exit 0
@@ -79,8 +81,10 @@ jobs:
           
           echo "Monitoring Orchestrator container with ID: $container_id"
           while true; do
+              echo "get current status"
               current_status=$(docker ps -q | grep $container_id)
               if [ -z "$current_status" ]; then
+                  echo "no current container get logs"
                   docker logs $container_id || echo "no logs"
                   echo "-----------------------------------"
                   exit 0
@@ -114,8 +118,10 @@ jobs:
           
           echo "Monitoring Orchestrator container with ID: $container_id"
           while true; do
+              echo "get current status"
               current_status=$(docker ps -q | grep $container_id)
               if [ -z "$current_status" ]; then
+                  echo "no current container get logs"
                   docker logs $container_id || echo "no logs"
                   echo "-----------------------------------"
                   exit 0
@@ -149,8 +155,10 @@ jobs:
           
           echo "Monitoring Orchestrator container with ID: $container_id"
           while true; do
+              echo "get current status"
               current_status=$(docker ps -q | grep $container_id)
               if [ -z "$current_status" ]; then
+                  echo "no current container get logs"
                   docker logs $container_id || echo "no logs"
                   echo "-----------------------------------"
                   exit 0
