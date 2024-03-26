@@ -37,9 +37,9 @@ geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x8D47Db7390AC4D3D449
 echo "funding deployer address 0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf with 100 Ether"
 geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0x90126d02E41c9eB2a10cfc43aAb3BD3460523Cdf", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
-# unlock advanced erc20 tests accounts
-echo "funding deployer address 0xcC8487562AAc220ea4406196Ee902C7c076966af with 100 Ether"
-geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xcC8487562AAc220ea4406196Ee902C7c076966af", value: web3.toWei(100,"ether")})' attach http://eth:8545
+# unlock admin erc20 tests accounts
+echo "funding deployer address 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 with 100 Ether"
+geth --exec 'eth.sendTransaction({from: eth.coinbase, to: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", value: web3.toWei(100,"ether")})' attach http://eth:8545
 
 # unlock the TSS account
 echo "funding TSS address 0xF421292cb0d3c97b90EEEADfcD660B893592c6A2 with 100 Ether"
@@ -74,7 +74,7 @@ if [ "$OPTION" == "upgrade" ]; then
   echo "E2E setup passed, waiting for upgrade height..."
 
   # Restart zetaclients at upgrade height
-  /work/restart-zetaclientd.sh -u "$UPGRADE_HEIGHT" -n 2
+  /work/restart-zetaclientd-at-upgrade.sh -u "$UPGRADE_HEIGHT" -n 2
 
   echo "waiting 10 seconds for node to restart..."
 

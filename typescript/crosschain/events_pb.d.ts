@@ -325,3 +325,32 @@ export declare class EventCCTXGasPriceIncreased extends Message<EventCCTXGasPric
   static equals(a: EventCCTXGasPriceIncreased | PlainMessage<EventCCTXGasPriceIncreased> | undefined, b: EventCCTXGasPriceIncreased | PlainMessage<EventCCTXGasPriceIncreased> | undefined): boolean;
 }
 
+/**
+ * @generated from message zetachain.zetacore.crosschain.EventERC20Whitelist
+ */
+export declare class EventERC20Whitelist extends Message<EventERC20Whitelist> {
+  /**
+   * @generated from field: string whitelist_cctx_index = 1;
+   */
+  whitelistCctxIndex: string;
+
+  /**
+   * @generated from field: string zrc20_address = 2;
+   */
+  zrc20Address: string;
+
+  constructor(data?: PartialMessage<EventERC20Whitelist>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.crosschain.EventERC20Whitelist";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): EventERC20Whitelist;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): EventERC20Whitelist;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): EventERC20Whitelist;
+
+  static equals(a: EventERC20Whitelist | PlainMessage<EventERC20Whitelist> | undefined, b: EventERC20Whitelist | PlainMessage<EventERC20Whitelist> | undefined): boolean;
+}
+

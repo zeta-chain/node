@@ -21,17 +21,15 @@ const (
 	TestCrosschainSwapName                = "crosschain_swap"
 	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
-	TestPauseZRC20Name                    = "pause_zrc20"
 	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
-	TestUpdateBytecodeName                = "update_bytecode"
 	TestEtherDepositAndCallName           = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName      = "deposit_eth_liquidity_cap"
 	TestMyTestName                        = "my_test"
 
 	TestERC20WithdrawName = "erc20_withdraw"
 	TestERC20DepositName  = "erc20_deposit"
-	// #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestERC20DepositRestrictedName  = "erc20_deposit_restricted"
+
+	TestERC20DepositRestrictedName  = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestEtherDepositName            = "eth_deposit"
 	TestEtherWithdrawName           = "eth_withdraw"
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
@@ -45,6 +43,11 @@ const (
 	TestStressBTCWithdrawName   = "stress_btc_withdraw"
 	TestStressEtherDepositName  = "stress_eth_deposit"
 	TestStressBTCDepositName    = "stress_btc_deposit"
+
+	// Admin test
+	TestMigrateChainSupportName = "migrate_chain_support"
+	TestPauseZRC20Name          = "pause_zrc20"
+	TestUpdateBytecodeName      = "update_bytecode"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -314,5 +317,11 @@ var AllE2ETests = []runner.E2ETest{
 			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
 		},
 		TestBitcoinWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestMigrateChainSupportName,
+		"migrate the evm chain from goerli to sepolia",
+		[]runner.ArgDefinition{},
+		TestMigrateChainSupport,
 	),
 }

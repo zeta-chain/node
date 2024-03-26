@@ -12,6 +12,8 @@ import (
 
 // TestEtherWithdraw tests the withdraw of ether
 func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
+	r.Logger.Info("TestEtherWithdraw")
+
 	approvedAmount := big.NewInt(1e18)
 	if len(args) != 1 {
 		panic("TestEtherWithdraw requires exactly one argument for the withdrawal amount.")
@@ -59,6 +61,8 @@ func TestEtherWithdraw(r *runner.E2ERunner, args []string) {
 	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
 		panic("cctx status is not outbound mined")
 	}
+
+	r.Logger.Info("TestEtherWithdraw completed")
 }
 
 // TestEtherWithdrawRestricted tests the withdrawal to a restricted receiver address

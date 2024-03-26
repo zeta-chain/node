@@ -38,7 +38,7 @@ func adminTestRoutine(
 			deployerRunner,
 			UserAdminAddress,
 			UserAdminPrivateKey,
-			runner.NewLogger(verbose, color.FgGreen, "admin"),
+			runner.NewLogger(verbose, color.FgHiGreen, "admin"),
 		)
 		if err != nil {
 			return err
@@ -48,7 +48,8 @@ func adminTestRoutine(
 		startTime := time.Now()
 
 		// funding the account
-		txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 1000)
+		// we transfer around the total supply of Zeta to the admin for the chain migration test
+		txZetaSend := deployerRunner.SendZetaOnEvm(UserAdminAddress, 20_500_000_000)
 		txERC20Send := deployerRunner.SendERC20OnEvm(UserAdminAddress, 1000)
 		adminRunner.WaitForTxReceiptOnEvm(txZetaSend)
 		adminRunner.WaitForTxReceiptOnEvm(txERC20Send)

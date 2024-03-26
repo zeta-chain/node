@@ -40,6 +40,22 @@ func (runner *E2ERunner) WaitForMinedCCTX(txHash ethcommon.Hash) {
 	}
 }
 
+// WaitForMinedCCTXFromIndex waits for a cctx to be mined from its index
+func (runner *E2ERunner) WaitForMinedCCTXFromIndex(index string) {
+	defer func() {
+		runner.Unlock()
+	}()
+	runner.Lock()
+
+	cctx := utils.WaitCCTXMinedByIndex(runner.Ctx, index, runner.CctxClient, runner.Logger, runner.CctxTimeout)
+	if cctx.CctxStatus.Status != types.CctxStatus_OutboundMined {
+		panic(fmt.Sprintf("expected cctx status to be mined; got %s, message: %s",
+			cctx.CctxStatus.Status.String(),
+			cctx.CctxStatus.StatusMessage),
+		)
+	}
+}
+
 // SendZetaOnEvm sends ZETA to an address on EVM
 // this allows the ZETA contract deployer to funds other accounts on EVM
 func (runner *E2ERunner) SendZetaOnEvm(address ethcommon.Address, zetaAmount int64) *ethtypes.Transaction {

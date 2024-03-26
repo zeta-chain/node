@@ -155,7 +155,7 @@ func StressTest(cmd *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	e2eTest.SetupEVM(stressTestArgs.contractsDeployed)
+	e2eTest.SetupEVM(stressTestArgs.contractsDeployed, true)
 
 	// If stress test is running on local docker environment
 	if stressTestArgs.network == "LOCAL" {

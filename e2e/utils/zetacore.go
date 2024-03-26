@@ -106,6 +106,59 @@ func WaitCctxsMinedByInTxHash(
 	}
 }
 
+// WaitCCTXMinedByIndex waits until cctx is mined; returns the cctxIndex
+func WaitCCTXMinedByIndex(
+	ctx context.Context,
+	cctxIndex string,
+	cctxClient crosschaintypes.QueryClient,
+	logger infoLogger,
+	cctxTimeout time.Duration,
+) *crosschaintypes.CrossChainTx {
+	startTime := time.Now()
+
+	timeout := DefaultCctxTimeout
+	if cctxTimeout != 0 {
+		timeout = cctxTimeout
+	}
+
+	for i := 0; ; i++ {
+		if time.Since(startTime) > timeout {
+			panic(fmt.Sprintf(
+				"waiting cctx timeout, cctx not mined, cctx: %s",
+				cctxIndex,
+			))
+		}
+		time.Sleep(1 * time.Second)
+
+		// fetch cctx by index
+		res, err := cctxClient.Cctx(ctx, &crosschaintypes.QueryGetCctxRequest{
+			Index: cctxIndex,
+		})
+		if err != nil {
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+			}
+			continue
+		}
+		cctx := res.CrossChainTx
+		if !IsTerminalStatus(cctx.CctxStatus.Status) {
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info(
+					"waiting for cctx to be mined from index: %s, cctx status: %s, message: %s",
+					cctxIndex,
+					cctx.CctxStatus.Status.String(),
+					cctx.CctxStatus.StatusMessage,
+				)
+			}
+			continue
+		}
+
+		return cctx
+	}
+}
+
 func IsTerminalStatus(status crosschaintypes.CctxStatus) bool {
 	return status == crosschaintypes.CctxStatus_OutboundMined ||
 		status == crosschaintypes.CctxStatus_Aborted ||

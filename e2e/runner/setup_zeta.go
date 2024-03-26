@@ -4,8 +4,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-
 	"github.com/btcsuite/btcutil"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -18,6 +16,7 @@ import (
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/contracts/contextapp"
 	"github.com/zeta-chain/zetacore/e2e/contracts/zevmswap"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	e2eutils "github.com/zeta-chain/zetacore/e2e/utils"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"

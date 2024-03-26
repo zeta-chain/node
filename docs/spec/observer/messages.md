@@ -111,7 +111,6 @@ message MsgAddBlockHeader {
 ## MsgResetChainNonces
 
 ResetChainNonces handles resetting chain nonces
-Authorized: admin policy group 2 (admin update)
 
 ```proto
 message MsgResetChainNonces {
