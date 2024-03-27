@@ -26,6 +26,17 @@ func TestNewParams(t *testing.T) {
 	require.Equal(t, sdk.Int{}, params.ObserverSlashAmount, "ObserverSlashAmount should be initialized but is currently disabled")
 }
 
+func TestParamKeyTable(t *testing.T) {
+	kt := ParamKeyTable()
+
+	ps := Params{}
+	for _, psp := range ps.ParamSetPairs() {
+		require.PanicsWithValue(t, "duplicate parameter key", func() {
+			kt.RegisterType(psp)
+		})
+	}
+}
+
 func TestDefaultParams(t *testing.T) {
 	params := DefaultParams()
 
@@ -85,6 +96,7 @@ func TestValidateMinBondFactor(t *testing.T) {
 
 func TestValidateAvgBlockTime(t *testing.T) {
 	require.Error(t, validateAvgBlockTime(6))
+	require.Error(t, validateAvgBlockTime("invalid"))
 	require.NoError(t, validateAvgBlockTime("6.00"))
 	require.Error(t, validateAvgBlockTime("-1")) // Negative time should fail
 	require.Error(t, validateAvgBlockTime("0"))  // Zero should also fail
@@ -99,12 +111,14 @@ func TestValidateTargetBondRatio(t *testing.T) {
 
 func TestValidateValidatorEmissionPercentage(t *testing.T) {
 	require.Error(t, validateValidatorEmissionPercentage(0.5))
+	require.Error(t, validateValidatorEmissionPercentage("-0.50")) // Less than 0 percent should fail
 	require.NoError(t, validateValidatorEmissionPercentage("0.50"))
 	require.Error(t, validateValidatorEmissionPercentage("1.01")) // More than 100 percent should fail
 }
 
 func TestValidateObserverEmissionPercentage(t *testing.T) {
 	require.Error(t, validateObserverEmissionPercentage(0.25))
+	require.Error(t, validateObserverEmissionPercentage("-0.50")) // Less than 0 percent should fail
 	require.NoError(t, validateObserverEmissionPercentage("0.25"))
 	require.Error(t, validateObserverEmissionPercentage("1.01")) // More than 100 percent should fail
 }
