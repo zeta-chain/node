@@ -3,9 +3,14 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	emissionskeeper "github.com/zeta-chain/zetacore/x/emissions/keeper"
+	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
 func TestKeeper_CalculateFixedValidatorRewards(t *testing.T) {
@@ -13,7 +18,13 @@ func TestKeeper_CalculateFixedValidatorRewards(t *testing.T) {
 		name                 string
 		blockTimeInSecs      string
 		expectedBlockRewards sdk.Dec
+		wantErr              bool
 	}{
+		{
+			name:            "Invalid block time",
+			blockTimeInSecs: "",
+			wantErr:         true,
+		},
 		{
 			name:                 "Block Time 5.7",
 			blockTimeInSecs:      "5.7",
@@ -43,8 +54,57 @@ func TestKeeper_CalculateFixedValidatorRewards(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
 			blockRewards, err := emissionskeeper.CalculateFixedValidatorRewards(tc.blockTimeInSecs)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedBlockRewards, blockRewards)
 		})
 	}
+}
+
+func TestKeeper_GetFixedBlockRewards(t *testing.T) {
+	k, _, _, _ := keepertest.EmissionsKeeper(t)
+	fixedBlockRewards, err := k.GetFixedBlockRewards()
+	require.NoError(t, err)
+	expected, err := emissionskeeper.CalculateFixedValidatorRewards(emissionstypes.AvgBlockTime)
+	require.NoError(t, err)
+	require.Equal(t, expected, fixedBlockRewards)
+}
+
+func TestKeeper_GetBlockRewardComponent(t *testing.T) {
+	t.Run("should return all 0s if reserves factor is 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseBankMock: true,
+		})
+
+		bankMock := keepertest.GetEmissionsBankMock(t, k)
+		bankMock.On("GetBalance",
+			ctx, mock.Anything, config.BaseDenom).
+			Return(sdk.NewCoin(config.BaseDenom, math.NewInt(0)), nil).Once()
+
+		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx)
+		require.Equal(t, sdk.ZeroDec(), reservesFactor)
+		require.Equal(t, sdk.ZeroDec(), bondFactor)
+		require.Equal(t, sdk.ZeroDec(), durationFactor)
+	})
+
+	t.Run("should return if reserves factor is not 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseBankMock: true,
+		})
+
+		bankMock := keepertest.GetEmissionsBankMock(t, k)
+		bankMock.On("GetBalance",
+			ctx, mock.Anything, config.BaseDenom).
+			Return(sdk.NewCoin(config.BaseDenom, math.NewInt(1)), nil).Once()
+
+		reservesFactor, bondFactor, durationFactor := k.GetBlockRewardComponents(ctx)
+		require.Equal(t, sdk.OneDec(), reservesFactor)
+		// bonded ratio is 0
+		require.Equal(t, sdk.ZeroDec(), bondFactor)
+		// non 0 value returned
+		require.NotEqual(t, sdk.ZeroDec(), durationFactor)
+	})
 }
