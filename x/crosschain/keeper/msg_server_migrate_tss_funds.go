@@ -8,11 +8,15 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ethereum/go-ethereum/crypto"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
+	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
+	"github.com/zeta-chain/zetacore/pkg/gas"
+
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -24,7 +28,7 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 
 	// check if authorized
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 
 	if k.zetaObserverKeeper.IsInboundEnabled(ctx) {
@@ -82,7 +86,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		Creator:        "",
 		Index:          index,
 		ZetaFees:       sdkmath.Uint{},
-		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
+		RelayedMessage: fmt.Sprintf("%s:%s", constant.CmdMigrateTssFunds, "Funds Migrator Admin Cmd"),
 		CctxStatus: &types.Status{
 			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",
@@ -92,7 +96,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			Sender:                          "",
 			SenderChainId:                   chainID,
 			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
+			CoinType:                        coin.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          amount,
 			InboundTxObservedHash:           tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash()).String(),
@@ -103,7 +107,7 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		OutboundTxParams: []*types.OutboundTxParams{{
 			Receiver:                         "",
 			ReceiverChainId:                  chainID,
-			CoinType:                         common.CoinType_Cmd,
+			CoinType:                         coin.CoinType_Cmd,
 			Amount:                           amount,
 			OutboundTxTssNonce:               0,
 			OutboundTxGasLimit:               1_000_000,
@@ -117,21 +121,21 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 			TssPubkey:                        currentTss.TssPubkey,
 		}}}
 	// Set the sender and receiver addresses for EVM chain
-	if common.IsEVMChain(chainID) {
-		ethAddressOld, err := common.GetTssAddrEVM(currentTss.TssPubkey)
+	if chains.IsEVMChain(chainID) {
+		ethAddressOld, err := zetacrypto.GetTssAddrEVM(currentTss.TssPubkey)
 		if err != nil {
 			return err
 		}
-		ethAddressNew, err := common.GetTssAddrEVM(newTss.TssPubkey)
+		ethAddressNew, err := zetacrypto.GetTssAddrEVM(newTss.TssPubkey)
 		if err != nil {
 			return err
 		}
 		cctx.InboundTxParams.Sender = ethAddressOld.String()
 		cctx.GetCurrentOutTxParam().Receiver = ethAddressNew.String()
 		// Tss migration is a send transaction, so the gas limit is set to 21000
-		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = common.EVMSend
+		cctx.GetCurrentOutTxParam().OutboundTxGasLimit = gas.EVMSend
 		// Multiple current gas price with standard multiplier to add some buffer
-		multipliedGasPrice, err := common.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
+		multipliedGasPrice, err := gas.MultiplyGasPrice(medianGasPrice, types.TssMigrationGasMultiplierEVM)
 		if err != nil {
 			return err
 		}
@@ -143,16 +147,16 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 		cctx.GetCurrentOutTxParam().Amount = amount.Sub(evmFee)
 	}
 	// Set the sender and receiver addresses for Bitcoin chain
-	if common.IsBitcoinChain(chainID) {
-		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+	if chains.IsBitcoinChain(chainID) {
+		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 		if err != nil {
 			return err
 		}
-		btcAddressOld, err := common.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
+		btcAddressOld, err := zetacrypto.GetTssAddrBTC(currentTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}
-		btcAddressNew, err := common.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
+		btcAddressNew, err := zetacrypto.GetTssAddrBTC(newTss.TssPubkey, bitcoinNetParams)
 		if err != nil {
 			return err
 		}

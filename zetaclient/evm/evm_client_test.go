@@ -8,7 +8,8 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
@@ -45,7 +46,7 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	// load archived evm outtx Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)
-	coinType := common.CoinType_Gas
+	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
 	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
 
@@ -96,7 +97,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 	// load archived evm outtx Gas
 	// https://etherscan.io/tx/0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3
 	chainID := int64(1)
-	coinType := common.CoinType_Gas
+	coinType := coin.CoinType_Gas
 	outtxHash := "0xd13b593eb62b5500a00e288cc2fb2c8af1339025c0e6bc6183b8bef2ebbed0d3"
 	tx, receipt := testutils.LoadEVMOuttxNReceipt(t, chainID, outtxHash, coinType)
 
@@ -113,7 +114,7 @@ func TestEVM_VoteOutboundBallot(t *testing.T) {
 			math.NewIntFromBigInt(tx.GasPrice()),
 			tx.Gas(),
 			math.NewUintFromBigInt(tx.Value()),
-			common.ReceiveStatus_Success,
+			chains.ReceiveStatus_Success,
 			chainID,
 			tx.Nonce(),
 			coinType,

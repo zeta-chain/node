@@ -12,7 +12,7 @@ import (
 )
 
 // UpdateObserver handles updating an observer address
-// Authorized: admin policy group 2 (admin update), old observer address (if the
+// Authorized: admin policy (admin update), old observer address (if the
 // reason is that the observer was tombstoned).
 func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObserver) (*types.MsgUpdateObserverResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -25,9 +25,9 @@ func (k msgServer) UpdateObserver(goCtx context.Context, msg *types.MsgUpdateObs
 		return nil, errorsmod.Wrap(types.ErrUpdateObserver, fmt.Sprintf("Unable to update observer with update reason : %s", msg.UpdateReason))
 	}
 
-	// We do not use IsAuthorized here because we want to allow tombstoned observers to be updated
+	// We do not use IsNonTombstonedObserver here because we want to allow tombstoned observers to be updated
 	if !k.IsAddressPartOfObserverSet(ctx, msg.OldObserverAddress) {
-		return nil, errorsmod.Wrap(types.ErrNotAuthorized, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
+		return nil, errorsmod.Wrap(types.ErrNotObserver, fmt.Sprintf("Observer address is not authorized : %s", msg.OldObserverAddress))
 	}
 
 	err = k.IsValidator(ctx, msg.NewObserverAddress)
@@ -80,9 +80,9 @@ func (k Keeper) CheckUpdateReason(ctx sdk.Context, msg *types.MsgUpdateObserver)
 		}
 	case types.ObserverUpdateReason_AdminUpdate:
 		{
-			// Group admin is authorized to update observer
+			// Operational policy is required to update an observer for admin update
 			if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-				return false, types.ErrNotAuthorizedPolicy
+				return false, authoritytypes.ErrUnauthorized
 			}
 			return true, nil
 		}

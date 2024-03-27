@@ -58,7 +58,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// can unpause zrc20
 		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -88,7 +88,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		assertPaused(zrc20B)
 		assertUnpaused(zrc20C)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// can unpause already unpaused zrc20
 		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -120,7 +120,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 		assertPaused(zrc20B)
 		assertPaused(zrc20C)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// can unpause all zrc20
 		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
@@ -170,9 +170,9 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			[]string{sample.EthAddress().String()},
 			types.UpdatePausedStatusAction_PAUSE,
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err = msgServer.UpdateZRC20PausedStatus(ctx, types.NewMsgUpdateZRC20PausedStatus(
 			admin,
@@ -180,7 +180,7 @@ func TestKeeper_UpdateZRC20PausedStatus(t *testing.T) {
 			types.UpdatePausedStatusAction_UNPAUSE,
 		))
 
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if zrc20 does not exist", func(t *testing.T) {

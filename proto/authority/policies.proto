@@ -8,8 +8,9 @@ option go_package = "github.com/zeta-chain/zetacore/x/authority/types";
 // PolicyType defines the type of policy
 enum PolicyType {
   option (gogoproto.goproto_enum_stringer) = true;
-  groupEmergency = 0;
-  groupAdmin = 1;
+  groupEmergency = 0; // Used for emergency situations that require immediate action
+  groupOperational = 1; // Used for operational tasks like changing non-sensitive protocol parameters
+  groupAdmin = 2; // Used for administrative tasks like changing sensitive protocol parameters or moving funds
 }
 
 message Policy {

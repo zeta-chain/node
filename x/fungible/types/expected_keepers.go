@@ -11,7 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/evmos/ethermint/x/evm/statedb"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
 
@@ -31,7 +31,7 @@ type BankKeeper interface {
 }
 
 type ObserverKeeper interface {
-	GetSupportedChains(ctx sdk.Context) []*common.Chain
+	GetSupportedChains(ctx sdk.Context) []*chains.Chain
 }
 
 type EVMKeeper interface {

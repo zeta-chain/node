@@ -7,13 +7,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/app"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/authz"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
@@ -30,15 +31,15 @@ var _ interfaces.ZetaCoreBridger = &ZetaCoreBridge{}
 type ZetaCoreBridge struct {
 	logger        zerolog.Logger
 	blockHeight   int64
-	accountNumber map[common.KeyType]uint64
-	seqNumber     map[common.KeyType]uint64
+	accountNumber map[authz.KeyType]uint64
+	seqNumber     map[authz.KeyType]uint64
 	grpcConn      *grpc.ClientConn
 	cfg           config.ClientConfiguration
 	encodingCfg   params.EncodingConfig
 	keys          *keys.Keys
 	broadcastLock *sync.RWMutex
 	zetaChainID   string
-	zetaChain     common.Chain
+	zetaChain     chains.Chain
 	stop          chan struct{}
 	pause         chan struct{}
 	Telemetry     *metrics.TelemetryServer
@@ -72,14 +73,14 @@ func NewZetaCoreBridge(
 		logger.Error().Err(err).Msg("grpc dial fail")
 		return nil, err
 	}
-	accountsMap := make(map[common.KeyType]uint64)
-	seqMap := make(map[common.KeyType]uint64)
-	for _, keyType := range common.GetAllKeyTypes() {
+	accountsMap := make(map[authz.KeyType]uint64)
+	seqMap := make(map[authz.KeyType]uint64)
+	for _, keyType := range authz.GetAllKeyTypes() {
 		accountsMap[keyType] = 0
 		seqMap[keyType] = 0
 	}
 
-	zetaChain, err := common.ZetaChainFromChainID(chainID)
+	zetaChain, err := chains.ZetaChainFromChainID(chainID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid chain id %s, %w", chainID, err)
 	}
@@ -106,7 +107,7 @@ func MakeLegacyCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
 	banktypes.RegisterLegacyAminoCodec(cdc)
 	authtypes.RegisterLegacyAminoCodec(cdc)
-	cosmos.RegisterCodec(cdc)
+	sdk.RegisterLegacyAminoCodec(cdc)
 	crosschaintypes.RegisterCodec(cdc)
 	return cdc
 }
@@ -119,7 +120,7 @@ func (b *ZetaCoreBridge) UpdateChainID(chainID string) error {
 	if b.zetaChainID != chainID {
 		b.zetaChainID = chainID
 
-		zetaChain, err := common.ZetaChainFromChainID(chainID)
+		zetaChain, err := chains.ZetaChainFromChainID(chainID)
 		if err != nil {
 			return fmt.Errorf("invalid chain id %s, %w", chainID, err)
 		}
@@ -130,7 +131,7 @@ func (b *ZetaCoreBridge) UpdateChainID(chainID string) error {
 }
 
 // ZetaChain returns the ZetaChain chain object
-func (b *ZetaCoreBridge) ZetaChain() common.Chain {
+func (b *ZetaCoreBridge) ZetaChain() chains.Chain {
 	return b.zetaChain
 }
 
@@ -140,7 +141,7 @@ func (b *ZetaCoreBridge) Stop() {
 }
 
 // GetAccountNumberAndSequenceNumber We do not use multiple KeyType for now , but this can be optionally used in the future to seprate TSS signer from Zetaclient GRantee
-func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (uint64, uint64, error) {
+func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ authz.KeyType) (uint64, uint64, error) {
 	ctx, err := b.GetContext()
 	if err != nil {
 		return 0, 0, err
@@ -149,7 +150,7 @@ func (b *ZetaCoreBridge) GetAccountNumberAndSequenceNumber(_ common.KeyType) (ui
 	return ctx.AccountRetriever.GetAccountNumberSequence(ctx, address)
 }
 
-func (b *ZetaCoreBridge) SetAccountNumber(keyType common.KeyType) {
+func (b *ZetaCoreBridge) SetAccountNumber(keyType authz.KeyType) {
 	ctx, err := b.GetContext()
 	if err != nil {
 		b.logger.Error().Err(err).Msg("fail to get context")
@@ -223,19 +224,19 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
 			continue
 		}
-		if common.IsBitcoinChain(chainParam.ChainId) {
+		if chains.IsBitcoinChain(chainParam.ChainId) {
 			newBTCParams = chainParam
-		} else if common.IsEVMChain(chainParam.ChainId) {
+		} else if chains.IsEVMChain(chainParam.ChainId) {
 			newEVMParams[chainParam.ChainId] = chainParam
 		}
 	}
 
-	chains, err := b.GetSupportedChains()
+	supporteChains, err := b.GetSupportedChains()
 	if err != nil {
 		return err
 	}
-	newChains := make([]common.Chain, len(chains))
-	for i, chain := range chains {
+	newChains := make([]chains.Chain, len(supporteChains))
+	for i, chain := range supporteChains {
 		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()

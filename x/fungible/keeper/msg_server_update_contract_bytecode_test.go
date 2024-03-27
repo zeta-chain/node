@@ -11,7 +11,8 @@ import (
 	"github.com/evmos/ethermint/x/evm/statedb"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	zetacommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
@@ -39,7 +40,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
 
 		// sample chainIDs and addresses
-		chainList := zetacommon.DefaultChainsList()
+		chainList := chains.DefaultChainsList()
 		require.True(t, len(chainList) > 1)
 		require.NotNil(t, chainList[0])
 		require.NotNil(t, chainList[1])
@@ -86,7 +87,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			"BETA",
 			18,
 			chainID2,
-			zetacommon.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			"beta",
 			big.NewInt(90_000),
 		)
@@ -132,7 +133,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			"GAMMA",
 			18,
 			chainID1,
-			zetacommon.CoinType_ERC20,
+			coin.CoinType_ERC20,
 			"gamma",
 			big.NewInt(90_000),
 		)
@@ -204,7 +205,7 @@ func TestKeeper_UpdateContractBytecode(t *testing.T) {
 			sample.EthAddress().Hex(),
 			sample.Hash().Hex(),
 		))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail invalid contract address", func(t *testing.T) {

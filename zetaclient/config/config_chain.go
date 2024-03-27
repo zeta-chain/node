@@ -1,8 +1,6 @@
 package config
 
-import (
-	"github.com/zeta-chain/zetacore/common"
-)
+import "github.com/zeta-chain/zetacore/pkg/chains"
 
 const (
 	BtcConfirmationCount    = 1
@@ -46,26 +44,26 @@ var bitcoinConfigRegnet = BTCConfig{
 }
 
 var evmChainsConfigs = map[int64]EVMConfig{
-	common.EthChain().ChainId: {
-		Chain: common.EthChain(),
+	chains.EthChain().ChainId: {
+		Chain: chains.EthChain(),
 	},
-	common.BscMainnetChain().ChainId: {
-		Chain: common.BscMainnetChain(),
+	chains.BscMainnetChain().ChainId: {
+		Chain: chains.BscMainnetChain(),
 	},
-	common.GoerliChain().ChainId: {
-		Chain:    common.GoerliChain(),
+	chains.GoerliChain().ChainId: {
+		Chain:    chains.GoerliChain(),
 		Endpoint: "",
 	},
-	common.BscTestnetChain().ChainId: {
-		Chain:    common.BscTestnetChain(),
+	chains.BscTestnetChain().ChainId: {
+		Chain:    chains.BscTestnetChain(),
 		Endpoint: "",
 	},
-	common.MumbaiChain().ChainId: {
-		Chain:    common.MumbaiChain(),
+	chains.MumbaiChain().ChainId: {
+		Chain:    chains.MumbaiChain(),
 		Endpoint: "",
 	},
-	common.GoerliLocalnetChain().ChainId: {
-		Chain:    common.GoerliLocalnetChain(),
+	chains.GoerliLocalnetChain().ChainId: {
+		Chain:    chains.GoerliLocalnetChain(),
 		Endpoint: "http://eth:8545",
 	},
 }

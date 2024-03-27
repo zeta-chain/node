@@ -3,7 +3,7 @@ package sample
 import (
 	"testing"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
 
@@ -17,7 +17,7 @@ func ForeignCoins(t *testing.T, address string) types.ForeignCoins {
 		Decimals:             uint32(r.Uint64()),
 		Name:                 StringRandom(r, 32),
 		Symbol:               StringRandom(r, 32),
-		CoinType:             common.CoinType_ERC20,
+		CoinType:             coin.CoinType_ERC20,
 		GasLimit:             r.Uint64(),
 	}
 }

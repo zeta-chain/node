@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -30,10 +30,10 @@ func (k Keeper) CheckIfFinalizingVote(ctx sdk.Context, ballot types.Ballot) (typ
 	return ballot, true
 }
 
-// IsAuthorized checks whether a signer is authorized to sign
+// IsNonTombstonedObserver checks whether a signer is authorized to sign
 // This function checks if the signer is present in the observer set
 // and also checks if the signer is not tombstoned
-func (k Keeper) IsAuthorized(ctx sdk.Context, address string) bool {
+func (k Keeper) IsNonTombstonedObserver(ctx sdk.Context, address string) bool {
 	isPresentInMapper := k.IsAddressPartOfObserverSet(ctx, address)
 	if !isPresentInMapper {
 		return false
@@ -48,7 +48,7 @@ func (k Keeper) IsAuthorized(ctx sdk.Context, address string) bool {
 func (k Keeper) FindBallot(
 	ctx sdk.Context,
 	index string,
-	chain *common.Chain,
+	chain *chains.Chain,
 	observationType types.ObservationType,
 ) (ballot types.Ballot, isNew bool, err error) {
 	isNew = false

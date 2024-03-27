@@ -23,7 +23,7 @@ func (k msgServer) UpdateContractBytecode(goCtx context.Context, msg *types.MsgU
 
 	// check authorization
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, cosmoserror.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+		return nil, cosmoserror.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 
 	// fetch account to update
