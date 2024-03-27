@@ -8,9 +8,9 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
@@ -122,7 +122,7 @@ func WithdrawBitcoin(r *runner.E2ERunner, amount *big.Int) {
 
 func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
-	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
+	addressRestricted, err := chains.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, chains.BtcRegtestChain().ChainId)
 	if err != nil {
 		panic(err)
 	}

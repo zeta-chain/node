@@ -7,7 +7,7 @@ import (
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -28,35 +28,35 @@ func (k Keeper) ZRC20DepositAndCallContract(
 	amount *big.Int,
 	senderChainID int64,
 	data []byte,
-	coinType common.CoinType,
+	coinType coin.CoinType,
 	asset string,
 ) (*evmtypes.MsgEthereumTxResponse, bool, error) {
 	var ZRC20Contract eth.Address
-	var coin types.ForeignCoins
+	var foreignCoin types.ForeignCoins
 	var found bool
 
 	// get foreign coin
-	if coinType == common.CoinType_Gas {
-		coin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
+	if coinType == coin.CoinType_Gas {
+		foreignCoin, found = k.GetGasCoinForForeignCoin(ctx, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrGasCoinNotFound
 		}
 	} else {
-		coin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChainID)
+		foreignCoin, found = k.GetForeignCoinFromAsset(ctx, asset, senderChainID)
 		if !found {
 			return nil, false, crosschaintypes.ErrForeignCoinNotFound
 		}
 	}
-	ZRC20Contract = eth.HexToAddress(coin.Zrc20ContractAddress)
+	ZRC20Contract = eth.HexToAddress(foreignCoin.Zrc20ContractAddress)
 
 	// check if foreign coin is paused
-	if coin.Paused {
+	if foreignCoin.Paused {
 		return nil, false, types.ErrPausedZRC20
 	}
 
 	// check foreign coins cap if it has a cap
-	if !coin.LiquidityCap.IsNil() && !coin.LiquidityCap.IsZero() {
-		liquidityCap := coin.LiquidityCap.BigInt()
+	if !foreignCoin.LiquidityCap.IsNil() && !foreignCoin.LiquidityCap.IsZero() {
+		liquidityCap := foreignCoin.LiquidityCap.BigInt()
 		totalSupply, err := k.TotalSupplyZRC4(ctx, ZRC20Contract)
 		if err != nil {
 			return nil, false, err

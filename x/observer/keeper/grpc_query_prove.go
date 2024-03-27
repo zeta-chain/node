@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcutil"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -23,7 +24,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	blockHash, err := common.StringToHash(req.ChainId, req.BlockHash)
+	blockHash, err := chains.StringToHash(req.ChainId, req.BlockHash)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -35,11 +36,11 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 	proven := false
 
 	txBytes, err := req.Proof.Verify(res.Header, int(req.TxIndex))
-	if err != nil && !common.IsErrorInvalidProof(err) {
+	if err != nil && !proofs.IsErrorInvalidProof(err) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if err == nil {
-		if common.IsEVMChain(req.ChainId) {
+		if chains.IsEVMChain(req.ChainId) {
 			var txx ethtypes.Transaction
 			err = txx.UnmarshalBinary(txBytes)
 			if err != nil {
@@ -49,7 +50,7 @@ func (k Keeper) Prove(c context.Context, req *types.QueryProveRequest) (*types.Q
 				return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("tx hash mismatch: %s != %s", txx.Hash().Hex(), req.TxHash))
 			}
 			proven = true
-		} else if common.IsBitcoinChain(req.ChainId) {
+		} else if chains.IsBitcoinChain(req.ChainId) {
 			tx, err := btcutil.NewTxFromBytes(txBytes)
 			if err != nil {
 				return nil, status.Error(codes.Internal, fmt.Sprintf("failed to unmarshal btc transaction: %s", err))

@@ -5,7 +5,9 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType, Proof, ReceiveStatus } from "../common/common_pb.js";
+import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
+import type { CoinType } from "../pkg/coin/coin_pb.js";
+import type { Proof } from "../pkg/proofs/proofs_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
@@ -27,7 +29,7 @@ export declare class MsgCreateTSSVoter extends Message<MsgCreateTSSVoter> {
   keyGenZetaHeight: bigint;
 
   /**
-   * @generated from field: common.ReceiveStatus status = 4;
+   * @generated from field: chains.ReceiveStatus status = 4;
    */
   status: ReceiveStatus;
 
@@ -186,12 +188,12 @@ export declare class MsgAddToInTxTracker extends Message<MsgAddToInTxTracker> {
   txHash: string;
 
   /**
-   * @generated from field: common.CoinType coin_type = 4;
+   * @generated from field: coin.CoinType coin_type = 4;
    */
   coinType: CoinType;
 
   /**
-   * @generated from field: common.Proof proof = 5;
+   * @generated from field: proofs.Proof proof = 5;
    */
   proof?: Proof;
 
@@ -347,7 +349,7 @@ export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> 
   txHash: string;
 
   /**
-   * @generated from field: common.Proof proof = 5;
+   * @generated from field: proofs.Proof proof = 5;
    */
   proof?: Proof;
 
@@ -563,7 +565,7 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   valueReceived: string;
 
   /**
-   * @generated from field: common.ReceiveStatus status = 6;
+   * @generated from field: chains.ReceiveStatus status = 6;
    */
   status: ReceiveStatus;
 
@@ -578,7 +580,7 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   outTxTssNonce: bigint;
 
   /**
-   * @generated from field: common.CoinType coin_type = 9;
+   * @generated from field: coin.CoinType coin_type = 9;
    */
   coinType: CoinType;
 
@@ -675,7 +677,7 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
   gasLimit: bigint;
 
   /**
-   * @generated from field: common.CoinType coin_type = 12;
+   * @generated from field: coin.CoinType coin_type = 12;
    */
   coinType: CoinType;
 

@@ -26,7 +26,8 @@ import (
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	uniswapv2factory "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-core/contracts/uniswapv2factory.sol"
 	uniswapv2router02 "github.com/zeta-chain/protocol-contracts/pkg/uniswap/v2-periphery/contracts/uniswapv2router02.sol"
-	zetacommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -89,11 +90,11 @@ func (k Keeper) DeployZRC20Contract(
 	name, symbol string,
 	decimals uint8,
 	chainID int64,
-	coinType zetacommon.CoinType,
+	coinType coin.CoinType,
 	erc20Contract string,
 	gasLimit *big.Int,
 ) (common.Address, error) {
-	chain := zetacommon.GetChainFromChainID(chainID)
+	chain := chains.GetChainFromChainID(chainID)
 	if chain == nil {
 		return common.Address{}, cosmoserrors.Wrapf(zetaObserverTypes.ErrSupportedChains, "chain %d not found", chainID)
 	}

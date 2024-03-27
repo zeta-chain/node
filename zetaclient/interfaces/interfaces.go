@@ -5,6 +5,9 @@ import (
 	"math/big"
 
 	"github.com/onrik/ethrpc"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
 
@@ -20,7 +23,6 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/go-tss/blame"
-	"github.com/zeta-chain/zetacore/common"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -71,13 +73,13 @@ type ZetaCoreBridger interface {
 		outTxEffectiveGasPrice *big.Int,
 		outTxEffectiveGasLimit uint64,
 		amount *big.Int,
-		status common.ReceiveStatus,
-		chain common.Chain,
+		status chains.ReceiveStatus,
+		chain chains.Chain,
 		nonce uint64,
-		coinType common.CoinType,
+		coinType coin.CoinType,
 	) (string, string, error)
-	PostGasPrice(chain common.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
-	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header common.HeaderData) (string, error)
+	PostGasPrice(chain chains.Chain, gasPrice uint64, supply string, blockNum uint64) (string, error)
+	PostAddBlockHeader(chainID int64, txhash []byte, height int64, header proofs.HeaderData) (string, error)
 	GetBlockHeaderStateByChain(chainID int64) (observertypes.QueryGetBlockHeaderStateResponse, error)
 
 	PostBlameData(blame *blame.Blame, chainID int64, index string) (string, error)
@@ -85,18 +87,18 @@ type ZetaCoreBridger interface {
 		chainID int64,
 		nonce uint64,
 		txHash string,
-		proof *common.Proof,
+		proof *proofs.Proof,
 		blockHash string,
 		txIndex int64,
 	) (string, error)
 	GetKeys() *keys.Keys
 	GetBlockHeight() (int64, error)
 	GetZetaBlockHeight() (int64, error)
-	GetLastBlockHeightByChain(chain common.Chain) (*crosschaintypes.LastBlockHeight, error)
+	GetLastBlockHeightByChain(chain chains.Chain) (*crosschaintypes.LastBlockHeight, error)
 	ListPendingCctx(chainID int64) ([]*crosschaintypes.CrossChainTx, uint64, error)
 	GetPendingNoncesByChain(chainID int64) (observertypes.PendingNonces, error)
 	GetCctxByNonce(chainID int64, nonce uint64) (*crosschaintypes.CrossChainTx, error)
-	GetOutTxTracker(chain common.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error)
+	GetOutTxTracker(chain chains.Chain, nonce uint64) (*crosschaintypes.OutTxTracker, error)
 	GetAllOutTxTrackerByChain(chainID int64, order Order) ([]crosschaintypes.OutTxTracker, error)
 	GetCrosschainFlags() (observertypes.CrosschainFlags, error)
 	GetObserverList() ([]string, error)
@@ -104,7 +106,7 @@ type ZetaCoreBridger interface {
 	GetBtcTssAddress(chainID int64) (string, error)
 	GetInboundTrackersForChain(chainID int64) ([]crosschaintypes.InTxTracker, error)
 	GetLogger() *zerolog.Logger
-	ZetaChain() common.Chain
+	ZetaChain() chains.Chain
 	Pause()
 	Unpause()
 	GetZetaHotKeyBalance() (sdkmath.Int, error)

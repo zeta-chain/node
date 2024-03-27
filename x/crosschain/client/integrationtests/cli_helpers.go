@@ -17,7 +17,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/network"
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -137,11 +138,11 @@ func BuildSignedDeployETHZRC20(
 	}
 	args := append([]string{
 		"",
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		strconv.FormatInt(chains.GoerliLocalnetChain().ChainId, 10),
 		"18",
 		"ETH",
 		"gETH",
-		strconv.FormatInt(int64(common.CoinType_Gas), 10),
+		strconv.FormatInt(int64(coin.CoinType_Gas), 10),
 		"1000000",
 	}, txArgs...)
 	out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, args)
@@ -156,7 +157,7 @@ func BuildSignedDeployETHZRC20(
 func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
 	cmd := cli.CmdGasPriceVoter()
 	inboundVoterArgs := []string{
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		strconv.FormatInt(chains.GoerliLocalnetChain().ChainId, 10),
 		"10000000000",
 		"100",
 		"100",
@@ -225,7 +226,7 @@ func BuildSignedOutboundVote(
 		"0",
 		valueReceived,
 		status,
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		strconv.FormatInt(chains.GoerliLocalnetChain().ChainId, 10),
 		strconv.FormatUint(nonce, 10),
 		"Zeta",
 	}
@@ -252,10 +253,10 @@ func BuildSignedInboundVote(t testing.TB, val *network.Validator, denom string, 
 	cmd := cli.CmdCCTXInboundVoter()
 	inboundVoterArgs := []string{
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		strconv.FormatInt(chains.GoerliLocalnetChain().ChainId, 10),
 		"0x3b9Fe88DE29efD13240829A0c18E9EC7A44C3CA7",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		strconv.FormatInt(common.GoerliLocalnetChain().ChainId, 10),
+		strconv.FormatInt(chains.GoerliLocalnetChain().ChainId, 10),
 		"10000000000000000000",
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
@@ -286,16 +287,16 @@ func GetBallotIdentifier(message string, eventIndex int) string {
 	msg := types.NewMsgVoteOnObservedInboundTx(
 		"",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		common.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain().ChainId,
 		"0x3b9Fe88DE29efD13240829A0c18E9EC7A44C3CA7",
 		"0x96B05C238b99768F349135de0653b687f9c13fEE",
-		common.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain().ChainId,
 		sdk.NewUint(10000000000000000000),
 		message,
 		"0x19398991572a825894b34b904ac1e3692720895351466b5c9e6bb7ae1e21d680",
 		100,
 		250_000,
-		common.CoinType_Zeta,
+		coin.CoinType_Zeta,
 		"",
 		// #nosec G701 always positive
 		uint(eventIndex),
@@ -314,9 +315,9 @@ func GetBallotIdentifierOutBound(nonce uint64, cctxindex, outtxHash, valueReceiv
 		0,
 		math.NewUintFromString(valueReceived),
 		0,
-		common.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain().ChainId,
 		nonce,
-		common.CoinType_Zeta,
+		coin.CoinType_Zeta,
 	)
 	return msg.Digest()
 }

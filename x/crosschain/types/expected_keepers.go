@@ -9,7 +9,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -46,9 +48,9 @@ type ObserverKeeper interface {
 	AddVoteToBallot(ctx sdk.Context, ballot observertypes.Ballot, address string, observationType observertypes.VoteType) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
 	IsAuthorized(ctx sdk.Context, address string) bool
-	FindBallot(ctx sdk.Context, index string, chain *common.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
+	FindBallot(ctx sdk.Context, index string, chain *chains.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
-	GetBlockHeader(ctx sdk.Context, hash []byte) (val common.BlockHeader, found bool)
+	GetBlockHeader(ctx sdk.Context, hash []byte) (val proofs.BlockHeader, found bool)
 	CheckIfTssPubkeyHasBeenGenerated(ctx sdk.Context, tssPubkey string) (observertypes.TSS, bool)
 	GetAllTSS(ctx sdk.Context) (list []observertypes.TSS)
 	GetTSS(ctx sdk.Context) (val observertypes.TSS, found bool)
@@ -75,7 +77,7 @@ type ObserverKeeper interface {
 		ctx sdk.Context,
 		senderChainID int64,
 		receiverChainID int64,
-		coinType common.CoinType,
+		coinType coin.CoinType,
 		voter string,
 		ballotIndex string,
 		inTxHash string,
@@ -84,11 +86,11 @@ type ObserverKeeper interface {
 		ctx sdk.Context,
 		ballotIndex string,
 		outTxChainID int64,
-		receiveStatus common.ReceiveStatus,
+		receiveStatus chains.ReceiveStatus,
 		voter string,
 	) (bool, bool, observertypes.Ballot, string, error)
-	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain
-	GetSupportedChains(ctx sdk.Context) []*common.Chain
+	GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain
+	GetSupportedChains(ctx sdk.Context) []*chains.Chain
 }
 
 type FungibleKeeper interface {
@@ -120,7 +122,7 @@ type FungibleKeeper interface {
 		amount *big.Int,
 		senderChainID int64,
 		data []byte,
-		coinType common.CoinType,
+		coinType coin.CoinType,
 		asset string,
 	) (*evmtypes.MsgEthereumTxResponse, bool, error)
 	CallUniswapV2RouterSwapExactTokensForTokens(
@@ -154,7 +156,7 @@ type FungibleKeeper interface {
 		name, symbol string,
 		decimals uint8,
 		chainID int64,
-		coinType common.CoinType,
+		coinType coin.CoinType,
 		erc20Contract string,
 		gasLimit *big.Int,
 	) (eth.Address, error)

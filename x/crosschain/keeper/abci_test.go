@@ -9,7 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -42,20 +42,20 @@ func TestKeeper_IterateAndUpdateCctxGasPrice(t *testing.T) {
 	}
 
 	// add some evm and non-evm chains
-	supportedChains := []*common.Chain{
-		{ChainId: common.EthChain().ChainId},
-		{ChainId: common.BtcMainnetChain().ChainId},
-		{ChainId: common.BscMainnetChain().ChainId},
-		{ChainId: common.ZetaChainMainnet().ChainId},
+	supportedChains := []*chains.Chain{
+		{ChainId: chains.EthChain().ChainId},
+		{ChainId: chains.BtcMainnetChain().ChainId},
+		{ChainId: chains.BscMainnetChain().ChainId},
+		{ChainId: chains.ZetaChainMainnet().ChainId},
 	}
 
 	// set pending cctx
 	tss := sample.Tss()
 	zk.ObserverKeeper.SetTSS(ctx, tss)
-	createCctxWithNonceRange(t, ctx, *k, 10, 15, common.EthChain().ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 20, 25, common.BtcMainnetChain().ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 30, 35, common.BscMainnetChain().ChainId, tss, zk)
-	createCctxWithNonceRange(t, ctx, *k, 40, 45, common.ZetaChainMainnet().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 10, 15, chains.EthChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 20, 25, chains.BtcMainnetChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 30, 35, chains.BscMainnetChain().ChainId, tss, zk)
+	createCctxWithNonceRange(t, ctx, *k, 40, 45, chains.ZetaChainMainnet().ChainId, tss, zk)
 
 	// set a cctx where the update function should fail to test that the next cctx are not updated but the next chains are
 	failMap[sample.GetCctxIndexFromString("1-12")] = struct{}{}

@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	eth "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -116,7 +116,7 @@ func (k msgServer) AddToOutTxTracker(goCtx context.Context, msg *types.MsgAddToO
 func (k Keeper) VerifyOutTxBody(ctx sdk.Context, msg *types.MsgAddToOutTxTracker, txBytes []byte) error {
 	// get tss address
 	var bitcoinChainID int64
-	if common.IsBitcoinChain(msg.ChainId) {
+	if chains.IsBitcoinChain(msg.ChainId) {
 		bitcoinChainID = msg.ChainId
 	}
 	tss, err := k.zetaObserverKeeper.GetTssAddress(ctx, &observertypes.QueryGetTssAddressRequest{
@@ -127,9 +127,9 @@ func (k Keeper) VerifyOutTxBody(ctx sdk.Context, msg *types.MsgAddToOutTxTracker
 	}
 
 	// verify message against transaction body
-	if common.IsEVMChain(msg.ChainId) {
+	if chains.IsEVMChain(msg.ChainId) {
 		err = VerifyEVMOutTxBody(msg, txBytes, tss.Eth)
-	} else if common.IsBitcoinChain(msg.ChainId) {
+	} else if chains.IsBitcoinChain(msg.ChainId) {
 		err = VerifyBTCOutTxBody(msg, txBytes, tss.Btc)
 	} else {
 		return fmt.Errorf("cannot verify outTx body for chain %d", msg.ChainId)
@@ -172,7 +172,7 @@ func VerifyEVMOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssEth 
 // VerifyBTCOutTxBody validates the SegWit sender address, nonce and chain id and tx hash
 // Note: 'msg' may contain fabricated information
 func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc string) error {
-	if !common.IsBitcoinChain(msg.ChainId) {
+	if !chains.IsBitcoinChain(msg.ChainId) {
 		return fmt.Errorf("not a Bitcoin chain ID %d", msg.ChainId)
 	}
 	tx, err := btcutil.NewTxFromBytes(txBytes)
@@ -187,7 +187,7 @@ func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc 
 		if err != nil {
 			return fmt.Errorf("failed to parse public key")
 		}
-		bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(msg.ChainId)
+		bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(msg.ChainId)
 		if err != nil {
 			return fmt.Errorf("failed to get Bitcoin net params, error %s", err.Error())
 		}
@@ -205,8 +205,8 @@ func VerifyBTCOutTxBody(msg *types.MsgAddToOutTxTracker, txBytes []byte, tssBtc 
 	if len(tx.MsgTx().TxOut) < 1 {
 		return fmt.Errorf("outTx should have at least one output")
 	}
-	if tx.MsgTx().TxOut[0].Value != common.NonceMarkAmount(msg.Nonce) {
-		return fmt.Errorf("want nonce mark %d, got %d", tx.MsgTx().TxOut[0].Value, common.NonceMarkAmount(msg.Nonce))
+	if tx.MsgTx().TxOut[0].Value != chains.NonceMarkAmount(msg.Nonce) {
+		return fmt.Errorf("want nonce mark %d, got %d", tx.MsgTx().TxOut[0].Value, chains.NonceMarkAmount(msg.Nonce))
 	}
 	if tx.MsgTx().TxHash().String() != msg.TxHash {
 		return fmt.Errorf("want tx hash %s, got %s", tx.MsgTx().TxHash(), msg.TxHash)

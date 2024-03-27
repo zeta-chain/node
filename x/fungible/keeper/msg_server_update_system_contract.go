@@ -10,7 +10,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -47,7 +47,7 @@ func (k msgServer) UpdateSystemContract(goCtx context.Context, msg *types.MsgUpd
 		if err != nil {
 			return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call zrc20 contract method updateSystemContractAddress (%s)", err.Error())
 		}
-		if fcoin.CoinType == common.CoinType_Gas {
+		if fcoin.CoinType == coin.CoinType_Gas {
 			_, err = k.CallEVM(tmpCtx, *sysABI, types.ModuleAddressEVM, newSystemContractAddr, BigIntZero, nil, true, false, "setGasCoinZRC20", big.NewInt(fcoin.ForeignChainId), zrc20Addr)
 			if err != nil {
 				return nil, cosmoserrors.Wrapf(types.ErrContractCall, "failed to call system contract method setGasCoinZRC20 (%s)", err.Error())
