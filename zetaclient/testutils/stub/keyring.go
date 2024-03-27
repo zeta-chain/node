@@ -35,8 +35,7 @@ func (m mockKeyring) SupportedAlgorithms() (ckeys.SigningAlgoList, ckeys.Signing
 }
 
 func (m mockKeyring) Key(_ string) (*ckeys.Record, error) {
-	record, _ := ckeys.NewLocalRecord("", TestKeyringPair, TestKeyringPair.PubKey())
-	return record, nil
+	return ckeys.NewLocalRecord("", TestKeyringPair, TestKeyringPair.PubKey())
 }
 
 func (m mockKeyring) KeyByAddress(_ sdk.Address) (*ckeys.Record, error) {
