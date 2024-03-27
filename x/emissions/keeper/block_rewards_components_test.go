@@ -168,3 +168,21 @@ func TestKeeper_GetBondFactor(t *testing.T) {
 		require.Equal(t, sdk.OneDec(), bondFactor)
 	})
 }
+
+func TestKeeper_GetDurationFactor(t *testing.T) {
+	t.Run("should return duration factor 0 if duration factor constant is 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		params := emissionstypes.DefaultParams()
+		params.DurationFactorConstant = "0"
+		k.SetParams(ctx, params)
+		duractionFactor := k.GetDurationFactor(ctx)
+		require.Equal(t, sdk.ZeroDec(), duractionFactor)
+	})
+
+	t.Run("should return duration factor for default params", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+		duractionFactor := k.GetDurationFactor(ctx)
+		// hardcoding actual expected value for default params, it will change if logic changes
+		require.Equal(t, sdk.MustNewDecFromStr("0.000000004346937374"), duractionFactor)
+	})
+}
