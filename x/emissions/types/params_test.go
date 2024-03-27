@@ -105,28 +105,29 @@ func TestValidateAvgBlockTime(t *testing.T) {
 func TestValidateTargetBondRatio(t *testing.T) {
 	require.Error(t, validateTargetBondRatio(0.5))
 	require.NoError(t, validateTargetBondRatio("0.50"))
-	require.Error(t, validateTargetBondRatio("1.01"))  // More than 100 percent should fail
 	require.Error(t, validateTargetBondRatio("-0.01")) // Less than 0 percent should fail
+	require.Error(t, validateTargetBondRatio("1.01"))  // More than 100 percent should fail
 }
 
 func TestValidateValidatorEmissionPercentage(t *testing.T) {
 	require.Error(t, validateValidatorEmissionPercentage(0.5))
-	require.Error(t, validateValidatorEmissionPercentage("-0.50")) // Less than 0 percent should fail
 	require.NoError(t, validateValidatorEmissionPercentage("0.50"))
-	require.Error(t, validateValidatorEmissionPercentage("1.01")) // More than 100 percent should fail
+	require.Error(t, validateValidatorEmissionPercentage("-0.50")) // Less than 0 percent should fail
+	require.Error(t, validateValidatorEmissionPercentage("1.01"))  // More than 100 percent should fail
 }
 
 func TestValidateObserverEmissionPercentage(t *testing.T) {
 	require.Error(t, validateObserverEmissionPercentage(0.25))
-	require.Error(t, validateObserverEmissionPercentage("-0.50")) // Less than 0 percent should fail
 	require.NoError(t, validateObserverEmissionPercentage("0.25"))
-	require.Error(t, validateObserverEmissionPercentage("1.01")) // More than 100 percent should fail
+	require.Error(t, validateObserverEmissionPercentage("-0.50")) // Less than 0 percent should fail
+	require.Error(t, validateObserverEmissionPercentage("1.01"))  // More than 100 percent should fail
 }
 
 func TestValidateTssEmissionPercentage(t *testing.T) {
 	require.Error(t, validateTssEmissonPercentage(0.25))
 	require.NoError(t, validateTssEmissonPercentage("0.25"))
-	require.Error(t, validateTssEmissonPercentage("1.01")) // More than 100 percent should fail
+	require.Error(t, validateTssEmissonPercentage("-0.25")) // Less than 0 percent should fail
+	require.Error(t, validateTssEmissonPercentage("1.01"))  // More than 100 percent should fail
 }
 
 func TestParamsString(t *testing.T) {
