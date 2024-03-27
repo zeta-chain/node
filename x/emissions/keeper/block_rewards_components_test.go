@@ -108,3 +108,63 @@ func TestKeeper_GetBlockRewardComponent(t *testing.T) {
 		require.NotEqual(t, sdk.ZeroDec(), durationFactor)
 	})
 }
+
+func TestKeeper_GetBondFactor(t *testing.T) {
+	t.Run("should return 0 if current bond ratio is 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionsKeeper(t)
+
+		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
+		require.Equal(t, sdk.ZeroDec(), bondFactor)
+	})
+
+	t.Run("should return max bond factor if bond factor exceeds max bond factor", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseStakingMock: true,
+		})
+
+		params := emissionstypes.DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+		k.SetParams(ctx, params)
+
+		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
+		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.25"))
+		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
+		require.Equal(t, sdk.MustNewDecFromStr(params.MaxBondFactor), bondFactor)
+	})
+
+	t.Run("should return min bond factor if bond factor below min bond factor", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseStakingMock: true,
+		})
+
+		params := emissionstypes.DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+		k.SetParams(ctx, params)
+
+		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
+		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.75"))
+		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
+		require.Equal(t, sdk.MustNewDecFromStr(params.MinBondFactor), bondFactor)
+	})
+
+	t.Run("should return calculated bond factor if bond factor in range", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseStakingMock: true,
+		})
+
+		params := emissionstypes.DefaultParams()
+		params.TargetBondRatio = "0.5"
+		params.MaxBondFactor = "1.1"
+		params.MinBondFactor = "0.9"
+		k.SetParams(ctx, params)
+
+		stakingMock := keepertest.GetEmissionsStakingMock(t, k)
+		stakingMock.On("BondedRatio", ctx).Return(sdk.MustNewDecFromStr("0.5"))
+		bondFactor := k.GetBondFactor(ctx, k.GetStakingKeeper())
+		require.Equal(t, sdk.OneDec(), bondFactor)
+	})
+}
