@@ -6,9 +6,8 @@ import (
 	"os"
 	"testing"
 
-	ethtypes "github.com/ethereum/go-ethereum/core/types"
-
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -85,7 +84,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			IsBtcTypeChainEnabled: true,
 			validator:             validator,
 			wantErr: func(t require.TestingT, err error, i ...interface{}) {
-				require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+				require.ErrorIs(t, err, types.ErrNotObserver)
 			},
 		},
 		{

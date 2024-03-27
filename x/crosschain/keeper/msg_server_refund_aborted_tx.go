@@ -9,7 +9,6 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"golang.org/x/net/context"
 )
 
@@ -23,8 +22,8 @@ func (k msgServer) RefundAbortedCCTX(goCtx context.Context, msg *types.MsgRefund
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, observertypes.ErrNotAuthorized
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+		return nil, authoritytypes.ErrUnauthorized
 	}
 
 	// check if the cctx exists

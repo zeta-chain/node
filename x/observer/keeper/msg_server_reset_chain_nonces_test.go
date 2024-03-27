@@ -23,7 +23,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
@@ -31,7 +31,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 			ChainNonceLow:  1,
 			ChainNonceHigh: 5,
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("cannot reset chain nonces if tss not found", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		chainId := chains.GoerliLocalnetChain().ChainId
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
@@ -64,7 +64,7 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		_, err := srv.ResetChainNonces(sdk.WrapSDKContext(ctx), &types.MsgResetChainNonces{
 			Creator:        admin,
@@ -85,8 +85,8 @@ func TestMsgServer_ResetChainNonces(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		chainId := chains.GoerliLocalnetChain().ChainId
 		index := chains.GoerliLocalnetChain().ChainName.String()

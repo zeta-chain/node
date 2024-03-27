@@ -62,7 +62,7 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 			BlockHash: "",
 			TxIndex:   0,
 		})
-		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
 		require.False(t, found)
 	})

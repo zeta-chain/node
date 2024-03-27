@@ -152,7 +152,7 @@ func TestKeeper_UpdateSystemContract(t *testing.T) {
 		// should not update the system contract if not admin
 		_, err = msgServer.UpdateSystemContract(ctx, types.NewMsgUpdateSystemContract(admin, newSystemContract.Hex()))
 		require.Error(t, err)
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should not update the system contract if invalid address", func(t *testing.T) {

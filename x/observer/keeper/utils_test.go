@@ -65,7 +65,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
-		require.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.True(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 }

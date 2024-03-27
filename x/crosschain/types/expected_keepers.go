@@ -47,7 +47,7 @@ type ObserverKeeper interface {
 	SetLastObserverCount(ctx sdk.Context, lbc *observertypes.LastObserverCount)
 	AddVoteToBallot(ctx sdk.Context, ballot observertypes.Ballot, address string, observationType observertypes.VoteType) (observertypes.Ballot, error)
 	CheckIfFinalizingVote(ctx sdk.Context, ballot observertypes.Ballot) (observertypes.Ballot, bool)
-	IsAuthorized(ctx sdk.Context, address string) bool
+	IsNonTombstonedObserver(ctx sdk.Context, address string) bool
 	FindBallot(ctx sdk.Context, index string, chain *chains.Chain, observationType observertypes.ObservationType) (ballot observertypes.Ballot, isNew bool, err error)
 	AddBallotToList(ctx sdk.Context, ballot observertypes.Ballot)
 	GetBlockHeader(ctx sdk.Context, hash []byte) (val proofs.BlockHeader, found bool)

@@ -53500,8 +53500,13 @@ definitions:
     type: string
     enum:
       - groupEmergency
+      - groupOperational
       - groupAdmin
     default: groupEmergency
+    description: |-
+      - groupEmergency: Used for emergency situations that require immediate action
+       - groupOperational: Used for operational tasks like changing non-sensitive protocol parameters
+       - groupAdmin: Used for administrative tasks like changing sensitive protocol parameters or moving funds
     title: PolicyType defines the type of policy
   authorityQueryGetPoliciesResponse:
     type: object

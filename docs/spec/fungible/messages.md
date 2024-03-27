@@ -62,7 +62,7 @@ message MsgRemoveForeignCoin {
 
 ## MsgUpdateSystemContract
 
-Authorized: admin policy group 2.
+UpdateSystemContract updates the system contract
 
 ```proto
 message MsgUpdateSystemContract {

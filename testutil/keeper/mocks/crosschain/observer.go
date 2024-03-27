@@ -684,24 +684,6 @@ func (_m *CrosschainObserverKeeper) GetTssAddress(goCtx context.Context, req *ob
 	return r0, r1
 }
 
-// IsAuthorized provides a mock function with given fields: ctx, address
-func (_m *CrosschainObserverKeeper) IsAuthorized(ctx types.Context, address string) bool {
-	ret := _m.Called(ctx, address)
-
-	if len(ret) == 0 {
-		panic("no return value specified for IsAuthorized")
-	}
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
-		r0 = rf(ctx, address)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
 // IsInboundEnabled provides a mock function with given fields: ctx
 func (_m *CrosschainObserverKeeper) IsInboundEnabled(ctx types.Context) bool {
 	ret := _m.Called(ctx)
@@ -713,6 +695,24 @@ func (_m *CrosschainObserverKeeper) IsInboundEnabled(ctx types.Context) bool {
 	var r0 bool
 	if rf, ok := ret.Get(0).(func(types.Context) bool); ok {
 		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// IsNonTombstonedObserver provides a mock function with given fields: ctx, address
+func (_m *CrosschainObserverKeeper) IsNonTombstonedObserver(ctx types.Context, address string) bool {
+	ret := _m.Called(ctx, address)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsNonTombstonedObserver")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(types.Context, string) bool); ok {
+		r0 = rf(ctx, address)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}

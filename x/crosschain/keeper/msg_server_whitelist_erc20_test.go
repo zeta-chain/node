@@ -31,7 +31,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
 		setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "foobar", "FOOBAR")
@@ -72,7 +72,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, uint64(100000), gasLimit.Uint64())
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// Ensure that whitelist a new erc20 create a cctx with a different index
 		res, err = msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
@@ -99,7 +99,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
@@ -110,7 +110,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 			Decimals:     18,
 			GasLimit:     100000,
 		})
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if invalid erc20 address", func(t *testing.T) {
@@ -123,7 +123,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
 			Creator:      admin,
@@ -147,7 +147,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		chainID := getValidEthChainID(t)
 		asset := sample.EthAddress().Hex()
@@ -179,7 +179,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		chainID := getValidEthChainID(t)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		erc20Address := sample.EthAddress().Hex()
 		_, err := msgServer.WhitelistERC20(ctx, &types.MsgWhitelistERC20{
@@ -204,7 +204,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		k.GetObserverKeeper().SetTssAndUpdateNonce(ctx, sample.Tss())
 

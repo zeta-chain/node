@@ -101,6 +101,10 @@ func SetupZetaGenesisState(t *testing.T, genesisState map[string]json.RawMessage
 				PolicyType: authoritytypes.PolicyType_groupAdmin,
 				Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
 			},
+			{
+				PolicyType: authoritytypes.PolicyType_groupOperational,
+				Address:    "zeta13c7p3xrhd6q2rx3h235jpt8pjdwvacyw6twpax",
+			},
 		},
 	}
 	authorityGenesis.Policies = policies

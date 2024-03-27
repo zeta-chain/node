@@ -18,7 +18,7 @@ func (k msgServer) UpdateKeygen(goCtx context.Context, msg *types.MsgUpdateKeyge
 
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency) {
-		return &types.MsgUpdateKeygenResponse{}, types.ErrNotAuthorizedPolicy
+		return &types.MsgUpdateKeygenResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	keygen, found := k.GetKeygen(ctx)
