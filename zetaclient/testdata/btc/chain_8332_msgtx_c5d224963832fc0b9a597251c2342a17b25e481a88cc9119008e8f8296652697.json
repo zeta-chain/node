@@ -1,0 +1,42 @@
+{
+  "Version": 2,
+  "TxIn": [
+    {
+      "PreviousOutPoint": {
+        "Hash": [
+          127, 3, 175, 215, 135, 178, 52, 169, 234, 18, 205, 65, 18, 193, 182,
+          123, 2, 102, 254, 107, 221, 18, 243, 92, 98, 226, 161, 209, 185, 140,
+          72, 91
+        ],
+        "Index": 2
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEUCIQCWzKD96dT53Y9o+KCtLvB5WXrJL4X2XGgpiz3rRBdJMwIgcdwc7Z870dOeiVUZdSLjRAJ8hkLz0l7TXVSLF0ZArekB",
+        "A1zjZr/QH950JWL3zF5q4SXsK6yGLTw6EdLXCxs7qprg"
+      ],
+      "Sequence": 4294967295
+    },
+    {
+      "PreviousOutPoint": {
+        "Hash": [
+          175, 165, 125, 14, 98, 13, 62, 204, 88, 160, 18, 74, 177, 75, 159, 44,
+          131, 4, 151, 145, 200, 2, 177, 50, 227, 26, 2, 89, 184, 155, 179, 54
+        ],
+        "Index": 2
+      },
+      "SignatureScript": "",
+      "Witness": [
+        "MEQCIGbWmCHGFlrSKF7+tnQHhrQGDNS0PR2E4lxq/OLz68CFAiB/yHWTSaAs1GbDzngvzFkGu76N/YKJX1iy88irfDg0tAE=",
+        "A1zjZr/QH950JWL3zF5q4SXsK6yGLTw6EdLXCxs7qprg"
+      ],
+      "Sequence": 4294967295
+    }
+  ],
+  "TxOut": [
+    { "Value": 1000, "PkScript": "ABTaquDT3p2P3uMWYeYa6oKLWb54ZA==" },
+    { "Value": 0, "PkScript": "ahRn7QvMThJWvCzofSLhkNY6EgEUvw==" },
+    { "Value": 89858, "PkScript": "ABTR7GmCiu3FRjdYPgWWQ67j+GLNIw==" }
+  ],
+  "LockTime": 0
+}

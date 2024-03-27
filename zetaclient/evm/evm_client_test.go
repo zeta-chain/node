@@ -52,7 +52,7 @@ func TestEVM_CheckTxInclusion(t *testing.T) {
 	// load archived evm block
 	// https://etherscan.io/block/19363323
 	blockNumber := receipt.BlockNumber.Uint64()
-	block := testutils.LoadEVMBlock(t, chainID, blockNumber, true)
+	block := testutils.LoadEVMBlock(chainID, blockNumber, true)
 
 	// create client
 	blockCache, err := lru.New(1000)

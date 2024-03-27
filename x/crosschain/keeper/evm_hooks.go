@@ -7,7 +7,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	"github.com/btcsuite/btcutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -318,9 +317,8 @@ func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) err
 		if err != nil {
 			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
 		}
-		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
-		if !ok {
-			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s (not P2WPKH address)", event.To)
+		if !common.IsBtcAddressSupported(addr) {
+			return fmt.Errorf("ParseZRC20WithdrawalEvent: unsupported address %s", string(event.To))
 		}
 	}
 	return nil

@@ -150,15 +150,16 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZRC20WithdrawToBTC(t).Logs[3])
 		require.NoError(t, err)
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcTestNetChain().ChainId)
-		require.ErrorContains(t, err, "address is not for network testnet3")
+		require.ErrorContains(t, err, "invalid address")
 	})
 
-	t.Run("unable to validate a event with an invalid address type", func(t *testing.T) {
+	t.Run("unable to validate an unsupported address type", func(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZRC20WithdrawToBTC(t).Logs[3])
 		require.NoError(t, err)
-		btcMainNetWithdrawalEvent.To = []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3")
-		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcTestNetChain().ChainId)
-		require.ErrorContains(t, err, "decode address failed: unknown address type")
+		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
+			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
+		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, common.BtcMainnetChain().ChainId)
+		require.ErrorContains(t, err, "unsupported address")
 	})
 }
 
@@ -710,27 +711,6 @@ func TestKeeper_ProcessLogs(t *testing.T) {
 
 		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
 		require.ErrorContains(t, err, observertypes.ErrInboundDisabled.Error())
-		cctxList := k.GetAllCrossChainTx(ctx)
-		require.Len(t, cctxList, 0)
-	})
-
-	t.Run("error returned for invalid event data", func(t *testing.T) {
-		k, ctx, sdkk, zk := keepertest.CrosschainKeeper(t)
-		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
-
-		chain := common.BtcMainnetChain()
-		chainID := chain.ChainId
-		setSupportedChain(ctx, zk, chainID)
-		SetupStateForProcessLogs(t, ctx, k, zk, sdkk, chain)
-
-		block := sample.GetInvalidZRC20WithdrawToExternal(t)
-		gasZRC20 := setupGasCoin(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper, chainID, "bitcoin", "BTC")
-		for _, log := range block.Logs {
-			log.Address = gasZRC20
-		}
-
-		err := k.ProcessLogs(ctx, block.Logs, sample.EthAddress(), "")
-		require.ErrorContains(t, err, "ParseZRC20WithdrawalEvent: invalid address")
 		cctxList := k.GetAllCrossChainTx(ctx)
 		require.Len(t, cctxList, 0)
 	})

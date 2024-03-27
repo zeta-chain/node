@@ -48,14 +48,17 @@ func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	stop := r.MineBlocks()
 
 	// withdraw amount provided as test arg BTC from ZRC20 to BTC legacy address
+	// the address "1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3" is for mainnet, not regtest
 	tx, err = r.BTCZRC20.Withdraw(r.ZEVMAuth, []byte("1EYVvXLusCxtVuEwoYvWRyN5EZTXwPVvo3"), amount)
 	if err != nil {
 		panic(err)
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 1 {
+		fmt.Println("WithdrawToInvalidAddress panicing")
 		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
 	}
+	fmt.Printf("WithdrawToInvalidAddress receipt status: %d\n", receipt.Status)
 	// stop mining
 	stop <- struct{}{}
 }

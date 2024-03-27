@@ -145,15 +145,16 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs := FilterAndParseIncomingTx(
+	inTxs, err := FilterAndParseIncomingTx(
+		suite.BitcoinChainClient.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
-		&log.Logger,
+		log.Logger,
 		&chaincfg.TestNet3Params,
 		0.0,
 	)
-
+	suite.Require().NoError(err)
 	suite.Require().Equal(1, len(inTxs))
 	suite.Require().Equal(inTxs[0].Value, 0.0001)
 	suite.Require().Equal(inTxs[0].ToAddress, "tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2")
@@ -182,15 +183,16 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	suite.T().Logf("block height %d", block.Height)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
-	inTxs := FilterAndParseIncomingTx(
+	inTxs, err := FilterAndParseIncomingTx(
+		suite.BitcoinChainClient.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
-		&log.Logger,
+		log.Logger,
 		&chaincfg.TestNet3Params,
 		0.0,
 	)
-
+	suite.Require().NoError(err)
 	suite.Require().Equal(0, len(inTxs))
 }
 

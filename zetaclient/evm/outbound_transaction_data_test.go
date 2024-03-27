@@ -13,9 +13,7 @@ import (
 
 func TestSigner_SetChainAndSender(t *testing.T) {
 	// setup inputs
-	cctx, err := getCCTX()
-	require.NoError(t, err)
-
+	cctx := getCCTX()
 	txData := &OutBoundTransactionData{}
 	logger := zerolog.Logger{}
 
@@ -45,9 +43,7 @@ func TestSigner_SetChainAndSender(t *testing.T) {
 }
 
 func TestSigner_SetupGas(t *testing.T) {
-	cctx, err := getCCTX()
-	require.NoError(t, err)
-
+	cctx := getCCTX()
 	evmSigner, err := getNewEvmSigner()
 	require.NoError(t, err)
 
@@ -77,16 +73,14 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("NewOutBoundTransactionData success", func(t *testing.T) {
-		cctx, err := getCCTX()
-		require.NoError(t, err)
+		cctx := getCCTX()
 		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.False(t, skip)
 		require.NoError(t, err)
 	})
 
 	t.Run("NewOutBoundTransactionData skip", func(t *testing.T) {
-		cctx, err := getCCTX()
-		require.NoError(t, err)
+		cctx := getCCTX()
 		cctx.CctxStatus.Status = types.CctxStatus_Aborted
 		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.NoError(t, err)
@@ -94,7 +88,7 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	})
 
 	t.Run("NewOutBoundTransactionData unknown chain", func(t *testing.T) {
-		cctx, err := getInvalidCCTX()
+		cctx := getInvalidCCTX()
 		require.NoError(t, err)
 		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
 		require.ErrorContains(t, err, "unknown chain")
@@ -102,7 +96,7 @@ func TestSigner_NewOutBoundTransactionData(t *testing.T) {
 	})
 
 	t.Run("NewOutBoundTransactionData setup gas error", func(t *testing.T) {
-		cctx, err := getCCTX()
+		cctx := getCCTX()
 		require.NoError(t, err)
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
 		_, skip, err := NewOutBoundTransactionData(cctx, mockChainClient, evmSigner.EvmClient(), zerolog.Logger{}, 123)
