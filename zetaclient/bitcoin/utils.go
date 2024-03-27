@@ -12,7 +12,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 
 	"github.com/btcsuite/btcd/txscript"
@@ -172,11 +172,11 @@ func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, n
 	dynamicFee := true
 
 	// use default fee for regnet
-	if common.IsBitcoinRegnet(chainID) {
+	if chains.IsBitcoinRegnet(chainID) {
 		dynamicFee = false
 	}
 	// mainnet dynamic fee takes effect only after a planned upgrade height
-	if common.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
+	if chains.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
 		dynamicFee = false
 	}
 	if !dynamicFee {
@@ -227,7 +227,7 @@ func PayToWitnessPubKeyHashScript(pubKeyHash []byte) ([]byte, error) {
 }
 
 // DecodeP2WPKHVout decodes receiver and amount from P2WPKH output
-func DecodeP2WPKHVout(vout btcjson.Vout, chain common.Chain) (string, int64, error) {
+func DecodeP2WPKHVout(vout btcjson.Vout, chain chains.Chain) (string, int64, error) {
 	amount, err := GetSatoshis(vout.Value)
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error getting satoshis")

@@ -104,7 +104,7 @@ message MsgAddBlockHeader {
 	int64 chain_id = 2;
 	bytes block_hash = 3;
 	int64 height = 4;
-	common.HeaderData header = 5;
+	proofs.HeaderData header = 5;
 }
 ```
 

@@ -20,6 +20,7 @@
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
+* [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 
 ### Features
 
@@ -50,13 +51,15 @@
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
+* [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 
 ### Chores
 
 * [1814](https://github.com/zeta-chain/node/pull/1814) - fix code coverage ignore for protobuf generated files
 
 ### CI
-
+* [1945](https://github.com/zeta-chain/node/pull/1945) - update advanced testing pipeline to not execute tests that weren't selected so they show skipped instead of skipping steps.
+* [1940](https://github.com/zeta-chain/node/pull/1940) - adjust release pipeline to be created as pre-release instead of latest
 * [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
 * [1891](https://github.com/zeta-chain/node/pull/1891) - fix typo that was introduced to docker-compose and a typo in start.sh for the docker start script for full nodes.
 * [1894](https://github.com/zeta-chain/node/pull/1894) - added download binaries and configs to the start sequence so it will download binaries that don't exist

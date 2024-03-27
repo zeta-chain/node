@@ -9,7 +9,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -65,7 +65,7 @@ func TestKeeper_WhitelistERC20(t *testing.T) {
 		require.EqualValues(t, erc20Address, fc.Asset)
 		cctx, found := k.GetCrossChainTx(ctx, cctxIndex)
 		require.True(t, found)
-		require.EqualValues(t, fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
+		require.EqualValues(t, fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, erc20Address), cctx.RelayedMessage)
 
 		// check gas limit is set
 		gasLimit, err := zk.FungibleKeeper.QueryGasLimit(ctx, ethcommon.HexToAddress(zrc20))

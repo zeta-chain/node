@@ -12,7 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -148,11 +149,11 @@ func CmdCCTXInboundVoter() *cobra.Command {
 				return err
 			}
 
-			coinType, ok := common.CoinType_value[args[9]]
+			coinType, ok := coin.CoinType_value[args[9]]
 			if !ok {
 				return fmt.Errorf("wrong coin type %s", args[9])
 			}
-			argsCoinType := common.CoinType(coinType)
+			argsCoinType := coin.CoinType(coinType)
 
 			argsAsset := args[10]
 
@@ -224,11 +225,11 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 
 			argsMMint := args[6]
 
-			var status common.ReceiveStatus
+			var status chains.ReceiveStatus
 			if args[7] == "0" {
-				status = common.ReceiveStatus_Success
+				status = chains.ReceiveStatus_Success
 			} else if args[7] == "1" {
-				status = common.ReceiveStatus_Failed
+				status = chains.ReceiveStatus_Failed
 			} else {
 				return fmt.Errorf("wrong status")
 			}
@@ -243,11 +244,11 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 				return err
 			}
 
-			coinType, ok := common.CoinType_value[args[10]]
+			coinType, ok := coin.CoinType_value[args[10]]
 			if !ok {
 				return fmt.Errorf("wrong coin type %s", args[10])
 			}
-			argsCoinType := common.CoinType(coinType)
+			argsCoinType := coin.CoinType(coinType)
 
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
 var VersionCmd = &cobra.Command{
@@ -14,6 +14,6 @@ var VersionCmd = &cobra.Command{
 }
 
 func Version(_ *cobra.Command, _ []string) error {
-	fmt.Printf(common.Version)
+	fmt.Printf(constant.Version)
 	return nil
 }

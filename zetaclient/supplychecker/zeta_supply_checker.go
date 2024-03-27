@@ -15,7 +15,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
@@ -28,8 +29,8 @@ type ZetaSupplyChecker struct {
 	ticker           *clienttypes.DynamicTicker
 	stop             chan struct{}
 	logger           zerolog.Logger
-	externalEvmChain []common.Chain
-	ethereumChain    common.Chain
+	externalEvmChain []chains.Chain
+	ethereumChain    chains.Chain
 	genesisSupply    sdkmath.Int
 }
 
@@ -61,11 +62,11 @@ func NewZetaSupplyChecker(appContext *appcontext.AppContext, zetaClient *zetabri
 	}
 
 	for chainID := range zetaSupplyChecker.evmClient {
-		chain := common.GetChainFromChainID(chainID)
-		if chain.IsExternalChain() && common.IsEVMChain(chain.ChainId) && !common.IsEthereumChain(chain.ChainId) {
+		chain := chains.GetChainFromChainID(chainID)
+		if chain.IsExternalChain() && chains.IsEVMChain(chain.ChainId) && !chains.IsEthereumChain(chain.ChainId) {
 			zetaSupplyChecker.externalEvmChain = append(zetaSupplyChecker.externalEvmChain, *chain)
 		}
-		if common.IsEthereumChain(chain.ChainId) {
+		if chains.IsEthereumChain(chain.ChainId) {
 			zetaSupplyChecker.ethereumChain = *chain
 		}
 	}
@@ -224,7 +225,7 @@ func (zs *ZetaSupplyChecker) AbortedTxAmount() (sdkmath.Int, error) {
 }
 
 func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
-	chainsToCheck := make([]common.Chain, len(zs.externalEvmChain)+1)
+	chainsToCheck := make([]chains.Chain, len(zs.externalEvmChain)+1)
 	chainsToCheck = append(append(chainsToCheck, zs.externalEvmChain...), zs.ethereumChain)
 	cctxs := zs.GetPendingCCTXInTransit(chainsToCheck)
 	amount := sdkmath.ZeroUint()
@@ -237,7 +238,7 @@ func (zs *ZetaSupplyChecker) GetAmountOfZetaInTransit() sdkmath.Int {
 	}
 	return amountInt
 }
-func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []common.Chain) []*types.CrossChainTx {
+func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Chain) []*types.CrossChainTx {
 	cctxInTransit := make([]*types.CrossChainTx, 0)
 	for _, chain := range receivingChains {
 		cctx, _, err := zs.zetaClient.ListPendingCctx(chain.ChainId)
@@ -246,7 +247,7 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []common.Ch
 		}
 		nonceToCctxMap := make(map[uint64]*types.CrossChainTx)
 		for _, c := range cctx {
-			if c.GetInboundTxParams().CoinType == common.CoinType_Zeta {
+			if c.GetInboundTxParams().CoinType == coin.CoinType_Zeta {
 				nonceToCctxMap[c.GetCurrentOutTxParam().OutboundTxTssNonce] = c
 			}
 		}

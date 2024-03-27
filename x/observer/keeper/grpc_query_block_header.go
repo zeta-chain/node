@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,9 +22,9 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	store := ctx.KVStore(k.storeKey)
 	blockHeaderStore := prefix.NewStore(store, types.KeyPrefix(types.BlockHeaderKey))
 
-	var blockHeaders []*common.BlockHeader
+	var blockHeaders []*proofs.BlockHeader
 	pageRes, err := query.Paginate(blockHeaderStore, req.Pagination, func(key []byte, value []byte) error {
-		var blockHeader common.BlockHeader
+		var blockHeader proofs.BlockHeader
 		if err := k.cdc.Unmarshal(value, &blockHeader); err != nil {
 			return err
 		}

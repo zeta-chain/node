@@ -12,7 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/rs/zerolog/log"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerkeeper "github.com/zeta-chain/zetacore/x/observer/keeper"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -142,7 +143,7 @@ func (k msgServer) VoteOnObservedOutboundTx(goCtx context.Context, msg *types.Ms
 			newStatus := cctx.CctxStatus.Status.String()
 			EmitOutboundSuccess(tmpCtx, msg, oldStatus.String(), newStatus, cctx)
 		case observertypes.BallotStatus_BallotFinalized_FailureObservation:
-			if msg.CoinType == common.CoinType_Cmd || common.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
+			if msg.CoinType == coin.CoinType_Cmd || chains.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
 				// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")
 			} else {

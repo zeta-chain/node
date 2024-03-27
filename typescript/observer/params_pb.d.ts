@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../common/common_pb.js";
+import type { Chain } from "../pkg/chains/chains_pb.js";
 
 /**
  * Deprecated(v14):Moved into the authority module
@@ -144,7 +144,7 @@ export declare class ChainParams extends Message<ChainParams> {
  */
 export declare class ObserverParams extends Message<ObserverParams> {
   /**
-   * @generated from field: common.Chain chain = 1;
+   * @generated from field: chains.Chain chain = 1;
    */
   chain?: Chain;
 

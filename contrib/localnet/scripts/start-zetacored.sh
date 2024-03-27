@@ -211,8 +211,8 @@ else
   sleep 20
   echo
 
-  # Fetch the height of the upgrade, default is 200, if arg3 is passed, use that value
-  UPGRADE_HEIGHT=${3:-200}
+  # Fetch the height of the upgrade, default is 225, if arg3 is passed, use that value
+  UPGRADE_HEIGHT=${3:-225}
 
   # If this is the first node, create a governance proposal for upgrade
   if [ $HOSTNAME = "zetacore0" ]

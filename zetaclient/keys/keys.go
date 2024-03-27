@@ -15,8 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/rs/zerolog/log"
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
+	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	zetaerrors "github.com/zeta-chain/zetacore/zetaclient/errors"
 )
@@ -78,7 +78,7 @@ func GetKeyringKeybase(cfg config.Config, hotkeyPassword string) (ckeys.Keyring,
 		return nil, "", fmt.Errorf("key not in backend %s present with name (%s): %w", kb.Backend(), granteeName, err)
 	}
 
-	pubkeyBech32, err := common.GetPubkeyBech32FromRecord(rc)
+	pubkeyBech32, err := zetacrypto.GetPubkeyBech32FromRecord(rc)
 	if err != nil {
 		return nil, "", fmt.Errorf("fail to get pubkey from record,err:%w", err)
 	}
@@ -151,8 +151,8 @@ func (k *Keys) GetKeybase() ckeys.Keyring {
 	return k.kb
 }
 
-func (k *Keys) GetPubKeySet(password string) (common.PubKeySet, error) {
-	pubkeySet := common.PubKeySet{
+func (k *Keys) GetPubKeySet(password string) (zetacrypto.PubKeySet, error) {
+	pubkeySet := zetacrypto.PubKeySet{
 		Secp256k1: "",
 		Ed25519:   "",
 	}
@@ -166,7 +166,7 @@ func (k *Keys) GetPubKeySet(password string) (common.PubKeySet, error) {
 	if err != nil {
 		return pubkeySet, zetaerrors.ErrBech32ifyPubKey
 	}
-	pubkey, err := common.NewPubKey(s)
+	pubkey, err := zetacrypto.NewPubKey(s)
 	if err != nil {
 		return pubkeySet, zetaerrors.ErrNewPubKey
 	}
@@ -184,7 +184,7 @@ func (k *Keys) GetHotkeyPassword() string {
 }
 
 func SetupConfigForTest() {
-	config := cosmos.GetConfig()
+	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(cmd.Bech32PrefixAccAddr, cmd.Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(cmd.Bech32PrefixValAddr, cmd.Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(cmd.Bech32PrefixConsAddr, cmd.Bech32PrefixConsPub)

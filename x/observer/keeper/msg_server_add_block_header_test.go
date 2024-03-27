@@ -10,7 +10,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -44,10 +45,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "success submit eth header",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
+				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
-				Header:    common.NewEthereumHeader(header1RLP),
+				Header:    proofs.NewEthereumHeader(header1RLP),
 			},
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
@@ -58,10 +59,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "failure submit eth header eth disabled",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
+				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
-				Header:    common.NewEthereumHeader(header1RLP),
+				Header:    proofs.NewEthereumHeader(header1RLP),
 			},
 			IsEthTypeChainEnabled: false,
 			IsBtcTypeChainEnabled: true,
@@ -74,10 +75,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "failure submit eth header eth disabled",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   sample.AccAddress(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
+				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
 				Height:    1,
-				Header:    common.NewEthereumHeader(header1RLP),
+				Header:    proofs.NewEthereumHeader(header1RLP),
 			},
 			IsEthTypeChainEnabled: false,
 			IsBtcTypeChainEnabled: true,
@@ -90,10 +91,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 			name: "should succeed if block header parent does exist",
 			msg: &types.MsgAddBlockHeader{
 				Creator:   observerAddress.String(),
-				ChainId:   common.GoerliLocalnetChain().ChainId,
+				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header2.Hash().Bytes(),
 				Height:    2,
-				Header:    common.NewEthereumHeader(header2RLP),
+				Header:    proofs.NewEthereumHeader(header2RLP),
 			},
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
@@ -108,10 +109,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		//	name: "should fail if block header parent does not exist",
 		//	msg: &types.MsgAddBlockHeader{
 		//		Creator:   observerAddress.String(),
-		//		ChainId:   common.GoerliLocalnetChain().ChainId,
+		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
 		//		BlockHash: header3.Hash().Bytes(),
 		//		Height:    3,
-		//		Header:    common.NewEthereumHeader(header3RLP),
+		//		Header:    chains.NewEthereumHeader(header3RLP),
 		//	},
 		//	IsEthTypeChainEnabled: true,
 		//	IsBtcTypeChainEnabled: true,
@@ -124,10 +125,10 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		//	name: "should succeed to post 3rd header if 2nd header is posted",
 		//	msg: &types.MsgAddBlockHeader{
 		//		Creator:   observerAddress.String(),
-		//		ChainId:   common.GoerliLocalnetChain().ChainId,
+		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
 		//		BlockHash: header3.Hash().Bytes(),
 		//		Height:    3,
-		//		Header:    common.NewEthereumHeader(header3RLP),
+		//		Header:    chains.NewEthereumHeader(header3RLP),
 		//	},
 		//	IsEthTypeChainEnabled: true,
 		//	IsBtcTypeChainEnabled: true,
@@ -143,7 +144,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 				ChainId:   9999,
 				BlockHash: header3.Hash().Bytes(),
 				Height:    3,
-				Header:    common.NewEthereumHeader(header3RLP),
+				Header:    proofs.NewEthereumHeader(header3RLP),
 			},
 			IsEthTypeChainEnabled: true,
 			IsBtcTypeChainEnabled: true,
@@ -171,7 +172,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 				},
 			})
 
-			setSupportedChain(ctx, *k, common.GoerliLocalnetChain().ChainId)
+			setSupportedChain(ctx, *k, chains.GoerliLocalnetChain().ChainId)
 
 			_, err := srv.AddBlockHeader(ctx, tc.msg)
 			tc.wantErr(t, err)

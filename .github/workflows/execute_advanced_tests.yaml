@@ -1,0 +1,182 @@
+name: "TESTING:ADVANCED:E2E"
+
+on:
+  workflow_dispatch:
+    inputs:
+      e2e-admin-tests:
+        type: boolean
+        required: false
+        default: false
+      e2e-upgrade-test:
+        type: boolean
+        required: false
+        default: false
+      e2e-performance-test:
+        type: boolean
+        required: false
+        default: false
+      e2e-upgrade-test-light:
+        type: boolean
+        required: false
+        default: false
+      debug:
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  e2e-admin-tests:
+    if: ${{ github.event.inputs.e2e-admin-tests == 'true' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: Execute e2e-admin-tests
+        shell: bash
+        run: |
+          make start-e2e-admin-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id || echo "docker-ps-error")
+              if [ "$current_status" == "docker-ps-error" ]; then
+                  echo "***********************************"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "*        TESTING COMPLETE         *"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "***********************************"
+                  docker logs $container_id || echo "no logs"
+                  exit 0
+              else
+                  echo "Testing in progress still...."
+                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                    docker logs $container_id || echo "no logs"
+                  fi
+              fi
+              sleep 5
+          done
+
+  e2e-upgrade-test:
+    if: ${{ github.event.inputs.e2e-upgrade-test == 'true' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: Execute upgrade-test
+        shell: bash
+        run: |
+          make start-upgrade-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id || echo "docker-ps-error")
+              if [ "$current_status" == "docker-ps-error" ]; then
+                  echo "***********************************"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "*        TESTING COMPLETE         *"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "***********************************"
+                  docker logs $container_id || echo "no logs"
+                  exit 0
+              else
+                  echo "Testing in progress still...."
+                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                    docker logs $container_id || echo "no logs"
+                  fi
+              fi
+              sleep 5
+          done
+
+  e2e-upgrade-test-light:
+    if: ${{ github.event.inputs.e2e-upgrade-test-light == 'true' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: Execute upgrade-test-light
+        shell: bash
+        run: |
+          make start-upgrade-test-light
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id || echo "docker-ps-error")
+              if [ "$current_status" == "docker-ps-error" ]; then
+                  echo "***********************************"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "*        TESTING COMPLETE         *"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "***********************************"
+                  docker logs $container_id || echo "no logs"
+                  exit 0
+              else
+                  echo "Testing in progress still...."
+                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                    docker logs $container_id || echo "no logs"
+                  fi
+              fi
+              sleep 5
+          done
+
+  e2e-performance-test:
+    if: ${{ github.event.inputs.e2e-performance-test == 'true' }}
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    timeout-minutes: 120
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@v3
+
+      - name: Execute Performance Tests
+        shell: bash
+        run: |
+          make start-e2e-performance-test
+          container_id=$(docker ps --filter "ancestor=orchestrator:latest" --format "{{.ID}}")
+          if [ -z "$container_id" ]; then
+              echo "Orchestrator container is not currently running. Exiting..."
+              exit 1
+          fi
+          echo "Monitoring Orchestrator container with ID: $container_id"
+          while true; do
+              current_status=$(docker ps -q | grep $container_id || echo "docker-ps-error")
+              if [ "$current_status" == "docker-ps-error" ]; then
+                  echo "***********************************"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "*        TESTING COMPLETE         *"
+                  echo "*                                 *"
+                  echo "*                                 *"
+                  echo "***********************************"
+                  docker logs $container_id || echo "no logs"
+                  exit 0
+              else
+                  echo "Testing in progress still...."
+                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                    docker logs $container_id || echo "no logs"
+                  fi
+              fi
+              sleep 5
+          done

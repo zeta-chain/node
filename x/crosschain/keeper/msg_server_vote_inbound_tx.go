@@ -6,7 +6,7 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -121,7 +121,7 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 
 	// FinalizeInbound updates CCTX Prices and Nonce
 	// Aborts is any of the updates fail
-	if common.IsZetaChain(msg.ReceiverChain) {
+	if chains.IsZetaChain(msg.ReceiverChain) {
 		tmpCtx, commit := ctx.CacheContext()
 		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, msg.SenderChainId)
 
