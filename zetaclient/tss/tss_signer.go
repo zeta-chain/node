@@ -74,6 +74,7 @@ type TSS struct {
 	logger        zerolog.Logger
 	Signers       []string
 	CoreBridge    interfaces.ZetaCoreBridger
+	KeySignMan    *KeySignManager
 
 	// TODO: support multiple Bitcoin network, not just one network
 	// https://github.com/zeta-chain/node/issues/1397
@@ -92,6 +93,7 @@ func NewTSS(
 	tssPassword string,
 	hotkeyPassword string,
 ) (*TSS, error) {
+	logger := log.With().Str("module", "tss_signer").Logger()
 	server, err := SetupTSSServer(peer, privkey, preParams, appContext.Config(), tssPassword)
 	if err != nil {
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
@@ -100,8 +102,9 @@ func NewTSS(
 		Server:         server,
 		Keys:           make(map[string]*Key),
 		CurrentPubkey:  appContext.ZetaCoreContext().GetCurrentTssPubkey(),
-		logger:         log.With().Str("module", "tss_signer").Logger(),
+		logger:         logger,
 		CoreBridge:     bridge,
+		KeySignMan:     NewKeySignManager(logger),
 		BitcoinChainID: bitcoinChainID,
 	}
 
@@ -121,9 +124,13 @@ func NewTSS(
 	if err != nil {
 		return nil, err
 	}
+
+	// Initialize metrics
 	for _, key := range keygenRes.GranteePubkeys {
 		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
 	}
+	metrics.NumActiveMsgSigns.Set(0)
+
 	return &newTss, nil
 }
 
@@ -203,7 +210,9 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 	}
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
+	tss.KeySignMan.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
+	tss.KeySignMan.EndMsgSign()
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
@@ -272,7 +281,9 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
+	tss.KeySignMan.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
+	tss.KeySignMan.EndMsgSign()
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
 	}
