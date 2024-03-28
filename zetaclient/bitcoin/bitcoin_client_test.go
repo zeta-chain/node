@@ -15,7 +15,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -32,7 +32,7 @@ func MockBTCClientMainnet() *BTCChainClient {
 	coreContext := corecontext.NewZetaCoreContext(cfg)
 
 	return &BTCChainClient{
-		chain:       common.BtcMainnetChain(),
+		chain:       chains.BtcMainnetChain(),
 		zetaClient:  stub.NewMockZetaCoreBridge(),
 		Tss:         stub.NewTSSMainnet(),
 		coreContext: coreContext,
@@ -44,7 +44,7 @@ func TestNewBitcoinClient(t *testing.T) {
 		cfg := config.NewConfig()
 		coreContext := corecontext.NewZetaCoreContext(cfg)
 		appContext := appcontext.NewAppContext(coreContext, cfg)
-		chain := common.BtcMainnetChain()
+		chain := chains.BtcMainnetChain()
 		bridge := stub.NewMockZetaCoreBridge()
 		tss := stub.NewMockTSS(sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}

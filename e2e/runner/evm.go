@@ -7,9 +7,10 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/ethereum"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/proofs"
+	"github.com/zeta-chain/zetacore/pkg/proofs/ethereum"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -244,8 +245,8 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		BlockHash: blockHash.Hex(),
 		TxIndex:   int64(txIndex),
 		TxHash:    txHash.Hex(),
-		Proof:     common.NewEthereumProof(txProof),
-		ChainId:   common.GoerliLocalnetChain().ChainId,
+		Proof:     proofs.NewEthereumProof(txProof),
+		ChainId:   chains.GoerliLocalnetChain().ChainId,
 	})
 	if err != nil {
 		panic(err)

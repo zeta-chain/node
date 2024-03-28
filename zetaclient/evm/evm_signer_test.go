@@ -8,7 +8,8 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	corecommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -35,7 +36,7 @@ func getNewEvmSigner() (*Signer, error) {
 	ts := &metrics.TelemetryServer{}
 	cfg := config.NewConfig()
 	return NewEVMSigner(
-		corecommon.BscMainnetChain(),
+		chains.BscMainnetChain(),
 		stub.EVMRPCEnabled,
 		stub.NewTSSMainnet(),
 		config.GetConnectorABI(),
@@ -53,8 +54,8 @@ func getNewEvmChainClient() (*ChainClient, error) {
 	cfg := config.NewConfig()
 	tss := stub.NewTSSMainnet()
 
-	evmcfg := config.EVMConfig{Chain: corecommon.BscMainnetChain(), Endpoint: "http://localhost:8545"}
-	cfg.EVMChainConfigs[corecommon.BscMainnetChain().ChainId] = evmcfg
+	evmcfg := config.EVMConfig{Chain: chains.BscMainnetChain(), Endpoint: "http://localhost:8545"}
+	cfg.EVMChainConfigs[chains.BscMainnetChain().ChainId] = evmcfg
 	coreCTX := corecontext.NewZetaCoreContext(cfg)
 	appCTX := appcontext.NewAppContext(coreCTX, cfg)
 
@@ -224,7 +225,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("SignCommandTx CmdWhitelistERC20", func(t *testing.T) {
-		cmd := corecommon.CmdWhitelistERC20
+		cmd := constant.CmdWhitelistERC20
 		params := ConnectorAddress.Hex()
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(txData, cmd, params)
@@ -241,7 +242,7 @@ func TestSigner_SignCommandTx(t *testing.T) {
 	})
 
 	t.Run("SignCommandTx CmdMigrateTssFunds", func(t *testing.T) {
-		cmd := corecommon.CmdMigrateTssFunds
+		cmd := constant.CmdMigrateTssFunds
 		// Call SignCommandTx
 		tx, err := evmSigner.SignCommandTx(txData, cmd, "")
 		require.NoError(t, err)

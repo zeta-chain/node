@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { Chain } from "../common/common_pb.js";
+import type { Chain } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from enum zetachain.zetacore.observer.ObservationType
@@ -67,7 +67,7 @@ export declare class ObserverMapper extends Message<ObserverMapper> {
   index: string;
 
   /**
-   * @generated from field: common.Chain observer_chain = 2;
+   * @generated from field: chains.Chain observer_chain = 2;
    */
   observerChain?: Chain;
 

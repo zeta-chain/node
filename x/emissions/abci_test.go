@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	emissionsModule "github.com/zeta-chain/zetacore/x/emissions"
@@ -88,7 +88,7 @@ func TestBeginBlocker(t *testing.T) {
 		})
 
 		// Total block rewards is the fixed amount of rewards that are distributed
-		totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
 		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
 		require.NoError(t, err)
 		// Fund the emission pool to start the emission process
@@ -246,7 +246,7 @@ func TestDistributeObserverRewards(t *testing.T) {
 			zk.ObserverKeeper.SetObserverSet(ctx, observerSet)
 
 			// Total block rewards is the fixed amount of rewards that are distributed
-			totalBlockRewards, err := common.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+			totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
 			totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
 			require.NoError(t, err)
 

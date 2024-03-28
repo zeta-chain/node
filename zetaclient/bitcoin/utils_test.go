@@ -6,14 +6,14 @@ import (
 
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
 func TestDecodeP2WPKHVout(t *testing.T) {
 	// load archived outtx raw result
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	nonce := uint64(148)
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
 
@@ -26,7 +26,7 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 	receiver, amount, err := DecodeP2WPKHVout(rawResult.Vout[0], chain)
 	require.NoError(t, err)
 	require.Equal(t, testutils.TSSAddressBTCMainnet, receiver)
-	require.Equal(t, common.NonceMarkAmount(nonce), amount)
+	require.Equal(t, chains.NonceMarkAmount(nonce), amount)
 
 	// decode vout 1, payment 0.00012000 BTC
 	receiver, amount, err = DecodeP2WPKHVout(rawResult.Vout[1], chain)
@@ -44,7 +44,7 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	// load archived outtx raw result
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	nonce := uint64(148)
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
 

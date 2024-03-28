@@ -21,7 +21,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 )
 
 // PublicAPI is the web3_ prefixed set of APIs in the Web3 JSON-RPC spec.
@@ -34,7 +34,7 @@ func NewPublicAPI() *PublicAPI {
 
 // ClientVersion returns the client version in the Web3 user agent format.
 func (a *PublicAPI) ClientVersion() string {
-	return fmt.Sprintf("%s/%s/%s/%s", common.Name, common.Version, runtime.GOOS+"-"+runtime.GOARCH, runtime.Version())
+	return fmt.Sprintf("%s/%s/%s/%s", constant.Name, constant.Version, runtime.GOOS+"-"+runtime.GOARCH, runtime.Version())
 }
 
 // Sha3 returns the keccak-256 hash of the passed-in input.

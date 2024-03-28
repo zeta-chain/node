@@ -1,8 +1,8 @@
 syntax = "proto3";
 package zetachain.zetacore.fungible;
 
-import "common/common.proto";
 import "gogoproto/gogo.proto";
+import "pkg/coin/coin.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/fungible/types";
 
@@ -59,7 +59,7 @@ message MsgDeployFungibleCoinZRC20 {
   uint32 decimals = 4;
   string name = 5;
   string symbol = 6;
-  common.CoinType coin_type = 7;
+  coin.CoinType coin_type = 7;
   int64 gas_limit = 8;
 }
 

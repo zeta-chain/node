@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -21,9 +21,9 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		})
 		srv := keeper.NewMsgServerImpl(*k)
 
-		chain1 := common.ExternalChainList()[0].ChainId
-		chain2 := common.ExternalChainList()[1].ChainId
-		chain3 := common.ExternalChainList()[2].ChainId
+		chain1 := chains.ExternalChainList()[0].ChainId
+		chain2 := chains.ExternalChainList()[1].ChainId
+		chain3 := chains.ExternalChainList()[2].ChainId
 
 		// set admin
 		admin := sample.AccAddress()
@@ -33,7 +33,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		_, found := k.GetChainParamsList(ctx)
 		require.False(t, found)
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chain params can be added
 		chainParams1 := sample.ChainParams(chain1)
@@ -49,7 +49,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Len(t, chainParamsList.ChainParams, 1)
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chian params can be added
 		chainParams2 := sample.ChainParams(chain2)
@@ -66,7 +66,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams1, chainParamsList.ChainParams[0])
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// a new chain params can be added
 		chainParams3 := sample.ChainParams(chain3)
@@ -84,7 +84,7 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 		require.Equal(t, chainParams2, chainParamsList.ChainParams[1])
 		require.Equal(t, chainParams3, chainParamsList.ChainParams[2])
 
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// chain params can be updated
 		chainParams2.ConfirmationCount = chainParams2.ConfirmationCount + 1
@@ -111,12 +111,12 @@ func TestMsgServer_UpdateChainParams(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := srv.UpdateChainParams(sdk.WrapSDKContext(ctx), &types.MsgUpdateChainParams{
 			Creator:     admin,
-			ChainParams: sample.ChainParams(common.ExternalChainList()[0].ChainId),
+			ChainParams: sample.ChainParams(chains.ExternalChainList()[0].ChainId),
 		})
-		require.ErrorIs(t, err, types.ErrNotAuthorizedPolicy)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 }

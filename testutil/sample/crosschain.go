@@ -9,7 +9,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -42,7 +42,7 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		Sender:                          EthAddress().String(),
 		SenderChainId:                   r.Int63(),
 		TxOrigin:                        EthAddress().String(),
-		CoinType:                        common.CoinType(r.Intn(100)),
+		CoinType:                        coin.CoinType(r.Intn(100)),
 		Asset:                           StringRandom(r, 32),
 		Amount:                          math.NewUint(uint64(r.Int63())),
 		InboundTxObservedHash:           StringRandom(r, 32),
@@ -56,7 +56,7 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 	return &types.OutboundTxParams{
 		Receiver:                         EthAddress().String(),
 		ReceiverChainId:                  r.Int63(),
-		CoinType:                         common.CoinType(r.Intn(100)),
+		CoinType:                         coin.CoinType(r.Intn(100)),
 		Amount:                           math.NewUint(uint64(r.Int63())),
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),
@@ -125,7 +125,7 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	}
 }
 
-func InboundVote(coinType common.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
+func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
 	return types.MsgVoteOnObservedInboundTx{
 		Creator:       "",
 		Sender:        EthAddress().String(),

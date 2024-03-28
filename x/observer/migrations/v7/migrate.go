@@ -29,16 +29,24 @@ func MigratePolicies(ctx sdk.Context, observerKeeper observerKeeper) error {
 	for _, adminPolicy := range params.AdminPolicy {
 		if adminPolicy != nil {
 
-			// Convert group1 -> emergency and group2 -> admin
-			policyType := authoritytypes.PolicyType_groupAdmin
 			if adminPolicy.PolicyType == types.Policy_Type_group1 {
-				policyType = authoritytypes.PolicyType_groupEmergency
+				// for policy group 1, we set the policy type to emergency
+				policies.Items = append(policies.Items, &authoritytypes.Policy{
+					Address:    adminPolicy.Address,
+					PolicyType: authoritytypes.PolicyType_groupEmergency,
+				})
+			} else {
+				// for policy group 2, we set the policy type to admin and operational
+				// the operational address should be changed after the migration
+				policies.Items = append(policies.Items, &authoritytypes.Policy{
+					Address:    adminPolicy.Address,
+					PolicyType: authoritytypes.PolicyType_groupAdmin,
+				})
+				policies.Items = append(policies.Items, &authoritytypes.Policy{
+					Address:    adminPolicy.Address,
+					PolicyType: authoritytypes.PolicyType_groupOperational,
+				})
 			}
-
-			policies.Items = append(policies.Items, &authoritytypes.Policy{
-				Address:    adminPolicy.Address,
-				PolicyType: policyType,
-			})
 		}
 	}
 

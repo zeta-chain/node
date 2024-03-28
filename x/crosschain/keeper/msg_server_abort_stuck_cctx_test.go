@@ -9,7 +9,6 @@ import (
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_AbortStuckCCTX(t *testing.T) {
@@ -21,7 +20,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -52,7 +51,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -83,7 +82,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 		msgServer := crosschainkeeper.NewMsgServerImpl(*k)
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -114,7 +113,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, false)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")
@@ -129,7 +128,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 			Creator:   admin,
 			CctxIndex: sample.GetCctxIndexFromString("cctx_index"),
 		})
-		require.ErrorIs(t, err, observertypes.ErrNotAuthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("cannot abort a cctx if doesn't exist", func(t *testing.T) {
@@ -140,7 +139,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// abort the cctx
 		_, err := msgServer.AbortStuckCCTX(ctx, &crosschaintypes.MsgAbortStuckCCTX{
@@ -158,7 +157,7 @@ func TestMsgServer_AbortStuckCCTX(t *testing.T) {
 
 		admin := sample.AccAddress()
 		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		// create a cctx
 		cctx := sample.CrossChainTx(t, "cctx_index")

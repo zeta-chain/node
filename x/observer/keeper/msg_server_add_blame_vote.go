@@ -13,14 +13,15 @@ import (
 func (k msgServer) AddBlameVote(goCtx context.Context, vote *types.MsgAddBlameVote) (*types.MsgAddBlameVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	observationType := types.ObservationType_TSSKeySign
+
 	// GetChainFromChainID makes sure we are getting only supported chains , if a chain support has been turned on using gov proposal, this function returns nil
 	observationChain := k.GetSupportedChainFromChainID(ctx, vote.ChainId)
 	if observationChain == nil {
 		return nil, cosmoserrors.Wrap(crosschainTypes.ErrUnsupportedChain, fmt.Sprintf("ChainID %d, Blame vote", vote.ChainId))
 	}
-	// IsAuthorized does various checks against the list of observer mappers
-	if ok := k.IsAuthorized(ctx, vote.Creator); !ok {
-		return nil, types.ErrNotAuthorizedPolicy
+
+	if ok := k.IsNonTombstonedObserver(ctx, vote.Creator); !ok {
+		return nil, types.ErrNotObserver
 	}
 
 	index := vote.Digest()

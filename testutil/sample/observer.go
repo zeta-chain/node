@@ -8,8 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
+	zetacrypto "github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -111,7 +112,7 @@ func ChainParamsSupported(chainID int64) *types.ChainParams {
 }
 
 func ChainParamsList() (cpl types.ChainParamsList) {
-	chainList := common.PrivnetChainList()
+	chainList := chains.PrivnetChainList()
 
 	for _, chain := range chainList {
 		cpl.ChainParams = append(cpl.ChainParams, ChainParams(chain.ChainId))
@@ -125,7 +126,7 @@ func Tss() types.TSS {
 	if err != nil {
 		panic(err)
 	}
-	pk, err := common.NewPubKey(spk)
+	pk, err := zetacrypto.NewPubKey(spk)
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -16,7 +18,7 @@ func (k msgServer) UpdateCrosschainFlags(goCtx context.Context, msg *types.MsgUp
 
 	// check permission
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, msg.GetRequiredPolicyType()) {
-		return &types.MsgUpdateCrosschainFlagsResponse{}, types.ErrNotAuthorizedPolicy
+		return &types.MsgUpdateCrosschainFlagsResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	// check if the value exists

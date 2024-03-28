@@ -11,7 +11,7 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/onrik/ethrpc"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -106,7 +106,7 @@ func LoadEVMIntx(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethrpc.Transaction {
+	coinType coin.CoinType) *ethrpc.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, false))
 
 	tx := &ethrpc.Transaction{}
@@ -120,7 +120,7 @@ func LoadEVMIntxReceipt(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethtypes.Receipt {
+	coinType coin.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, false))
 
 	receipt := &ethtypes.Receipt{}
@@ -134,7 +134,7 @@ func LoadEVMIntxCctx(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *crosschaintypes.CrossChainTx {
+	coinType coin.CoinType) *crosschaintypes.CrossChainTx {
 	nameCctx := path.Join("../", TestDataPathCctx, FileNameEVMIntxCctx(chainID, intxHash, coinType))
 
 	cctx := &crosschaintypes.CrossChainTx{}
@@ -161,7 +161,7 @@ func LoadEVMIntxNReceipt(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
+	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
 	// load archived intx and receipt
 	tx := LoadEVMIntx(t, chainID, intxHash, coinType)
 	receipt := LoadEVMIntxReceipt(t, chainID, intxHash, coinType)
@@ -174,7 +174,7 @@ func LoadEVMIntxDonation(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethrpc.Transaction {
+	coinType coin.CoinType) *ethrpc.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMIntx(chainID, intxHash, coinType, true))
 
 	tx := &ethrpc.Transaction{}
@@ -188,7 +188,7 @@ func LoadEVMIntxReceiptDonation(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethtypes.Receipt {
+	coinType coin.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMIntxReceipt(chainID, intxHash, coinType, true))
 
 	receipt := &ethtypes.Receipt{}
@@ -202,7 +202,7 @@ func LoadEVMIntxNReceiptDonation(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
+	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt) {
 	// load archived donation intx and receipt
 	tx := LoadEVMIntxDonation(t, chainID, intxHash, coinType)
 	receipt := LoadEVMIntxReceiptDonation(t, chainID, intxHash, coinType)
@@ -215,7 +215,7 @@ func LoadEVMIntxNReceiptNCctx(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt, *crosschaintypes.CrossChainTx) {
+	coinType coin.CoinType) (*ethrpc.Transaction, *ethtypes.Receipt, *crosschaintypes.CrossChainTx) {
 	// load archived intx, receipt and cctx
 	tx := LoadEVMIntx(t, chainID, intxHash, coinType)
 	receipt := LoadEVMIntxReceipt(t, chainID, intxHash, coinType)
@@ -229,7 +229,7 @@ func LoadEVMOuttx(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethtypes.Transaction {
+	coinType coin.CoinType) *ethtypes.Transaction {
 	nameTx := path.Join("../", TestDataPathEVM, FileNameEVMOuttx(chainID, intxHash, coinType))
 
 	tx := &ethtypes.Transaction{}
@@ -243,7 +243,7 @@ func LoadEVMOuttxReceipt(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) *ethtypes.Receipt {
+	coinType coin.CoinType) *ethtypes.Receipt {
 	nameReceipt := path.Join("../", TestDataPathEVM, FileNameEVMOuttxReceipt(chainID, intxHash, coinType))
 
 	receipt := &ethtypes.Receipt{}
@@ -257,7 +257,7 @@ func LoadEVMOuttxNReceipt(
 	t *testing.T,
 	chainID int64,
 	intxHash string,
-	coinType common.CoinType) (*ethtypes.Transaction, *ethtypes.Receipt) {
+	coinType coin.CoinType) (*ethtypes.Transaction, *ethtypes.Receipt) {
 	// load archived evm outtx and receipt
 	tx := LoadEVMOuttx(t, chainID, intxHash, coinType)
 	receipt := LoadEVMOuttxReceipt(t, chainID, intxHash, coinType)

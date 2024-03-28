@@ -13,8 +13,8 @@ func (k msgServer) RemoveChainParams(goCtx context.Context, msg *types.MsgRemove
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check permission
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return &types.MsgRemoveChainParamsResponse{}, types.ErrNotAuthorizedPolicy
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+		return &types.MsgRemoveChainParamsResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	// find current core params list or initialize a new one
