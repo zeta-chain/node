@@ -60,7 +60,7 @@
 
 ### CI
 
-* []() - Fix e2e advanced test debug checkbox.
+* [1958](https://github.com/zeta-chain/node/pull/1958) - Fix e2e advanced test debug checkbox.
 * [1945](https://github.com/zeta-chain/node/pull/1945) - update advanced testing pipeline to not execute tests that weren't selected so they show skipped instead of skipping steps.
 * [1940](https://github.com/zeta-chain/node/pull/1940) - adjust release pipeline to be created as pre-release instead of latest
 * [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
