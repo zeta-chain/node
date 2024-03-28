@@ -57,7 +57,7 @@ jobs:
                   exit 0
               else
                   echo "Testing in progress still...."
-                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                  if [ "${{ github.event.inputs.debug }}" == "true" ]; then
                     docker logs $container_id || echo "no logs"
                   fi
               fi
@@ -96,7 +96,7 @@ jobs:
                   exit 0
               else
                   echo "Testing in progress still...."
-                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                  if [ "${{ github.event.inputs.debug }}" == "true" ]; then
                     docker logs $container_id || echo "no logs"
                   fi
               fi
@@ -135,7 +135,7 @@ jobs:
                   exit 0
               else
                   echo "Testing in progress still...."
-                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                  if [ "${{ github.event.inputs.debug }}" == "true" ]; then
                     docker logs $container_id || echo "no logs"
                   fi
               fi
@@ -174,7 +174,7 @@ jobs:
                   exit 0
               else
                   echo "Testing in progress still...."
-                  if [ "${{ github.event.inputs.e2e-upgrade-test }}" == "true" ]; then
+                  if [ "${{ github.event.inputs.debug }}" == "true" ]; then
                     docker logs $container_id || echo "no logs"
                   fi
               fi
