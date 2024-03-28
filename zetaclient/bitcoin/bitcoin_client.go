@@ -726,7 +726,7 @@ func (ob *BTCChainClient) IsInTxRestricted(inTx *BTCInTxEvnet) bool {
 	return false
 }
 
-// GetBtcEvent either returns a valid BTCInTxEvnet or nil
+// GetBtcEvent either returns a valid BTCInTxEvent or nil
 // Note: the caller should retry the tx on error (e.g., GetSenderAddressByVin failed)
 func GetBtcEvent(
 	rpcClient interfaces.BTCRPCClient,
@@ -741,7 +741,7 @@ func GetBtcEvent(
 	var value float64
 	var memo []byte
 	if len(tx.Vout) >= 2 {
-		// 1st vout must to addressed to the tssAddress with p2wpkh scriptPubKey
+		// 1st vout must have tss address as receiver with p2wpkh scriptPubKey
 		vout0 := tx.Vout[0]
 		script := vout0.ScriptPubKey.Hex
 		if len(script) == 44 && script[:4] == "0014" { // P2WPKH output: 0x00 + 20 bytes of pubkey hash
@@ -1252,12 +1252,12 @@ func (ob *BTCChainClient) checkTssOutTxResult(cctx *types.CrossChainTx, hash *ch
 
 	// differentiate between normal and restricted cctx
 	if compliance.IsCctxRestricted(cctx) {
-		err = ob.checkTSSVoutCancelled(params, rawResult.Vout, ob.chain)
+		err = ob.checkTSSVoutCancelled(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in cancelled outTx %s nonce %d", hash, nonce)
 		}
 	} else {
-		err = ob.checkTSSVout(params, rawResult.Vout, ob.chain)
+		err = ob.checkTSSVout(params, rawResult.Vout)
 		if err != nil {
 			return errors.Wrapf(err, "checkTssOutTxResult: invalid TSS Vout in outTx %s nonce %d", hash, nonce)
 		}
@@ -1343,7 +1343,7 @@ func (ob *BTCChainClient) checkTSSVin(vins []btcjson.Vin, nonce uint64) error {
 //   - The first output is the nonce-mark
 //   - The second output is the correct payment to recipient
 //   - The third output is the change to TSS (optional)
-func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []btcjson.Vout, chain common.Chain) error {
+func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, payment to recipient, change to TSS (optional)]
 	if !(len(vouts) == 2 || len(vouts) == 3) {
 		return fmt.Errorf("checkTSSVout: invalid number of vouts: %d", len(vouts))
@@ -1358,21 +1358,19 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 			// the 2nd output is the payment to recipient
 			receiverExpected = params.Receiver
 		}
-		receiverVout, amount, err := DecodeTSSVout(vout, receiverExpected, chain)
+		receiverVout, amount, err := DecodeTSSVout(vout, receiverExpected, ob.chain)
 		if err != nil {
 			return err
 		}
-		// 1st vout: nonce-mark
-		if vout.N == 0 {
+		switch vout.N {
+		case 0: // 1st vout: nonce-mark
 			if receiverVout != tssAddress {
 				return fmt.Errorf("checkTSSVout: nonce-mark address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 			if amount != common.NonceMarkAmount(nonce) {
 				return fmt.Errorf("checkTSSVout: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
 			}
-		}
-		// 2nd vout: payment to recipient
-		if vout.N == 1 {
+		case 1: // 2nd vout: payment to recipient
 			if receiverVout != params.Receiver {
 				return fmt.Errorf("checkTSSVout: output address %s not match params receiver %s", receiverVout, params.Receiver)
 			}
@@ -1380,9 +1378,7 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 			if uint64(amount) != params.Amount.Uint64() {
 				return fmt.Errorf("checkTSSVout: output amount %d not match params amount %d", amount, params.Amount)
 			}
-		}
-		// 3rd vout: change to TSS (optional)
-		if vout.N == 2 {
+		case 2: // 3rd vout: change to TSS (optional)
 			if receiverVout != tssAddress {
 				return fmt.Errorf("checkTSSVout: change address %s not match TSS address %s", receiverVout, tssAddress)
 			}
@@ -1394,7 +1390,7 @@ func (ob *BTCChainClient) checkTSSVout(params *types.OutboundTxParams, vouts []b
 // checkTSSVoutCancelled vout is valid if:
 //   - The first output is the nonce-mark
 //   - The second output is the change to TSS (optional)
-func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, vouts []btcjson.Vout, chain common.Chain) error {
+func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, vouts []btcjson.Vout) error {
 	// vouts: [nonce-mark, change to TSS (optional)]
 	if !(len(vouts) == 1 || len(vouts) == 2) {
 		return fmt.Errorf("checkTSSVoutCancelled: invalid number of vouts: %d", len(vouts))
@@ -1404,21 +1400,19 @@ func (ob *BTCChainClient) checkTSSVoutCancelled(params *types.OutboundTxParams, 
 	tssAddress := ob.Tss.BTCAddress()
 	for _, vout := range vouts {
 		// decode receiver and amount from vout
-		receiverVout, amount, err := DecodeTSSVout(vout, tssAddress, chain)
+		receiverVout, amount, err := DecodeTSSVout(vout, tssAddress, ob.chain)
 		if err != nil {
 			return errors.Wrap(err, "checkTSSVoutCancelled: error decoding P2WPKH vout")
 		}
-		// 1st vout: nonce-mark
-		if vout.N == 0 {
+		switch vout.N {
+		case 0: // 1st vout: nonce-mark
 			if receiverVout != tssAddress {
 				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark address %s not match TSS address %s", receiverVout, tssAddress)
 			}
 			if amount != common.NonceMarkAmount(nonce) {
 				return fmt.Errorf("checkTSSVoutCancelled: nonce-mark amount %d not match nonce-mark amount %d", amount, common.NonceMarkAmount(nonce))
 			}
-		}
-		// 2nd vout: change to TSS (optional)
-		if vout.N == 2 {
+		case 1: // 2nd vout: change to TSS (optional)
 			if receiverVout != tssAddress {
 				return fmt.Errorf("checkTSSVoutCancelled: change address %s not match TSS address %s", receiverVout, tssAddress)
 			}

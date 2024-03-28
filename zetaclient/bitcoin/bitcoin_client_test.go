@@ -236,17 +236,17 @@ func TestCheckTSSVout(t *testing.T) {
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
-		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}}, chain)
+		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 
-		err = btcClient.checkTSSVout(params, []btcjson.Vout{{}, {}, {}, {}}, chain)
+		err = btcClient.checkTSSVout(params, []btcjson.Vout{{}, {}, {}, {}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
@@ -255,7 +255,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// invalid TSS vout
 		rawResult.Vout[0].ScriptPubKey.Hex = "invalid script"
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.Error(t, err)
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
@@ -264,7 +264,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
@@ -273,7 +273,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
@@ -282,7 +282,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params receiver")
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
@@ -291,7 +291,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not match payment amount
 		rawResult.Vout[1].Value = 0.00011000
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match params amount")
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
@@ -300,7 +300,7 @@ func TestCheckTSSVout(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[2].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVout(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 }
@@ -322,17 +322,17 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
 
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
 		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
-		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{}, chain)
+		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{})
 		require.ErrorContains(t, err, "invalid number of vouts")
 
-		err = btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{{}, {}, {}}, chain)
+		err = btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{{}, {}, {}})
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
@@ -344,7 +344,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[0].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
@@ -356,19 +356,20 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 		// not match nonce mark
 		rawResult.Vout[0].Value = 0.00000147
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the TSS address", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
 		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
+		rawResult.Vout[1].N = 1 // swap vout index
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
 		rawResult.Vout[1].ScriptPubKey.Hex = "0014ba8be635673034d4d0ddc9447409b594385ec4aa"
-		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout, chain)
+		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 }

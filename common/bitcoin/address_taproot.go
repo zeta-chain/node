@@ -193,6 +193,7 @@ func (a *AddressSegWit) String() string {
 	return a.EncodeAddress()
 }
 
+// DecodeTaprootAddress decodes taproot address only and returns error on non-taproot address
 func DecodeTaprootAddress(addr string) (*AddressTaproot, error) {
 	hrp, version, program, err := decodeSegWitAddress(addr)
 	if err != nil {
