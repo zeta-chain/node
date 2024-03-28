@@ -14,6 +14,7 @@ func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 	// `index` is the index of the `address` in the `VoterList`
 	// `index` is used to set the vote in the `Votes` array
 	index := m.GetVoterIndex(address)
+	// TODO: is this valid possibility?
 	if index == -1 {
 		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf("Voter %s not in voter list", address))
 	}
@@ -23,6 +24,7 @@ func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 
 func (m Ballot) HasVoted(address string) bool {
 	index := m.GetVoterIndex(address)
+	// TODO: is this valid possibility?
 	if index == -1 {
 		return false
 	}

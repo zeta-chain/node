@@ -108,12 +108,3 @@ func validateBallotMaturityBlocks(i interface{}) error {
 
 	return nil
 }
-
-func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
-	for _, admin := range p.AdminPolicy {
-		if admin.PolicyType == policyType {
-			return admin.Address
-		}
-	}
-	return ""
-}

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -11,6 +12,14 @@ func TestGenesisState_Validate(t *testing.T) {
 	invalidChainParamsGen := types.DefaultGenesis()
 	chainParams := types.GetDefaultChainParams().ChainParams
 	invalidChainParamsGen.ChainParamsList.ChainParams = append(chainParams, chainParams[0])
+
+	gsWithDuplicateNodeAccountList := types.DefaultGenesis()
+	nodeAccount := sample.NodeAccount()
+	gsWithDuplicateNodeAccountList.NodeAccountList = []*types.NodeAccount{nodeAccount, nodeAccount}
+
+	gsWithDuplicateChainNonces := types.DefaultGenesis()
+	chainNonce := sample.ChainNonces(t, "0")
+	gsWithDuplicateChainNonces.ChainNonces = []types.ChainNonces{chainNonce, chainNonce}
 
 	for _, tc := range []struct {
 		desc     string
@@ -30,6 +39,16 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc:     "invalid chain params",
 			genState: invalidChainParamsGen,
+			valid:    false,
+		},
+		{
+			desc:     "invalid genesis state duplicate node account list",
+			genState: gsWithDuplicateNodeAccountList,
+			valid:    false,
+		},
+		{
+			desc:     "invalid genesis state duplicate chain nonces",
+			genState: gsWithDuplicateChainNonces,
 			valid:    false,
 		},
 	} {
