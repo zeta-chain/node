@@ -42,6 +42,7 @@ func TestGenesis(t *testing.T) {
 			},
 			PendingNonces: sample.PendingNoncesList(t, "sample", 20),
 			NonceToCctx:   sample.NonceToCctxList(t, "sample", 20),
+			TssHistory:    []types.TSS{sample.Tss()},
 		}
 
 		// Init and export
@@ -86,6 +87,48 @@ func TestGenesis(t *testing.T) {
 			Keygen:            &types.Keygen{},
 			LastObserverCount: &types.LastObserverCount{},
 			NodeAccountList:   []*types.NodeAccount{},
+		}
+
+		require.Equal(t, expectedGenesisState, *got)
+	})
+
+	t.Run("genState fields not defined except tss", func(t *testing.T) {
+		tss := sample.Tss()
+		genesisState := types.GenesisState{
+			Tss: &tss,
+		}
+
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		observer.InitGenesis(ctx, *k, genesisState)
+		got := observer.ExportGenesis(ctx, *k)
+		require.NotNil(t, got)
+
+		defaultParams := types.DefaultParams()
+		btcChainParams := types.GetDefaultBtcRegtestChainParams()
+		btcChainParams.IsSupported = true
+		goerliChainParams := types.GetDefaultGoerliLocalnetChainParams()
+		goerliChainParams.IsSupported = true
+		zetaPrivnetChainParams := types.GetDefaultZetaPrivnetChainParams()
+		zetaPrivnetChainParams.IsSupported = true
+		localnetChainParams := types.ChainParamsList{
+			ChainParams: []*types.ChainParams{
+				btcChainParams,
+				goerliChainParams,
+				zetaPrivnetChainParams,
+			},
+		}
+		pendingNonces, err := k.GetAllPendingNonces(ctx)
+		require.NoError(t, err)
+		require.NotEmpty(t, pendingNonces)
+		expectedGenesisState := types.GenesisState{
+			Params:            &defaultParams,
+			CrosschainFlags:   types.DefaultCrosschainFlags(),
+			ChainParamsList:   localnetChainParams,
+			Tss:               &tss,
+			Keygen:            &types.Keygen{},
+			LastObserverCount: &types.LastObserverCount{},
+			NodeAccountList:   []*types.NodeAccount{},
+			PendingNonces:     pendingNonces,
 		}
 
 		require.Equal(t, expectedGenesisState, *got)
