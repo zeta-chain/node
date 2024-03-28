@@ -68,13 +68,13 @@ var _ interfaces.TSSSigner = (*TSS)(nil)
 
 // TSS is a struct that holds the server and the keys for TSS
 type TSS struct {
-	Server        *tss.TssServer
-	Keys          map[string]*Key // PubkeyInBech32 => TSSKey
-	CurrentPubkey string
-	logger        zerolog.Logger
-	Signers       []string
-	CoreBridge    interfaces.ZetaCoreBridger
-	KeySignMan    *KeySignManager
+	Server          *tss.TssServer
+	Keys            map[string]*Key // PubkeyInBech32 => TSSKey
+	CurrentPubkey   string
+	logger          zerolog.Logger
+	Signers         []string
+	CoreBridge      interfaces.ZetaCoreBridger
+	KeysignsTracker *ConcurrentKeysignsTracker
 
 	// TODO: support multiple Bitcoin network, not just one network
 	// https://github.com/zeta-chain/node/issues/1397
@@ -99,13 +99,13 @@ func NewTSS(
 		return nil, fmt.Errorf("SetupTSSServer error: %w", err)
 	}
 	newTss := TSS{
-		Server:         server,
-		Keys:           make(map[string]*Key),
-		CurrentPubkey:  appContext.ZetaCoreContext().GetCurrentTssPubkey(),
-		logger:         logger,
-		CoreBridge:     bridge,
-		KeySignMan:     NewKeySignManager(logger),
-		BitcoinChainID: bitcoinChainID,
+		Server:          server,
+		Keys:            make(map[string]*Key),
+		CurrentPubkey:   appContext.ZetaCoreContext().GetCurrentTssPubkey(),
+		logger:          logger,
+		CoreBridge:      bridge,
+		KeysignsTracker: NewKeySignManager(logger),
+		BitcoinChainID:  bitcoinChainID,
 	}
 
 	err = newTss.LoadTssFilesFromDirectory(appContext.Config().TssPath)
@@ -210,9 +210,9 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.C
 	}
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, []string{base64.StdEncoding.EncodeToString(H)}, int64(height), nil, "0.14.0")
-	tss.KeySignMan.StartMsgSign()
+	tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
-	tss.KeySignMan.EndMsgSign()
+	tss.KeysignsTracker.EndMsgSign()
 	if err != nil {
 		log.Warn().Msg("keysign fail")
 	}
@@ -281,9 +281,9 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
 
-	tss.KeySignMan.StartMsgSign()
+	tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
-	tss.KeySignMan.EndMsgSign()
+	tss.KeysignsTracker.EndMsgSign()
 	if err != nil {
 		log.Warn().Err(err).Msg("keysign fail")
 	}
