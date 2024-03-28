@@ -199,7 +199,8 @@ func TestOutTxSize2In3Out(t *testing.T) {
 	// #nosec G701 always positive
 	vError := uint64(1) // 1 vByte error tolerance
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(uint64(len(utxosTxids)), []btcutil.Address{payee})
+	vBytesEstimated, err := EstimateOuttxSize(uint64(len(utxosTxids)), []btcutil.Address{payee})
+	require.NoError(t, err)
 	if vBytes > vBytesEstimated {
 		require.True(t, vBytes-vBytesEstimated <= vError)
 	} else {
@@ -222,7 +223,8 @@ func TestOutTxSize21In3Out(t *testing.T) {
 	// #nosec G701 always positive
 	vError := uint64(21 / 4) // 5 vBytes error tolerance
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(uint64(len(exampleTxids)), []btcutil.Address{payee})
+	vBytesEstimated, err := EstimateOuttxSize(uint64(len(exampleTxids)), []btcutil.Address{payee})
+	require.NoError(t, err)
 	if vBytes > vBytesEstimated {
 		require.True(t, vBytes-vBytesEstimated <= vError)
 	} else {
@@ -245,7 +247,8 @@ func TestOutTxSizeXIn3Out(t *testing.T) {
 		// #nosec G701 always positive
 		vError := uint64(0.25 + float64(x)/4) // 1st witness incurs 0.25 more vByte error than others (which incurs 1/4 vByte per witness)
 		vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-		vBytesEstimated := EstimateOuttxSize(uint64(len(exampleTxids[:x])), []btcutil.Address{payee})
+		vBytesEstimated, err := EstimateOuttxSize(uint64(len(exampleTxids[:x])), []btcutil.Address{payee})
+		require.NoError(t, err)
 		if vBytes > vBytesEstimated {
 			require.True(t, vBytes-vBytesEstimated <= vError)
 			//fmt.Printf("%d error percentage: %.2f%%\n", float64(vBytes-vBytesEstimated)/float64(vBytes)*100)
@@ -259,33 +262,64 @@ func TestOutTxSizeXIn3Out(t *testing.T) {
 func TestGetOutputSizeByAddress(t *testing.T) {
 	// test nil P2TR address and non-nil P2TR address
 	nilP2TR := (*bitcoin.AddressTaproot)(nil)
+	sizeNilP2TR, err := GetOutputSizeByAddress(nilP2TR)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), sizeNilP2TR)
+
 	addrP2TR := getTestAddrScript(t, ScriptTypeP2TR)
-	require.Equal(t, uint64(0), GetOutputSizeByAddress(nilP2TR))
-	require.Equal(t, uint64(bytesPerOutputP2TR), GetOutputSizeByAddress(addrP2TR))
+	sizeP2TR, err := GetOutputSizeByAddress(addrP2TR)
+	require.NoError(t, err)
+	require.Equal(t, uint64(bytesPerOutputP2TR), sizeP2TR)
 
 	// test nil P2WSH address and non-nil P2WSH address
 	nilP2WSH := (*btcutil.AddressWitnessScriptHash)(nil)
+	sizeNilP2WSH, err := GetOutputSizeByAddress(nilP2WSH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), sizeNilP2WSH)
+
 	addrP2WSH := getTestAddrScript(t, ScriptTypeP2WSH)
-	require.Equal(t, uint64(0), GetOutputSizeByAddress(nilP2WSH))
-	require.Equal(t, uint64(bytesPerOutputP2WSH), GetOutputSizeByAddress(addrP2WSH))
+	sizeP2WSH, err := GetOutputSizeByAddress(addrP2WSH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(bytesPerOutputP2WSH), sizeP2WSH)
 
 	// test nil P2WPKH address and non-nil P2WPKH address
 	nilP2WPKH := (*btcutil.AddressWitnessPubKeyHash)(nil)
+	sizeNilP2WPKH, err := GetOutputSizeByAddress(nilP2WPKH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), sizeNilP2WPKH)
+
 	addrP2WPKH := getTestAddrScript(t, ScriptTypeP2WPKH)
-	require.Equal(t, uint64(0), GetOutputSizeByAddress(nilP2WPKH))
-	require.Equal(t, uint64(bytesPerOutputP2WPKH), GetOutputSizeByAddress(addrP2WPKH))
+	sizeP2WPKH, err := GetOutputSizeByAddress(addrP2WPKH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(bytesPerOutputP2WPKH), sizeP2WPKH)
 
 	// test nil P2SH address and non-nil P2SH address
 	nilP2SH := (*btcutil.AddressScriptHash)(nil)
+	sizeNilP2SH, err := GetOutputSizeByAddress(nilP2SH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), sizeNilP2SH)
+
 	addrP2SH := getTestAddrScript(t, ScriptTypeP2SH)
-	require.Equal(t, uint64(0), GetOutputSizeByAddress(nilP2SH))
-	require.Equal(t, uint64(bytesPerOutputP2SH), GetOutputSizeByAddress(addrP2SH))
+	sizeP2SH, err := GetOutputSizeByAddress(addrP2SH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(bytesPerOutputP2SH), sizeP2SH)
 
 	// test nil P2PKH address and non-nil P2PKH address
 	nilP2PKH := (*btcutil.AddressPubKeyHash)(nil)
+	sizeNilP2PKH, err := GetOutputSizeByAddress(nilP2PKH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), sizeNilP2PKH)
+
 	addrP2PKH := getTestAddrScript(t, ScriptTypeP2PKH)
-	require.Equal(t, uint64(0), GetOutputSizeByAddress(nilP2PKH))
-	require.Equal(t, uint64(bytesPerOutputP2PKH), GetOutputSizeByAddress(addrP2PKH))
+	sizeP2PKH, err := GetOutputSizeByAddress(addrP2PKH)
+	require.NoError(t, err)
+	require.Equal(t, uint64(bytesPerOutputP2PKH), sizeP2PKH)
+
+	// test unsupported address type
+	nilP2PK := (*btcutil.AddressPubKey)(nil)
+	sizeP2PK, err := GetOutputSizeByAddress(nilP2PK)
+	require.ErrorContains(t, err, "cannot get output size for address type")
+	require.Equal(t, uint64(0), sizeP2PK)
 }
 
 func TestOutputSizeP2TR(t *testing.T) {
@@ -303,7 +337,8 @@ func TestOutputSizeP2TR(t *testing.T) {
 	// Estimate the tx size in vByte
 	// #nosec G701 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(2, payees)
+	vBytesEstimated, err := EstimateOuttxSize(2, payees)
+	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
 }
 
@@ -322,7 +357,8 @@ func TestOutputSizeP2WSH(t *testing.T) {
 	// Estimate the tx size in vByte
 	// #nosec G701 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(2, payees)
+	vBytesEstimated, err := EstimateOuttxSize(2, payees)
+	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
 }
 
@@ -341,7 +377,8 @@ func TestOutputSizeP2SH(t *testing.T) {
 	// Estimate the tx size in vByte
 	// #nosec G701 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(2, payees)
+	vBytesEstimated, err := EstimateOuttxSize(2, payees)
+	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
 }
 
@@ -360,7 +397,8 @@ func TestOutputSizeP2PKH(t *testing.T) {
 	// Estimate the tx size in vByte
 	// #nosec G701 always positive
 	vBytes := uint64(blockchain.GetTransactionWeight(btcutil.NewTx(tx)) / blockchain.WitnessScaleFactor)
-	vBytesEstimated := EstimateOuttxSize(2, payees)
+	vBytesEstimated, err := EstimateOuttxSize(2, payees)
+	require.NoError(t, err)
 	require.Equal(t, vBytes, vBytesEstimated)
 }
 
@@ -377,7 +415,9 @@ func TestOuttxSizeBreakdown(t *testing.T) {
 	// add all outtx sizes paying to each address
 	txSizeTotal := uint64(0)
 	for _, payee := range payees {
-		txSizeTotal += EstimateOuttxSize(2, []btcutil.Address{payee})
+		sizeOutput, err := EstimateOuttxSize(2, []btcutil.Address{payee})
+		require.NoError(t, err)
+		txSizeTotal += sizeOutput
 	}
 
 	// calculate the average outtx size
@@ -401,16 +441,24 @@ func TestOuttxSizeBreakdown(t *testing.T) {
 	require.Equal(t, depositFee, 0.00001360)
 }
 
-func TestOuttxSizeMinMax(t *testing.T) {
+func TestOuttxSizeMinMaxError(t *testing.T) {
 	// P2TR output is the largest in size; P2WPKH is the smallest
 	toP2TR := getTestAddrScript(t, ScriptTypeP2TR)
 	toP2WPKH := getTestAddrScript(t, ScriptTypeP2WPKH)
 
 	// Estimate the largest outtx size in vByte
-	sizeMax := EstimateOuttxSize(21, []btcutil.Address{toP2TR})
+	sizeMax, err := EstimateOuttxSize(21, []btcutil.Address{toP2TR})
+	require.NoError(t, err)
 	require.Equal(t, outTxBytesMax, sizeMax)
 
 	// Estimate the smallest outtx size in vByte
-	sizeMin := EstimateOuttxSize(2, []btcutil.Address{toP2WPKH})
+	sizeMin, err := EstimateOuttxSize(2, []btcutil.Address{toP2WPKH})
+	require.NoError(t, err)
 	require.Equal(t, outTxBytesMin, sizeMin)
+
+	// Estimate unknown address type
+	nilP2PK := (*btcutil.AddressPubKey)(nil)
+	size, err := EstimateOuttxSize(1, []btcutil.Address{nilP2PK})
+	require.Error(t, err)
+	require.Equal(t, uint64(0), size)
 }

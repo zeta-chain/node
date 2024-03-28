@@ -11,20 +11,27 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
+	"github.com/pkg/errors"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"golang.org/x/crypto/ripemd160"
-
-	"github.com/pkg/errors"
 )
 
 const (
-	// Length of P2TR, P2WSH, P2WPKH, P2SH, P2PKH scripts
-	LengthScriptP2TR   = 34
-	LengthScriptP2WSH  = 34
+	// Lenth of P2TR script [OP_1 0x20 <32-byte-hash>]
+	LengthScriptP2TR = 34
+
+	// Length of P2WSH script [OP_0 0x20 <32-byte-hash>]
+	LengthScriptP2WSH = 34
+
+	// Length of P2WPKH script [OP_0 0x14 <20-byte-hash>]
 	LengthScriptP2WPKH = 22
-	LengthScriptP2SH   = 23
-	LengthScriptP2PKH  = 25
+
+	// Length of P2SH script [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
+	LengthScriptP2SH = 23
+
+	// Length of P2PKH script [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
+	LengthScriptP2PKH = 25
 )
 
 // PayToAddrScript creates a new script to pay a transaction output to a the
@@ -40,25 +47,21 @@ func PayToAddrScript(addr btcutil.Address) ([]byte, error) {
 
 // IsPkScriptP2TR checks if the given script is a P2TR script
 func IsPkScriptP2TR(script []byte) bool {
-	// [OP_1 0x20 <32-byte-hash>]
 	return len(script) == LengthScriptP2TR && script[0] == txscript.OP_1 && script[1] == 0x20
 }
 
 // IsPkScriptP2WSH checks if the given script is a P2WSH script
 func IsPkScriptP2WSH(script []byte) bool {
-	// [OP_0 0x20 <32-byte-hash>]
 	return len(script) == LengthScriptP2WSH && script[0] == txscript.OP_0 && script[1] == 0x20
 }
 
 // IsPkScriptP2WPKH checks if the given script is a P2WPKH script
 func IsPkScriptP2WPKH(script []byte) bool {
-	// [OP_0 0x14 <20-byte-hash>]
 	return len(script) == LengthScriptP2WPKH && script[0] == txscript.OP_0 && script[1] == 0x14
 }
 
 // IsPkScriptP2SH checks if the given script is a P2SH script
 func IsPkScriptP2SH(script []byte) bool {
-	// [OP_HASH160 0x14 <20-byte-hash> OP_EQUAL]
 	return len(script) == LengthScriptP2SH &&
 		script[0] == txscript.OP_HASH160 &&
 		script[1] == 0x14 &&
@@ -67,7 +70,6 @@ func IsPkScriptP2SH(script []byte) bool {
 
 // IsPkScriptP2PKH checks if the given script is a P2PKH script
 func IsPkScriptP2PKH(script []byte) bool {
-	// [OP_DUP OP_HASH160 0x14 <20-byte-hash> OP_EQUALVERIFY OP_CHECKSIG]
 	return len(script) == LengthScriptP2PKH &&
 		script[0] == txscript.OP_DUP &&
 		script[1] == txscript.OP_HASH160 &&

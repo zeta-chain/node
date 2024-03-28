@@ -9,19 +9,17 @@ import (
 	"github.com/btcsuite/btcd/blockchain"
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/common/bitcoin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-
-	"github.com/btcsuite/btcd/wire"
-	"github.com/pkg/errors"
 )
 
 const (
 	bytesPerKB              = 1000
-	bytesEmptyTx            = 10  // an empty tx is 10 bytes
 	bytesPerInput           = 41  // each input is 41 bytes
 	bytesPerOutputP2TR      = 43  // each P2TR output is 43 bytes
 	bytesPerOutputP2WSH     = 43  // each P2WSH output is 43 bytes
@@ -39,19 +37,16 @@ const (
 )
 
 var (
-	BtcOutTxBytesDepositor  uint64
-	BtcOutTxBytesWithdrawer uint64
-	DefaultDepositorFee     float64
-)
+	// The outtx size incurred by the depositor: 68vB
+	BtcOutTxBytesDepositor = OuttxSizeDepositor()
 
-func init() {
-	BtcOutTxBytesDepositor = OuttxSizeDepositor()   // 68vB, the outtx size incurred by the depositor
-	BtcOutTxBytesWithdrawer = OuttxSizeWithdrawer() // 177vB, the outtx size incurred by the withdrawer
+	// The outtx size incurred by the withdrawer: 177vB
+	BtcOutTxBytesWithdrawer = OuttxSizeWithdrawer()
 
+	// The default depositor fee is 0.00001360 BTC (20 * 68vB / 100000000)
 	// default depositor fee calculation is based on a fixed fee rate of 20 sat/byte just for simplicity.
-	// In reality, the fee rate on UTXO deposit is different from the fee rate when the UTXO is spent.
-	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate) // 0.00001360 (20 * 68vB / 100000000)
-}
+	DefaultDepositorFee = DepositorFee(defaultDepositorFeeRate)
+)
 
 // FeeRateToSatPerByte converts a fee rate in BTC/KB to sat/byte.
 func FeeRateToSatPerByte(rate float64) *big.Int {
@@ -69,9 +64,9 @@ func WiredTxSize(numInputs uint64, numOutputs uint64) uint64 {
 }
 
 // EstimateOuttxSize estimates the size of a outtx in vBytes
-func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) uint64 {
+func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) (uint64, error) {
 	if numInputs == 0 {
-		return 0
+		return 0, nil
 	}
 	// #nosec G701 always positive
 	numOutputs := 2 + uint64(len(payees))
@@ -82,45 +77,49 @@ func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) uint64 {
 	// calculate the size of the outputs to payees
 	bytesToPayees := uint64(0)
 	for _, to := range payees {
-		bytesToPayees += GetOutputSizeByAddress(to)
+		sizeOutput, err := GetOutputSizeByAddress(to)
+		if err != nil {
+			return 0, err
+		}
+		bytesToPayees += sizeOutput
 	}
 	// calculate the size of the witness
 	bytesWitness := bytes1stWitness + (numInputs-1)*bytesPerWitness
 	// https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#transaction-size-calculations
 	// Calculation for signed SegWit tx: blockchain.GetTransactionWeight(tx) / 4
-	return bytesWiredTx + bytesInput + bytesOutput + bytesToPayees + bytesWitness/blockchain.WitnessScaleFactor
+	return bytesWiredTx + bytesInput + bytesOutput + bytesToPayees + bytesWitness/blockchain.WitnessScaleFactor, nil
 }
 
 // GetOutputSizeByAddress returns the size of a tx output in bytes by the given address
-func GetOutputSizeByAddress(to btcutil.Address) uint64 {
+func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	switch addr := to.(type) {
 	case *bitcoin.AddressTaproot:
 		if addr == nil {
-			return 0
+			return 0, nil
 		}
-		return bytesPerOutputP2TR
+		return bytesPerOutputP2TR, nil
 	case *btcutil.AddressWitnessScriptHash:
 		if addr == nil {
-			return 0
+			return 0, nil
 		}
-		return bytesPerOutputP2WSH
+		return bytesPerOutputP2WSH, nil
 	case *btcutil.AddressWitnessPubKeyHash:
 		if addr == nil {
-			return 0
+			return 0, nil
 		}
-		return bytesPerOutputP2WPKH
+		return bytesPerOutputP2WPKH, nil
 	case *btcutil.AddressScriptHash:
 		if addr == nil {
-			return 0
+			return 0, nil
 		}
-		return bytesPerOutputP2SH
+		return bytesPerOutputP2SH, nil
 	case *btcutil.AddressPubKeyHash:
 		if addr == nil {
-			return 0
+			return 0, nil
 		}
-		return bytesPerOutputP2PKH
+		return bytesPerOutputP2PKH, nil
 	default:
-		return bytesPerOutputP2WPKH
+		return 0, fmt.Errorf("cannot get output size for address type %T", to)
 	}
 }
 
@@ -207,18 +206,12 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 
 // CalcDepositorFee calculates the depositor fee for a given block
 func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, netParams *chaincfg.Params, logger zerolog.Logger) float64 {
-	// use dynamic fee or default
-	dynamicFee := true
-
 	// use default fee for regnet
 	if common.IsBitcoinRegnet(chainID) {
-		dynamicFee = false
+		return DefaultDepositorFee
 	}
 	// mainnet dynamic fee takes effect only after a planned upgrade height
 	if common.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
-		dynamicFee = false
-	}
-	if !dynamicFee {
 		return DefaultDepositorFee
 	}
 

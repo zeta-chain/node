@@ -293,6 +293,20 @@ func TestAddWithdrawTxOutputs(t *testing.T) {
 			},
 		},
 		{
+			name:   "should add outputs without change successfully",
+			tx:     wire.NewMsgTx(wire.TxVersion),
+			to:     to,
+			total:  0.20012000,
+			amount: 0.2,
+			nonce:  10000,
+			fees:   big.NewInt(2000),
+			fail:   false,
+			txout: []*wire.TxOut{
+				{Value: 10000, PkScript: tssScript},
+				{Value: 20000000, PkScript: toScript},
+			},
+		},
+		{
 			name:     "should cancel tx successfully",
 			tx:       wire.NewMsgTx(wire.TxVersion),
 			to:       to,

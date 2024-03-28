@@ -98,7 +98,10 @@ func (signer *BTCSigner) GetERC20CustodyAddress() ethcommon.Address {
 	return ethcommon.Address{}
 }
 
-// AddWithdrawTxOutputs adds the outputs to the withdraw tx
+// AddWithdrawTxOutputs adds the 3 outputs to the withdraw tx
+// 1st output: the nonce-mark btc to TSS itself
+// 2nd output: the payment to the recipient
+// 3rd output: the remaining btc to TSS itself
 func (signer *BTCSigner) AddWithdrawTxOutputs(
 	tx *wire.MsgTx,
 	to btcutil.Address,
@@ -200,7 +203,10 @@ func (signer *BTCSigner) SignWithdrawTx(
 
 	// size checking
 	// #nosec G701 always positive
-	txSize := EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
+	txSize, err := EstimateOuttxSize(uint64(len(prevOuts)), []btcutil.Address{to})
+	if err != nil {
+		return nil, err
+	}
 	if sizeLimit < BtcOutTxBytesWithdrawer { // ZRC20 'withdraw' charged less fee from end user
 		signer.logger.Info().Msgf("sizeLimit %d is less than BtcOutTxBytesWithdrawer %d for nonce %d", sizeLimit, txSize, nonce)
 	}

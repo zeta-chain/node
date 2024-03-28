@@ -41,6 +41,22 @@ func MockBTCClientMainnet() *BTCChainClient {
 	}
 }
 
+// createRPCClientAndLoadTx is a helper function to load raw tx and feed it to mock rpc client
+func createRPCClientAndLoadTx(chainId int64, txHash string) *stub.MockBTCRPCClient {
+	// file name for the archived MsgTx
+	nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
+
+	// load archived MsgTx
+	var msgTx wire.MsgTx
+	testutils.LoadObjectFromJSONFile(&msgTx, nameMsgTx)
+	tx := btcutil.NewTx(&msgTx)
+
+	// feed tx to mock rpc client
+	rpcClient := stub.NewMockBTCRPCClient()
+	rpcClient.WithRawTransaction(tx)
+	return rpcClient
+}
+
 func TestNewBitcoinClient(t *testing.T) {
 	t.Run("should return error because zetacore doesn't update core context", func(t *testing.T) {
 		cfg := config.NewConfig()
@@ -355,22 +371,6 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		err := btcClient.checkTSSVoutCancelled(params, rawResult.Vout, chain)
 		require.ErrorContains(t, err, "not match TSS address")
 	})
-}
-
-// createRPCClientAndLoadTx is a helper function to load raw tx and feed it to mock rpc client
-func createRPCClientAndLoadTx(chainId int64, txHash string) *stub.MockBTCRPCClient {
-	// file name for the archived MsgTx
-	nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
-
-	// load archived MsgTx
-	var msgTx wire.MsgTx
-	testutils.LoadObjectFromJSONFile(&msgTx, nameMsgTx)
-	tx := btcutil.NewTx(&msgTx)
-
-	// feed tx to mock rpc client
-	rpcClient := stub.NewMockBTCRPCClient()
-	rpcClient.WithRawTransaction(tx)
-	return rpcClient
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {
