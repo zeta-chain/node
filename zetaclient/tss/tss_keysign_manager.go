@@ -14,8 +14,8 @@ type ConcurrentKeysignsTracker struct {
 	Logger            zerolog.Logger
 }
 
-// NewKeySignManager - constructor
-func NewKeySignManager(logger zerolog.Logger) *ConcurrentKeysignsTracker {
+// NewKeysignsTracker - constructor
+func NewKeysignsTracker(logger zerolog.Logger) *ConcurrentKeysignsTracker {
 	return &ConcurrentKeysignsTracker{
 		numActiveMsgSigns: 0,
 		mu:                sync.Mutex{},

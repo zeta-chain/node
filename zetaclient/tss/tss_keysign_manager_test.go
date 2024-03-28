@@ -8,7 +8,7 @@ import (
 )
 
 func TestKeySignManager_StartMsgSign(t *testing.T) {
-	ksman := NewKeySignManager(zerolog.Logger{})
+	ksman := NewKeysignsTracker(zerolog.Logger{})
 	ksman.StartMsgSign()
 	ksman.StartMsgSign()
 	ksman.StartMsgSign()
@@ -17,7 +17,7 @@ func TestKeySignManager_StartMsgSign(t *testing.T) {
 }
 
 func TestKeySignManager_EndMsgSign(t *testing.T) {
-	ksman := NewKeySignManager(zerolog.Logger{})
+	ksman := NewKeysignsTracker(zerolog.Logger{})
 	ksman.StartMsgSign()
 	ksman.StartMsgSign()
 	ksman.EndMsgSign()

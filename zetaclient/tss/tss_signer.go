@@ -104,7 +104,7 @@ func NewTSS(
 		CurrentPubkey:   appContext.ZetaCoreContext().GetCurrentTssPubkey(),
 		logger:          logger,
 		CoreBridge:      bridge,
-		KeysignsTracker: NewKeySignManager(logger),
+		KeysignsTracker: NewKeysignsTracker(logger),
 		BitcoinChainID:  bitcoinChainID,
 	}
 
