@@ -1,12 +1,6 @@
 # CHANGELOG
 
 ## Unreleased
-
-### Refactor
-
-* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
-
-
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -25,6 +19,8 @@
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
+* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
+
 
 ### Features
 
