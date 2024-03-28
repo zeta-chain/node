@@ -94,6 +94,5 @@ func TestBeginBlocker(t *testing.T) {
 		require.True(t, found)
 		require.Equal(t, uint64(observeSetLen), lastObserverCount.Count)
 		require.Equal(t, ctx.BlockHeight(), lastObserverCount.LastChangeHeight)
-
 	})
 }
