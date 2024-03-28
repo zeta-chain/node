@@ -22,7 +22,7 @@ func TestDecodeVoutP2TR(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2TR", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2TR
@@ -40,7 +40,7 @@ func TestDecodeVoutP2TRErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2TR", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -79,7 +79,7 @@ func TestDecodeVoutP2WSH(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2WSH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	require.Len(t, rawResult.Vout, 1)
 
 	// decode vout 0, P2WSH
@@ -97,7 +97,7 @@ func TestDecodeVoutP2WSHErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2WSH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -136,7 +136,7 @@ func TestDecodeP2WPKHVout(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	require.Len(t, rawResult.Vout, 3)
 
 	// decode vout 0, nonce mark 148
@@ -164,7 +164,7 @@ func TestDecodeP2WPKHVoutErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCOuttx(chain.ChainId, nonce))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -196,7 +196,7 @@ func TestDecodeVoutP2SH(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2SH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2SH
@@ -214,7 +214,7 @@ func TestDecodeVoutP2SHErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2SH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -259,7 +259,7 @@ func TestDecodeVoutP2PKH(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2PKH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	require.Len(t, rawResult.Vout, 2)
 
 	// decode vout 0, P2PKH
@@ -277,7 +277,7 @@ func TestDecodeVoutP2PKHErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2PKH", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 	t.Run("should return error on invalid script", func(t *testing.T) {
 		invalidVout := rawResult.Vout[0]
@@ -334,7 +334,7 @@ func TestDecodeOpReturnMemo(t *testing.T) {
 	chain := common.BtcMainnetChain()
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
 	scriptHex := "6a1467ed0bcc4e1256bc2ce87d22e190d63a120114bf"
-	rawResult := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+	rawResult := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 	require.True(t, len(rawResult.Vout) >= 2)
 	require.Equal(t, scriptHex, rawResult.Vout[1].ScriptPubKey.Hex)
 
@@ -410,7 +410,7 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "259fc21e63e138136c8f19270a0f7ca10039a66a474f91d23a17896f46e677a7"
 		nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2TR", txHash))
 		var rawResult btcjson.TxRawResult
-		testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+		testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 		receiverExpected := "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9"
 		receiver, amount, err := DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
@@ -423,7 +423,7 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "791bb9d16f7ab05f70a116d18eaf3552faf77b9d5688699a480261424b4f7e53"
 		nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2WSH", txHash))
 		var rawResult btcjson.TxRawResult
-		testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+		testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 		receiverExpected := "bc1qqv6pwn470vu0tssdfha4zdk89v3c8ch5lsnyy855k9hcrcv3evequdmjmc"
 		receiver, amount, err := DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
@@ -436,7 +436,7 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "5d09d232bfe41c7cb831bf53fc2e4029ab33a99087fd5328a2331b52ff2ebe5b"
 		nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2WPKH", txHash))
 		var rawResult btcjson.TxRawResult
-		testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+		testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 		receiverExpected := "bc1qaxf82vyzy8y80v000e7t64gpten7gawewzu42y"
 		receiver, amount, err := DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
@@ -449,7 +449,7 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "fd68c8b4478686ca6f5ae4c28eaab055490650dbdaa6c2c8e380a7e075958a21"
 		nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2SH", txHash))
 		var rawResult btcjson.TxRawResult
-		testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+		testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 		receiverExpected := "327z4GyFM8Y8DiYfasGKQWhRK4MvyMSEgE"
 		receiver, amount, err := DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
@@ -462,7 +462,7 @@ func TestDecodeTSSVout(t *testing.T) {
 		txHash := "9c741de6e17382b7a9113fc811e3558981a35a360e3d1262a6675892c91322ca"
 		nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2PKH", txHash))
 		var rawResult btcjson.TxRawResult
-		testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+		testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 
 		receiverExpected := "1FueivsE338W2LgifJ25HhTcVJ7CRT8kte"
 		receiver, amount, err := DecodeTSSVout(rawResult.Vout[0], receiverExpected, chain)
@@ -480,7 +480,7 @@ func TestDecodeTSSVoutErrors(t *testing.T) {
 	nameTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCTxByType(chain.ChainId, "P2TR", txHash))
 
 	var rawResult btcjson.TxRawResult
-	testutils.LoadObjectFromJSONFile(&rawResult, nameTx)
+	testutils.LoadObjectFromJSONFile(t, &rawResult, nameTx)
 	receiverExpected := "bc1p4scddlkkuw9486579autxumxmkvuphm5pz4jvf7f6pdh50p2uzqstawjt9"
 
 	t.Run("should return error on invalid amount", func(t *testing.T) {

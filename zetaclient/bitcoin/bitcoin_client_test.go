@@ -42,13 +42,13 @@ func MockBTCClientMainnet() *BTCChainClient {
 }
 
 // createRPCClientAndLoadTx is a helper function to load raw tx and feed it to mock rpc client
-func createRPCClientAndLoadTx(chainId int64, txHash string) *stub.MockBTCRPCClient {
+func createRPCClientAndLoadTx(t *testing.T, chainId int64, txHash string) *stub.MockBTCRPCClient {
 	// file name for the archived MsgTx
 	nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chainId, txHash))
 
 	// load archived MsgTx
 	var msgTx wire.MsgTx
-	testutils.LoadObjectFromJSONFile(&msgTx, nameMsgTx)
+	testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
 	tx := btcutil.NewTx(&msgTx)
 
 	// feed tx to mock rpc client
@@ -96,11 +96,11 @@ func TestConfirmationThreshold(t *testing.T) {
 func TestAvgFeeRateBlock828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(&blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 
 	// https://mempool.space/block/000000000000000000025ca01d2c1094b8fd3bacc5468cc3193ced6a14618c27
 	var blockMb testutils.MempoolBlock
-	testutils.LoadObjectFromJSONFile(&blockMb, path.Join("../", testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockMb, path.Join("../", testutils.TestDataPathBTC, "block_mempool.space_8332_828440.json"))
 
 	gasRate, err := CalcBlockAvgFeeRate(&blockVb, &chaincfg.MainNetParams)
 	require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestAvgFeeRateBlock828440(t *testing.T) {
 func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(&blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 
 	t.Run("block has no transactions", func(t *testing.T) {
 		emptyVb := btcjson.GetBlockVerboseTxResult{Tx: []btcjson.TxRawResult{}}
@@ -196,7 +196,7 @@ func TestAvgFeeRateBlock828440Errors(t *testing.T) {
 func TestCalcDepositorFee828440(t *testing.T) {
 	// load archived block 828440
 	var blockVb btcjson.GetBlockVerboseTxResult
-	testutils.LoadObjectFromJSONFile(&blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
+	testutils.LoadObjectFromJSONFile(t, &blockVb, path.Join("../", testutils.TestDataPathBTC, "block_trimmed_8332_828440.json"))
 	avgGasRate := float64(32.0)
 	// #nosec G701 test - always in range
 	gasRate := int64(avgGasRate * clientcommon.BTCOuttxGasPriceMultiplier)
@@ -234,13 +234,13 @@ func TestCheckTSSVout(t *testing.T) {
 	btcClient := MockBTCClientMainnet()
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 		err := btcClient.checkTSSVout(params, rawResult.Vout, chain)
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 2 or > 3", func(t *testing.T) {
-		_, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		err := btcClient.checkTSSVout(params, []btcjson.Vout{{}}, chain)
@@ -250,7 +250,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "invalid number of vouts")
 	})
 	t.Run("should fail on invalid TSS vout", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// invalid TSS vout
@@ -259,7 +259,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.Error(t, err)
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -268,7 +268,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not match nonce mark
@@ -277,7 +277,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match nonce-mark amount")
 	})
 	t.Run("should fail if vout 1 is not to the receiver address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not receiver address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -286,7 +286,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match params receiver")
 	})
 	t.Run("should fail if vout 1 not match payment amount", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not match payment amount
@@ -295,7 +295,7 @@ func TestCheckTSSVout(t *testing.T) {
 		require.ErrorContains(t, err, "not match params amount")
 	})
 	t.Run("should fail if vout 2 is not to the TSS address", func(t *testing.T) {
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		// not TSS address, bc1qh297vdt8xq6df5xae9z8gzd4jsu9a392mp0dus
@@ -317,7 +317,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 
 	t.Run("valid TSS vout should pass", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -326,7 +326,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("should fail if vout length < 1 or > 2", func(t *testing.T) {
-		_, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		_, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		params := cctx.GetCurrentOutTxParam()
 
 		err := btcClient.checkTSSVoutCancelled(params, []btcjson.Vout{}, chain)
@@ -337,7 +337,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 is not to the TSS address", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -349,7 +349,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 0 not match nonce mark", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -361,7 +361,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 	})
 	t.Run("should fail if vout 1 is not to the TSS address", func(t *testing.T) {
 		// remove change vout to simulate cancelled tx
-		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(chainID, nonce)
+		rawResult, cctx := testutils.LoadBTCTxRawResultNCctx(t, chainID, nonce)
 		rawResult.Vout[1] = rawResult.Vout[2]
 		rawResult.Vout = rawResult.Vout[:2]
 		params := cctx.GetCurrentOutTxParam()
@@ -381,7 +381,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2TR tx
 		// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 		txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
@@ -393,7 +393,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2WSH tx
 		// https://mempool.space/tx/d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016
 		txHash := "d13de30b0cc53b5c4702b184ae0a0b0f318feaea283185c1cddb8b341c27c016"
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
@@ -405,7 +405,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2WPKH tx
 		// https://mempool.space/tx/c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697
 		txHash := "c5d224963832fc0b9a597251c2342a17b25e481a88cc9119008e8f8296652697"
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 2}
@@ -417,7 +417,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2SH tx
 		// https://mempool.space/tx/211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a
 		txHash := "211568441340fd5e10b1a8dcb211a18b9e853dbdf265ebb1c728f9b52813455a"
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 0}
@@ -429,7 +429,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		// vin from the archived P2PKH tx
 		// https://mempool.space/tx/781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7
 		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 
 		// get sender address
 		txVin := btcjson.Vin{Txid: txHash, Vout: 1}
@@ -443,7 +443,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 		txHash := "781fc8d41b476dbceca283ebff9573fda52c8fdbba5e78152aeb4432286836a7"
 		nameMsgTx := path.Join("../", testutils.TestDataPathBTC, testutils.FileNameBTCMsgTx(chain.ChainId, txHash))
 		var msgTx wire.MsgTx
-		testutils.LoadObjectFromJSONFile(&msgTx, nameMsgTx)
+		testutils.LoadObjectFromJSONFile(t, &msgTx, nameMsgTx)
 
 		// modify script to unknown script
 		msgTx.TxOut[1].PkScript = []byte{0x00, 0x01, 0x02, 0x03} // can be any invalid script bytes
@@ -485,7 +485,7 @@ func TestGetSenderAddressByVinErrors(t *testing.T) {
 	})
 	t.Run("should return error on invalid output index", func(t *testing.T) {
 		// create mock rpc client with preloaded tx
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, txHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, txHash)
 		// invalid output index
 		txVin := btcjson.Vin{Txid: txHash, Vout: 3}
 		sender, err := GetSenderAddressByVin(rpcClient, txVin, net)
@@ -501,7 +501,7 @@ func TestGetBtcEvent(t *testing.T) {
 	chain := common.BtcMainnetChain()
 
 	// GetBtcEvent arguments
-	tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+	tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)
 	net := &chaincfg.MainNetParams
@@ -527,7 +527,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 2
 		eventExpected.FromAddress = "bc1q68kxnq52ahz5vd6c8czevsawu0ux9nfrzzrh6e"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, preHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -542,7 +542,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 2
 		eventExpected.FromAddress = "bc1px3peqcd60hk7wqyqk36697u9hzugq0pd5lzvney93yzzrqy4fkpq6cj7m3"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, preHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -557,7 +557,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 0
 		eventExpected.FromAddress = "bc1q79kmcyc706d6nh7tpzhnn8lzp76rp0tepph3hqwrhacqfcy4lwxqft0ppq"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, preHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -572,7 +572,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 0
 		eventExpected.FromAddress = "3MqRRSP76qxdVD9K4cfFnVtSLVwaaAjm3t"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, preHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -587,7 +587,7 @@ func TestGetBtcEvent(t *testing.T) {
 		tx.Vin[0].Vout = 1
 		eventExpected.FromAddress = "1ESQp1WQi7fzSpzCNs2oBTqaUBmNjLQLoV"
 		// load previous raw tx so so mock rpc client can return it
-		rpcClient := createRPCClientAndLoadTx(chain.ChainId, preHash)
+		rpcClient := createRPCClientAndLoadTx(t, chain.ChainId, preHash)
 
 		// get BTC event
 		event, err := GetBtcEvent(rpcClient, *tx, tssAddress, blockNumber, log.Logger, net, depositorFee)
@@ -596,7 +596,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if len(tx.Vout) < 2", func(t *testing.T) {
 		// load tx and modify the tx to have only 1 vout
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout = tx.Vout[:1]
 
 		// get BTC event
@@ -608,7 +608,7 @@ func TestGetBtcEvent(t *testing.T) {
 	t.Run("should skip tx if Vout[0] is not a P2WPKH output", func(t *testing.T) {
 		// load tx
 		rpcClient := stub.NewMockBTCRPCClient()
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 
 		// modify the tx to have Vout[0] a P2SH output
 		tx.Vout[0].ScriptPubKey.Hex = strings.Replace(tx.Vout[0].ScriptPubKey.Hex, "0014", "a914", 1)
@@ -624,7 +624,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if receiver address is not TSS address", func(t *testing.T) {
 		// load tx and modify receiver address to any non-tss address: bc1qw8wrek2m7nlqldll66ajnwr9mh64syvkt67zlu
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "001471dc3cd95bf4fe0fb7ffd6bb29b865ddf5581196"
 
 		// get BTC event
@@ -635,7 +635,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if amount is less than depositor fee", func(t *testing.T) {
 		// load tx and modify amount to less than depositor fee
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].Value = depositorFee - 1.0/1e8 // 1 satoshi less than depositor fee
 
 		// get BTC event
@@ -646,7 +646,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if 2nd vout is not OP_RETURN", func(t *testing.T) {
 		// load tx and modify memo OP_RETURN to OP_1
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a", "51", 1)
 
 		// get BTC event
@@ -657,7 +657,7 @@ func TestGetBtcEvent(t *testing.T) {
 	})
 	t.Run("should skip tx if memo decoding fails", func(t *testing.T) {
 		// load tx and modify memo length to be 1 byte less than actual
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[1].ScriptPubKey.Hex = strings.Replace(tx.Vout[1].ScriptPubKey.Hex, "6a14", "6a13", 1)
 
 		// get BTC event
@@ -680,7 +680,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 
 	t.Run("should return error on invalid Vout[0] script", func(t *testing.T) {
 		// load tx and modify Vout[0] script to invalid script
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vout[0].ScriptPubKey.Hex = "0014invalid000000000000000000000000000000000"
 
 		// get BTC event
@@ -691,7 +691,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if len(tx.Vin) < 1", func(t *testing.T) {
 		// load tx and remove vin
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		tx.Vin = nil
 
 		// get BTC event
@@ -702,7 +702,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	})
 	t.Run("should return error if RPC client fails to get raw tx", func(t *testing.T) {
 		// load tx and leave rpc client without preloaded tx
-		tx := testutils.LoadBTCIntxRawResult(chain.ChainId, txHash, false)
+		tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
 		rpcClient := stub.NewMockBTCRPCClient()
 
 		// get BTC event
