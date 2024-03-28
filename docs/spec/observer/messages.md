@@ -122,3 +122,14 @@ message MsgResetChainNonces {
 }
 ```
 
+## MsgVoteTSS
+
+```proto
+message MsgVoteTSS {
+	string creator = 1;
+	string tss_pubkey = 2;
+	int64 keyGenZetaHeight = 3;
+	chains.ReceiveStatus status = 4;
+}
+```
+

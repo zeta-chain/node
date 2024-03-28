@@ -54324,6 +54324,8 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgVoteTSSResponse:
+    type: object
   observerNode:
     type: object
     properties:
