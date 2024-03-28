@@ -12,6 +12,7 @@ func (k Keeper) ListPoolAddresses(_ context.Context, req *types.QueryListPoolAdd
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
 	return &types.QueryListPoolAddressesResponse{UndistributedObserverBalancesAddress: types.UndistributedObserverRewardsPoolAddress.String(),
 		EmissionModuleAddress:           types.EmissionsModuleAddress.String(),
 		UndistributedTssBalancesAddress: types.UndistributedTssRewardsPoolAddress.String()}, nil

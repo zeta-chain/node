@@ -63,7 +63,7 @@ func BeginBlocker(ctx sdk.Context, keeper keeper.Keeper) {
 // This function uses the distribution module of cosmos-sdk , by directly sending funds to the feecollector.
 func DistributeValidatorRewards(ctx sdk.Context, amount sdkmath.Int, bankKeeper types.BankKeeper, feeCollector string) error {
 	coin := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, amount))
-	ctx.Logger().Info(fmt.Sprintf(fmt.Sprintf("Distributing Validator Rewards Total:%s To FeeCollector : %s", amount.String(), feeCollector)))
+	ctx.Logger().Info(fmt.Sprintf("Distributing Validator Rewards Total:%s To FeeCollector : %s", amount.String(), feeCollector))
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, feeCollector, coin)
 }
 

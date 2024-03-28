@@ -16,6 +16,7 @@ func (k Keeper) GetBlockRewardComponents(ctx sdk.Context) (sdk.Dec, sdk.Dec, sdk
 	durationFactor := k.GetDurationFactor(ctx)
 	return reservesFactor, bondFactor, durationFactor
 }
+
 func (k Keeper) GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper) sdk.Dec {
 	targetBondRatio := sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).TargetBondRatio)
 	maxBondFactor := sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).MaxBondFactor)
