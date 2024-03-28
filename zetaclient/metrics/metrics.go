@@ -78,6 +78,12 @@ var (
 		Name:      "last_start_timestamp_seconds",
 		Help:      "Start time in Unix time",
 	})
+
+	NumActiveMsgSigns = promauto.NewGauge(prometheus.GaugeOpts{
+		Namespace: ZetaClientNamespace,
+		Name:      "num_active_message_signs",
+		Help:      "Number of concurrent key signs",
+	})
 )
 
 func NewMetrics() (*Metrics, error) {
