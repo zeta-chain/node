@@ -68,9 +68,7 @@ func TestKeeper_GetFixedBlockRewards(t *testing.T) {
 	k, _, _, _ := keepertest.EmissionsKeeper(t)
 	fixedBlockRewards, err := k.GetFixedBlockRewards()
 	require.NoError(t, err)
-	expected, err := emissionskeeper.CalculateFixedValidatorRewards(emissionstypes.AvgBlockTime)
-	require.NoError(t, err)
-	require.Equal(t, expected, fixedBlockRewards)
+	require.Equal(t, emissionstypes.BlockReward, fixedBlockRewards)
 }
 
 func TestKeeper_GetBlockRewardComponent(t *testing.T) {
@@ -106,6 +104,7 @@ func TestKeeper_GetBlockRewardComponent(t *testing.T) {
 		require.Equal(t, sdk.ZeroDec(), bondFactor)
 		// non 0 value returned
 		require.NotEqual(t, sdk.ZeroDec(), durationFactor)
+		require.Positive(t, durationFactor.BigInt().Int64())
 	})
 }
 
