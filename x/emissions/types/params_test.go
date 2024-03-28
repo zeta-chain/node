@@ -56,7 +56,7 @@ func TestParamSetPairs(t *testing.T) {
 	assertParamSetPair(t, pairs, KeyPrefix(ParamTargetBondRatio), "00.67", validateTargetBondRatio)
 	assertParamSetPair(t, pairs, KeyPrefix(ParamValidatorEmissionPercentage), "00.50", validateValidatorEmissionPercentage)
 	assertParamSetPair(t, pairs, KeyPrefix(ParamObserverEmissionPercentage), "00.25", validateObserverEmissionPercentage)
-	assertParamSetPair(t, pairs, KeyPrefix(ParamTssSignerEmissionPercentage), "00.25", validateTssEmissonPercentage)
+	assertParamSetPair(t, pairs, KeyPrefix(ParamTssSignerEmissionPercentage), "00.25", validateTssEmissionPercentage)
 	assertParamSetPair(t, pairs, KeyPrefix(ParamDurationFactorConstant), "0.001877876953694702", validateDurationFactorConstant)
 }
 
@@ -124,10 +124,10 @@ func TestValidateObserverEmissionPercentage(t *testing.T) {
 }
 
 func TestValidateTssEmissionPercentage(t *testing.T) {
-	require.Error(t, validateTssEmissonPercentage(0.25))
-	require.NoError(t, validateTssEmissonPercentage("0.25"))
-	require.Error(t, validateTssEmissonPercentage("-0.25")) // Less than 0 percent should fail
-	require.Error(t, validateTssEmissonPercentage("1.01"))  // More than 100 percent should fail
+	require.Error(t, validateTssEmissionPercentage(0.25))
+	require.NoError(t, validateTssEmissionPercentage("0.25"))
+	require.Error(t, validateTssEmissionPercentage("-0.25")) // Less than 0 percent should fail
+	require.Error(t, validateTssEmissionPercentage("1.01"))  // More than 100 percent should fail
 }
 
 func TestParamsString(t *testing.T) {
