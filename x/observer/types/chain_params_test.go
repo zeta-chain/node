@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/zeta-chain/zetacore/x/observer/types"
@@ -196,4 +197,23 @@ func (s *UpdateChainParamsSuite) Validate(params *types.ChainParams) {
 	copy.OutboundTxScheduleLookahead = 501
 	err = types.ValidateChainParams(&copy)
 	require.NotNil(s.T(), err)
+
+	copy = *params
+	copy.BallotThreshold = sdk.Dec{}
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy.BallotThreshold = sdk.MustNewDecFromStr("1.2")
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy.BallotThreshold = sdk.MustNewDecFromStr("0.9")
+	err = types.ValidateChainParams(&copy)
+	require.Nil(s.T(), err)
+
+	copy = *params
+	copy.MinObserverDelegation = sdk.Dec{}
+	err = types.ValidateChainParams(&copy)
+	require.NotNil(s.T(), err)
+	copy.MinObserverDelegation = sdk.MustNewDecFromStr("0.9")
+	err = types.ValidateChainParams(&copy)
+	require.Nil(s.T(), err)
 }

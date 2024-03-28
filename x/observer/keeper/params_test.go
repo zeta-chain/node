@@ -1,4 +1,4 @@
-package keeper_test
+package keeper
 
 import (
 	"fmt"
@@ -9,13 +9,11 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/stretchr/testify/require"
-	testutilkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
-	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := keeper.SetupKeeper(t)
+	k, ctx := SetupKeeper(t)
 	params := types.DefaultParams()
 
 	k.SetParams(ctx, params)
@@ -24,7 +22,6 @@ func TestGetParams(t *testing.T) {
 }
 
 func TestGenerateAddress(t *testing.T) {
-	testutilkeeper.SetConfig(false)
 	addr := sdk.AccAddress(crypto.AddressHash([]byte("Output1" + strconv.Itoa(1))))
 	addrString := addr.String()
 	fmt.Println(addrString)
