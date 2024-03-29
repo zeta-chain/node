@@ -221,13 +221,13 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 
 	// check and update chain params for each chain
 	for _, chainParam := range chainParams {
+		if !chainParam.GetIsSupported() {
+			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+			continue
+		}
 		err := observertypes.ValidateChainParams(chainParam)
 		if err != nil {
 			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
-			continue
-		}
-		if !chainParam.GetIsSupported() {
-			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
 			continue
 		}
 		if chains.IsBitcoinChain(chainParam.ChainId) {
@@ -237,12 +237,12 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		}
 	}
 
-	supporteChains, err := b.GetSupportedChains()
+	supportedChains, err := b.GetSupportedChains()
 	if err != nil {
 		return err
 	}
-	newChains := make([]chains.Chain, len(supporteChains))
-	for i, chain := range supporteChains {
+	newChains := make([]chains.Chain, len(supportedChains))
+	for i, chain := range supportedChains {
 		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()
