@@ -52,6 +52,27 @@ func TestKeeper_GetBallotList(t *testing.T) {
 	require.Equal(t, identifier, list.BallotsIndexList[0])
 }
 
+func TestKeeper_GetAllBallots(t *testing.T) {
+	k, ctx := SetupKeeper(t)
+	identifier := "0x9ea007f0f60e32d58577a8cf25678942d2b10791c2a34f48e237b76a7e998e4d"
+	b := &types.Ballot{
+		Index:                "",
+		BallotIdentifier:     identifier,
+		VoterList:            nil,
+		ObservationType:      0,
+		BallotThreshold:      sdk.Dec{},
+		BallotStatus:         0,
+		BallotCreationHeight: 1,
+	}
+	ballots := k.GetAllBallots(ctx)
+	require.Empty(t, ballots)
+
+	k.SetBallot(ctx, b)
+	ballots = k.GetAllBallots(ctx)
+	require.Equal(t, 1, len(ballots))
+	require.Equal(t, b, ballots[0])
+}
+
 func TestKeeper_GetMaturedBallotList(t *testing.T) {
 	k, ctx := SetupKeeper(t)
 	identifier := "0x9ea007f0f60e32d58577a8cf25678942d2b10791c2a34f48e237b76a7e998e4d"
