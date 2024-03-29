@@ -12,15 +12,6 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// func createNNodeAccount(keeper *types.Keeper, ctx sdk.Context, n int) []types.NodeAccount {
-// 	items := make([]types.NodeAccount, n)
-// 	for i := range items {
-// 		items[i].Operator = fmt.Sprintf("%d", i)
-// 		keeper.SetNodeAccount(ctx, items[i])
-// 	}
-// 	return items
-// }
-
 func TestMsgServer_UpdateKeygen(t *testing.T) {
 	t.Run("should error if not authorized", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{

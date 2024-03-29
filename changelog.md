@@ -47,6 +47,7 @@
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
 * [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
+* [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 
 ### Fixes
 
