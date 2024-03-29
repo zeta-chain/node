@@ -108,3 +108,129 @@ func TestChainNoncesQueryPaginated(t *testing.T) {
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }
+
+func TestPendingNoncesQuerySingle(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.PendingNoncesByChain(wctx, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+
+		res, err := k.PendingNoncesByChain(wctx, &types.QueryPendingNoncesByChainRequest{
+			ChainId: 1,
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+		tss := sample.Tss()
+		k.SetTSS(ctx, tss)
+		res, err := k.PendingNoncesByChain(wctx, &types.QueryPendingNoncesByChainRequest{
+			ChainId: 1,
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return if found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+		tss := sample.Tss()
+		k.SetTSS(ctx, tss)
+		pendingNonces := sample.PendingNoncesList(t, "sample", 5)
+		pendingNonces[1].Tss = tss.TssPubkey
+		for _, nonce := range pendingNonces {
+			k.SetPendingNonces(ctx, nonce)
+		}
+		res, err := k.PendingNoncesByChain(wctx, &types.QueryPendingNoncesByChainRequest{
+			ChainId: 1,
+		})
+		require.NoError(t, err)
+		require.Equal(t, pendingNonces[1], res.PendingNonces)
+	})
+
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	wctx := sdk.WrapSDKContext(ctx)
+	pendingNonces := sample.PendingNoncesList(t, "sample", 5)
+	for _, nonce := range pendingNonces {
+		k.SetPendingNonces(ctx, nonce)
+	}
+	tss := sample.Tss()
+	k.SetTSS(ctx, tss)
+	for _, tc := range []struct {
+		desc     string
+		request  *types.QueryPendingNoncesByChainRequest
+		response *types.QueryPendingNoncesByChainResponse
+		err      error
+	}{
+		{
+			desc:     "First",
+			request:  &types.QueryPendingNoncesByChainRequest{ChainId: pendingNonces[0].ChainId},
+			response: &types.QueryPendingNoncesByChainResponse{PendingNonces: pendingNonces[0]},
+		},
+		{
+			desc:     "Second",
+			request:  &types.QueryPendingNoncesByChainRequest{ChainId: pendingNonces[1].ChainId},
+			response: &types.QueryPendingNoncesByChainResponse{PendingNonces: pendingNonces[1]},
+		},
+		{
+			desc:    "KeyNotFound",
+			request: &types.QueryPendingNoncesByChainRequest{ChainId: 987},
+			err:     status.Error(codes.InvalidArgument, "not found"),
+		},
+		{
+			desc: "InvalidRequest",
+			err:  status.Error(codes.InvalidArgument, "invalid request"),
+		},
+	} {
+		tc := tc
+		t.Run(tc.desc, func(t *testing.T) {
+			response, err := k.PendingNoncesByChain(wctx, tc.request)
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+			} else {
+				require.Equal(t, tc.response, response)
+			}
+		})
+	}
+}
+
+func TestPendingNoncesQueryPaginated(t *testing.T) {
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	wctx := sdk.WrapSDKContext(ctx)
+	pendingNonces := sample.PendingNoncesList(t, "sample", 5)
+	for _, nonce := range pendingNonces {
+		k.SetPendingNonces(ctx, nonce)
+	}
+
+	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllPendingNoncesRequest {
+		return &types.QueryAllPendingNoncesRequest{
+			Pagination: &query.PageRequest{
+				Key:        next,
+				Offset:     offset,
+				Limit:      limit,
+				CountTotal: total,
+			},
+		}
+	}
+
+	t.Run("Total", func(t *testing.T) {
+		resp, err := k.PendingNoncesAll(wctx, request(nil, 0, 0, true))
+		require.NoError(t, err)
+		require.Equal(t, len(pendingNonces), int(resp.Pagination.Total))
+	})
+	t.Run("InvalidRequest", func(t *testing.T) {
+		_, err := k.PendingNoncesAll(wctx, nil)
+		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
+	})
+}
