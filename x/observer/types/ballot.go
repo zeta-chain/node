@@ -24,7 +24,7 @@ func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 
 func (m Ballot) HasVoted(address string) bool {
 	index := m.GetVoterIndex(address)
-	// TODO: is this valid possibility?
+	// TODO: is this valid possibility? can m.Votes[index] be nil?
 	if index == -1 {
 		return false
 	}

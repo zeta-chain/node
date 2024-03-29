@@ -61,6 +61,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		})
 
 		accAddressOfValidator, err := types.GetAccAddressFromOperatorAddress(validator.OperatorAddress)
+		require.NoError(t, err)
 
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
