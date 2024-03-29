@@ -10,21 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestMsgServer_AddBlameVote(t *testing.T) {
 	t.Run("should error if supported chain not found", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
-			UseAuthorityMock: true,
-		})
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
-
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		res, err := srv.AddBlameVote(ctx, &types.MsgAddBlameVote{
 			ChainId: 1,
@@ -34,14 +27,8 @@ func TestMsgServer_AddBlameVote(t *testing.T) {
 	})
 
 	t.Run("should error if not tombstoned observer", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeperWithMocks(t, keepertest.ObserverMockOptions{
-			UseAuthorityMock: true,
-		})
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		srv := keeper.NewMsgServerImpl(*k)
-
-		authorityMock := keepertest.GetObserverAuthorityMock(t, k)
-		admin := sample.AccAddress()
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		chainId := getValidEthChainIDWithIndex(t, 0)
 		setSupportedChain(ctx, *k, chainId)
