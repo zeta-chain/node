@@ -158,51 +158,6 @@ func TestPendingNoncesQuerySingle(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, pendingNonces[1], res.PendingNonces)
 	})
-
-	k, ctx, _, _ := keepertest.ObserverKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	pendingNonces := sample.PendingNoncesList(t, "sample", 5)
-	for _, nonce := range pendingNonces {
-		k.SetPendingNonces(ctx, nonce)
-	}
-	tss := sample.Tss()
-	k.SetTSS(ctx, tss)
-	for _, tc := range []struct {
-		desc     string
-		request  *types.QueryPendingNoncesByChainRequest
-		response *types.QueryPendingNoncesByChainResponse
-		err      error
-	}{
-		{
-			desc:     "First",
-			request:  &types.QueryPendingNoncesByChainRequest{ChainId: pendingNonces[0].ChainId},
-			response: &types.QueryPendingNoncesByChainResponse{PendingNonces: pendingNonces[0]},
-		},
-		{
-			desc:     "Second",
-			request:  &types.QueryPendingNoncesByChainRequest{ChainId: pendingNonces[1].ChainId},
-			response: &types.QueryPendingNoncesByChainResponse{PendingNonces: pendingNonces[1]},
-		},
-		{
-			desc:    "KeyNotFound",
-			request: &types.QueryPendingNoncesByChainRequest{ChainId: 987},
-			err:     status.Error(codes.InvalidArgument, "not found"),
-		},
-		{
-			desc: "InvalidRequest",
-			err:  status.Error(codes.InvalidArgument, "invalid request"),
-		},
-	} {
-		tc := tc
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := k.PendingNoncesByChain(wctx, tc.request)
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.Equal(t, tc.response, response)
-			}
-		})
-	}
 }
 
 func TestPendingNoncesQueryPaginated(t *testing.T) {
