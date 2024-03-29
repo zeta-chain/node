@@ -88,7 +88,7 @@ func (k Keeper) IsValidator(ctx sdk.Context, creator string) error {
 		return types.ErrNotValidator
 	}
 
-	if validator.Jailed == true || validator.IsBonded() == false {
+	if validator.Jailed || !validator.IsBonded() {
 		return types.ErrValidatorStatus
 	}
 	return nil
@@ -135,7 +135,6 @@ func (k Keeper) CheckObserverSelfDelegation(ctx sdk.Context, accAddress string) 
 		return err
 	}
 	tokens := validator.TokensFromShares(delegation.Shares)
-
 	if tokens.LT(minDelegation) {
 		k.RemoveObserverFromSet(ctx, accAddress)
 	}
