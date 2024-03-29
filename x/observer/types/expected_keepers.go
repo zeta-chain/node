@@ -3,7 +3,6 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 )
@@ -12,7 +11,7 @@ type StakingKeeper interface {
 	GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, found bool)
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 	SetValidator(ctx sdk.Context, validator stakingtypes.Validator)
-	SetDelegation(ctx sdk.Context, delegation types.Delegation)
+	SetDelegation(ctx sdk.Context, delegation stakingtypes.Delegation)
 }
 
 type SlashingKeeper interface {
