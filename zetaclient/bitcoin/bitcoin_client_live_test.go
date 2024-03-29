@@ -348,3 +348,76 @@ func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 
 	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }
+
+// Remove prefix "Live" to run this live test
+func LiveTestGetSenderByVin(t *testing.T) {
+	// setup Bitcoin client
+	chainID := int64(8332)
+	client, err := getRPCClient(chainID)
+	require.NoError(t, err)
+
+	// net params
+	net, err := common.GetBTCChainParams(chainID)
+	require.NoError(t, err)
+	testnet := false
+	if chainID == common.BtcTestNetChain().ChainId {
+		testnet = true
+	}
+
+	// calculates block range to test
+	startBlock, err := client.GetBlockCount()
+	require.NoError(t, err)
+	endBlock := startBlock - 5000
+
+	// loop through mempool.space blocks in descending order
+BLOCKLOOP:
+	for bn := startBlock; bn >= endBlock; {
+		// get block hash
+		blkHash, err := client.GetBlockHash(int64(bn))
+		if err != nil {
+			fmt.Printf("error GetBlockHash for block %d: %s\n", bn, err)
+			time.Sleep(3 * time.Second)
+			continue
+		}
+
+		// get mempool.space txs for the block
+		mempoolTxs, err := testutils.GetBlockTxs(context.Background(), blkHash.String(), testnet)
+		if err != nil {
+			fmt.Printf("error GetBlockTxs %d: %s\n", bn, err)
+			time.Sleep(10 * time.Second)
+			continue
+		}
+
+		// loop through each tx in the block
+		for i, mptx := range mempoolTxs {
+			// sample 10 txs per block
+			if i >= 10 {
+				break
+			}
+			for _, mpvin := range mptx.Vin {
+				// skip coinbase tx
+				if mpvin.IsCoinbase {
+					continue
+				}
+				// get sender address for each vin
+				vin := btcjson.Vin{
+					Txid: mpvin.TxID,
+					Vout: mpvin.Vout,
+				}
+				senderAddr, err := GetSenderAddressByVin(client, vin, net)
+				if err != nil {
+					fmt.Printf("error GetSenderAddressByVin for block %d, tx %s vout %d: %s\n", bn, vin.Txid, vin.Vout, err)
+					time.Sleep(3 * time.Second)
+					continue BLOCKLOOP // retry the block
+				}
+				if senderAddr != mpvin.Prevout.ScriptpubkeyAddress {
+					panic(fmt.Sprintf("block %d, tx %s, vout %d: want %s, got %s\n", bn, vin.Txid, vin.Vout, mpvin.Prevout.ScriptpubkeyAddress, senderAddr))
+				} else {
+					fmt.Printf("block: %d sender address type: %s\n", bn, mpvin.Prevout.ScriptpubkeyType)
+				}
+			}
+		}
+		bn--
+		time.Sleep(500 * time.Millisecond)
+	}
+}
