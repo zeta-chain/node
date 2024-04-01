@@ -30,21 +30,25 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 	if !found {
 		return nil, errorsmod.Wrap(sdkerrors.ErrorInvalidSigner, fmt.Sprintf("signer %s does not have a node account set", msg.Creator))
 	}
-	// No need to create a ballot if keygen does not exist
+	// no need to create a ballot if keygen does not exist
 	keygen, found := k.GetKeygen(ctx)
 	if !found {
 		return &types.MsgVoteTSSResponse{}, types.ErrKeygenNotFound
 	}
-	// USE a separate transaction to update KEYGEN status to pending when trying to change the TSS address
+	// use a separate transaction to update KEYGEN status to pending when trying to change the TSS address
 	if keygen.Status == types.KeygenStatus_KeyGenSuccess {
 		return &types.MsgVoteTSSResponse{}, types.ErrKeygenCompleted
 	}
-	index := msg.Digest()
-	// Add votes and Set Ballot
+
+	// add votes and set Ballot
 	// GetBallot checks against the supported chains list before querying for Ballot
 	// TODO : https://github.com/zeta-chain/node/issues/896
+	ballotCreated := false
+	index := msg.Digest()
 	ballot, found := k.GetBallot(ctx, index)
 	if !found {
+
+		// if ballot does not exist, create a new ballot
 		var voterList []string
 
 		for _, nodeAccount := range k.GetAllNodeAccount(ctx) {
@@ -61,40 +65,48 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 			BallotCreationHeight: ctx.BlockHeight(),
 		}
 		k.AddBallotToList(ctx, ballot)
-	}
-	var err error
-	if msg.Status == chains.ReceiveStatus_Success {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, types.VoteType_SuccessObservation)
-		if err != nil {
-			return &types.MsgVoteTSSResponse{}, err
-		}
-	} else if msg.Status == chains.ReceiveStatus_Failed {
-		ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, types.VoteType_FailureObservation)
-		if err != nil {
-			return &types.MsgVoteTSSResponse{}, err
-		}
-	}
-	if !found {
+
 		EmitEventBallotCreated(ctx, ballot, msg.TssPubkey, "Common-TSS-For-All-Chain")
+		ballotCreated = true
 	}
 
+	// vote the ballot
+	var err error
+	vote := types.VoteType_SuccessObservation
+	if msg.Status == chains.ReceiveStatus_Failed {
+		vote = types.VoteType_FailureObservation
+	}
+	ballot, err = k.AddVoteToBallot(ctx, ballot, msg.Creator, vote)
+	if err != nil {
+		return &types.MsgVoteTSSResponse{}, err
+	}
+
+	// returns here if the ballot is not finalized
 	ballot, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
-		// Return nil here to add vote to ballot and commit state
-		return &types.MsgVoteTSSResponse{}, nil
+		return &types.MsgVoteTSSResponse{
+			VoteFinalized: false,
+			BallotCreated: ballotCreated,
+			KeygenSuccess: false,
+		}, nil
 	}
-	// Set TSS only on success, set Keygen either way.
-	// Keygen block can be updated using a policy transaction if keygen fails
-	if ballot.BallotStatus != types.BallotStatus_BallotFinalized_FailureObservation {
+
+	// set TSS only on success, set Keygen either way.
+	// keygen block can be updated using a policy transaction if keygen fails
+	keygenSuccess := false
+	if ballot.BallotStatus == types.BallotStatus_BallotFinalized_FailureObservation {
+		keygen.Status = types.KeygenStatus_KeyGenFailed
+		keygen.BlockNumber = math.MaxInt64
+	} else {
 		tss := types.TSS{
 			TssPubkey:           msg.TssPubkey,
 			TssParticipantList:  keygen.GetGranteePubkeys(),
 			OperatorAddressList: ballot.VoterList,
 			FinalizedZetaHeight: ctx.BlockHeight(),
-			KeyGenZetaHeight:    msg.KeyGenZetaHeight,
+			KeyGenZetaHeight:    msg.KeygenZetaHeight,
 		}
-		// Set TSS history only, current TSS is updated via admin transaction
-		// In Case this is the first TSS address update both current and history
+		// set TSS history only, current TSS is updated via admin transaction
+		// in Case this is the first TSS address update both current and history
 		tssList := k.GetAllTSS(ctx)
 		if len(tssList) == 0 {
 			k.SetTssAndUpdateNonce(ctx, tss)
@@ -102,11 +114,14 @@ func (k msgServer) VoteTSS(goCtx context.Context, msg *types.MsgVoteTSS) (*types
 		k.SetTSSHistory(ctx, tss)
 		keygen.Status = types.KeygenStatus_KeyGenSuccess
 		keygen.BlockNumber = ctx.BlockHeight()
-
-	} else if ballot.BallotStatus == types.BallotStatus_BallotFinalized_FailureObservation {
-		keygen.Status = types.KeygenStatus_KeyGenFailed
-		keygen.BlockNumber = math.MaxInt64
+		keygenSuccess = true
 	}
+
 	k.SetKeygen(ctx, keygen)
-	return &types.MsgVoteTSSResponse{}, nil
+
+	return &types.MsgVoteTSSResponse{
+		VoteFinalized: true,
+		BallotCreated: ballotCreated,
+		KeygenSuccess: keygenSuccess,
+	}, nil
 }

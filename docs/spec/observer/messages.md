@@ -139,7 +139,7 @@ Only node accounts are authorized to broadcast this message.
 message MsgVoteTSS {
 	string creator = 1;
 	string tss_pubkey = 2;
-	int64 keyGenZetaHeight = 3;
+	int64 keygen_zeta_height = 3;
 	chains.ReceiveStatus status = 4;
 }
 ```

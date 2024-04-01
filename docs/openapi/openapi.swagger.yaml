@@ -54324,6 +54324,13 @@ definitions:
     type: object
   observerMsgVoteTSSResponse:
     type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
+      keygen_success:
+        type: boolean
   observerNode:
     type: object
     properties:

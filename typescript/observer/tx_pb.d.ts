@@ -524,9 +524,9 @@ export declare class MsgVoteTSS extends Message<MsgVoteTSS> {
   tssPubkey: string;
 
   /**
-   * @generated from field: int64 keyGenZetaHeight = 3;
+   * @generated from field: int64 keygen_zeta_height = 3;
    */
-  keyGenZetaHeight: bigint;
+  keygenZetaHeight: bigint;
 
   /**
    * @generated from field: chains.ReceiveStatus status = 4;
@@ -552,6 +552,21 @@ export declare class MsgVoteTSS extends Message<MsgVoteTSS> {
  * @generated from message zetachain.zetacore.observer.MsgVoteTSSResponse
  */
 export declare class MsgVoteTSSResponse extends Message<MsgVoteTSSResponse> {
+  /**
+   * @generated from field: bool ballot_created = 1;
+   */
+  ballotCreated: boolean;
+
+  /**
+   * @generated from field: bool vote_finalized = 2;
+   */
+  voteFinalized: boolean;
+
+  /**
+   * @generated from field: bool keygen_success = 3;
+   */
+  keygenSuccess: boolean;
+
   constructor(data?: PartialMessage<MsgVoteTSSResponse>);
 
   static readonly runtime: typeof proto3;
