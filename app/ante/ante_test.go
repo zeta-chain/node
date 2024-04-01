@@ -65,7 +65,7 @@ func TestIsSystemTx(t *testing.T) {
 	}{
 		{
 			"MsgCreateTSSVoter",
-			buildTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
 			}),
@@ -74,7 +74,7 @@ func TestIsSystemTx(t *testing.T) {
 		},
 		{
 			"MsgCreateTSSVoter",
-			buildTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
 			}),
@@ -83,7 +83,7 @@ func TestIsSystemTx(t *testing.T) {
 		},
 		{
 			"MsgExec{MsgCreateTSSVoter}",
-			buildAuthzTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+			buildAuthzTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
 			}),
@@ -170,7 +170,7 @@ func TestIsSystemTx(t *testing.T) {
 		},
 		{
 			"MsgCreateTSSVoter",
-			buildTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -179,7 +179,7 @@ func TestIsSystemTx(t *testing.T) {
 		},
 		{
 			"MsgExec{MsgCreateTSSVoter}",
-			buildAuthzTxFromMsg(&crosschaintypes.MsgCreateTSSVoter{
+			buildAuthzTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
