@@ -1,9 +1,9 @@
-# tx crosschain create-tss-voter
+# tx observer create-tss-voter
 
 Create a new TSSVoter
 
 ```
-zetacored tx crosschain create-tss-voter [pubkey] [keygenBlock] [status] [flags]
+zetacored tx observer create-tss-voter [pubkey] [keygen-block] [status] [flags]
 ```
 
 ### Options
@@ -48,5 +48,5 @@ zetacored tx crosschain create-tss-voter [pubkey] [keygenBlock] [status] [flags]
 
 ### SEE ALSO
 
-* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
+* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
 

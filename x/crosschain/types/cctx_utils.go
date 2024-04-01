@@ -39,10 +39,10 @@ func GetAllAuthzZetaclientTxTypes() []string {
 		sdk.MsgTypeURL(&MsgGasPriceVoter{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedInboundTx{}),
 		sdk.MsgTypeURL(&MsgVoteOnObservedOutboundTx{}),
-		sdk.MsgTypeURL(&MsgCreateTSSVoter{}),
 		sdk.MsgTypeURL(&MsgAddToOutTxTracker{}),
 		sdk.MsgTypeURL(&observertypes.MsgAddBlameVote{}),
 		sdk.MsgTypeURL(&observertypes.MsgAddBlockHeader{}),
+		sdk.MsgTypeURL(&observertypes.MsgVoteTSS{}),
 	}
 }
 
