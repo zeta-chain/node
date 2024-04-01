@@ -20,6 +20,7 @@
 * [1885](https://github.com/zeta-chain/node/pull/1885) - change important metrics on port 8123 to be prometheus compatible
 * [1863](https://github.com/zeta-chain/node/pull/1863) - remove duplicate ValidateChainParams function
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
+* [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
 
 ### Features
@@ -29,6 +30,7 @@
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
+* [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
 
 ### Tests
 
@@ -60,6 +62,7 @@
 
 ### CI
 
+* [1958](https://github.com/zeta-chain/node/pull/1958) - Fix e2e advanced test debug checkbox.
 * [1945](https://github.com/zeta-chain/node/pull/1945) - update advanced testing pipeline to not execute tests that weren't selected so they show skipped instead of skipping steps.
 * [1940](https://github.com/zeta-chain/node/pull/1940) - adjust release pipeline to be created as pre-release instead of latest
 * [1867](https://github.com/zeta-chain/node/pull/1867) - default restore_type for full node docker-compose to snapshot instead of statesync for reliability.
