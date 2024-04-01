@@ -10,7 +10,8 @@ import (
 	"github.com/pkg/errors"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
 	tmtypes "github.com/tendermint/tendermint/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -34,7 +35,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 
-	if inboundCoinType == common.CoinType_Zeta {
+	if inboundCoinType == coin.CoinType_Zeta {
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
 		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {
@@ -42,7 +43,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		parsedAddress, data, err := common.ParseAddressAndData(cctx.RelayedMessage)
+		parsedAddress, data, err := chains.ParseAddressAndData(cctx.RelayedMessage)
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 		}
@@ -50,7 +51,7 @@ func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (boo
 			to = parsedAddress
 		}
 
-		from, err := common.DecodeAddressFromChainID(inboundSenderChainID, inboundSender)
+		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender)
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}

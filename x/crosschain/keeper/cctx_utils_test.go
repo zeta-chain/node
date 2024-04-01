@@ -7,7 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -29,9 +29,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: common.CoinType_Zeta,
-			},
-		})
+				CoinType: coin.CoinType_Zeta,
+			}})
 		require.NoError(t, err)
 		require.Equal(t, uint64(0), gasLimit)
 	})
@@ -50,8 +49,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
-				CoinType:      common.CoinType_Gas,
 			}})
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), gasLimit)
@@ -81,9 +80,9 @@ func TestGetRevertGasLimit(t *testing.T) {
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
-				CoinType:      common.CoinType_ERC20,
 			}})
 		require.NoError(t, err)
 		require.Equal(t, uint64(42), gasLimit)
@@ -95,8 +94,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: 999999,
-				CoinType:      common.CoinType_Gas,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
@@ -110,15 +109,15 @@ func TestGetRevertGasLimit(t *testing.T) {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
-			CoinType:             common.CoinType_Gas,
+			CoinType:             coin.CoinType_Gas,
 		})
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
-				CoinType:      common.CoinType_Gas,
 			}})
 		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
 	})
@@ -129,8 +128,8 @@ func TestGetRevertGasLimit(t *testing.T) {
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: 999999,
-				CoinType:      common.CoinType_ERC20,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
 	})
@@ -145,16 +144,16 @@ func TestGetRevertGasLimit(t *testing.T) {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             coin.CoinType_ERC20,
 			Asset:                asset,
 		})
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
-				CoinType:      common.CoinType_ERC20,
 			}})
 		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
 	})

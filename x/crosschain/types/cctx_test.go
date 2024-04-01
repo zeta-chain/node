@@ -7,7 +7,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -17,9 +18,9 @@ import (
 func Test_InitializeCCTX(t *testing.T) {
 	t.Run("should return a cctx with correct values", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := common.GoerliChain()
+		senderChain := chains.GoerliChain()
 		sender := sample.EthAddress()
-		receiverChain := common.GoerliChain()
+		receiverChain := chains.GoerliChain()
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -29,7 +30,7 @@ func Test_InitializeCCTX(t *testing.T) {
 		gasLimit := uint64(100)
 		asset := "test-asset"
 		eventIndex := uint64(1)
-		cointType := common.CoinType_ERC20
+		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteOnObservedInboundTx{
 			Creator:       creator,
@@ -67,9 +68,9 @@ func Test_InitializeCCTX(t *testing.T) {
 	})
 	t.Run("should return an error if the cctx is invalid", func(t *testing.T) {
 		_, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		senderChain := common.GoerliChain()
+		senderChain := chains.GoerliChain()
 		sender := sample.EthAddress()
-		receiverChain := common.GoerliChain()
+		receiverChain := chains.GoerliChain()
 		receiver := sample.EthAddress()
 		creator := sample.AccAddress()
 		amount := sdkmath.NewUint(42)
@@ -79,7 +80,7 @@ func Test_InitializeCCTX(t *testing.T) {
 		gasLimit := uint64(100)
 		asset := "test-asset"
 		eventIndex := uint64(1)
-		cointType := common.CoinType_ERC20
+		cointType := coin.CoinType_ERC20
 		tss := sample.Tss()
 		msg := types.MsgVoteOnObservedInboundTx{
 			Creator:       creator,

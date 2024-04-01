@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	tmdb "github.com/tendermint/tm-db"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschainmocks "github.com/zeta-chain/zetacore/testutil/keeper/mocks/crosschain"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -192,12 +193,12 @@ func GetCrosschainFungibleMock(t testing.TB, keeper *keeper.Keeper) *crosschainm
 	return cfk
 }
 
-func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *common.Chain) {
+func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeeper, senderChain *chains.Chain) {
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(senderChain).Once()
 
 }
-func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain common.Chain) {
+func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain chains.Chain) {
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 		Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
@@ -206,7 +207,7 @@ func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, 
 		Return(big.NewInt(100), nil).Once()
 
 }
-func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain common.Chain, asset string) {
+func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain chains.Chain, asset string) {
 	m2.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 		Return(&senderChain).Twice()
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
@@ -240,7 +241,7 @@ func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *cr
 
 }
 
-func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain common.Chain) (nonce uint64) {
+func MockUpdateNonce(m *crosschainmocks.CrosschainObserverKeeper, senderChain chains.Chain) (nonce uint64) {
 	nonce = uint64(1)
 	tss := sample.Tss()
 	m.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
@@ -265,18 +266,18 @@ func MockRevertForHandleEVMDeposit(m *crosschainmocks.CrosschainFungibleKeeper, 
 		amount,
 		senderChainID,
 		mock.Anything,
-		common.CoinType_ERC20,
+		coin.CoinType_ERC20,
 		mock.Anything,
 	).Return(&evmtypes.MsgEthereumTxResponse{VmError: "reverted"}, false, errDeposit)
 }
 
-func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain common.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, common.ReceiveStatus_Success, observer).
+func MockVoteOnOutboundSuccessBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_Success, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_SuccessObservation}, senderChain.ChainName.String(), nil).Once()
 }
 
-func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain common.Chain, observer string) {
-	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, common.ReceiveStatus_Failed, observer).
+func MockVoteOnOutboundFailedBallot(m *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, cctx *types.CrossChainTx, senderChain chains.Chain, observer string) {
+	m.On("VoteOnOutboundBallot", ctx, mock.Anything, cctx.GetCurrentOutTxParam().ReceiverChainId, chains.ReceiveStatus_Failed, observer).
 		Return(true, true, observertypes.Ballot{BallotStatus: observertypes.BallotStatus_BallotFinalized_FailureObservation}, senderChain.ChainName.String(), nil).Once()
 }
 

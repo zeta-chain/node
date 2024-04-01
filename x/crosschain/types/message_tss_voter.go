@@ -6,14 +6,14 @@ import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const TypeMsgCreateTSSVoter = "CreateTSSVoter"
 
 var _ sdk.Msg = &MsgCreateTSSVoter{}
 
-func NewMsgCreateTSSVoter(creator string, pubkey string, keygenZetaHeight int64, status common.ReceiveStatus) *MsgCreateTSSVoter {
+func NewMsgCreateTSSVoter(creator string, pubkey string, keygenZetaHeight int64, status chains.ReceiveStatus) *MsgCreateTSSVoter {
 	return &MsgCreateTSSVoter{
 		Creator:          creator,
 		TssPubkey:        pubkey,

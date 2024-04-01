@@ -167,7 +167,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 					MaxPendingCctxs:         100,
 				},
 			},
-			want: authoritytypes.PolicyType_groupAdmin,
+			want: authoritytypes.PolicyType_groupOperational,
 		},
 		{
 			name: "enabling inbound asserts group 2",
@@ -181,7 +181,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: authoritytypes.PolicyType_groupAdmin,
+			want: authoritytypes.PolicyType_groupOperational,
 		},
 		{
 			name: "enabling outbound asserts group 2",
@@ -195,7 +195,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: authoritytypes.PolicyType_groupAdmin,
+			want: authoritytypes.PolicyType_groupOperational,
 		},
 		{
 			name: "enabling eth header verification asserts group 2",
@@ -209,7 +209,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: authoritytypes.PolicyType_groupAdmin,
+			want: authoritytypes.PolicyType_groupOperational,
 		},
 		{
 			name: "enabling btc header verification asserts group 2",
@@ -223,7 +223,7 @@ func TestMsgUpdateCrosschainFlags_GetRequiredPolicyType(t *testing.T) {
 				},
 				GasPriceIncreaseFlags: nil,
 			},
-			want: authoritytypes.PolicyType_groupAdmin,
+			want: authoritytypes.PolicyType_groupOperational,
 		},
 	}
 

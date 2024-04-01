@@ -8,7 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -36,7 +36,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		k.ProcessZEVMDeposit(ctx, cctx)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
@@ -61,7 +61,7 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
-		cctx.InboundTxParams.CoinType = common.CoinType_Zeta
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
 		k.ProcessZEVMDeposit(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)

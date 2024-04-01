@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType } from "../common/common_pb.js";
+import type { CoinType } from "../pkg/coin/coin_pb.js";
 
 /**
  * @generated from enum zetachain.zetacore.crosschain.CctxStatus
@@ -104,7 +104,7 @@ export declare class InboundTxParams extends Message<InboundTxParams> {
   txOrigin: string;
 
   /**
-   * @generated from field: common.CoinType coin_type = 4;
+   * @generated from field: coin.CoinType coin_type = 4;
    */
   coinType: CoinType;
 
@@ -201,7 +201,7 @@ export declare class OutboundTxParams extends Message<OutboundTxParams> {
   receiverChainId: bigint;
 
   /**
-   * @generated from field: common.CoinType coin_type = 3;
+   * @generated from field: coin.CoinType coin_type = 3;
    */
   coinType: CoinType;
 

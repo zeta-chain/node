@@ -4,14 +4,14 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func (m InboundTxParams) Validate() error {
 	if m.Sender == "" {
 		return fmt.Errorf("sender cannot be empty")
 	}
-	if common.GetChainFromChainID(m.SenderChainId) == nil {
+	if chains.GetChainFromChainID(m.SenderChainId) == nil {
 		return fmt.Errorf("invalid sender chain id %d", m.SenderChainId)
 	}
 	err := ValidateAddressForChain(m.Sender, m.SenderChainId)

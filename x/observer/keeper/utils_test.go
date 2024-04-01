@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/stretchr/testify/require"
-	zetacommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -32,9 +32,9 @@ func setSupportedChain(ctx sdk.Context, observerKeeper keeper.Keeper, chainIDs .
 func getValidEthChainIDWithIndex(t *testing.T, index int) int64 {
 	switch index {
 	case 0:
-		return zetacommon.GoerliLocalnetChain().ChainId
+		return chains.GoerliLocalnetChain().ChainId
 	case 1:
-		return zetacommon.GoerliChain().ChainId
+		return chains.GoerliChain().ChainId
 	default:
 		require.Fail(t, "invalid index")
 	}
@@ -65,7 +65,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 		k.SetObserverSet(ctx, types.ObserverSet{
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
-		require.True(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.True(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for tombstoned observer", func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 	t.Run("not authorized for non-validator observer", func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestKeeper_IsAuthorized(t *testing.T) {
 			ObserverList: []string{accAddressOfValidator.String()},
 		})
 
-		require.False(t, k.IsAuthorized(ctx, accAddressOfValidator.String()))
+		require.False(t, k.IsNonTombstonedObserver(ctx, accAddressOfValidator.String()))
 
 	})
 }

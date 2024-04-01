@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -42,7 +42,7 @@ func (k Keeper) GetChainParamsByChainID(ctx sdk.Context, chainID int64) (*types.
 
 // GetSupportedChainFromChainID returns the chain from the chain id
 // it returns nil if the chain doesn't exist or is not supported
-func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *common.Chain {
+func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *chains.Chain {
 	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
 		return nil
@@ -50,24 +50,24 @@ func (k Keeper) GetSupportedChainFromChainID(ctx sdk.Context, chainID int64) *co
 
 	for _, cp := range cpl.ChainParams {
 		if cp.ChainId == chainID && cp.IsSupported {
-			return common.GetChainFromChainID(chainID)
+			return chains.GetChainFromChainID(chainID)
 		}
 	}
 	return nil
 }
 
 // GetSupportedChains returns the list of supported chains
-func (k Keeper) GetSupportedChains(ctx sdk.Context) []*common.Chain {
+func (k Keeper) GetSupportedChains(ctx sdk.Context) []*chains.Chain {
 	cpl, found := k.GetChainParamsList(ctx)
 	if !found {
-		return []*common.Chain{}
+		return []*chains.Chain{}
 	}
 
-	var chains []*common.Chain
+	var c []*chains.Chain
 	for _, cp := range cpl.ChainParams {
 		if cp.IsSupported {
-			chains = append(chains, common.GetChainFromChainID(cp.ChainId))
+			c = append(c, chains.GetChainFromChainID(cp.ChainId))
 		}
 	}
-	return chains
+	return c
 }

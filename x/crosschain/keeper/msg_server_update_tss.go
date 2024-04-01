@@ -7,7 +7,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -19,7 +18,7 @@ func (k msgServer) UpdateTssAddress(goCtx context.Context, msg *types.MsgUpdateT
 	// TODO : Add a new policy type for updating the TSS address
 	// https://github.com/zeta-chain/node/issues/1715
 	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Update can only be executed by the correct policy account")
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Update can only be executed by the correct policy account")
 	}
 
 	currentTss, found := k.zetaObserverKeeper.GetTSS(ctx)

@@ -9,7 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -45,12 +46,12 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		msgServer := keeper.NewMsgServerImpl(*k)
 		validatorList := setObservers(t, k, ctx, zk)
 		to, from := int64(1337), int64(101)
-		chains := zk.ObserverKeeper.GetSupportedChains(ctx)
-		for _, chain := range chains {
-			if common.IsEVMChain(chain.ChainId) {
+		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
+		for _, chain := range supportedChains {
+			if chains.IsEVMChain(chain.ChainId) {
 				from = chain.ChainId
 			}
-			if common.IsZetaChain(chain.ChainId) {
+			if chains.IsZetaChain(chain.ChainId) {
 				to = chain.ChainId
 			}
 		}
@@ -249,7 +250,7 @@ func TestKeeper_SaveInbound(t *testing.T) {
 }
 
 // GetERC20Cctx returns a sample CrossChainTx with ERC20 params. This is used for testing Inbound and Outbound voting transactions
-func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.Chain, asset string, amount *big.Int) *types.CrossChainTx {
+func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain chains.Chain, asset string, amount *big.Int) *types.CrossChainTx {
 	r := sample.Rand()
 	cctx := &types.CrossChainTx{
 		Creator:          sample.AccAddress(),
@@ -271,9 +272,9 @@ func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain common.C
 	cctx.GetCurrentOutTxParam().OutboundTxHash = sample.Hash().String()
 	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = sample.ZetaIndex(t)
 
-	cctx.InboundTxParams.CoinType = common.CoinType_ERC20
+	cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
 	for _, outboundTxParam := range cctx.OutboundTxParams {
-		outboundTxParam.CoinType = common.CoinType_ERC20
+		outboundTxParam.CoinType = coin.CoinType_ERC20
 	}
 
 	cctx.GetInboundTxParams().Asset = asset

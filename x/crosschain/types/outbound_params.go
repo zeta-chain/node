@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 func (m OutboundTxParams) GetGasPrice() (uint64, error) {
@@ -21,7 +21,7 @@ func (m OutboundTxParams) Validate() error {
 	if m.Receiver == "" {
 		return fmt.Errorf("receiver cannot be empty")
 	}
-	if common.GetChainFromChainID(m.ReceiverChainId) == nil {
+	if chains.GetChainFromChainID(m.ReceiverChainId) == nil {
 		return fmt.Errorf("invalid receiver chain id %d", m.ReceiverChainId)
 	}
 	err := ValidateAddressForChain(m.Receiver, m.ReceiverChainId)

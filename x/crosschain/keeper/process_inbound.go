@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -12,7 +12,7 @@ import (
 // It does a conditional dispatch to ProcessZEVMDeposit or ProcessCrosschainMsgPassing based on the receiver chain.
 // The internal functions handle the state changes and error handling.
 func (k Keeper) ProcessInbound(ctx sdk.Context, cctx *types.CrossChainTx) {
-	if common.IsZetaChain(cctx.GetCurrentOutTxParam().ReceiverChainId) {
+	if chains.IsZetaChain(cctx.GetCurrentOutTxParam().ReceiverChainId) {
 		k.ProcessZEVMDeposit(ctx, cctx)
 	} else {
 		k.ProcessCrosschainMsgPassing(ctx, cctx)

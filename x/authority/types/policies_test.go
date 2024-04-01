@@ -41,8 +41,23 @@ func TestPolicies_Validate(t *testing.T) {
 			errContains: "",
 		},
 		{
-			name:        "regular valid policies",
-			policies:    sample.Policies(),
+			name: "policies with all group",
+			policies: types.Policies{
+				Items: []*types.Policy{
+					{
+						Address:    sample.AccAddress(),
+						PolicyType: types.PolicyType_groupEmergency,
+					},
+					{
+						Address:    sample.AccAddress(),
+						PolicyType: types.PolicyType_groupAdmin,
+					},
+					{
+						Address:    sample.AccAddress(),
+						PolicyType: types.PolicyType_groupOperational,
+					},
+				},
+			},
 			errContains: "",
 		},
 		{

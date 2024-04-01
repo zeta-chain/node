@@ -18,8 +18,8 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	. "gopkg.in/check.v1"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd"
-	"github.com/zeta-chain/zetacore/common/cosmos"
 )
 
 type KeysSuite struct{}
@@ -53,7 +53,7 @@ func (*KeysSuite) setupKeysForTest(c *C) string {
 	registry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(registry)
 	cdc := codec.NewProtoCodec(registry)
-	kb, err := cKeys.New(cosmos.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
+	kb, err := cKeys.New(sdk.KeyringServiceName(), cKeys.BackendTest, metaCliDir, buf, cdc)
 	c.Assert(err, IsNil)
 
 	_, _, err = kb.NewMnemonic(GetGranteeKeyName(signerNameForTest), cKeys.English, cmd.ZetaChainHDPath, password, hd.Secp256k1)
@@ -91,7 +91,7 @@ func (ks *KeysSuite) TestNewKeys(c *C) {
 	k, _, err := GetKeyringKeybase(cfg, "")
 	c.Assert(err, IsNil)
 	c.Assert(k, NotNil)
-	granter := cosmos.AccAddress(crypto.AddressHash([]byte("granter")))
+	granter := sdk.AccAddress(crypto.AddressHash([]byte("granter")))
 	ki := NewKeysWithKeybase(k, granter, signerNameForTest, "")
 	kInfo := ki.GetSignerInfo()
 	c.Assert(kInfo, NotNil)

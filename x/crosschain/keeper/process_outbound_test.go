@@ -6,7 +6,8 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -34,7 +35,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("successfully process failed outbound set to aborted for type cmd", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
-		cctx.InboundTxParams.CoinType = common.CoinType_Cmd
+		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
@@ -44,7 +45,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 	t.Run("successfully process failed outbound set to aborted for withdraw tx", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		cctx := sample.CrossChainTx(t, "test")
-		cctx.InboundTxParams.SenderChainId = common.ZetaChainMainnet().ChainId
+		cctx.InboundTxParams.SenderChainId = chains.ZetaChainMainnet().ChainId
 		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)
@@ -172,7 +173,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 func TestKeeper_ProcessOutbound(t *testing.T) {
 	t.Run("successfully process outbound with ballot finalized to success", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_SuccessObservation, sample.String())
 		require.NoError(t, err)
@@ -181,7 +182,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and old status is Pending Revert", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingRevert
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
 		require.NoError(t, err)
@@ -191,9 +192,9 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 	t.Run("successfully process outbound with ballot finalized to failed and coin-type is CMD", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
-		cctx := GetERC20Cctx(t, sample.EthAddress(), common.GoerliChain(), "", big.NewInt(42))
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
-		cctx.InboundTxParams.CoinType = common.CoinType_Cmd
+		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
 		require.NoError(t, err)
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_Aborted)

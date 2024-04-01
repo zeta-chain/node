@@ -21,6 +21,10 @@ func DefaultPolicies() Policies {
 			},
 			{
 				Address:    DefaultPolicyAddress,
+				PolicyType: PolicyType_groupOperational,
+			},
+			{
+				Address:    DefaultPolicyAddress,
 				PolicyType: PolicyType_groupAdmin,
 			},
 		},
@@ -38,7 +42,7 @@ func (p Policies) Validate() error {
 			return fmt.Errorf("invalid address: %s", err)
 		}
 
-		if policy.PolicyType != PolicyType_groupEmergency && policy.PolicyType != PolicyType_groupAdmin {
+		if policy.PolicyType != PolicyType_groupEmergency && policy.PolicyType != PolicyType_groupAdmin && policy.PolicyType != PolicyType_groupOperational {
 			return fmt.Errorf("invalid policy type: %s", policy.PolicyType)
 		}
 

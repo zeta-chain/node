@@ -8,7 +8,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 // ValidateZetaIndex validates the zeta index
@@ -21,14 +21,14 @@ func ValidateZetaIndex(index string) error {
 
 // ValidateHashForChain validates the hash for the chain
 func ValidateHashForChain(hash string, chainID int64) error {
-	if common.IsEthereumChain(chainID) || common.IsZetaChain(chainID) {
+	if chains.IsEthereumChain(chainID) || chains.IsZetaChain(chainID) {
 		_, err := hexutil.Decode(hash)
 		if err != nil {
 			return fmt.Errorf("hash must be a valid ethereum hash %s", hash)
 		}
 		return nil
 	}
-	if common.IsBitcoinChain(chainID) {
+	if chains.IsBitcoinChain(chainID) {
 		r, err := regexp.Compile("^[a-fA-F0-9]{64}$")
 		if err != nil {
 			return fmt.Errorf("error compiling regex")
@@ -44,17 +44,17 @@ func ValidateHashForChain(hash string, chainID int64) error {
 // ValidateAddressForChain validates the address for the chain
 func ValidateAddressForChain(address string, chainID int64) error {
 	// we do not validate the address for zeta chain as the address field can be btc or eth address
-	if common.IsZetaChain(chainID) {
+	if chains.IsZetaChain(chainID) {
 		return nil
 	}
-	if common.IsEthereumChain(chainID) {
+	if chains.IsEthereumChain(chainID) {
 		if !ethcommon.IsHexAddress(address) {
 			return fmt.Errorf("invalid address %s , chain %d", address, chainID)
 		}
 		return nil
 	}
-	if common.IsBitcoinChain(chainID) {
-		addr, err := common.DecodeBtcAddress(address, chainID)
+	if chains.IsBitcoinChain(chainID) {
+		addr, err := chains.DecodeBtcAddress(address, chainID)
 		if err != nil {
 			return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
 		}

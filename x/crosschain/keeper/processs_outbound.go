@@ -3,7 +3,8 @@ package keeper
 import (
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -49,7 +50,7 @@ ProcessFailedOutbound processes a failed outbound transaction. It does the follo
 */
 func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx, valueReceived string) error {
 	oldStatus := cctx.CctxStatus.Status
-	if cctx.InboundTxParams.CoinType == common.CoinType_Cmd || common.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
+	if cctx.InboundTxParams.CoinType == coin.CoinType_Cmd || chains.IsZetaChain(cctx.InboundTxParams.SenderChainId) {
 		// if the cctx is of coin type cmd or the sender chain is zeta chain, then we do not revert, the cctx is aborted
 		cctx.GetCurrentOutTxParam().TxFinalizationStatus = types.TxFinalizationStatus_Executed
 		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "")

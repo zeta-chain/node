@@ -17,7 +17,8 @@ import (
 	connectorzevm "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
 	zrc20 "github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -137,7 +138,7 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 	if receiverChain == nil {
 		return errorsmod.Wrapf(observertypes.ErrSupportedChains, "chain with chainID %d not supported", foreignCoin.ForeignChainId)
 	}
-	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
+	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to convert chainID: %s", err.Error())
 	}
@@ -219,7 +220,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		return types.ErrUnableToSendCoinType
 	}
 	toAddr := "0x" + hex.EncodeToString(event.DestinationAddress)
-	senderChain, err := common.ZetaChainFromChainID(ctx.ChainID())
+	senderChain, err := chains.ZetaChainFromChainID(ctx.ChainID())
 	if err != nil {
 		return fmt.Errorf("ProcessZetaSentEvent: failed to convert chainID: %s", err.Error())
 	}
@@ -237,7 +238,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		event.Raw.TxHash.String(),
 		event.Raw.BlockNumber,
 		90000,
-		common.CoinType_Zeta,
+		coin.CoinType_Zeta,
 		"",
 		event.Raw.Index,
 	)
@@ -264,7 +265,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 	return k.ProcessCCTX(ctx, cctx, receiverChain)
 }
 
-func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *common.Chain) error {
+func (k Keeper) ProcessCCTX(ctx sdk.Context, cctx types.CrossChainTx, receiverChain *chains.Chain) error {
 	inCctxIndex, ok := ctx.Value("inCctxIndex").(string)
 	if ok {
 		cctx.InboundTxParams.InboundTxObservedHash = inCctxIndex
@@ -301,11 +302,11 @@ func ParseZRC20WithdrawalEvent(log ethtypes.Log) (*zrc20.ZRC20Withdrawal, error)
 func ValidateZrc20WithdrawEvent(event *zrc20.ZRC20Withdrawal, chainID int64) error {
 	// The event was parsed; that means the user has deposited tokens to the contract.
 
-	if common.IsBitcoinChain(chainID) {
+	if chains.IsBitcoinChain(chainID) {
 		if event.Value.Cmp(big.NewInt(0)) <= 0 {
 			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid amount %s", event.Value.String())
 		}
-		addr, err := common.DecodeBtcAddress(string(event.To), chainID)
+		addr, err := chains.DecodeBtcAddress(string(event.To), chainID)
 		if err != nil {
 			return fmt.Errorf("ParseZRC20WithdrawalEvent: invalid address %s: %s", event.To, err)
 		}

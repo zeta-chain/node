@@ -11,7 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -29,11 +29,11 @@ func (k Keeper) PayGasAndUpdateCctx(
 ) error {
 	// Dispatch to the correct function based on the coin type
 	switch cctx.InboundTxParams.CoinType {
-	case common.CoinType_Zeta:
+	case coin.CoinType_Zeta:
 		return k.PayGasInZetaAndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
-	case common.CoinType_Gas:
+	case coin.CoinType_Gas:
 		return k.PayGasNativeAndUpdateCctx(ctx, chainID, cctx, inputAmount)
-	case common.CoinType_ERC20:
+	case coin.CoinType_ERC20:
 		return k.PayGasInERC20AndUpdateCctx(ctx, chainID, cctx, inputAmount, noEthereumTxEvent)
 	default:
 		// can't pay gas with coin type
@@ -90,7 +90,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 	inputAmount math.Uint,
 ) error {
 	// preliminary checks
-	if cctx.InboundTxParams.CoinType != common.CoinType_Gas {
+	if cctx.InboundTxParams.CoinType != coin.CoinType_Gas {
 		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
@@ -137,7 +137,7 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
-	if cctx.InboundTxParams.CoinType != common.CoinType_ERC20 {
+	if cctx.InboundTxParams.CoinType != coin.CoinType_ERC20 {
 		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in erc20 with %s", cctx.InboundTxParams.CoinType.String())
 	}
 
@@ -262,7 +262,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	noEthereumTxEvent bool,
 ) error {
 	// preliminary checks
-	if cctx.InboundTxParams.CoinType != common.CoinType_Zeta {
+	if cctx.InboundTxParams.CoinType != coin.CoinType_Zeta {
 		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in zeta with %s", cctx.InboundTxParams.CoinType.String())
 	}
 

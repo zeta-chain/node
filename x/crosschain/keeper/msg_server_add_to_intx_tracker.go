@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
@@ -23,7 +23,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 	}
 
 	isAdmin := k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupEmergency)
-	isObserver := k.zetaObserverKeeper.IsAuthorized(ctx, msg.Creator)
+	isObserver := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator)
 
 	isProven := false
 	if !(isAdmin || isObserver) && msg.Proof != nil {
@@ -32,7 +32,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 			return nil, types.ErrProofVerificationFail.Wrapf(err.Error())
 		}
 
-		if common.IsEVMChain(msg.ChainId) {
+		if chains.IsEVMChain(msg.ChainId) {
 			err = k.VerifyEVMInTxBody(ctx, msg, txBytes)
 			if err != nil {
 				return nil, types.ErrTxBodyVerificationFail.Wrapf(err.Error())
@@ -45,7 +45,7 @@ func (k msgServer) AddToInTxTracker(goCtx context.Context, msg *types.MsgAddToIn
 
 	// Sender needs to be either the admin policy account or an observer
 	if !(isAdmin || isObserver || isProven) {
-		return nil, errorsmod.Wrap(observertypes.ErrNotAuthorized, fmt.Sprintf("Creator %s", msg.Creator))
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, fmt.Sprintf("Creator %s", msg.Creator))
 	}
 
 	k.SetInTxTracker(ctx, types.InTxTracker{

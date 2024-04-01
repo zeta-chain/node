@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/ethereum/go-ethereum/crypto"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -17,8 +17,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 )
 
 var ErrSample = errors.New("sample error")
@@ -87,7 +87,7 @@ func PubKeyString() string {
 	if err != nil {
 		panic(err)
 	}
-	pubkey, err := common.NewPubKey(s)
+	pubkey, err := crypto.NewPubKey(s)
 	if err != nil {
 		panic(err)
 	}
@@ -114,7 +114,7 @@ func Hash() ethcommon.Hash {
 
 func ZetaIndex(t *testing.T) string {
 	msg := CrossChainTx(t, "foo")
-	hash := crypto.Keccak256Hash([]byte(msg.String()))
+	hash := ethcrypto.Keccak256Hash([]byte(msg.String()))
 	return hash.Hex()
 }
 

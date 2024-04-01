@@ -13,12 +13,14 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/erc20custody.sol"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/evm/zetaconnector.non-eth.sol"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	clienttypes "github.com/zeta-chain/zetacore/zetaclient/types"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 	"golang.org/x/net/context"
@@ -73,11 +75,11 @@ func (ob *ChainClient) ObserveIntxTrackers() error {
 
 		// check and vote on inbound tx
 		switch tracker.CoinType {
-		case common.CoinType_Zeta:
+		case coin.CoinType_Zeta:
 			_, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, true)
-		case common.CoinType_ERC20:
+		case coin.CoinType_ERC20:
 			_, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, true)
-		case common.CoinType_Gas:
+		case coin.CoinType_Gas:
 			_, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, true)
 		default:
 			return fmt.Errorf("unknown coin type %s for intx %s chain %d", tracker.CoinType, tx.Hash, ob.chain.ChainId)
@@ -123,7 +125,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenZeta(tx *ethrpc.Transaction, rece
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(msg, common.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
+		return ob.PostVoteInbound(msg, coin.CoinType_Zeta, zetabridge.PostVoteInboundMessagePassingExecutionGasLimit)
 	}
 	return msg.Digest(), nil
 }
@@ -164,7 +166,7 @@ func (ob *ChainClient) CheckAndVoteInboundTokenERC20(tx *ethrpc.Transaction, rec
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(msg, common.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
+		return ob.PostVoteInbound(msg, coin.CoinType_ERC20, zetabridge.PostVoteInboundExecutionGasLimit)
 	}
 	return msg.Digest(), nil
 }
@@ -192,13 +194,13 @@ func (ob *ChainClient) CheckAndVoteInboundTokenGas(tx *ethrpc.Transaction, recei
 		return "", nil
 	}
 	if vote {
-		return ob.PostVoteInbound(msg, common.CoinType_Gas, zetabridge.PostVoteInboundExecutionGasLimit)
+		return ob.PostVoteInbound(msg, coin.CoinType_Gas, zetabridge.PostVoteInboundExecutionGasLimit)
 	}
 	return msg.Digest(), nil
 }
 
 // PostVoteInbound posts a vote for the given vote message
-func (ob *ChainClient) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType common.CoinType, retryGasLimit uint64) (string, error) {
+func (ob *ChainClient) PostVoteInbound(msg *types.MsgVoteOnObservedInboundTx, coinType coin.CoinType, retryGasLimit uint64) (string, error) {
 	txHash := msg.InTxHash
 	chainID := ob.chain.ChainId
 	zetaHash, ballot, err := ob.zetaClient.PostVoteInbound(zetabridge.PostVoteInboundGasLimit, retryGasLimit, msg)
@@ -223,7 +225,7 @@ func (ob *ChainClient) HasEnoughConfirmations(receipt *ethtypes.Receipt, lastHei
 func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.ERC20CustodyDeposited, sender ethcommon.Address) *types.MsgVoteOnObservedInboundTx {
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := common.ParseAddressAndData(hex.EncodeToString(event.Message))
+	parsedAddress, _, err := chains.ParseAddressAndData(hex.EncodeToString(event.Message))
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
@@ -234,7 +236,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 	}
 
 	// donation check
-	if bytes.Equal(event.Message, []byte(common.DonationMessage)) {
+	if bytes.Equal(event.Message, []byte(constant.DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", event.Raw.TxHash.Hex(), ob.chain.ChainId)
 		return nil
 	}
@@ -253,7 +255,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
 		1_500_000,
-		common.CoinType_ERC20,
+		coin.CoinType_ERC20,
 		event.Asset.String(),
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
@@ -262,7 +264,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForDepositedEvent(event *erc20custody.
 
 // BuildInboundVoteMsgForZetaSentEvent builds a inbound vote message for a ZetaSent event
 func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.ZetaConnectorNonEthZetaSent) *types.MsgVoteOnObservedInboundTx {
-	destChain := common.GetChainFromChainID(event.DestinationChainId.Int64())
+	destChain := chains.GetChainFromChainID(event.DestinationChainId.Int64())
 	if destChain == nil {
 		ob.logger.ExternalChainWatcher.Warn().Msgf("chain id not supported  %d", event.DestinationChainId.Int64())
 		return nil
@@ -304,7 +306,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForZetaSentEvent(event *zetaconnector.
 		event.Raw.TxHash.Hex(),
 		event.Raw.BlockNumber,
 		event.DestinationGasLimit.Uint64(),
-		common.CoinType_Zeta,
+		coin.CoinType_Zeta,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		event.Raw.Index,
@@ -317,7 +319,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 
 	// compliance check
 	maybeReceiver := ""
-	parsedAddress, _, err := common.ParseAddressAndData(message)
+	parsedAddress, _, err := chains.ParseAddressAndData(message)
 	if err == nil && parsedAddress != (ethcommon.Address{}) {
 		maybeReceiver = parsedAddress.Hex()
 	}
@@ -330,7 +332,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 	// donation check
 	// #nosec G703 err is already checked
 	data, _ := hex.DecodeString(message)
-	if bytes.Equal(data, []byte(common.DonationMessage)) {
+	if bytes.Equal(data, []byte(constant.DonationMessage)) {
 		ob.logger.ExternalChainWatcher.Info().Msgf("thank you rich folk for your donation! tx %s chain %d", tx.Hash, ob.chain.ChainId)
 		return nil
 	}
@@ -348,7 +350,7 @@ func (ob *ChainClient) BuildInboundVoteMsgForTokenSentToTSS(tx *ethrpc.Transacti
 		tx.Hash,
 		blockNumber,
 		90_000,
-		common.CoinType_Gas,
+		coin.CoinType_Gas,
 		"",
 		ob.zetaClient.GetKeys().GetOperatorAddress().String(),
 		0, // not a smart contract call

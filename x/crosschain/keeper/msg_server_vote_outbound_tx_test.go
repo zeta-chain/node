@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -154,7 +154,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_Success,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -210,7 +210,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_Failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -270,7 +270,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_Failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -332,7 +332,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Failed,
+			Status:                         chains.ReceiveStatus_Failed,
 			Creator:                        observer,
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -376,7 +376,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_Success,
 			Creator:                        accAddress.String(),
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,
@@ -422,7 +422,7 @@ func TestKeeper_VoteOnObservedOutboundTx(t *testing.T) {
 			CctxHash:                       cctx.Index,
 			OutTxTssNonce:                  cctx.GetCurrentOutTxParam().OutboundTxTssNonce,
 			OutTxChain:                     cctx.GetCurrentOutTxParam().ReceiverChainId,
-			Status:                         common.ReceiveStatus_Success,
+			Status:                         chains.ReceiveStatus_Success,
 			Creator:                        accAddress.String(),
 			ObservedOutTxHash:              sample.Hash().String(),
 			ValueReceived:                  cctx.GetCurrentOutTxParam().Amount,

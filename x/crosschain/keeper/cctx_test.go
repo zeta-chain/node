@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -48,10 +48,10 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 			SenderChainId:                   int64(i),
 			TxOrigin:                        fmt.Sprintf("%d", i),
 			Asset:                           fmt.Sprintf("%d", i),
+			CoinType:                        coin.CoinType_Zeta,
 			InboundTxObservedHash:           fmt.Sprintf("%d", i),
 			InboundTxObservedExternalHeight: uint64(i),
 			InboundTxFinalizedZetaHeight:    uint64(i),
-			CoinType:                        common.CoinType_Zeta,
 		}
 		items[i].OutboundTxParams = []*types.OutboundTxParams{{
 			Receiver:                         fmt.Sprintf("%d", i),
@@ -62,7 +62,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
 			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
 			OutboundTxObservedExternalHeight: uint64(i),
-			CoinType:                         common.CoinType_Zeta,
+			CoinType:                         coin.CoinType_Zeta,
 		}}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
