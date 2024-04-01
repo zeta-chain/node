@@ -23,6 +23,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/crosschain/client/cli"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungiblecli "github.com/zeta-chain/zetacore/x/fungible/client/cli"
+	observercli "github.com/zeta-chain/zetacore/x/observer/client/cli"
 )
 
 func TxSignExec(clientCtx client.Context, from fmt.Stringer, filename string, extraArgs ...string) (testutil.BufferWriter, error) {
@@ -181,7 +182,7 @@ func BuildSignedGasPriceVote(t testing.TB, val *network.Validator, denom string,
 }
 
 func BuildSignedTssVote(t testing.TB, val *network.Validator, denom string, account authtypes.AccountI) *os.File {
-	cmd := cli.CmdCreateTSSVoter()
+	cmd := observercli.CmdVoteTSS()
 	inboundVoterArgs := []string{
 		"tsspubkey",
 		"1",
