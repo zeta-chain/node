@@ -40,7 +40,6 @@ func TestParseStringToObservationType(t *testing.T) {
 		{"TestValidObservationType1", "OutBoundTx", types.ObservationType(2)},
 		{"TestValidObservationType1", "TSSKeyGen", types.ObservationType(3)},
 		{"TestValidObservationType1", "TSSKeySign", types.ObservationType(4)},
-		// TODO: this is wrong, ObservationType should check if value exists?
 		{"TestInvalidObservationType", "InvalidType", types.ObservationType(0)},
 	}
 

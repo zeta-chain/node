@@ -15,15 +15,13 @@ func TestConvertNodes(t *testing.T) {
 		expected []*types.Node
 	}{
 		{
-			name:  "TestEmptyInput",
-			input: []blame.Node{},
-			// TODO: is nil ok here, should be empty array?
+			name:     "TestEmptyInput",
+			input:    []blame.Node{},
 			expected: nil,
 		},
 		{
-			name:  "TestNilInput",
-			input: nil,
-			// TODO: is nil ok here, should be empty array?
+			name:     "TestNilInput",
+			input:    nil,
 			expected: nil,
 		},
 		{
