@@ -22,6 +22,7 @@
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 * [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
+* [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
 
 ### Features
 
