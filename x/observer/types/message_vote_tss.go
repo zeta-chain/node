@@ -48,6 +48,12 @@ func (msg *MsgVoteTSS) ValidateBasic() error {
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
+
+	// either success or observation failure
+	if msg.Status != chains.ReceiveStatus_Success && msg.Status != chains.ReceiveStatus_Failed {
+		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid status: %s", msg.Status)
+	}
+
 	return nil
 }
 
