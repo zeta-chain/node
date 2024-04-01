@@ -60,5 +60,4 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 		CctxStatus_Reverted,
 	}
 	return stateTransitionMap
-
 }

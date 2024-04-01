@@ -23,6 +23,16 @@ func OutTxTracker(t *testing.T, index string) types.OutTxTracker {
 	}
 }
 
+func InTxTracker(t *testing.T, index string) types.InTxTracker {
+	r := newRandFromStringSeed(t, index)
+
+	return types.InTxTracker{
+		ChainId:  r.Int63(),
+		CoinType: coin.CoinType_Zeta,
+		TxHash:   Hash().Hex(),
+	}
+}
+
 func GasPrice(t *testing.T, index string) *types.GasPrice {
 	r := newRandFromStringSeed(t, index)
 

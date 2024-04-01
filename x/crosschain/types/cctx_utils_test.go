@@ -4,9 +4,12 @@ import (
 	"math/rand"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestCrossChainTx_GetCurrentOutTxParam(t *testing.T) {
@@ -64,4 +67,18 @@ func TestOutboundTxParams_GetGasPrice(t *testing.T) {
 	outTxParams.OutboundTxGasPrice = "invalid"
 	_, err = outTxParams.GetGasPrice()
 	require.Error(t, err)
+}
+
+func TestCctxUtils_GetAllAuthzZetaclientTxTypes(t *testing.T) {
+	authzTxTypes := types.GetAllAuthzZetaclientTxTypes()
+	assert.Equal(t, 7, len(authzTxTypes))
+	assert.Equal(t, []string{
+		sdk.MsgTypeURL(&types.MsgGasPriceVoter{}),
+		sdk.MsgTypeURL(&types.MsgVoteOnObservedInboundTx{}),
+		sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
+		sdk.MsgTypeURL(&types.MsgCreateTSSVoter{}),
+		sdk.MsgTypeURL(&types.MsgAddToOutTxTracker{}),
+		sdk.MsgTypeURL(&observertypes.MsgAddBlameVote{}),
+		sdk.MsgTypeURL(&observertypes.MsgAddBlockHeader{}),
+	}, authzTxTypes)
 }

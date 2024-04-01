@@ -20,6 +20,16 @@ func TestGenesis(t *testing.T) {
 			sample.OutTxTracker(t, "1"),
 			sample.OutTxTracker(t, "2"),
 		},
+		InTxTrackerList: []types.InTxTracker{
+			sample.InTxTracker(t, "0"),
+			sample.InTxTracker(t, "1"),
+			sample.InTxTracker(t, "2"),
+		},
+		FinalizedInbounds: []string{
+			sample.Hash().String(),
+			sample.Hash().String(),
+			sample.Hash().String(),
+		},
 		GasPriceList: []*types.GasPrice{
 			sample.GasPrice(t, "0"),
 			sample.GasPrice(t, "1"),
