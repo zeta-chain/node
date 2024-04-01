@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
@@ -51,6 +52,39 @@ func TestLastBlockHeightQuerySingle(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLastBlockHeightLimits(t *testing.T) {
+	t.Run("should err if last send height is max int", func(t *testing.T) {
+		keeper, ctx := setupKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+		keeper.SetLastBlockHeight(ctx, types.LastBlockHeight{
+			Index:          "index",
+			LastSendHeight: math2.MaxInt64,
+		})
+
+		res, err := keeper.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{
+			Index: "index",
+		})
+		require.Nil(t, res)
+		require.Error(t, err)
+	})
+
+	t.Run("should err if last receive height is max int", func(t *testing.T) {
+		keeper, ctx := setupKeeper(t)
+		wctx := sdk.WrapSDKContext(ctx)
+		keeper.SetLastBlockHeight(ctx, types.LastBlockHeight{
+			Index:             "index",
+			LastSendHeight:    10,
+			LastReceiveHeight: math2.MaxInt64,
+		})
+
+		res, err := keeper.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{
+			Index: "index",
+		})
+		require.Nil(t, res)
+		require.Error(t, err)
+	})
 }
 
 func TestLastBlockHeightQueryPaginated(t *testing.T) {
