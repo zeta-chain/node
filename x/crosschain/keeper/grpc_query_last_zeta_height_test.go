@@ -19,7 +19,7 @@ func TestKeeper_LastZetaHeight(t *testing.T) {
 	t.Run("should error if height less than zero", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		ctx = ctx.WithBlockHeight(-1)
-		res, err := k.LastZetaHeight(ctx, nil)
+		res, err := k.LastZetaHeight(ctx, &types.QueryLastZetaHeightRequest{})
 		require.Error(t, err)
 		require.Nil(t, res)
 	})

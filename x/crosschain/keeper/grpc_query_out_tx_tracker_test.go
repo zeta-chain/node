@@ -61,6 +61,16 @@ func TestKeeper_OutTxTracker(t *testing.T) {
 		require.Nil(t, res)
 	})
 
+	t.Run("should return if not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		res, err := k.OutTxTracker(ctx, &types.QueryGetOutTxTrackerRequest{
+			ChainID: 1,
+			Nonce:   1,
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
 	t.Run("should return if req is not nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
