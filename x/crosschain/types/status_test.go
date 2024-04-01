@@ -56,6 +56,10 @@ func TestStatus_ValidateTransition(t *testing.T) {
 		{"Invalid - PendingRevert to PendingInbound", types.CctxStatus_PendingRevert, types.CctxStatus_PendingInbound, false},
 		{"Invalid - PendingRevert to PendingOutbound", types.CctxStatus_PendingRevert, types.CctxStatus_PendingOutbound, false},
 		{"Invalid - PendingRevert to PendingRevert", types.CctxStatus_PendingRevert, types.CctxStatus_PendingRevert, false},
+
+		{"Invalid old status - CctxStatus_Aborted", types.CctxStatus_Aborted, types.CctxStatus_PendingRevert, false},
+		{"Invalid old status - CctxStatus_Reverted", types.CctxStatus_Reverted, types.CctxStatus_PendingRevert, false},
+		{"Invalid old status - CctxStatus_OutboundMined", types.CctxStatus_OutboundMined, types.CctxStatus_PendingRevert, false},
 	}
 
 	for _, tc := range tests {
