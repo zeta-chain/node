@@ -9,30 +9,101 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
 
-func TestBitcoinWithdraw(r *runner.E2ERunner, args []string) {
-	if len(args) != 1 {
-		panic("TestBitcoinWithdraw requires exactly one argument for the amount.")
+func TestBitcoinWithdrawSegWit(r *runner.E2ERunner, args []string) {
+	// check length of arguments
+	if len(args) != 2 {
+		panic("TestBitcoinWithdrawSegWit requires two arguments: [receiver, amount]")
 	}
-
-	withdrawalAmount, err := strconv.ParseFloat(args[0], 64)
-	if err != nil {
-		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
-	}
-
-	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
-	if err != nil {
-		panic(err)
-	}
-	amount := big.NewInt(int64(withdrawalAmountSat))
-
 	r.SetBtcAddress(r.Name, false)
 
-	WithdrawBitcoin(r, amount)
+	// parse arguments
+	defaultReceiver := r.BTCDeployerAddress.EncodeAddress()
+	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	_, ok := receiver.(*btcutil.AddressWitnessPubKeyHash)
+	if !ok {
+		panic("Invalid receiver address specified for TestBitcoinWithdrawSegWit.")
+	}
+
+	withdrawBTCZRC20(r, receiver, amount)
+}
+
+func TestBitcoinWithdrawTaproot(r *runner.E2ERunner, args []string) {
+	// check length of arguments
+	if len(args) != 2 {
+		panic("TestBitcoinWithdrawTaproot requires two arguments: [receiver, amount]")
+	}
+	r.SetBtcAddress(r.Name, false)
+
+	// parse arguments and withdraw BTC
+	defaultReceiver := "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh"
+	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	_, ok := receiver.(*bitcoin.AddressTaproot)
+	if !ok {
+		panic("Invalid receiver address specified for TestBitcoinWithdrawTaproot.")
+	}
+
+	withdrawBTCZRC20(r, receiver, amount)
+}
+
+func TestBitcoinWithdrawLegacy(r *runner.E2ERunner, args []string) {
+	// check length of arguments
+	if len(args) != 2 {
+		panic("TestBitcoinWithdrawLegacy requires two arguments: [receiver, amount]")
+	}
+	r.SetBtcAddress(r.Name, false)
+
+	// parse arguments and withdraw BTC
+	defaultReceiver := "mxpYha3UJKUgSwsAz2qYRqaDSwAkKZ3YEY"
+	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	_, ok := receiver.(*btcutil.AddressPubKeyHash)
+	if !ok {
+		panic("Invalid receiver address specified for TestBitcoinWithdrawLegacy.")
+	}
+
+	withdrawBTCZRC20(r, receiver, amount)
+}
+
+func TestBitcoinWithdrawP2WSH(r *runner.E2ERunner, args []string) {
+	// check length of arguments
+	if len(args) != 2 {
+		panic("TestBitcoinWithdrawP2WSH requires two arguments: [receiver, amount]")
+	}
+	r.SetBtcAddress(r.Name, false)
+
+	// parse arguments and withdraw BTC
+	defaultReceiver := "bcrt1qm9mzhyky4w853ft2ms6dtqdyyu3z2tmrq8jg8xglhyuv0dsxzmgs2f0sqy"
+	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	_, ok := receiver.(*btcutil.AddressWitnessScriptHash)
+	if !ok {
+		panic("Invalid receiver address specified for TestBitcoinWithdrawP2WSH.")
+	}
+
+	withdrawBTCZRC20(r, receiver, amount)
+}
+
+func TestBitcoinWithdrawP2SH(r *runner.E2ERunner, args []string) {
+	// check length of arguments
+	if len(args) != 2 {
+		panic("TestBitcoinWithdrawP2SH requires two arguments: [receiver, amount]")
+	}
+	r.SetBtcAddress(r.Name, false)
+
+	// parse arguments and withdraw BTC
+	defaultReceiver := "2N6AoUj3KPS7wNGZXuCckh8YEWcSYNsGbqd"
+	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
+	_, ok := receiver.(*btcutil.AddressScriptHash)
+	if !ok {
+		panic("Invalid receiver address specified for TestBitcoinWithdrawP2SH.")
+	}
+
+	withdrawBTCZRC20(r, receiver, amount)
 }
 
 func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
@@ -53,7 +124,37 @@ func TestBitcoinWithdrawRestricted(r *runner.E2ERunner, args []string) {
 
 	r.SetBtcAddress(r.Name, false)
 
-	WithdrawBitcoinRestricted(r, amount)
+	withdrawBitcoinRestricted(r, amount)
+}
+
+func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Address, *big.Int) {
+	// parse receiver address
+	var err error
+	var receiver btcutil.Address
+	if args[0] == "" {
+		// use the default receiver
+		receiver, err = common.DecodeBtcAddress(defaultReceiver, common.BtcRegtestChain().ChainId)
+		if err != nil {
+			panic("Invalid default receiver address specified for TestBitcoinWithdraw.")
+		}
+	} else {
+		receiver, err = common.DecodeBtcAddress(args[0], common.BtcRegtestChain().ChainId)
+		if err != nil {
+			panic("Invalid receiver address specified for TestBitcoinWithdraw.")
+		}
+	}
+	// parse the withdrawal amount
+	withdrawalAmount, err := strconv.ParseFloat(args[1], 64)
+	if err != nil {
+		panic("Invalid withdrawal amount specified for TestBitcoinWithdraw.")
+	}
+	withdrawalAmountSat, err := btcutil.NewAmount(withdrawalAmount)
+	if err != nil {
+		panic(err)
+	}
+	amount := big.NewInt(int64(withdrawalAmountSat))
+
+	return receiver, amount
 }
 
 func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) *btcjson.TxRawResult {
@@ -85,7 +186,13 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 		panic(err)
 	}
 
+	// get cctx and check status
 	cctx := utils.WaitCctxMinedByInTxHash(r.Ctx, receipt.TxHash.Hex(), r.CctxClient, r.Logger, r.CctxTimeout)
+	if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_OutboundMined {
+		panic(fmt.Errorf("cctx status is not OutboundMined"))
+	}
+
+	// get bitcoin tx according to the outTxHash in cctx
 	outTxHash := cctx.GetCurrentOutTxParam().OutboundTxHash
 	hash, err := chainhash.NewHashFromStr(outTxHash)
 	if err != nil {
@@ -116,11 +223,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 	return rawTx
 }
 
-func WithdrawBitcoin(r *runner.E2ERunner, amount *big.Int) {
-	withdrawBTCZRC20(r, r.BTCDeployerAddress, amount)
-}
-
-func WithdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
+func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
 	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
 	if err != nil {
