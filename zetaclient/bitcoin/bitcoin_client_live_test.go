@@ -30,7 +30,7 @@ import (
 
 type BitcoinClientTestSuite struct {
 	suite.Suite
-	BitcoinChainClient *BTCChainClient
+	rpcClient *rpcclient.Client
 }
 
 func (suite *BitcoinClientTestSuite) SetupTest() {
@@ -50,7 +50,8 @@ func (suite *BitcoinClientTestSuite) SetupTest() {
 	client, err := NewBitcoinClient(appContext, common.BtcRegtestChain(), nil, tss, tempSQLiteDbPath,
 		clientcommon.DefaultLoggers(), config.BTCConfig{}, nil)
 	suite.Require().NoError(err)
-	suite.BitcoinChainClient = client
+	suite.rpcClient, err = getRPCClient(18332)
+	suite.Require().NoError(err)
 	skBytes, err := hex.DecodeString(skHex)
 	suite.Require().NoError(err)
 	suite.T().Logf("skBytes: %d", len(skBytes))
@@ -127,10 +128,10 @@ func getFeeRate(client *rpcclient.Client, confTarget int64, estimateMode *btcjso
 // All methods that begin with "Test" are run as tests within a
 // suite.
 func (suite *BitcoinClientTestSuite) Test1() {
-	feeResult, err := suite.BitcoinChainClient.rpcClient.EstimateSmartFee(1, nil)
+	feeResult, err := suite.rpcClient.EstimateSmartFee(1, nil)
 	suite.Require().NoError(err)
 	suite.T().Logf("fee result: %f", *feeResult.FeeRate)
-	bn, err := suite.BitcoinChainClient.rpcClient.GetBlockCount()
+	bn, err := suite.rpcClient.GetBlockCount()
 	suite.Require().NoError(err)
 	suite.T().Logf("block %d", bn)
 
@@ -139,14 +140,13 @@ func (suite *BitcoinClientTestSuite) Test1() {
 	err = chainhash.Decode(&hash, hashStr)
 	suite.Require().NoError(err)
 
-	//:= suite.BitcoinChainClient.rpcClient.GetBlock(&hash)
-	block, err := suite.BitcoinChainClient.rpcClient.GetBlockVerboseTx(&hash)
+	block, err := suite.rpcClient.GetBlockVerboseTx(&hash)
 	suite.Require().NoError(err)
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
 	inTxs, err := FilterAndParseIncomingTx(
-		suite.BitcoinChainClient.rpcClient,
+		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
@@ -176,15 +176,14 @@ func (suite *BitcoinClientTestSuite) Test2() {
 	err := chainhash.Decode(&hash, hashStr)
 	suite.Require().NoError(err)
 
-	//:= suite.BitcoinChainClient.rpcClient.GetBlock(&hash)
-	block, err := suite.BitcoinChainClient.rpcClient.GetBlockVerboseTx(&hash)
+	block, err := suite.rpcClient.GetBlockVerboseTx(&hash)
 	suite.Require().NoError(err)
 	suite.T().Logf("block confirmation %d", block.Confirmations)
 	suite.T().Logf("block height %d", block.Height)
 	suite.T().Logf("block txs len %d", len(block.Tx))
 
 	inTxs, err := FilterAndParseIncomingTx(
-		suite.BitcoinChainClient.rpcClient,
+		suite.rpcClient,
 		block.Tx,
 		uint64(block.Height),
 		"tb1qsa222mn2rhdq9cruxkz8p2teutvxuextx3ees2",
@@ -197,7 +196,7 @@ func (suite *BitcoinClientTestSuite) Test2() {
 }
 
 func (suite *BitcoinClientTestSuite) Test3() {
-	client := suite.BitcoinChainClient.rpcClient
+	client := suite.rpcClient
 	res, err := client.EstimateSmartFee(1, &btcjson.EstimateModeConservative)
 	suite.Require().NoError(err)
 	suite.T().Logf("fee: %f", *res.FeeRate)
@@ -212,11 +211,18 @@ func (suite *BitcoinClientTestSuite) Test3() {
 	suite.T().Logf("block number %d", bn)
 }
 
-// func TestBitcoinChainClient(t *testing.T) {
-// 	suite.Run(t, new(BitcoinClientTestSuite))
-// }
+// TestBitcoinClientLive is a phony test to run each live test individually
+func TestBitcoinClientLive(t *testing.T) {
+	// suite.Run(t, new(BitcoinClientTestSuite))
 
-// Remove prefix "Live" to run this live test
+	// LiveTestBitcoinFeeRate(t)
+	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
+	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
+	// LiveTestGetSenderByVin(t)
+}
+
+// LiveTestBitcoinFeeRate query Bitcoin mainnet fee rate every 5 minutes
+// and compares Conservative and Economical fee rates for different block targets (1 and 2)
 func LiveTestBitcoinFeeRate(t *testing.T) {
 	// setup Bitcoin client
 	client, err := getRPCClient(8332)
@@ -321,7 +327,7 @@ func compareAvgFeeRate(t *testing.T, client *rpcclient.Client, startBlock int, e
 	}
 }
 
-// Remove prefix "Live" to run this live test
+// LiveTestAvgFeeRateMainnetMempoolSpace compares calculated fee rate with mempool.space fee rate for mainnet
 func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	// setup Bitcoin client
 	client, err := getRPCClient(8332)
@@ -335,7 +341,7 @@ func LiveTestAvgFeeRateMainnetMempoolSpace(t *testing.T) {
 	compareAvgFeeRate(t, client, startBlock, endBlock, false)
 }
 
-// Remove prefix "Live" to run this live test
+// LiveTestAvgFeeRateTestnetMempoolSpace compares calculated fee rate with mempool.space fee rate for testnet
 func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	// setup Bitcoin client
 	client, err := getRPCClient(18332)
@@ -349,7 +355,7 @@ func LiveTestAvgFeeRateTestnetMempoolSpace(t *testing.T) {
 	compareAvgFeeRate(t, client, startBlock, endBlock, true)
 }
 
-// Remove prefix "Live" to run this live test
+// LiveTestGetSenderByVin gets sender address for each vin and compares with mempool.space sender address
 func LiveTestGetSenderByVin(t *testing.T) {
 	// setup Bitcoin client
 	chainID := int64(8332)
