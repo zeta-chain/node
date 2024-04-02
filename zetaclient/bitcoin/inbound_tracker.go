@@ -21,6 +21,9 @@ func (ob *BTCChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() 
 	for {
 		select {
 		case <-ticker.C():
+			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
+				continue
+			}
 			err := ob.ObserveTrackerSuggestions()
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("error observing in tx")

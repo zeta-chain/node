@@ -43,6 +43,9 @@ func (ob *ChainClient) ExternalChainWatcherForNewInboundTrackerSuggestions() {
 	for {
 		select {
 		case <-ticker.C():
+			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
+				continue
+			}
 			err := ob.ObserveIntxTrackers()
 			if err != nil {
 				ob.logger.ExternalChainWatcher.Err(err).Msg("ObserveTrackerSuggestions error")

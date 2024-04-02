@@ -335,6 +335,9 @@ func (ob *BTCChainClient) WatchInTx() {
 	for {
 		select {
 		case <-ticker.C():
+			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsInboundEnabled {
+				continue
+			}
 			err := ob.ObserveInTx()
 			if err != nil {
 				ob.logger.WatchInTx.Error().Err(err).Msg("WatchInTx error observing in tx")
@@ -383,12 +386,6 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 }
 
 func (ob *BTCChainClient) ObserveInTx() error {
-	// make sure inbound TXS / Send is enabled by the protocol
-	flags := ob.coreContext.GetCrossChainFlags()
-	if !flags.IsInboundEnabled {
-		return errors.New("inbound TXS / Send has been disabled by the protocol")
-	}
-
 	// get and update latest block height
 	cnt, err := ob.rpcClient.GetBlockCount()
 	if err != nil {
@@ -437,6 +434,7 @@ func (ob *BTCChainClient) ObserveInTx() error {
 		}
 
 		// add block header to zetabridge
+		flags := ob.coreContext.GetCrossChainFlags()
 		if flags.BlockHeaderVerificationFlags != nil && flags.BlockHeaderVerificationFlags.IsBtcTypeChainEnabled {
 			err = ob.postBlockHeader(bn)
 			if err != nil {
@@ -576,11 +574,20 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 }
 
 func (ob *BTCChainClient) WatchGasPrice() {
+	// report gas price right away as the ticker takes time to kick in
+	err := ob.PostGasPrice()
+	if err != nil {
+		ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
+	}
+
+	// start gas price ticker
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
 		ob.logger.WatchGasPrice.Error().Err(err).Msg("WatchGasPrice error")
 		return
 	}
+	ob.logger.WatchGasPrice.Info().Msgf("WatchGasPrice started for chain %d with interval %d",
+		ob.chain.ChainId, ob.GetChainParams().GasPriceTicker)
 
 	defer ticker.Stop()
 	for {
@@ -588,7 +595,7 @@ func (ob *BTCChainClient) WatchGasPrice() {
 		case <-ticker.C():
 			err := ob.PostGasPrice()
 			if err != nil {
-				ob.logger.WatchGasPrice.Error().Err(err).Msg("PostGasPrice error on " + ob.chain.String())
+				ob.logger.WatchGasPrice.Error().Err(err).Msgf("PostGasPrice error for chain %d", ob.chain.ChainId)
 			}
 			ticker.UpdateInterval(ob.GetChainParams().GasPriceTicker, ob.logger.WatchGasPrice)
 		case <-ob.stop:
@@ -1095,6 +1102,9 @@ func (ob *BTCChainClient) observeOutTx() {
 	for {
 		select {
 		case <-ticker.C():
+			if flags := ob.coreContext.GetCrossChainFlags(); !flags.IsOutboundEnabled {
+				continue
+			}
 			trackers, err := ob.zetaClient.GetAllOutTxTrackerByChain(ob.chain.ChainId, interfaces.Ascending)
 			if err != nil {
 				ob.logger.ObserveOutTx.Error().Err(err).Msg("observeOutTx: error GetAllOutTxTrackerByChain")
