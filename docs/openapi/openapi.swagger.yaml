@@ -27604,7 +27604,6 @@ paths:
         - Query
   /zeta-chain/lightclient/prove:
     get:
-      summary: Prove performs merkle proof verification
       operationId: Query_Prove
       responses:
         "200":
@@ -27665,6 +27664,20 @@ paths:
           required: false
           type: string
           format: int64
+      tags:
+        - Query
+  /zeta-chain/lightclient/verification_flags:
+    get:
+      operationId: Query_VerificationFlags
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryVerificationFlagsResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
   /zeta-chain/observer/TSS:
@@ -54385,6 +54398,19 @@ definitions:
     properties:
       chain_state:
         $ref: '#/definitions/lightclientChainState'
+  lightclientQueryVerificationFlagsResponse:
+    type: object
+    properties:
+      verification_flags:
+        $ref: '#/definitions/lightclientVerificationFlags'
+  lightclientVerificationFlags:
+    type: object
+    properties:
+      ethTypeChainEnabled:
+        type: boolean
+      btcTypeChainEnabled:
+        type: boolean
+    title: VerificationFlags is a structure containing information which chain types are enabled for block header verification
   observerAdmin_Policy:
     type: object
     properties:

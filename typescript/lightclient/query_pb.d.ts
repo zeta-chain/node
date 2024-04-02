@@ -8,6 +8,7 @@ import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { BlockHeader, Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ChainState } from "./chain_state_pb.js";
+import type { VerificationFlags } from "./verification_flags_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.lightclient.QueryAllBlockHeaderRequest
@@ -277,5 +278,48 @@ export declare class QueryProveResponse extends Message<QueryProveResponse> {
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryProveResponse;
 
   static equals(a: QueryProveResponse | PlainMessage<QueryProveResponse> | undefined, b: QueryProveResponse | PlainMessage<QueryProveResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryVerificationFlagsRequest
+ */
+export declare class QueryVerificationFlagsRequest extends Message<QueryVerificationFlagsRequest> {
+  constructor(data?: PartialMessage<QueryVerificationFlagsRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryVerificationFlagsRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryVerificationFlagsRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryVerificationFlagsRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryVerificationFlagsRequest;
+
+  static equals(a: QueryVerificationFlagsRequest | PlainMessage<QueryVerificationFlagsRequest> | undefined, b: QueryVerificationFlagsRequest | PlainMessage<QueryVerificationFlagsRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryVerificationFlagsResponse
+ */
+export declare class QueryVerificationFlagsResponse extends Message<QueryVerificationFlagsResponse> {
+  /**
+   * @generated from field: zetachain.zetacore.lightclient.VerificationFlags verification_flags = 1;
+   */
+  verificationFlags?: VerificationFlags;
+
+  constructor(data?: PartialMessage<QueryVerificationFlagsResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryVerificationFlagsResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryVerificationFlagsResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryVerificationFlagsResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryVerificationFlagsResponse;
+
+  static equals(a: QueryVerificationFlagsResponse | PlainMessage<QueryVerificationFlagsResponse> | undefined, b: QueryVerificationFlagsResponse | PlainMessage<QueryVerificationFlagsResponse> | undefined): boolean;
 }
 

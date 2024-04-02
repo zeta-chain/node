@@ -18,8 +18,9 @@ const (
 )
 
 const (
-	BlockHeaderKey = "BlockHeader-value-"
-	ChainStateKey  = "ChainState-value-"
+	BlockHeaderKey       = "BlockHeader-value-"
+	ChainStateKey        = "ChainState-value-"
+	VerificationFlagsKey = "VerificationFlags-value-"
 )
 
 func KeyPrefix(p string) []byte {

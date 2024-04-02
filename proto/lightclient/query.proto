@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "lightclient/chain_state.proto";
+import "lightclient/verification_flags.proto";
 import "pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
@@ -27,9 +28,12 @@ service Query {
     option (google.api.http).get = "/zeta-chain/lightclient/chain_state/{chain_id}";
   }
 
-  // Prove performs merkle proof verification
   rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
     option (google.api.http).get = "/zeta-chain/lightclient/prove";
+  }
+
+  rpc VerificationFlags(QueryVerificationFlagsRequest) returns (QueryVerificationFlagsResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/verification_flags";
   }
 }
 
@@ -77,4 +81,10 @@ message QueryProveRequest {
 
 message QueryProveResponse {
   bool valid = 1;
+}
+
+message QueryVerificationFlagsRequest {}
+
+message QueryVerificationFlagsResponse {
+  VerificationFlags verification_flags = 1 [(gogoproto.nullable) = false];
 }
