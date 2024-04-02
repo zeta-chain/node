@@ -10,14 +10,14 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 )
 
-var _ sdk.Msg = &MsgAddBlockHeader{}
+var _ sdk.Msg = &MsgVoteBlockHeader{}
 
 const (
-	TypeMsgAddBlockHeader = "add_block_header"
+	TypeMsgVoteBlockHeader = "vote_block_header"
 )
 
-func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header proofs.HeaderData) *MsgAddBlockHeader {
-	return &MsgAddBlockHeader{
+func NewMsgVoteBlockHeader(creator string, chainID int64, blockHash []byte, height int64, header proofs.HeaderData) *MsgVoteBlockHeader {
+	return &MsgVoteBlockHeader{
 		Creator:   creator,
 		ChainId:   chainID,
 		BlockHash: blockHash,
@@ -26,15 +26,15 @@ func NewMsgAddBlockHeader(creator string, chainID int64, blockHash []byte, heigh
 	}
 }
 
-func (msg *MsgAddBlockHeader) Route() string {
+func (msg *MsgVoteBlockHeader) Route() string {
 	return RouterKey
 }
 
-func (msg *MsgAddBlockHeader) Type() string {
-	return TypeMsgAddBlockHeader
+func (msg *MsgVoteBlockHeader) Type() string {
+	return TypeMsgVoteBlockHeader
 }
 
-func (msg *MsgAddBlockHeader) GetSigners() []sdk.AccAddress {
+func (msg *MsgVoteBlockHeader) GetSigners() []sdk.AccAddress {
 	creator, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		panic(err)
@@ -42,12 +42,12 @@ func (msg *MsgAddBlockHeader) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgAddBlockHeader) GetSignBytes() []byte {
+func (msg *MsgVoteBlockHeader) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
 
-func (msg *MsgAddBlockHeader) ValidateBasic() error {
+func (msg *MsgVoteBlockHeader) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return cosmoserrors.Wrapf(sdkerrors.ErrInvalidAddress, err.Error())
@@ -72,7 +72,7 @@ func (msg *MsgAddBlockHeader) ValidateBasic() error {
 	return nil
 }
 
-func (msg *MsgAddBlockHeader) Digest() string {
+func (msg *MsgVoteBlockHeader) Digest() string {
 	m := *msg
 	m.Creator = ""
 	hash := crypto.Keccak256Hash([]byte(m.String()))

@@ -369,7 +369,7 @@ func (ob *BTCChainClient) postBlockHeader(tip int64) error {
 		return err
 	}
 	blockHash := res2.Header.BlockHash()
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	_, err = ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		blockHash[:],
 		res2.Block.Height,

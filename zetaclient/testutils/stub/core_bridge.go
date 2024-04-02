@@ -58,7 +58,7 @@ func (z *MockZetaCoreBridge) PostGasPrice(_ chains.Chain, _ uint64, _ string, _ 
 	return "", nil
 }
 
-func (z *MockZetaCoreBridge) PostAddBlockHeader(_ int64, _ []byte, _ int64, _ proofs.HeaderData) (string, error) {
+func (z *MockZetaCoreBridge) PostVoteBlockHeader(_ int64, _ []byte, _ int64, _ proofs.HeaderData) (string, error) {
 	if z.paused {
 		return "", errors.New(ErrMsgPaused)
 	}

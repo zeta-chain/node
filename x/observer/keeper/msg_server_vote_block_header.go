@@ -11,8 +11,8 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-// AddBlockHeader handles adding a block header to the store, through majority voting of observers
-func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockHeader) (*types.MsgAddBlockHeaderResponse, error) {
+// VoteBlockHeader vote for a new block header to the storers
+func (k msgServer) VoteBlockHeader(goCtx context.Context, msg *types.MsgVoteBlockHeader) (*types.MsgVoteBlockHeaderResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check authorization for this chain
@@ -87,7 +87,7 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	}
 	_, isFinalized := k.CheckIfFinalizingVote(ctx, ballot)
 	if !isFinalized {
-		return &types.MsgAddBlockHeaderResponse{}, nil
+		return &types.MsgVoteBlockHeaderResponse{}, nil
 	}
 
 	/**
@@ -121,5 +121,5 @@ func (k msgServer) AddBlockHeader(goCtx context.Context, msg *types.MsgAddBlockH
 	}
 	k.SetBlockHeader(ctx, bh)
 
-	return &types.MsgAddBlockHeaderResponse{}, nil
+	return &types.MsgVoteBlockHeaderResponse{}, nil
 }

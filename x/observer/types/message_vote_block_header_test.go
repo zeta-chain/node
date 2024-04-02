@@ -15,7 +15,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
+func TestMsgVoteBlockHeader_ValidateBasic(t *testing.T) {
 	keeper.SetConfig(false)
 	var header ethtypes.Header
 	file, err := os.Open("../../../pkg/testdata/eth_header_18495266.json")
@@ -32,12 +32,12 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 	headerData := proofs.NewEthereumHeader(buffer.Bytes())
 	tests := []struct {
 		name  string
-		msg   *types.MsgAddBlockHeader
+		msg   *types.MsgVoteBlockHeader
 		error bool
 	}{
 		{
 			name: "invalid creator",
-			msg: types.NewMsgAddBlockHeader(
+			msg: types.NewMsgVoteBlockHeader(
 				"invalid_address",
 				1,
 				[]byte{},
@@ -48,7 +48,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid chain id",
-			msg: types.NewMsgAddBlockHeader(
+			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
 				-1,
 				[]byte{},
@@ -59,7 +59,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid header",
-			msg: types.NewMsgAddBlockHeader(
+			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
 				5,
 				sample.Hash().Bytes(),
@@ -70,7 +70,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "invalid blockHash length",
-			msg: types.NewMsgAddBlockHeader(
+			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
 				5,
 				sample.Hash().Bytes()[:31],
@@ -81,7 +81,7 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 		},
 		{
 			name: "valid",
-			msg: types.NewMsgAddBlockHeader(
+			msg: types.NewMsgVoteBlockHeader(
 				sample.AccAddress(),
 				5,
 				header.Hash().Bytes(),
@@ -105,23 +105,23 @@ func TestMsgAddBlockHeader_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgAddBlockHeader_GetSigners(t *testing.T) {
+func TestMsgVoteBlockHeader_GetSigners(t *testing.T) {
 	signer := sample.AccAddress()
 	tests := []struct {
 		name   string
-		msg    types.MsgAddBlockHeader
+		msg    types.MsgVoteBlockHeader
 		panics bool
 	}{
 		{
 			name: "valid signer",
-			msg: types.MsgAddBlockHeader{
+			msg: types.MsgVoteBlockHeader{
 				Creator: signer,
 			},
 			panics: false,
 		},
 		{
 			name: "invalid signer",
-			msg: types.MsgAddBlockHeader{
+			msg: types.MsgVoteBlockHeader{
 				Creator: "invalid",
 			},
 			panics: true,
@@ -142,22 +142,22 @@ func TestMsgAddBlockHeader_GetSigners(t *testing.T) {
 	}
 }
 
-func TestMsgAddBlockHeader_Type(t *testing.T) {
-	msg := types.MsgAddBlockHeader{
+func TestMsgVoteBlockHeader_Type(t *testing.T) {
+	msg := types.MsgVoteBlockHeader{
 		Creator: sample.AccAddress(),
 	}
-	require.Equal(t, types.TypeMsgAddBlockHeader, msg.Type())
+	require.Equal(t, types.TypeMsgVoteBlockHeader, msg.Type())
 }
 
-func TestMsgAddBlockHeader_Route(t *testing.T) {
-	msg := types.MsgAddBlockHeader{
+func TestMsgVoteBlockHeader_Route(t *testing.T) {
+	msg := types.MsgVoteBlockHeader{
 		Creator: sample.AccAddress(),
 	}
 	require.Equal(t, types.RouterKey, msg.Route())
 }
 
-func TestMsgAddBlockHeader_GetSignBytes(t *testing.T) {
-	msg := types.MsgAddBlockHeader{
+func TestMsgVoteBlockHeader_GetSignBytes(t *testing.T) {
+	msg := types.MsgVoteBlockHeader{
 		Creator: sample.AccAddress(),
 	}
 	require.NotPanics(t, func() {
@@ -165,8 +165,8 @@ func TestMsgAddBlockHeader_GetSignBytes(t *testing.T) {
 	})
 }
 
-func TestMsgAddBlockHeader_Digest(t *testing.T) {
-	msg := types.MsgAddBlockHeader{
+func TestMsgVoteBlockHeader_Digest(t *testing.T) {
+	msg := types.MsgVoteBlockHeader{
 		Creator: sample.AccAddress(),
 	}
 

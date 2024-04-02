@@ -37,7 +37,7 @@ func TestIsSystemTx(t *testing.T) {
 	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
 	//		*cctxtypes.MsgAddToOutTxTracker,
 	//		*cctxtypes.MsgCreateTSSVoter,
-	//		*observertypes.MsgAddBlockHeader,
+	//		*observertypes.MsgVoteBlockHeader,
 	//		*observertypes.MsgAddBlameVote:
 	buildTxFromMsg := func(msg sdk.Msg) sdk.Tx {
 		txBuilder := app.MakeEncodingConfig().TxConfig.NewTxBuilder()
@@ -187,8 +187,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgAddBlockHeader",
-			buildTxFromMsg(&observertypes.MsgAddBlockHeader{
+			"MsgVoteBlockHeader",
+			buildTxFromMsg(&observertypes.MsgVoteBlockHeader{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,
@@ -196,8 +196,8 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgAddBlockHeader}",
-			buildAuthzTxFromMsg(&observertypes.MsgAddBlockHeader{
+			"MsgExec{MsgVoteBlockHeader}",
+			buildAuthzTxFromMsg(&observertypes.MsgVoteBlockHeader{
 				Creator: sample.AccAddress(),
 			}),
 			isAuthorized,

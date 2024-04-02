@@ -18,7 +18,7 @@ import (
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestMsgServer_AddBlockHeader(t *testing.T) {
+func TestMsgServer_VoteBlockHeader(t *testing.T) {
 	header, header2, header3, err := ethHeaders()
 	require.NoError(t, err)
 	header1RLP, err := rlp.EncodeToBytes(header)
@@ -35,7 +35,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 	// Add tests for btc headers : https://github.com/zeta-chain/node/issues/1336
 	tt := []struct {
 		name                  string
-		msg                   *types.MsgAddBlockHeader
+		msg                   *types.MsgVoteBlockHeader
 		IsEthTypeChainEnabled bool
 		IsBtcTypeChainEnabled bool
 		validator             stakingtypes.Validator
@@ -43,7 +43,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 	}{
 		{
 			name: "success submit eth header",
-			msg: &types.MsgAddBlockHeader{
+			msg: &types.MsgVoteBlockHeader{
 				Creator:   observerAddress.String(),
 				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
@@ -57,7 +57,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		},
 		{
 			name: "failure submit eth header eth disabled",
-			msg: &types.MsgAddBlockHeader{
+			msg: &types.MsgVoteBlockHeader{
 				Creator:   observerAddress.String(),
 				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
@@ -73,7 +73,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		},
 		{
 			name: "failure submit eth header eth disabled",
-			msg: &types.MsgAddBlockHeader{
+			msg: &types.MsgVoteBlockHeader{
 				Creator:   sample.AccAddress(),
 				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header.Hash().Bytes(),
@@ -89,7 +89,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		},
 		{
 			name: "should succeed if block header parent does exist",
-			msg: &types.MsgAddBlockHeader{
+			msg: &types.MsgVoteBlockHeader{
 				Creator:   observerAddress.String(),
 				ChainId:   chains.GoerliLocalnetChain().ChainId,
 				BlockHash: header2.Hash().Bytes(),
@@ -107,7 +107,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		// https://github.com/zeta-chain/node/issues/1875
 		//{
 		//	name: "should fail if block header parent does not exist",
-		//	msg: &types.MsgAddBlockHeader{
+		//	msg: &types.MsgVoteBlockHeader{
 		//		Creator:   observerAddress.String(),
 		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
 		//		BlockHash: header3.Hash().Bytes(),
@@ -123,7 +123,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		//},
 		//{
 		//	name: "should succeed to post 3rd header if 2nd header is posted",
-		//	msg: &types.MsgAddBlockHeader{
+		//	msg: &types.MsgVoteBlockHeader{
 		//		Creator:   observerAddress.String(),
 		//		ChainId:   chains.GoerliLocalnetChain().ChainId,
 		//		BlockHash: header3.Hash().Bytes(),
@@ -139,7 +139,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 		//},
 		{
 			name: "should fail if chain is not supported",
-			msg: &types.MsgAddBlockHeader{
+			msg: &types.MsgVoteBlockHeader{
 				Creator:   observerAddress.String(),
 				ChainId:   9999,
 				BlockHash: header3.Hash().Bytes(),
@@ -174,7 +174,7 @@ func TestMsgServer_AddBlockHeader(t *testing.T) {
 
 			setSupportedChain(ctx, *k, chains.GoerliLocalnetChain().ChainId)
 
-			_, err := srv.AddBlockHeader(ctx, tc.msg)
+			_, err := srv.VoteBlockHeader(ctx, tc.msg)
 			tc.wantErr(t, err)
 			if err == nil {
 				bhs, found := k.GetBlockHeaderState(ctx, tc.msg.ChainId)

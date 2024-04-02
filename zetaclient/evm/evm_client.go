@@ -895,7 +895,7 @@ func (ob *ChainClient) postBlockHeader(tip uint64) error {
 		return err
 	}
 
-	_, err = ob.zetaClient.PostAddBlockHeader(
+	_, err = ob.zetaClient.PostVoteBlockHeader(
 		ob.chain.ChainId,
 		header.Hash().Bytes(),
 		header.Number.Int64(),

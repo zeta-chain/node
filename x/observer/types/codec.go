@@ -14,7 +14,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddBlameVote{}, "crosschain/AddBlameVote", nil)
 	cdc.RegisterConcrete(&MsgUpdateCrosschainFlags{}, "crosschain/UpdateCrosschainFlags", nil)
 	cdc.RegisterConcrete(&MsgUpdateKeygen{}, "crosschain/UpdateKeygen", nil)
-	cdc.RegisterConcrete(&MsgAddBlockHeader{}, "crosschain/AddBlockHeader", nil)
+	cdc.RegisterConcrete(&MsgVoteBlockHeader{}, "crosschain/VoteBlockHeader", nil)
 	cdc.RegisterConcrete(&MsgUpdateObserver{}, "observer/UpdateObserver", nil)
 	cdc.RegisterConcrete(&MsgResetChainNonces{}, "observer/ResetChainNonces", nil)
 }
@@ -27,7 +27,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAddBlameVote{},
 		&MsgUpdateCrosschainFlags{},
 		&MsgUpdateKeygen{},
-		&MsgAddBlockHeader{},
+		&MsgVoteBlockHeader{},
 		&MsgUpdateObserver{},
 		&MsgResetChainNonces{},
 	)
