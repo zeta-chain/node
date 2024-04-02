@@ -4,6 +4,8 @@ package zetachain.zetacore.crosschain;
 import "gogoproto/gogo.proto";
 import "pkg/coin/coin.proto";
 
+//TODO : fix the descriptor numbers for the fields
+// https://github.com/zeta-chain/node/issues/1951
 option go_package = "github.com/zeta-chain/zetacore/x/crosschain/types";
 
 enum CctxStatus {
