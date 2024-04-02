@@ -19,14 +19,13 @@ import (
 // HandleEVMDeposit handles a deposit from an inbound tx
 // returns (isContractReverted, err)
 // (true, non-nil) means CallEVM() reverted
-func (k Keeper) HandleEVMDeposit(
-	ctx sdk.Context,
-	cctx *types.CrossChainTx,
-	msg types.MsgVoteOnObservedInboundTx,
-	senderChainID int64,
-) (bool, error) {
-	to := ethcommon.HexToAddress(msg.Receiver)
+func (k Keeper) HandleEVMDeposit(ctx sdk.Context, cctx *types.CrossChainTx) (bool, error) {
+	to := ethcommon.HexToAddress(cctx.GetCurrentOutTxParam().Receiver)
 	var ethTxHash ethcommon.Hash
+	inboundAmount := cctx.GetInboundTxParams().Amount.BigInt()
+	inboundSender := cctx.GetInboundTxParams().Sender
+	inboundSenderChainID := cctx.GetInboundTxParams().SenderChainId
+	inboundCoinType := cctx.InboundTxParams.CoinType
 	if len(ctx.TxBytes()) > 0 {
 		// add event for tendermint transaction hash format
 		hash := tmbytes.HexBytes(tmtypes.Tx(ctx.TxBytes()).Hash())
@@ -36,15 +35,15 @@ func (k Keeper) HandleEVMDeposit(
 		cctx.GetCurrentOutTxParam().OutboundTxObservedExternalHeight = uint64(ctx.BlockHeight())
 	}
 
-	if msg.CoinType == coin.CoinType_Zeta {
+	if inboundCoinType == coin.CoinType_Zeta {
 		// if coin type is Zeta, this is a deposit ZETA to zEVM cctx.
-		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, msg.Amount.BigInt())
+		err := k.fungibleKeeper.DepositCoinZeta(ctx, to, inboundAmount)
 		if err != nil {
 			return false, err
 		}
 	} else {
 		// cointype is Gas or ERC20; then it could be a ZRC20 deposit/depositAndCall cctx.
-		parsedAddress, data, err := chains.ParseAddressAndData(msg.Message)
+		parsedAddress, data, err := chains.ParseAddressAndData(cctx.RelayedMessage)
 		if err != nil {
 			return false, errors.Wrap(types.ErrUnableToParseAddress, err.Error())
 		}
@@ -52,7 +51,7 @@ func (k Keeper) HandleEVMDeposit(
 			to = parsedAddress
 		}
 
-		from, err := chains.DecodeAddressFromChainID(senderChainID, msg.Sender)
+		from, err := chains.DecodeAddressFromChainID(inboundSenderChainID, inboundSender)
 		if err != nil {
 			return false, fmt.Errorf("HandleEVMDeposit: unable to decode address: %s", err.Error())
 		}
@@ -61,11 +60,11 @@ func (k Keeper) HandleEVMDeposit(
 			ctx,
 			from,
 			to,
-			msg.Amount.BigInt(),
-			senderChainID,
+			inboundAmount,
+			inboundSenderChainID,
 			data,
-			msg.CoinType,
-			msg.Asset,
+			inboundCoinType,
+			cctx.InboundTxParams.Asset,
 		)
 		if fungibletypes.IsContractReverted(evmTxResponse, err) || errShouldRevertCctx(err) {
 			return true, err
@@ -79,9 +78,9 @@ func (k Keeper) HandleEVMDeposit(
 			logs := evmtypes.LogsToEthereum(evmTxResponse.Logs)
 			if len(logs) > 0 {
 				ctx = ctx.WithValue("inCctxIndex", cctx.Index)
-				txOrigin := msg.TxOrigin
+				txOrigin := cctx.InboundTxParams.TxOrigin
 				if txOrigin == "" {
-					txOrigin = msg.Sender
+					txOrigin = inboundSender
 				}
 
 				err = k.ProcessLogs(ctx, logs, to, txOrigin)
