@@ -12,6 +12,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/pkg/authz"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -42,6 +43,7 @@ type ZetaCoreBridge struct {
 	zetaChain     chains.Chain
 	stop          chan struct{}
 	pause         chan struct{}
+	mockSDKClient rpcclient.Client
 	Telemetry     *metrics.TelemetryServer
 }
 
@@ -58,11 +60,12 @@ func NewZetaCoreBridge(
 	// main module logger
 	logger := log.With().Str("module", "CoreBridge").Logger()
 	cfg := config.ClientConfiguration{
-		ChainHost:    fmt.Sprintf("%s:1317", chainIP),
-		SignerName:   signerName,
-		SignerPasswd: "password",
-		ChainRPC:     fmt.Sprintf("%s:26657", chainIP),
-		HsmMode:      hsmMode,
+		ChainHost:        fmt.Sprintf("%s:1317", chainIP),
+		SignerName:       signerName,
+		SignerPasswd:     "password",
+		ChainRPC:         fmt.Sprintf("%s:26657", chainIP),
+		HsmMode:          hsmMode,
+		UseMockSDKClient: false,
 	}
 
 	grpcConn, err := grpc.Dial(
@@ -98,6 +101,7 @@ func NewZetaCoreBridge(
 		zetaChainID:   chainID,
 		zetaChain:     zetaChain,
 		pause:         make(chan struct{}),
+		mockSDKClient: nil,
 		Telemetry:     telemetry,
 	}, nil
 }
@@ -268,4 +272,9 @@ func (b *ZetaCoreBridge) Pause() {
 
 func (b *ZetaCoreBridge) Unpause() {
 	b.pause <- struct{}{}
+}
+
+func (b *ZetaCoreBridge) EnableMockSDKClient(client rpcclient.Client) {
+	b.mockSDKClient = client
+	b.cfg.UseMockSDKClient = true
 }

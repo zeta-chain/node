@@ -286,8 +286,8 @@ func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
 	require.Equal(t, expectedOutput.AbortedZetaAmount, resp)
 }
 
+// Need to test after refactor
 func TestZetaCoreBridge_GetGenesisSupply(t *testing.T) {
-
 }
 
 func TestZetaCoreBridge_GetZetaTokenSupplyOnNode(t *testing.T) {
