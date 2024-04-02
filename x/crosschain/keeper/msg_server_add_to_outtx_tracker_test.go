@@ -32,7 +32,7 @@ func setEnabledChain(ctx sdk.Context, zk keepertest.ZetaKeepers, chainID int64) 
 }
 
 // setupTssAndNonceToCctx sets tss and nonce to cctx
-func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce int64) {
+func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce int64, status types.CctxStatus) {
 	tssPubKey := "zetapub1addwnpepq28c57cvcs0a2htsem5zxr6qnlvq9mzhmm76z3jncsnzz32rclangr2g35p"
 	k.GetObserverKeeper().SetTSS(ctx, observertypes.TSS{
 		TssPubkey: tssPubKey,
@@ -47,7 +47,7 @@ func setupTssAndNonceToCctx(k *keeper.Keeper, ctx sdk.Context, chainId, nonce in
 		Creator: "any",
 		Index:   "0x123",
 		CctxStatus: &types.Status{
-			Status: types.CctxStatus_PendingOutbound,
+			Status: status,
 		},
 	}
 	k.SetCrossChainTx(ctx, cctx)
@@ -70,7 +70,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		chainID := getEthereumChainID()
-		setupTssAndNonceToCctx(k, ctx, chainID, 0)
+		setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_PendingOutbound)
 		setEnabledChain(ctx, zk, chainID)
 
 		msgServer := keeper.NewMsgServerImpl(*k)
@@ -89,6 +89,106 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		require.True(t, found)
 	})
 
+	t.Run("should return early if cctx not pending", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		chainID := getEthereumChainID()
+		setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_OutboundMined)
+		setEnabledChain(ctx, zk, chainID)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		res, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    sample.Hash().Hex(),
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     0,
+		})
+		require.NoError(t, err)
+		require.Equal(t, &types.MsgAddToOutTxTrackerResponse{IsRemoved: true}, res)
+		_, found := k.GetOutTxTracker(ctx, chainID, 0)
+		require.False(t, found)
+	})
+
+	t.Run("should error for unsupported chain", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+
+		chainID := getEthereumChainID()
+		setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_PendingOutbound)
+		setEnabledChain(ctx, zk, chainID)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+			Creator:   admin,
+			ChainId:   chainID + 1,
+			TxHash:    sample.Hash().Hex(),
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     0,
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("should error if no tss", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+
+		chainID := getEthereumChainID()
+		setEnabledChain(ctx, zk, chainID)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    sample.Hash().Hex(),
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     0,
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("should error if no cctx", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+
+		chainID := getEthereumChainID()
+		setEnabledChain(ctx, zk, chainID)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.AddToOutTxTracker(ctx, &types.MsgAddToOutTxTracker{
+			Creator:   admin,
+			ChainId:   chainID,
+			TxHash:    sample.Hash().Hex(),
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+			Nonce:     0,
+		})
+		require.Error(t, err)
+	})
+
 	t.Run("unable to add tracker admin exceeding maximum allowed length of hashlist without proof", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
@@ -99,7 +199,7 @@ func TestMsgServer_AddToOutTxTracker(t *testing.T) {
 		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupEmergency, true)
 
 		chainID := getEthereumChainID()
-		setupTssAndNonceToCctx(k, ctx, chainID, 0)
+		setupTssAndNonceToCctx(k, ctx, chainID, 0, types.CctxStatus_PendingOutbound)
 		setEnabledChain(ctx, zk, chainID)
 
 		k.SetOutTxTracker(ctx, types.OutTxTracker{
