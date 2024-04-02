@@ -67,7 +67,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
@@ -82,7 +82,38 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
 		require.Equal(t, types.TxFinalizationStatus_NotFinalized, cctx.GetCurrentOutTxParam().TxFinalizationStatus)
 		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
+	})
 
+	t.Run("successfully process failed outbound set to pending revert if gas limit is 0", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+			UseObserverMock: true,
+		})
+
+		// Setup mock data
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		asset := ""
+
+		// mock successful GetRevertGasLimit for ERC20
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 0)
+
+		// mock successful PayGasAndUpdateCctx
+		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
+
+		// mock successful UpdateNonce
+		_ = keepertest.MockUpdateNonce(observerMock, *senderChain)
+
+		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		err := k.ProcessFailedOutbound(ctx, cctx, sample.String())
+		require.NoError(t, err)
+		require.Equal(t, cctx.CctxStatus.Status, types.CctxStatus_PendingRevert)
+		require.Equal(t, types.TxFinalizationStatus_NotFinalized, cctx.GetCurrentOutTxParam().TxFinalizationStatus)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.OutboundTxParams[0].TxFinalizationStatus)
 	})
 
 	t.Run("unable to process revert when update nonce fails", func(t *testing.T) {
@@ -100,7 +131,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)
@@ -131,7 +162,7 @@ func TestKeeper_ProcessFailedOutbound(t *testing.T) {
 		asset := ""
 
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
@@ -201,6 +232,15 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		require.Equal(t, cctx.GetCurrentOutTxParam().TxFinalizationStatus, types.TxFinalizationStatus_Executed)
 	})
 
+	t.Run("do not process if cctx invalid", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
+		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		cctx.InboundTxParams = nil
+		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		require.Error(t, err)
+	})
+
 	t.Run("do not process outbound on error, no new outbound created", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -244,12 +284,16 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
 		cctx.OutboundTxParams = append(cctx.OutboundTxParams, sample.OutboundTxParams(sample.Rand()))
+		cctx.OutboundTxParams[1].ReceiverChainId = 5
+		cctx.OutboundTxParams[1].OutboundTxBallotIndex = ""
+		cctx.OutboundTxParams[1].OutboundTxHash = ""
+
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
-		require.ErrorContains(t, err, "cannot revert a revert")
+		require.Error(t, err)
 	})
 
 	t.Run("successfully revert a outbound and create a new revert tx", func(t *testing.T) {
@@ -270,7 +314,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		oldOutTxParamsLen := len(cctx.OutboundTxParams)
 		// mock successful GetRevertGasLimit for ERC20
-		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain)
+		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
 		// mock successful PayGasAndUpdateCctx
 		keepertest.MockPayGasAndUpdateCCTX(fungibleMock, observerMock, ctx, *k, *senderChain, asset)

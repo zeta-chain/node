@@ -15,7 +15,6 @@ import (
 
 func getEthereumChainID() int64 {
 	return 5 // Goerli
-
 }
 
 // setEnabledChain sets the chain as enabled in chain params
