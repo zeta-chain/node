@@ -117,6 +117,78 @@ func TestMsgServer_HandleEVMDeposit(t *testing.T) {
 		fungibleMock.AssertExpectations(t)
 	})
 
+	t.Run("can process ERC20 deposit calling fungible method for contract call", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		senderChain := getValidEthChainID(t)
+
+		fungibleMock := keepertest.GetCrosschainFungibleMock(t, k)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		// expect DepositCoinZeta to be called
+		// ZRC20DepositAndCallContract(ctx, from, to, msg.Amount.BigInt(), senderChain, msg.Message, contract, data, msg.CoinType, msg.Asset)
+		fungibleMock.On(
+			"ZRC20DepositAndCallContract",
+			ctx,
+			mock.Anything,
+			receiver,
+			amount,
+			senderChain,
+			mock.Anything,
+			coin.CoinType_ERC20,
+			mock.Anything,
+		).Return(&evmtypes.MsgEthereumTxResponse{
+			Logs: []*evmtypes.Log{},
+		}, true, nil)
+
+		// call HandleEVMDeposit
+		cctx := sample.CrossChainTx(t, "foo")
+		cctx.InboundTxParams.TxOrigin = ""
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
+		cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+		cctx.GetInboundTxParams().SenderChainId = senderChain
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = ""
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			cctx,
+		)
+		require.NoError(t, err)
+		require.False(t, reverted)
+		fungibleMock.AssertExpectations(t)
+	})
+
+	t.Run("should error if invalid sender", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseFungibleMock: true,
+		})
+
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+
+		// call HandleEVMDeposit
+		cctx := sample.CrossChainTx(t, "foo")
+		cctx.InboundTxParams.TxOrigin = ""
+		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetInboundTxParams().Amount = math.NewUintFromBigInt(amount)
+		cctx.GetInboundTxParams().CoinType = coin.CoinType_ERC20
+		cctx.GetInboundTxParams().Sender = "invalid"
+		cctx.GetInboundTxParams().SenderChainId = 987
+		cctx.RelayedMessage = ""
+		cctx.GetInboundTxParams().Asset = ""
+		reverted, err := k.HandleEVMDeposit(
+			ctx,
+			cctx,
+		)
+		require.Error(t, err)
+		require.False(t, reverted)
+	})
+
 	t.Run("should return error with non-reverted if deposit ERC20 fails with tx non-failed", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,

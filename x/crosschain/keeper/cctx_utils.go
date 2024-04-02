@@ -18,7 +18,7 @@ import (
 // UpdateNonce sets the CCTX outbound nonce to the next nonce, and updates the nonce of blockchain state.
 // It also updates the PendingNonces that is used to track the unfulfilled outbound txs.
 func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.CrossChainTx) error {
-	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, receiveChainID)
+	chain := k.GetObserverKeeper().GetSupportedChainFromChainID(ctx, receiveChainID)
 	if chain == nil {
 		return zetaObserverTypes.ErrSupportedChains
 	}
@@ -30,7 +30,7 @@ func (k Keeper) UpdateNonce(ctx sdk.Context, receiveChainID int64, cctx *types.C
 
 	// SET nonce
 	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = nonce.Nonce
-	tss, found := k.zetaObserverKeeper.GetTSS(ctx)
+	tss, found := k.GetObserverKeeper().GetTSS(ctx)
 	if !found {
 		return cosmoserrors.Wrap(types.ErrCannotFindTSSKeys, fmt.Sprintf("Chain(%s) | Identifiers : %s ", chain.ChainName.String(), cctx.LogIdentifierForCCTX()))
 	}
