@@ -237,7 +237,7 @@ func TestKeeper_ProcessOutbound(t *testing.T) {
 		cctx := GetERC20Cctx(t, sample.EthAddress(), chains.GoerliChain(), "", big.NewInt(42))
 		cctx.CctxStatus.Status = types.CctxStatus_PendingOutbound
 		cctx.InboundTxParams = nil
-		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotFinalized_FailureObservation, sample.String())
+		err := k.ProcessOutbound(ctx, cctx, observertypes.BallotStatus_BallotInProgress, sample.String())
 		require.Error(t, err)
 	})
 

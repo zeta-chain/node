@@ -103,11 +103,7 @@ func (k Keeper) ProcessFailedOutbound(ctx sdk.Context, cctx *types.CrossChainTx,
 // The state is committed only if the individual steps are successful
 func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballotStatus observertypes.BallotStatus, valueReceived string) error {
 	tmpCtx, commit := ctx.CacheContext()
-	err := cctx.Validate()
-	if err != nil {
-		return err
-	}
-	err = func() error {
+	err := func() error {
 		switch ballotStatus {
 		case observertypes.BallotStatus_BallotFinalized_SuccessObservation:
 			k.ProcessSuccessfulOutbound(tmpCtx, cctx, valueReceived)
@@ -119,6 +115,10 @@ func (k Keeper) ProcessOutbound(ctx sdk.Context, cctx *types.CrossChainTx, ballo
 		}
 		return nil
 	}()
+	if err != nil {
+		return err
+	}
+	err = cctx.Validate()
 	if err != nil {
 		return err
 	}
