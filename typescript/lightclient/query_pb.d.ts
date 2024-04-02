@@ -63,51 +63,104 @@ export declare class QueryAllBlockHeaderResponse extends Message<QueryAllBlockHe
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderByHashRequest
+ * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderRequest
  */
-export declare class QueryGetBlockHeaderByHashRequest extends Message<QueryGetBlockHeaderByHashRequest> {
+export declare class QueryGetBlockHeaderRequest extends Message<QueryGetBlockHeaderRequest> {
   /**
    * @generated from field: bytes block_hash = 1;
    */
   blockHash: Uint8Array;
 
-  constructor(data?: PartialMessage<QueryGetBlockHeaderByHashRequest>);
+  constructor(data?: PartialMessage<QueryGetBlockHeaderRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderByHashRequest";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderByHashRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderByHashRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderByHashRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderRequest;
 
-  static equals(a: QueryGetBlockHeaderByHashRequest | PlainMessage<QueryGetBlockHeaderByHashRequest> | undefined, b: QueryGetBlockHeaderByHashRequest | PlainMessage<QueryGetBlockHeaderByHashRequest> | undefined): boolean;
+  static equals(a: QueryGetBlockHeaderRequest | PlainMessage<QueryGetBlockHeaderRequest> | undefined, b: QueryGetBlockHeaderRequest | PlainMessage<QueryGetBlockHeaderRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderByHashResponse
+ * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderResponse
  */
-export declare class QueryGetBlockHeaderByHashResponse extends Message<QueryGetBlockHeaderByHashResponse> {
+export declare class QueryGetBlockHeaderResponse extends Message<QueryGetBlockHeaderResponse> {
   /**
    * @generated from field: proofs.BlockHeader block_header = 1;
    */
   blockHeader?: BlockHeader;
 
-  constructor(data?: PartialMessage<QueryGetBlockHeaderByHashResponse>);
+  constructor(data?: PartialMessage<QueryGetBlockHeaderResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderByHashResponse";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderByHashResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderByHashResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderByHashResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderResponse;
 
-  static equals(a: QueryGetBlockHeaderByHashResponse | PlainMessage<QueryGetBlockHeaderByHashResponse> | undefined, b: QueryGetBlockHeaderByHashResponse | PlainMessage<QueryGetBlockHeaderByHashResponse> | undefined): boolean;
+  static equals(a: QueryGetBlockHeaderResponse | PlainMessage<QueryGetBlockHeaderResponse> | undefined, b: QueryGetBlockHeaderResponse | PlainMessage<QueryGetBlockHeaderResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryAllChainStateRequest
+ */
+export declare class QueryAllChainStateRequest extends Message<QueryAllChainStateRequest> {
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageRequest pagination = 1;
+   */
+  pagination?: PageRequest;
+
+  constructor(data?: PartialMessage<QueryAllChainStateRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryAllChainStateRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllChainStateRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllChainStateRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllChainStateRequest;
+
+  static equals(a: QueryAllChainStateRequest | PlainMessage<QueryAllChainStateRequest> | undefined, b: QueryAllChainStateRequest | PlainMessage<QueryAllChainStateRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryAllChainStateResponse
+ */
+export declare class QueryAllChainStateResponse extends Message<QueryAllChainStateResponse> {
+  /**
+   * @generated from field: repeated zetachain.zetacore.lightclient.ChainState chain_state = 1;
+   */
+  chainState: ChainState[];
+
+  /**
+   * @generated from field: cosmos.base.query.v1beta1.PageResponse pagination = 2;
+   */
+  pagination?: PageResponse;
+
+  constructor(data?: PartialMessage<QueryAllChainStateResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryAllChainStateResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryAllChainStateResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryAllChainStateResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryAllChainStateResponse;
+
+  static equals(a: QueryAllChainStateResponse | PlainMessage<QueryAllChainStateResponse> | undefined, b: QueryAllChainStateResponse | PlainMessage<QueryAllChainStateResponse> | undefined): boolean;
 }
 
 /**

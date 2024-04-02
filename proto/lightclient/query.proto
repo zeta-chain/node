@@ -11,16 +11,20 @@ option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
-    option (google.api.http).get = "/zeta-chain/lightclient/get_all_block_headers";
+  rpc BlockHeaderAll(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/block_headers";
   }
 
-  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
-    option (google.api.http).get = "/zeta-chain/lightclient/get_block_header_by_hash/{block_hash}";
+  rpc BlockHeader(QueryGetBlockHeaderRequest) returns (QueryGetBlockHeaderResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/block_headers/{block_hash}";
   }
 
-  rpc GetChainStateByChain(QueryGetChainStateRequest) returns (QueryGetChainStateResponse) {
-    option (google.api.http).get = "/zeta-chain/lightclient/get_chain_state_by_chain_id/{chain_id}";
+  rpc ChainStateAll(QueryAllChainStateRequest) returns (QueryAllChainStateResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/chain_state";
+  }
+
+  rpc ChainState(QueryGetChainStateRequest) returns (QueryGetChainStateResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/chain_state/{chain_id}";
   }
 
   // Prove performs merkle proof verification
@@ -34,16 +38,25 @@ message QueryAllBlockHeaderRequest {
 }
 
 message QueryAllBlockHeaderResponse {
-  repeated proofs.BlockHeader block_headers = 1;
+  repeated proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryGetBlockHeaderByHashRequest {
+message QueryGetBlockHeaderRequest {
   bytes block_hash = 1;
 }
 
-message QueryGetBlockHeaderByHashResponse {
+message QueryGetBlockHeaderResponse {
   proofs.BlockHeader block_header = 1;
+}
+
+message QueryAllChainStateRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllChainStateResponse {
+  repeated ChainState chain_state = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryGetChainStateRequest {

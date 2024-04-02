@@ -27446,9 +27446,9 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
-  /zeta-chain/lightclient/get_all_block_headers:
+  /zeta-chain/lightclient/block_headers:
     get:
-      operationId: Query_GetAllBlockHeaders
+      operationId: Query_BlockHeaderAll
       responses:
         "200":
           description: A successful response.
@@ -27504,14 +27504,14 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/lightclient/get_block_header_by_hash/{block_hash}:
+  /zeta-chain/lightclient/block_headers/{block_hash}:
     get:
-      operationId: Query_GetBlockHeaderByHash
+      operationId: Query_BlockHeader
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacorelightclientQueryGetBlockHeaderByHashResponse'
+            $ref: '#/definitions/lightclientQueryGetBlockHeaderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27524,9 +27524,67 @@ paths:
           format: byte
       tags:
         - Query
-  /zeta-chain/lightclient/get_chain_state_by_chain_id/{chain_id}:
+  /zeta-chain/lightclient/chain_state:
     get:
-      operationId: Query_GetChainStateByChain
+      operationId: Query_ChainStateAll
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/lightclientQueryAllChainStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/lightclient/chain_state/{chain_id}:
+    get:
+      operationId: Query_ChainState
       responses:
         "200":
           description: A successful response.
@@ -27907,7 +27965,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacoreobserverQueryGetBlockHeaderByHashResponse'
+            $ref: '#/definitions/observerQueryGetBlockHeaderByHashResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -54307,6 +54365,21 @@ definitions:
         type: string
         format: byte
     title: ChainState defines the overall state of the block headers for a given chain
+  lightclientQueryAllChainStateResponse:
+    type: object
+    properties:
+      chain_state:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/lightclientChainState'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  lightclientQueryGetBlockHeaderResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/proofsBlockHeader'
   lightclientQueryGetChainStateResponse:
     type: object
     properties:
@@ -54657,6 +54730,11 @@ definitions:
     properties:
       blame_info:
         $ref: '#/definitions/observerBlame'
+  observerQueryGetBlockHeaderByHashResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/proofsBlockHeader'
   observerQueryGetBlockHeaderStateResponse:
     type: object
     properties:
@@ -54969,11 +55047,6 @@ definitions:
           $ref: '#/definitions/proofsBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  zetacorelightclientQueryGetBlockHeaderByHashResponse:
-    type: object
-    properties:
-      block_header:
-        $ref: '#/definitions/proofsBlockHeader'
   zetacorelightclientQueryProveResponse:
     type: object
     properties:
@@ -55008,11 +55081,6 @@ definitions:
           $ref: '#/definitions/proofsBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  zetacoreobserverQueryGetBlockHeaderByHashResponse:
-    type: object
-    properties:
-      block_header:
-        $ref: '#/definitions/proofsBlockHeader'
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:

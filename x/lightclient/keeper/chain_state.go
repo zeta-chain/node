@@ -1,12 +1,31 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
+
+// GetAllChainStates returns all chain states
+func (k Keeper) GetAllChainStates(ctx sdk.Context) (list []types.ChainState) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.ChainStateKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.ChainState
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return list
+}
 
 // SetChainState set a specific chain state in the store from its index
 func (k Keeper) SetChainState(ctx sdk.Context, chainState types.ChainState) {

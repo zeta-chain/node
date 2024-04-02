@@ -11,8 +11,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// GetAllBlockHeaders queries all for block header
-func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHeaderRequest) (*types.QueryAllBlockHeaderResponse, error) {
+// BlockHeaderAll queries all block headers
+func (k Keeper) BlockHeaderAll(c context.Context, req *types.QueryAllBlockHeaderRequest) (*types.QueryAllBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -20,14 +20,14 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	store := ctx.KVStore(k.storeKey)
 	blockHeaderStore := prefix.NewStore(store, types.KeyPrefix(types.BlockHeaderKey))
 
-	var blockHeaders []*proofs.BlockHeader
+	var blockHeaders []proofs.BlockHeader
 	pageRes, err := query.Paginate(blockHeaderStore, req.Pagination, func(key []byte, value []byte) error {
 		var blockHeader proofs.BlockHeader
 		if err := k.cdc.Unmarshal(value, &blockHeader); err != nil {
 			return err
 		}
 
-		blockHeaders = append(blockHeaders, &blockHeader)
+		blockHeaders = append(blockHeaders, blockHeader)
 		return nil
 	})
 	if err != nil {
@@ -36,8 +36,8 @@ func (k Keeper) GetAllBlockHeaders(c context.Context, req *types.QueryAllBlockHe
 	return &types.QueryAllBlockHeaderResponse{BlockHeaders: blockHeaders, Pagination: pageRes}, nil
 }
 
-// GetBlockHeaderByHash queries block header by hash
-func (k Keeper) GetBlockHeaderByHash(c context.Context, req *types.QueryGetBlockHeaderByHashRequest) (*types.QueryGetBlockHeaderByHashResponse, error) {
+// BlockHeader queries block header by hash
+func (k Keeper) BlockHeader(c context.Context, req *types.QueryGetBlockHeaderRequest) (*types.QueryGetBlockHeaderResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -47,5 +47,5 @@ func (k Keeper) GetBlockHeaderByHash(c context.Context, req *types.QueryGetBlock
 		return nil, status.Error(codes.NotFound, "not found")
 	}
 
-	return &types.QueryGetBlockHeaderByHashResponse{BlockHeader: &header}, nil
+	return &types.QueryGetBlockHeaderResponse{BlockHeader: &header}, nil
 }

@@ -1,11 +1,31 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
 	"github.com/zeta-chain/zetacore/x/lightclient/types"
 )
+
+// GetAllBlockHeaders returns all block headers
+func (k Keeper) GetAllBlockHeaders(ctx sdk.Context) (list []proofs.BlockHeader) {
+	p := types.KeyPrefix(fmt.Sprintf("%s", types.BlockHeaderKey))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
+
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val proofs.BlockHeader
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return list
+}
 
 // SetBlockHeader set a specific block header in the store from its index
 func (k Keeper) SetBlockHeader(ctx sdk.Context, header proofs.BlockHeader) {
