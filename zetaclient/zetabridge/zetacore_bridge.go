@@ -220,14 +220,15 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	var newBTCParams *observertypes.ChainParams
 
 	// check and update chain params for each chain
+	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for _, chainParam := range chainParams {
 		if !chainParam.GetIsSupported() {
-			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
 			continue
 		}
 		err := observertypes.ValidateChainParams(chainParam)
 		if err != nil {
-			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
 		if chains.IsBitcoinChain(chainParam.ChainId) {
