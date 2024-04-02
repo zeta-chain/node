@@ -205,7 +205,7 @@ func TestKeeper_RefundAmountOnZetaChainZeta(t *testing.T) {
 			sender,
 		)
 		require.NoError(t, err)
-		coin := sdkk.BankKeeper.GetBalance(ctx, sdk.AccAddress(sender.Bytes()), config.BaseDenom)
+		coin := sdkk.BankKeeper.GetBalance(ctx, sender.Bytes(), config.BaseDenom)
 		fmt.Println(coin.Amount.String())
 		require.Equal(t, "42", coin.Amount.String())
 	})
@@ -326,6 +326,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		)
 
 		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
@@ -348,6 +349,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 
 		// can refund again
 		err = k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
@@ -430,6 +432,7 @@ func TestKeeper_RefundAmountOnZetaChainERC20(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		err := k.RefundAmountOnZetaChainERC20(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType: coin.CoinType_Zeta,
 				Amount:   math.NewUint(42),

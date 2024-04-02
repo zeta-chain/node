@@ -1,7 +1,6 @@
 # CHANGELOG
 
 ## Unreleased
-
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
@@ -22,6 +21,8 @@
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 * [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
+* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
+
 
 ### Features
 

@@ -149,6 +149,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
 		panic(err)
 	}
+
 }
 
 // RegisterInvariants registers the crosschain module's invariants.

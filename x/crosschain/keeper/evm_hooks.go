@@ -169,18 +169,13 @@ func (k Keeper) ProcessZRC20WithdrawalEvent(ctx sdk.Context, event *zrc20.ZRC20W
 		foreignCoin.Asset,
 		event.Raw.Index,
 	)
-	sendHash := msg.Digest()
 
-	cctx := k.CreateNewCCTX(
-		ctx,
-		msg,
-		sendHash,
-		tss.TssPubkey,
-		types.CctxStatus_PendingOutbound,
-		senderChain.ChainId,
-		receiverChain.ChainId,
-	)
-
+	// Create a new cctx with status as pending Inbound, this is created directly from the event without waiting for any observer votes
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	if err != nil {
+		return fmt.Errorf("ProcessZRC20WithdrawalEvent: failed to initialize cctx: %s", err.Error())
+	}
+	cctx.SetPendingOutbound("ZRC20 withdrawal event setting to pending outbound directly")
 	// Get gas price and amount
 	gasprice, found := k.GetGasPrice(ctx, receiverChain.ChainId)
 	if !found {
@@ -206,7 +201,7 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		fungibletypes.ModuleName,
 		sdk.NewCoins(sdk.NewCoin(config.BaseDenom, sdk.NewIntFromBigInt(event.ZetaValueAndGas))),
 	); err != nil {
-		fmt.Printf("burn coins failed: %s\n", err.Error())
+		ctx.Logger().Error(fmt.Sprintf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error()))
 		return fmt.Errorf("ProcessZetaSentEvent: failed to burn coins from fungible: %s", err.Error())
 	}
 
@@ -247,18 +242,14 @@ func (k Keeper) ProcessZetaSentEvent(ctx sdk.Context, event *connectorzevm.ZetaC
 		"",
 		event.Raw.Index,
 	)
-	sendHash := msg.Digest()
 
-	// Create the CCTX
-	cctx := k.CreateNewCCTX(
-		ctx,
-		msg,
-		sendHash,
-		tss.TssPubkey,
-		types.CctxStatus_PendingOutbound,
-		senderChain.ChainId,
-		receiverChain.ChainId,
-	)
+	// create a new cctx with status as pending Inbound,
+	// this is created directly from the event without waiting for any observer votes
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
+	if err != nil {
+		return fmt.Errorf("ProcessZetaSentEvent: failed to initialize cctx: %s", err.Error())
+	}
+	cctx.SetPendingOutbound("ZetaSent event setting to pending outbound directly")
 
 	if err := k.PayGasAndUpdateCctx(
 		ctx,
