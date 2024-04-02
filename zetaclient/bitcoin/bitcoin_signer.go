@@ -8,11 +8,11 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/zeta-chain/zetacore/pkg/chains"
-	"github.com/zeta-chain/zetacore/pkg/coin"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
@@ -286,7 +286,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		Logger()
 
 	params := cctx.GetCurrentOutTxParam()
-	if params.CoinType == coin.CoinType_Zeta || params.CoinType == coin.CoinType_ERC20 {
+	coinType := cctx.InboundTxParams.CoinType
+	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}

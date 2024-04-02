@@ -239,6 +239,7 @@ func TestBeginBlocker(t *testing.T) {
 
 func TestDistributeObserverRewards(t *testing.T) {
 	keepertest.SetConfig(false)
+	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 	observerSet := sample.ObserverSet(4)
 
 	tt := []struct {
@@ -325,6 +326,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			for _, observer := range observerSet.ObserverList {
+				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+					Address: observer,
+					Amount:  sdkmath.NewInt(100),
+				})
+			}
 
 			// Keeper initialization
 			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
@@ -368,7 +375,6 @@ func TestDistributeObserverRewards(t *testing.T) {
 				Height:           0,
 				BallotsIndexList: ballotIdentifiers,
 			})
-
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly
