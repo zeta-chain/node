@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -159,6 +161,64 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		require.ErrorIs(t, err, types.ErrObservedTxAlreadyFinalized)
 		_, found = zk.ObserverKeeper.GetBallot(ctx, msg2.Digest())
 		require.False(t, found)
+	})
+
+	t.Run("should error if vote on inbound ballot fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("VoteOnInboundBallot", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(true, false, errors.New("err"))
+		msgServer := keeper.NewMsgServerImpl(*k)
+		to, from := int64(1337), int64(101)
+
+		msg := sample.InboundVote(0, from, to)
+		res, err := msgServer.VoteOnObservedInboundTx(
+			ctx,
+			&msg,
+		)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return if not finalized", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("VoteOnInboundBallot", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(false, false, nil)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		to, from := int64(1337), int64(101)
+
+		msg := sample.InboundVote(0, from, to)
+		res, err := msgServer.VoteOnObservedInboundTx(
+			ctx,
+			&msg,
+		)
+		require.NoError(t, err)
+		require.Empty(t, res)
+	})
+
+	t.Run("should err if tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("VoteOnInboundBallot", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(true, false, nil)
+		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false)
+		msgServer := keeper.NewMsgServerImpl(*k)
+		to, from := int64(1337), int64(101)
+
+		msg := sample.InboundVote(0, from, to)
+		res, err := msgServer.VoteOnObservedInboundTx(
+			ctx,
+			&msg,
+		)
+		require.Error(t, err)
+		require.Nil(t, res)
 	})
 }
 
