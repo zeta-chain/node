@@ -2,15 +2,19 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/keeper"
+
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -51,6 +55,8 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 				to = chain.ChainId
 			}
 		}
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+
 		msg := sample.InboundVote(0, from, to)
 		for _, validatorAddr := range validatorList {
 			msg.Creator = validatorAddr
@@ -96,6 +102,9 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
 			ObserverList: []string{validatorAddr},
 		})
+
+		// Add tss to the observer keeper
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		// Vote on the FIRST message.
 		msg := &types.MsgVoteOnObservedInboundTx{
@@ -198,4 +207,80 @@ func TestStatus_ChangeStatus(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestKeeper_SaveInbound(t *testing.T) {
+	t.Run("should save the cctx", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		eventIndex := sample.Uint64InRange(1, 100)
+		k.SaveInbound(ctx, cctx, eventIndex)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundTxParams.TxFinalizationStatus)
+		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundTxParams().InboundTxObservedHash, cctx.GetInboundTxParams().SenderChainId, eventIndex))
+		_, found := k.GetCrossChainTx(ctx, cctx.Index)
+		require.True(t, found)
+	})
+
+	t.Run("should save the cctx and remove tracker", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		receiver := sample.EthAddress()
+		amount := big.NewInt(42)
+		senderChain := getValidEthChain(t)
+		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
+		hash := sample.Hash()
+		cctx.InboundTxParams.InboundTxObservedHash = hash.String()
+		k.SetInTxTracker(ctx, types.InTxTracker{
+			ChainId:  senderChain.ChainId,
+			TxHash:   hash.String(),
+			CoinType: 0,
+		})
+		eventIndex := sample.Uint64InRange(1, 100)
+
+		k.SaveInbound(ctx, cctx, eventIndex)
+		require.Equal(t, types.TxFinalizationStatus_Executed, cctx.InboundTxParams.TxFinalizationStatus)
+		require.True(t, k.IsFinalizedInbound(ctx, cctx.GetInboundTxParams().InboundTxObservedHash, cctx.GetInboundTxParams().SenderChainId, eventIndex))
+		_, found := k.GetCrossChainTx(ctx, cctx.Index)
+		require.True(t, found)
+		_, found = k.GetInTxTracker(ctx, senderChain.ChainId, hash.String())
+		require.False(t, found)
+	})
+}
+
+// GetERC20Cctx returns a sample CrossChainTx with ERC20 params. This is used for testing Inbound and Outbound voting transactions
+func GetERC20Cctx(t *testing.T, receiver ethcommon.Address, senderChain chains.Chain, asset string, amount *big.Int) *types.CrossChainTx {
+	r := sample.Rand()
+	cctx := &types.CrossChainTx{
+		Creator:          sample.AccAddress(),
+		Index:            sample.ZetaIndex(t),
+		ZetaFees:         sample.UintInRange(0, 100),
+		RelayedMessage:   "",
+		CctxStatus:       &types.Status{Status: types.CctxStatus_PendingInbound},
+		InboundTxParams:  sample.InboundTxParams(r),
+		OutboundTxParams: []*types.OutboundTxParams{sample.OutboundTxParams(r)},
+	}
+
+	cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
+	cctx.GetInboundTxParams().SenderChainId = senderChain.ChainId
+	cctx.GetInboundTxParams().InboundTxObservedHash = sample.Hash().String()
+	cctx.GetInboundTxParams().InboundTxBallotIndex = sample.ZetaIndex(t)
+
+	cctx.GetCurrentOutTxParam().ReceiverChainId = senderChain.ChainId
+	cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+	cctx.GetCurrentOutTxParam().OutboundTxHash = sample.Hash().String()
+	cctx.GetCurrentOutTxParam().OutboundTxBallotIndex = sample.ZetaIndex(t)
+
+	cctx.InboundTxParams.CoinType = coin.CoinType_ERC20
+	for _, outboundTxParam := range cctx.OutboundTxParams {
+		outboundTxParam.CoinType = coin.CoinType_ERC20
+	}
+
+	cctx.GetInboundTxParams().Asset = asset
+	cctx.GetInboundTxParams().Sender = sample.EthAddress().String()
+	cctx.GetCurrentOutTxParam().OutboundTxTssNonce = 42
+	cctx.GetCurrentOutTxParam().OutboundTxGasUsed = 100
+	cctx.GetCurrentOutTxParam().OutboundTxEffectiveGasLimit = 100
+	return cctx
 }

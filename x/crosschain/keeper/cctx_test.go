@@ -62,7 +62,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
 			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
 			OutboundTxObservedExternalHeight: uint64(i),
-			CoinType:                         0,
+			CoinType:                         coin.CoinType_Zeta,
 		}}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
@@ -73,6 +73,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
+
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
 	}
 	return items

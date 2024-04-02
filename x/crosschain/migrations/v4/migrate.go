@@ -55,7 +55,7 @@ func SetZetaAccounting(
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.CrossChainTx
 		cdc.MustUnmarshal(iterator.Value(), &val)
-		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.GetCurrentOutTxParam().CoinType == coin.CoinType_Zeta {
+		if val.CctxStatus.Status == types.CctxStatus_Aborted && val.InboundTxParams.CoinType == coin.CoinType_Zeta {
 			abortedAmountZeta = abortedAmountZeta.Add(val.GetCurrentOutTxParam().Amount)
 		}
 	}
