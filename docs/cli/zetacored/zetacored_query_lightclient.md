@@ -1,0 +1,28 @@
+# query lightclient
+
+Querying commands for the lightclient module
+
+```
+zetacored query lightclient [flags]
+```
+
+### Options
+
+```
+  -h, --help   help for lightclient
+```
+
+### Options inherited from parent commands
+
+```
+      --chain-id string     The network chain ID
+      --home string         directory for config and data 
+      --log_format string   The logging format (json|plain) 
+      --log_level string    The logging level (trace|debug|info|warn|error|fatal|panic) 
+      --trace               print out full stack trace on errors
+```
+
+### SEE ALSO
+
+* [zetacored query](zetacored_query.md)	 - Querying subcommands
+
