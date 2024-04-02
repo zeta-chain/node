@@ -27446,6 +27446,104 @@ paths:
             $ref: '#/definitions/googlerpcStatus'
       tags:
         - Query
+  /zeta-chain/lightclient/get_all_block_headers:
+    get:
+      operationId: Query_GetAllBlockHeaders
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorelightclientQueryAllBlockHeaderResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: |-
+            offset is a numeric offset that can be used when key is unavailable.
+            It is less efficient than using key. Only one of offset or key should
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: |-
+            limit is the total number of results to be returned in the result page.
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: |-
+            count_total is set to true  to indicate that the result set should include
+            a count of the total number of items available for pagination in UIs.
+            count_total is only respected when offset is used. It is ignored when key
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: |-
+            reverse is set to true if results are to be returned in the descending order.
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /zeta-chain/lightclient/get_block_header_by_hash/{block_hash}:
+    get:
+      operationId: Query_GetBlockHeaderByHash
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorelightclientQueryGetBlockHeaderByHashResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: block_hash
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /zeta-chain/lightclient/get_block_header_state_by_chain_id/{chain_id}:
+    get:
+      operationId: Query_GetBlockHeaderStateByChain
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorelightclientQueryGetBlockHeaderStateResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /zeta-chain/observer/TSS:
     get:
       summary: Queries a tSS by index.
@@ -27686,7 +27784,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryAllBlockHeaderResponse'
+            $ref: '#/definitions/zetacoreobserverQueryAllBlockHeaderResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27744,7 +27842,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetBlockHeaderByHashResponse'
+            $ref: '#/definitions/zetacoreobserverQueryGetBlockHeaderByHashResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27764,7 +27862,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryGetBlockHeaderStateResponse'
+            $ref: '#/definitions/zetacoreobserverQueryGetBlockHeaderStateResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -54155,21 +54253,6 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
-  observerBlockHeaderState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
   observerBlockHeaderVerificationFlags:
     type: object
     properties:
@@ -54416,16 +54499,6 @@ definitions:
           $ref: '#/definitions/observerBlame'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
-  observerQueryAllBlockHeaderResponse:
-    type: object
-    properties:
-      block_headers:
-        type: array
-        items:
-          type: object
-          $ref: '#/definitions/proofsBlockHeader'
-      pagination:
-        $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllChainNoncesResponse:
     type: object
     properties:
@@ -54483,16 +54556,6 @@ definitions:
     properties:
       blame_info:
         $ref: '#/definitions/observerBlame'
-  observerQueryGetBlockHeaderByHashResponse:
-    type: object
-    properties:
-      block_header:
-        $ref: '#/definitions/proofsBlockHeader'
-  observerQueryGetBlockHeaderStateResponse:
-    type: object
-    properties:
-      block_header_state:
-        $ref: '#/definitions/observerBlockHeaderState'
   observerQueryGetChainNoncesResponse:
     type: object
     properties:
@@ -54795,6 +54858,57 @@ definitions:
         $ref: '#/definitions/zetacorefungibleParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetacorelightclientBlockHeaderState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
+    title: BlockHeaderState defines the overall state of the block headers for a given chain
+  zetacorelightclientQueryAllBlockHeaderResponse:
+    type: object
+    properties:
+      block_headers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/proofsBlockHeader'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  zetacorelightclientQueryGetBlockHeaderByHashResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/proofsBlockHeader'
+  zetacorelightclientQueryGetBlockHeaderStateResponse:
+    type: object
+    properties:
+      block_header_state:
+        $ref: '#/definitions/zetacorelightclientBlockHeaderState'
+  zetacoreobserverBlockHeaderState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
   zetacoreobserverParams:
     type: object
     properties:
@@ -54814,6 +54928,26 @@ definitions:
         type: string
         format: int64
     description: Params defines the parameters for the module.
+  zetacoreobserverQueryAllBlockHeaderResponse:
+    type: object
+    properties:
+      block_headers:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/proofsBlockHeader'
+      pagination:
+        $ref: '#/definitions/v1beta1PageResponse'
+  zetacoreobserverQueryGetBlockHeaderByHashResponse:
+    type: object
+    properties:
+      block_header:
+        $ref: '#/definitions/proofsBlockHeader'
+  zetacoreobserverQueryGetBlockHeaderStateResponse:
+    type: object
+    properties:
+      block_header_state:
+        $ref: '#/definitions/zetacoreobserverBlockHeaderState'
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:

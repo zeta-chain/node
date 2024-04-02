@@ -1,0 +1,14 @@
+syntax = "proto3";
+package zetachain.zetacore.lightclient;
+
+import "gogoproto/gogo.proto";
+import "lightclient/block_header_state.proto";
+import "pkg/proofs/proofs.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+
+// GenesisState defines the lightclient module's genesis state.
+message GenesisState {
+  repeated proofs.BlockHeader block_headers = 1 [(gogoproto.nullable) = false];
+  repeated BlockHeaderState block_header_states = 2 [(gogoproto.nullable) = false];
+}

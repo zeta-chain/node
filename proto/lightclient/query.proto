@@ -1,0 +1,50 @@
+syntax = "proto3";
+package zetachain.zetacore.lightclient;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "lightclient/block_header_state.proto";
+import "pkg/proofs/proofs.proto";
+
+option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  rpc GetAllBlockHeaders(QueryAllBlockHeaderRequest) returns (QueryAllBlockHeaderResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/get_all_block_headers";
+  }
+
+  rpc GetBlockHeaderByHash(QueryGetBlockHeaderByHashRequest) returns (QueryGetBlockHeaderByHashResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/get_block_header_by_hash/{block_hash}";
+  }
+
+  rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/get_block_header_state_by_chain_id/{chain_id}";
+  }
+}
+
+message QueryAllBlockHeaderRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryAllBlockHeaderResponse {
+  repeated proofs.BlockHeader block_headers = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryGetBlockHeaderByHashRequest {
+  bytes block_hash = 1;
+}
+
+message QueryGetBlockHeaderByHashResponse {
+  proofs.BlockHeader block_header = 1;
+}
+
+message QueryGetBlockHeaderStateRequest {
+  int64 chain_id = 1;
+}
+
+message QueryGetBlockHeaderStateResponse {
+  BlockHeaderState block_header_state = 1;
+}
