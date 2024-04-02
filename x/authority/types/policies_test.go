@@ -11,14 +11,19 @@ import (
 )
 
 // setConfig sets the global config to use zeta chain's bech32 prefixes
-func setConfig() {
+func setConfig(t *testing.T) {
+	defer func(t *testing.T) {
+		if r := recover(); r != nil {
+			t.Log("config is already sealed", r)
+		}
+	}(t)
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
+	cfg.Seal()
 }
 
 func TestPolicies_Validate(t *testing.T) {
-	setConfig()
-
+	setConfig(t)
 	// use table driven tests to test the validation of policies
 	tests := []struct {
 		name        string

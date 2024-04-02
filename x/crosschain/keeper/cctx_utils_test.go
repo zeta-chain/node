@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -46,6 +47,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
@@ -76,6 +78,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
@@ -89,6 +92,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: 999999,
@@ -110,6 +114,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
@@ -121,6 +126,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
 				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: 999999,
@@ -190,4 +196,23 @@ func TestGetAbortedAmount(t *testing.T) {
 		a := crosschainkeeper.GetAbortedAmount(cctx)
 		require.Equal(t, sdkmath.ZeroUint(), a)
 	})
+}
+
+func Test_IsPending(t *testing.T) {
+	tt := []struct {
+		status   types.CctxStatus
+		expected bool
+	}{
+		{types.CctxStatus_PendingInbound, false},
+		{types.CctxStatus_PendingOutbound, true},
+		{types.CctxStatus_PendingRevert, true},
+		{types.CctxStatus_Reverted, false},
+		{types.CctxStatus_Aborted, false},
+		{types.CctxStatus_OutboundMined, false},
+	}
+	for _, tc := range tt {
+		t.Run(fmt.Sprintf("status %s", tc.status), func(t *testing.T) {
+			require.Equal(t, tc.expected, crosschainkeeper.IsPending(types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
+		})
+	}
 }

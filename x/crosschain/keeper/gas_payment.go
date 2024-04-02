@@ -14,7 +14,7 @@ import (
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-	zetaObserverTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // PayGasAndUpdateCctx updates the outbound tx with the new amount after paying the gas fee
@@ -94,7 +94,7 @@ func (k Keeper) PayGasNativeAndUpdateCctx(
 		return cosmoserrors.Wrapf(types.ErrInvalidCoinType, "can't pay gas in native gas with %s", cctx.InboundTxParams.CoinType.String())
 	}
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 
 	// get gas params
@@ -142,16 +142,14 @@ func (k Keeper) PayGasInERC20AndUpdateCctx(
 	}
 
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
-
 	// get gas params
 	gasZRC20, gasLimit, gasPrice, protocolFlatFee, err := k.ChainGasParams(ctx, chainID)
 	if err != nil {
 		return cosmoserrors.Wrap(types.ErrCannotFindGasParams, err.Error())
 	}
 	outTxGasFee := gasLimit.Mul(gasPrice).Add(protocolFlatFee)
-
 	// get address of the zrc20
 	fc, found := k.fungibleKeeper.GetForeignCoinFromAsset(ctx, cctx.InboundTxParams.Asset, chainID)
 	if !found {
@@ -269,7 +267,7 @@ func (k Keeper) PayGasInZetaAndUpdateCctx(
 	}
 
 	if chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, chainID); chain == nil {
-		return zetaObserverTypes.ErrSupportedChains
+		return observertypes.ErrSupportedChains
 	}
 
 	gasZRC20, err := k.fungibleKeeper.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
