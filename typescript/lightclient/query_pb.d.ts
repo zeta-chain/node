@@ -6,8 +6,8 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
-import type { BlockHeader } from "../pkg/proofs/proofs_pb.js";
-import type { BlockHeaderState } from "./block_header_state_pb.js";
+import type { BlockHeader, Proof } from "../pkg/proofs/proofs_pb.js";
+import type { ChainState } from "./chain_state_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.lightclient.QueryAllBlockHeaderRequest
@@ -111,50 +111,118 @@ export declare class QueryGetBlockHeaderByHashResponse extends Message<QueryGetB
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderStateRequest
+ * @generated from message zetachain.zetacore.lightclient.QueryGetChainStateRequest
  */
-export declare class QueryGetBlockHeaderStateRequest extends Message<QueryGetBlockHeaderStateRequest> {
+export declare class QueryGetChainStateRequest extends Message<QueryGetChainStateRequest> {
   /**
    * @generated from field: int64 chain_id = 1;
    */
   chainId: bigint;
 
-  constructor(data?: PartialMessage<QueryGetBlockHeaderStateRequest>);
+  constructor(data?: PartialMessage<QueryGetChainStateRequest>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderStateRequest";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetChainStateRequest";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderStateRequest;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainStateRequest;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateRequest;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainStateRequest;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateRequest;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainStateRequest;
 
-  static equals(a: QueryGetBlockHeaderStateRequest | PlainMessage<QueryGetBlockHeaderStateRequest> | undefined, b: QueryGetBlockHeaderStateRequest | PlainMessage<QueryGetBlockHeaderStateRequest> | undefined): boolean;
+  static equals(a: QueryGetChainStateRequest | PlainMessage<QueryGetChainStateRequest> | undefined, b: QueryGetChainStateRequest | PlainMessage<QueryGetChainStateRequest> | undefined): boolean;
 }
 
 /**
- * @generated from message zetachain.zetacore.lightclient.QueryGetBlockHeaderStateResponse
+ * @generated from message zetachain.zetacore.lightclient.QueryGetChainStateResponse
  */
-export declare class QueryGetBlockHeaderStateResponse extends Message<QueryGetBlockHeaderStateResponse> {
+export declare class QueryGetChainStateResponse extends Message<QueryGetChainStateResponse> {
   /**
-   * @generated from field: zetachain.zetacore.lightclient.BlockHeaderState block_header_state = 1;
+   * @generated from field: zetachain.zetacore.lightclient.ChainState chain_state = 1;
    */
-  blockHeaderState?: BlockHeaderState;
+  chainState?: ChainState;
 
-  constructor(data?: PartialMessage<QueryGetBlockHeaderStateResponse>);
+  constructor(data?: PartialMessage<QueryGetChainStateResponse>);
 
   static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetBlockHeaderStateResponse";
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryGetChainStateResponse";
   static readonly fields: FieldList;
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetBlockHeaderStateResponse;
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryGetChainStateResponse;
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateResponse;
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryGetChainStateResponse;
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetBlockHeaderStateResponse;
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryGetChainStateResponse;
 
-  static equals(a: QueryGetBlockHeaderStateResponse | PlainMessage<QueryGetBlockHeaderStateResponse> | undefined, b: QueryGetBlockHeaderStateResponse | PlainMessage<QueryGetBlockHeaderStateResponse> | undefined): boolean;
+  static equals(a: QueryGetChainStateResponse | PlainMessage<QueryGetChainStateResponse> | undefined, b: QueryGetChainStateResponse | PlainMessage<QueryGetChainStateResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryProveRequest
+ */
+export declare class QueryProveRequest extends Message<QueryProveRequest> {
+  /**
+   * @generated from field: int64 chain_id = 1;
+   */
+  chainId: bigint;
+
+  /**
+   * @generated from field: string tx_hash = 2;
+   */
+  txHash: string;
+
+  /**
+   * @generated from field: proofs.Proof proof = 3;
+   */
+  proof?: Proof;
+
+  /**
+   * @generated from field: string block_hash = 4;
+   */
+  blockHash: string;
+
+  /**
+   * @generated from field: int64 tx_index = 5;
+   */
+  txIndex: bigint;
+
+  constructor(data?: PartialMessage<QueryProveRequest>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryProveRequest";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryProveRequest;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryProveRequest;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryProveRequest;
+
+  static equals(a: QueryProveRequest | PlainMessage<QueryProveRequest> | undefined, b: QueryProveRequest | PlainMessage<QueryProveRequest> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.lightclient.QueryProveResponse
+ */
+export declare class QueryProveResponse extends Message<QueryProveResponse> {
+  /**
+   * @generated from field: bool valid = 1;
+   */
+  valid: boolean;
+
+  constructor(data?: PartialMessage<QueryProveResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.lightclient.QueryProveResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): QueryProveResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): QueryProveResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): QueryProveResponse;
+
+  static equals(a: QueryProveResponse | PlainMessage<QueryProveResponse> | undefined, b: QueryProveResponse | PlainMessage<QueryProveResponse> | undefined): boolean;
 }
 

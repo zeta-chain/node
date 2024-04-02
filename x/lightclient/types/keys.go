@@ -16,3 +16,12 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_" + ModuleName
 )
+
+const (
+	BlockHeaderKey = "BlockHeader-value-"
+	ChainStateKey  = "ChainState-value-"
+)
+
+func KeyPrefix(p string) []byte {
+	return []byte(p)
+}

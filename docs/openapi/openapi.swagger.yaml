@@ -27524,14 +27524,14 @@ paths:
           format: byte
       tags:
         - Query
-  /zeta-chain/lightclient/get_block_header_state_by_chain_id/{chain_id}:
+  /zeta-chain/lightclient/get_chain_state_by_chain_id/{chain_id}:
     get:
-      operationId: Query_GetBlockHeaderStateByChain
+      operationId: Query_GetChainStateByChain
       responses:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacorelightclientQueryGetBlockHeaderStateResponse'
+            $ref: '#/definitions/lightclientQueryGetChainStateResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -27540,6 +27540,71 @@ paths:
         - name: chain_id
           in: path
           required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /zeta-chain/lightclient/prove:
+    get:
+      summary: Prove performs merkle proof verification
+      operationId: Query_Prove
+      responses:
+        "200":
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/zetacorelightclientQueryProveResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            $ref: '#/definitions/googlerpcStatus'
+      parameters:
+        - name: chain_id
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: tx_hash
+          in: query
+          required: false
+          type: string
+        - name: proof.ethereum_proof.keys
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.ethereum_proof.values
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+            format: byte
+          collectionFormat: multi
+        - name: proof.bitcoin_proof.tx_bytes
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.path
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: proof.bitcoin_proof.index
+          in: query
+          required: false
+          type: integer
+          format: int64
+        - name: block_hash
+          in: query
+          required: false
+          type: string
+        - name: tx_index
+          in: query
+          required: false
           type: string
           format: int64
       tags:
@@ -27862,7 +27927,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacoreobserverQueryGetBlockHeaderStateResponse'
+            $ref: '#/definitions/observerQueryGetBlockHeaderStateResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -28191,7 +28256,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/observerQueryProveResponse'
+            $ref: '#/definitions/zetacoreobserverQueryProveResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -54226,6 +54291,27 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/protobufAny'
+  lightclientChainState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
+    title: ChainState defines the overall state of the block headers for a given chain
+  lightclientQueryGetChainStateResponse:
+    type: object
+    properties:
+      chain_state:
+        $ref: '#/definitions/lightclientChainState'
   observerAdmin_Policy:
     type: object
     properties:
@@ -54253,6 +54339,21 @@ definitions:
         items:
           type: object
           $ref: '#/definitions/observerNode'
+  observerBlockHeaderState:
+    type: object
+    properties:
+      chain_id:
+        type: string
+        format: int64
+      latest_height:
+        type: string
+        format: int64
+      earliest_height:
+        type: string
+        format: int64
+      latest_block_hash:
+        type: string
+        format: byte
   observerBlockHeaderVerificationFlags:
     type: object
     properties:
@@ -54556,6 +54657,11 @@ definitions:
     properties:
       blame_info:
         $ref: '#/definitions/observerBlame'
+  observerQueryGetBlockHeaderStateResponse:
+    type: object
+    properties:
+      block_header_state:
+        $ref: '#/definitions/observerBlockHeaderState'
   observerQueryGetChainNoncesResponse:
     type: object
     properties:
@@ -54622,11 +54728,6 @@ definitions:
     properties:
       pending_nonces:
         $ref: '#/definitions/observerPendingNonces'
-  observerQueryProveResponse:
-    type: object
-    properties:
-      valid:
-        type: boolean
   observerQueryShowObserverCountResponse:
     type: object
     properties:
@@ -54858,22 +54959,6 @@ definitions:
         $ref: '#/definitions/zetacorefungibleParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  zetacorelightclientBlockHeaderState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
-    title: BlockHeaderState defines the overall state of the block headers for a given chain
   zetacorelightclientQueryAllBlockHeaderResponse:
     type: object
     properties:
@@ -54889,26 +54974,11 @@ definitions:
     properties:
       block_header:
         $ref: '#/definitions/proofsBlockHeader'
-  zetacorelightclientQueryGetBlockHeaderStateResponse:
+  zetacorelightclientQueryProveResponse:
     type: object
     properties:
-      block_header_state:
-        $ref: '#/definitions/zetacorelightclientBlockHeaderState'
-  zetacoreobserverBlockHeaderState:
-    type: object
-    properties:
-      chain_id:
-        type: string
-        format: int64
-      latest_height:
-        type: string
-        format: int64
-      earliest_height:
-        type: string
-        format: int64
-      latest_block_hash:
-        type: string
-        format: byte
+      valid:
+        type: boolean
   zetacoreobserverParams:
     type: object
     properties:
@@ -54943,11 +55013,6 @@ definitions:
     properties:
       block_header:
         $ref: '#/definitions/proofsBlockHeader'
-  zetacoreobserverQueryGetBlockHeaderStateResponse:
-    type: object
-    properties:
-      block_header_state:
-        $ref: '#/definitions/zetacoreobserverBlockHeaderState'
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:
@@ -54955,6 +55020,11 @@ definitions:
         $ref: '#/definitions/zetacoreobserverParams'
         description: params holds all the parameters of this module.
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  zetacoreobserverQueryProveResponse:
+    type: object
+    properties:
+      valid:
+        type: boolean
   ethermint.evm.v1.ChainConfig:
     type: object
     properties:

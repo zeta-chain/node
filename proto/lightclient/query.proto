@@ -4,7 +4,7 @@ package zetachain.zetacore.lightclient;
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "lightclient/block_header_state.proto";
+import "lightclient/chain_state.proto";
 import "pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/lightclient/types";
@@ -19,8 +19,13 @@ service Query {
     option (google.api.http).get = "/zeta-chain/lightclient/get_block_header_by_hash/{block_hash}";
   }
 
-  rpc GetBlockHeaderStateByChain(QueryGetBlockHeaderStateRequest) returns (QueryGetBlockHeaderStateResponse) {
-    option (google.api.http).get = "/zeta-chain/lightclient/get_block_header_state_by_chain_id/{chain_id}";
+  rpc GetChainStateByChain(QueryGetChainStateRequest) returns (QueryGetChainStateResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/get_chain_state_by_chain_id/{chain_id}";
+  }
+
+  // Prove performs merkle proof verification
+  rpc Prove(QueryProveRequest) returns (QueryProveResponse) {
+    option (google.api.http).get = "/zeta-chain/lightclient/prove";
   }
 }
 
@@ -41,10 +46,22 @@ message QueryGetBlockHeaderByHashResponse {
   proofs.BlockHeader block_header = 1;
 }
 
-message QueryGetBlockHeaderStateRequest {
+message QueryGetChainStateRequest {
   int64 chain_id = 1;
 }
 
-message QueryGetBlockHeaderStateResponse {
-  BlockHeaderState block_header_state = 1;
+message QueryGetChainStateResponse {
+  ChainState chain_state = 1;
+}
+
+message QueryProveRequest {
+  int64 chain_id = 1;
+  string tx_hash = 2;
+  proofs.Proof proof = 3;
+  string block_hash = 4;
+  int64 tx_index = 5;
+}
+
+message QueryProveResponse {
+  bool valid = 1;
 }
