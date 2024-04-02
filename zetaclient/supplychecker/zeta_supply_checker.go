@@ -247,7 +247,7 @@ func (zs *ZetaSupplyChecker) GetPendingCCTXInTransit(receivingChains []chains.Ch
 		}
 		nonceToCctxMap := make(map[uint64]*types.CrossChainTx)
 		for _, c := range cctx {
-			if c.GetInboundTxParams().CoinType == coin.CoinType_Zeta {
+			if c.InboundTxParams.CoinType == coin.CoinType_Zeta {
 				nonceToCctxMap[c.GetCurrentOutTxParam().OutboundTxTssNonce] = c
 			}
 		}
