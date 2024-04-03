@@ -79,7 +79,7 @@ func setupTssMigrationParams(
 }
 
 func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
-	t.Run("test gas price multiplier", func(t *testing.T) {
+	t.Run("test evm chain", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
@@ -107,6 +107,34 @@ func TestKeeper_MigrateTSSFundsForChain(t *testing.T) {
 		multipliedValue, err := gas.MultiplyGasPrice(gp, crosschaintypes.TssMigrationGasMultiplierEVM)
 		require.NoError(t, err)
 		require.Equal(t, multipliedValue.String(), cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
+	})
+
+	t.Run("test btc chain", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		chain := getValidBTCChain()
+		amount := sdkmath.NewUintFromString("10000000000000000000")
+		indexString, _ := setupTssMigrationParams(zk, k, ctx, *chain, amount, true, true)
+		gp, found := k.GetMedianGasPriceInUint(ctx, chain.ChainId)
+		require.True(t, found)
+		_, err := msgServer.MigrateTssFunds(ctx, &crosschaintypes.MsgMigrateTssFunds{
+			Creator: admin,
+			ChainId: chain.ChainId,
+			Amount:  amount,
+		})
+		require.NoError(t, err)
+		hash := crypto.Keccak256Hash([]byte(indexString))
+		index := hash.Hex()
+		cctx, found := k.GetCrossChainTx(ctx, index)
+		require.True(t, found)
+		require.Equal(t, gp.MulUint64(2).String(), cctx.GetCurrentOutTxParam().OutboundTxGasPrice)
 	})
 }
 

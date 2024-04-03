@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
@@ -16,7 +17,7 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
+func TestKeeper_ProcessInboundZEVMDeposit(t *testing.T) {
 	t.Run("process zevm deposit successfully", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -31,14 +32,15 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
 			Return(nil)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
-		k.ProcessZEVMDeposit(ctx, cctx)
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_OutboundMined, cctx.CctxStatus.Status)
 	})
 
@@ -56,14 +58,15 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		fungibleMock.On("DepositCoinZeta", mock.Anything, receiver, amount).
 			Return(fmt.Errorf("deposit error"), false)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := sample.CrossChainTx(t, "test")
 		cctx.CctxStatus = &types.Status{Status: types.CctxStatus_PendingInbound}
 		cctx.GetCurrentOutTxParam().Receiver = receiver.String()
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
 		cctx.GetInboundTxParams().Amount = sdkmath.NewUintFromBigInt(amount)
 		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
 		cctx.GetInboundTxParams().SenderChainId = 0
-		k.ProcessZEVMDeposit(ctx, cctx)
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, "deposit error", cctx.CctxStatus.StatusMessage)
 	})
@@ -90,9 +93,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 			Return(nil)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, "", amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, fmt.Sprintf("invalid sender chain id %d", cctx.InboundTxParams.SenderChainId), cctx.CctxStatus.StatusMessage)
 	})
@@ -122,9 +126,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		fungibleMock.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 			Return(fungibletypes.ForeignCoins{}, false)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, fmt.Sprintf("revert gas limit error: %s", types.ErrForeignCoinNotFound), cctx.CctxStatus.StatusMessage)
 	})
@@ -158,9 +163,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 			Return(nil).Once()
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains), cctx.CctxStatus.StatusMessage)
 	})
@@ -194,9 +200,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, senderChain.ChainId).
 			Return(nil).Once()
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, fmt.Sprintf("deposit revert message: %s err : %s", errDeposit, observertypes.ErrSupportedChains), cctx.CctxStatus.StatusMessage)
 	})
@@ -233,9 +240,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		observerMock.On("GetChainNonces", mock.Anything, senderChain.ChainName.String()).
 			Return(observertypes.ChainNonces{}, false)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Contains(t, cctx.CctxStatus.StatusMessage, "cannot find receiver chain nonce")
 	})
@@ -270,9 +278,10 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		// mock successful UpdateNonce
 		updatedNonce := keepertest.MockUpdateNonce(observerMock, *senderChain)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
-		k.ProcessZEVMDeposit(ctx, cctx)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_PendingRevert, cctx.CctxStatus.Status)
 		require.Equal(t, errDeposit.Error(), cctx.CctxStatus.StatusMessage)
 		require.Equal(t, updatedNonce, cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
@@ -303,16 +312,17 @@ func TestKeeper_ProcessZEVMDeposit(t *testing.T) {
 		// mock successful GetRevertGasLimit for ERC20
 		keepertest.MockGetRevertGasLimitForERC20(fungibleMock, asset, *senderChain, 100)
 
-		// call ProcessZEVMDeposit
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *senderChain, asset, amount)
+		cctx.GetCurrentOutTxParam().ReceiverChainId = chains.ZetaPrivnetChain().ChainId
 		cctx.OutboundTxParams = append(cctx.OutboundTxParams, cctx.GetCurrentOutTxParam())
-		k.ProcessZEVMDeposit(ctx, cctx)
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Contains(t, cctx.CctxStatus.StatusMessage, fmt.Sprintf("revert outbound error: %s", "cannot revert a revert tx"))
 	})
 }
 
-func TestKeeper_ProcessCrosschainMsgPassing(t *testing.T) {
+func TestKeeper_ProcessInboundProcessCrosschainMsgPassing(t *testing.T) {
 	t.Run("process crosschain msg passing successfully", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseFungibleMock: true,
@@ -355,9 +365,9 @@ func TestKeeper_ProcessCrosschainMsgPassing(t *testing.T) {
 		observerMock.On("GetSupportedChainFromChainID", mock.Anything, receiverChain.ChainId).
 			Return(nil).Once()
 
-		// call ProcessCrosschainMsgPassing
+		// call ProcessInbound
 		cctx := GetERC20Cctx(t, receiver, *receiverChain, "", amount)
-		k.ProcessCrosschainMsgPassing(ctx, cctx)
+		k.ProcessInbound(ctx, cctx)
 		require.Equal(t, types.CctxStatus_Aborted, cctx.CctxStatus.Status)
 		require.Equal(t, observertypes.ErrSupportedChains.Error(), cctx.CctxStatus.StatusMessage)
 	})
