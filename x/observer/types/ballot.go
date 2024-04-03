@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 
-	"cosmossdk.io/errors"
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,7 +15,7 @@ func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 	// `index` is used to set the vote in the `Votes` array
 	index := m.GetVoterIndex(address)
 	if index == -1 {
-		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf("Voter %s not in voter list", address))
+		return m, cosmoserrors.Wrap(ErrUnableToAddVote, fmt.Sprintf("Voter %s not in voter list", address))
 	}
 	m.Votes[index] = vote
 	return m, nil
