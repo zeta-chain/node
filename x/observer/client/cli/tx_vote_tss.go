@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -15,8 +14,8 @@ import (
 
 func CmdVoteTSS() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-tss-voter [pubkey] [keygen-block] [status]",
-		Short: "Create a new TSSVoter",
+		Use:   "vote-tss [pubkey] [keygen-block] [status]",
+		Short: "Vote for a new TSS creation",
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -24,18 +23,17 @@ func CmdVoteTSS() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
 			keygenBlock, err := strconv.ParseInt(args[1], 10, 64)
 			if err != nil {
 				return err
 			}
-			var status chains.ReceiveStatus
-			if args[2] == "0" {
-				status = chains.ReceiveStatus_Success
-			} else if args[2] == "1" {
-				status = chains.ReceiveStatus_Failed
-			} else {
-				return fmt.Errorf("wrong status")
+
+			status, err := chains.ReceiveStatusFromString(args[2])
+			if err != nil {
+				return err
 			}
+
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
