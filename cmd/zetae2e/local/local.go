@@ -285,7 +285,12 @@ func localE2ETest(cmd *cobra.Command, _ []string) {
 			e2etests.TestPauseZRC20Name,
 			e2etests.TestUpdateBytecodeName,
 			e2etests.TestDepositEtherLiquidityCapName,
-			e2etests.TestMigrateChainSupportName,
+
+			// TestMigrateChainSupportName tests EVM chain migration. Currently this test doesn't work with Anvil because pre-EIP1559 txs are not supported
+			// See issue below for details
+			// TODO: renenable this test as per the issue below
+			// https://github.com/zeta-chain/node/issues/1980
+			// e2etests.TestMigrateChainSupportName,
 		))
 	}
 	if testPerformance {

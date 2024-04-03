@@ -142,6 +142,8 @@ func (signer *Signer) Sign(
 ) (*ethtypes.Transaction, []byte, []byte, error) {
 	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
 
+	// TODO: use EIP-1559 transaction type
+	// https://github.com/zeta-chain/node/issues/1952
 	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
@@ -251,6 +253,8 @@ func (signer *Signer) SignRevertTx(txData *OutBoundTransactionData) (*ethtypes.T
 
 // SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
+	// TODO: use EIP-1559 transaction type
+	// https://github.com/zeta-chain/node/issues/1952
 	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
@@ -274,6 +278,8 @@ func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint6
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignWithdrawTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
+	// TODO: use EIP-1559 transaction type
+	// https://github.com/zeta-chain/node/issues/1952
 	tx := ethtypes.NewTransaction(txData.nonce, txData.to, txData.amount, 21000, txData.gasPrice, nil)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
