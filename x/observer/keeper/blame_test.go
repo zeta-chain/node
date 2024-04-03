@@ -15,7 +15,7 @@ func TestKeeper_GetBlame(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	var chainId int64 = 97
 	var nonce uint64 = 101
-	digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
+	digest := sample.ZetaIndex(t)
 
 	index := types.GetBlameIndex(chainId, nonce, digest, 123)
 
@@ -34,7 +34,7 @@ func TestKeeper_GetBlameByChainAndNonce(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	var chainId int64 = 97
 	var nonce uint64 = 101
-	digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
+	digest := sample.ZetaIndex(t)
 
 	index := types.GetBlameIndex(chainId, nonce, digest, 123)
 

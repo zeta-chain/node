@@ -38,10 +38,12 @@ func TestKeeper_AfterValidatorRemoved(t *testing.T) {
 	k.SetObserverSet(ctx, os)
 
 	hooks := k.Hooks()
-	hooks.AfterValidatorRemoved(ctx, nil, valAddr)
+	err = hooks.AfterValidatorRemoved(ctx, nil, valAddr)
+	require.NoError(t, err)
 
 	os, found := k.GetObserverSet(ctx)
 	require.True(t, found)
+	// observer for validator is removed from set
 	require.Empty(t, os.ObserverList)
 }
 
@@ -66,7 +68,7 @@ func TestKeeper_AfterValidatorBeginUnbonding(t *testing.T) {
 	})
 
 	hooks := k.Hooks()
-	hooks.AfterValidatorBeginUnbonding(ctx, nil, validator.GetOperator())
+	err = hooks.AfterValidatorBeginUnbonding(ctx, nil, validator.GetOperator())
 	require.NoError(t, err)
 
 	os, found := k.GetObserverSet(ctx)
@@ -126,7 +128,7 @@ func TestKeeper_AfterDelegationModified(t *testing.T) {
 		})
 
 		hooks := k.Hooks()
-		hooks.AfterDelegationModified(ctx, accAddressOfValidator, validator.GetOperator())
+		err = hooks.AfterDelegationModified(ctx, accAddressOfValidator, validator.GetOperator())
 		require.NoError(t, err)
 
 		os, found := k.GetObserverSet(ctx)

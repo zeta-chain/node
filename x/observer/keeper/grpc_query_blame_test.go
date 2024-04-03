@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -35,7 +36,7 @@ func TestKeeper_BlameByIdentifier(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 		var chainId int64 = 97
 		var nonce uint64 = 101
-		digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
+		digest := sample.ZetaIndex(t)
 
 		index := types.GetBlameIndex(chainId, nonce, digest, 123)
 		blame := types.Blame{
@@ -70,7 +71,7 @@ func TestKeeper_GetAllBlameRecords(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 		var chainId int64 = 97
 		var nonce uint64 = 101
-		digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
+		digest := sample.ZetaIndex(t)
 
 		index := types.GetBlameIndex(chainId, nonce, digest, 123)
 		blame := types.Blame{
@@ -113,7 +114,7 @@ func TestKeeper_BlamesByChainAndNonce(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 		var chainId int64 = 97
 		var nonce uint64 = 101
-		digest := "85f5e10431f69bc2a14046a13aabaefc660103b6de7a84f75c4b96181d03f0b5"
+		digest := sample.ZetaIndex(t)
 
 		index := types.GetBlameIndex(chainId, nonce, digest, 123)
 		blame := types.Blame{

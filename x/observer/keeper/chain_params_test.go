@@ -23,7 +23,6 @@ func TestKeeper_GetSupportedChainFromChainID(t *testing.T) {
 
 		// chain params list but chain not supported
 		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
-		chainParams.IsSupported = false
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{chainParams},
 		})
@@ -48,10 +47,9 @@ func TestKeeper_GetChainParamsByChainID(t *testing.T) {
 		require.False(t, found)
 	})
 
-	t.Run("return true if not found", func(t *testing.T) {
+	t.Run("return true if found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
-		chainParams.IsSupported = false
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{chainParams},
 		})
@@ -63,7 +61,6 @@ func TestKeeper_GetChainParamsByChainID(t *testing.T) {
 	t.Run("return false if chain not found in params", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		chainParams := sample.ChainParams(getValidEthChainIDWithIndex(t, 0))
-		chainParams.IsSupported = false
 		k.SetChainParamsList(ctx, types.ChainParamsList{
 			ChainParams: []*types.ChainParams{chainParams},
 		})
