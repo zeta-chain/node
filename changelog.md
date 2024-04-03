@@ -1,13 +1,15 @@
 # CHANGELOG
 
 ## Unreleased
-
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
   * Updating admin policies now requires to send a governance proposal executing the `UpdatePolicies` message in the `authority` module.
   * The `Policies` query of the `authority` module must be used to get the current admin policies.
   * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
+
+* `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
+  * The structure of the message remains the same.
 
 ### Refactor
 
@@ -22,6 +24,8 @@
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 * [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
+* [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
+* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 
 ### Features
 
@@ -47,6 +51,7 @@
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
 * [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
+* [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
 
 ### Fixes
 

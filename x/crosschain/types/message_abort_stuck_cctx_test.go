@@ -24,7 +24,7 @@ func TestMsgAbortStuckCCTX_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid cctx index",
 			msg:  types.NewMsgAbortStuckCCTX(sample.AccAddress(), "cctx_index"),
-			err:  types.ErrInvalidCCTXIndex,
+			err:  types.ErrInvalidIndexValue,
 		},
 		{
 			name: "valid",
