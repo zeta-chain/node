@@ -154,6 +154,70 @@ func TestMsgServer_RefundAbortedCCTX(t *testing.T) {
 		require.True(t, c.CctxStatus.IsAbortRefunded)
 	})
 
+	t.Run("should error if aleady refunded", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		chainID := getValidEthChainID(t)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		cctx := sample.CrossChainTx(t, "sample-index")
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
+		cctx.CctxStatus.IsAbortRefunded = true
+		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
+		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundTxParams.CoinType = coin.CoinType_Zeta
+		cctx.OutboundTxParams = nil
+		k.SetCrossChainTx(ctx, *cctx)
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
+		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundTxParams.Sender,
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("should error if refund fails", func(t *testing.T) {
+		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		chainID := getValidEthChainID(t)
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+		k.GetAuthKeeper().GetModuleAccount(ctx, fungibletypes.ModuleName)
+
+		cctx := sample.CrossChainTx(t, "sample-index")
+		cctx.CctxStatus.Status = crosschaintypes.CctxStatus_Aborted
+		cctx.CctxStatus.IsAbortRefunded = false
+		cctx.InboundTxParams.TxOrigin = cctx.InboundTxParams.Sender
+		cctx.InboundTxParams.SenderChainId = chainID
+		cctx.InboundTxParams.CoinType = coin.CoinType_Cmd
+		cctx.OutboundTxParams = nil
+		k.SetCrossChainTx(ctx, *cctx)
+		k.SetZetaAccounting(ctx, crosschaintypes.ZetaAccounting{AbortedZetaAmount: cctx.GetCurrentOutTxParam().Amount})
+		deploySystemContracts(t, ctx, zk.FungibleKeeper, sdkk.EvmKeeper)
+
+		_, err := msgServer.RefundAbortedCCTX(ctx, &crosschaintypes.MsgRefundAbortedCCTX{
+			Creator:       admin,
+			CctxIndex:     cctx.Index,
+			RefundAddress: cctx.InboundTxParams.Sender,
+		})
+		require.Error(t, err)
+	})
+
 	t.Run("successfully refund to optional refund address if provided", func(t *testing.T) {
 		k, ctx, sdkk, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,

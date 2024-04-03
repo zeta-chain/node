@@ -21,6 +21,7 @@ func TestBallot_AddVote(t *testing.T) {
 		finalVotes  []VoteType
 		finalStatus BallotStatus
 		isFinalized bool
+		wantErr     bool
 	}{
 		{
 			name:      "All success",
@@ -188,6 +189,18 @@ func TestBallot_AddVote(t *testing.T) {
 			finalStatus: BallotStatus_BallotInProgress,
 			isFinalized: false,
 		},
+		{
+			name:      "Voter not in voter list",
+			threshold: sdk.MustNewDecFromStr("0.66"),
+			voterList: []string{},
+			votes: []votes{
+				{"Observer5", VoteType_SuccessObservation},
+			},
+			wantErr:     true,
+			finalVotes:  []VoteType{},
+			finalStatus: BallotStatus_BallotInProgress,
+			isFinalized: false,
+		},
 	}
 	for _, test := range tt {
 		test := test
@@ -202,7 +215,11 @@ func TestBallot_AddVote(t *testing.T) {
 				BallotStatus:     BallotStatus_BallotInProgress,
 			}
 			for _, vote := range test.votes {
-				ballot, _ = ballot.AddVote(vote.address, vote.vote)
+				b, err := ballot.AddVote(vote.address, vote.vote)
+				if test.wantErr {
+					require.Error(t, err)
+				}
+				ballot = b
 			}
 
 			finalBallot, isFinalized := ballot.IsFinalizingVote()

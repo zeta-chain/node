@@ -12,6 +12,8 @@ func TestKeeper_GetObserverSet(t *testing.T) {
 	t.Run("get observer set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
+		_, found := k.GetObserverSet(ctx)
+		require.False(t, found)
 		k.SetObserverSet(ctx, os)
 		tfm, found := k.GetObserverSet(ctx)
 		require.True(t, found)
@@ -23,6 +25,7 @@ func TestKeeper_IsAddressPartOfObserverSet(t *testing.T) {
 	t.Run("address is part of observer set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
+		require.False(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
 		k.SetObserverSet(ctx, os)
 		require.True(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
 		require.False(t, k.IsAddressPartOfObserverSet(ctx, sample.AccAddress()))
@@ -42,12 +45,30 @@ func TestKeeper_AddObserverToSet(t *testing.T) {
 		require.True(t, found)
 		require.Len(t, osNew.ObserverList, len(os.ObserverList)+1)
 	})
+
+	t.Run("add observer to set if set doesn't exist", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		newObserver := sample.AccAddress()
+		k.AddObserverToSet(ctx, newObserver)
+		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
+		osNew, found := k.GetObserverSet(ctx)
+		require.True(t, found)
+		require.Len(t, osNew.ObserverList, 1)
+
+		// add same address again, len doesn't change
+		k.AddObserverToSet(ctx, newObserver)
+		require.True(t, k.IsAddressPartOfObserverSet(ctx, newObserver))
+		osNew, found = k.GetObserverSet(ctx)
+		require.True(t, found)
+		require.Len(t, osNew.ObserverList, 1)
+	})
 }
 
 func TestKeeper_RemoveObserverFromSet(t *testing.T) {
 	t.Run("remove observer from set", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
 		os := sample.ObserverSet(10)
+		k.RemoveObserverFromSet(ctx, os.ObserverList[0])
 		k.SetObserverSet(ctx, os)
 		k.RemoveObserverFromSet(ctx, os.ObserverList[0])
 		require.False(t, k.IsAddressPartOfObserverSet(ctx, os.ObserverList[0]))
@@ -64,12 +85,24 @@ func TestKeeper_UpdateObserverAddress(t *testing.T) {
 		newObserverAddress := sample.AccAddress()
 		observerSet := sample.ObserverSet(10)
 		observerSet.ObserverList = append(observerSet.ObserverList, oldObserverAddress)
-		k.SetObserverSet(ctx, observerSet)
 		err := k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
+		require.Error(t, err)
+		k.SetObserverSet(ctx, observerSet)
+		err = k.UpdateObserverAddress(ctx, oldObserverAddress, newObserverAddress)
 		require.NoError(t, err)
 		observerSet, found := k.GetObserverSet(ctx)
 		require.True(t, found)
 		require.Equal(t, newObserverAddress, observerSet.ObserverList[len(observerSet.ObserverList)-1])
+	})
+	t.Run("should error if observer address not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		oldObserverAddress := sample.AccAddress()
+		newObserverAddress := sample.AccAddress()
+		observerSet := sample.ObserverSet(10)
+		observerSet.ObserverList = append(observerSet.ObserverList, oldObserverAddress)
+		k.SetObserverSet(ctx, observerSet)
+		err := k.UpdateObserverAddress(ctx, sample.AccAddress(), newObserverAddress)
+		require.Error(t, err)
 	})
 	t.Run("update observer address long observerList", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)
