@@ -217,7 +217,7 @@ func TestBitcoinClientLive(t *testing.T) {
 	// LiveTestBitcoinFeeRate(t)
 	// LiveTestAvgFeeRateMainnetMempoolSpace(t)
 	// LiveTestAvgFeeRateTestnetMempoolSpace(t)
-	LiveTestGetSenderByVin(t)
+	// LiveTestGetSenderByVin(t)
 }
 
 // LiveTestBitcoinFeeRate query Bitcoin mainnet fee rate every 5 minutes

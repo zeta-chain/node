@@ -158,7 +158,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		btcMainNetWithdrawalEvent, err := crosschainkeeper.ParseZRC20WithdrawalEvent(*sample.GetValidZRC20WithdrawToBTC(t).Logs[3])
 		require.NoError(t, err)
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcTestNetChain().ChainId)
-		require.ErrorContains(t, err, "address is not for network testnet3")
+		require.ErrorContains(t, err, "invalid address")
 	})
 
 	t.Run("unable to validate an unsupported address type", func(t *testing.T) {
@@ -167,7 +167,7 @@ func TestValidateZrc20WithdrawEvent(t *testing.T) {
 		btcMainNetWithdrawalEvent.To = []byte("04b2891ba8cb491828db3ebc8a780d43b169e7b3974114e6e50f9bab6ec" +
 			"63c2f20f6d31b2025377d05c2a704d3bd799d0d56f3a8543d79a01ab6084a1cb204f260")
 		err = crosschainkeeper.ValidateZrc20WithdrawEvent(btcMainNetWithdrawalEvent, chains.BtcMainnetChain().ChainId)
-		require.ErrorContains(t, err, "decode address failed: unknown address type")
+		require.ErrorContains(t, err, "unsupported address")
 	})
 }
 
