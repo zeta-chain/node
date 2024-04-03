@@ -55,10 +55,8 @@ func WithdrawToInvalidAddress(r *runner.E2ERunner, amount *big.Int) {
 	}
 	receipt = utils.MustWaitForTxReceipt(r.Ctx, r.ZEVMClient, tx, r.Logger, r.ReceiptTimeout)
 	if receipt.Status == 1 {
-		fmt.Println("WithdrawToInvalidAddress panicing")
 		panic(fmt.Errorf("withdraw receipt status is successful for an invalid BTC address"))
 	}
-	fmt.Printf("WithdrawToInvalidAddress receipt status: %d\n", receipt.Status)
 	// stop mining
 	stop <- struct{}{}
 }
