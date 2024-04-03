@@ -41,10 +41,8 @@ func ObserverSet(n int) types.ObserverSet {
 }
 
 func NodeAccount() *types.NodeAccount {
-	operator := AccAddress()
-
 	return &types.NodeAccount{
-		Operator:       operator,
+		Operator:       AccAddress(),
 		GranteeAddress: AccAddress(),
 		GranteePubkey:  PubKeySet(),
 		NodeStatus:     types.NodeStatus_Active,

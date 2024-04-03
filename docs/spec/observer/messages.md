@@ -121,3 +121,25 @@ message MsgResetChainNonces {
 }
 ```
 
+## MsgVoteTSS
+
+VoteTSS votes on creating a TSS key and recording the information about it (public
+key, participant and operator addresses, finalized and keygen heights).
+
+If the vote passes, the information about the TSS key is recorded on chain
+and the status of the keygen is set to "success".
+
+Fails if the keygen does not exist, the keygen has been already
+completed, or the keygen has failed.
+
+Only node accounts are authorized to broadcast this message.
+
+```proto
+message MsgVoteTSS {
+	string creator = 1;
+	string tss_pubkey = 2;
+	int64 keygen_zeta_height = 3;
+	chains.ReceiveStatus status = 4;
+}
+```
+

@@ -53701,8 +53701,6 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgCreateTSSVoterResponse:
-    type: object
   crosschainMsgGasPriceVoterResponse:
     type: object
   crosschainMsgMigrateTssFundsResponse:
@@ -54324,6 +54322,15 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgVoteTSSResponse:
+    type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
+      keygen_success:
+        type: boolean
   observerNode:
     type: object
     properties:

@@ -8,25 +8,24 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/btcsuite/btcd/rpcclient"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/onrik/ethrpc"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
-	"github.com/btcsuite/btcd/rpcclient"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 var debugArgs = debugArguments{}

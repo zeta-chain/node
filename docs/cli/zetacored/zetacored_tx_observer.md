@@ -34,4 +34,5 @@ zetacored tx observer [flags]
 * [zetacored tx observer update-crosschain-flags](zetacored_tx_observer_update-crosschain-flags.md)	 - Update crosschain flags
 * [zetacored tx observer update-keygen](zetacored_tx_observer_update-keygen.md)	 - command to update the keygen block via a group proposal
 * [zetacored tx observer update-observer](zetacored_tx_observer_update-observer.md)	 - Broadcast message add-observer
+* [zetacored tx observer vote-tss](zetacored_tx_observer_vote-tss.md)	 - Vote for a new TSS creation
 
