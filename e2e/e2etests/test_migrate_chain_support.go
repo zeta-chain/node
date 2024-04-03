@@ -7,20 +7,19 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/zeta-chain/zetacore/e2e/txserver"
-	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
-
-	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
-	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/fatih/color"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/zrc20.sol"
 	"github.com/zeta-chain/zetacore/e2e/runner"
+	"github.com/zeta-chain/zetacore/e2e/txserver"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
@@ -31,7 +30,7 @@ const EVM2RPCURL = "http://eth2:8545"
 
 // EVM2ChainID is the chain ID for the additional EVM localnet
 // We set Sepolia testnet although the value is not important, only used to differentiate
-var EVM2ChainID = common.SepoliaChain().ChainId
+var EVM2ChainID = chains.SepoliaChain().ChainId
 
 func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	// deposit most of the ZETA supply on ZetaChain
@@ -81,7 +80,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 		18,
 		"Sepolia ETH",
 		"sETH",
-		common.CoinType_Gas,
+		coin.CoinType_Gas,
 		100000,
 	))
 	if err != nil {
@@ -171,7 +170,7 @@ func TestMigrateChainSupport(r *runner.E2ERunner, _ []string) {
 	res, err := newRunner.ZetaTxServer.BroadcastTx(utils.FungibleAdminName, crosschaintypes.NewMsgWhitelistERC20(
 		adminAddr,
 		newRunner.ERC20Addr.Hex(),
-		common.SepoliaChain().ChainId,
+		chains.SepoliaChain().ChainId,
 		"USDT",
 		"USDT",
 		18,
