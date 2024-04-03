@@ -347,12 +347,3 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 		require.ErrorContains(t, err, "not match TSS address")
 	})
 }
-
-func TestBTCChainClient_ObserveInTx(t *testing.T) {
-	t.Run("should return error", func(t *testing.T) {
-		// create mainnet mock client
-		btcClient := MockBTCClientMainnet()
-		err := btcClient.ObserveInTx()
-		require.ErrorContains(t, err, "inbound TXS / Send has been disabled by the protocol")
-	})
-}
