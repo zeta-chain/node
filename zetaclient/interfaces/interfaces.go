@@ -43,7 +43,7 @@ type ChainClient interface {
 	SetChainParams(observertypes.ChainParams)
 	GetChainParams() observertypes.ChainParams
 	GetTxID(nonce uint64) string
-	ExternalChainWatcherForNewInboundTrackerSuggestions()
+	WatchIntxTracker()
 }
 
 // ChainSigner is the interface to sign transactions for a chain
