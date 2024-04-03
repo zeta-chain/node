@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -17,7 +16,7 @@ func (k Keeper) LastZetaHeight(goCtx context.Context, req *types.QueryLastZetaHe
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	height := ctx.BlockHeight()
-	if height >= math.MaxInt64 || height < 0 {
+	if height < 0 {
 		return nil, status.Error(codes.OutOfRange, "height out of range")
 	}
 	return &types.QueryLastZetaHeightResponse{

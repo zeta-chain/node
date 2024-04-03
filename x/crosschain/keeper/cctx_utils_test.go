@@ -6,13 +6,16 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 func TestGetRevertGasLimit(t *testing.T) {
@@ -215,4 +218,159 @@ func Test_IsPending(t *testing.T) {
 			require.Equal(t, tc.expected, crosschainkeeper.IsPending(types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
 		})
 	}
+}
+
+func TestKeeper_UpdateNonce(t *testing.T) {
+	t.Run("should error if supported chain is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(nil)
+
+		err := k.UpdateNonce(ctx, 5, nil)
+		require.Error(t, err)
+	})
+
+	t.Run("should error if chain nonces not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+			ChainName: 5,
+			ChainId:   5,
+		})
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{}, false)
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: sdkmath.NewUint(1)},
+			},
+		}
+		err := k.UpdateNonce(ctx, 5, &cctx)
+		require.Error(t, err)
+	})
+
+	t.Run("should error if tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+			ChainName: 5,
+			ChainId:   5,
+		})
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
+			Nonce: 100,
+		}, true)
+		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, false)
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: sdkmath.NewUint(1)},
+			},
+		}
+		err := k.UpdateNonce(ctx, 5, &cctx)
+		require.Error(t, err)
+		require.Equal(t, uint64(100), cctx.GetCurrentOutTxParam().OutboundTxTssNonce)
+	})
+
+	t.Run("should error if pending nonces not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+			ChainName: 5,
+			ChainId:   5,
+		})
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
+			Nonce: 100,
+		}, true)
+		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{}, false)
+
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: sdkmath.NewUint(1)},
+			},
+		}
+		err := k.UpdateNonce(ctx, 5, &cctx)
+		require.Error(t, err)
+	})
+
+	t.Run("should error if nonces not equal", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+			ChainName: 5,
+			ChainId:   5,
+		})
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
+			Nonce: 100,
+		}, true)
+		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{
+			NonceHigh: 99,
+		}, true)
+
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: sdkmath.NewUint(1)},
+			},
+		}
+		err := k.UpdateNonce(ctx, 5, &cctx)
+		require.Error(t, err)
+	})
+
+	t.Run("should update nonces", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseObserverMock: true,
+		})
+
+		observerMock := keepertest.GetCrosschainObserverMock(t, k)
+		observerMock.On("GetSupportedChainFromChainID", mock.Anything, mock.Anything).Return(&chains.Chain{
+			ChainName: 5,
+			ChainId:   5,
+		})
+		observerMock.On("GetChainNonces", mock.Anything, mock.Anything).Return(observertypes.ChainNonces{
+			Nonce: 100,
+		}, true)
+		observerMock.On("GetTSS", mock.Anything).Return(observertypes.TSS{}, true)
+		observerMock.On("GetPendingNonces", mock.Anything, mock.Anything, mock.Anything).Return(observertypes.PendingNonces{
+			NonceHigh: 100,
+		}, true)
+
+		observerMock.On("SetChainNonces", mock.Anything, mock.Anything).Once()
+		observerMock.On("SetPendingNonces", mock.Anything, mock.Anything).Once()
+
+		cctx := types.CrossChainTx{
+			InboundTxParams: &types.InboundTxParams{
+				Amount: sdkmath.ZeroUint(),
+			},
+			OutboundTxParams: []*types.OutboundTxParams{
+				{Amount: sdkmath.NewUint(1)},
+			},
+		}
+		err := k.UpdateNonce(ctx, 5, &cctx)
+		require.NoError(t, err)
+	})
 }
