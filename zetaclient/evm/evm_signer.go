@@ -142,16 +142,7 @@ func (signer *Signer) Sign(
 ) (*ethtypes.Transaction, []byte, []byte, error) {
 	log.Debug().Msgf("TSS SIGNER: %s", signer.tssSigner.Pubkey())
 
-	tx := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-		ChainID:   big.NewInt(signer.chain.ChainId),
-		Nonce:     nonce,
-		To:        &to,
-		Value:     big.NewInt(0),
-		Gas:       gasLimit,
-		GasTipCap: gasPrice,
-		GasFeeCap: gasPrice,
-		Data:      data,
-	})
+	tx := ethtypes.NewTransaction(nonce, to, big.NewInt(0), gasLimit, gasPrice, data)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 
@@ -260,17 +251,7 @@ func (signer *Signer) SignRevertTx(txData *OutBoundTransactionData) (*ethtypes.T
 
 // SignCancelTx signs a transaction from TSS address to itself with a zero amount in order to increment the nonce
 func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint64) (*ethtypes.Transaction, error) {
-	to := signer.tssSigner.EVMAddress()
-	tx := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-		ChainID:   big.NewInt(signer.chain.ChainId),
-		Nonce:     nonce,
-		To:        &to,
-		Value:     big.NewInt(0),
-		Gas:       21000,
-		GasTipCap: gasPrice,
-		GasFeeCap: gasPrice,
-		Data:      nil,
-	})
+	tx := ethtypes.NewTransaction(nonce, signer.tssSigner.EVMAddress(), big.NewInt(0), 21000, gasPrice, nil)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, height, nonce, signer.chain, "")
@@ -293,16 +274,7 @@ func (signer *Signer) SignCancelTx(nonce uint64, gasPrice *big.Int, height uint6
 
 // SignWithdrawTx signs a withdrawal transaction sent from the TSS address to the destination
 func (signer *Signer) SignWithdrawTx(txData *OutBoundTransactionData) (*ethtypes.Transaction, error) {
-	tx := ethtypes.NewTx(&ethtypes.DynamicFeeTx{
-		ChainID:   big.NewInt(signer.chain.ChainId),
-		Nonce:     txData.nonce,
-		To:        &txData.to,
-		Value:     txData.amount,
-		Gas:       21000,
-		GasTipCap: txData.gasPrice,
-		GasFeeCap: txData.gasPrice,
-		Data:      nil,
-	})
+	tx := ethtypes.NewTransaction(txData.nonce, txData.to, txData.amount, 21000, txData.gasPrice, nil)
 
 	hashBytes := signer.ethSigner.Hash(tx).Bytes()
 	sig, err := signer.tssSigner.Sign(hashBytes, txData.height, txData.nonce, signer.chain, "")
