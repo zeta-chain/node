@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -115,6 +116,28 @@ func TestKeeper_GetMaturedBallotList(t *testing.T) {
 		list = k.GetMaturedBallotList(ctx)
 		require.Equal(t, 1, len(list))
 		require.Equal(t, identifier, list[0])
+	})
+
+	t.Run("should return empty for max maturity blocks", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.ObserverKeeper(t)
+		identifier := sample.ZetaIndex(t)
+		b := &types.Ballot{
+			Index:                "",
+			BallotIdentifier:     identifier,
+			VoterList:            nil,
+			ObservationType:      0,
+			BallotThreshold:      sdk.Dec{},
+			BallotStatus:         0,
+			BallotCreationHeight: 1,
+		}
+		k.SetParams(ctx, types.Params{
+			BallotMaturityBlocks: math.MaxInt64,
+		})
+		list := k.GetMaturedBallotList(ctx)
+		require.Empty(t, list)
+		k.AddBallotToList(ctx, *b)
+		list = k.GetMaturedBallotList(ctx)
+		require.Empty(t, list)
 	})
 
 	t.Run("should return empty if maturity blocks greater than height", func(t *testing.T) {
