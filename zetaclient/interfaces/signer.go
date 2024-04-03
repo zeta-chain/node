@@ -4,7 +4,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/chaincfg"
@@ -17,7 +17,7 @@ import (
 type TSSSigner interface {
 	Pubkey() []byte
 	// Sign: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-	Sign(data []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubkey string) ([65]byte, error)
+	Sign(data []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubkey string) ([65]byte, error)
 	EVMAddress() ethcommon.Address
 	BTCAddress() string
 	BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash
@@ -31,7 +31,7 @@ type TestSigner struct {
 	PrivKey *ecdsa.PrivateKey
 }
 
-func (s TestSigner) Sign(digest []byte, _ uint64, _ uint64, _ *common.Chain, _ string) ([65]byte, error) {
+func (s TestSigner) Sign(digest []byte, _ uint64, _ uint64, _ *chains.Chain, _ string) ([65]byte, error) {
 	sig, err := crypto.Sign(digest, s.PrivKey)
 	if err != nil {
 		return [65]byte{}, err

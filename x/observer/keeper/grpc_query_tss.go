@@ -5,7 +5,8 @@ import (
 	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,18 +46,18 @@ func (k Keeper) GetTssAddress(goCtx context.Context, req *types.QueryGetTssAddre
 	if !found {
 		return nil, status.Error(codes.NotFound, "current tss not set")
 	}
-	ethAddress, err := common.GetTssAddrEVM(tss.TssPubkey)
+	ethAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	bitcoinParams := common.BitcoinRegnetParams
+	bitcoinParams := chains.BitcoinRegnetParams
 	if req.BitcoinChainId != 0 {
-		bitcoinParams, err = common.BitcoinNetParamsFromChainID(req.BitcoinChainId)
+		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	btcAddress, err := common.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+	btcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -76,18 +77,18 @@ func (k Keeper) GetTssAddressByFinalizedHeight(goCtx context.Context, req *types
 	if !found {
 		return nil, status.Error(codes.NotFound, "tss not found")
 	}
-	ethAddress, err := common.GetTssAddrEVM(tss.TssPubkey)
+	ethAddress, err := crypto.GetTssAddrEVM(tss.TssPubkey)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	bitcoinParams := common.BitcoinRegnetParams
+	bitcoinParams := chains.BitcoinRegnetParams
 	if req.BitcoinChainId != 0 {
-		bitcoinParams, err = common.BitcoinNetParamsFromChainID(req.BitcoinChainId)
+		bitcoinParams, err = chains.BitcoinNetParamsFromChainID(req.BitcoinChainId)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 	}
-	btcAddress, err := common.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
+	btcAddress, err := crypto.GetTssAddrBTC(tss.TssPubkey, bitcoinParams)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

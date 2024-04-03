@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-import "common/common.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -16,6 +15,8 @@ import "observer/observer.proto";
 import "observer/params.proto";
 import "observer/pending_nonces.proto";
 import "observer/tss.proto";
+import "pkg/chains/chains.proto";
+import "pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -217,7 +218,7 @@ message QueryTssHistoryResponse {
 message QueryProveRequest {
   int64 chain_id = 1;
   string tx_hash = 2;
-  common.Proof proof = 3;
+  proofs.Proof proof = 3;
   string block_hash = 4;
   int64 tx_index = 5;
 }
@@ -267,7 +268,7 @@ message QueryObserverSetResponse {
 message QuerySupportedChains {}
 
 message QuerySupportedChainsResponse {
-  repeated common.Chain chains = 1;
+  repeated chains.Chain chains = 1;
 }
 
 message QueryGetChainParamsForChainRequest {
@@ -350,7 +351,7 @@ message QueryAllBlockHeaderRequest {
 }
 
 message QueryAllBlockHeaderResponse {
-  repeated common.BlockHeader block_headers = 1;
+  repeated proofs.BlockHeader block_headers = 1;
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -359,7 +360,7 @@ message QueryGetBlockHeaderByHashRequest {
 }
 
 message QueryGetBlockHeaderByHashResponse {
-  common.BlockHeader block_header = 1;
+  proofs.BlockHeader block_header = 1;
 }
 
 message QueryGetBlockHeaderStateRequest {

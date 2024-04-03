@@ -3,10 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -48,7 +47,7 @@ func (k Keeper) SetCctxAndNonceToCctxAndInTxHashToCctx(ctx sdk.Context, cctx typ
 			Tss:       tss.TssPubkey,
 		})
 	}
-	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.GetCurrentOutTxParam().CoinType == common.CoinType_Zeta {
+	if cctx.CctxStatus.Status == types.CctxStatus_Aborted && cctx.InboundTxParams.CoinType == coin.CoinType_Zeta {
 		k.AddZetaAbortedAmount(ctx, GetAbortedAmount(cctx))
 	}
 }
@@ -97,60 +96,4 @@ func (k Keeper) RemoveCrossChainTx(ctx sdk.Context, index string) {
 	p := types.KeyPrefix(fmt.Sprintf("%s", types.SendKey))
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), p)
 	store.Delete(types.KeyPrefix(index))
-}
-
-func (k Keeper) CreateNewCCTX(
-	ctx sdk.Context,
-	msg *types.MsgVoteOnObservedInboundTx,
-	index string,
-	tssPubkey string,
-	s types.CctxStatus,
-	senderChainID,
-	receiverChainID int64,
-) types.CrossChainTx {
-	if msg.TxOrigin == "" {
-		msg.TxOrigin = msg.Sender
-	}
-	inboundParams := &types.InboundTxParams{
-		Sender:                          msg.Sender,
-		SenderChainId:                   senderChainID,
-		TxOrigin:                        msg.TxOrigin,
-		Asset:                           msg.Asset,
-		Amount:                          msg.Amount,
-		CoinType:                        msg.CoinType,
-		InboundTxObservedHash:           msg.InTxHash,
-		InboundTxObservedExternalHeight: msg.InBlockHeight,
-		InboundTxFinalizedZetaHeight:    0,
-		InboundTxBallotIndex:            index,
-	}
-
-	outBoundParams := &types.OutboundTxParams{
-		Receiver:                         msg.Receiver,
-		ReceiverChainId:                  receiverChainID,
-		OutboundTxHash:                   "",
-		OutboundTxTssNonce:               0,
-		OutboundTxGasLimit:               msg.GasLimit,
-		OutboundTxGasPrice:               "",
-		OutboundTxBallotIndex:            "",
-		OutboundTxObservedExternalHeight: 0,
-		CoinType:                         msg.CoinType, // FIXME: is this correct?
-		Amount:                           sdk.NewUint(0),
-		TssPubkey:                        tssPubkey,
-	}
-	status := &types.Status{
-		Status:              s,
-		StatusMessage:       "",
-		LastUpdateTimestamp: ctx.BlockHeader().Time.Unix(),
-		IsAbortRefunded:     false,
-	}
-	newCctx := types.CrossChainTx{
-		Creator:          msg.Creator,
-		Index:            index,
-		ZetaFees:         math.ZeroUint(),
-		RelayedMessage:   msg.Message,
-		CctxStatus:       status,
-		InboundTxParams:  inboundParams,
-		OutboundTxParams: []*types.OutboundTxParams{outBoundParams},
-	}
-	return newCctx
 }

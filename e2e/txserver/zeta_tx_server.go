@@ -34,7 +34,8 @@ import (
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	emissionstypes "github.com/zeta-chain/zetacore/x/emissions/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -247,11 +248,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		common.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain().ChainId,
 		18,
 		"ETH",
 		"gETH",
-		common.CoinType_Gas,
+		coin.CoinType_Gas,
 		100000,
 	))
 	if err != nil {
@@ -262,11 +263,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	_, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		"",
-		common.BtcRegtestChain().ChainId,
+		chains.BtcRegtestChain().ChainId,
 		8,
 		"BTC",
 		"tBTC",
-		common.CoinType_Gas,
+		coin.CoinType_Gas,
 		100000,
 	))
 	if err != nil {
@@ -277,11 +278,11 @@ func (zts ZetaTxServer) DeploySystemContractsAndZRC20(account, erc20Addr string)
 	res, err = zts.BroadcastTx(account, fungibletypes.NewMsgDeployFungibleCoinZRC20(
 		addr.String(),
 		erc20Addr,
-		common.GoerliLocalnetChain().ChainId,
+		chains.GoerliLocalnetChain().ChainId,
 		6,
 		"USDT",
 		"USDT",
-		common.CoinType_ERC20,
+		coin.CoinType_ERC20,
 		100000,
 	))
 	if err != nil {

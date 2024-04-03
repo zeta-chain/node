@@ -16,7 +16,7 @@ message MsgAddObserver {
 ## MsgUpdateObserver
 
 UpdateObserver handles updating an observer address
-Authorized: admin policy group 2 (admin update), old observer address (if the
+Authorized: admin policy (admin update), old observer address (if the
 reason is that the observer was tombstoned).
 
 ```proto
@@ -104,7 +104,7 @@ message MsgAddBlockHeader {
 	int64 chain_id = 2;
 	bytes block_hash = 3;
 	int64 height = 4;
-	common.HeaderData header = 5;
+	proofs.HeaderData header = 5;
 }
 ```
 

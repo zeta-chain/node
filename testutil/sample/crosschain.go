@@ -9,7 +9,8 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -42,7 +43,21 @@ func InboundTxParams(r *rand.Rand) *types.InboundTxParams {
 		Sender:                          EthAddress().String(),
 		SenderChainId:                   r.Int63(),
 		TxOrigin:                        EthAddress().String(),
-		CoinType:                        common.CoinType(r.Intn(100)),
+		CoinType:                        coin.CoinType(r.Intn(100)),
+		Asset:                           StringRandom(r, 32),
+		Amount:                          math.NewUint(uint64(r.Int63())),
+		InboundTxObservedHash:           StringRandom(r, 32),
+		InboundTxObservedExternalHeight: r.Uint64(),
+		InboundTxBallotIndex:            StringRandom(r, 32),
+		InboundTxFinalizedZetaHeight:    r.Uint64(),
+	}
+}
+
+func InboundTxParamsValidChainID(r *rand.Rand) *types.InboundTxParams {
+	return &types.InboundTxParams{
+		Sender:                          EthAddress().String(),
+		SenderChainId:                   chains.GoerliChain().ChainId,
+		TxOrigin:                        EthAddress().String(),
 		Asset:                           StringRandom(r, 32),
 		Amount:                          math.NewUint(uint64(r.Int63())),
 		InboundTxObservedHash:           StringRandom(r, 32),
@@ -56,7 +71,23 @@ func OutboundTxParams(r *rand.Rand) *types.OutboundTxParams {
 	return &types.OutboundTxParams{
 		Receiver:                         EthAddress().String(),
 		ReceiverChainId:                  r.Int63(),
-		CoinType:                         common.CoinType(r.Intn(100)),
+		CoinType:                         coin.CoinType(r.Intn(100)),
+		Amount:                           math.NewUint(uint64(r.Int63())),
+		OutboundTxTssNonce:               r.Uint64(),
+		OutboundTxGasLimit:               r.Uint64(),
+		OutboundTxGasPrice:               math.NewUint(uint64(r.Int63())).String(),
+		OutboundTxHash:                   StringRandom(r, 32),
+		OutboundTxBallotIndex:            StringRandom(r, 32),
+		OutboundTxObservedExternalHeight: r.Uint64(),
+		OutboundTxGasUsed:                r.Uint64(),
+		OutboundTxEffectiveGasPrice:      math.NewInt(r.Int63()),
+	}
+}
+
+func OutboundTxParamsValidChainID(r *rand.Rand) *types.OutboundTxParams {
+	return &types.OutboundTxParams{
+		Receiver:                         EthAddress().String(),
+		ReceiverChainId:                  chains.GoerliChain().ChainId,
 		Amount:                           math.NewUint(uint64(r.Int63())),
 		OutboundTxTssNonce:               r.Uint64(),
 		OutboundTxGasLimit:               r.Uint64(),
@@ -125,7 +156,7 @@ func ZetaAccounting(t *testing.T, index string) types.ZetaAccounting {
 	}
 }
 
-func InboundVote(coinType common.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
+func InboundVote(coinType coin.CoinType, from, to int64) types.MsgVoteOnObservedInboundTx {
 	return types.MsgVoteOnObservedInboundTx{
 		Creator:       "",
 		Sender:        EthAddress().String(),

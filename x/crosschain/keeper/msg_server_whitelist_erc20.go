@@ -11,7 +11,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
@@ -25,8 +26,8 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// check if authorized
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+		return nil, errorsmod.Wrap(authoritytypes.ErrUnauthorized, "Deploy can only be executed by the correct policy account")
 	}
 
 	erc20Addr := ethcommon.HexToAddress(msg.Erc20Address)
@@ -69,7 +70,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		// #nosec G701 always in range
 		uint8(msg.Decimals),
 		chain.ChainId,
-		common.CoinType_ERC20,
+		coin.CoinType_ERC20,
 		msg.Erc20Address,
 		big.NewInt(msg.GasLimit),
 	)
@@ -108,11 +109,13 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	index := hash.Hex()
 
 	// create a cmd cctx to whitelist the erc20 on the external chain
+	// TODO : refactor this to use the `NewCCTX` function instead.
+	//https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        msg.Creator,
 		Index:          index,
 		ZetaFees:       sdk.NewUint(0),
-		RelayedMessage: fmt.Sprintf("%s:%s", common.CmdWhitelistERC20, msg.Erc20Address),
+		RelayedMessage: fmt.Sprintf("%s:%s", constant.CmdWhitelistERC20, msg.Erc20Address),
 		CctxStatus: &types.Status{
 			Status:              types.CctxStatus_PendingOutbound,
 			StatusMessage:       "",
@@ -122,7 +125,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			Sender:                          "",
 			SenderChainId:                   0,
 			TxOrigin:                        "",
-			CoinType:                        common.CoinType_Cmd,
+			CoinType:                        coin.CoinType_Cmd,
 			Asset:                           "",
 			Amount:                          math.Uint{},
 			InboundTxObservedHash:           hash.String(), // all Upper case Cosmos TX HEX, with no 0x prefix
@@ -134,7 +137,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 			{
 				Receiver:                         param.Erc20CustodyContractAddress,
 				ReceiverChainId:                  msg.ChainId,
-				CoinType:                         common.CoinType_Cmd,
+				CoinType:                         coin.CoinType_Cmd,
 				Amount:                           math.NewUint(0),
 				OutboundTxTssNonce:               0,
 				OutboundTxGasLimit:               100_000,
@@ -159,7 +162,7 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 		Decimals:             msg.Decimals,
 		Name:                 msg.Name,
 		Symbol:               msg.Symbol,
-		CoinType:             common.CoinType_ERC20,
+		CoinType:             coin.CoinType_ERC20,
 		// #nosec G701 always positive
 		GasLimit: uint64(msg.GasLimit),
 	}

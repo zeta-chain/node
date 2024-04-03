@@ -3,7 +3,7 @@ package keeper
 import (
 	"strconv"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
@@ -15,13 +15,13 @@ func EmitEventInboundFinalized(ctx sdk.Context, cctx *types.CrossChainTx) {
 		MsgTypeUrl:     sdk.MsgTypeURL(&types.MsgVoteOnObservedInboundTx{}),
 		CctxIndex:      cctx.Index,
 		Sender:         cctx.InboundTxParams.Sender,
-		SenderChain:    common.GetChainFromChainID(cctx.InboundTxParams.SenderChainId).ChainName.String(),
+		SenderChain:    chains.GetChainFromChainID(cctx.InboundTxParams.SenderChainId).ChainName.String(),
 		TxOrgin:        cctx.InboundTxParams.TxOrigin,
 		Asset:          cctx.InboundTxParams.Asset,
 		InTxHash:       cctx.InboundTxParams.InboundTxObservedHash,
 		InBlockHeight:  strconv.FormatUint(cctx.InboundTxParams.InboundTxObservedExternalHeight, 10),
 		Receiver:       currentOutParam.Receiver,
-		ReceiverChain:  common.GetChainFromChainID(currentOutParam.ReceiverChainId).ChainName.String(),
+		ReceiverChain:  chains.GetChainFromChainID(currentOutParam.ReceiverChainId).ChainName.String(),
 		Amount:         cctx.InboundTxParams.Amount.String(),
 		RelayedMessage: cctx.RelayedMessage,
 		NewStatus:      cctx.CctxStatus.Status.String(),
@@ -59,11 +59,11 @@ func EmitZetaWithdrawCreated(ctx sdk.Context, cctx types.CrossChainTx) {
 
 }
 
-func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
+func EmitOutboundSuccess(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundSuccess{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:     cctx.Index,
-		ValueReceived: msg.ValueReceived.String(),
+		CctxIndex:     cctxIndex,
+		ValueReceived: valueReceived,
 		OldStatus:     oldStatus,
 		NewStatus:     newStatus,
 	})
@@ -73,11 +73,11 @@ func EmitOutboundSuccess(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx
 
 }
 
-func EmitOutboundFailure(ctx sdk.Context, msg *types.MsgVoteOnObservedOutboundTx, oldStatus string, newStatus string, cctx types.CrossChainTx) {
+func EmitOutboundFailure(ctx sdk.Context, valueReceived string, oldStatus string, newStatus string, cctxIndex string) {
 	err := ctx.EventManager().EmitTypedEvents(&types.EventOutboundFailure{
 		MsgTypeUrl:    sdk.MsgTypeURL(&types.MsgVoteOnObservedOutboundTx{}),
-		CctxIndex:     cctx.Index,
-		ValueReceived: msg.ValueReceived.String(),
+		CctxIndex:     cctxIndex,
+		ValueReceived: valueReceived,
 		OldStatus:     oldStatus,
 		NewStatus:     newStatus,
 	})
