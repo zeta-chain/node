@@ -225,13 +225,9 @@ func CmdCCTXOutboundVoter() *cobra.Command {
 
 			argsMMint := args[6]
 
-			var status chains.ReceiveStatus
-			if args[7] == "0" {
-				status = chains.ReceiveStatus_Success
-			} else if args[7] == "1" {
-				status = chains.ReceiveStatus_Failed
-			} else {
-				return fmt.Errorf("wrong status")
+			status, err := chains.ReceiveStatusFromString(args[7])
+			if err != nil {
+				return err
 			}
 
 			chain, err := strconv.ParseInt(args[8], 10, 64)
