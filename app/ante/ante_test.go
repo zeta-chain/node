@@ -36,7 +36,7 @@ func TestIsSystemTx(t *testing.T) {
 	//		*cctxtypes.MsgVoteOnObservedInboundTx,
 	//		*cctxtypes.MsgVoteOnObservedOutboundTx,
 	//		*cctxtypes.MsgAddToOutTxTracker,
-	//		*cctxtypes.MsgCreateTSSVoter,
+	//		*observertypes.MsgVoteTSS,
 	//		*observertypes.MsgAddBlockHeader,
 	//		*observertypes.MsgAddBlameVote:
 	buildTxFromMsg := func(msg sdk.Msg) sdk.Tx {
@@ -64,7 +64,7 @@ func TestIsSystemTx(t *testing.T) {
 		wantIs       bool
 	}{
 		{
-			"MsgCreateTSSVoter",
+			"MsgVoteTSS",
 			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
@@ -73,7 +73,7 @@ func TestIsSystemTx(t *testing.T) {
 			false,
 		},
 		{
-			"MsgCreateTSSVoter",
+			"MsgVoteTSS",
 			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
@@ -82,7 +82,7 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgCreateTSSVoter}",
+			"MsgExec{MsgVoteTSS}",
 			buildAuthzTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator:   sample.AccAddress(),
 				TssPubkey: "pubkey1234",
@@ -169,7 +169,7 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgCreateTSSVoter",
+			"MsgVoteTSS",
 			buildTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator: sample.AccAddress(),
 			}),
@@ -178,7 +178,7 @@ func TestIsSystemTx(t *testing.T) {
 			true,
 		},
 		{
-			"MsgExec{MsgCreateTSSVoter}",
+			"MsgExec{MsgVoteTSS}",
 			buildAuthzTxFromMsg(&observertypes.MsgVoteTSS{
 				Creator: sample.AccAddress(),
 			}),
