@@ -243,3 +243,13 @@ func TestSendQueryPaginated(t *testing.T) {
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }
+
+func TestKeeper_RemoveCrossChainTx(t *testing.T) {
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+	txs := createNCctx(keeper, ctx, 5)
+
+	keeper.RemoveCrossChainTx(ctx, txs[0].Index)
+	txs = keeper.GetAllCrossChainTx(ctx)
+	require.Equal(t, 4, len(txs))
+}

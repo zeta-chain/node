@@ -67,7 +67,30 @@ func TestMsgServer_AddToInTxTracker(t *testing.T) {
 		require.False(t, found)
 	})
 
-	t.Run("admin add  tx tracker", func(t *testing.T) {
+	t.Run("fail for unsupported chain id", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		tx_hash := "string"
+
+		chainID := getValidEthChainID(t)
+		setSupportedChain(ctx, zk, chainID)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.AddToInTxTracker(ctx, &types.MsgAddToInTxTracker{
+			Creator:   sample.AccAddress(),
+			ChainId:   chainID + 1,
+			TxHash:    tx_hash,
+			CoinType:  coin.CoinType_Zeta,
+			Proof:     nil,
+			BlockHash: "",
+			TxIndex:   0,
+		})
+		require.ErrorIs(t, err, observertypes.ErrSupportedChains)
+		_, found := k.GetInTxTracker(ctx, chainID, tx_hash)
+		require.False(t, found)
+	})
+
+	t.Run("admin add tx tracker", func(t *testing.T) {
 		k, ctx, _, zk := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,
 		})
