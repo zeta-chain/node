@@ -10,6 +10,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
 )
 
+// WatchIntxTracker watches zetacore for bitcoin intx trackers
 func (ob *BTCChainClient) WatchIntxTracker() {
 	ticker, err := types.NewDynamicTicker("Bitcoin_WatchIntxTracker", ob.GetChainParams().InTxTicker)
 	if err != nil {

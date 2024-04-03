@@ -252,16 +252,16 @@ func FetchERC20CustodyContract(addr ethcommon.Address, client interfaces.EVMRPCC
 	return erc20custody.NewERC20Custody(addr, client)
 }
 
-// Start all observation routines for the external chain
+// Start all observation routines for the evm chain
 func (ob *ChainClient) Start() {
-	go ob.WatchIntxTracker()
-	go ob.WatchInTx()
-	go ob.WatchGasPrice()
-	go ob.WatchOutTx()
-	go ob.WatchRPCStatus()
+	go ob.WatchInTx()        // watch evm chain for incoming txs and post votes to zetacore
+	go ob.WatchOutTx()       // watch evm chain for outgoing txs status
+	go ob.WatchGasPrice()    // watch evm chain for gas prices and post to zetacore
+	go ob.WatchIntxTracker() // watch zetacore for intx trackers
+	go ob.WatchRPCStatus()   // watch the RPC status of the evm chain
 }
 
-// WatchRPCStatus watches the RPC status of the external chain
+// WatchRPCStatus watches the RPC status of the evm chain
 func (ob *ChainClient) WatchRPCStatus() {
 	ob.logger.Chain.Info().Msgf("Starting RPC status check for chain %s", ob.chain.String())
 	ticker := time.NewTicker(60 * time.Second)
@@ -611,7 +611,7 @@ func (ob *ChainClient) IsSendOutTxProcessed(cctx *crosschaintypes.CrossChainTx, 
 	return false, false, nil
 }
 
-// WatchOutTx watches external chain for outgoing txs status
+// WatchOutTx watches evm chain for outgoing txs status
 func (ob *ChainClient) WatchOutTx() {
 	// read env variables if set
 	timeoutNonce, err := strconv.Atoi(os.Getenv("OS_TIMEOUT_NONCE"))
@@ -840,7 +840,7 @@ func (ob *ChainClient) GetLastBlockHeight() uint64 {
 	return height
 }
 
-// WatchInTx watches external chain for incoming txs and post votes to zetacore
+// WatchInTx watches evm chain for incoming txs and post votes to zetacore
 func (ob *ChainClient) WatchInTx() {
 	ticker, err := clienttypes.NewDynamicTicker(fmt.Sprintf("EVM_WatchInTx_%d", ob.chain.ChainId), ob.GetChainParams().InTxTicker)
 	if err != nil {
@@ -1163,7 +1163,7 @@ func (ob *ChainClient) ObserverTSSReceive(startBlock, toBlock uint64, flags obse
 	return toBlock
 }
 
-// WatchGasPrice watches external chain for gas prices and post to zetacore
+// WatchGasPrice watches evm chain for gas prices and post to zetacore
 func (ob *ChainClient) WatchGasPrice() {
 	ob.logger.GasPrice.Info().Msg("WatchGasPrice starting...")
 	err := ob.PostGasPrice()

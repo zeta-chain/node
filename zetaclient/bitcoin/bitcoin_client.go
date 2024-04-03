@@ -216,12 +216,12 @@ func NewBitcoinClient(
 
 func (ob *BTCChainClient) Start() {
 	ob.logger.Chain.Info().Msgf("BitcoinChainClient is starting")
-	go ob.WatchInTx()
-	go ob.WatchOutTx()
-	go ob.WatchUTXOS()
-	go ob.WatchGasPrice()
-	go ob.WatchIntxTracker()
-	go ob.WatchRPCStatus()
+	go ob.WatchInTx()        // watch bitcoin chain for incoming txs and post votes to zetacore
+	go ob.WatchOutTx()       // watch bitcoin chain for outgoing txs status
+	go ob.WatchUTXOS()       // watch bitcoin chain for UTXOs owned by the TSS address
+	go ob.WatchGasPrice()    // watch bitcoin chain for gas rate and post to zetacore
+	go ob.WatchIntxTracker() // watch zetacore for bitcoin intx trackers
+	go ob.WatchRPCStatus()   // watch the RPC status of the bitcoin chain
 }
 
 // WatchRPCStatus watches the RPC status of the Bitcoin chain
@@ -580,7 +580,7 @@ func (ob *BTCChainClient) IsSendOutTxProcessed(cctx *types.CrossChainTx, logger 
 	return true, true, nil
 }
 
-// WatchGasPrice watches Bitcoin gas rate and post to zetacore
+// WatchGasPrice watches Bitcoin chain for gas rate and post to zetacore
 func (ob *BTCChainClient) WatchGasPrice() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchGasPrice", ob.GetChainParams().GasPriceTicker)
 	if err != nil {
@@ -822,6 +822,7 @@ func GetBtcEvent(
 	return nil, nil
 }
 
+// WatchUTXOS watches bitcoin chain for UTXOs owned by the TSS address
 func (ob *BTCChainClient) WatchUTXOS() {
 	ticker, err := clienttypes.NewDynamicTicker("Bitcoin_WatchUTXOS", ob.GetChainParams().WatchUtxoTicker)
 	if err != nil {
