@@ -12,8 +12,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 )
 
 const (
@@ -72,9 +71,9 @@ func generateKeyPair(t *testing.T, net *chaincfg.Params) (*btcec.PrivateKey, btc
 
 // getTestAddrScript returns hard coded test address scripts by script type
 func getTestAddrScript(t *testing.T, scriptType string) btcutil.Address {
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	if inputAddress, ok := testAddressMap[scriptType]; ok {
-		address, err := common.DecodeBtcAddress(inputAddress, chain.ChainId)
+		address, err := chains.DecodeBtcAddress(inputAddress, chain.ChainId)
 		require.NoError(t, err)
 		return address
 	} else {
@@ -261,7 +260,7 @@ func TestOutTxSizeXIn3Out(t *testing.T) {
 
 func TestGetOutputSizeByAddress(t *testing.T) {
 	// test nil P2TR address and non-nil P2TR address
-	nilP2TR := (*bitcoin.AddressTaproot)(nil)
+	nilP2TR := (*chains.AddressTaproot)(nil)
 	sizeNilP2TR, err := GetOutputSizeByAddress(nilP2TR)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), sizeNilP2TR)

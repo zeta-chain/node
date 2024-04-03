@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	crosschainkeeper "github.com/zeta-chain/zetacore/x/crosschain/keeper"
@@ -28,7 +29,7 @@ func TestGetRevertGasLimit(t *testing.T) {
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: common.CoinType_Zeta,
+				CoinType: coin.CoinType_Zeta,
 			}})
 		require.NoError(t, err)
 		require.Equal(t, uint64(0), gasLimit)
@@ -46,8 +47,9 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
 		require.NoError(t, err)
@@ -76,8 +78,9 @@ func TestGetRevertGasLimit(t *testing.T) {
 		require.NoError(t, err)
 
 		gasLimit, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
@@ -89,8 +92,9 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: 999999,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
@@ -105,13 +109,14 @@ func TestGetRevertGasLimit(t *testing.T) {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
-			CoinType:             common.CoinType_Gas,
+			CoinType:             coin.CoinType_Gas,
 		})
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_Gas,
+				CoinType:      coin.CoinType_Gas,
 				SenderChainId: chainID,
 			}})
 		require.ErrorIs(t, err, fungibletypes.ErrContractCall)
@@ -121,8 +126,9 @@ func TestGetRevertGasLimit(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: 999999,
 			}})
 		require.ErrorIs(t, err, types.ErrForeignCoinNotFound)
@@ -138,14 +144,14 @@ func TestGetRevertGasLimit(t *testing.T) {
 		zk.FungibleKeeper.SetForeignCoins(ctx, fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 			ForeignChainId:       chainID,
-			CoinType:             common.CoinType_ERC20,
+			CoinType:             coin.CoinType_ERC20,
 			Asset:                asset,
 		})
 
 		// no contract deployed therefore will fail
 		_, err := k.GetRevertGasLimit(ctx, types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType:      common.CoinType_ERC20,
+				CoinType:      coin.CoinType_ERC20,
 				SenderChainId: chainID,
 				Asset:         asset,
 			}})
@@ -190,4 +196,23 @@ func TestGetAbortedAmount(t *testing.T) {
 		a := crosschainkeeper.GetAbortedAmount(cctx)
 		require.Equal(t, sdkmath.ZeroUint(), a)
 	})
+}
+
+func Test_IsPending(t *testing.T) {
+	tt := []struct {
+		status   types.CctxStatus
+		expected bool
+	}{
+		{types.CctxStatus_PendingInbound, false},
+		{types.CctxStatus_PendingOutbound, true},
+		{types.CctxStatus_PendingRevert, true},
+		{types.CctxStatus_Reverted, false},
+		{types.CctxStatus_Aborted, false},
+		{types.CctxStatus_OutboundMined, false},
+	}
+	for _, tc := range tt {
+		t.Run(fmt.Sprintf("status %s", tc.status), func(t *testing.T) {
+			require.Equal(t, tc.expected, crosschainkeeper.IsPending(types.CrossChainTx{CctxStatus: &types.Status{Status: tc.status}}))
+		})
+	}
 }

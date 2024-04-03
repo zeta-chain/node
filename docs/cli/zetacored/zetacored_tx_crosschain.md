@@ -29,7 +29,6 @@ zetacored tx crosschain [flags]
 * [zetacored tx crosschain add-to-in-tx-tracker](zetacored_tx_crosschain_add-to-in-tx-tracker.md)	 - Add a in-tx-tracker 
 				Use 0:Zeta,1:Gas,2:ERC20
 * [zetacored tx crosschain add-to-out-tx-tracker](zetacored_tx_crosschain_add-to-out-tx-tracker.md)	 - Add a out-tx-tracker
-* [zetacored tx crosschain create-tss-voter](zetacored_tx_crosschain_create-tss-voter.md)	 - Create a new TSSVoter
 * [zetacored tx crosschain gas-price-voter](zetacored_tx_crosschain_gas-price-voter.md)	 - Broadcast message gasPriceVoter
 * [zetacored tx crosschain inbound-voter](zetacored_tx_crosschain_inbound-voter.md)	 - Broadcast message sendVoter
 * [zetacored tx crosschain migrate-tss-funds](zetacored_tx_crosschain_migrate-tss-funds.md)	 - Migrate TSS funds to the latest TSS address

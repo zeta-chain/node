@@ -7,9 +7,9 @@ import (
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/connectorzevm.sol"
-	"github.com/zeta-chain/zetacore/common"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	cctxtypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -135,7 +135,7 @@ func TestZetaWithdrawBTCRevert(r *runner.E2ERunner, args []string) {
 
 	lessThanAmount := amount.Div(amount, big.NewInt(10)) // 1/10 of amount
 	tx, err = r.ConnectorZEVM.Send(r.ZEVMAuth, connectorzevm.ZetaInterfacesSendInput{
-		DestinationChainId:  big.NewInt(common.BtcRegtestChain().ChainId),
+		DestinationChainId:  big.NewInt(chains.BtcRegtestChain().ChainId),
 		DestinationAddress:  r.DeployerAddress.Bytes(),
 		DestinationGasLimit: big.NewInt(400_000),
 		Message:             nil,

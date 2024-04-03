@@ -7,7 +7,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -26,12 +26,12 @@ func init() {
 
 // TSS is a mock of TSS signer for testing
 type TSS struct {
-	chain      common.Chain
+	chain      chains.Chain
 	evmAddress string
 	btcAddress string
 }
 
-func NewMockTSS(chain common.Chain, evmAddress string, btcAddress string) *TSS {
+func NewMockTSS(chain chains.Chain, evmAddress string, btcAddress string) *TSS {
 	return &TSS{
 		chain:      chain,
 		evmAddress: evmAddress,
@@ -40,15 +40,15 @@ func NewMockTSS(chain common.Chain, evmAddress string, btcAddress string) *TSS {
 }
 
 func NewTSSMainnet() *TSS {
-	return NewMockTSS(common.BtcMainnetChain(), testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
+	return NewMockTSS(chains.BtcMainnetChain(), testutils.TSSAddressEVMMainnet, testutils.TSSAddressBTCMainnet)
 }
 
 func NewTSSAthens3() *TSS {
-	return NewMockTSS(common.BscTestnetChain(), testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
+	return NewMockTSS(chains.BscTestnetChain(), testutils.TSSAddressEVMAthens3, testutils.TSSAddressBTCAthens3)
 }
 
 // Sign uses test key unrelated to any tss key in production
-func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *common.Chain, _ string) ([65]byte, error) {
+func (s *TSS) Sign(data []byte, _ uint64, _ uint64, _ *chains.Chain, _ string) ([65]byte, error) {
 	signature, err := crypto.Sign(data, TestPrivateKey)
 	if err != nil {
 		return [65]byte{}, err
@@ -78,7 +78,7 @@ func (s *TSS) BTCAddress() string {
 }
 
 func (s *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash {
-	net, err := common.GetBTCChainParams(s.chain.ChainId)
+	net, err := chains.GetBTCChainParams(s.chain.ChainId)
 	if err != nil {
 		panic(err)
 	}

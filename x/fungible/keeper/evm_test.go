@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/protocol-contracts/pkg/contracts/zevm/systemcontract.sol"
-	zetacommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/server/config"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
 	testkeeper "github.com/zeta-chain/zetacore/testutil/keeper"
@@ -23,7 +24,7 @@ import (
 
 // get a valid chain id independently of the build flag
 func getValidChainID(t *testing.T) int64 {
-	list := zetacommon.DefaultChainsList()
+	list := chains.DefaultChainsList()
 	require.NotEmpty(t, list)
 	require.NotNil(t, list[0])
 
@@ -181,7 +182,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 			"bar",
 			8,
 			chainID,
-			zetacommon.CoinType_Gas,
+			coin.CoinType_Gas,
 			"foobar",
 			big.NewInt(1000),
 		)
@@ -196,7 +197,7 @@ func TestKeeper_DeployZRC20Contract(t *testing.T) {
 		require.Equal(t, uint32(8), foreignCoins.Decimals)
 		require.Equal(t, "foo", foreignCoins.Name)
 		require.Equal(t, "bar", foreignCoins.Symbol)
-		require.Equal(t, zetacommon.CoinType_Gas, foreignCoins.CoinType)
+		require.Equal(t, coin.CoinType_Gas, foreignCoins.CoinType)
 		require.Equal(t, uint64(1000), foreignCoins.GasLimit)
 
 		// can get the zrc20 data

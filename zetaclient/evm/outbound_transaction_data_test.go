@@ -7,7 +7,7 @@ import (
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
-	corecommon "github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -51,14 +51,14 @@ func TestSigner_SetupGas(t *testing.T) {
 	logger := zerolog.Logger{}
 
 	t.Run("SetupGas_success", func(t *testing.T) {
-		chain := corecommon.BscMainnetChain()
+		chain := chains.BscMainnetChain()
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.NoError(t, err)
 	})
 
 	t.Run("SetupGas_error", func(t *testing.T) {
 		cctx.GetCurrentOutTxParam().OutboundTxGasPrice = "invalidGasPrice"
-		chain := corecommon.BscMainnetChain()
+		chain := chains.BscMainnetChain()
 		err := txData.SetupGas(cctx, logger, evmSigner.EvmClient(), &chain)
 		require.ErrorContains(t, err, "cannot convert gas price")
 	})

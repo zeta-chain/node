@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,7 +28,7 @@ func NewParams(observerParams []*ObserverParams, adminParams []*Admin_Policy, ba
 // privnet chains are supported by default for testing purposes
 // custom params must be provided in genesis for other networks
 func DefaultParams() Params {
-	chains := common.PrivnetChainList()
+	chains := chains.PrivnetChainList()
 	observerParams := make([]*ObserverParams, len(chains))
 	for i, chain := range chains {
 		observerParams[i] = &ObserverParams{

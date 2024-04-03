@@ -8,27 +8,26 @@ import (
 	"math/rand"
 	"time"
 
-	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
-
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
-	"github.com/zeta-chain/zetacore/zetaclient/compliance"
-	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
-	"github.com/zeta-chain/zetacore/zetaclient/metrics"
-	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
-	"github.com/zeta-chain/zetacore/zetaclient/tss"
-
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
+	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
+	"github.com/zeta-chain/zetacore/zetaclient/compliance"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
+	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
+	"github.com/zeta-chain/zetacore/zetaclient/metrics"
+	"github.com/zeta-chain/zetacore/zetaclient/outtxprocessor"
+	"github.com/zeta-chain/zetacore/zetaclient/tss"
 )
 
 const (
@@ -171,11 +170,11 @@ func (signer *BTCSigner) SignWithdrawTx(
 	btcClient *BTCChainClient,
 	height uint64,
 	nonce uint64,
-	chain *common.Chain,
+	chain *chains.Chain,
 	cancelTx bool,
 ) (*wire.MsgTx, error) {
 	estimateFee := float64(gasPrice.Uint64()*outTxBytesMax) / 1e8
-	nonceMark := common.NonceMarkAmount(nonce)
+	nonceMark := chains.NonceMarkAmount(nonce)
 
 	// refresh unspent UTXOs and continue with keysign regardless of error
 	err := btcClient.FetchUTXOS()
@@ -314,7 +313,8 @@ func (signer *BTCSigner) TryProcessOutTx(
 		Logger()
 
 	params := cctx.GetCurrentOutTxParam()
-	if params.CoinType == common.CoinType_Zeta || params.CoinType == common.CoinType_ERC20 {
+	coinType := cctx.InboundTxParams.CoinType
+	if coinType == coin.CoinType_Zeta || coinType == coin.CoinType_ERC20 {
 		logger.Error().Msgf("BTC TryProcessOutTx: can only send BTC to a BTC network")
 		return
 	}
@@ -341,12 +341,12 @@ func (signer *BTCSigner) TryProcessOutTx(
 	}
 
 	// Check receiver P2WPKH address
-	to, err := common.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
+	to, err := chains.DecodeBtcAddress(params.Receiver, params.ReceiverChainId)
 	if err != nil {
 		logger.Error().Err(err).Msgf("cannot decode address %s ", params.Receiver)
 		return
 	}
-	if !common.IsBtcAddressSupported(to) {
+	if !chains.IsBtcAddressSupported(to) {
 		logger.Error().Msgf("unsupported address %s", params.Receiver)
 		return
 	}

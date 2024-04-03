@@ -6,10 +6,11 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import type { ObserverUpdateReason } from "./observer_pb.js";
-import type { HeaderData } from "../common/common_pb.js";
+import type { HeaderData } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams } from "./params_pb.js";
 import type { Blame } from "./blame_pb.js";
 import type { BlockHeaderVerificationFlags, GasPriceIncreaseFlags } from "./crosschain_flags_pb.js";
+import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.observer.MsgUpdateObserver
@@ -94,7 +95,7 @@ export declare class MsgAddBlockHeader extends Message<MsgAddBlockHeader> {
   height: bigint;
 
   /**
-   * @generated from field: common.HeaderData header = 5;
+   * @generated from field: proofs.HeaderData header = 5;
    */
   header?: HeaderData;
 
@@ -506,5 +507,78 @@ export declare class MsgResetChainNoncesResponse extends Message<MsgResetChainNo
   static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgResetChainNoncesResponse;
 
   static equals(a: MsgResetChainNoncesResponse | PlainMessage<MsgResetChainNoncesResponse> | undefined, b: MsgResetChainNoncesResponse | PlainMessage<MsgResetChainNoncesResponse> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgVoteTSS
+ */
+export declare class MsgVoteTSS extends Message<MsgVoteTSS> {
+  /**
+   * @generated from field: string creator = 1;
+   */
+  creator: string;
+
+  /**
+   * @generated from field: string tss_pubkey = 2;
+   */
+  tssPubkey: string;
+
+  /**
+   * @generated from field: int64 keygen_zeta_height = 3;
+   */
+  keygenZetaHeight: bigint;
+
+  /**
+   * @generated from field: chains.ReceiveStatus status = 4;
+   */
+  status: ReceiveStatus;
+
+  constructor(data?: PartialMessage<MsgVoteTSS>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteTSS";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteTSS;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteTSS;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteTSS;
+
+  static equals(a: MsgVoteTSS | PlainMessage<MsgVoteTSS> | undefined, b: MsgVoteTSS | PlainMessage<MsgVoteTSS> | undefined): boolean;
+}
+
+/**
+ * @generated from message zetachain.zetacore.observer.MsgVoteTSSResponse
+ */
+export declare class MsgVoteTSSResponse extends Message<MsgVoteTSSResponse> {
+  /**
+   * @generated from field: bool ballot_created = 1;
+   */
+  ballotCreated: boolean;
+
+  /**
+   * @generated from field: bool vote_finalized = 2;
+   */
+  voteFinalized: boolean;
+
+  /**
+   * @generated from field: bool keygen_success = 3;
+   */
+  keygenSuccess: boolean;
+
+  constructor(data?: PartialMessage<MsgVoteTSSResponse>);
+
+  static readonly runtime: typeof proto3;
+  static readonly typeName = "zetachain.zetacore.observer.MsgVoteTSSResponse";
+  static readonly fields: FieldList;
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgVoteTSSResponse;
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgVoteTSSResponse;
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgVoteTSSResponse;
+
+  static equals(a: MsgVoteTSSResponse | PlainMessage<MsgVoteTSSResponse> | undefined, b: MsgVoteTSSResponse | PlainMessage<MsgVoteTSSResponse> | undefined): boolean;
 }
 

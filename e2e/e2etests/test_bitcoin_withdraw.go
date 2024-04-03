@@ -8,10 +8,9 @@ import (
 	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
 	"github.com/zeta-chain/zetacore/e2e/runner"
 	"github.com/zeta-chain/zetacore/e2e/utils"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils"
 )
@@ -44,7 +43,7 @@ func TestBitcoinWithdrawTaproot(r *runner.E2ERunner, args []string) {
 	// parse arguments and withdraw BTC
 	defaultReceiver := "bcrt1pqqqsyqcyq5rqwzqfpg9scrgwpugpzysnzs23v9ccrydpk8qarc0sj9hjuh"
 	receiver, amount := parseBitcoinWithdrawArgs(args, defaultReceiver)
-	_, ok := receiver.(*bitcoin.AddressTaproot)
+	_, ok := receiver.(*chains.AddressTaproot)
 	if !ok {
 		panic("Invalid receiver address specified for TestBitcoinWithdrawTaproot.")
 	}
@@ -133,12 +132,12 @@ func parseBitcoinWithdrawArgs(args []string, defaultReceiver string) (btcutil.Ad
 	var receiver btcutil.Address
 	if args[0] == "" {
 		// use the default receiver
-		receiver, err = common.DecodeBtcAddress(defaultReceiver, common.BtcRegtestChain().ChainId)
+		receiver, err = chains.DecodeBtcAddress(defaultReceiver, chains.BtcRegtestChain().ChainId)
 		if err != nil {
 			panic("Invalid default receiver address specified for TestBitcoinWithdraw.")
 		}
 	} else {
-		receiver, err = common.DecodeBtcAddress(args[0], common.BtcRegtestChain().ChainId)
+		receiver, err = chains.DecodeBtcAddress(args[0], chains.BtcRegtestChain().ChainId)
 		if err != nil {
 			panic("Invalid receiver address specified for TestBitcoinWithdraw.")
 		}
@@ -225,7 +224,7 @@ func withdrawBTCZRC20(r *runner.E2ERunner, to btcutil.Address, amount *big.Int) 
 
 func withdrawBitcoinRestricted(r *runner.E2ERunner, amount *big.Int) {
 	// use restricted BTC P2WPKH address
-	addressRestricted, err := common.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, common.BtcRegtestChain().ChainId)
+	addressRestricted, err := chains.DecodeBtcAddress(testutils.RestrictedBtcAddressTest, chains.BtcRegtestChain().ChainId)
 	if err != nil {
 		panic(err)
 	}

@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/zeta-chain/zetacore/app"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/crypto"
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -115,11 +115,11 @@ func AddObserverAccountsCmd() *cobra.Command {
 
 				observerSet.ObserverList = append(observerSet.ObserverList, info.ObserverAddress)
 				if info.ZetaClientGranteePubKey != "" {
-					pubkey, err := common.NewPubKey(info.ZetaClientGranteePubKey)
+					pubkey, err := crypto.NewPubKey(info.ZetaClientGranteePubKey)
 					if err != nil {
 						panic(err)
 					}
-					pubkeySet := common.PubKeySet{
+					pubkeySet := crypto.PubKeySet{
 						Secp256k1: pubkey,
 						Ed25519:   "",
 					}

@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType } from "../common/common_pb.js";
+import type { CoinType } from "../pkg/coin/coin_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.fungible.ForeignCoins
@@ -46,7 +46,7 @@ export declare class ForeignCoins extends Message<ForeignCoins> {
   symbol: string;
 
   /**
-   * @generated from field: common.CoinType coin_type = 8;
+   * @generated from field: coin.CoinType coin_type = 8;
    */
   coinType: CoinType;
 

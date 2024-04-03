@@ -3,7 +3,7 @@ package testutils
 import (
 	"fmt"
 
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 )
 
 // FileNameEVMBlock returns unified archive file name for block
@@ -15,7 +15,7 @@ func FileNameEVMBlock(chainID int64, blockNumber uint64, trimmed bool) string {
 }
 
 // FileNameEVMIntx returns unified archive file name for inbound tx
-func FileNameEVMIntx(chainID int64, intxHash string, coinType common.CoinType, donation bool) string {
+func FileNameEVMIntx(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
 	if !donation {
 		return fmt.Sprintf("chain_%d_intx_ethrpc_%s_%s.json", chainID, coinType, intxHash)
 	}
@@ -23,7 +23,7 @@ func FileNameEVMIntx(chainID int64, intxHash string, coinType common.CoinType, d
 }
 
 // FileNameEVMIntxReceipt returns unified archive file name for inbound tx receipt
-func FileNameEVMIntxReceipt(chainID int64, intxHash string, coinType common.CoinType, donation bool) string {
+func FileNameEVMIntxReceipt(chainID int64, intxHash string, coinType coin.CoinType, donation bool) string {
 	if !donation {
 		return fmt.Sprintf("chain_%d_intx_receipt_%s_%s.json", chainID, coinType, intxHash)
 	}
@@ -31,7 +31,7 @@ func FileNameEVMIntxReceipt(chainID int64, intxHash string, coinType common.Coin
 }
 
 // FileNameEVMIntxCctx returns unified archive file name for inbound cctx
-func FileNameEVMIntxCctx(chainID int64, intxHash string, coinType common.CoinType) string {
+func FileNameEVMIntxCctx(chainID int64, intxHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("cctx_intx_%d_%s_%s.json", chainID, coinType, intxHash)
 }
 
@@ -65,11 +65,11 @@ func FileNameCctxByNonce(chainID int64, nonce uint64) string {
 }
 
 // FileNameEVMOuttx returns unified archive file name for outbound tx
-func FileNameEVMOuttx(chainID int64, txHash string, coinType common.CoinType) string {
+func FileNameEVMOuttx(chainID int64, txHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("chain_%d_outtx_%s_%s.json", chainID, coinType, txHash)
 }
 
 // FileNameEVMOuttxReceipt returns unified archive file name for outbound tx receipt
-func FileNameEVMOuttxReceipt(chainID int64, txHash string, coinType common.CoinType) string {
+func FileNameEVMOuttxReceipt(chainID int64, txHash string, coinType coin.CoinType) string {
 	return fmt.Sprintf("chain_%d_outtx_receipt_%s_%s.json", chainID, coinType, txHash)
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -26,7 +25,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		res, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(admin))
 		require.NoError(t, err)
@@ -48,10 +47,10 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		nonadmin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, nonadmin, authoritytypes.PolicyType_groupAdmin, false)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, nonadmin, authoritytypes.PolicyType_groupOperational, false)
 
 		_, err := msgServer.DeploySystemContracts(ctx, types.NewMsgDeploySystemContracts(nonadmin))
-		require.ErrorIs(t, err, sdkerrors.ErrUnauthorized)
+		require.ErrorIs(t, err, authoritytypes.ErrUnauthorized)
 	})
 
 	t.Run("should fail if contract deployment fails", func(t *testing.T) {
@@ -64,7 +63,7 @@ func TestMsgServer_DeploySystemContracts(t *testing.T) {
 		admin := sample.AccAddress()
 
 		authorityMock := keepertest.GetFungibleAuthorityMock(t, k)
-		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupOperational, true)
 
 		mockEVMKeeper := keepertest.GetFungibleEVMMock(t, k)
 		mockEVMKeeper.On(

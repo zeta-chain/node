@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
@@ -16,7 +16,7 @@ import (
 type ZetaCoreContext struct {
 	coreContextLock    *sync.RWMutex
 	keygen             observertypes.Keygen
-	chainsEnabled      []common.Chain
+	chainsEnabled      []chains.Chain
 	evmChainParams     map[int64]*observertypes.ChainParams
 	bitcoinChainParams *observertypes.ChainParams
 	currentTssPubkey   string
@@ -37,7 +37,7 @@ func NewZetaCoreContext(cfg config.Config) *ZetaCoreContext {
 	}
 	return &ZetaCoreContext{
 		coreContextLock:    new(sync.RWMutex),
-		chainsEnabled:      []common.Chain{},
+		chainsEnabled:      []chains.Chain{},
 		evmChainParams:     evmChainParams,
 		bitcoinChainParams: bitcoinChainParams,
 		crossChainFlags:    observertypes.CrosschainFlags{},
@@ -66,10 +66,10 @@ func (c *ZetaCoreContext) GetCurrentTssPubkey() string {
 	return c.currentTssPubkey
 }
 
-func (c *ZetaCoreContext) GetEnabledChains() []common.Chain {
+func (c *ZetaCoreContext) GetEnabledChains() []chains.Chain {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
-	copiedChains := make([]common.Chain, len(c.chainsEnabled))
+	copiedChains := make([]chains.Chain, len(c.chainsEnabled))
 	copy(copiedChains, c.chainsEnabled)
 	return copiedChains
 }
@@ -94,14 +94,14 @@ func (c *ZetaCoreContext) GetAllEVMChainParams() map[int64]*observertypes.ChainP
 	return copied
 }
 
-func (c *ZetaCoreContext) GetBTCChainParams() (common.Chain, *observertypes.ChainParams, bool) {
+func (c *ZetaCoreContext) GetBTCChainParams() (chains.Chain, *observertypes.ChainParams, bool) {
 	c.coreContextLock.RLock()
 	defer c.coreContextLock.RUnlock()
 
 	if c.bitcoinChainParams == nil { // bitcoin is not enabled
-		return common.Chain{}, &observertypes.ChainParams{}, false
+		return chains.Chain{}, &observertypes.ChainParams{}, false
 	}
-	chain := common.GetChainFromChainID(c.bitcoinChainParams.ChainId)
+	chain := chains.GetChainFromChainID(c.bitcoinChainParams.ChainId)
 	if chain == nil {
 		panic(fmt.Sprintf("BTCChain is missing for chainID %d", c.bitcoinChainParams.ChainId))
 	}
@@ -118,7 +118,7 @@ func (c *ZetaCoreContext) GetCrossChainFlags() observertypes.CrosschainFlags {
 // this must be the ONLY function that writes to core context
 func (c *ZetaCoreContext) Update(
 	keygen *observertypes.Keygen,
-	newChains []common.Chain,
+	newChains []chains.Chain,
 	evmChainParams map[int64]*observertypes.ChainParams,
 	btcChainParams *observertypes.ChainParams,
 	tssPubKey string,

@@ -17,7 +17,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/testutil/sample"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
@@ -34,7 +34,7 @@ func MockBTCClientMainnet() *BTCChainClient {
 	coreContext := corecontext.NewZetaCoreContext(cfg)
 
 	return &BTCChainClient{
-		chain:       common.BtcMainnetChain(),
+		chain:       chains.BtcMainnetChain(),
 		zetaClient:  stub.NewMockZetaCoreBridge(),
 		Tss:         stub.NewTSSMainnet(),
 		coreContext: coreContext,
@@ -62,9 +62,9 @@ func TestNewBitcoinClient(t *testing.T) {
 		cfg := config.NewConfig()
 		coreContext := corecontext.NewZetaCoreContext(cfg)
 		appContext := appcontext.NewAppContext(coreContext, cfg)
-		chain := common.BtcMainnetChain()
+		chain := chains.BtcMainnetChain()
 		bridge := stub.NewMockZetaCoreBridge()
-		tss := stub.NewMockTSS(common.BtcTestNetChain(), sample.EthAddress().String(), "")
+		tss := stub.NewMockTSS(chains.BtcTestNetChain(), sample.EthAddress().String(), "")
 		loggers := clientcommon.ClientLogger{}
 		btcCfg := cfg.BitcoinConfig
 		ts := metrics.NewTelemetryServer()
@@ -226,7 +226,7 @@ func TestCalcDepositorFee828440(t *testing.T) {
 func TestCheckTSSVout(t *testing.T) {
 	// the archived outtx raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	chainID := chain.ChainId
 	nonce := uint64(148)
 
@@ -308,7 +308,7 @@ func TestCheckTSSVout(t *testing.T) {
 func TestCheckTSSVoutCancelled(t *testing.T) {
 	// the archived outtx raw result file and cctx file
 	// https://blockstream.info/tx/030cd813443f7b70cc6d8a544d320c6d8465e4528fc0f3410b599dc0b26753a0
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	chainID := chain.ChainId
 	nonce := uint64(148)
 
@@ -375,7 +375,7 @@ func TestCheckTSSVoutCancelled(t *testing.T) {
 }
 
 func TestGetSenderAddressByVin(t *testing.T) {
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	net := &chaincfg.MainNetParams
 
 	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
@@ -465,7 +465,7 @@ func TestGetSenderAddressByVin(t *testing.T) {
 func TestGetSenderAddressByVinErrors(t *testing.T) {
 	// https://mempool.space/tx/3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867
 	txHash := "3618e869f9e87863c0f1cc46dbbaa8b767b4a5d6d60b143c2c50af52b257e867"
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	net := &chaincfg.MainNetParams
 
 	t.Run("should get sender address from P2TR tx", func(t *testing.T) {
@@ -499,7 +499,7 @@ func TestGetBtcEvent(t *testing.T) {
 	// load archived intx P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 
 	// GetBtcEvent arguments
 	tx := testutils.LoadBTCIntxRawResult(t, chain.ChainId, txHash, false)
@@ -673,7 +673,7 @@ func TestGetBtcEventErrors(t *testing.T) {
 	// load archived intx P2WPKH raw result
 	// https://mempool.space/tx/847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa
 	txHash := "847139aa65aa4a5ee896375951cbf7417cfc8a4d6f277ec11f40cd87319f04aa"
-	chain := common.BtcMainnetChain()
+	chain := chains.BtcMainnetChain()
 	net := &chaincfg.MainNetParams
 	tssAddress := testutils.TSSAddressBTCMainnet
 	blockNumber := uint64(835640)

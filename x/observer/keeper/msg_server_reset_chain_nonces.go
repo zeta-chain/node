@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
@@ -13,8 +13,8 @@ import (
 // Authorized: admin policy group 2 (admin update)
 func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetChainNonces) (*types.MsgResetChainNoncesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupAdmin) {
-		return &types.MsgResetChainNoncesResponse{}, types.ErrNotAuthorizedPolicy
+	if !k.GetAuthorityKeeper().IsAuthorized(ctx, msg.Creator, authoritytypes.PolicyType_groupOperational) {
+		return &types.MsgResetChainNoncesResponse{}, authoritytypes.ErrUnauthorized
 	}
 
 	tss, found := k.GetTSS(ctx)
@@ -22,7 +22,7 @@ func (k msgServer) ResetChainNonces(goCtx context.Context, msg *types.MsgResetCh
 		return nil, types.ErrTssNotFound
 	}
 
-	chain := common.GetChainFromChainID(msg.ChainId)
+	chain := chains.GetChainFromChainID(msg.ChainId)
 	if chain == nil {
 		return nil, types.ErrSupportedChains
 	}

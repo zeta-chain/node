@@ -12,8 +12,8 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/cosmos/btcutil/base58"
 	"github.com/pkg/errors"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/constant"
 	"golang.org/x/crypto/ripemd160"
 )
 
@@ -38,8 +38,8 @@ const (
 // specified address.
 func PayToAddrScript(addr btcutil.Address) ([]byte, error) {
 	switch addr := addr.(type) {
-	case *bitcoin.AddressTaproot:
-		return bitcoin.PayToWitnessTaprootScript(addr.ScriptAddress())
+	case *chains.AddressTaproot:
+		return chains.PayToWitnessTaprootScript(addr.ScriptAddress())
 	default:
 		return txscript.PayToAddrScript(addr)
 	}
@@ -88,7 +88,7 @@ func DecodeScriptP2TR(scriptHex string, net *chaincfg.Params) (string, error) {
 		return "", fmt.Errorf("invalid P2TR script: %s", scriptHex)
 	}
 	witnessProg := script[2:]
-	receiverAddress, err := bitcoin.NewAddressTaproot(witnessProg, net)
+	receiverAddress, err := chains.NewAddressTaproot(witnessProg, net)
 	if err != nil { // should never happen
 		return "", errors.Wrapf(err, "error getting address from script %s", scriptHex)
 	}
@@ -170,7 +170,7 @@ func DecodeOpReturnMemo(scriptHex string, txid string) ([]byte, bool, error) {
 		if err != nil {
 			return nil, false, errors.Wrapf(err, "error hex decoding memo: %s", scriptHex)
 		}
-		if bytes.Equal(memoBytes, []byte(common.DonationMessage)) {
+		if bytes.Equal(memoBytes, []byte(constant.DonationMessage)) {
 			return nil, false, fmt.Errorf("donation tx: %s", txid)
 		}
 		return memoBytes, true, nil
@@ -190,26 +190,26 @@ func EncodeAddress(hash160 []byte, netID byte) string {
 }
 
 // DecodeTSSVout decodes receiver and amount from a given TSS vout
-func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain common.Chain) (string, int64, error) {
+func DecodeTSSVout(vout btcjson.Vout, receiverExpected string, chain chains.Chain) (string, int64, error) {
 	// parse amount
 	amount, err := GetSatoshis(vout.Value)
 	if err != nil {
 		return "", 0, errors.Wrap(err, "error getting satoshis")
 	}
 	// get btc chain params
-	chainParams, err := common.GetBTCChainParams(chain.ChainId)
+	chainParams, err := chains.GetBTCChainParams(chain.ChainId)
 	if err != nil {
 		return "", 0, errors.Wrapf(err, "error GetBTCChainParams for chain %d", chain.ChainId)
 	}
 	// decode cctx receiver address
-	addr, err := common.DecodeBtcAddress(receiverExpected, chain.ChainId)
+	addr, err := chains.DecodeBtcAddress(receiverExpected, chain.ChainId)
 	if err != nil {
 		return "", 0, errors.Wrapf(err, "error decoding receiver %s", receiverExpected)
 	}
 	// parse receiver address from vout
 	var receiverVout string
 	switch addr.(type) {
-	case *bitcoin.AddressTaproot:
+	case *chains.AddressTaproot:
 		receiverVout, err = DecodeScriptP2TR(vout.ScriptPubKey.Hex, chainParams)
 	case *btcutil.AddressWitnessScriptHash:
 		receiverVout, err = DecodeScriptP2WSH(vout.ScriptPubKey.Hex, chainParams)

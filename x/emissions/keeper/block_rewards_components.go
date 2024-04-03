@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
-	"github.com/zeta-chain/zetacore/common"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/x/emissions/types"
 )
 
@@ -16,6 +16,7 @@ func (k Keeper) GetBlockRewardComponents(ctx sdk.Context) (sdk.Dec, sdk.Dec, sdk
 	durationFactor := k.GetDurationFactor(ctx)
 	return reservesFactor, bondFactor, durationFactor
 }
+
 func (k Keeper) GetBondFactor(ctx sdk.Context, stakingKeeper types.StakingKeeper) sdk.Dec {
 	targetBondRatio := sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).TargetBondRatio)
 	maxBondFactor := sdk.MustNewDecFromStr(k.GetParamsIfExists(ctx).MaxBondFactor)
@@ -66,7 +67,7 @@ func (k Keeper) GetFixedBlockRewards() (sdk.Dec, error) {
 }
 
 func CalculateFixedValidatorRewards(avgBlockTimeString string) (sdk.Dec, error) {
-	azetaAmountTotalRewards, err := common.GetAzetaDecFromAmountInZeta(types.BlockRewardsInZeta)
+	azetaAmountTotalRewards, err := coin.GetAzetaDecFromAmountInZeta(types.BlockRewardsInZeta)
 	if err != nil {
 		return sdk.ZeroDec(), err
 	}

@@ -13,6 +13,10 @@ func Policies() authoritytypes.Policies {
 				Address:    AccAddress(),
 				PolicyType: authoritytypes.PolicyType_groupAdmin,
 			},
+			{
+				Address:    AccAddress(),
+				PolicyType: authoritytypes.PolicyType_groupOperational,
+			},
 		},
 	}
 }

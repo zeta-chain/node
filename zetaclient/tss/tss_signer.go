@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/cosmos"
 	appcontext "github.com/zeta-chain/zetacore/zetaclient/app_context"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
@@ -29,8 +31,6 @@ import (
 	"github.com/zeta-chain/go-tss/keysign"
 	"github.com/zeta-chain/go-tss/p2p"
 	"github.com/zeta-chain/go-tss/tss"
-	"github.com/zeta-chain/zetacore/common"
-	zcommon "github.com/zeta-chain/zetacore/common/cosmos"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/config"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
@@ -50,7 +50,7 @@ func NewTSSKey(pk string) (*Key, error) {
 	TSSKey := &Key{
 		PubkeyInBech32: pk,
 	}
-	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, pk)
+	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, pk)
 	if err != nil {
 		log.Error().Err(err).Msgf("GetPubKeyFromBech32 from %s", pk)
 		return nil, fmt.Errorf("GetPubKeyFromBech32: %w", err)
@@ -124,6 +124,7 @@ func NewTSS(
 	if err != nil {
 		return nil, err
 	}
+
 	// Initialize metrics
 	for _, key := range keygenRes.GranteePubkeys {
 		metrics.TssNodeBlamePerPubKey.WithLabelValues(key).Inc()
@@ -199,7 +200,7 @@ func (tss *TSS) Pubkey() []byte {
 // Sign signs a digest
 // digest should be Hashes of some data
 // NOTE: Specify optionalPubkey to use a different pubkey than the current pubkey set during keygen
-func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.Chain, optionalPubKey string) ([65]byte, error) {
+func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *chains.Chain, optionalPubKey string) ([65]byte, error) {
 	H := digest
 	log.Debug().Msgf("hash of digest is %s", H)
 
@@ -271,7 +272,7 @@ func (tss *TSS) Sign(digest []byte, height uint64, nonce uint64, chain *common.C
 
 // SignBatch is hash of some data
 // digest should be batch of hashes of some data
-func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *common.Chain) ([][65]byte, error) {
+func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *chains.Chain) ([][65]byte, error) {
 	tssPubkey := tss.CurrentPubkey
 	digestBase64 := make([]string, len(digests))
 	for i, digest := range digests {
@@ -279,6 +280,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	}
 	// #nosec G701 always in range
 	keysignReq := keysign.NewRequest(tssPubkey, digestBase64, int64(height), nil, "0.14.0")
+
 	tss.KeysignsTracker.StartMsgSign()
 	ksRes, err := tss.Server.KeySign(keysignReq)
 	tss.KeysignsTracker.EndMsgSign()
@@ -320,7 +322,7 @@ func (tss *TSS) SignBatch(digests [][]byte, height uint64, nonce uint64, chain *
 	//	log.Error().Err(err).Msgf("signature verification failure")
 	//	return [][65]byte{}, fmt.Errorf("signuature verification fail")
 	//}
-	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Error().Msg("get pubkey from bech32 fail")
 	}
@@ -408,7 +410,7 @@ func (tss *TSS) BTCAddressWitnessPubkeyHash() *btcutil.AddressWitnessPubKeyHash 
 }
 
 func (tss *TSS) PubKeyCompressedBytes() []byte {
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tss.CurrentPubkey)
+	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tss.CurrentPubkey)
 	if err != nil {
 		log.Error().Err(err).Msg("PubKeyCompressedBytes error")
 		return nil
@@ -496,7 +498,7 @@ func GetTssAddrBTC(tssPubkey string, bitcoinChainID int64) (string, error) {
 
 func GetTssAddrEVM(tssPubkey string) (ethcommon.Address, error) {
 	var keyAddr ethcommon.Address
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Fatal().Err(err)
 		return keyAddr, err
@@ -546,7 +548,7 @@ func verifySignature(tssPubkey string, signature []keysign.Signature, H []byte) 
 		log.Warn().Msg("verify_signature: empty signature array")
 		return false
 	}
-	pubkey, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubkey, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		log.Error().Msg("get pubkey from bech32 fail")
 	}
@@ -593,12 +595,12 @@ func wasNodePartOfTss(granteePubKey32 string, granteeList []string) bool {
 }
 
 func getKeyAddrBTCWitnessPubkeyHash(tssPubkey string, chainID int64) (*btcutil.AddressWitnessPubKeyHash, error) {
-	pubk, err := zcommon.GetPubKeyFromBech32(zcommon.Bech32PubKeyTypeAccPub, tssPubkey)
+	pubk, err := cosmos.GetPubKeyFromBech32(cosmos.Bech32PubKeyTypeAccPub, tssPubkey)
 	if err != nil {
 		return nil, err
 	}
 
-	bitcoinNetParams, err := common.BitcoinNetParamsFromChainID(chainID)
+	bitcoinNetParams, err := chains.BitcoinNetParamsFromChainID(chainID)
 	if err != nil {
 		return nil, err
 	}

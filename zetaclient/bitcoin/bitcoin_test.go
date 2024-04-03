@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/zetaclient/interfaces"
 
 	"github.com/btcsuite/btcd/btcec"
@@ -16,7 +17,6 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/stretchr/testify/suite"
-	"github.com/zeta-chain/zetacore/common"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -144,7 +144,7 @@ func getTSSTX(tss *interfaces.TestSigner, tx *wire.MsgTx, sigHashes *txscript.Tx
 		return "", err
 	}
 
-	sig65B, err := tss.Sign(witnessHash, 10, 10, &common.Chain{}, "")
+	sig65B, err := tss.Sign(witnessHash, 10, 10, &chains.Chain{}, "")
 	R := big.NewInt(0).SetBytes(sig65B[:32])
 	S := big.NewInt(0).SetBytes(sig65B[32:64])
 	sig := btcec.Signature{

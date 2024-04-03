@@ -1,7 +1,6 @@
 syntax = "proto3";
 package zetachain.zetacore.observer;
 
-import "common/common.proto";
 import "gogoproto/gogo.proto";
 import "observer/blame.proto";
 import "observer/crosschain_flags.proto";
@@ -9,6 +8,8 @@ import "observer/observer.proto";
 import "observer/params.proto";
 import "observer/pending_nonces.proto";
 import "observer/tss.proto";
+import "pkg/chains/chains.proto";
+import "pkg/proofs/proofs.proto";
 
 option go_package = "github.com/zeta-chain/zetacore/x/observer/types";
 
@@ -23,6 +24,7 @@ service Msg {
   rpc UpdateKeygen(MsgUpdateKeygen) returns (MsgUpdateKeygenResponse);
   rpc AddBlockHeader(MsgAddBlockHeader) returns (MsgAddBlockHeaderResponse);
   rpc ResetChainNonces(MsgResetChainNonces) returns (MsgResetChainNoncesResponse);
+  rpc VoteTSS(MsgVoteTSS) returns (MsgVoteTSSResponse);
 }
 
 message MsgUpdateObserver {
@@ -38,7 +40,7 @@ message MsgAddBlockHeader {
   int64 chain_id = 2;
   bytes block_hash = 3;
   int64 height = 4;
-  common.HeaderData header = 5 [(gogoproto.nullable) = false];
+  proofs.HeaderData header = 5 [(gogoproto.nullable) = false];
 }
 
 message MsgAddBlockHeaderResponse {}
@@ -98,3 +100,16 @@ message MsgResetChainNonces {
 }
 
 message MsgResetChainNoncesResponse {}
+
+message MsgVoteTSS {
+  string creator = 1;
+  string tss_pubkey = 2;
+  int64 keygen_zeta_height = 3;
+  chains.ReceiveStatus status = 4;
+}
+
+message MsgVoteTSSResponse {
+  bool ballot_created = 1;
+  bool vote_finalized = 2;
+  bool keygen_success = 3;
+}

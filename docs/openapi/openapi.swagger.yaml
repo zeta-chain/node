@@ -26711,25 +26711,6 @@ paths:
           type: string
       tags:
         - Query
-  /zeta-chain/crosschain/get_tss_address:
-    get:
-      summary: |-
-        GetTssAddress queries the tss address of the module.
-        Deprecated: Moved to observer
-        TODO: remove after v12 once upgrade testing is no longer needed with v11
-        https://github.com/zeta-chain/node/issues/1547
-      operationId: Query_GetTssAddress
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetacorecrosschainQueryGetTssAddressResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/crosschain/in_tx_hash_to_cctx_data/{inTxHash}:
     get:
       summary: Queries a InTxHashToCctx data by index.
@@ -27840,7 +27821,7 @@ paths:
         "200":
           description: A successful response.
           schema:
-            $ref: '#/definitions/zetacoreobserverQueryGetTssAddressResponse'
+            $ref: '#/definitions/observerQueryGetTssAddressResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -53500,8 +53481,13 @@ definitions:
     type: string
     enum:
       - groupEmergency
+      - groupOperational
       - groupAdmin
     default: groupEmergency
+    description: |-
+      - groupEmergency: Used for emergency situations that require immediate action
+       - groupOperational: Used for operational tasks like changing non-sensitive protocol parameters
+       - groupAdmin: Used for administrative tasks like changing sensitive protocol parameters or moving funds
     title: PolicyType defines the type of policy
   authorityQueryGetPoliciesResponse:
     type: object
@@ -53521,33 +53507,15 @@ definitions:
       index:
         type: integer
         format: int64
-  commonBlockHeader:
-    type: object
-    properties:
-      height:
-        type: string
-        format: int64
-      hash:
-        type: string
-        format: byte
-      parent_hash:
-        type: string
-        format: byte
-      chain_id:
-        type: string
-        format: int64
-      header:
-        $ref: '#/definitions/commonHeaderData'
-        title: chain specific header
-  commonChain:
+  chainsChain:
     type: object
     properties:
       chain_name:
-        $ref: '#/definitions/commonChainName'
+        $ref: '#/definitions/chainsChainName'
       chain_id:
         type: string
         format: int64
-  commonChainName:
+  chainsChainName:
     type: string
     enum:
       - empty
@@ -53573,7 +53541,15 @@ definitions:
        zeta_localnet = 13;
        - btc_regtest: Athens
         zeta_athensnet=15;
-  commonCoinType:
+  chainsReceiveStatus:
+    type: string
+    enum:
+      - Created
+      - Success
+      - Failed
+    default: Created
+    title: '- Created: some observer sees inbound tx'
+  coinCoinType:
     type: string
     enum:
       - Zeta
@@ -53585,40 +53561,6 @@ definitions:
       - Gas: Ether, BNB, Matic, Klay, BTC, etc
        - ERC20: ERC20 token
        - Cmd: not a real coin, rather a command
-  commonHeaderData:
-    type: object
-    properties:
-      ethereum_header:
-        type: string
-        format: byte
-        title: binary encoded headers; RLP for ethereum
-      bitcoin_header:
-        type: string
-        format: byte
-        title: 80-byte little-endian encoded binary data
-  commonProof:
-    type: object
-    properties:
-      ethereum_proof:
-        $ref: '#/definitions/ethereumProof'
-      bitcoin_proof:
-        $ref: '#/definitions/bitcoinProof'
-  commonPubKeySet:
-    type: object
-    properties:
-      secp256k1:
-        type: string
-      ed25519:
-        type: string
-    title: PubKeySet contains two pub keys , secp256k1 and ed25519
-  commonReceiveStatus:
-    type: string
-    enum:
-      - Created
-      - Success
-      - Failed
-    default: Created
-    title: '- Created: some observer sees inbound tx'
   crosschainCctxStatus:
     type: string
     enum:
@@ -53702,7 +53644,7 @@ definitions:
       tx_hash:
         type: string
       coin_type:
-        $ref: '#/definitions/commonCoinType'
+        $ref: '#/definitions/coinCoinType'
   crosschainInboundTxParams:
     type: object
     properties:
@@ -53716,7 +53658,7 @@ definitions:
         type: string
         title: this address is the EOA that signs the inbound tx
       coin_type:
-        $ref: '#/definitions/commonCoinType'
+        $ref: '#/definitions/coinCoinType'
       asset:
         type: string
         title: for ERC20 coin type, the asset is an address of the ERC20 contract
@@ -53759,8 +53701,6 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgCreateTSSVoterResponse:
-    type: object
   crosschainMsgGasPriceVoterResponse:
     type: object
   crosschainMsgMigrateTssFundsResponse:
@@ -53808,7 +53748,7 @@ definitions:
         type: string
         format: int64
       coin_type:
-        $ref: '#/definitions/commonCoinType'
+        $ref: '#/definitions/coinCoinType'
       amount:
         type: string
       outbound_tx_tss_nonce:
@@ -54011,6 +53951,14 @@ definitions:
         type: string
       proved:
         type: boolean
+  cryptoPubKeySet:
+    type: object
+    properties:
+      secp256k1:
+        type: string
+      ed25519:
+        type: string
+    title: PubKeySet contains two pub keys , secp256k1 and ed25519
   emissionsMsgWithdrawEmissionResponse:
     type: object
   emissionsQueryGetEmissionsFactorsResponse:
@@ -54069,7 +54017,7 @@ definitions:
       symbol:
         type: string
       coin_type:
-        $ref: '#/definitions/commonCoinType'
+        $ref: '#/definitions/coinCoinType'
       gas_limit:
         type: string
         format: uint64
@@ -54374,6 +54322,15 @@ definitions:
     type: object
   observerMsgUpdateObserverResponse:
     type: object
+  observerMsgVoteTSSResponse:
+    type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
+      keygen_success:
+        type: boolean
   observerNode:
     type: object
     properties:
@@ -54393,7 +54350,7 @@ definitions:
       granteeAddress:
         type: string
       granteePubkey:
-        $ref: '#/definitions/commonPubKeySet'
+        $ref: '#/definitions/cryptoPubKeySet'
       nodeStatus:
         $ref: '#/definitions/observerNodeStatus'
   observerNodeStatus:
@@ -54419,7 +54376,7 @@ definitions:
     type: object
     properties:
       chain:
-        $ref: '#/definitions/commonChain'
+        $ref: '#/definitions/chainsChain'
       ballot_threshold:
         type: string
       min_observer_delegation:
@@ -54473,7 +54430,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/commonBlockHeader'
+          $ref: '#/definitions/proofsBlockHeader'
       pagination:
         $ref: '#/definitions/v1beta1PageResponse'
   observerQueryAllChainNoncesResponse:
@@ -54537,7 +54494,7 @@ definitions:
     type: object
     properties:
       block_header:
-        $ref: '#/definitions/commonBlockHeader'
+        $ref: '#/definitions/proofsBlockHeader'
   observerQueryGetBlockHeaderStateResponse:
     type: object
     properties:
@@ -54585,6 +54542,13 @@ definitions:
         type: string
       btc:
         type: string
+  observerQueryGetTssAddressResponse:
+    type: object
+    properties:
+      eth:
+        type: string
+      btc:
+        type: string
   observerQueryHasVotedResponse:
     type: object
     properties:
@@ -54619,7 +54583,7 @@ definitions:
         type: array
         items:
           type: object
-          $ref: '#/definitions/commonChain'
+          $ref: '#/definitions/chainsChain'
   observerQueryTssHistoryResponse:
     type: object
     properties:
@@ -54664,6 +54628,42 @@ definitions:
         type: string
       vote_type:
         $ref: '#/definitions/observerVoteType'
+  proofsBlockHeader:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+      hash:
+        type: string
+        format: byte
+      parent_hash:
+        type: string
+        format: byte
+      chain_id:
+        type: string
+        format: int64
+      header:
+        $ref: '#/definitions/proofsHeaderData'
+        title: chain specific header
+  proofsHeaderData:
+    type: object
+    properties:
+      ethereum_header:
+        type: string
+        format: byte
+        title: binary encoded headers; RLP for ethereum
+      bitcoin_header:
+        type: string
+        format: byte
+        title: 80-byte little-endian encoded binary data
+  proofsProof:
+    type: object
+    properties:
+      ethereum_proof:
+        $ref: '#/definitions/ethereumProof'
+      bitcoin_proof:
+        $ref: '#/definitions/bitcoinProof'
   protobufAny:
     type: object
     properties:
@@ -54744,17 +54744,6 @@ definitions:
       enabled:
         type: boolean
     description: Params defines the parameters for the module.
-  zetacorecrosschainQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
-    title: |-
-      Deprecated: Moved to observer
-      TODO: remove after v12 once upgrade testing is no longer needed with v11
-      https://github.com/zeta-chain/node/issues/1547
   zetacorecrosschainQueryParamsResponse:
     type: object
     properties:
@@ -54832,13 +54821,6 @@ definitions:
         type: string
         format: int64
     description: Params defines the parameters for the module.
-  zetacoreobserverQueryGetTssAddressResponse:
-    type: object
-    properties:
-      eth:
-        type: string
-      btc:
-        type: string
   zetacoreobserverQueryParamsResponse:
     type: object
     properties:

@@ -8,24 +8,24 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/btcsuite/btcd/rpcclient"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/onrik/ethrpc"
+	"github.com/rs/zerolog"
+	"github.com/spf13/cobra"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/testutil/sample"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/bitcoin"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
 	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/evm"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/metrics"
 	"github.com/zeta-chain/zetacore/zetaclient/zetabridge"
-
-	"github.com/btcsuite/btcd/rpcclient"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	ethcommon "github.com/ethereum/go-ethereum/common"
-	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/testutil/sample"
-	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
-	"github.com/zeta-chain/zetacore/zetaclient/config"
 )
 
 var debugArgs = debugArguments{}
@@ -90,12 +90,12 @@ func DebugCmd() *cobra.Command {
 				return err
 			}
 
-			chain := common.GetChainFromChainID(chainID)
+			chain := chains.GetChainFromChainID(chainID)
 			if chain == nil {
 				return fmt.Errorf("invalid chain id")
 			}
 
-			if common.IsEVMChain(chain.ChainId) {
+			if chains.IsEVMChain(chain.ChainId) {
 
 				ob := evm.ChainClient{
 					Mu: &sync.Mutex{},
@@ -104,7 +104,7 @@ func DebugCmd() *cobra.Command {
 				ob.WithLogger(chainLogger)
 				var ethRPC *ethrpc.EthRPC
 				var client *ethclient.Client
-				coinType := common.CoinType_Cmd
+				coinType := coin.CoinType_Cmd
 				for chain, evmConfig := range cfg.GetAllEVMConfigs() {
 					if chainID == chain {
 						ethRPC = ethrpc.NewEthRPC(evmConfig.Endpoint)
@@ -114,7 +114,7 @@ func DebugCmd() *cobra.Command {
 						}
 						ob.WithEvmClient(client)
 						ob.WithEvmJSONRPC(ethRPC)
-						ob.WithChain(*common.GetChainFromChainID(chainID))
+						ob.WithChain(*chains.GetChainFromChainID(chainID))
 					}
 				}
 				hash := ethcommon.HexToHash(txHash)
@@ -144,29 +144,29 @@ func DebugCmd() *cobra.Command {
 						}
 						evmChainParams.ZetaTokenContractAddress = chainParams.ZetaTokenContractAddress
 						if strings.EqualFold(tx.To, chainParams.ConnectorContractAddress) {
-							coinType = common.CoinType_Zeta
+							coinType = coin.CoinType_Zeta
 						} else if strings.EqualFold(tx.To, chainParams.Erc20CustodyContractAddress) {
-							coinType = common.CoinType_ERC20
+							coinType = coin.CoinType_ERC20
 						} else if strings.EqualFold(tx.To, tssEthAddress) {
-							coinType = common.CoinType_Gas
+							coinType = coin.CoinType_Gas
 						}
 					}
 				}
 
 				switch coinType {
-				case common.CoinType_Zeta:
+				case coin.CoinType_Zeta:
 					ballotIdentifier, err = ob.CheckAndVoteInboundTokenZeta(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
-				case common.CoinType_ERC20:
+				case coin.CoinType_ERC20:
 					ballotIdentifier, err = ob.CheckAndVoteInboundTokenERC20(tx, receipt, false)
 					if err != nil {
 						return err
 					}
 
-				case common.CoinType_Gas:
+				case coin.CoinType_Gas:
 					ballotIdentifier, err = ob.CheckAndVoteInboundTokenGas(tx, receipt, false)
 					if err != nil {
 						return err
@@ -175,13 +175,13 @@ func DebugCmd() *cobra.Command {
 					fmt.Println("CoinType not detected")
 				}
 				fmt.Println("CoinType : ", coinType)
-			} else if common.IsBitcoinChain(chain.ChainId) {
+			} else if chains.IsBitcoinChain(chain.ChainId) {
 				obBtc := bitcoin.BTCChainClient{
 					Mu: &sync.Mutex{},
 				}
 				obBtc.WithZetaClient(bridge)
 				obBtc.WithLogger(chainLogger)
-				obBtc.WithChain(*common.GetChainFromChainID(chainID))
+				obBtc.WithChain(*chains.GetChainFromChainID(chainID))
 				connCfg := &rpcclient.ConnConfig{
 					Host:         cfg.BitcoinConfig.RPCHost,
 					User:         cfg.BitcoinConfig.RPCUsername,

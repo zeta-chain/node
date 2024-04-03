@@ -13,8 +13,7 @@ import (
 	"github.com/btcsuite/btcutil"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/zeta-chain/zetacore/common"
-	"github.com/zeta-chain/zetacore/common/bitcoin"
+	"github.com/zeta-chain/zetacore/pkg/chains"
 	clientcommon "github.com/zeta-chain/zetacore/zetaclient/common"
 )
 
@@ -93,7 +92,7 @@ func EstimateOuttxSize(numInputs uint64, payees []btcutil.Address) (uint64, erro
 // GetOutputSizeByAddress returns the size of a tx output in bytes by the given address
 func GetOutputSizeByAddress(to btcutil.Address) (uint64, error) {
 	switch addr := to.(type) {
-	case *bitcoin.AddressTaproot:
+	case *chains.AddressTaproot:
 		if addr == nil {
 			return 0, nil
 		}
@@ -207,11 +206,11 @@ func CalcBlockAvgFeeRate(blockVb *btcjson.GetBlockVerboseTxResult, netParams *ch
 // CalcDepositorFee calculates the depositor fee for a given block
 func CalcDepositorFee(blockVb *btcjson.GetBlockVerboseTxResult, chainID int64, netParams *chaincfg.Params, logger zerolog.Logger) float64 {
 	// use default fee for regnet
-	if common.IsBitcoinRegnet(chainID) {
+	if chains.IsBitcoinRegnet(chainID) {
 		return DefaultDepositorFee
 	}
 	// mainnet dynamic fee takes effect only after a planned upgrade height
-	if common.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
+	if chains.IsBitcoinMainnet(chainID) && blockVb.Height < DynamicDepositorFeeHeight {
 		return DefaultDepositorFee
 	}
 

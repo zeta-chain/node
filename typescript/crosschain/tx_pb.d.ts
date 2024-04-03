@@ -5,65 +5,9 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
-import type { CoinType, Proof, ReceiveStatus } from "../common/common_pb.js";
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoter
- */
-export declare class MsgCreateTSSVoter extends Message<MsgCreateTSSVoter> {
-  /**
-   * @generated from field: string creator = 1;
-   */
-  creator: string;
-
-  /**
-   * @generated from field: string tss_pubkey = 2;
-   */
-  tssPubkey: string;
-
-  /**
-   * @generated from field: int64 keyGenZetaHeight = 3;
-   */
-  keyGenZetaHeight: bigint;
-
-  /**
-   * @generated from field: common.ReceiveStatus status = 4;
-   */
-  status: ReceiveStatus;
-
-  constructor(data?: PartialMessage<MsgCreateTSSVoter>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoter";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoter;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoter;
-
-  static equals(a: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined, b: MsgCreateTSSVoter | PlainMessage<MsgCreateTSSVoter> | undefined): boolean;
-}
-
-/**
- * @generated from message zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse
- */
-export declare class MsgCreateTSSVoterResponse extends Message<MsgCreateTSSVoterResponse> {
-  constructor(data?: PartialMessage<MsgCreateTSSVoterResponse>);
-
-  static readonly runtime: typeof proto3;
-  static readonly typeName = "zetachain.zetacore.crosschain.MsgCreateTSSVoterResponse";
-  static readonly fields: FieldList;
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): MsgCreateTSSVoterResponse;
-
-  static equals(a: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined, b: MsgCreateTSSVoterResponse | PlainMessage<MsgCreateTSSVoterResponse> | undefined): boolean;
-}
+import type { CoinType } from "../pkg/coin/coin_pb.js";
+import type { Proof } from "../pkg/proofs/proofs_pb.js";
+import type { ReceiveStatus } from "../pkg/chains/chains_pb.js";
 
 /**
  * @generated from message zetachain.zetacore.crosschain.MsgMigrateTssFunds
@@ -186,12 +130,12 @@ export declare class MsgAddToInTxTracker extends Message<MsgAddToInTxTracker> {
   txHash: string;
 
   /**
-   * @generated from field: common.CoinType coin_type = 4;
+   * @generated from field: coin.CoinType coin_type = 4;
    */
   coinType: CoinType;
 
   /**
-   * @generated from field: common.Proof proof = 5;
+   * @generated from field: proofs.Proof proof = 5;
    */
   proof?: Proof;
 
@@ -347,7 +291,7 @@ export declare class MsgAddToOutTxTracker extends Message<MsgAddToOutTxTracker> 
   txHash: string;
 
   /**
-   * @generated from field: common.Proof proof = 5;
+   * @generated from field: proofs.Proof proof = 5;
    */
   proof?: Proof;
 
@@ -563,7 +507,7 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   valueReceived: string;
 
   /**
-   * @generated from field: common.ReceiveStatus status = 6;
+   * @generated from field: chains.ReceiveStatus status = 6;
    */
   status: ReceiveStatus;
 
@@ -578,7 +522,7 @@ export declare class MsgVoteOnObservedOutboundTx extends Message<MsgVoteOnObserv
   outTxTssNonce: bigint;
 
   /**
-   * @generated from field: common.CoinType coin_type = 9;
+   * @generated from field: coin.CoinType coin_type = 9;
    */
   coinType: CoinType;
 
@@ -675,7 +619,7 @@ export declare class MsgVoteOnObservedInboundTx extends Message<MsgVoteOnObserve
   gasLimit: bigint;
 
   /**
-   * @generated from field: common.CoinType coin_type = 12;
+   * @generated from field: coin.CoinType coin_type = 12;
    */
   coinType: CoinType;
 

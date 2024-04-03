@@ -9,10 +9,11 @@ import type { ChainNonces } from "./chain_nonces_pb.js";
 import type { PageRequest, PageResponse } from "../cosmos/base/query/v1beta1/pagination_pb.js";
 import type { PendingNonces } from "./pending_nonces_pb.js";
 import type { TSS } from "./tss_pb.js";
-import type { BlockHeader, Chain, Proof } from "../common/common_pb.js";
+import type { BlockHeader, Proof } from "../pkg/proofs/proofs_pb.js";
 import type { ChainParams, ChainParamsList, Params } from "./params_pb.js";
 import type { BallotStatus, VoteType } from "./ballot_pb.js";
 import type { LastObserverCount, ObservationType } from "./observer_pb.js";
+import type { Chain } from "../pkg/chains/chains_pb.js";
 import type { NodeAccount } from "./node_account_pb.js";
 import type { CrosschainFlags } from "./crosschain_flags_pb.js";
 import type { Keygen } from "./keygen_pb.js";
@@ -443,7 +444,7 @@ export declare class QueryProveRequest extends Message<QueryProveRequest> {
   txHash: string;
 
   /**
-   * @generated from field: common.Proof proof = 3;
+   * @generated from field: proofs.Proof proof = 3;
    */
   proof?: Proof;
 
@@ -755,7 +756,7 @@ export declare class QuerySupportedChains extends Message<QuerySupportedChains> 
  */
 export declare class QuerySupportedChainsResponse extends Message<QuerySupportedChainsResponse> {
   /**
-   * @generated from field: repeated common.Chain chains = 1;
+   * @generated from field: repeated chains.Chain chains = 1;
    */
   chains: Chain[];
 
@@ -1278,7 +1279,7 @@ export declare class QueryAllBlockHeaderRequest extends Message<QueryAllBlockHea
  */
 export declare class QueryAllBlockHeaderResponse extends Message<QueryAllBlockHeaderResponse> {
   /**
-   * @generated from field: repeated common.BlockHeader block_headers = 1;
+   * @generated from field: repeated proofs.BlockHeader block_headers = 1;
    */
   blockHeaders: BlockHeader[];
 
@@ -1331,7 +1332,7 @@ export declare class QueryGetBlockHeaderByHashRequest extends Message<QueryGetBl
  */
 export declare class QueryGetBlockHeaderByHashResponse extends Message<QueryGetBlockHeaderByHashResponse> {
   /**
-   * @generated from field: common.BlockHeader block_header = 1;
+   * @generated from field: proofs.BlockHeader block_header = 1;
    */
   blockHeader?: BlockHeader;
 
