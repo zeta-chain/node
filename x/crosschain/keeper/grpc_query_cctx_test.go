@@ -64,7 +64,6 @@ func createCctxWithNonceRange(
 }
 
 func TestKeeper_CctxListPending(t *testing.T) {
-
 	t.Run("should fail for empty req", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
 		_, err := k.CctxListPending(ctx, nil)
@@ -154,5 +153,134 @@ func TestKeeper_CctxListPending(t *testing.T) {
 
 		// pending nonce + 2
 		require.EqualValues(t, uint64(1002), res.TotalPending)
+	})
+
+	t.Run("error if some before low nonce are missing", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID(t)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		cctxs := createCctxWithNonceRange(t, ctx, *k, 1000, 2000, chainID, tss, zk)
+
+		// set some cctxs as pending below nonce
+		cctx1, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("1337-940"))
+		require.True(t, found)
+		cctx1.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, cctx1)
+
+		cctx2, found := k.GetCrossChainTx(ctx, sample.GetCctxIndexFromString("1337-955"))
+		require.True(t, found)
+		cctx2.CctxStatus.Status = types.CctxStatus_PendingOutbound
+		k.SetCrossChainTx(ctx, cctx2)
+
+		res, err := k.CctxListPending(ctx, &types.QueryListCctxPendingRequest{ChainId: chainID, Limit: 100})
+		require.NoError(t, err)
+		require.Equal(t, 100, len(res.CrossChainTx))
+
+		expectedCctxs := append([]*types.CrossChainTx{&cctx1, &cctx2}, cctxs[0:98]...)
+		require.EqualValues(t, expectedCctxs, res.CrossChainTx)
+
+		// pending nonce + 2
+		require.EqualValues(t, uint64(1002), res.TotalPending)
+	})
+}
+
+func TestKeeper_ZetaAccounting(t *testing.T) {
+	t.Run("should error if zeta accounting not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		res, err := k.ZetaAccounting(ctx, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return zeta accounting if found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		k.SetZetaAccounting(ctx, types.ZetaAccounting{
+			AbortedZetaAmount: sdk.NewUint(100),
+		})
+
+		res, err := k.ZetaAccounting(ctx, nil)
+		require.NoError(t, err)
+		require.Equal(t, &types.QueryZetaAccountingResponse{
+			AbortedZetaAmount: sdk.NewUint(100).String(),
+		}, res)
+	})
+}
+
+func TestKeeper_CctxByNonce(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		res, err := k.CctxByNonce(ctx, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeper(t)
+		res, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+			ChainID: 1,
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if nonce to cctx not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID(t)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+
+		res, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+			ChainID: chainID,
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if crosschain tx not found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID(t)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		nonce := 1000
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
+
+		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
+			ChainId:   chainID,
+			Nonce:     int64(nonce),
+			CctxIndex: cctx.Index,
+			Tss:       tss.TssPubkey,
+		})
+
+		res, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+			ChainID: chainID,
+			Nonce:   uint64(nonce),
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return if crosschain tx found", func(t *testing.T) {
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
+		chainID := getValidEthChainID(t)
+		tss := sample.Tss()
+		zk.ObserverKeeper.SetTSS(ctx, tss)
+		nonce := 1000
+		cctx := sample.CrossChainTx(t, fmt.Sprintf("%d-%d", chainID, nonce))
+
+		zk.ObserverKeeper.SetNonceToCctx(ctx, observertypes.NonceToCctx{
+			ChainId:   chainID,
+			Nonce:     int64(nonce),
+			CctxIndex: cctx.Index,
+			Tss:       tss.TssPubkey,
+		})
+		k.SetCrossChainTx(ctx, *cctx)
+
+		res, err := k.CctxByNonce(ctx, &types.QueryGetCctxByNonceRequest{
+			ChainID: chainID,
+			Nonce:   uint64(nonce),
+		})
+		require.NoError(t, err)
+		require.Equal(t, cctx, res.CrossChainTx)
 	})
 }

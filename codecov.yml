@@ -49,6 +49,8 @@ ignore:
   - "x/**/types/types.go"
   - "x/**/types/expected_keepers.go"
   - "x/**/module.go"
+  - "x/**/events.go"
+  - "x/**/migrator.go"
   - "x/**/module_simulation.go"
   - "x/**/simulation/**/*"
   - "**/*.proto"

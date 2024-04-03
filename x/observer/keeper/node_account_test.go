@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"fmt"
@@ -6,12 +6,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Keeper Tests
 
-func createNNodeAccount(keeper *Keeper, ctx sdk.Context, n int) []types.NodeAccount {
+func createNNodeAccount(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.NodeAccount {
 	items := make([]types.NodeAccount, n)
 	for i := range items {
 		items[i].Operator = fmt.Sprintf("%d", i)
@@ -21,26 +23,28 @@ func createNNodeAccount(keeper *Keeper, ctx sdk.Context, n int) []types.NodeAcco
 }
 
 func TestNodeAccountGet(t *testing.T) {
-	keeper, ctx := SetupKeeper(t)
-	items := createNNodeAccount(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+	items := createNNodeAccount(k, ctx, 10)
 	for _, item := range items {
-		rst, found := keeper.GetNodeAccount(ctx, item.Operator)
+		rst, found := k.GetNodeAccount(ctx, item.Operator)
 		require.True(t, found)
 		require.Equal(t, item, rst)
 	}
 }
 func TestNodeAccountRemove(t *testing.T) {
-	keeper, ctx := SetupKeeper(t)
-	items := createNNodeAccount(keeper, ctx, 10)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+
+	items := createNNodeAccount(k, ctx, 10)
 	for _, item := range items {
-		keeper.RemoveNodeAccount(ctx, item.Operator)
-		_, found := keeper.GetNodeAccount(ctx, item.Operator)
+		k.RemoveNodeAccount(ctx, item.Operator)
+		_, found := k.GetNodeAccount(ctx, item.Operator)
 		require.False(t, found)
 	}
 }
 
 func TestNodeAccountGetAll(t *testing.T) {
-	keeper, ctx := SetupKeeper(t)
-	items := createNNodeAccount(keeper, ctx, 10)
-	require.Equal(t, items, keeper.GetAllNodeAccount(ctx))
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	items := createNNodeAccount(k, ctx, 10)
+	require.Equal(t, items, k.GetAllNodeAccount(ctx))
 }

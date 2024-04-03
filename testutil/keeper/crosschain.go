@@ -198,13 +198,13 @@ func MockGetSupportedChainFromChainID(m *crosschainmocks.CrosschainObserverKeepe
 		Return(senderChain).Once()
 
 }
-func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain chains.Chain) {
+func MockGetRevertGasLimitForERC20(m *crosschainmocks.CrosschainFungibleKeeper, asset string, senderChain chains.Chain, returnVal int64) {
 	m.On("GetForeignCoinFromAsset", mock.Anything, asset, senderChain.ChainId).
 		Return(fungibletypes.ForeignCoins{
 			Zrc20ContractAddress: sample.EthAddress().String(),
 		}, true).Once()
 	m.On("QueryGasLimit", mock.Anything, mock.Anything).
-		Return(big.NewInt(100), nil).Once()
+		Return(big.NewInt(returnVal), nil).Once()
 
 }
 func MockPayGasAndUpdateCCTX(m *crosschainmocks.CrosschainFungibleKeeper, m2 *crosschainmocks.CrosschainObserverKeeper, ctx sdk.Context, k keeper.Keeper, senderChain chains.Chain, asset string) {

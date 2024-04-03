@@ -13,6 +13,42 @@ import (
 )
 
 func TestMsgServer_UpdateTssAddress(t *testing.T) {
+	t.Run("should fail if not authorized", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, false)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+			Creator:   admin,
+			TssPubkey: "",
+		})
+		require.Error(t, err)
+	})
+
+	t.Run("should fail if tss not found", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
+			UseAuthorityMock: true,
+		})
+
+		admin := sample.AccAddress()
+		authorityMock := keepertest.GetCrosschainAuthorityMock(t, k)
+		keepertest.MockIsAuthorized(&authorityMock.Mock, admin, authoritytypes.PolicyType_groupAdmin, true)
+
+		msgServer := keeper.NewMsgServerImpl(*k)
+
+		_, err := msgServer.UpdateTssAddress(ctx, &crosschaintypes.MsgUpdateTssAddress{
+			Creator:   admin,
+			TssPubkey: "",
+		})
+		require.Error(t, err)
+	})
+
 	t.Run("successfully update tss address", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
 			UseAuthorityMock: true,

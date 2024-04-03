@@ -20,6 +20,14 @@ func TestKeeper_GetNonceToCctx(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, n, rst)
 		}
+
+		for _, n := range nonceToCctxList {
+			k.RemoveNonceToCctx(ctx, n)
+		}
+		for _, n := range nonceToCctxList {
+			_, found := k.GetNonceToCctx(ctx, n.Tss, n.ChainId, n.Nonce)
+			require.False(t, found)
+		}
 	})
 	t.Run("Get nonce to cctx not found", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.ObserverKeeper(t)

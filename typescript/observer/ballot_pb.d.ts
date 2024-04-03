@@ -50,6 +50,8 @@ export declare enum BallotStatus {
 }
 
 /**
+ * https://github.com/zeta-chain/node/issues/939
+ *
  * @generated from message zetachain.zetacore.observer.Ballot
  */
 export declare class Ballot extends Message<Ballot> {
