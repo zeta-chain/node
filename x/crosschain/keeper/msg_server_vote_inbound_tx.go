@@ -6,7 +6,6 @@ import (
 
 	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -85,127 +84,44 @@ func (k msgServer) VoteOnObservedInboundTx(goCtx context.Context, msg *types.Msg
 		}
 	}
 	commit()
-
 	// If the ballot is not finalized return nil here to add vote to commit state
 	if !finalized {
 		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
 	}
-
-	// get the latest TSS to set the TSS public key in the CCTX
-	tssPub := ""
 	tss, tssFound := k.zetaObserverKeeper.GetTSS(ctx)
-	if tssFound {
-		tssPub = tss.TssPubkey
+	if !tssFound {
+		return nil, types.ErrCannotFindTSSKeys
 	}
-
-	// create the CCTX
-	cctx := k.CreateNewCCTX(
-		ctx,
-		msg,
-		index,
-		tssPub,
-		types.CctxStatus_PendingInbound,
-		msg.SenderChainId,
-		msg.ReceiverChain,
-	)
-
-	defer func() {
-		EmitEventInboundFinalized(ctx, &cctx)
-		k.AddFinalizedInbound(ctx, msg.InTxHash, msg.SenderChainId, msg.EventIndex)
-		// #nosec G701 always positive
-		cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
-		cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
-		k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
-		k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
-	}()
-
-	// FinalizeInbound updates CCTX Prices and Nonce
-	// Aborts is any of the updates fail
-	if chains.IsZetaChain(msg.ReceiverChain) {
-		tmpCtx, commit := ctx.CacheContext()
-		isContractReverted, err := k.HandleEVMDeposit(tmpCtx, &cctx, *msg, msg.SenderChainId)
-
-		if err != nil && !isContractReverted { // exceptional case; internal error; should abort CCTX
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-		} else if err != nil && isContractReverted { // contract call reverted; should refund
-			revertMessage := err.Error()
-			chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, cctx.InboundTxParams.SenderChainId)
-			if chain == nil {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "invalid sender chain")
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-			}
-
-			gasLimit, err := k.GetRevertGasLimit(ctx, cctx)
-			if err != nil {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, "can't get revert tx gas limit"+err.Error())
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-			}
-			if gasLimit == 0 {
-				// use same gas limit of outbound as a fallback -- should not happen
-				gasLimit = msg.GasLimit
-			}
-
-			// create new OutboundTxParams for the revert
-			revertTxParams := &types.OutboundTxParams{
-				Receiver:           cctx.InboundTxParams.Sender,
-				ReceiverChainId:    cctx.InboundTxParams.SenderChainId,
-				Amount:             cctx.InboundTxParams.Amount,
-				CoinType:           cctx.InboundTxParams.CoinType,
-				OutboundTxGasLimit: gasLimit,
-			}
-			cctx.OutboundTxParams = append(cctx.OutboundTxParams, revertTxParams)
-
-			// we create a new cached context, and we don't commit the previous one with EVM deposit
-			tmpCtx, commit := ctx.CacheContext()
-			err = func() error {
-				err := k.PayGasAndUpdateCctx(
-					tmpCtx,
-					chain.ChainId,
-					&cctx,
-					cctx.InboundTxParams.Amount,
-					false,
-				)
-				if err != nil {
-					return err
-				}
-				return k.UpdateNonce(tmpCtx, chain.ChainId, &cctx)
-			}()
-			if err != nil {
-				cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error()+" deposit revert message: "+revertMessage)
-				return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-			}
-			commit()
-			cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingRevert, revertMessage)
-			return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-		}
-		// successful HandleEVMDeposit;
-		commit()
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_OutboundMined, "Remote omnichain contract call completed")
-		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
-	}
-
-	// Receiver is not ZetaChain: Cross Chain SWAP
-	tmpCtx, commit = ctx.CacheContext()
-	err = func() error {
-		err := k.PayGasAndUpdateCctx(
-			tmpCtx,
-			msg.ReceiverChain,
-			&cctx,
-			cctx.InboundTxParams.Amount,
-			false,
-		)
-		if err != nil {
-			return err
-		}
-		return k.UpdateNonce(tmpCtx, msg.ReceiverChain, &cctx)
-	}()
+	// create a new CCTX from the inbound message.The status of the new CCTX is set to PendingInbound.
+	cctx, err := types.NewCCTX(ctx, *msg, tss.TssPubkey)
 	if err != nil {
-		// do not commit anything here as the CCTX should be aborted
-		cctx.CctxStatus.ChangeStatus(types.CctxStatus_Aborted, err.Error())
-		return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+		return nil, err
 	}
-	commit()
-	cctx.CctxStatus.ChangeStatus(types.CctxStatus_PendingOutbound, "")
+	// Process the inbound CCTX, the process function manages the state commit and cctx status change.
+	//	If the process fails, the changes to the evm state are rolled back.
+	k.ProcessInbound(ctx, &cctx)
+	// Save the inbound CCTX to the store. This is called irrespective of the status of the CCTX or the outcome of the process function.
+	k.SaveInbound(ctx, &cctx, msg.EventIndex)
 	return &types.MsgVoteOnObservedInboundTxResponse{}, nil
+}
+
+/* SaveInbound saves the inbound CCTX to the store.It does the following:
+    - Emits an event for the finalized inbound CCTX.
+	- Adds the inbound CCTX to the finalized inbound CCTX store.This is done to prevent double spending, using the same inbound tx hash and event index.
+	- Updates the CCTX with the finalized height and finalization status.
+	- Removes the inbound CCTX from the inbound transaction tracker store.This is only for inbounds created via InTx tracker suggestions
+	- Sets the CCTX and nonce to the CCTX and inbound transaction hash to CCTX store.
+*/
+
+func (k Keeper) SaveInbound(ctx sdk.Context, cctx *types.CrossChainTx, eventIndex uint64) {
+	EmitEventInboundFinalized(ctx, cctx)
+	k.AddFinalizedInbound(ctx,
+		cctx.GetInboundTxParams().InboundTxObservedHash,
+		cctx.GetInboundTxParams().SenderChainId,
+		eventIndex)
+	// #nosec G701 always positive
+	cctx.InboundTxParams.InboundTxFinalizedZetaHeight = uint64(ctx.BlockHeight())
+	cctx.InboundTxParams.TxFinalizationStatus = types.TxFinalizationStatus_Executed
+	k.RemoveInTxTrackerIfExists(ctx, cctx.InboundTxParams.SenderChainId, cctx.InboundTxParams.InboundTxObservedHash)
+	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, *cctx)
 }
