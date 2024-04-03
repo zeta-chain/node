@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -13,9 +14,14 @@ import (
 	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
+	"github.com/zeta-chain/zetacore/zetaclient/config"
+	corecontext "github.com/zeta-chain/zetacore/zetaclient/core_context"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
 	"math/big"
+	"net"
 	"os"
 	"testing"
 
@@ -188,18 +194,116 @@ func TestZetaCoreBridge_SetTSS(t *testing.T) {
 	})
 }
 
-func TestZetaCoreBridge_CoreContextUpdater(t *testing.T) {
+func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
+	//Setup server for multiple grpc calls
+	l, err := net.Listen("tcp", "127.0.0.1:9090")
+	require.NoError(t, err)
+
+	server := grpcmock.MockUnstartedServer(
+		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
+		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
+		grpcmock.RegisterService(observertypes.RegisterQueryServer),
+		grpcmock.WithPlanner(planner.FirstMatch()),
+		grpcmock.WithListener(l),
+		func(s *grpcmock.Server) {
+			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
+				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 12345})
+
+			method = "/cosmos.upgrade.v1beta1.Query/CurrentPlan"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(upgradetypes.QueryCurrentPlanRequest{}).
+				Return(upgradetypes.QueryCurrentPlanResponse{
+					Plan: &upgradetypes.Plan{
+						Name:   "big upgrade",
+						Height: 100,
+					},
+				})
+
+			method = "/zetachain.zetacore.observer.Query/GetChainParams"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QueryGetChainParamsRequest{}).
+				Return(observertypes.QueryGetChainParamsResponse{ChainParams: &observertypes.ChainParamsList{
+					ChainParams: []*observertypes.ChainParams{
+						{
+							ChainId: 7000,
+						},
+					},
+				}})
+
+			method = "/zetachain.zetacore.observer.Query/SupportedChains"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QuerySupportedChains{}).
+				Return(observertypes.QuerySupportedChainsResponse{
+					Chains: []*chains.Chain{
+						{chains.BscMainnetChain().ChainName,
+							chains.BscMainnetChain().ChainId,
+						},
+						{chains.EthChain().ChainName,
+							chains.EthChain().ChainId,
+						},
+					},
+				})
+
+			method = "/zetachain.zetacore.observer.Query/Keygen"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QueryGetKeygenRequest{}).
+				Return(observertypes.QueryGetKeygenResponse{
+					Keygen: &observertypes.Keygen{
+						Status:         observertypes.KeygenStatus_KeyGenSuccess,
+						GranteePubkeys: nil,
+						BlockNumber:    5646,
+					}})
+
+			method = "/zetachain.zetacore.observer.Query/TSS"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QueryGetTSSRequest{}).
+				Return(observertypes.QueryGetTSSResponse{
+					TSS: observertypes.TSS{
+						TssPubkey:           "zetapub1addwnpepqtadxdyt037h86z60nl98t6zk56mw5zpnm79tsmvspln3hgt5phdc79kvfc",
+						TssParticipantList:  nil,
+						OperatorAddressList: nil,
+						FinalizedZetaHeight: 1000,
+						KeyGenZetaHeight:    900,
+					},
+				})
+
+			method = "/zetachain.zetacore.observer.Query/CrosschainFlags"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(observertypes.QueryGetCrosschainFlagsRequest{}).
+				Return(observertypes.QueryGetCrosschainFlagsResponse{CrosschainFlags: observertypes.CrosschainFlags{
+					IsInboundEnabled:             true,
+					IsOutboundEnabled:            false,
+					GasPriceIncreaseFlags:        nil,
+					BlockHeaderVerificationFlags: nil,
+				}})
+		},
+	)(t)
+
+	server.Serve()
+	defer closeMockServer(t, server)
+
 	zetabridge, err := setupCorBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
 
-	//t.Run("core context update success", func(t *testing.T) {
-	//	zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-	//	hash, err := zetabridge.CoreContextUpdater()
-	//	require.NoError(t, err)
-	//	require.Equal(t, sampleHash, hash)
-	//})
+	t.Run("core context update success", func(t *testing.T) {
+		cfg := config.NewConfig()
+		coreCtx := corecontext.NewZetaCoreContext(cfg)
+		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+		err := zetabridge.UpdateZetaCoreContext(coreCtx, false)
+		require.NoError(t, err)
+	})
 }
 
 func TestZetaCoreBridge_PostBlameData(t *testing.T) {
