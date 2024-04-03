@@ -27,7 +27,6 @@ zetacored tx observer [flags]
 * [zetacored tx](zetacored_tx.md)	 - Transactions subcommands
 * [zetacored tx observer add-blame-vote](zetacored_tx_observer_add-blame-vote.md)	 - Broadcast message add-blame-vote
 * [zetacored tx observer add-observer](zetacored_tx_observer_add-observer.md)	 - Broadcast message add-observer
-* [zetacored tx observer create-tss-voter](zetacored_tx_observer_create-tss-voter.md)	 - Create a new TSSVoter
 * [zetacored tx observer encode](zetacored_tx_observer_encode.md)	 - Encode a json string into hex
 * [zetacored tx observer remove-chain-params](zetacored_tx_observer_remove-chain-params.md)	 - Broadcast message to remove chain params
 * [zetacored tx observer reset-chain-nonces](zetacored_tx_observer_reset-chain-nonces.md)	 - Broadcast message to reset chain nonces
@@ -35,4 +34,5 @@ zetacored tx observer [flags]
 * [zetacored tx observer update-crosschain-flags](zetacored_tx_observer_update-crosschain-flags.md)	 - Update crosschain flags
 * [zetacored tx observer update-keygen](zetacored_tx_observer_update-keygen.md)	 - command to update the keygen block via a group proposal
 * [zetacored tx observer update-observer](zetacored_tx_observer_update-observer.md)	 - Broadcast message add-observer
+* [zetacored tx observer vote-tss](zetacored_tx_observer_vote-tss.md)	 - Vote for a new TSS creation
 
