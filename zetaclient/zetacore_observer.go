@@ -154,6 +154,10 @@ func (co *CoreObserver) startCctxScheduler(appContext *appcontext.AppContext) {
 							co.logger.ZetaChainWatcher.Error().Err(err).Msgf("startCctxScheduler: getTargetChainOb failed for chain %d", c.ChainId)
 							continue
 						}
+						if !ob.GetChainParams().IsSupported {
+							co.logger.ZetaChainWatcher.Info().Msgf("startCctxScheduler: chain %d is not supported", c.ChainId)
+							continue
+						}
 
 						cctxList, totalPending, err := co.bridge.ListPendingCctx(c.ChainId)
 						if err != nil {
