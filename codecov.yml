@@ -38,7 +38,7 @@ flags:
       - "common/"
 
 ignore:
-  - "x/**/client/"
+  - "x/**/client/**/*"
   - "x/**/keeper/keeper.go"
   - "x/**/keeper/msg_server.go"
   - "x/**/keeper/grpc_query_params.go"
