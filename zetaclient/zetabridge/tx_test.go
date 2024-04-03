@@ -4,9 +4,15 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
+	"math/big"
+	"net"
+	"os"
+	"testing"
+
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -20,12 +26,6 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
-	"math/big"
-	"net"
-	"os"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 const (

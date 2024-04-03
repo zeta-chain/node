@@ -2,6 +2,7 @@ package stub
 
 import (
 	"context"
+
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/rpc/client/mock"
