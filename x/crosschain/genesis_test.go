@@ -13,7 +13,6 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.GenesisState{
-		Params:         types.DefaultParams(),
 		ZetaAccounting: sample.ZetaAccounting(t, "sample"),
 		OutTxTrackerList: []types.OutTxTracker{
 			sample.OutTxTracker(t, "0"),
