@@ -23,13 +23,18 @@ import (
 	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func setCosmosConfig() {
-	cosmosConf := sdk.GetConfig()
-	cosmosConf.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
-	cosmosConf.Seal()
+func setConfig(t *testing.T) {
+	defer func(t *testing.T) {
+		if r := recover(); r != nil {
+			t.Log("config is already sealed", r)
+		}
+	}(t)
+	cfg := sdk.GetConfig()
+	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
+	cfg.Seal()
 }
 func Test_ModifyCrossChainState(t *testing.T) {
-	setCosmosConfig()
+	setConfig(t)
 	t.Run("successfully modify cross chain state to reduce data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
@@ -58,7 +63,7 @@ func Test_ModifyCrossChainState(t *testing.T) {
 }
 
 func Test_ModifyObserverState(t *testing.T) {
-	setCosmosConfig()
+	setConfig(t)
 	t.Run("successfully modify observer state to reduce data", func(t *testing.T) {
 		cdc := keepertest.NewCodec()
 		appState := sample.AppState(t)
@@ -86,7 +91,7 @@ func Test_ModifyObserverState(t *testing.T) {
 }
 
 func Test_ImportDataIntoFile(t *testing.T) {
-	setCosmosConfig()
+	setConfig(t)
 	cdc := keepertest.NewCodec()
 	genDoc := sample.GenDoc(t)
 	importGenDoc := ImportGenDoc(t, cdc, 100)
