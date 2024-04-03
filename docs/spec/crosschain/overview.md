@@ -69,8 +69,8 @@ status is changed to final.
 ## Permissions
 
 | Message                     | Admin policy account | Observer validator |
-| --------------------------- | -------------------- | ------------------ |
-| MsgCreateTSSVoter           |                      | ✅                 |
+|-----------------------------| -------------------- | ------------------ |
+| MsgVoteTSS                  |                      | ✅                 |
 | MsgGasPriceVoter            |                      | ✅                 |
 | MsgVoteOnObservedOutboundTx |                      | ✅                 |
 | MsgVoteOnObservedInboundTx  |                      | ✅                 |

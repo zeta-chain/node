@@ -1,9 +1,9 @@
-# tx crosschain create-tss-voter
+# tx observer vote-tss
 
-Create a new TSSVoter
+Vote for a new TSS creation
 
 ```
-zetacored tx crosschain create-tss-voter [pubkey] [keygenBlock] [status] [flags]
+zetacored tx observer vote-tss [pubkey] [keygen-block] [status] [flags]
 ```
 
 ### Options
@@ -21,7 +21,7 @@ zetacored tx crosschain create-tss-voter [pubkey] [keygenBlock] [status] [flags]
       --gas-adjustment float     adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored  (default 1)
       --gas-prices string        Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)
       --generate-only            Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)
-  -h, --help                     help for create-tss-voter
+  -h, --help                     help for vote-tss
       --keyring-backend string   Select keyring's backend (os|file|kwallet|pass|test|memory) 
       --keyring-dir string       The client Keyring directory; if omitted, the default 'home' directory will be used
       --ledger                   Use a connected Ledger device
@@ -48,5 +48,5 @@ zetacored tx crosschain create-tss-voter [pubkey] [keygenBlock] [status] [flags]
 
 ### SEE ALSO
 
-* [zetacored tx crosschain](zetacored_tx_crosschain.md)	 - crosschain transactions subcommands
+* [zetacored tx observer](zetacored_tx_observer.md)	 - observer transactions subcommands
 

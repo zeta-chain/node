@@ -11,7 +11,6 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgAddToOutTxTracker{}, "crosschain/AddToOutTxTracker", nil)
 	cdc.RegisterConcrete(&MsgAddToInTxTracker{}, "crosschain/AddToInTxTracker", nil)
 	cdc.RegisterConcrete(&MsgRemoveFromOutTxTracker{}, "crosschain/RemoveFromOutTxTracker", nil)
-	cdc.RegisterConcrete(&MsgCreateTSSVoter{}, "crosschain/CreateTSSVoter", nil)
 	cdc.RegisterConcrete(&MsgGasPriceVoter{}, "crosschain/GasPriceVoter", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedOutboundTx{}, "crosschain/VoteOnObservedOutboundTx", nil)
 	cdc.RegisterConcrete(&MsgVoteOnObservedInboundTx{}, "crosschain/VoteOnObservedInboundTx", nil)
@@ -26,7 +25,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgAddToOutTxTracker{},
 		&MsgAddToInTxTracker{},
 		&MsgRemoveFromOutTxTracker{},
-		&MsgCreateTSSVoter{},
 		&MsgGasPriceVoter{},
 		&MsgVoteOnObservedOutboundTx{},
 		&MsgVoteOnObservedInboundTx{},
