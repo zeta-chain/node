@@ -3,13 +3,13 @@ package types
 import (
 	"fmt"
 
+	cosmoserrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (m Ballot) AddVote(address string, vote VoteType) (Ballot, error) {
 	if m.HasVoted(address) {
-		return m, errors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot :%s | Already Voted", address, m.String()))
+		return m, cosmoserrors.Wrap(ErrUnableToAddVote, fmt.Sprintf(" Voter : %s | Ballot :%s | Already Voted", address, m.String()))
 	}
 	// `index` is the index of the `address` in the `VoterList`
 	// `index` is used to set the vote in the `Votes` array

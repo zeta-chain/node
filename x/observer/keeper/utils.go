@@ -13,9 +13,9 @@ func (k Keeper) AddVoteToBallot(ctx sdk.Context, ballot types.Ballot, address st
 	if err != nil {
 		return ballot, err
 	}
-	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot idetifier %s", address, ballot.BallotIdentifier))
+	ctx.Logger().Info(fmt.Sprintf("Vote Added | Voter :%s, ballot identifier %s", address, ballot.BallotIdentifier))
 	k.SetBallot(ctx, &ballot)
-	return ballot, err
+	return ballot, nil
 }
 
 // CheckIfFinalizingVote checks if the ballot is finalized in this block and if it is, it sets the ballot in the store

@@ -37,7 +37,6 @@ func GetQueryCmd(_ string) *cobra.Command {
 		CmdInTxHashToCctxData(),
 		CmdListInTxHashToCctx(),
 		CmdShowInTxHashToCctx(),
-		CmdQueryParams(),
 
 		CmdPendingCctx(),
 		CmdListInTxTrackerByChain(),

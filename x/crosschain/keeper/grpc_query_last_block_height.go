@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -50,10 +50,10 @@ func (k Keeper) LastBlockHeight(c context.Context, req *types.QueryGetLastBlockH
 	if !found {
 		return nil, status.Error(codes.InvalidArgument, "not found")
 	}
-	if val.LastSendHeight >= math2.MaxInt64 {
+	if val.LastSendHeight >= math.MaxInt64 {
 		return nil, status.Error(codes.OutOfRange, "invalid last send height")
 	}
-	if val.LastReceiveHeight >= math2.MaxInt64 {
+	if val.LastReceiveHeight >= math.MaxInt64 {
 		return nil, status.Error(codes.OutOfRange, "invalid last recv height")
 	}
 
