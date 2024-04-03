@@ -100,6 +100,7 @@ func validateAdminPolicy(i interface{}) error {
 	return nil
 }
 
+// https://github.com/zeta-chain/node/issues/1983
 func validateBallotMaturityBlocks(i interface{}) error {
 	_, ok := i.(int64)
 	if !ok {
