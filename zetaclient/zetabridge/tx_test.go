@@ -8,10 +8,14 @@ import (
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/zeta-chain/go-tss/blame"
 	"github.com/zeta-chain/zetacore/pkg/chains"
+	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/pkg/proofs"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observertypes "github.com/zeta-chain/zetacore/x/observer/types"
 	"github.com/zeta-chain/zetacore/zetaclient/authz"
 	"github.com/zeta-chain/zetacore/zetaclient/keys"
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
+	"math/big"
 	"os"
 	"testing"
 
@@ -243,28 +247,98 @@ func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
 
 // TODO: Rest of tests Requires zetabridge refactoring
 func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
-	//zetabridge, err := setupCorBridge()
-	//require.NoError(t, err)
-	//address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	//zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	//
-	//t.Run("post add block header success", func(t *testing.T) {
-	//	zetaBridgeBroadcast = ZetaBridgeBroadcastTest
-	//	hash, _, err := zetabridge.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteOnObservedInboundTx{
-	//		Creator: address.String(),
-	//	})
-	//	require.NoError(t, err)
-	//	require.Equal(t, sampleHash, hash)
-	//})
+	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
+
+	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: true}
+	input := observertypes.QueryHasVotedRequest{
+		BallotIdentifier: "0x2d10e9b7ce7921fa6b61ada3020d1c797d5ec52424cdcf86ef31cbbbcd45db58",
+		VoterAddress:     address.String(),
+	}
+	method := "/zetachain.zetacore.observer.Query/HasVoted"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+
+	t.Run("post inbound vote already voted", func(t *testing.T) {
+		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+		hash, _, err := zetabridge.PostVoteInbound(100, 200, &crosschaintypes.MsgVoteOnObservedInboundTx{
+			Creator: address.String(),
+		})
+		require.NoError(t, err)
+		require.Equal(t, "", hash)
+	})
 }
 func TestZetaCoreBridge_MonitorVoteInboundTxResult(t *testing.T) {
+	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+
+	t.Run("monitor inbound vote", func(t *testing.T) {
+		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+		zetabridge.MonitorVoteInboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedInboundTx{
+			Creator: address.String(),
+		})
+		// Nothing to verify against this function
+		// Just running through without panic
+	})
 }
 
 func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
-}
+	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
-func TestZetaCoreBridge_PostVoteOutboundFromMsg(t *testing.T) {
+	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: true}
+	input := observertypes.QueryHasVotedRequest{
+		BallotIdentifier: "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347",
+		VoterAddress:     address.String(),
+	}
+	method := "/zetachain.zetacore.observer.Query/HasVoted"
+	server := setupMockServer(t, observertypes.RegisterQueryServer, method, input, expectedOutput)
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+
+	zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+	hash, ballot, err := zetabridge.PostVoteOutbound(
+		sampleHash,
+		sampleHash,
+		1234,
+		1000,
+		big.NewInt(100),
+		1200,
+		big.NewInt(500),
+		chains.ReceiveStatus_Success,
+		chains.EthChain(),
+		10001,
+		coin.CoinType_Gas)
+	require.NoError(t, err)
+	require.Equal(t, "", hash)
+	require.Equal(t, "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347", ballot)
 }
 
 func TestZetaCoreBridge_MonitorVoteOutboundTxResult(t *testing.T) {
+	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+
+	t.Run("monitor outbound vote", func(t *testing.T) {
+		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+		zetabridge.MonitorVoteOutboundTxResult(sampleHash, 1000, &crosschaintypes.MsgVoteOnObservedOutboundTx{
+			Creator: address.String(),
+		})
+		// Nothing to verify against this function
+		// Just running through without panic
+	})
 }
