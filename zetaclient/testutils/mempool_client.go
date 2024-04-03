@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	APIURLBlocks        = "https://mempool.space/api/v1/blocks"
-	APIUrlBlocksTestnet = "https://mempool.space/testnet/api/v1/blocks"
+	APIURLBlocks          = "https://mempool.space/api/v1/blocks"
+	APIURLBlockTxs        = "https://mempool.space/api/block/%s/txs"
+	APIURLBlocksTestnet   = "https://mempool.space/testnet/api/v1/blocks"
+	APIURLBlockTxsTestnet = "https://mempool.space/testnet/api/block/%s/txs"
 )
 
 type MempoolBlock struct {
@@ -28,6 +30,39 @@ type MempoolBlock struct {
 	PreviousBlockHash string     `json:"previousblockhash"`
 	MedianTime        int        `json:"mediantime"`
 	Extras            BlockExtra `json:"extras"`
+}
+
+type Vin struct {
+	TxID    string `json:"txid"`
+	Vout    uint32 `json:"vout"`
+	Prevout struct {
+		Scriptpubkey        string `json:"scriptpubkey"`
+		ScriptpubkeyAsm     string `json:"scriptpubkey_asm"`
+		ScriptpubkeyType    string `json:"scriptpubkey_type"`
+		ScriptpubkeyAddress string `json:"scriptpubkey_address"`
+		Value               int64  `json:"value"`
+	} `json:"prevout"`
+	Scriptsig  string `json:"scriptsig"`
+	IsCoinbase bool   `json:"is_coinbase"`
+	Sequence   uint32 `json:"sequence"`
+}
+
+type Vout struct {
+	Scriptpubkey     string `json:"scriptpubkey"`
+	ScriptpubkeyAsm  string `json:"scriptpubkey_asm"`
+	ScriptpubkeyType string `json:"scriptpubkey_type"`
+	Value            int64  `json:"value"`
+}
+
+type MempoolTx struct {
+	TxID     string `json:"txid"`
+	Version  int    `json:"version"`
+	LockTime int    `json:"locktime"`
+	Vin      []Vin  `json:"vin"`
+	Vout     []Vout `json:"vout"`
+	Size     int    `json:"size"`
+	Weight   int    `json:"weight"`
+	Fee      int    `json:"fee"`
 }
 
 type BlockExtra struct {
@@ -91,14 +126,28 @@ func Get(ctx context.Context, path string, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
 
+// GetBlocks returns return 15 mempool.space blocks [n-14, n] per request
 func GetBlocks(ctx context.Context, n int, testnet bool) ([]MempoolBlock, error) {
 	path := fmt.Sprintf("%s/%d", APIURLBlocks, n)
 	if testnet {
-		path = fmt.Sprintf("%s/%d", APIUrlBlocksTestnet, n)
+		path = fmt.Sprintf("%s/%d", APIURLBlocksTestnet, n)
 	}
 	blocks := make([]MempoolBlock, 0)
 	if err := Get(ctx, path, &blocks); err != nil {
 		return nil, err
 	}
 	return blocks, nil
+}
+
+// GetBlockTxs a list of transactions in the block (up to 25 transactions beginning at index 0)
+func GetBlockTxs(ctx context.Context, blockHash string, testnet bool) ([]MempoolTx, error) {
+	path := fmt.Sprintf(APIURLBlockTxs, blockHash)
+	if testnet {
+		path = fmt.Sprintf(APIURLBlockTxsTestnet, blockHash)
+	}
+	txs := make([]MempoolTx, 0)
+	if err := Get(ctx, path, &txs); err != nil {
+		return nil, err
+	}
+	return txs, nil
 }
