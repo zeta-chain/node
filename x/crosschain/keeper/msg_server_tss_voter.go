@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"math"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"github.com/zeta-chain/zetacore/x/observer/keeper"
@@ -107,7 +107,7 @@ func (k msgServer) CreateTSSVoter(goCtx context.Context, msg *types.MsgCreateTSS
 
 	} else if ballot.BallotStatus == observertypes.BallotStatus_BallotFinalized_FailureObservation {
 		keygen.Status = observertypes.KeygenStatus_KeyGenFailed
-		keygen.BlockNumber = math2.MaxInt64
+		keygen.BlockNumber = math.MaxInt64
 	}
 	k.zetaObserverKeeper.SetKeygen(ctx, keygen)
 	return &types.MsgCreateTSSVoterResponse{}, nil

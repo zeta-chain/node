@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	"math"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	math2 "github.com/ethereum/go-ethereum/common/math"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	"google.golang.org/grpc/codes"
@@ -60,7 +60,7 @@ func TestLastBlockHeightLimits(t *testing.T) {
 		wctx := sdk.WrapSDKContext(ctx)
 		keeper.SetLastBlockHeight(ctx, types.LastBlockHeight{
 			Index:          "index",
-			LastSendHeight: math2.MaxInt64,
+			LastSendHeight: math.MaxInt64,
 		})
 
 		res, err := keeper.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{
@@ -76,7 +76,7 @@ func TestLastBlockHeightLimits(t *testing.T) {
 		keeper.SetLastBlockHeight(ctx, types.LastBlockHeight{
 			Index:             "index",
 			LastSendHeight:    10,
-			LastReceiveHeight: math2.MaxInt64,
+			LastReceiveHeight: math.MaxInt64,
 		})
 
 		res, err := keeper.LastBlockHeight(wctx, &types.QueryGetLastBlockHeightRequest{

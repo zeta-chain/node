@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"math/big"
+	"math/rand"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -183,22 +184,49 @@ func TestKeeper_VoteOnObservedInboundTx(t *testing.T) {
 	})
 
 	t.Run("should return if not finalized", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.CrosschainKeeperWithMocks(t, keepertest.CrosschainMockOptions{
-			UseObserverMock: true,
-		})
-		observerMock := keepertest.GetCrosschainObserverMock(t, k)
-		observerMock.On("VoteOnInboundBallot", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return(false, false, nil)
+		k, ctx, _, zk := keepertest.CrosschainKeeper(t)
 		msgServer := keeper.NewMsgServerImpl(*k)
+		validatorList := setObservers(t, k, ctx, zk)
+
+		// add one more voter to make it not finalized
+		r := rand.New(rand.NewSource(42))
+		valAddr := sample.ValAddress(r)
+		observerSet := append(validatorList, valAddr.String())
+		zk.ObserverKeeper.SetObserverSet(ctx, observertypes.ObserverSet{
+			ObserverList: observerSet,
+		})
 		to, from := int64(1337), int64(101)
+		supportedChains := zk.ObserverKeeper.GetSupportedChains(ctx)
+		for _, chain := range supportedChains {
+			if chains.IsEVMChain(chain.ChainId) {
+				from = chain.ChainId
+			}
+			if chains.IsZetaChain(chain.ChainId) {
+				to = chain.ChainId
+			}
+		}
+		zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
 
 		msg := sample.InboundVote(0, from, to)
-		res, err := msgServer.VoteOnObservedInboundTx(
+		for _, validatorAddr := range validatorList {
+			msg.Creator = validatorAddr
+			_, err := msgServer.VoteOnObservedInboundTx(
+				ctx,
+				&msg,
+			)
+			require.NoError(t, err)
+		}
+		ballot, _, _ := zk.ObserverKeeper.FindBallot(
 			ctx,
-			&msg,
+			msg.Digest(),
+			zk.ObserverKeeper.GetSupportedChainFromChainID(ctx, msg.SenderChainId),
+			observertypes.ObservationType_InBoundTx,
 		)
-		require.NoError(t, err)
-		require.Empty(t, res)
+		require.Equal(t, ballot.BallotStatus, observertypes.BallotStatus_BallotInProgress)
+		require.Equal(t, ballot.Votes[0], observertypes.VoteType_SuccessObservation)
+		require.Equal(t, ballot.Votes[1], observertypes.VoteType_NotYetVoted)
+		_, found := k.GetCrossChainTx(ctx, msg.Digest())
+		require.False(t, found)
 	})
 
 	t.Run("should err if tss not found", func(t *testing.T) {
