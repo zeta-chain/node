@@ -1,8 +1,11 @@
 package runner
 
 import (
+	"log"
 	"math/big"
 	"time"
+
+	"github.com/ethereum/go-ethereum/rpc"
 
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -77,7 +80,7 @@ func (runner *E2ERunner) DepositERC20() ethcommon.Hash {
 }
 
 func (runner *E2ERunner) DepositERC20WithAmountAndMessage(to ethcommon.Address, amount *big.Int, msg []byte) ethcommon.Hash {
-	// reset allowance, necessary for ERC20
+	// reset allowance, necessary for USDT
 	tx, err := runner.ERC20.Approve(runner.EVMAuth, runner.ERC20CustodyAddr, big.NewInt(0))
 	if err != nil {
 		panic(err)
@@ -169,7 +172,7 @@ func (runner *E2ERunner) SendEther(_ ethcommon.Address, value *big.Int, data []b
 	}
 
 	tx := ethtypes.NewTransaction(nonce, runner.TSSAddress, value, gasLimit, gasPrice, data)
-	chainID, err := evmClient.NetworkID(runner.Ctx)
+	chainID, err := evmClient.ChainID(runner.Ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -255,4 +258,37 @@ func (runner *E2ERunner) ProveEthTransaction(receipt *ethtypes.Receipt) {
 		panic("txProof invalid") // FIXME: don't do this in production
 	}
 	runner.Logger.Info("OK: txProof verified")
+}
+
+// AnvilMineBlocks mines blocks on Anvil localnet
+// the block time is provided in seconds
+// the method returns a function to stop the mining
+func (runner *E2ERunner) AnvilMineBlocks(url string, blockTime int) (func(), error) {
+	stop := make(chan struct{})
+
+	client, err := rpc.Dial(url)
+	if err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	go func() {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				time.Sleep(time.Duration(blockTime) * time.Second)
+
+				var result interface{}
+				err = client.CallContext(runner.Ctx, &result, "evm_mine")
+				if err != nil {
+					log.Fatalf("Failed to mine a new block: %v", err)
+				}
+			}
+		}
+	}()
+	return func() {
+		close(stop)
+	}, nil
 }

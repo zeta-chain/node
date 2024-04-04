@@ -49,7 +49,11 @@ func WaitCctxsMinedByInTxHash(
 
 	// fetch cctxs by inTxHash
 	for i := 0; ; i++ {
+		if time.Since(startTime) > timeout {
+			panic(fmt.Sprintf("waiting cctx timeout, cctx not mined, inTxHash: %s", inTxHash))
+		}
 		time.Sleep(1 * time.Second)
+
 		res, err := cctxClient.InTxHashToCctxData(ctx, &crosschaintypes.QueryInTxHashToCctxDataRequest{
 			InTxHash: inTxHash,
 		})
@@ -93,16 +97,62 @@ func WaitCctxsMinedByInTxHash(
 			cctxs = append(cctxs, &cctx)
 		}
 		if !allFound {
-			if time.Since(startTime) > timeout {
-				panic(fmt.Sprintf(
-					"waiting cctx timeout, cctx not mined, inTxHash: %s, current cctxs: %v",
-					inTxHash,
-					cctxs,
-				))
-			}
 			continue
 		}
 		return cctxs
+	}
+}
+
+// WaitCCTXMinedByIndex waits until cctx is mined; returns the cctxIndex
+func WaitCCTXMinedByIndex(
+	ctx context.Context,
+	cctxIndex string,
+	cctxClient crosschaintypes.QueryClient,
+	logger infoLogger,
+	cctxTimeout time.Duration,
+) *crosschaintypes.CrossChainTx {
+	startTime := time.Now()
+
+	timeout := DefaultCctxTimeout
+	if cctxTimeout != 0 {
+		timeout = cctxTimeout
+	}
+
+	for i := 0; ; i++ {
+		if time.Since(startTime) > timeout {
+			panic(fmt.Sprintf(
+				"waiting cctx timeout, cctx not mined, cctx: %s",
+				cctxIndex,
+			))
+		}
+		time.Sleep(1 * time.Second)
+
+		// fetch cctx by index
+		res, err := cctxClient.Cctx(ctx, &crosschaintypes.QueryGetCctxRequest{
+			Index: cctxIndex,
+		})
+		if err != nil {
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info("Error getting cctx by inTxHash: %s", err.Error())
+			}
+			continue
+		}
+		cctx := res.CrossChainTx
+		if !IsTerminalStatus(cctx.CctxStatus.Status) {
+			// prevent spamming logs
+			if i%10 == 0 {
+				logger.Info(
+					"waiting for cctx to be mined from index: %s, cctx status: %s, message: %s",
+					cctxIndex,
+					cctx.CctxStatus.Status.String(),
+					cctx.CctxStatus.StatusMessage,
+				)
+			}
+			continue
+		}
+
+		return cctx
 	}
 }
 

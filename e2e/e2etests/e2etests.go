@@ -15,23 +15,25 @@ const (
 	TestZetaWithdrawBTCRevertName         = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 	TestMessagePassingName                = "message_passing"
 	TestZRC20SwapName                     = "zrc20_swap"
-	TestBitcoinWithdrawName               = "bitcoin_withdraw"
+	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
 	TestCrosschainSwapName                = "crosschain_swap"
 	TestMessagePassingRevertFailName      = "message_passing_revert_fail"
 	TestMessagePassingRevertSuccessName   = "message_passing_revert_success"
-	TestPauseZRC20Name                    = "pause_zrc20"
 	TestERC20DepositAndCallRefundName     = "erc20_deposit_and_call_refund"
-	TestUpdateBytecodeName                = "update_bytecode"
 	TestEtherDepositAndCallName           = "eth_deposit_and_call"
 	TestDepositEtherLiquidityCapName      = "deposit_eth_liquidity_cap"
 	TestMyTestName                        = "my_test"
 
 	TestERC20WithdrawName = "erc20_withdraw"
 	TestERC20DepositName  = "erc20_deposit"
-	// #nosec G101: Potential hardcoded credentials (gosec), not a credential
-	TestERC20DepositRestrictedName  = "erc20_deposit_restricted"
+
+	TestERC20DepositRestrictedName  = "erc20_deposit_restricted" // #nosec G101: Potential hardcoded credentials (gosec), not a credential
 	TestEtherDepositName            = "eth_deposit"
 	TestEtherWithdrawName           = "eth_withdraw"
 	TestEtherWithdrawRestrictedName = "eth_withdraw_restricted"
@@ -45,6 +47,11 @@ const (
 	TestStressBTCWithdrawName   = "stress_btc_withdraw"
 	TestStressEtherDepositName  = "stress_eth_deposit"
 	TestStressBTCDepositName    = "stress_btc_deposit"
+
+	// Admin test
+	TestMigrateChainSupportName = "migrate_chain_support"
+	TestPauseZRC20Name          = "pause_zrc20"
+	TestUpdateBytecodeName      = "update_bytecode"
 )
 
 // AllE2ETests is an ordered list of all e2e tests
@@ -130,12 +137,49 @@ var AllE2ETests = []runner.E2ETest{
 		TestZRC20Swap,
 	),
 	runner.NewE2ETest(
-		TestBitcoinWithdrawName,
-		"withdraw BTC from ZEVM",
+		TestBitcoinWithdrawSegWitName,
+		"withdraw BTC from ZEVM to a SegWit address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
 		},
-		TestBitcoinWithdraw,
+		TestBitcoinWithdrawSegWit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawTaprootName,
+		"withdraw BTC from ZEVM to a Taproot address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawTaproot,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawLegacyName,
+		"withdraw BTC from ZEVM to a legacy address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawLegacy,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2WSHName,
+		"withdraw BTC from ZEVM to a P2WSH address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2WSH,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2SHName,
+		"withdraw BTC from ZEVM to a P2SH address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2SH,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawInvalidAddressName,
@@ -311,8 +355,14 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRestricted,
+	),
+	runner.NewE2ETest(
+		TestMigrateChainSupportName,
+		"migrate the evm chain from goerli to sepolia",
+		[]runner.ArgDefinition{},
+		TestMigrateChainSupport,
 	),
 }

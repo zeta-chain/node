@@ -42,7 +42,7 @@ func (runner *E2ERunner) SetEVMContractsFromConfig() {
 }
 
 // SetupEVM setup contracts on EVM for e2e test
-func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
+func (runner *E2ERunner) SetupEVM(contractsDeployed bool, whitelistERC20 bool) {
 	runner.Logger.Print("⚙️ setting up EVM network")
 	startTime := time.Now()
 	defer func() {
@@ -157,12 +157,14 @@ func (runner *E2ERunner) SetupEVM(contractsDeployed bool) {
 
 	// initialize custody contract
 	runner.Logger.Info("Whitelist ERC20")
-	txWhitelist, err := ERC20Custody.Whitelist(runner.EVMAuth, erc20Addr)
-	if err != nil {
-		panic(err)
-	}
-	if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, txWhitelist, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
-		panic("ERC20 whitelist failed")
+	if whitelistERC20 {
+		txWhitelist, err := ERC20Custody.Whitelist(runner.EVMAuth, erc20Addr)
+		if err != nil {
+			panic(err)
+		}
+		if receipt := utils.MustWaitForTxReceipt(runner.Ctx, runner.EVMClient, txWhitelist, runner.Logger, runner.ReceiptTimeout); receipt.Status != 1 {
+			panic("ERC20 whitelist failed")
+		}
 	}
 
 	runner.Logger.Info("Set TSS address")

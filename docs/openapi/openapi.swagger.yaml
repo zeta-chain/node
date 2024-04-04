@@ -27173,21 +27173,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /zeta-chain/crosschain/params:
-    get:
-      summary: Parameters queries the parameters of the module.
-      operationId: Query_Params
-      responses:
-        "200":
-          description: A successful response.
-          schema:
-            $ref: '#/definitions/zetacorecrosschainQueryParamsResponse'
-        default:
-          description: An unexpected error response.
-          schema:
-            $ref: '#/definitions/googlerpcStatus'
-      tags:
-        - Query
   /zeta-chain/crosschain/protocolFee:
     get:
       operationId: Query_ProtocolFee
@@ -53935,8 +53920,6 @@ definitions:
       is_removed:
         type: boolean
         title: if the tx was removed from the tracker due to no pending cctx
-  crosschainMsgCreateTSSVoterResponse:
-    type: object
   crosschainMsgGasPriceVoterResponse:
     type: object
   crosschainMsgMigrateTssFundsResponse:
@@ -54607,6 +54590,15 @@ definitions:
     type: object
   observerMsgVoteBlockHeaderResponse:
     type: object
+  observerMsgVoteTSSResponse:
+    type: object
+    properties:
+      ballot_created:
+        type: boolean
+      vote_finalized:
+        type: boolean
+      keygen_success:
+        type: boolean
   observerNode:
     type: object
     properties:
@@ -54999,19 +54991,6 @@ definitions:
                repeated Bar results = 1;
                PageResponse page = 2;
        }
-  zetacorecrosschainParams:
-    type: object
-    properties:
-      enabled:
-        type: boolean
-    description: Params defines the parameters for the module.
-  zetacorecrosschainQueryParamsResponse:
-    type: object
-    properties:
-      params:
-        $ref: '#/definitions/zetacorecrosschainParams'
-        description: params holds all the parameters of this module.
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
   zetacorecrosschainStatus:
     type: object
     properties:

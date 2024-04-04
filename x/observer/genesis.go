@@ -16,7 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		observerCount = uint64(len(genState.Observers.ObserverList))
 	}
 
-	// if chian params are defined set them
+	// if chain params are defined set them
 	if len(genState.ChainParamsList.ChainParams) > 0 {
 		k.SetChainParamsList(ctx, genState.ChainParamsList)
 	} else {

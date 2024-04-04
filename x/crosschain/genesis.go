@@ -9,9 +9,6 @@ import (
 // InitGenesis initializes the crosschain module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
-	// Params
-	k.SetParams(ctx, genState.Params)
-
 	k.SetZetaAccounting(ctx, genState.ZetaAccounting)
 	// Set all the outTxTracker
 	for _, elem := range genState.OutTxTrackerList {
@@ -59,7 +56,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	var genesis types.GenesisState
 
-	genesis.Params = k.GetParams(ctx)
 	genesis.OutTxTrackerList = k.GetAllOutTxTracker(ctx)
 	genesis.InTxHashToCctxList = k.GetAllInTxHashToCctx(ctx)
 	genesis.InTxTrackerList = k.GetAllInTxTracker(ctx)

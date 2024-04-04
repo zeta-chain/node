@@ -172,8 +172,8 @@ func IsSystemTx(tx sdk.Tx, isAuthorizedSigner func(string) bool) bool {
 		*cctxtypes.MsgVoteOnObservedInboundTx,
 		*cctxtypes.MsgVoteOnObservedOutboundTx,
 		*cctxtypes.MsgAddToOutTxTracker,
-		*cctxtypes.MsgCreateTSSVoter,
 		*observertypes.MsgVoteBlockHeader,
+		*observertypes.MsgVoteTSS,
 		*observertypes.MsgAddBlameVote:
 		signers := innerMsg.GetSigners()
 		if len(signers) == 1 {
