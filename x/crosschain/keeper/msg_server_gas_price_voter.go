@@ -25,13 +25,10 @@ func (k msgServer) GasPriceVoter(goCtx context.Context, msg *types.MsgGasPriceVo
 
 	chain := k.zetaObserverKeeper.GetSupportedChainFromChainID(ctx, msg.ChainId)
 	if chain == nil {
-		return nil, observertypes.ErrSupportedChains
+		return nil, cosmoserrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
 	}
 	if ok := k.zetaObserverKeeper.IsNonTombstonedObserver(ctx, msg.Creator); !ok {
 		return nil, observertypes.ErrNotObserver
-	}
-	if chain == nil {
-		return nil, cosmoserrors.Wrap(types.ErrUnsupportedChain, fmt.Sprintf("ChainID : %d ", msg.ChainId))
 	}
 
 	gasPrice, isFound := k.GetGasPrice(ctx, chain.ChainId)

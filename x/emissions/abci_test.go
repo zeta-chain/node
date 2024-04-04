@@ -6,6 +6,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/coin"
@@ -69,6 +70,90 @@ func TestBeginBlocker(t *testing.T) {
 		require.True(t, sk.BankKeeper.GetBalance(ctx, feeCollectorAddress, config.BaseDenom).Amount.IsZero())
 		require.True(t, sk.BankKeeper.GetBalance(ctx, emissionstypes.EmissionsModuleAddress, config.BaseDenom).Amount.Equal(sdk.NewInt(1000000000000)))
 	})
+	t.Run("begin blocker returns early if validator distribution fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseBankMock: true,
+		})
+		// Total block rewards is the fixed amount of rewards that are distributed
+		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+		require.NoError(t, err)
+
+		bankMock := keepertest.GetEmissionsBankMock(t, k)
+		bankMock.On("GetBalance",
+			ctx, mock.Anything, config.BaseDenom).
+			Return(totalRewardCoins[0], nil).Once()
+
+		// fail first distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, k.GetFeeCollector(), mock.Anything).
+			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
+		emissionsModule.BeginBlocker(ctx, *k)
+
+		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 1)
+	})
+
+	t.Run("begin blocker returns early if observer distribution fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseBankMock: true,
+		})
+		// Total block rewards is the fixed amount of rewards that are distributed
+		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+		require.NoError(t, err)
+
+		bankMock := keepertest.GetEmissionsBankMock(t, k)
+		bankMock.On("GetBalance",
+			ctx, mock.Anything, config.BaseDenom).
+			Return(totalRewardCoins[0], nil).Once()
+
+		// allow first distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, k.GetFeeCollector(), mock.Anything).
+			Return(nil).Once()
+
+		// fail second distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedObserverRewardsPool, mock.Anything).
+			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
+		emissionsModule.BeginBlocker(ctx, *k)
+
+		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 2)
+	})
+
+	t.Run("begin blocker returns early if tss distribution fails", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.EmissionKeeperWithMockOptions(t, keepertest.EmissionMockOptions{
+			UseBankMock: true,
+		})
+		// Total block rewards is the fixed amount of rewards that are distributed
+		totalBlockRewards, err := coin.GetAzetaDecFromAmountInZeta(emissionstypes.BlockRewardsInZeta)
+		totalRewardCoins := sdk.NewCoins(sdk.NewCoin(config.BaseDenom, totalBlockRewards.TruncateInt()))
+		require.NoError(t, err)
+
+		bankMock := keepertest.GetEmissionsBankMock(t, k)
+		bankMock.On("GetBalance",
+			ctx, mock.Anything, config.BaseDenom).
+			Return(totalRewardCoins[0], nil).Once()
+
+		// allow first distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, k.GetFeeCollector(), mock.Anything).
+			Return(nil).Once()
+
+		// allow second distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedObserverRewardsPool, mock.Anything).
+			Return(nil).Once()
+
+		// fail third distribution
+		bankMock.On("SendCoinsFromModuleToModule",
+			mock.Anything, emissionstypes.ModuleName, emissionstypes.UndistributedTssRewardsPool, mock.Anything).
+			Return(emissionstypes.ErrUnableToWithdrawEmissions).Once()
+		emissionsModule.BeginBlocker(ctx, *k)
+
+		bankMock.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 3)
+	})
+
 	t.Run("successfully distribute rewards", func(t *testing.T) {
 		numberOfTestBlocks := 100
 		k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
@@ -154,6 +239,7 @@ func TestBeginBlocker(t *testing.T) {
 
 func TestDistributeObserverRewards(t *testing.T) {
 	keepertest.SetConfig(false)
+	k, ctx, _, _ := keepertest.EmissionsKeeper(t)
 	observerSet := sample.ObserverSet(4)
 
 	tt := []struct {
@@ -240,6 +326,12 @@ func TestDistributeObserverRewards(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
+			for _, observer := range observerSet.ObserverList {
+				k.SetWithdrawableEmission(ctx, emissionstypes.WithdrawableEmissions{
+					Address: observer,
+					Amount:  sdkmath.NewInt(100),
+				})
+			}
 
 			// Keeper initialization
 			k, ctx, sk, zk := keepertest.EmissionsKeeper(t)
@@ -283,7 +375,6 @@ func TestDistributeObserverRewards(t *testing.T) {
 				Height:           0,
 				BallotsIndexList: ballotIdentifiers,
 			})
-
 			ctx = ctx.WithBlockHeight(100)
 
 			// Distribute the rewards and check if the rewards are distributed correctly

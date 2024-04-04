@@ -13,7 +13,11 @@ func (m *Status) AbortRefunded(timeStamp int64) {
 // empty msg does not overwrite old status message
 func (m *Status) ChangeStatus(newStatus CctxStatus, msg string) {
 	if len(msg) > 0 {
-		m.StatusMessage = msg
+		if m.StatusMessage != "" {
+			m.StatusMessage = fmt.Sprintf("%s : %s", m.StatusMessage, msg)
+		} else {
+			m.StatusMessage = msg
+		}
 	}
 	if !m.ValidateTransition(newStatus) {
 		m.StatusMessage = fmt.Sprintf("Failed to transition : OldStatus %s , NewStatus %s , MSG : %s :", m.Status.String(), newStatus.String(), msg)
@@ -60,5 +64,4 @@ func stateTransitionMap() map[CctxStatus][]CctxStatus {
 		CctxStatus_Reverted,
 	}
 	return stateTransitionMap
-
 }

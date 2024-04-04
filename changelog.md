@@ -1,13 +1,15 @@
 # CHANGELOG
 
 ## Unreleased
-
 ### Breaking Changes
 
 * Admin policies have been moved from `observer` to a new module `authority`.
   * Updating admin policies now requires to send a governance proposal executing the `UpdatePolicies` message in the `authority` module.
   * The `Policies` query of the `authority` module must be used to get the current admin policies.
   * `PolicyType_group1` has been renamed into `PolicyType_groupEmergency` and `PolicyType_group2` has been renamed into `PolicyType_groupAdmin`.
+
+* `MsgCreateTSSVoter` message in the `crosschain` module has been moved to the `observer` module and renamed to `MsgVoteTSS`.
+  * The structure of the message remains the same.
 
 ### Refactor
 
@@ -22,6 +24,8 @@
 * [1914](https://github.com/zeta-chain/node/pull/1914) - move crosschain flags to core context in zetaclient
 * [1948](https://github.com/zeta-chain/node/pull/1948) - remove deprecated GetTSSAddress query in crosschain module
 * [1936](https://github.com/zeta-chain/node/pull/1936) - refactor common package into subpackages and rename to pkg
+* [1966](https://github.com/zeta-chain/node/pull/1966) - move TSS vote message from crosschain to observer
+* [1853](https://github.com/zeta-chain/node/pull/1853) - refactor vote inbound tx and vote outbound tx
 
 ### Features
 
@@ -47,12 +51,16 @@
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
 * [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
+* [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
+* [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
+* [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
 * [1941](https://github.com/zeta-chain/node/pull/1941) - add unit tests for zetabridge package
 
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
+* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 

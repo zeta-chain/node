@@ -62,7 +62,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 			OutboundTxGasPrice:               fmt.Sprintf("%d", i),
 			OutboundTxBallotIndex:            fmt.Sprintf("%d", i),
 			OutboundTxObservedExternalHeight: uint64(i),
-			CoinType:                         0,
+			CoinType:                         coin.CoinType_Zeta,
 		}}
 		items[i].CctxStatus = &types.Status{
 			Status:              types.CctxStatus_PendingInbound,
@@ -73,6 +73,7 @@ func createNCctx(keeper *keeper.Keeper, ctx sdk.Context, n int) []types.CrossCha
 
 		items[i].ZetaFees = math.OneUint()
 		items[i].Index = fmt.Sprintf("%d", i)
+
 		keeper.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, items[i])
 	}
 	return items
@@ -241,4 +242,14 @@ func TestSendQueryPaginated(t *testing.T) {
 		_, err := keeper.CctxAll(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
+}
+
+func TestKeeper_RemoveCrossChainTx(t *testing.T) {
+	keeper, ctx, _, zk := keepertest.CrosschainKeeper(t)
+	zk.ObserverKeeper.SetTSS(ctx, sample.Tss())
+	txs := createNCctx(keeper, ctx, 5)
+
+	keeper.RemoveCrossChainTx(ctx, txs[0].Index)
+	txs = keeper.GetAllCrossChainTx(ctx)
+	require.Equal(t, 4, len(txs))
 }

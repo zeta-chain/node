@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/testutil/sample"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 )
 
@@ -47,6 +48,11 @@ func TestGenesisState_Validate(t *testing.T) {
 						InTxHash: "1",
 					},
 				},
+				GasPriceList: []*types.GasPrice{
+					sample.GasPrice(t, "0"),
+					sample.GasPrice(t, "1"),
+					sample.GasPrice(t, "2"),
+				},
 			},
 			valid: true,
 		},
@@ -73,6 +79,20 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 					{
 						InTxHash: "0",
+					},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "duplicated gasPriceList",
+			genState: &types.GenesisState{
+				GasPriceList: []*types.GasPrice{
+					{
+						Index: "1",
+					},
+					{
+						Index: "1",
 					},
 				},
 			},

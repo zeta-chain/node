@@ -25,7 +25,7 @@ func TestMigrateStore(t *testing.T) {
 		v4ZetaAccountingAmount := math.ZeroUint()
 		for _, cctx := range cctxList {
 			k.SetCrossChainTx(ctx, cctx)
-			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.GetCurrentOutTxParam().CoinType != coin.CoinType_Zeta {
+			if cctx.CctxStatus.Status != crosschaintypes.CctxStatus_Aborted || cctx.InboundTxParams.CoinType != coin.CoinType_Zeta {
 				continue
 			}
 			v5ZetaAccountingAmount = v5ZetaAccountingAmount.Add(crosschainkeeper.GetAbortedAmount(cctx))

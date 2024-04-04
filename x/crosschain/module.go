@@ -76,12 +76,7 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-
-	err := types.RegisterClientCtx(clientCtx)
-	if err != nil {
-		fmt.Println("RegisterQueryHandlerClient err: %w", err)
-	}
-	err = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 	if err != nil {
 		fmt.Println("RegisterQueryHandlerClient err: %w", err)
 	}
@@ -154,6 +149,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 4, m.Migrate4to5); err != nil {
 		panic(err)
 	}
+
 }
 
 // RegisterInvariants registers the crosschain module's invariants.
