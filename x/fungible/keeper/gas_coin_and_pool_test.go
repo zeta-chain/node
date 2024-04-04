@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"errors"
 	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	evmkeeper "github.com/evmos/ethermint/x/evm/keeper"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -148,5 +150,47 @@ func TestKeeper_SetupChainGasCoinAndPool(t *testing.T) {
 		found, err := k.QuerySystemContractGasCoinZRC20(ctx, big.NewInt(chainID))
 		require.NoError(t, err)
 		require.Equal(t, zrc20, found)
+	})
+
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
+	})
+
+	t.Run("should error if mint coins fails", func(t *testing.T) {
+		k, ctx, sdkk, _ := testkeeper.FungibleKeeperWithMocks(t, testkeeper.FungibleMockOptions{
+			UseBankMock: true,
+		})
+		bankMock := testkeeper.GetFungibleBankMock(t, k)
+		bankMock.On("MintCoins", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("err"))
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		chainID := getValidChainID(t)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+
+		addr, err := k.SetupChainGasCoinAndPool(
+			ctx,
+			chainID,
+			"test",
+			"test",
+			8,
+			nil,
+		)
+		require.Error(t, err)
+		require.Empty(t, addr)
 	})
 }

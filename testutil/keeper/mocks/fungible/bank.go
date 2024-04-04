@@ -13,6 +13,24 @@ type FungibleBankKeeper struct {
 	mock.Mock
 }
 
+// GetBalance provides a mock function with given fields: ctx, addr, denom
+func (_m *FungibleBankKeeper) GetBalance(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
+	ret := _m.Called(ctx, addr, denom)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBalance")
+	}
+
+	var r0 types.Coin
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, string) types.Coin); ok {
+		r0 = rf(ctx, addr, denom)
+	} else {
+		r0 = ret.Get(0).(types.Coin)
+	}
+
+	return r0
+}
+
 // MintCoins provides a mock function with given fields: ctx, moduleName, amt
 func (_m *FungibleBankKeeper) MintCoins(ctx types.Context, moduleName string, amt types.Coins) error {
 	ret := _m.Called(ctx, moduleName, amt)
