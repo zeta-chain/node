@@ -220,14 +220,15 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 	var newBTCParams *observertypes.ChainParams
 
 	// check and update chain params for each chain
+	sampledLogger := b.logger.Sample(&zerolog.BasicSampler{N: 10})
 	for _, chainParam := range chainParams {
-		err := observertypes.ValidateChainParams(chainParam)
-		if err != nil {
-			b.logger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
+		if !chainParam.GetIsSupported() {
+			sampledLogger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
 			continue
 		}
-		if !chainParam.GetIsSupported() {
-			b.logger.Info().Msgf("Chain %d is not supported yet", chainParam.ChainId)
+		err := observertypes.ValidateChainParams(chainParam)
+		if err != nil {
+			sampledLogger.Warn().Err(err).Msgf("Invalid chain params for chain %d", chainParam.ChainId)
 			continue
 		}
 		if chains.IsBitcoinChain(chainParam.ChainId) {
@@ -237,12 +238,12 @@ func (b *ZetaCoreBridge) UpdateZetaCoreContext(coreContext *corecontext.ZetaCore
 		}
 	}
 
-	supporteChains, err := b.GetSupportedChains()
+	supportedChains, err := b.GetSupportedChains()
 	if err != nil {
 		return err
 	}
-	newChains := make([]chains.Chain, len(supporteChains))
-	for i, chain := range supporteChains {
+	newChains := make([]chains.Chain, len(supportedChains))
+	for i, chain := range supportedChains {
 		newChains[i] = *chain
 	}
 	keyGen, err := b.GetKeyGen()

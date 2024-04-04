@@ -1,0 +1,23 @@
+{
+  "Version": 1,
+  "TxIn": [
+    {
+      "PreviousOutPoint": {
+        "Hash": [
+          88, 35, 68, 215, 98, 226, 80, 135, 144, 112, 176, 41, 10, 204, 196,
+          243, 171, 206, 47, 130, 190, 82, 88, 31, 234, 63, 168, 65, 219, 15,
+          248, 81
+        ],
+        "Index": 1
+      },
+      "SignatureScript": "SDBFAiEAtm10q/gt84o5QCkWsxouad5aqiEDgBd3h3ci/8tuDl4CIB9wKaSz2HDRhPKwkoXBbYqZwTD+8fhiZOolJcwvgV49ASED25w7Nl3+PHENu2OrUD2EmDvsdylmoWe0hSDOMtQvj04=",
+      "Witness": null,
+      "Sequence": 268435456
+    }
+  ],
+  "TxOut": [
+    { "Value": 1425000, "PkScript": "qRRdKyXqq2FtT8BTLay8+A2Un6cUTIc=" },
+    { "Value": 19064706, "PkScript": "dqkUk2fpBSIxBUekNfA/gxxYw1RZ3KGIrA==" }
+  ],
+  "LockTime": 0
+}

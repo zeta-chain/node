@@ -67,9 +67,6 @@ func CreateSignerMap(
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
 			continue
 		}
-		if !evmChainParams.IsSupported {
-			continue
-		}
 		mpiAddress := ethcommon.HexToAddress(evmChainParams.ConnectorContractAddress)
 		erc20CustodyAddress := ethcommon.HexToAddress(evmChainParams.Erc20CustodyContractAddress)
 		signer, err := evm.NewEVMSigner(
@@ -117,12 +114,9 @@ func CreateChainClientMap(
 		if evmConfig.Chain.IsZetaChain() {
 			continue
 		}
-		evmChainParams, found := appContext.ZetaCoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
+		_, found := appContext.ZetaCoreContext().GetEVMChainParams(evmConfig.Chain.ChainId)
 		if !found {
 			loggers.Std.Error().Msgf("ChainParam not found for chain %s", evmConfig.Chain.String())
-			continue
-		}
-		if !evmChainParams.IsSupported {
 			continue
 		}
 		co, err := evm.NewEVMChainClient(appContext, bridge, tss, dbpath, loggers, evmConfig, ts)

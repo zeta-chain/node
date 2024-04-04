@@ -33,6 +33,7 @@
 * [1755](https://github.com/zeta-chain/node/issues/1755) - use evm JSON RPC for inbound tx (including blob tx) observation.
 * [1815](https://github.com/zeta-chain/node/pull/1815) - add authority module for authorized actions
 * [1884](https://github.com/zeta-chain/node/pull/1884) - added zetatool cmd, added subcommand to filter deposits
+* [1942](https://github.com/zeta-chain/node/pull/1982) - support Bitcoin P2TR, P2WSH, P2SH, P2PKH addresses
 * [1935](https://github.com/zeta-chain/node/pull/1935) - add an operational authority group
 * [1954](https://github.com/zeta-chain/node/pull/1954) - add metric for concurrent keysigns
 
@@ -52,12 +53,15 @@
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
 * [1900](https://github.com/zeta-chain/node/pull/1900) - add testing for external chain migration
 * [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
+* [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
+* [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
 * [1955](https://github.com/zeta-chain/node/pull/1955) - improve emissions module coverage
 
 ### Fixes
 
 * [1861](https://github.com/zeta-chain/node/pull/1861) - fix `ObserverSlashAmount` invalid read
 * [1880](https://github.com/zeta-chain/node/issues/1880) - lower the gas price multiplier for EVM chains.
+* [1883](https://github.com/zeta-chain/node/issues/1883) - zetaclient should check 'IsSupported' flag to pause/unpause a specific chain
 * [1633](https://github.com/zeta-chain/node/issues/1633) - zetaclient should be able to pick up new connector and erc20Custody addresses
 * [1944](https://github.com/zeta-chain/node/pull/1944) - fix evm signer unit tests
 
@@ -174,6 +178,7 @@
 * [1675](https://github.com/zeta-chain/node/issues/1675) - use chain param ConfirmationCount for bitcoin confirmation
 
 ## Chores
+
 * [1694](https://github.com/zeta-chain/node/pull/1694) - remove standalone network, use require testing package for the entire node folder
 
 ## Version: v12.1.0
@@ -186,6 +191,7 @@
 * [1658](https://github.com/zeta-chain/node/pull/1658) - modify emission distribution to use fixed block rewards
 
 ### Fixes
+
 * [1535](https://github.com/zeta-chain/node/issues/1535) - Avoid voting on wrong ballots due to false blockNumber in EVM tx receipt
 * [1588](https://github.com/zeta-chain/node/pull/1588) - fix chain params comparison logic
 * [1650](https://github.com/zeta-chain/node/pull/1605) - exempt (discounted) *system txs* from min gas price check and gas fee deduction

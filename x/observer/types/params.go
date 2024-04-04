@@ -100,6 +100,7 @@ func validateAdminPolicy(i interface{}) error {
 	return nil
 }
 
+// https://github.com/zeta-chain/node/issues/1983
 func validateBallotMaturityBlocks(i interface{}) error {
 	_, ok := i.(int64)
 	if !ok {
@@ -107,13 +108,4 @@ func validateBallotMaturityBlocks(i interface{}) error {
 	}
 
 	return nil
-}
-
-func (p Params) GetAdminPolicyAccount(policyType Policy_Type) string {
-	for _, admin := range p.AdminPolicy {
-		if admin.PolicyType == policyType {
-			return admin.Address
-		}
-	}
-	return ""
 }

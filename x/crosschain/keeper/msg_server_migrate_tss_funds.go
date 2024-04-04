@@ -41,6 +41,10 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	}
 
 	tssHistory := k.zetaObserverKeeper.GetAllTSS(ctx)
+	if len(tssHistory) == 0 {
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "empty TSS history")
+	}
+
 	sort.SliceStable(tssHistory, func(i, j int) bool {
 		return tssHistory[i].FinalizedZetaHeight < tssHistory[j].FinalizedZetaHeight
 	})

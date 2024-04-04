@@ -15,7 +15,11 @@ const (
 	TestZetaWithdrawBTCRevertName         = "zeta_withdraw_btc_revert" // #nosec G101 - not a hardcoded password
 	TestMessagePassingName                = "message_passing"
 	TestZRC20SwapName                     = "zrc20_swap"
-	TestBitcoinWithdrawName               = "bitcoin_withdraw"
+	TestBitcoinWithdrawSegWitName         = "bitcoin_withdraw_segwit"
+	TestBitcoinWithdrawTaprootName        = "bitcoin_withdraw_taproot"
+	TestBitcoinWithdrawLegacyName         = "bitcoin_withdraw_legacy"
+	TestBitcoinWithdrawP2WSHName          = "bitcoin_withdraw_p2wsh"
+	TestBitcoinWithdrawP2SHName           = "bitcoin_withdraw_p2sh"
 	TestBitcoinWithdrawInvalidAddressName = "bitcoin_withdraw_invalid"
 	TestBitcoinWithdrawRestrictedName     = "bitcoin_withdraw_restricted"
 	TestCrosschainSwapName                = "crosschain_swap"
@@ -133,12 +137,49 @@ var AllE2ETests = []runner.E2ETest{
 		TestZRC20Swap,
 	),
 	runner.NewE2ETest(
-		TestBitcoinWithdrawName,
-		"withdraw BTC from ZEVM",
+		TestBitcoinWithdrawSegWitName,
+		"withdraw BTC from ZEVM to a SegWit address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
 		},
-		TestBitcoinWithdraw,
+		TestBitcoinWithdrawSegWit,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawTaprootName,
+		"withdraw BTC from ZEVM to a Taproot address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawTaproot,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawLegacyName,
+		"withdraw BTC from ZEVM to a legacy address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawLegacy,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2WSHName,
+		"withdraw BTC from ZEVM to a P2WSH address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2WSH,
+	),
+	runner.NewE2ETest(
+		TestBitcoinWithdrawP2SHName,
+		"withdraw BTC from ZEVM to a P2SH address",
+		[]runner.ArgDefinition{
+			runner.ArgDefinition{Description: "receiver address", DefaultValue: ""},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
+		},
+		TestBitcoinWithdrawP2SH,
 	),
 	runner.NewE2ETest(
 		TestBitcoinWithdrawInvalidAddressName,
@@ -314,7 +355,7 @@ var AllE2ETests = []runner.E2ETest{
 		TestBitcoinWithdrawRestrictedName,
 		"withdraw Bitcoin from ZEVM to restricted address",
 		[]runner.ArgDefinition{
-			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.01"},
+			runner.ArgDefinition{Description: "amount in btc", DefaultValue: "0.001"},
 		},
 		TestBitcoinWithdrawRestricted,
 	),
