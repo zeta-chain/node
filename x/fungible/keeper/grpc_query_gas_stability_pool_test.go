@@ -29,6 +29,42 @@ func TestKeeper_GasStabilityPoolAddress(t *testing.T) {
 	})
 }
 
+func TestKeeper_GasStabilityPoolBalance(t *testing.T) {
+	t.Run("should error if req is nil", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		res, err := k.GasStabilityPoolBalance(ctx, nil)
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeper(t)
+		chainID := 5
+
+		res, err := k.GasStabilityPoolBalance(ctx, &types.QueryGetGasStabilityPoolBalance{
+			ChainId: int64(chainID),
+		})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
+	t.Run("should return balance", func(t *testing.T) {
+		k, ctx, sdkk, _ := keepertest.FungibleKeeper(t)
+		chainID := 5
+		_ = k.GetAuthKeeper().GetModuleAccount(ctx, types.ModuleName)
+
+		deploySystemContracts(t, ctx, k, sdkk.EvmKeeper)
+		setupGasCoin(t, ctx, k, sdkk.EvmKeeper, int64(chainID), "foobar", "foobar")
+
+		res, err := k.GasStabilityPoolBalance(ctx, &types.QueryGetGasStabilityPoolBalance{
+			ChainId: int64(chainID),
+		})
+		require.NoError(t, err)
+		require.Equal(t, "0", res.Balance)
+	})
+
+}
+
 func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 	t.Run("should error if req is nil", func(t *testing.T) {
 		k, ctx, _, _ := keepertest.FungibleKeeper(t)
@@ -61,6 +97,24 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		require.Nil(t, res)
 	})
 
+	t.Run("should error if system contracts not deployed", func(t *testing.T) {
+		k, ctx, _, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
+			UseObserverMock: true,
+		})
+		observerMock := keepertest.GetFungibleObserverMock(t, k)
+		chainID := 5
+		observerMock.On("GetSupportedChains", mock.Anything).Return([]*chains.Chain{
+			{
+				ChainName: chains.ChainName(chainID),
+				ChainId:   int64(chainID),
+			},
+		})
+
+		res, err := k.GasStabilityPoolBalanceAll(ctx, &types.QueryAllGasStabilityPoolBalance{})
+		require.Error(t, err)
+		require.Nil(t, res)
+	})
+
 	t.Run("should return balances", func(t *testing.T) {
 		k, ctx, sdkk, _ := keepertest.FungibleKeeperWithMocks(t, keepertest.FungibleMockOptions{
 			UseObserverMock: true,
@@ -84,6 +138,5 @@ func TestKeeper_GasStabilityPoolBalanceAll(t *testing.T) {
 		require.Len(t, res.Balances, 1)
 		require.Equal(t, int64(chainID), res.Balances[0].ChainId)
 		require.Equal(t, "0", res.Balances[0].Balance)
-
 	})
 }

@@ -363,7 +363,7 @@ func TestKeeper_DepositCoinZeta(t *testing.T) {
 	b := k.GetBankKeeper().GetBalance(ctx, zetaToAddress, "azeta")
 	require.Equal(t, int64(0), b.Amount.Int64())
 
-	k.MintZetaToEVMAccount(ctx, to[:], amount)
+	k.DepositCoinZeta(ctx, to, amount)
 	b = k.GetBankKeeper().GetBalance(ctx, zetaToAddress, "azeta")
 	require.Equal(t, amount.Int64(), b.Amount.Int64())
 }
