@@ -96,7 +96,6 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}
-	fmt.Printf("addr %v\n", addr.EncodeAddress())
 
 	hash, err := chainhash.NewHashFromStr(prevOut)
 	if err != nil {
@@ -109,7 +108,7 @@ func buildTX() (*wire.MsgTx, *txscript.TxSigHashes, int, int64, []byte, *btcec.P
 	txIn := wire.NewTxIn(outpoint, nil, nil)
 	tx.AddTxIn(txIn)
 
-	pkScript, err := PayToWitnessPubKeyHashScript(addr.WitnessProgram())
+	pkScript, err := PayToAddrScript(addr)
 	if err != nil {
 		return nil, nil, 0, 0, nil, nil, false, err
 	}

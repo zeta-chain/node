@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/zeta-chain/zetacore/pkg/coin"
-	"github.com/zeta-chain/zetacore/pkg/constant"
-	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-
+	"github.com/zeta-chain/zetacore/pkg/coin"
+	"github.com/zeta-chain/zetacore/pkg/constant"
+	authoritytypes "github.com/zeta-chain/zetacore/x/authority/types"
 	"github.com/zeta-chain/zetacore/x/crosschain/types"
 	fungibletypes "github.com/zeta-chain/zetacore/x/fungible/types"
 )
@@ -173,6 +170,16 @@ func (k msgServer) WhitelistERC20(goCtx context.Context, msg *types.MsgWhitelist
 	k.SetCctxAndNonceToCctxAndInTxHashToCctx(ctx, cctx)
 
 	commit()
+
+	err = ctx.EventManager().EmitTypedEvent(
+		&types.EventERC20Whitelist{
+			Zrc20Address:       zrc20Addr.Hex(),
+			WhitelistCctxIndex: index,
+		},
+	)
+	if err != nil {
+		return nil, errorsmod.Wrapf(err, "failed to emit event")
+	}
 
 	return &types.MsgWhitelistERC20Response{
 		Zrc20Address: zrc20Addr.Hex(),

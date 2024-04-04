@@ -79,7 +79,7 @@ func (ob *BTCChainClient) CheckReceiptForBtcTxHash(txHash string, vote bool) (st
 		return "", err
 	}
 	// #nosec G701 always positive
-	event, err := GetBtcEvent(*tx, tss, uint64(blockVb.Height), &ob.logger.InTx, ob.netParams, depositorFee)
+	event, err := GetBtcEvent(ob.rpcClient, *tx, tss, uint64(blockVb.Height), ob.logger.InTx, ob.netParams, depositorFee)
 	if err != nil {
 		return "", err
 	}

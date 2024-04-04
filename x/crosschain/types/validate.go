@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"cosmossdk.io/errors"
-	"github.com/btcsuite/btcutil"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/zeta-chain/zetacore/pkg/chains"
@@ -58,9 +57,8 @@ func ValidateAddressForChain(address string, chainID int64) error {
 		if err != nil {
 			return fmt.Errorf("invalid address %s , chain %d: %s", address, chainID, err)
 		}
-		_, ok := addr.(*btcutil.AddressWitnessPubKeyHash)
-		if !ok {
-			return fmt.Errorf(" invalid address %s (not P2WPKH address)", address)
+		if !chains.IsBtcAddressSupported(addr) {
+			return fmt.Errorf("unsupported address %s", address)
 		}
 		return nil
 	}
