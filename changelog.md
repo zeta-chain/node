@@ -51,6 +51,7 @@
 * [1805](https://github.com/zeta-chain/node/pull/1805) - add admin and performance test and fix upgrade test
 * [1879](https://github.com/zeta-chain/node/pull/1879) - full coverage for messages in types packages
 * [1899](https://github.com/zeta-chain/node/pull/1899) - add empty test files so packages are included in coverage
+* [1900](https://github.com/zeta-chain/node/pull/1900) - add testing for external chain migration
 * [1903](https://github.com/zeta-chain/node/pull/1903) - common package tests
 * [1961](https://github.com/zeta-chain/node/pull/1961) - improve observer module coverage
 * [1967](https://github.com/zeta-chain/node/pull/1967) - improve crosschain module coverage
