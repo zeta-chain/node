@@ -82,7 +82,7 @@ func TestBroadcast(t *testing.T) {
 		msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
 		authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
-		_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
+		_, err = BroadcastToZetaCore(zetabridge, 10000, authzMsg, authzSigner)
 		require.NoError(t, err)
 	})
 
@@ -93,8 +93,19 @@ func TestBroadcast(t *testing.T) {
 		msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
 		authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
 		require.NoError(t, err)
-		_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
+		_, err = BroadcastToZetaCore(zetabridge, 10000, authzMsg, authzSigner)
 		require.Error(t, err)
 	})
+
+}
+
+func TestZetaCoreBridge_GetContext(t *testing.T) {
+	address := types.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
+	zetabridge, err := setupCoreBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+
+	_, err = zetabridge.GetContext()
+	require.NoError(t, err)
 
 }

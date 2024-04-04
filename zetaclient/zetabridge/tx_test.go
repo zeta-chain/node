@@ -353,7 +353,7 @@ func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
 func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
-	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: true}
+	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
 		BallotIdentifier: "0x2d10e9b7ce7921fa6b61ada3020d1c797d5ec52424cdcf86ef31cbbbcd45db58",
 		VoterAddress:     address.String(),
@@ -374,7 +374,7 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 			Creator: address.String(),
 		})
 		require.NoError(t, err)
-		require.Equal(t, "", hash)
+		require.Equal(t, sampleHash, hash)
 	})
 }
 
@@ -420,7 +420,7 @@ func TestZetaCoreBridge_MonitorVoteInboundTxResult(t *testing.T) {
 func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
-	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: true}
+	expectedOutput := observertypes.QueryHasVotedResponse{HasVoted: false}
 	input := observertypes.QueryHasVotedRequest{
 		BallotIdentifier: "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347",
 		VoterAddress:     address.String(),
@@ -449,7 +449,7 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 		10001,
 		coin.CoinType_Gas)
 	require.NoError(t, err)
-	require.Equal(t, "", hash)
+	require.Equal(t, sampleHash, hash)
 	require.Equal(t, "0xc507c67847209b403def6d944486ff888c442eccf924cf9ebdc48714b22b5347", ballot)
 }
 
