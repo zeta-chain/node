@@ -14,8 +14,7 @@ import (
 func TestCctxRestricted(t *testing.T) {
 	// load archived cctx
 	var cctx crosschaintypes.CrossChainTx
-	err := testutils.LoadObjectFromJSONFile(&cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_1_6270.json"))
-	require.NoError(t, err)
+	testutils.LoadObjectFromJSONFile(t, &cctx, path.Join("../", testutils.TestDataPathCctx, "cctx_1_6270.json"))
 
 	// create config
 	cfg := config.Config{
