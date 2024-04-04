@@ -21,6 +21,7 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/hsm"
 )
 
+// BroadcastInterface defines the signature of the broadcast function used by zetabridge transactions
 type BroadcastInterface = func(bridge *ZetaCoreBridge, gaslimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error)
 
 const (
@@ -38,6 +39,7 @@ var (
 	zetaBridgeBroadcast BroadcastInterface = BroadcastToZetaCore
 )
 
+// BroadcastToZetaCore is the default broadcast function used to send transactions to Zeta Core
 func BroadcastToZetaCore(bridge *ZetaCoreBridge, gasLimit uint64, authzWrappedMsg sdktypes.Msg, authzSigner authz.Signer) (string, error) {
 	return bridge.Broadcast(gasLimit, authzWrappedMsg, authzSigner)
 }
@@ -171,20 +173,20 @@ func (b *ZetaCoreBridge) GetContext() (client.Context, error) {
 	ctx = ctx.WithLegacyAmino(b.encodingCfg.Amino)
 	ctx = ctx.WithAccountRetriever(authtypes.AccountRetriever{})
 
-	remote := b.cfg.ChainRPC
-	if !strings.HasPrefix(b.cfg.ChainHost, "http") {
-		remote = fmt.Sprintf("tcp://%s", remote)
-	}
-
-	ctx = ctx.WithNodeURI(remote)
-	wsClient, err := rpchttp.New(remote, "/websocket")
-	if err != nil {
-		return ctx, err
-	}
-
 	if b.cfg.UseMockSDKClient {
 		ctx = ctx.WithClient(b.mockSDKClient)
 	} else {
+		remote := b.cfg.ChainRPC
+		if !strings.HasPrefix(b.cfg.ChainHost, "http") {
+			remote = fmt.Sprintf("tcp://%s", remote)
+		}
+
+		ctx = ctx.WithNodeURI(remote)
+		wsClient, err := rpchttp.New(remote, "/websocket")
+		if err != nil {
+			return ctx, err
+		}
+
 		ctx = ctx.WithClient(wsClient)
 	}
 

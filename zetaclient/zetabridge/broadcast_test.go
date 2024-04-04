@@ -41,14 +41,14 @@ func TestBroadcast(t *testing.T) {
 	address := types.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
 	//Setup server for multiple grpc calls
-	l, err := net.Listen("tcp", "127.0.0.1:9090")
+	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
 	server := grpcmock.MockUnstartedServer(
 		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
 		grpcmock.RegisterService(feemarkettypes.RegisterQueryServer),
 		grpcmock.RegisterService(authtypes.RegisterQueryServer),
 		grpcmock.WithPlanner(planner.FirstMatch()),
-		grpcmock.WithListener(l),
+		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
 			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
 			s.ExpectUnary(method).
@@ -71,16 +71,30 @@ func TestBroadcast(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 
-	blockHash, err := hex.DecodeString(ethBlockHash)
-	require.NoError(t, err)
-	msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
-	authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
-	require.NoError(t, err)
-	_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
-	require.NoError(t, err)
+	t.Run("broadcast success", func(t *testing.T) {
+		zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
+		blockHash, err := hex.DecodeString(ethBlockHash)
+		require.NoError(t, err)
+		msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
+		authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
+		require.NoError(t, err)
+		_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
+		require.NoError(t, err)
+	})
+
+	t.Run("broadcast failed", func(t *testing.T) {
+		zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(errors.New("account sequence mismatch, expected 5 got 4"), 32))
+		blockHash, err := hex.DecodeString(ethBlockHash)
+		require.NoError(t, err)
+		msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
+		authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
+		require.NoError(t, err)
+		_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
+		require.Error(t, err)
+	})
+
 }

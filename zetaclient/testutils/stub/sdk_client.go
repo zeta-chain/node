@@ -10,21 +10,21 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-type MockSDKClient struct {
+type SDKClient struct {
 	mock.Client
 	err  error
 	code uint32
 }
 
-func (c MockSDKClient) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
+func (c SDKClient) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
 	return nil, c.err
 }
 
-func (c MockSDKClient) BroadcastTxAsync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c SDKClient) BroadcastTxAsync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c MockSDKClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c SDKClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	log := ""
 	if c.err != nil {
 		log = c.err.Error()
@@ -38,7 +38,7 @@ func (c MockSDKClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*corety
 	}, c.err
 }
 
-func (c MockSDKClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
+func (c SDKClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
 	return &coretypes.ResultTx{
 		Hash:   bytes.HexBytes{},
 		Height: 0,
@@ -51,7 +51,7 @@ func (c MockSDKClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.Resul
 	}, c.err
 }
 
-func (c MockSDKClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlock, error) {
+func (c SDKClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlock, error) {
 	return &coretypes.ResultBlock{Block: &tmtypes.Block{
 		Header:   tmtypes.Header{},
 		Data:     tmtypes.Data{},
@@ -59,8 +59,8 @@ func (c MockSDKClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBloc
 	}}, c.err
 }
 
-func NewMockSDKClientWithErr(err error, code uint32) *MockSDKClient {
-	return &MockSDKClient{
+func NewSDKClientWithErr(err error, code uint32) *SDKClient {
+	return &SDKClient{
 		Client: mock.Client{},
 		err:    err,
 		code:   code,

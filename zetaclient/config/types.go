@@ -17,14 +17,18 @@ const (
 	KeyringBackendFile      KeyringBackend = "file"
 )
 
+// ClientConfiguration is a subset of zetaclient config that is used by zetabridge
 type ClientConfiguration struct {
-	ChainHost        string `json:"chain_host" mapstructure:"chain_host"`
-	ChainRPC         string `json:"chain_rpc" mapstructure:"chain_rpc"`
-	ChainHomeFolder  string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
-	SignerName       string `json:"signer_name" mapstructure:"signer_name"`
-	SignerPasswd     string `json:"signer_passwd"`
-	HsmMode          bool   `json:"hsm_mode"`
-	UseMockSDKClient bool   `json:"use_mock_sdk_client"`
+	ChainHost       string `json:"chain_host" mapstructure:"chain_host"`
+	ChainRPC        string `json:"chain_rpc" mapstructure:"chain_rpc"`
+	ChainHomeFolder string `json:"chain_home_folder" mapstructure:"chain_home_folder"`
+	SignerName      string `json:"signer_name" mapstructure:"signer_name"`
+	SignerPasswd    string `json:"signer_passwd"`
+	HsmMode         bool   `json:"hsm_mode"`
+
+	// UseMockSDKClient is a flag that determines whether the mock cosmos sdk client should be used, primarily for
+	// unit testing
+	UseMockSDKClient bool `json:"use_mock_sdk_client"`
 }
 
 type EVMConfig struct {

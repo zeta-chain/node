@@ -1,6 +1,9 @@
 package zetabridge
 
 import (
+	"net"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -20,19 +23,16 @@ import (
 	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
 	"go.nhat.io/grpcmock"
 	"go.nhat.io/grpcmock/planner"
-
-	"net"
-	"testing"
 )
 
 func setupMockServer(t *testing.T, serviceFunc any, method string, input any, expectedOutput any) *grpcmock.Server {
-	l, err := net.Listen("tcp", "127.0.0.1:9090")
+	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
 
 	server := grpcmock.MockUnstartedServer(
 		grpcmock.RegisterService(serviceFunc),
 		grpcmock.WithPlanner(planner.FirstMatch()),
-		grpcmock.WithListener(l),
+		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
 			s.ExpectUnary(method).
 				UnlimitedTimes().
@@ -49,7 +49,7 @@ func closeMockServer(t *testing.T, server *grpcmock.Server) {
 	require.NoError(t, err)
 }
 
-func setupCorBridge() (*ZetaCoreBridge, error) {
+func setupCoreBridge() (*ZetaCoreBridge, error) {
 	return NewZetaCoreBridge(
 		&keys.Keys{},
 		"127.0.0.1",
@@ -61,7 +61,7 @@ func setupCorBridge() (*ZetaCoreBridge, error) {
 
 func TestZetaCoreBridge_GetBallot(t *testing.T) {
 	expectedOutput := observertypes.QueryBallotByIdentifierResponse{
-		BallotIdentifier: "456",
+		BallotIdentifier: "123",
 		Voters:           nil,
 		ObservationType:  0,
 		BallotStatus:     0,
@@ -72,7 +72,7 @@ func TestZetaCoreBridge_GetBallot(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetBallotByID("123")
@@ -93,7 +93,7 @@ func TestZetaCoreBridge_GetCrosschainFlags(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetCrosschainFlags()
@@ -111,7 +111,7 @@ func TestZetaCoreBridge_GetChainParamsForChainID(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetChainParamsForChainID(123)
@@ -133,7 +133,7 @@ func TestZetaCoreBridge_GetChainParams(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetChainParams()
@@ -154,7 +154,7 @@ func TestZetaCoreBridge_GetUpgradePlan(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetUpgradePlan()
@@ -177,7 +177,7 @@ func TestZetaCoreBridge_GetAllCctx(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetAllCctx()
@@ -195,7 +195,7 @@ func TestZetaCoreBridge_GetCctxByHash(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetCctxByHash("9c8d02b6956b9c78ecb6090a8160faaa48e7aecfd0026fcdf533721d861436a3")
@@ -216,7 +216,7 @@ func TestZetaCoreBridge_GetCctxByNonce(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetCctxByNonce(7000, 55)
@@ -238,7 +238,7 @@ func TestZetaCoreBridge_GetObserverList(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetObserverList()
@@ -261,7 +261,7 @@ func TestZetaCoreBridge_ListPendingCctx(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, totalPending, err := zetabridge.ListPendingCctx(7000)
@@ -278,7 +278,7 @@ func TestZetaCoreBridge_GetAbortedZetaAmount(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetAbortedZetaAmount()
@@ -302,7 +302,7 @@ func TestZetaCoreBridge_GetZetaTokenSupplyOnNode(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetZetaTokenSupplyOnNode()
@@ -327,11 +327,14 @@ func TestZetaCoreBridge_GetLastBlockHeight(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetLastBlockHeight()
-	require.Equal(t, expectedOutput.LastBlockHeight, resp)
+	t.Run("last block height", func(t *testing.T) {
+		resp, err := zetabridge.GetLastBlockHeight()
+		require.NoError(t, err)
+		require.Equal(t, expectedOutput.LastBlockHeight, resp)
+	})
 }
 
 func TestZetaCoreBridge_GetLatestZetaBlock(t *testing.T) {
@@ -349,7 +352,7 @@ func TestZetaCoreBridge_GetLatestZetaBlock(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetLatestZetaBlock()
@@ -367,7 +370,7 @@ func TestZetaCoreBridge_GetNodeInfo(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetNodeInfo()
@@ -391,7 +394,7 @@ func TestZetaCoreBridge_GetLastBlockHeightByChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetLastBlockHeightByChain(index)
@@ -407,12 +410,20 @@ func TestZetaCoreBridge_GetZetaBlockHeight(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
-	resp, err := zetabridge.GetZetaBlockHeight()
-	require.NoError(t, err)
-	require.Equal(t, expectedOutput.Height, resp)
+	t.Run("get zeta block height success", func(t *testing.T) {
+		resp, err := zetabridge.GetZetaBlockHeight()
+		require.NoError(t, err)
+		require.Equal(t, expectedOutput.Height, resp)
+	})
+
+	t.Run("get block height success", func(t *testing.T) {
+		resp, err := zetabridge.GetBlockHeight()
+		require.NoError(t, err)
+		require.Equal(t, expectedOutput.Height, resp)
+	})
 }
 
 func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
@@ -427,7 +438,7 @@ func TestZetaCoreBridge_GetBaseGasPrice(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetBaseGasPrice()
@@ -453,7 +464,7 @@ func TestZetaCoreBridge_GetNonceByChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetNonceByChain(chain)
@@ -478,7 +489,7 @@ func TestZetaCoreBridge_GetAllNodeAccounts(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetAllNodeAccounts()
@@ -499,7 +510,7 @@ func TestZetaCoreBridge_GetKeyGen(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetKeyGen()
@@ -517,7 +528,7 @@ func TestZetaCoreBridge_GetBallotByID(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetBallot("ballot1235")
@@ -542,7 +553,7 @@ func TestZetaCoreBridge_GetInboundTrackersForChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetInboundTrackersForChain(chainID)
@@ -566,7 +577,7 @@ func TestZetaCoreBridge_GetCurrentTss(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetCurrentTss()
@@ -585,7 +596,7 @@ func TestZetaCoreBridge_GetEthTssAddress(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetEthTssAddress()
@@ -604,7 +615,7 @@ func TestZetaCoreBridge_GetBtcTssAddress(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetBtcTssAddress(8332)
@@ -630,7 +641,7 @@ func TestZetaCoreBridge_GetTssHistory(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetTssHistory()
@@ -657,7 +668,7 @@ func TestZetaCoreBridge_GetOutTxTracker(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetOutTxTracker(chain, 456)
@@ -692,7 +703,7 @@ func TestZetaCoreBridge_GetAllOutTxTrackerByChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetAllOutTxTrackerByChain(chain.ChainId, interfaces.Ascending)
@@ -719,7 +730,7 @@ func TestZetaCoreBridge_GetPendingNoncesByChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetPendingNoncesByChain(chains.EthChain().ChainId)
@@ -741,7 +752,7 @@ func TestZetaCoreBridge_GetBlockHeaderStateByChain(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetBlockHeaderStateByChain(chainID)
@@ -766,7 +777,7 @@ func TestZetaCoreBridge_GetSupportedChains(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetSupportedChains()
@@ -791,7 +802,7 @@ func TestZetaCoreBridge_GetPendingNonces(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.GetPendingNonces()
@@ -819,7 +830,7 @@ func TestZetaCoreBridge_Prove(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.Prove(blockHash, txHash, int64(txIndex), nil, chainId)
@@ -838,7 +849,7 @@ func TestZetaCoreBridge_HasVoted(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 
 	resp, err := zetabridge.HasVoted("123456asdf", "zeta1l40mm7meacx03r4lp87s9gkxfan32xnznp42u6")
@@ -862,9 +873,9 @@ func TestZetaCoreBridge_GetZetaHotKeyBalance(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), types.AccAddress{}, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), types.AccAddress{}, "", "")
 
 	resp, err := zetabridge.GetZetaHotKeyBalance()
 	require.NoError(t, err)

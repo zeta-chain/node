@@ -134,10 +134,10 @@ func getHeaderData(t *testing.T) proofs.HeaderData {
 }
 
 func TestZetaCoreBridge_PostGasPrice(t *testing.T) {
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 
 	t.Run("post gas price success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -157,10 +157,10 @@ func TestZetaCoreBridge_PostGasPrice(t *testing.T) {
 }
 
 func TestZetaCoreBridge_AddTxHashToOutTxTracker(t *testing.T) {
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 
 	t.Run("add tx hash success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -178,10 +178,10 @@ func TestZetaCoreBridge_AddTxHashToOutTxTracker(t *testing.T) {
 }
 
 func TestZetaCoreBridge_SetTSS(t *testing.T) {
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 
 	t.Run("set tss success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -197,7 +197,7 @@ func TestZetaCoreBridge_SetTSS(t *testing.T) {
 
 func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 	//Setup server for multiple grpc calls
-	l, err := net.Listen("tcp", "127.0.0.1:9090")
+	listener, err := net.Listen("tcp", "127.0.0.1:9090")
 	require.NoError(t, err)
 
 	server := grpcmock.MockUnstartedServer(
@@ -205,7 +205,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 		grpcmock.RegisterService(upgradetypes.RegisterQueryServer),
 		grpcmock.RegisterService(observertypes.RegisterQueryServer),
 		grpcmock.WithPlanner(planner.FirstMatch()),
-		grpcmock.WithListener(l),
+		grpcmock.WithListener(listener),
 		func(s *grpcmock.Server) {
 			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
 			s.ExpectUnary(method).
@@ -292,11 +292,11 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
 
 	t.Run("core context update success", func(t *testing.T) {
 		cfg := config.NewConfig()
@@ -308,10 +308,10 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 }
 
 func TestZetaCoreBridge_PostBlameData(t *testing.T) {
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 
 	t.Run("post blame data success", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -330,10 +330,10 @@ func TestZetaCoreBridge_PostBlameData(t *testing.T) {
 }
 
 func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
 	blockHash, err := hex.DecodeString(ethBlockHash)
 	require.NoError(t, err)
 
@@ -363,10 +363,10 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -402,10 +402,10 @@ func TestZetaCoreBridge_GetInBoundVoteMessage(t *testing.T) {
 
 func TestZetaCoreBridge_MonitorVoteInboundTxResult(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -430,10 +430,10 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 	server.Serve()
 	defer closeMockServer(t, server)
 
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
 
 	zetaBridgeBroadcast = ZetaBridgeBroadcastTest
 	hash, ballot, err := zetabridge.PostVoteOutbound(
@@ -455,10 +455,10 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 
 func TestZetaCoreBridge_MonitorVoteOutboundTxResult(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
-	zetabridge, err := setupCorBridge()
+	zetabridge, err := setupCoreBridge()
 	require.NoError(t, err)
-	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewSDKClientWithErr(nil, 0))
 
 	t.Run("monitor outbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
