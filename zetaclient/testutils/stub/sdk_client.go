@@ -13,7 +13,8 @@ import (
 
 type MockSDKClient struct {
 	mock.Client
-	err error
+	err  error
+	code uint32
 }
 
 func (c MockSDKClient) BroadcastTxCommit(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
@@ -25,7 +26,17 @@ func (c MockSDKClient) BroadcastTxAsync(_ context.Context, _ tmtypes.Tx) (*coret
 }
 
 func (c MockSDKClient) BroadcastTxSync(_ context.Context, _ tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return nil, c.err
+	log := ""
+	if c.err != nil {
+		log = c.err.Error()
+	}
+	return &coretypes.ResultBroadcastTx{
+		Code:      c.code,
+		Data:      bytes.HexBytes{},
+		Log:       log,
+		Codespace: "",
+		Hash:      bytes.HexBytes{},
+	}, c.err
 }
 
 func (c MockSDKClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
@@ -49,9 +60,10 @@ func (c MockSDKClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBloc
 	}}, c.err
 }
 
-func NewMockSDKClientWithErr(err error) *MockSDKClient {
+func NewMockSDKClientWithErr(err error, code uint32) *MockSDKClient {
 	return &MockSDKClient{
 		Client: mock.Client{},
 		err:    err,
+		code:   code,
 	}
 }

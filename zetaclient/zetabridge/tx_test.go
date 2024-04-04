@@ -9,6 +9,7 @@ import (
 	"os"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -295,7 +296,7 @@ func TestZetaCoreBridge_UpdateZetaCoreContext(t *testing.T) {
 	require.NoError(t, err)
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
 
 	t.Run("core context update success", func(t *testing.T) {
 		cfg := config.NewConfig()
@@ -349,7 +350,6 @@ func TestZetaCoreBridge_PostAddBlockHeader(t *testing.T) {
 	})
 }
 
-// TODO: Rest of tests Requires zetabridge refactoring
 func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
@@ -366,7 +366,7 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 	zetabridge, err := setupCorBridge()
 	require.NoError(t, err)
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
 
 	t.Run("post inbound vote already voted", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -377,12 +377,35 @@ func TestZetaCoreBridge_PostVoteInbound(t *testing.T) {
 		require.Equal(t, "", hash)
 	})
 }
+
+func TestZetaCoreBridge_GetInBoundVoteMessage(t *testing.T) {
+	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
+	t.Run("get inbound vote message", func(t *testing.T) {
+		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
+		msg := GetInBoundVoteMessage(
+			address.String(),
+			chains.EthChain().ChainId,
+			"",
+			address.String(),
+			chains.ZetaChainMainnet().ChainId,
+			math.NewUint(500),
+			"",
+			"", 12345,
+			1000,
+			coin.CoinType_Gas,
+			"azeta",
+			address.String(),
+			0)
+		require.Equal(t, address.String(), msg.Creator)
+	})
+}
+
 func TestZetaCoreBridge_MonitorVoteInboundTxResult(t *testing.T) {
 	address := sdktypes.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 	zetabridge, err := setupCorBridge()
 	require.NoError(t, err)
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
 
 	t.Run("monitor inbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest
@@ -410,7 +433,7 @@ func TestZetaCoreBridge_PostVoteOutbound(t *testing.T) {
 	zetabridge, err := setupCorBridge()
 	require.NoError(t, err)
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
 
 	zetaBridgeBroadcast = ZetaBridgeBroadcastTest
 	hash, ballot, err := zetabridge.PostVoteOutbound(
@@ -435,7 +458,7 @@ func TestZetaCoreBridge_MonitorVoteOutboundTxResult(t *testing.T) {
 	zetabridge, err := setupCorBridge()
 	require.NoError(t, err)
 	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
-	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil))
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
 
 	t.Run("monitor outbound vote", func(t *testing.T) {
 		zetaBridgeBroadcast = ZetaBridgeBroadcastTest

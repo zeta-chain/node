@@ -214,6 +214,7 @@ func (b *ZetaCoreBridge) QueryTxResult(hash string) (*sdktypes.TxResponse, error
 }
 
 // HandleBroadcastError returns whether to retry in a few seconds, and whether to report via AddTxHashToOutTxTracker
+// returns (bool retry, bool report)
 func HandleBroadcastError(err error, nonce, toChain, outTxHash string) (bool, bool) {
 	if strings.Contains(err.Error(), "nonce too low") {
 		log.Warn().Err(err).Msgf("nonce too low! this might be a unnecessary key-sign. increase re-try interval and awaits outTx confirmation")

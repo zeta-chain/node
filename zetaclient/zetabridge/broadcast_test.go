@@ -1,25 +1,86 @@
 package zetabridge
 
 import (
-	"fmt"
-	"regexp"
+	"encoding/hex"
+	"errors"
+	"net"
+	"testing"
 
-	. "gopkg.in/check.v1"
+	"github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
+	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/pkg/chains"
+	crosschaintypes "github.com/zeta-chain/zetacore/x/crosschain/types"
+	observerTypes "github.com/zeta-chain/zetacore/x/observer/types"
+	"github.com/zeta-chain/zetacore/zetaclient/keys"
+	"github.com/zeta-chain/zetacore/zetaclient/testutils/stub"
+	"go.nhat.io/grpcmock"
+	"go.nhat.io/grpcmock/planner"
 )
 
-type BcastSuite struct {
+func TestHandleBroadcastError(t *testing.T) {
+	type response struct {
+		retry  bool
+		report bool
+	}
+	testCases := map[error]response{
+		errors.New("nonce too low"):                       {retry: false, report: false},
+		errors.New("replacement transaction underpriced"): {retry: false, report: false},
+		errors.New("already known"):                       {retry: false, report: true},
+		errors.New(""):                                    {retry: true, report: false},
+	}
+	for input, output := range testCases {
+		retry, report := HandleBroadcastError(input, "", "", "")
+		require.Equal(t, output.report, report)
+		require.Equal(t, output.retry, retry)
+	}
 }
 
-var _ = Suite(&BcastSuite{})
+func TestBroadcast(t *testing.T) {
+	address := types.AccAddress(stub.TestKeyringPair.PubKey().Address().Bytes())
 
-func (s *BcastSuite) SetUpTest(c *C) {
-	fmt.Println("hello")
-}
+	//Setup server for multiple grpc calls
+	l, err := net.Listen("tcp", "127.0.0.1:9090")
+	require.NoError(t, err)
+	server := grpcmock.MockUnstartedServer(
+		grpcmock.RegisterService(crosschaintypes.RegisterQueryServer),
+		grpcmock.RegisterService(feemarkettypes.RegisterQueryServer),
+		grpcmock.RegisterService(authtypes.RegisterQueryServer),
+		grpcmock.WithPlanner(planner.FirstMatch()),
+		grpcmock.WithListener(l),
+		func(s *grpcmock.Server) {
+			method := "/zetachain.zetacore.crosschain.Query/LastZetaHeight"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(crosschaintypes.QueryLastZetaHeightRequest{}).
+				Return(crosschaintypes.QueryLastZetaHeightResponse{Height: 0})
 
-func (s *BcastSuite) TestParsingSeqNumMismatch(c *C) {
-	err_msg := "fail to broadcast to zetabridge,code:32, log:account sequence mismatch, expected 386232, got 386230: incorrect account sequence"
-	re := regexp.MustCompile(`account sequence mismatch, expected ([0-9]*), got ([0-9]*)`)
-	fmt.Printf("%q\n", re.FindStringSubmatch(err_msg))
-	err_msg2 := "hahah"
-	fmt.Printf("%q\n", re.FindStringSubmatch(err_msg2))
+			method = "/ethermint.feemarket.v1.Query/Params"
+			s.ExpectUnary(method).
+				UnlimitedTimes().
+				WithPayload(feemarkettypes.QueryParamsRequest{}).
+				Return(feemarkettypes.QueryParamsResponse{
+					Params: feemarkettypes.Params{
+						BaseFee: types.NewInt(23455),
+					},
+				})
+		},
+	)(t)
+
+	server.Serve()
+	defer closeMockServer(t, server)
+
+	zetabridge, err := setupCorBridge()
+	require.NoError(t, err)
+	zetabridge.keys = keys.NewKeysWithKeybase(stub.NewMockKeyring(), address, "", "")
+	zetabridge.EnableMockSDKClient(stub.NewMockSDKClientWithErr(nil, 0))
+
+	blockHash, err := hex.DecodeString(ethBlockHash)
+	require.NoError(t, err)
+	msg := observerTypes.NewMsgAddBlockHeader(address.String(), chains.EthChain().ChainId, blockHash, 18495266, getHeaderData(t))
+	authzMsg, authzSigner, err := zetabridge.WrapMessageWithAuthz(msg)
+	require.NoError(t, err)
+	_, err = zetabridge.Broadcast(10000, authzMsg, authzSigner)
+	require.NoError(t, err)
 }
