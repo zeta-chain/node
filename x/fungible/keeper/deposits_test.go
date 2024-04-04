@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/zeta-chain/zetacore/cmd/zetacored/config"
 	"github.com/zeta-chain/zetacore/pkg/chains"
 	"github.com/zeta-chain/zetacore/pkg/coin"
 	"github.com/zeta-chain/zetacore/testutil/contracts"
@@ -355,15 +356,16 @@ func TestKeeper_ZRC20DepositAndCallContract(t *testing.T) {
 }
 
 func TestKeeper_DepositCoinZeta(t *testing.T) {
-	k, ctx, _, _ := testkeeper.FungibleKeeper(t)
+	k, ctx, sdkk, _ := testkeeper.FungibleKeeper(t)
 	to := sample.EthAddress()
 	amount := big.NewInt(1)
 	zetaToAddress := sdk.AccAddress(to.Bytes())
 
-	b := k.GetBankKeeper().GetBalance(ctx, zetaToAddress, "azeta")
+	b := sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
 	require.Equal(t, int64(0), b.Amount.Int64())
 
-	k.DepositCoinZeta(ctx, to, amount)
-	b = k.GetBankKeeper().GetBalance(ctx, zetaToAddress, "azeta")
+	err := k.DepositCoinZeta(ctx, to, amount)
+	require.NoError(t, err)
+	b = sdkk.BankKeeper.GetBalance(ctx, zetaToAddress, config.BaseDenom)
 	require.Equal(t, amount.Int64(), b.Amount.Int64())
 }
