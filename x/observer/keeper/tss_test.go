@@ -9,14 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
 	"github.com/zeta-chain/zetacore/testutil/sample"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
-func TestTSSGet(t *testing.T) {
+func TestKeeper_GetTSS(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
@@ -25,7 +21,7 @@ func TestTSSGet(t *testing.T) {
 	require.Equal(t, tss, tssQueried)
 
 }
-func TestTSSRemove(t *testing.T) {
+func TestKeeper_RemoveTSS(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
 	tss := sample.Tss()
 	k.SetTSS(ctx, tss)
@@ -34,83 +30,34 @@ func TestTSSRemove(t *testing.T) {
 	require.False(t, found)
 }
 
-func TestTSSQuerySingle(t *testing.T) {
+func TestKeeper_CheckIfTssPubkeyHasBeenGenerated(t *testing.T) {
 	k, ctx, _, _ := keepertest.ObserverKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	//msgs := createTSS(keeper, ctx, 1)
 	tss := sample.Tss()
-	k.SetTSS(ctx, tss)
-	for _, tc := range []struct {
-		desc     string
-		request  *types.QueryGetTSSRequest
-		response *types.QueryGetTSSResponse
-		err      error
-	}{
-		{
-			desc:     "First",
-			request:  &types.QueryGetTSSRequest{},
-			response: &types.QueryGetTSSResponse{TSS: tss},
-		},
-		{
-			desc: "InvalidRequest",
-			err:  status.Error(codes.InvalidArgument, "invalid request"),
-		},
-	} {
-		tc := tc
-		t.Run(tc.desc, func(t *testing.T) {
-			response, err := k.TSS(wctx, tc.request)
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.Equal(t, tc.response, response)
-			}
-		})
-	}
+
+	generated, found := k.CheckIfTssPubkeyHasBeenGenerated(ctx, tss.TssPubkey)
+	require.False(t, found)
+	require.Equal(t, types.TSS{}, generated)
+
+	k.AppendTss(ctx, tss)
+
+	generated, found = k.CheckIfTssPubkeyHasBeenGenerated(ctx, tss.TssPubkey)
+	require.True(t, found)
+	require.Equal(t, tss, generated)
 }
 
-func TestTSSQueryHistory(t *testing.T) {
-	keeper, ctx, _, _ := keepertest.ObserverKeeper(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	for _, tc := range []struct {
-		desc          string
-		tssCount      int
-		foundPrevious bool
-		err           error
-	}{
-		{
-			desc:          "1 Tss addresses",
-			tssCount:      1,
-			foundPrevious: false,
-			err:           nil,
-		},
-		{
-			desc:          "10 Tss addresses",
-			tssCount:      10,
-			foundPrevious: true,
-			err:           nil,
-		},
-	} {
-		tc := tc
-		t.Run(tc.desc, func(t *testing.T) {
-			tssList := sample.TssList(tc.tssCount)
-			for _, tss := range tssList {
-				keeper.SetTSS(ctx, tss)
-				keeper.SetTSSHistory(ctx, tss)
-			}
-			request := &types.QueryTssHistoryRequest{}
-			response, err := keeper.TssHistory(wctx, request)
-			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
-			} else {
-				require.Equal(t, len(tssList), len(response.TssList))
-				prevTss, found := keeper.GetPreviousTSS(ctx)
-				require.Equal(t, tc.foundPrevious, found)
-				if found {
-					require.Equal(t, tssList[len(tssList)-2], prevTss)
-				}
-			}
-		})
+func TestKeeper_GetHistoricalTssByFinalizedHeight(t *testing.T) {
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	tssList := sample.TssList(100)
+	r := rand.Intn((len(tssList)-1)-0) + 0
+	_, found := k.GetHistoricalTssByFinalizedHeight(ctx, tssList[r].FinalizedZetaHeight)
+	require.False(t, found)
+
+	for _, tss := range tssList {
+		k.SetTSSHistory(ctx, tss)
 	}
+	tss, found := k.GetHistoricalTssByFinalizedHeight(ctx, tssList[r].FinalizedZetaHeight)
+	require.True(t, found)
+	require.Equal(t, tssList[r], tss)
 }
 
 func TestKeeper_TssHistory(t *testing.T) {
@@ -164,16 +111,5 @@ func TestKeeper_TssHistory(t *testing.T) {
 			return rst[i].FinalizedZetaHeight < rst[j].FinalizedZetaHeight
 		})
 		require.Equal(t, tssList, rst)
-	})
-	t.Run("Get historical TSS", func(t *testing.T) {
-		k, ctx, _, _ := keepertest.ObserverKeeper(t)
-		tssList := sample.TssList(100)
-		for _, tss := range tssList {
-			k.SetTSSHistory(ctx, tss)
-		}
-		r := rand.Intn((len(tssList)-1)-0) + 0
-		tss, found := k.GetHistoricalTssByFinalizedHeight(ctx, tssList[r].FinalizedZetaHeight)
-		require.True(t, found)
-		require.Equal(t, tssList[r], tss)
 	})
 }

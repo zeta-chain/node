@@ -53,6 +53,7 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
 					ReceiverChainId: chains.ZetaPrivnetChain().ChainId,
+					CoinType:        coin.CoinType_Gas,
 				},
 				{
 					ReceiverChainId: chainID,
@@ -142,7 +143,9 @@ func TestKeeper_PayGasNativeAndUpdateCctx(t *testing.T) {
 
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: coin.CoinType_Gas,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      coin.CoinType_Gas,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -202,9 +205,10 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
+
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: coin.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: coin.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -359,8 +363,8 @@ func TestKeeper_PayGasInERC20AndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: coin.CoinType_ERC20,
 				Asset:    assetAddress,
+				CoinType: coin.CoinType_ERC20,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -546,7 +550,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: coin.CoinType_Zeta,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      coin.CoinType_Zeta,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{
@@ -578,7 +584,9 @@ func TestKeeper_PayGasInZetaAndUpdateCctx(t *testing.T) {
 		// create a cctx reverted from zeta
 		cctx := types.CrossChainTx{
 			InboundTxParams: &types.InboundTxParams{
-				CoinType: coin.CoinType_Zeta,
+				SenderChainId: chainID,
+				Sender:        sample.EthAddress().String(),
+				CoinType:      coin.CoinType_Zeta,
 			},
 			OutboundTxParams: []*types.OutboundTxParams{
 				{

@@ -41,6 +41,10 @@ func (k msgServer) MigrateTssFunds(goCtx context.Context, msg *types.MsgMigrateT
 	}
 
 	tssHistory := k.zetaObserverKeeper.GetAllTSS(ctx)
+	if len(tssHistory) == 0 {
+		return nil, errorsmod.Wrap(types.ErrCannotMigrateTssFunds, "empty TSS history")
+	}
+
 	sort.SliceStable(tssHistory, func(i, j int) bool {
 		return tssHistory[i].FinalizedZetaHeight < tssHistory[j].FinalizedZetaHeight
 	})
@@ -82,6 +86,9 @@ func (k Keeper) MigrateTSSFundsForChain(ctx sdk.Context, chainID int64, amount s
 
 	hash := crypto.Keccak256Hash([]byte(indexString))
 	index := hash.Hex()
+
+	// TODO : Use the `NewCCTX` method to create the cctx
+	// https://github.com/zeta-chain/node/issues/1909
 	cctx := types.CrossChainTx{
 		Creator:        "",
 		Index:          index,

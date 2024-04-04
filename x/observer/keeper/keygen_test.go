@@ -1,4 +1,4 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
@@ -6,11 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	keepertest "github.com/zeta-chain/zetacore/testutil/keeper"
+	"github.com/zeta-chain/zetacore/x/observer/keeper"
 	"github.com/zeta-chain/zetacore/x/observer/types"
 )
 
 // Keeper Tests
-func createTestKeygen(keeper *Keeper, ctx sdk.Context) types.Keygen {
+func createTestKeygen(keeper *keeper.Keeper, ctx sdk.Context) types.Keygen {
 	item := types.Keygen{
 		BlockNumber: 10,
 	}
@@ -19,16 +21,16 @@ func createTestKeygen(keeper *Keeper, ctx sdk.Context) types.Keygen {
 }
 
 func TestKeygenGet(t *testing.T) {
-	keeper, ctx := SetupKeeper(t)
-	item := createTestKeygen(keeper, ctx)
-	rst, found := keeper.GetKeygen(ctx)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	item := createTestKeygen(k, ctx)
+	rst, found := k.GetKeygen(ctx)
 	require.True(t, found)
 	require.Equal(t, item, rst)
 }
 func TestKeygenRemove(t *testing.T) {
-	keeper, ctx := SetupKeeper(t)
-	createTestKeygen(keeper, ctx)
-	keeper.RemoveKeygen(ctx)
-	_, found := keeper.GetKeygen(ctx)
+	k, ctx, _, _ := keepertest.ObserverKeeper(t)
+	createTestKeygen(k, ctx)
+	k.RemoveKeygen(ctx)
+	_, found := k.GetKeygen(ctx)
 	require.False(t, found)
 }

@@ -128,3 +128,9 @@ func GetEmissionsParamStoreMock(t testing.TB, keeper *keeper.Keeper) *emissionsm
 	require.True(t, ok)
 	return m
 }
+
+func GetEmissionsStakingMock(t testing.TB, keeper *keeper.Keeper) *emissionsmocks.EmissionStakingKeeper {
+	cbk, ok := keeper.GetStakingKeeper().(*emissionsmocks.EmissionStakingKeeper)
+	require.True(t, ok)
+	return cbk
+}

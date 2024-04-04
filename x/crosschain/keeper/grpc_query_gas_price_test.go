@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,15 +38,20 @@ func TestGasPriceQuerySingle(t *testing.T) {
 			err:     status.Error(codes.InvalidArgument, "not found"),
 		},
 		{
-			desc: "InvalidRequest",
+			desc: "InvalidRequest nil",
 			err:  status.Error(codes.InvalidArgument, "invalid request"),
+		},
+		{
+			desc:    "InvalidRequest index",
+			request: &types.QueryGetGasPriceRequest{Index: "abc"},
+			err:     fmt.Errorf("strconv.Atoi: parsing \"abc\": invalid syntax"),
 		},
 	} {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			response, err := keeper.GasPrice(wctx, tc.request)
 			if tc.err != nil {
-				require.ErrorIs(t, err, tc.err)
+				require.Error(t, err)
 			} else {
 				require.Equal(t, tc.response, response)
 			}

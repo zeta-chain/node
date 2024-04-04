@@ -30,6 +30,7 @@ func GetTxCmd() *cobra.Command {
 		CmdUpdateObserver(),
 		CmdEncode(),
 		CmdResetChainNonces(),
+		CmdVoteTSS(),
 	)
 
 	return cmd
