@@ -7,7 +7,6 @@ import (
 	"github.com/tendermint/tendermint/libs/bytes"
 	"github.com/tendermint/tendermint/rpc/client/mock"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
-	"github.com/tendermint/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
@@ -53,10 +52,10 @@ func (c MockSDKClient) Tx(_ context.Context, _ []byte, _ bool) (*coretypes.Resul
 }
 
 func (c MockSDKClient) Block(_ context.Context, _ *int64) (*coretypes.ResultBlock, error) {
-	return &coretypes.ResultBlock{Block: &types.Block{
-		Header:   types.Header{},
-		Data:     types.Data{},
-		Evidence: types.EvidenceData{},
+	return &coretypes.ResultBlock{Block: &tmtypes.Block{
+		Header:   tmtypes.Header{},
+		Data:     tmtypes.Data{},
+		Evidence: tmtypes.EvidenceData{},
 	}}, c.err
 }
 
